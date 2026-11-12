@@ -14,8 +14,8 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain — o que não está decidido está na P-1 e nas propostas
-      D-001 a D-005, com o comportamento de hoje mantido até a resposta (FR-6201).
+- [x] No [NEEDS CLARIFICATION] markers remain — e nenhuma decisão pendente: D-001 a D-006 foram
+      fechadas pelo usuário em 11/11/2026.
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -33,7 +33,8 @@
 
 ## Notes
 
-- Os textos das D-002 a D-005 são propostas: o plano não começa antes de o usuário aprová-las ou
-  trocá-las, nem antes da resposta à P-1 se a implementação quiser alcançar a chamada sem documento.
+- Revalidada em 11/11/2026 depois das decisões do usuário sobre as propostas: D-002 e D-004 com a
+  redação dele, e a pergunta sobre a chamada sem documento respondida como D-006.
+- O plano parte da `main` depois do merge do #477, que mexe nos mesmos arquivos da gestão.
 - A revisão foi aplicada também nos arquivos das features revistas (`063`, `115`, `118`, `121`,
   `134`, `143`), com a redação anterior preservada em cada alínea.

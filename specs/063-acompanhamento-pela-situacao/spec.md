@@ -474,8 +474,8 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
 - **FR-1178** *(revisada pela `118` em 2026-11-04; revista pela `154` em 2026-11-11, que vigora com a implementação dela — as redações anteriores estão ao fim desta alínea)*:
   "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa. Na convocação com
   documento pedido e nada a fazer, ela DEVE vir seguida da frase de conclusão da FR-3728 da `118`,
-  que diz que a comissão ainda vai concluir a análise, ou, com a conferência já feita e sem
-  desfecho, da frase do próximo passo (FR-6205 da `154`).
+  que diz que a comissão ainda vai concluir a análise, ou, com todos os obrigatórios conferidos e
+  sem desfecho, da frase da conferência terminada (FR-6205 da `154`).
 
   > **Redação anterior à `154`, preservada:** a mesma, terminando em "seguida da frase de conclusão
   > da FR-3728 da `118`, que diz que a comissão ainda vai concluir a análise."

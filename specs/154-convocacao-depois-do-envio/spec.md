@@ -5,13 +5,15 @@
 **Created**: 2026-11-11
 
 **Status**: **Rascunho, só a spec — revisão de requisitos vigentes.** Não há plano, tarefas nem
-código. As decisões têm duas origens:
+código. **Todas as decisões são do usuário, e nenhuma está pendente:**
 
-- **Do usuário, em 11/11/2026, sobre os achados 20 e 23 do estudo da jornada final:** transcritas na
-  seção *Clarifications* e citadas como *1ª a 8ª decisão*. Não se reabrem.
-- **Propostas de desenho desta spec:** D-001 a D-005, abaixo. Elas dão redação ao que as decisões
-  fixaram em princípio. **Aguardam o usuário.** A **pergunta P-1** é do usuário; a spec adota a
-  recomendação dela só no sentido de **manter o comportamento de hoje** enquanto não houver resposta.
+- **Sobre os achados 20 e 23 do estudo da jornada final, em 11/11/2026:** transcritas na seção
+  *Clarifications* e citadas como *1ª a 8ª decisão*.
+- **Sobre as propostas de desenho desta spec, no mesmo dia:** D-001 a D-005 aprovadas — a D-002 e a
+  D-004 com ajuste de redação do usuário —, e a pergunta sobre a chamada que não pede documento pelo
+  portal respondida, registrada como D-006.
+
+Nenhuma delas se reabre.
 
 **Input**: o [estudo da jornada final](../../doc/estudo-jornada-final-2026-11-11/index.html) de
 11/11/2026 (PR #472), achados **20** e **23**, os dois de prioridade baixa:
@@ -76,6 +78,27 @@ coluna, migration, rota ou tela nova.
 - Q: O que já foi publicado ou gravado muda? → A: Não. Documentos já publicados e atos gravados não
   mudam (8ª decisão; Princípio da imutabilidade da Constituição).
 
+### Session 2026-11-11 (decisões do usuário sobre as propostas da spec)
+
+- Q: O que é providência pendente? → A: Deriva das tarefas obrigatórias do candidato; opcionais e
+  itens com a comissão ficam fora (D-001, aprovada).
+- Q: Que frase diz que a conferência acabou? → A: *"A conferência dos documentos obrigatórios
+  terminou. Aguarde o registro do resultado desta convocação."*, **somente** quando todos os
+  obrigatórios estiverem conferidos e não houver tarefa nem desfecho. A frase não afirma que os
+  opcionais também foram conferidos (D-002, com a redação do usuário).
+- Q: O cartão do reenviado no portal? → A: Aprovada a redação proposta (D-003).
+- Q: A contagem do reenviado? → A: Aprovada, com singular e plural naturais — *"1 reenviado —
+  aguardando nova conferência"*, *"2 reenviados — aguardando nova conferência"* —, sem "(s)" na tela
+  (D-004).
+- Q: E sem conferência possível? → A: Aprovadas as variantes no passado com o Processo encerrado ou
+  com desfecho. O vencimento do prazo, sozinho, mantém *"aguardando"*, porque a conferência ainda
+  pode ocorrer (D-005).
+- Q: E a chamada que não pede documento pelo portal? → A: Se o portal pede **só o Requerimento**,
+  ele é providência pendente até ser enviado; depois, *"Acompanhe sua convocação"*, sem a
+  advertência do não atendimento, e sem a frase da conferência terminada. Se **nada** é pedido pelo
+  portal, mantém-se a orientação de seguir as instruções do Edital e o comportamento atual até o
+  desfecho, porque o sistema não consegue verificar o cumprimento externo (D-006).
+
 ## User Scenarios & Testing *(mandatory)*
 
 Os cenários são os do estudo, no Edital de treinamento SIM09/2026 (C09), e os da `118` e da `121`
@@ -98,9 +121,9 @@ a ausência da advertência e a presença da frase de conclusão, na convocaçã
 **Acceptance Scenarios**:
 
 1. **Given** T (documentos obrigatórios e Requerimento enviados, nada conferido, prazo correndo),
-   **When** a pessoa abre a convocação, **Then** o título é *"Acompanhe sua convocação"*, o cartão do
-   prazo mostra a data, o dia da semana e a contagem, o resumo é a frase de conclusão, não há ação
-   principal, e a advertência do não atendimento não aparece.
+   **When** a pessoa abre a convocação, **Then** o título é *"Acompanhe sua convocação"*, o cartão
+   do prazo mostra a data, o dia da semana e a contagem, o resumo é a frase de conclusão, não há
+   ação principal, e a advertência do não atendimento não aparece.
 2. **Given** T, **When** a pessoa abre o acompanhamento, **Then** a ação é *"Nada por enquanto."*,
    seguida da frase de conclusão; o prazo aparece; a advertência não.
 3. **Given** C1 (nada enviado, prazo correndo), **When** a pessoa abre a convocação, **Then** o
@@ -108,8 +131,8 @@ a ausência da advertência e a presença da frase de conclusão, na convocaçã
 4. **Given** T, **When** a comissão registra pendência num obrigatório, **Then** a pessoa volta a
    ler *"Você foi convocado!"*, o resumo *"Você ainda precisa corrigir 1 documento."* e a
    advertência.
-5. **Given** T com um documento opcional não enviado, **When** a pessoa abre a convocação, **Then** o
-   título é *"Acompanhe sua convocação"*, e a linha do opcional segue a frase de conclusão: o
+5. **Given** T com um documento opcional não enviado, **When** a pessoa abre a convocação, **Then**
+   o título é *"Acompanhe sua convocação"*, e a linha do opcional segue a frase de conclusão: o
    opcional não é providência pendente.
 
 ---
@@ -118,8 +141,8 @@ a ausência da advertência e a presença da frase de conclusão, na convocaçã
 
 Os arquivos recebidos ficam *"com a comissão"*; os conferidos dizem *"Conferido: de acordo com o
 Edital"*; a convocação só se diz concluída com o resultado registrado. Quando a comissão já
-conferiu tudo e falta só registrar o resultado, a página diz esse próximo passo, e não que a análise
-ainda vai ser concluída.
+conferiu todos os obrigatórios e falta só registrar o resultado, a página diz esse próximo passo, e
+não que a análise ainda vai ser concluída — sem afirmar nada sobre os opcionais.
 
 **Why this priority**: a troca de título, sozinha, poderia ler como "deu certo". A 5ª decisão
 proíbe que o recebimento sugira aprovação, e a 6ª pede que a orientação seja verdadeira em cada
@@ -133,14 +156,20 @@ de cada cartão.
 1. **Given** T, **When** a pessoa lê a página, **Then** nenhum texto diz *aprovado*, *aceito*,
    *deferido*, *concluído*, *tudo certo* ou *enviou tudo*, e nenhum cartão recebido usa a marca
    visual do conferido.
-2. **Given** Tc (todos os obrigatórios conferidos — conformes ou *não se aplica* —, nenhum aguardando
-   conferência, sem desfecho), **When** a pessoa abre a convocação ou o acompanhamento, **Then** o
-   título é *"Acompanhe sua convocação"* e, no lugar da frase de conclusão, vem a frase do próximo
-   passo (D-002).
+2. **Given** Tc (todos os obrigatórios conferidos — conformes ou *não se aplica* —, nenhuma tarefa,
+   sem desfecho), **When** a pessoa abre a convocação ou o acompanhamento, **Then** o título é
+   *"Acompanhe sua convocação"* e, no lugar da frase de conclusão, vem *"A conferência dos
+   documentos obrigatórios terminou. Aguarde o registro do resultado desta convocação."* (D-002).
 3. **Given** uma chamada com um obrigatório conferido e outro aguardando conferência, **When** a
-   pessoa abre a convocação, **Then** vale a frase de conclusão (2ª decisão), e não a do próximo
-   passo.
-4. **Given** I1 (vaga aceita), **When** a pessoa abre a convocação, **Then** o título é *"Resultado
+   pessoa abre a convocação, **Then** vale a frase de conclusão (2ª decisão), e não a da conferência
+   terminada.
+4. **Given** a chamada que pede só o Requerimento, já enviado, **When** a pessoa abre a convocação,
+   **Then** o título é *"Acompanhe sua convocação"*, o prazo aparece, a advertência não, e a frase
+   da conferência terminada também não (D-006).
+5. **Given** a chamada que não pede nada pelo portal, sem desfecho, **When** a pessoa abre a
+   convocação, **Then** a tela é a de hoje: *"Você foi convocado!"*, *"Siga as instruções do Edital
+   para esta convocação."* e a advertência (D-006).
+6. **Given** I1 (vaga aceita), **When** a pessoa abre a convocação, **Then** o título é *"Resultado
    da sua convocação"*, com o rótulo do desfecho e a frase do aceite, como hoje — é a convocação
    concluída.
 
@@ -164,7 +193,8 @@ comparar, letra a letra, o nome do estado nas duas telas.
 
 1. **Given** um obrigatório reenviado depois da pendência, chamada aberta, **When** a comissão abre
    *Documentos da convocação*, **Then** o item diz *"Reenviado — aguardando nova conferência"*, e a
-   contagem diz *"1 reenviado — aguardando nova conferência"* (D-004).
+   contagem diz *"1 reenviado — aguardando nova conferência"*; com dois, *"2 reenviados — aguardando
+   nova conferência"* (D-004).
 2. **Given** o mesmo item, **When** o candidato abre a convocação, **Then** o cartão começa por
    *"Reenviado — aguardando nova conferência."*, seguido da explicação da D-003.
 3. **Given** o mesmo item, **When** a comissão abre a condução, **Then** o passo da chamada nomeia o
@@ -186,9 +216,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   a convocação não tem prazo registrado; sem advertência, como hoje.
 - **Chamada só com documento facultativo, nada enviado.** Não há providência pendente: título
   *"Acompanhe sua convocação"*, frase de conclusão seguida da linha do opcional, sem advertência. A
-  frase do próximo passo **não** vale, porque nada foi conferido (FR-6205).
-- **Facultativo pendente.** Não é providência pendente (o texto dele já diz *"Se quiser…"*): não muda
-  o título nem traz a advertência.
+  frase da conferência terminada **não** vale, porque a chamada não tem obrigatório (FR-6205).
+- **Tc com um opcional enviado e ainda não conferido.** Vale a frase da conferência terminada,
+  porque ela fala só dos obrigatórios; o cartão do opcional continua dizendo que a comissão vai
+  conferir (D-002).
+- **Facultativo pendente.** Não é providência pendente (o texto dele já diz *"Se quiser…"*): não
+  muda o título nem traz a advertência.
 - **Pendência nova num obrigatório depois de tudo enviado.** Volta a haver providência pendente:
   *"Você foi convocado!"* e a advertência, se o prazo estiver correndo.
 - **Requerimento como única tarefa restante.** É providência pendente: *"Você foi convocado!"* e a
@@ -200,12 +233,18 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   cartão do reenviado mantém o nome, porque a conferência ainda é aceita depois do vencimento
   (FR-3588 da `115`).
 - **Processo encerrado ou desfecho registrado com item reenviado sem conferência.** Ninguém vai
-  conferir: o portal diz a variante passada da D-005, sem *"aguardando"*. Na gestão, o nome segue a
+  conferir: o portal diz a variante passada da D-005, sem *"aguardando"*. Só o vencimento do prazo
+  não basta para a variante passada. Na gestão, o nome segue a
   regra que hoje vale para o *recebido* nessa situação.
 - **Convocação corrigida, com documento aproveitado da chamada anterior sem conferência.** O
   aproveitado está com a comissão: vale a frase de conclusão.
-- **Chamada que não pede nada pelo portal, ou que pede só o Requerimento.** Fica como hoje até a
-  resposta da P-1 (FR-6201).
+- **Chamada que pede só o Requerimento, ainda não enviado.** É providência pendente: *"Você foi
+  convocado!"* e a advertência, como hoje (FR-6201).
+- **Chamada que pede só o Requerimento, já enviado.** Sem providência pendente: *"Acompanhe sua
+  convocação"*, o prazo visível, sem a advertência e sem a frase da conferência terminada (FR-6201).
+- **Chamada que não pede nada pelo portal.** Fica como hoje até o desfecho: *"Você foi convocado!"*,
+  *"Siga as instruções do Edital para esta convocação."* e a advertência na condição da FR-1177 da
+  `063` (FR-6201).
 - **Pessoa com mais de uma inscrição convocada.** Tudo é por convocação: cada uma tem o seu título.
 
 ## Requirements *(mandatory)*
@@ -219,9 +258,16 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   documento obrigatório *a corrigir*, documento obrigatório *a enviar* ou Requerimento de Matrícula
   *a preencher*. Opcional a enviar, facultativo pendente, item com a comissão e item conferido MUST
   NOT contar como providência pendente. Ela é **derivada** a cada leitura, e nunca gravada (D-001).
-- **FR-6201**: Na chamada vigente que **não pede documento** pelo portal — sem nada pedido, ou só com
-  o Requerimento de Matrícula —, o título, a frase de consequência e a ação MUST continuar como hoje
-  até a resposta da P-1. Esta spec não decide se, nesses casos, a pessoa tem providência pendente.
+- **FR-6201**: Na chamada vigente que **não pede documento** pelo portal (D-006):
+  - **só com o Requerimento de Matrícula**: a providência pendente MUST ser o Requerimento ainda não
+    enviado. Enviado, o título MUST ser *"Acompanhe sua convocação"*, o prazo MUST continuar visível
+    (FR-6208), a advertência do não atendimento MUST NOT aparecer, e a frase da conferência
+    terminada (FR-6205) MUST NOT ser usada. A ação e o link de hoje para o Requerimento enviado não
+    mudam;
+  - **sem nada pedido pelo portal**: a pessoa MUST ser tratada como com providência pendente até o
+    desfecho — título *"Você foi convocado!"*, a ação *"Siga as instruções do Edital para esta
+    convocação."* e a advertência na condição da FR-1177 da `063` —, como hoje, porque o sistema não
+    verifica o cumprimento externo.
 
 #### B. O título
 
@@ -236,16 +282,19 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 #### C. A frase de conclusão e o próximo passo
 
-- **FR-6204**: Sem providência pendente e com ao menos um item obrigatório **com a comissão**
-  (recebido, aproveitado sem conferência ou reenviado), o resumo da chamada (FR-3862 da `121`) e o
-  acompanhamento (linha 5 da FR-3730 da `118`) MUST dizer a frase de conclusão da FR-3728 da `118`,
-  sem mudança: *"Você não tem mais documentos para enviar agora. A comissão ainda vai concluir a
-  análise."* A mesma frase MUST valer quando nenhum item obrigatório existe e nada foi conferido.
-- **FR-6205**: Sem providência pendente, sem desfecho, sem nenhum item obrigatório com a comissão e
-  com ao menos um item obrigatório conferido (*conforme* ou *não se aplica*), o resumo e o
-  acompanhamento MUST dizer, no lugar da frase de conclusão, a **frase do próximo passo** da D-002.
-  A linha do opcional da FR-3728 da `118`, quando houver opcional a enviar, MUST continuar a
-  segui-la.
+- **FR-6204**: Na chamada que pede documento, sem providência pendente e fora do caso da FR-6205 —
+  com algum obrigatório **com a comissão** (recebido, aproveitado sem conferência ou reenviado), ou
+  sem obrigatório na chamada —, o resumo da chamada (FR-3862 da `121`) e o acompanhamento (linha 5
+  da FR-3730 da `118`) MUST dizer a frase de conclusão da FR-3728 da `118`, sem mudança: *"Você não
+  tem mais documentos para enviar agora. A comissão ainda vai concluir a análise."*
+- **FR-6205**: Na chamada que pede ao menos um documento obrigatório, com **todos** os obrigatórios
+  conferidos (*conforme* ou *não se aplica*), sem tarefa e sem desfecho, o resumo e o acompanhamento
+  MUST dizer, no lugar da frase de conclusão, a **frase da conferência terminada**: *"A conferência
+  dos documentos obrigatórios terminou. Aguarde o registro do resultado desta convocação."* (D-002).
+  Ela MUST NOT ser usada em nenhum outro caso — nem na chamada só com facultativo, nem na que pede
+  só o Requerimento (FR-6201). O estado dos opcionais não a altera, e ela MUST NOT dizer que eles
+  foram conferidos. A linha do opcional da FR-3728 da `118`, quando houver opcional a enviar, MUST
+  continuar a segui-la.
 - **FR-6206**: Com desfecho vigente, a tela MUST continuar a da FR-3858 da `121` e da FR-3750 da
   `118` — título *"Resultado da sua convocação"*, rótulo do desfecho e, no aceite, a frase de que o
   registro não é matrícula, bolsa nem contrato. É a única situação em que a convocação se diz
@@ -262,9 +311,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   (prazo correndo, não iniciado, sem vencimento).
 - **FR-6209**: A frase *"Se você não atender no prazo, a comissão poderá registrar o não atendimento
   desta convocação."* MUST aparecer **somente** com a comunicação enviada, o vencimento registrado,
-  o prazo não encerrado **e** providência pendente do candidato (FR-6200; ou, nos casos da FR-6201,
-  na condição de hoje). Sem providência pendente, nenhuma frase de consequência MUST aparecer, nem na
-  convocação nem no acompanhamento. É a FR-1177 da `063`, revista.
+  o prazo não encerrado **e** providência pendente do candidato (FR-6200 e FR-6201). Sem providência
+  pendente, nenhuma frase de consequência MUST aparecer, nem na convocação nem no acompanhamento. É
+  a FR-1177 da `063`, revista.
 - **FR-6210**: A ressalva da FR-3864 da `121` (*"Esta convocação ainda não é a matrícula…"* ou
   *"…ainda não é o resultado…"*) MUST continuar em todo estado aberto, com ou sem providência
   pendente: ela não é frase de consequência.
@@ -277,14 +326,19 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   maiúscula quando abre o rótulo e minúscula dentro de frase. A condição da derivação não muda. O
   identificador interno do estado não é texto de tela, e a implementação decide se o renomeia.
 - **FR-6212**: Na gestão, o nome da FR-6211 MUST ser o do item na página *Documentos da convocação*,
-  o da contagem dessa página e da condução (D-004), o da ordem da condução (FR-3607 da `115`), o do
-  passo da chamada (FR-5011 da `143`) e o da exclusão do aviso de pendência (FR-4607 da `134`). O
-  passo PODE seguir com a ação (*"Conferir de novo"*) e com a explicação de quem reenviou e quando,
-  desde que nenhuma delas dê outro nome ao estado.
+  o da contagem dessa página e da condução — no singular, *"1 reenviado — aguardando nova
+  conferência"*, e no plural, *"2 reenviados — aguardando nova conferência"*, sem "(s)" (D-004) —, o
+  da ordem da condução (FR-3607 da `115`), o do passo da chamada (FR-5011 da `143`) e o da exclusão
+  do aviso de pendência (FR-4607 da `134`). O passo PODE seguir com a ação (*"Conferir de novo"*) e
+  com a explicação de quem reenviou e quando, desde que nenhuma delas dê outro nome ao estado.
 - **FR-6213**: No portal, o cartão do item reenviado (linha *complementado* da tabela da FR-3746 da
   `118`) MUST começar pelo nome da FR-6211 nas colunas *aberta* e *encerrada pelo prazo*, seguido da
-  explicação da D-003; nas colunas *encerrada pelo Processo* e *decidida*, MUST dizer a variante
-  passada da D-005.
+  explicação: *"Reenviado — aguardando nova conferência. Novo arquivo recebido em ‹data›, às ‹hora›,
+  depois da correção pedida."* (D-003). Nas colunas *encerrada pelo Processo* e *decidida*, MUST
+  dizer a variante passada: *"Reenviado em ‹data›; não foi conferido antes do encerramento do
+  Processo."* e *"Reenviado em ‹data›; não foi conferido antes do resultado."* (D-005). O vencimento
+  do prazo, sozinho, MUST manter o nome com *"aguardando"*, porque a conferência ainda é aceita
+  (FR-3588 da `115`).
 - **FR-6214**: Depois da implementação, os nomes *"Complementado, aguardando conferência"*,
   *"Reenviado(s), a conferir de novo"*, *"documento reenviado, a conferir de novo"*, *"documento
   reenviado: nova conferência"* e *"documento reenviado, aguardando conferência"* MUST NOT aparecer
@@ -311,19 +365,23 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 ### Measurable Outcomes
 
-- **SC-2000**: Nos cenários T, Tc, *só facultativo*, *prazo não iniciado com tudo enviado* e *sem
-  vencimento com tudo enviado*, o título é *"Acompanhe sua convocação"* e a advertência do não
-  atendimento aparece **zero** vezes, na convocação e no acompanhamento.
-- **SC-2001**: Nos cenários C1, F e *pendência nova depois de tudo enviado*, com o prazo correndo, o
-  título é *"Você foi convocado!"* e a advertência aparece **exatamente uma** vez em cada tela.
+- **SC-2000**: Nos cenários T, Tc, *só facultativo*, *prazo não iniciado com tudo enviado*, *sem
+  vencimento com tudo enviado* e *só Requerimento, já enviado*, o título é *"Acompanhe sua
+  convocação"* e a advertência do não atendimento aparece **zero** vezes, na convocação e no
+  acompanhamento.
+- **SC-2001**: Nos cenários C1, F, *pendência nova depois de tudo enviado*, *só Requerimento, ainda
+  não enviado* e *nada pedido pelo portal, sem desfecho*, com o prazo correndo, o título é *"Você
+  foi convocado!"* e a advertência aparece **exatamente uma** vez em cada tela.
 - **SC-2002**: Em 100% dos cenários com chamada aberta e vencimento registrado, o prazo aparece,
   com ou sem providência pendente.
 - **SC-2003**: Zero falsas conclusões: em nenhum cenário sem desfecho aparece *aprovado*, *aceito*,
-  *deferido*, *concluído*, *tudo certo* ou *enviou tudo*; em nenhum cenário com obrigatório com a
-  comissão aparece a frase do próximo passo; em nenhum cenário Tc aparece *"A comissão ainda vai
+  *deferido*, *concluído*, *tudo certo* ou *enviou tudo*; a frase da conferência terminada aparece
+  em 100% dos cenários Tc e em **nenhum** outro — nem com obrigatório com a comissão, nem só com
+  facultativo, nem só com o Requerimento; em nenhum cenário Tc aparece *"A comissão ainda vai
   concluir a análise."*
 - **SC-2004**: O item reenviado tem **um** nome, idêntico letra a letra, nas cinco superfícies da
-  gestão da FR-6212 e no cartão do portal — onde o estudo contou três.
+  gestão da FR-6212 e no cartão do portal — onde o estudo contou três —, e nenhuma contagem mostra
+  "(s)": com um, *"1 reenviado"*; com dois, *"2 reenviados"*.
 - **SC-2005**: Zero alterações em documento publicado, ato, trilha, mensagem ou aviso gravados antes
   da implementação, conferido pela comparação de uma amostra gravada antes e lida depois.
 - **SC-2006**: Repetidas as capturas `B08-tudo-enviado`, `D04-correcao-enviada` e
@@ -352,7 +410,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 > As redações anteriores ficam preservadas ao fim de cada alínea, no arquivo da feature revista, com
 > a marca *"revista pela `154` em 2026-11-11, que vigora com a implementação dela"*. *Por que
-> mudaram:* a 1ª a 7ª decisões.
+> mudaram:* a 1ª a 7ª decisões e as D-001 a D-006, todas do usuário.
 
 ### `063` — o acompanhamento pela situação
 
@@ -365,9 +423,10 @@ acréscimo da `118` não mudam.
 > *Redação anterior:* "(convocado, **somente** com a comunicação enviada, vencimento registrado e
 > prazo não encerrado)" — o resto, igual.
 
-**FR-1178, nova redação.** "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa.
-Na convocação com documento pedido e nada a fazer, ela DEVE vir seguida da frase de conclusão da
-FR-3728 da `118` ou, com a análise já feita, da frase do próximo passo (FR-6205 da `154`).
+**FR-1178, nova redação.** "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da
+pessoa. Na convocação com documento pedido e nada a fazer, ela DEVE vir seguida da frase de
+conclusão da FR-3728 da `118` ou, com todos os obrigatórios conferidos e sem desfecho, da frase da
+conferência terminada (FR-6205 da `154`).
 
 > *Redação anterior:* a mesma, terminando em "seguida da frase de conclusão da FR-3728 da `118`, que
 > diz que a comissão ainda vai concluir a análise."
@@ -390,8 +449,8 @@ obrigatórios)"; na ordem, *reenviado* no lugar de *complementado*.
 
 ### `118` — a jornada consolidada do convocado
 
-**FR-3728, acréscimo.** Sem tarefa, sem item obrigatório com a comissão e com algum obrigatório
-conferido, vale a frase do próximo passo (FR-6205 da `154`) no lugar da frase de conclusão. A
+**FR-3728, acréscimo.** Com todos os obrigatórios conferidos, sem tarefa e sem desfecho, vale a
+frase da conferência terminada (FR-6205 da `154`) no lugar da frase de conclusão; só nesse caso. A
 proibição de dizer que a pessoa enviou tudo, que está tudo certo, aceito, aprovado ou concluído
 continua.
 
@@ -402,9 +461,11 @@ consequência, só com providência pendente (FR-6209 da `154`).
 
 > *Redação anterior:* a mesma, sem este acréscimo.
 
-**FR-3746, linha *complementado* da tabela.** Colunas *aberta* e *encerrada pelo prazo*: o texto da
-D-003 da `154`; colunas *encerrada pelo Processo* e *decidida*: as variantes passadas da D-005 da
-`154`.
+**FR-3746, linha *complementado* da tabela, que passa a se chamar *reenviado — aguardando nova
+conferência*.** Colunas *aberta* e *encerrada pelo prazo*: *"Reenviado — aguardando nova
+conferência. Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida."* (D-003);
+*encerrada pelo Processo*: *"Reenviado em ‹data›; não foi conferido antes do encerramento do
+Processo."*; *decidida*: *"Reenviado em ‹data›; não foi conferido antes do resultado."* (D-005).
 
 > *Redação anterior:* *"Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida. A
 > comissão vai conferir."* | idem à coluna *aberta* | *"Novo arquivo recebido em ‹data›; não foi
@@ -421,6 +482,10 @@ D-003 da `154`; colunas *encerrada pelo Processo* e *decidida*: as variantes pas
 
 **Caso-limite *Prazo não iniciado* (cenário K), acréscimo.** O título é *"Você foi convocado!"* com
 providência pendente, e *"Acompanhe sua convocação"* sem ela.
+
+**Caso-limite novo, *Chamada que não pede documento*.** Só com o Requerimento: *"Você foi
+convocado!"* até o envio, e *"Acompanhe sua convocação"* depois, sem a advertência; sem nada pedido
+pelo portal, como hoje até o desfecho (FR-6201 da `154`).
 
 **FR-3858, linha da tabela dividida** (FR-6202 da `154`):
 
@@ -461,13 +526,14 @@ desta spec precisa partir da `main` depois dele.
 | Onde | O que diz hoje | O que muda |
 |---|---|---|
 | `portal/obrigacoes.py`, `TITULO_ABERTA` e `TITULOS` | *"Você foi convocado!"* para toda chamada aberta | título por providência pendente (FR-6202) |
-| `portal/obrigacoes.py`, frase de conclusão | uma frase só sem tarefa | frase do próximo passo em Tc (FR-6205) |
+| `portal/obrigacoes.py`, frase de conclusão | uma frase só sem tarefa | a frase da conferência terminada em Tc, e só nele (FR-6205) |
 | `portal/obrigacoes.py`, texto do item `ITEM_COMPLEMENTADO` | *"Novo arquivo recebido em …, depois da correção pedida. A comissão vai conferir."* e as duas variantes | D-003 e D-005 (FR-6213) |
-| `portal/situacao.py`, `NAO_ATENDIMENTO_PODE_SER_REGISTRADO` nas duas montagens da ação | posta sempre que há vencimento e o prazo corre | só com providência pendente (FR-6209) |
+| `portal/situacao.py`, `NAO_ATENDIMENTO_PODE_SER_REGISTRADO` nas duas montagens da ação | posta sempre que há vencimento e o prazo corre | só com providência pendente (FR-6209); na montagem sem documento, tirar no ramo do Requerimento enviado e manter no de *"Siga as instruções do Edital"* (FR-6201) |
+| título da convocação que pede só o Requerimento | *"Você foi convocado!"* sempre | *"Acompanhe sua convocação"* depois do envio (FR-6201) |
 | `portal/views.py`, contexto da convocação (`consequencia`) e `portal/templates/portal/_chamada_da_convocacao.html` (`{% if o.prazo %}`) | a consequência aparece sempre que o prazo aparece | separar a condição do prazo da condição da consequência (FR-6208, FR-6209) |
 | `portal/templates/portal/acompanhamento.html` | `acao.consequencia` | idem |
 | `interface/views.py`, `ROTULO_DO_ITEM["COMPLEMENTADO"]` | *"Complementado, aguardando conferência"* | FR-6211 |
-| `interface/templates/interface/convocacao_documentos.html`, contagem | *"Reenviado(s), a conferir de novo"* | D-004 |
+| `interface/templates/interface/convocacao_documentos.html`, contagem | *"Reenviado(s), a conferir de novo"*, com o plural por filtro | *"1 reenviado — aguardando nova conferência"*, *"2 reenviados — …"*, sem "(s)" (D-004) |
 | `interface/conducao_da_convocacao.py`, passo `REENVIADO` | *"Conferir de novo: o candidato reenviou …"* | nomear o estado (FR-6212); a ação pode ficar |
 | `avisos/application/pendencias.py`, `COMPLEMENTADA` | *"documento reenviado, aguardando conferência"* | FR-6212; o que já foi gravado fica (FR-6215) |
 | `tests/test_vocabulario_dos_documentos_da_convocacao.py` | proíbe *enviou tudo*, *documento aprovad*… | acrescentar os nomes antigos da FR-6214 e os termos da FR-6207 |
@@ -476,57 +542,61 @@ desta spec precisa partir da `main` depois dele.
 
 ## Decisões
 
-### D-001 — Providência pendente é ter tarefa
+Todas do usuário, em 11/11/2026. Nenhuma está pendente.
 
-**Proposta, aguarda o usuário.** A projeção da `118` já separa o que a pessoa precisa fazer (as
-tarefas) do que está com a comissão e do que é opcional. Ler a providência pendente dali evita uma
-segunda regra que pudesse divergir do resumo *"Você ainda precisa…"*: a página nunca diz *"Acompanhe
-sua convocação"* e, logo abaixo, uma tarefa. O opcional fica fora porque não é obrigação; o
-facultativo pendente também, porque o texto dele já diz *"Se quiser"*.
+### D-001 — Providência pendente é ter tarefa obrigatória
+
+**Decisão do usuário (11/11/2026), aprovando a proposta.** A providência pendente deriva das tarefas
+obrigatórias do candidato; opcionais e itens com a comissão ficam fora (FR-6200). A projeção da
+`118` já separa o que a pessoa precisa fazer do que está com a comissão e do que é opcional, e ler
+dali evita uma segunda regra que divergisse do resumo *"Você ainda precisa…"*: a página nunca diz
+*"Acompanhe sua convocação"* e, logo abaixo, uma tarefa.
 
 *Alternativa descartada:* contar o opcional não enviado como providência — manteria a advertência
 para quem cumpriu tudo o que é obrigatório, que é o achado 20.
 
-### D-002 — A frase do próximo passo
+### D-002 — A frase da conferência terminada
 
-**Proposta, aguarda o usuário.** Em Tc: *"A comissão já conferiu seus documentos. Agora ela vai
-registrar o resultado desta convocação."* Diz o fato (conferiu) e quem age a seguir, sem dizer como
-ficou — o resultado só existe quando registrado (FR-6206), e cada cartão já diz *"Conferido: de
-acordo com o Edital"* ou *"Não se aplica"*.
+**Decisão do usuário (11/11/2026), com redação dele.** *"A conferência dos documentos obrigatórios
+terminou. Aguarde o registro do resultado desta convocação."* — **somente** quando todos os
+obrigatórios estiverem conferidos e não houver tarefa nem desfecho (FR-6205). A frase fala dos
+obrigatórios para não afirmar que os opcionais também foram conferidos. O resultado só existe quando
+registrado (FR-6206), e cada cartão continua dizendo *"Conferido: de acordo com o Edital"* ou *"Não
+se aplica"*.
 
-*Alternativa descartada:* manter a frase de conclusão em Tc. *"A comissão ainda vai concluir a
-análise"* deixa de ser o próximo passo real quando a conferência acabou (6ª decisão).
+*Redação proposta e substituída:* *"A comissão já conferiu seus documentos. Agora ela vai registrar
+o resultado desta convocação."* — dizia "seus documentos", o que incluiria os opcionais.
 
 ### D-003 — O cartão do reenviado no portal, com a chamada aberta
 
-**Proposta, aguarda o usuário.** *"Reenviado — aguardando nova conferência. Novo arquivo recebido em
-‹data›, às ‹hora›, depois da correção pedida."* O nome abre o cartão (7ª decisão); a segunda frase é
-a explicação que contextualiza a correção. *"A comissão vai conferir."* sai, porque o nome já o diz.
+**Decisão do usuário (11/11/2026), aprovando a proposta.** *"Reenviado — aguardando nova
+conferência. Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida."* (FR-6213). O
+nome abre o cartão (7ª decisão); a segunda frase é a explicação que contextualiza a correção. *"A
+comissão vai conferir."* sai, porque o nome já o diz.
 
-### D-004 — A contagem diz o nome no plural
+### D-004 — A contagem diz o nome, no singular e no plural
 
-**Proposta, aguarda o usuário.** Na página *Documentos da convocação* e na condução, *"‹N›
-reenviado(s) — aguardando nova conferência"*; nas contagens da FR-3607 da `115`, *reenviados*. A
-contagem é do mesmo fato, e um terceiro nome para ela recriaria o achado 23.
+**Decisão do usuário (11/11/2026), com ajuste dele.** Na página *Documentos da convocação* e na
+condução, *"1 reenviado — aguardando nova conferência"* e *"2 reenviados — aguardando nova
+conferência"*, com singular e plural naturais e sem "(s)" na tela; nas contagens da FR-3607 da
+`115`, *reenviados* (FR-6212). A contagem é do mesmo fato, e um terceiro nome para ela recriaria o
+achado 23.
 
 ### D-005 — Sem conferência possível, o nome no passado
 
-**Proposta, aguarda o usuário.** Com o Processo encerrado ou o desfecho registrado, ninguém vai
-conferir, e *"aguardando nova conferência"* seria falso. O portal diz *"Reenviado em ‹data›; não foi
-conferido antes do encerramento do Processo."* e *"Reenviado em ‹data›; não foi conferido antes do
-resultado."* — o mesmo verbo do nome, sem a espera.
+**Decisão do usuário (11/11/2026), aprovando a proposta.** Com o Processo encerrado ou o desfecho
+registrado, ninguém vai conferir, e *"aguardando nova conferência"* seria falso. O portal diz
+*"Reenviado em ‹data›; não foi conferido antes do encerramento do Processo."* e *"Reenviado em
+‹data›; não foi conferido antes do resultado."* (FR-6213). **O vencimento do prazo, sozinho, mantém
+*"aguardando"***, porque a conferência ainda pode ocorrer (FR-3588 da `115`).
 
-*Alternativa:* manter o nome inteiro também ali, pela letra da 7ª decisão. A spec propõe a variante
-porque a 5ª decisão pede que a tela não diga o que não vai acontecer.
+### D-006 — A chamada que não pede documento pelo portal
 
-## Perguntas ao usuário
+**Decisão do usuário (11/11/2026), respondendo à pergunta da spec** (FR-6201):
 
-### P-1 — A chamada que não pede documento pelo portal
-
-Na chamada sem nada pedido pelo portal, a ação é *"Siga as instruções do Edital para esta
-convocação."*: o que a pessoa precisa fazer acontece fora do sistema, e o sistema não sabe se foi
-feito. Na chamada que pede só o Requerimento, o Requerimento enviado é tudo o que o portal pede.
-
-**Recomendação:** (a) só o Requerimento, enviado → sem providência pendente, como na FR-6200; (b)
-nada pedido pelo portal → com providência pendente até o desfecho, como hoje. **Enquanto não houver
-resposta, os dois ficam como hoje** (FR-6201), e nenhuma tela muda nesses casos.
+- **Só o Requerimento pedido pelo portal:** ele conta como providência pendente até ser enviado.
+  Depois, *"Acompanhe sua convocação"*, sem a advertência do não atendimento. A frase da conferência
+  terminada não se aplica a esse caso, porque ele não tem documento a conferir.
+- **Nada pedido pelo portal:** mantém-se a orientação de seguir as instruções do Edital e o
+  comportamento atual até o desfecho — *"Você foi convocado!"* e a advertência na condição da
+  FR-1177 da `063` —, porque o sistema não consegue verificar o cumprimento externo.

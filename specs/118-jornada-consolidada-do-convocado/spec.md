@@ -499,11 +499,13 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   *"até ‹prazo›"* (FR-3749). Nenhuma frase MUST dizer que a pessoa enviou tudo, que está tudo certo,
   aceito, aprovado ou concluído.
 
-  **Acréscimo da `154`.** A frase de conclusão vale com algum obrigatório com a comissão, ou sem
-  obrigatório e sem nada conferido (FR-6204 da `154`). Sem tarefa, sem obrigatório com a comissão,
-  com algum obrigatório conferido e sem desfecho, a projeção MUST oferecer, no lugar dela, a frase do
-  próximo passo (FR-6205 da `154`), seguida da frase do opcional quando houver. A proibição da última
-  frase acima continua, e alcança o título *"Acompanhe sua convocação"* (FR-6207 da `154`).
+  **Acréscimo da `154`.** Com **todos** os obrigatórios conferidos (*conforme* ou *não se aplica*),
+  sem tarefa e sem desfecho, a projeção MUST oferecer, no lugar da frase de conclusão, a frase da
+  conferência terminada: *"A conferência dos documentos obrigatórios terminou. Aguarde o registro do
+  resultado desta convocação."*, seguida da frase do opcional quando houver (FR-6205 da `154`). Em
+  todo outro caso sem tarefa — algum obrigatório com a comissão, ou chamada sem obrigatório —, vale a
+  frase de conclusão acima (FR-6204 da `154`). A proibição da última frase acima continua, e alcança o
+  título *"Acompanhe sua convocação"* (FR-6207 da `154`).
 
   > **Redação anterior à `154`:** a mesma, sem este acréscimo.
 - **FR-3729**: A projeção MUST NOT produzir decisão. Ela MUST NOT inferir desfecho, perda de vaga,
@@ -734,8 +736,8 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   > recebido em ‹data›, às ‹hora›, depois da correção pedida. A comissão vai conferir."* | idem à
   > coluna *aberta* | *"Novo arquivo recebido em ‹data›; não foi conferido antes do encerramento do
   > Processo."* | *"Novo arquivo enviado em ‹data›; não foi conferido antes do resultado."* A linha
-  > nova vigora com a implementação da `154`, e os textos dela são propostas que aguardam o usuário
-  > (FR-6213 da `154`).
+  > nova vigora com a implementação da `154`, com os textos decididos pelo usuário em 11/11/2026
+  > (FR-6213 da `154`). O vencimento do prazo, sozinho, mantém *"aguardando"*.
 
   O facultativo recebido, aproveitado, reenviado ou conferido usa a linha do estado dele, com o
   selo *"Opcional"* (FR-3744). **O prazo não iniciado e a convocação sem vencimento prevalecem sobre

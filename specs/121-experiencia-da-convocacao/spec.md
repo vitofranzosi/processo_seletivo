@@ -292,6 +292,11 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   convocação não aparece no portal (FR-3981 da `125`). *Acréscimo da `154`, em 2026-11-11, que
   vigora com a implementação dela:* o título é *"Você foi convocado!"* com providência pendente do
   candidato, e *"Acompanhe sua convocação"* sem ela (FR-6202 da `154`).
+- **Chamada que não pede documento pelo portal** *(acrescido pela `154` em 2026-11-11, que vigora
+  com a implementação dela)*. Só com o Requerimento de Matrícula: *"Você foi convocado!"* e a
+  consequência até o envio; enviado, *"Acompanhe sua convocação"*, com o prazo e sem a consequência.
+  Sem nada pedido pelo portal: como hoje até o desfecho, com *"Siga as instruções do Edital para esta
+  convocação."* (FR-6201 da `154`).
 
   > **Redação anterior à `125`, preservada:** O título é *"Você foi convocado!"*; o cartão do prazo diz
   > só a frase da FR-3749 da `118`, sem data, sem dia da semana e sem contagem; a consequência não
