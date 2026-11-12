@@ -1,0 +1,339 @@
+105 objects imported automatically (use -v 2 for details).
+
+Editais: [('SIM-TREINAMENTO-001', 'SIM01/2026', 'EM_ELABORACAO'), ('SIM-TREINAMENTO-002', 'SIM02/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-003', 'SIM03/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-004', 'SIM04/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-005', 'SIM05/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-006', 'SIM06/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-007', 'SIM07/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-008', 'SIM08/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-009', 'SIM09/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-010', 'SIM10/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-011', 'SIM11/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-012', 'SIM12/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-013', 'SIM13/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-014', 'SIM14/2026', 'PUBLICADO'), ('SIM-TREINAMENTO-015', 'SIM15/2026', 'PUBLICADO')]
+
+====================================================================================================
+IDENTIDADE treino.presidencia ()
+
+  SIM-TREINAMENTO-002 Edital SIM02/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-003 Edital SIM03/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-004 Edital SIM04/2026 [PUBLICADO]  suas=1 outras=0
+    [sua      ] pendente  ordem       | Emitir a ordem | onde=Professor de Informática · Ampla concorr | resp=conduz
+
+  SIM-TREINAMENTO-005 Edital SIM05/2026 [PUBLICADO]  suas=2 outras=1
+    [sua      ] pendente  consolidar  | Consolidar 3 inscrições prontas | onde=Prova objetiva | resp=conduz
+    [sua      ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  avaliar     | Avaliar 5 inscrições distribuídas | onde=Prova objetiva | resp=avalia
+
+  SIM-TREINAMENTO-006 Edital SIM06/2026 [PUBLICADO]  suas=2 outras=0
+    [sua      ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [sua      ] pendente  relacao     | Congelar a relação | onde=Técnico em Informática (EaD) · Ampla con | resp=conduz
+
+  SIM-TREINAMENTO-007 Edital SIM07/2026 [PUBLICADO]  suas=2 outras=0
+    [sua      ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [sua      ] pendente  semente     | Observar a extração | onde=Técnico em Informática (EaD) | resp=conduz
+
+  SIM-TREINAMENTO-008 Edital SIM08/2026 [PUBLICADO]  suas=1 outras=2
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-009 Edital SIM09/2026 [PUBLICADO]  suas=2 outras=0
+    [sua      ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-010 Edital SIM10/2026 [PUBLICADO]  suas=2 outras=1
+    [sua      ] pendente  convocacao  | Convocar 3 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-011 Edital SIM11/2026 [PUBLICADO]  suas=2 outras=2
+    [sua      ] pendente  conferir    | Conferir os documentos de 1 convocação | onde=Professor de Informática · Ampla concorr | resp=confere
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-012 Edital SIM12/2026 [PUBLICADO]  suas=2 outras=2
+    [sua      ] pendente  conferir    | Conferir os documentos de 3 convocações | onde=Professor de Informática · Ampla concorr | resp=confere
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-013 Edital SIM13/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-014 Edital SIM14/2026 [PUBLICADO]  suas=2 outras=0
+    [sua      ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-015 Edital SIM15/2026 [PUBLICADO]  suas=2 outras=1
+    [sua      ] pendente  convocacao  | Convocar 2 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [sua      ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  RESUMO treino.presidencia: {'em_espera': 10, 'de_outro': 3, 'sua': 20}; 1157 consultas; 1.27s para 15 Editais
+  FAIXA 104 (0):
+
+====================================================================================================
+IDENTIDADE treino.avaliacao1 ()
+
+  SIM-TREINAMENTO-002 Edital SIM02/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-003 Edital SIM03/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-004 Edital SIM04/2026 [PUBLICADO]  suas=0 outras=1
+    [de_outro ] pendente  ordem       | Emitir a ordem | onde=Professor de Informática · Ampla concorr | resp=conduz
+
+  SIM-TREINAMENTO-005 Edital SIM05/2026 [PUBLICADO]  suas=1 outras=2
+    [sua      ] pendente  avaliar     | Avaliar 5 inscrições | onde=Prova objetiva | resp=avalia
+    [de_outro ] pendente  consolidar  | Consolidar 3 inscrições prontas | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-006 Edital SIM06/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  relacao     | Congelar a relação | onde=Técnico em Informática (EaD) · Ampla con | resp=conduz
+
+  SIM-TREINAMENTO-007 Edital SIM07/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  semente     | Observar a extração | onde=Técnico em Informática (EaD) | resp=conduz
+
+  SIM-TREINAMENTO-008 Edital SIM08/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-009 Edital SIM09/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-010 Edital SIM10/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 3 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-011 Edital SIM11/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 1 convocação | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-012 Edital SIM12/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 3 convocações | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-013 Edital SIM13/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-014 Edital SIM14/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-015 Edital SIM15/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 2 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  RESUMO treino.avaliacao1: {'em_espera': 10, 'de_outro': 22, 'sua': 1}; 1939 consultas; 1.99s para 15 Editais
+  FAIXA 104 (1):
+    avaliacao    Prova objetiva — Edital SIM05/2026       | Avaliar (5 pendentes) | Etapa de avaliação
+
+====================================================================================================
+IDENTIDADE treino.avaliacao2 ()
+
+  SIM-TREINAMENTO-002 Edital SIM02/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-003 Edital SIM03/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-004 Edital SIM04/2026 [PUBLICADO]  suas=0 outras=1
+    [de_outro ] pendente  ordem       | Emitir a ordem | onde=Professor de Informática · Ampla concorr | resp=conduz
+
+  SIM-TREINAMENTO-005 Edital SIM05/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  consolidar  | Consolidar 3 inscrições prontas | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  avaliar     | Avaliar 5 inscrições distribuídas | onde=Prova objetiva | resp=avalia
+
+  SIM-TREINAMENTO-006 Edital SIM06/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  relacao     | Congelar a relação | onde=Técnico em Informática (EaD) · Ampla con | resp=conduz
+
+  SIM-TREINAMENTO-007 Edital SIM07/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  semente     | Observar a extração | onde=Técnico em Informática (EaD) | resp=conduz
+
+  SIM-TREINAMENTO-008 Edital SIM08/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-009 Edital SIM09/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-010 Edital SIM10/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 3 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-011 Edital SIM11/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 1 convocação | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-012 Edital SIM12/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 3 convocações | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-013 Edital SIM13/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-014 Edital SIM14/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-015 Edital SIM15/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 2 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  RESUMO treino.avaliacao2: {'em_espera': 10, 'de_outro': 23}; 1939 consultas; 2.05s para 15 Editais
+  FAIXA 104 (0):
+
+====================================================================================================
+IDENTIDADE estudo.publicador ('publicador',)
+
+  SIM-TREINAMENTO-002 Edital SIM02/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-003 Edital SIM03/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-004 Edital SIM04/2026 [PUBLICADO]  suas=0 outras=1
+    [de_outro ] pendente  ordem       | Emitir a ordem | onde=Professor de Informática · Ampla concorr | resp=conduz
+
+  SIM-TREINAMENTO-005 Edital SIM05/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  consolidar  | Consolidar 3 inscrições prontas | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  avaliar     | Avaliar 5 inscrições distribuídas | onde=Prova objetiva | resp=avalia
+
+  SIM-TREINAMENTO-006 Edital SIM06/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  relacao     | Congelar a relação | onde=Técnico em Informática (EaD) · Ampla con | resp=conduz
+
+  SIM-TREINAMENTO-007 Edital SIM07/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  semente     | Observar a extração | onde=Técnico em Informática (EaD) | resp=conduz
+
+  SIM-TREINAMENTO-008 Edital SIM08/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-009 Edital SIM09/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-010 Edital SIM10/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 3 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-011 Edital SIM11/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 1 convocação | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-012 Edital SIM12/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 3 convocações | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-013 Edital SIM13/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-014 Edital SIM14/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-015 Edital SIM15/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 2 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  RESUMO estudo.publicador: {'em_espera': 10, 'de_outro': 23}; 1165 consultas; 0.80s para 15 Editais
+  FAIXA 104 (0):
+
+====================================================================================================
+IDENTIDADE estudo.julgador ('julgador',)
+
+  SIM-TREINAMENTO-002 Edital SIM02/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-003 Edital SIM03/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+
+  SIM-TREINAMENTO-004 Edital SIM04/2026 [PUBLICADO]  suas=0 outras=1
+    [de_outro ] pendente  ordem       | Emitir a ordem | onde=Professor de Informática · Ampla concorr | resp=conduz
+
+  SIM-TREINAMENTO-005 Edital SIM05/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  consolidar  | Consolidar 3 inscrições prontas | onde=Prova objetiva | resp=conduz
+    [de_outro ] pendente  distribuir  | Distribuir 8 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  avaliar     | Avaliar 5 inscrições distribuídas | onde=Prova objetiva | resp=avalia
+
+  SIM-TREINAMENTO-006 Edital SIM06/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  relacao     | Congelar a relação | onde=Técnico em Informática (EaD) · Ampla con | resp=conduz
+
+  SIM-TREINAMENTO-007 Edital SIM07/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  distribuir  | Distribuir 10 inscrições sem avaliador suficiente | onde=Análise de títulos | resp=conduz
+    [de_outro ] pendente  semente     | Observar a extração | onde=Técnico em Informática (EaD) | resp=conduz
+
+  SIM-TREINAMENTO-008 Edital SIM08/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-009 Edital SIM09/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-010 Edital SIM10/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 3 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  SIM-TREINAMENTO-011 Edital SIM11/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 1 convocação | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-012 Edital SIM12/2026 [PUBLICADO]  suas=0 outras=4
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [de_outro ] pendente  conferir    | Conferir os documentos de 3 convocações | onde=Professor de Informática · Ampla concorr | resp=confere
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+    [em_espera] aguarda   convocacao  | Resposta de 3 convocações | onde=Professor de Informática · Ampla concorr | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-013 Edital SIM13/2026 [PUBLICADO]  suas=0 outras=1
+    [em_espera] aguarda   distribuir  | Distribuir Prova objetiva; Distribuir Análise de títulos; Distribuir A | onde=Prova objetiva; Análise de títulos; Anál | resp= | ate=12/12 16:53
+
+  SIM-TREINAMENTO-014 Edital SIM14/2026 [PUBLICADO]  suas=0 outras=2
+    [de_outro ] pendente  corte       | Emitir o corte | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+
+  SIM-TREINAMENTO-015 Edital SIM15/2026 [PUBLICADO]  suas=0 outras=3
+    [de_outro ] pendente  convocacao  | Convocar 2 titulares | onde=Professor de Informática · Ampla concorr | resp=conduz
+    [de_outro ] pendente  ordem       | Emitir a ordem que declara que ninguém concorreu nesta lista | onde=Professor de Informática · PPP | resp=conduz
+    [em_espera] aguarda   resultado   | Publicar o resultado definitivo | onde=Professor de Informática · Ampla concorr | resp= | ate=17/11 23:59
+
+  RESUMO estudo.julgador: {'em_espera': 10, 'de_outro': 23}; 1179 consultas; 0.79s para 15 Editais
+  FAIXA 104 (0):

@@ -1,0 +1,15 @@
+
+
+treino.presidencia
+  atual         1080 consultas   1.16s  20 itens
+  R1            1081 consultas   0.76s  20 itens
+  R1+R2          873 consultas   0.59s  20 itens
+  R1+R2+R3       865 consultas   0.57s  20 itens
+  mesmos itens seus nas quatro montagens: True
+
+treino.avaliacao1
+  atual         1697 consultas   1.63s  1 itens
+  R1              56 consultas   0.08s  1 itens
+  R1+R2           38 consultas   0.08s  1 itens
+  R1+R2+R3        58 consultas   0.15s  1 itens
+  mesmos itens seus nas quatro montagens: True
