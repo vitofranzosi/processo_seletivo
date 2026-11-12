@@ -47,3 +47,13 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 - [X] T026a A assinatura da prévia cita a versão: as listas saem dela (FR-5430)
 - [X] T026b Desenho da revisão no `plan.md` (Fase E); `/speckit-analyze` com as correções I1 a I4 e B1 — FR-5430 revista, FR-5432 e US1/AC1 remetidas à FR-5445, UX-466, Status, `quickstart.md` e README —; `/speckit-converge` sem lacuna
 - [X] T027 `make lint check test-pg`; PR — suíte verde em 12/11 (19155 passed, 24 skipped); PR #507
+
+## Fase F — Code review do PR #507 (12/11/2026)
+
+O review rodou depois do merge do #507. As correções vão num PR próprio.
+
+- [X] T028 Achados 1 e 2: o nome público das listas em `dominio.nomes_das_listas`. O código entra quando o nome repete o de outra lista, inclusive o da ampla, e quando falta o nome; nunca o UUID. FR-5440a, com teste de unidade e de integração (Edital com "Ampla concorrência" sem apontamento)
+- [X] T029 [P] Achado 3: o conjunto de reservadas é calculado uma vez por Perfil em `projetar`, e não a cada inscrição
+- [X] T030 [P] Achado 4: `conteudo.nome_da_lista` usa a `AMPLA_CONCORRENCIA` da relação das inscrições, uma constante só
+- [X] T031 [P] Achado 5: o teste da prévia por lista lê a linha da tabela pelas células, e não pela indentação
+- [ ] T032 `make lint check test-pg`; PR

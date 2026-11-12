@@ -49,8 +49,9 @@ NAO_CONSTAM = {
     HOMOLOGACAO: "inscrições não homologadas",
 }
 
-# O nome público da ampla — o da divulgação do resultado (`conteudo.nome_da_lista`), e não o rótulo
-# de gestão dos recortes, que fala em "linha geral do quadro" para quem opera (FR-5440).
+# O nome público da ampla, **um só** para a relação das inscrições e para a divulgação do resultado
+# (`conteudo.nome_da_lista` o importa daqui) — e não o rótulo de gestão dos recortes, que fala em
+# "linha geral do quadro" para quem opera (FR-5440). Mora neste módulo porque ele é puro.
 AMPLA_CONCORRENCIA = "Ampla concorrência"
 
 # A frase que explica por que o mesmo nome aparece duas vezes (FR-5446). Sem ela, o cotista que se
@@ -100,6 +101,36 @@ def chave_de_ordem(nome, protocolo):
     return (sem_acento.casefold().strip(), protocolo or "")
 
 
+def nomes_das_listas(modalidades):
+    """O nome público de cada lista reservada de um Perfil — `[(modalidade_id, nome)]` (FR-5440a).
+
+    `modalidades` vem na ordem dos recortes, como `[(modalidade_id, nome, codigo)]`. Três regras,
+    e cada uma fecha um caminho pelo qual o ato publicaria o que não deve:
+
+    - **o nome publicado da Modalidade**, como a divulgação do resultado o diz;
+    - **o código quando falta o nome** — o Edital do acervo publicado antes da validação de nome.
+      O rótulo de gestão dos recortes cai no UUID nesse caso, e o UUID é identificador interno
+      (FR-5421) num ato que não se corrige;
+    - **o código entre parênteses quando o nome repete o de outra lista do Perfil**, inclusive o
+      da ampla. Um Edital que declara uma Modalidade "Ampla concorrência" sem apontá-la como a
+      ampla — o acervo anterior à `122` — teria duas listas "Ampla concorrência", uma com todos e
+      outra com quem a declarou: os "dois blocos homônimos" que a `021` corrigiu na gestão.
+
+    A comparação ignora caixa e acento, pela mesma chave da ordem dos nomes: "AMPLA CONCORRENCIA"
+    e "Ampla concorrência" são o mesmo título para quem lê.
+    """
+    usados = {chave_de_ordem(AMPLA_CONCORRENCIA, "")[0]}
+    nomes = []
+    for posicao, (modalidade_id, nome, codigo) in enumerate(modalidades, start=1):
+        nome, codigo = (nome or "").strip(), (codigo or "").strip()
+        publico = nome or codigo or f"Lista reservada {posicao}"
+        if chave_de_ordem(publico, "")[0] in usados:
+            publico = f"{publico} ({codigo})" if codigo else f"{publico} ({posicao})"
+        usados.add(chave_de_ordem(publico, "")[0])
+        nomes.append((str(modalidade_id), publico))
+    return nomes
+
+
 def projetar(*, natureza, inscricoes, resultados, perfis, listas=None):
     """A projeção de uma natureza sobre as inscrições enviadas.
 
@@ -118,6 +149,11 @@ def projetar(*, natureza, inscricoes, resultados, perfis, listas=None):
     `itens` — que é o que vira linha gravada, assinatura e divergência — e duas vezes nos grupos.
     """
     listas = listas or {}
+    # As reservadas dependem só do Perfil: um conjunto por Perfil, e não um por inscrição.
+    reservadas_do_perfil = {
+        str(perfil_id): {str(lista_id) for lista_id, _nome in declaradas}
+        for perfil_id, declaradas in listas.items()
+    }
     itens, pendentes = [], 0
     por_perfil = {}
     for inscricao in inscricoes:
@@ -139,9 +175,9 @@ def projetar(*, natureza, inscricoes, resultados, perfis, listas=None):
         # A ampla recebe todos; a reservada, quem a declarou — se ela for lista **nesta** versão.
         # A Modalidade apontada como a ampla, ou uma que a versão não declara, não está em
         # `listas`, e a inscrição fica só na ampla (FR-5441).
-        reservadas = {str(lista_id) for lista_id, _nome in listas.get(perfil_id, [])}
         modalidade = str(inscricao.get("modalidade_id") or "")
-        destinos = [None, *([modalidade] if modalidade in reservadas else [])]
+        reservada = modalidade in reservadas_do_perfil.get(perfil_id, ())
+        destinos = [None, *([modalidade] if reservada else [])]
         for destino in destinos:
             lista = grupo.setdefault(destino, {"constam": [], "nao": 0})
             if situacao == INDEFERIDA:
@@ -364,6 +400,7 @@ __all__ = [
     "etapas_de_analise",
     "eventos_de_recurso",
     "grupos_publicados",
+    "nomes_das_listas",
     "projetar",
     "regride",
     "tem_lista_reservada",

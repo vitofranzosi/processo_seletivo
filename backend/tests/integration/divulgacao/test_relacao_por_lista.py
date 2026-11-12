@@ -182,3 +182,37 @@ def test_o_ato_no_formato_anterior_a_revisao_continua_como_foi_publicado(
     assert "Ampla concorrência" not in texto
     pdf = client.get(reverse("portal:publicacao-das-inscricoes-documento", args=[ato.id]))
     assert pdf.content == bytes(ato.documento)
+
+
+def test_a_modalidade_ampla_sem_apontamento_nao_vira_uma_segunda_ampla(
+    gestor, api_client, manager_headers
+):
+    """FR-5440a: o Edital do acervo declara "Ampla concorrência" sem apontá-la como a ampla.
+
+    A regra dos recortes a trata como reservada — e o ato a mantém como lista, como a classificação
+    —, mas o título leva o código, para que o leitor não veja duas amplas.
+    """
+    seed = 1491
+    cenario = montar(
+        gestor,
+        api_client,
+        manager_headers,
+        seed=seed,
+        codigo=str(seed),
+        com_cotas=True,
+        apontar_a_ampla=False,
+    )
+    inscrever_no(cenario, 2, primeiro=651, modalidades={1: modalidade_ampla_apontada(seed)})
+
+    ato = publicar(cenario, "RECEBIDAS", chave="ampla-sem-apontamento")
+
+    # A ordem das reservadas é a da versão publicada, que lista as Modalidades pelo código; o que o
+    # caso prende é o título: uma só "Ampla concorrência", e a declarada distinguida pelo código.
+    titulos = list(_listas(ato))
+    assert titulos == [
+        "Ampla concorrência",
+        "Ampla concorrência (AC)",
+        "Pessoas com deficiência",
+        "Pretos, pardos e indígenas",
+    ]
+    assert "Ampla concorrência (AC) (1)" in texto_de(bytes(ato.documento))
