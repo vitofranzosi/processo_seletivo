@@ -163,8 +163,13 @@ duplicaria titularidade, CSRF e recusas.
 
 **O acesso expirado.** Sem identidade na sessão, a rota redireciona ao acesso, e o `fetch` recebe a
 página de acesso com 200 e `text/html`. O script trata **toda resposta que não seja JSON** como
-falha do lote: a 404, o acesso expirado; as demais, a frase genérica de hoje (FR-5610). O 413 do
-proxy cai aqui também — o lote para, e a frase diz o que chegou e o que não.
+falha do lote: a 404, o acesso expirado; as demais, a frase genérica de hoje (FR-5610).
+
+**O 413 do proxy não é caminho normal** *(revisto em 11/11, pela análise cruzada)*. Na primeira
+redação, o 413 parava o lote, contra a FR-5606: um arquivo acima de 12 MB impediria os seguintes. O
+arquivo acima do limite da aplicação não viaja mais (R-009), e o limite da aplicação (10 MiB) fica
+abaixo do do proxy (12 MB); um 413 só aparece com o proxy mal dimensionado, e aí é falha de
+configuração, tratada como as demais respostas que não são JSON.
 
 ### R-003 — A sessão acumula o lote, e a volta o lê de uma vez
 
@@ -211,9 +216,13 @@ tem o mesmo resumo da origem — o gatilho da `0005` da convocação o exige —
 **Decisão.** Expor o resumo SHA-256 do arquivo vigente na página do próprio titular.
 
 **Razão.** A página já oferece o próprio arquivo ("Ver o arquivo recebido"); o resumo não revela o
-conteúdo e só confirma a coincidência a quem já tem o mesmo arquivo. A página é da sessão do titular;
-a tarefa de implementação confere o `Cache-Control` dela e registra o que encontrar. Nada é gravado
-no navegador pelo script (FR-5611).
+conteúdo e só confirma a coincidência a quem já tem o mesmo arquivo. Nada é gravado no navegador
+pelo script (FR-5611).
+
+**O cabeçalho de cache, conferido em 11/11** (na análise cruzada, `main` em `ef568113`):
+`portal.views.convocacao` responde **sem** `Cache-Control: no-store`, ao contrário de outras telas do
+portal. É anterior a esta spec e vale para todo o conteúdo pessoal da tela, não só para o resumo; está
+em *Achados registrados* da spec, para decisão do usuário, e esta spec não o corrige.
 
 **Descartada.** *Perguntar ao servidor a cada escolha* — enviaria o resumo ao escolher, contra a
 D-003 e a FR-5618, e custaria uma requisição por escolha.
@@ -239,3 +248,35 @@ aviso (FR-5619). O envio nunca espera o cálculo.
 **Razão.** Sem biblioteca nova (FR-5614); disponível em todo navegador atual sob HTTPS e em
 `localhost`. Dez megabytes cabem na memória de um celular, e o cálculo é da ordem de dezenas de
 milissegundos.
+
+### R-009 — O arquivo acima do limite não viaja: o servidor recusa pelo tamanho declarado
+
+*(Acrescentada em 2026-11-11, pela análise cruzada do plano.)*
+
+**Decisão.** No lote, antes de enviar cada documento, o script compara `file.size` com o limite que
+o cartão publica (`data-limite-em-bytes`, de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES`). Acima dele, o
+`POST` vai **sem o arquivo**, com o campo `tamanho_declarado`; o ramo do lote recusa com a frase de
+hoje de `shared.arquivos.aceitar` (*"O arquivo tem X e o limite é Y. Reduza o tamanho e envie
+novamente."*), grava a recusa na sessão como as outras, e o lote segue para o próximo (FR-5606).
+
+**Razão.** A recusa precisa chegar à sessão para sobreviver à navegação da volta (R-004); sem isso,
+ela se perderia em silêncio, contra a FR-5600. A frase continua uma só, a do servidor. O tamanho
+declarado só **produz** recusa, nunca aceitação: quem mentir sobre ele recebe uma recusa no próprio
+cartão. Sem script e com N = 1 nada muda.
+
+**Descartadas.** *Deixar o arquivo viajar e tratar o 413*: o proxy recusa sem frase do sistema, e
+acima de 12 MB a recusa não chega à sessão. *Recusar só no navegador*: a recusa sumiria na navegação
+de volta, e a frase seria cópia em JavaScript.
+
+### R-010 — O documento em voo, na queda de conexão
+
+*(Acrescentada em 2026-11-11, pela análise cruzada do plano.)*
+
+**Decisão.** Quando o `fetch` rejeita por falha de rede, o documento daquela requisição é dito
+*"não é possível saber se chegou"*, e não *"não recebido"* (FR-5610 revista). Ele continua escolhido,
+como os não enviados. Os anteriores, com resposta JSON, são ditos recebidos ou recusados pelo que a
+resposta disse.
+
+**Razão.** A requisição pode ter chegado ao servidor e criado a apresentação, perdendo-se só a
+resposta. Afirmar "não recebido" seria falso nesse caso. Reenviar é seguro: o mesmo arquivo no mesmo
+item volta como *"Este arquivo já tinha sido recebido."* (`FR-3581` da `115`).

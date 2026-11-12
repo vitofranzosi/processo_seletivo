@@ -33,7 +33,8 @@ cd backend && PYTEST_ADDOPTS="tests/navegador/test_jornada_dos_documentos_da_con
 | 3 | Escolha os quatro e envie pelo 2º | "Enviando k de 4…"; volta à confirmação com os quatro, com data e hora | SC-1800, FR-5608 |
 | 4 | Quatro escolhidos, o 2º uma imagem | "Recebemos 3 de 4 documentos", link para o 2º; a recusa de foto no cartão dele | SC-1802 |
 | 5 | Dois acima do limite | Volta ao cartão do 1º, foco na recusa; a do 2º no cartão dele | FR-5609 |
-| 6 | Quatro escolhidos; corte a rede (DevTools, *Offline*) depois do 2º | A tela fica; diz os recebidos e os não; os dois restantes continuam escolhidos | FR-5610 |
+| 6 | Quatro escolhidos; corte a rede (DevTools, *Offline*) depois do 2º | A tela fica; diz os recebidos e os não enviados; o que estava em voo diz que não é possível saber; os restantes continuam escolhidos | FR-5610 |
+| 6a | Quatro escolhidos, o 2º com 15 MB | O 2º recusado com a frase de tamanho de hoje, sem subir o arquivo; os outros três recebidos | FR-5606, R-009 |
 | 7 | Quatro escolhidos; saia noutra aba; envie | Nenhum recebido; frase de acesso expirado; escolhas no lugar | US2-4 |
 | 8 | Dois escolhidos; envie por um cartão vazio | "Escolha um arquivo PDF antes de enviar." no vazio; escolhas no lugar | FR-5604 |
 | 9 | Três escolhidos; "Remover a escolha" em dois | O terceiro volta a "Enviar"; envia só ele | US3 |
