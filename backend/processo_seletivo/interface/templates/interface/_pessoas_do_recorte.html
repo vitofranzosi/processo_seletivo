@@ -1,0 +1,8 @@
+{% comment %} As pessoas do recorte (143, FR-5024). Parcial desde a 157: o registro sem recarga a troca no lugar (FR-6514). {% endcomment %}<nav class="pessoas-do-recorte" id="pessoas-do-recorte" aria-label="Pessoas convocadas deste recorte"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if vizinhas.posicao %}<span class="posicao">Pessoa {{ vizinhas.posicao }} de {{ vizinhas.total }}</span>{% endif %}
+  {% if vizinhas.anterior %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.anterior.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">← Anterior: {{ vizinhas.anterior.nome }}</a>{% endif %}
+  {% if vizinhas.seguinte %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.seguinte.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Seguinte: {{ vizinhas.seguinte.nome }} →</a>{% endif %}
+  {% if vizinhas.proxima_a_conferir %}<a class="acao" href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.proxima_a_conferir.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Próxima com documento a conferir: {{ vizinhas.proxima_a_conferir.nome }}</a>{% endif %}
+  <a href="{{ url_da_convocacao }}#chamadas">Todas as chamadas</a>
+  <a href="{{ url_da_convocacao }}{% if lista_id %}&amp;{% else %}?{% endif %}ordem=documentos#chamadas">Fila de conferência</a>
+</nav>

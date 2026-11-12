@@ -51,6 +51,42 @@ def entregar(documento, *, anexo=False, verificado=None):
     return marcar_como_privada(resposta)
 
 
+def entregar_e_registrar_ao_fim(documento, *, anexo=False, verificado, ao_fim):
+    """Serve a cópia verificada e chama `ao_fim()` **só depois do último bloco** (157, FR-6544).
+
+    **A abertura é o acesso ao arquivo vigente** (decisão do usuário de 11/11/2026): o servidor
+    autorizou, conferiu o resumo e entregou o arquivo inteiro. `entregar`, acima, devolve a resposta
+    e a vista grava a consulta antes de sair o primeiro byte — e o pedido que caía no meio virava
+    abertura, e abertura é o que autoriza o "conforme" (FR-3611 da `115`). Aqui o registro mora no
+    fim da entrega: se o navegador desiste, o servidor web para de iterar, o gerador é fechado no
+    meio, e `ao_fim` nunca roda. Nada disso diz que o navegador mostrou o arquivo, nem que alguém o
+    leu: só que ele foi entregue.
+
+    **Um gerador, e não o arquivo.** Com um objeto de arquivo, a `FileResponse` usa o
+    `wsgi.file_wrapper` — o `sendfile` do servidor —, que entrega sem passar pelo Python, e o fim da
+    entrega ficaria invisível daqui. Os cabeçalhos são os de `entregar`.
+    """
+    from django.http import StreamingHttpResponse
+    from django.utils.http import content_disposition_header
+
+    verificado.seek(0, 2)
+    tamanho = verificado.tell()
+    verificado.seek(0)
+
+    def blocos():
+        try:
+            while bloco := verificado.read(BLOCO):
+                yield bloco
+            ao_fim()
+        finally:
+            verificado.close()
+
+    resposta = StreamingHttpResponse(blocos(), content_type="application/pdf")
+    resposta["Content-Length"] = str(tamanho)
+    resposta["Content-Disposition"] = content_disposition_header(anexo, documento.nome_original)
+    return marcar_como_privada(resposta)
+
+
 #: A frase do arquivo que não está onde o registro diz (117, FR-3695). A mesma em toda tela.
 ARQUIVO_INDISPONIVEL = (
     "Arquivo indisponível. O registro do documento existe, mas o arquivo não pôde ser lido. "

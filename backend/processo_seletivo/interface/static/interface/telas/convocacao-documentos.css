@@ -39,3 +39,19 @@
 .situacao-da-convocacao.tom-espera{border-left-color:var(--amarelo)}
 .situacao-da-convocacao .resumo{margin:.5rem 0}
 .volta-da-conferencia{margin-top:1.5rem}
+
+/* A confirmação do registro, dentro do cartão que acabou de ser registrado (157, UX-642): o que foi
+   registrado e o passo seguinte, no lugar em que a pessoa está olhando. */
+.confirmacao-da-conferencia{margin:.75rem 0;padding:.75rem 1rem;border-left:4px solid var(--verde);
+  background:var(--branco)}
+.confirmacao-da-conferencia p{margin:.25rem 0}
+/* O pedido de aviso de uma pessoa, ao fim da conferência dela (157, D-008). */
+.pedido-de-aviso{margin:.5rem 0 0}
+.pedido-de-aviso .acoes{margin:.25rem 0 0}
+/* A ajuda sobre a abertura do arquivo, recolhida dentro do formulário (157, UX-645, UX-652). */
+.ajuda-da-conferencia{margin:.5rem 0}
+.ajuda-da-conferencia p{margin:.25rem 0;color:var(--texto-fraco)}
+
+/* A mensagem da falha que não chegou ao comando (157, FR-6518): vazia, não ocupa lugar nem desenha
+   a faixa de erro. */
+.confirmar .erro:empty{display:none}

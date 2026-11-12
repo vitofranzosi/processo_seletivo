@@ -199,8 +199,9 @@ def test_c11(client, cenario, settings):
         {"lista": "", "chave": f"{chave}-avisar-pendencias"},
     )
     cartao = _cartao(_abrir(client, edital, marco_id).content.decode(), bernardo.id)
-    assert "Aviso de pendência registrado em" in cartao
-    assert "ainda não foi enviado" in cartao
+    # Os três grupos da situação do aviso (157, FR-6543): solicitado, ainda sem envio.
+    assert "Aviso solicitado em" in cartao
+    assert "aguardando envio" in cartao
     assert "pode ser pedido agora" not in cartao
 
     # Momento 3: o envio. **As tentativas gravadas fora da ordem do número** (revisão do #453,
@@ -208,7 +209,7 @@ def test_c11(client, cenario, settings):
     # pelo número; lida na ordem em que o banco a devolvesse, a tela diria "falha temporária".
     _tentativas_fora_de_ordem(bernardo)
     cartao = _cartao(_abrir(client, edital, marco_id).content.decode(), bernardo.id)
-    assert "aceito pelo servidor de correio em" in cartao
+    assert "Aviso enviado em" in cartao and "aceito pelo servidor de correio" in cartao
     assert "entregue" not in cartao
 
     # A página dos documentos da mesma pessoa: o lugar, a situação e as vizinhas (FR-5019 a
@@ -218,7 +219,7 @@ def test_c11(client, cenario, settings):
     ).content.decode()
     assert "<dt>Perfil</dt>" in pagina and "<dt>Lista</dt>" in pagina
     assert "Situação desta convocação" in pagina
-    assert "aceito pelo servidor de correio em" in pagina
+    assert "aceito pelo servidor de correio" in pagina
     assert "Pessoa 2 de 3" in pagina
     assert f"/convocacao/{alice.id}/documentos" in pagina
     assert f"/convocacao/{cecilia.id}/documentos" in pagina

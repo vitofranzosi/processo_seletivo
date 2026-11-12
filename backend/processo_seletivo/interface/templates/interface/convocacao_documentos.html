@@ -1,6 +1,6 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Documentos da convocação — {{ inscricao.protocolo }}{% endblock %}
-{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-documentos.css' %}">{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/convocacao.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-documentos.css' %}"><link rel="stylesheet" href="{% estatico 'interface/grupos/visualizador.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Convocação</a> › <span aria-current="page">Documentos</span></nav>{% endblock %}
 {% block conteudo %}
 <h1>Documentos da convocação</h1>
@@ -25,14 +25,7 @@ pastilha do cartão da chamada.
 com documento a conferir, e a volta às chamadas e à fila de conferência. Depois de conferir, a
 volta levava ao topo da convocação, e a pessoa seguinte ficava a uma rolagem inteira.
 {% endcomment %}
-<nav class="pessoas-do-recorte" id="pessoas-do-recorte" aria-label="Pessoas convocadas deste recorte">
-  {% if vizinhas.posicao %}<span class="posicao">Pessoa {{ vizinhas.posicao }} de {{ vizinhas.total }}</span>{% endif %}
-  {% if vizinhas.anterior %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.anterior.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">← Anterior: {{ vizinhas.anterior.nome }}</a>{% endif %}
-  {% if vizinhas.seguinte %}<a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.seguinte.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Seguinte: {{ vizinhas.seguinte.nome }} →</a>{% endif %}
-  {% if vizinhas.proxima_a_conferir %}<a class="acao" href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.proxima_a_conferir.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Próxima com documento a conferir: {{ vizinhas.proxima_a_conferir.nome }}</a>{% endif %}
-  <a href="{{ url_da_convocacao }}#chamadas">Todas as chamadas</a>
-  <a href="{{ url_da_convocacao }}{% if lista_id %}&amp;{% else %}?{% endif %}ordem=documentos#chamadas">Fila de conferência</a>
-</nav>
+{% include "interface/_pessoas_do_recorte.html" %}
 
 {% comment %}
 **Conferir é juízo sobre um documento, e não sobre a pessoa** (115, FR-3585). Cada item tem as
@@ -57,142 +50,36 @@ aviso são os do cartão desta chamada na convocação. Pendência registrada n�
 o gesto do aviso é do recorte e mora na convocação (D-006); o desfecho também, no cartão desta
 pessoa, onde o formulário vem aberto quando é o passo (D-005).
 {% endcomment %}
-<section class="situacao-da-convocacao tom-{{ linha.passo.tom }}" id="situacao-da-convocacao" aria-labelledby="titulo-da-situacao">
-  <h2 id="titulo-da-situacao">Situação desta convocação</h2>
-  <p class="passo-da-chamada"><span class="rotulo-do-passo">{% if linha.passo.tom == "feito" %}Situação{% else %}Próximo passo{% endif %}</span> {{ linha.passo.frase }}
-    {% if linha.passo.acao == "conferir" and pode_conferir and primeiro_a_conferir %}<a class="acao acao-do-passo" href="#item-{{ primeiro_a_conferir.item.id }}">Ir ao primeiro documento a conferir</a>
-    {% elif linha.passo.acao == "desfecho" and pode_emitir %}<a class="acao acao-do-passo" href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">Registrar o desfecho desta convocação</a>
-    {% elif linha.passo.acao == "desfecho" or linha.passo.acao == "emitir" %}<span class="ajuda">É ato de quem conduz a convocação{% if pode_emitir %}: <a href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">abrir esta pessoa na convocação</a>{% endif %}.</span>{% endif %}</p>
-  {% if linha.aviso %}<p class="aviso-da-pendencia">{{ linha.aviso.frase_da_pendencia }} {{ linha.aviso.frase_do_aviso }}{% if linha.aviso.oferece_o_aviso %} <a href="{{ url_da_convocacao }}#avisar-pendencias">Ir ao aviso das pessoas com documento pendente</a> <span class="ajuda">— o gesto alcança todas as pessoas com pendência deste recorte, no máximo um aviso por pessoa por dia.</span>{% endif %}</p>{% endif %}
-  {% with c=leitura.contagens %}
-  <ul class="resumo" aria-label="Documentos pedidos nesta convocação">
-    <li><strong>{{ c.conformes }}</strong>Conforme{{ c.conformes|pluralize }}</li>
-    <li><strong>{{ c.recebidos }}</strong>Recebido{{ c.recebidos|pluralize }}, a conferir</li>
-    {% if c.complementados %}<li><strong>{{ c.complementados }}</strong>Reenviado{{ c.complementados|pluralize }}, a conferir de novo</li>{% endif %}
-    <li><strong>{{ c.pendentes }}</strong>Pendente{{ c.pendentes|pluralize }}</li>
-    <li><strong>{{ c.a_apresentar }}</strong>A apresentar</li>
-    {% if c.nao_se_aplica %}<li><strong>{{ c.nao_se_aplica }}</strong>Não se aplica após análise</li>{% endif %}
-  </ul>
-  {% endwith %}
-<p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
-{% if leitura.pendencias_para_incluir and not desfecho %}
-<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme, ou como não se aplica quando o Edital publicou a condição — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
-{% endif %}
-{% if leitura.facultativos_sem_conferencia and not desfecho %}
-<p class="nota">Documento facultativo recebido e ainda não conferido: {% for lido in leitura.facultativos_sem_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. Isso não impede o desfecho.</p>
-{% endif %}
-</section>
+{% include "interface/_situacao_dos_documentos.html" %}
 
+{% comment %}
+**O documento ao lado do formulário** (157, FR-6505; o padrão da Mesa, D-001). O painel vem **antes**
+no DOM, para a tabulação seguir a ordem visual, e fica `hidden` até alguém abrir um documento: nada
+carrega sozinho (FR-6501). Em tela larga, o visualizador o mostra à esquerda; abaixo dela, o arquivo
+abre fora da página, e a volta relê a marca e oferece o retorno ao ponto de conferência (FR-6527,
+FR-6528). Sem script, os links abrem em aba própria e o registro recarrega a página, como antes.
+
+A segunda linha da barra diz de quem é o documento (UX-640): o painel nunca mostra um arquivo sem
+dizer de quem ele é.
+{% endcomment %}
+<div class="trabalho-com-documento" data-visualizador>
+<aside class="painel-documento" id="painel-documento" hidden data-painel aria-labelledby="painel-documento-titulo">
+  <div class="barra-do-painel">
+    <h2 id="painel-documento-titulo" tabindex="-1" data-titulo-do-painel>Documento</h2>
+    <p class="identificacao-do-documento" data-identificacao>{{ inscricao.nome }} · {{ inscricao.protocolo }}</p>
+  </div>
+  <p class="texto-do-painel" data-texto-do-painel></p>
+  <iframe id="painel-documento-quadro" data-quadro title="Documento" src="about:blank"></iframe>
+</aside>
+<div class="lista-da-conferencia">
 {% for lido in leitura.pedidos %}
-<article class="recorte documento-da-convocacao" id="item-{{ lido.item.id }}" aria-labelledby="item-titulo-{{ forloop.counter }}">
-  <h2 id="item-titulo-{{ forloop.counter }}">{{ lido.nome }}{% if not lido.obrigatorio %} <span class="nenhuma">(facultativo)</span>{% endif %}
-    <span class="situacao {% if lido.estado == 'CONFORME' %}s-PUBLICADO{% elif lido.estado == 'NAO_SE_APLICA' %}s-NAO_SE_APLICA{% elif lido.estado == 'PENDENTE' %}s-EM_REVISAO{% elif lido.estado == 'A_APRESENTAR' %}s-CANCELADO{% else %}s-EM_ELABORACAO{% endif %}">{% for chave, rotulo in rotulo_do_item.items %}{% if chave == lido.estado %}{{ rotulo }}{% endif %}{% endfor %}{% if lido.sem_condicao_publicada %} — registrado sem condição publicada{% endif %}</span></h2>
-  {% comment %}
-  A condição de exigência, com o texto que o Edital publicou (131, FR-4454, FR-4459). É o que
-  fundamenta o "não se aplica", junto do motivo; sem ela, o documento é exigido de todos, e a opção
-  nem aparece.
-  {% endcomment %}
-  {% if lido.condicao %}<p class="condicao-publicada">Condição publicada: {{ lido.condicao }}.</p>{% endif %}
-  {% if lido.sem_condicao_publicada and not desfecho %}<p class="nota">Este "não se aplica" foi registrado num documento que o Edital exige de todos, e não atende ao aceite. Registre outra conferência: conforme ou pendente.</p>{% endif %}
-  {% if lido.instrucao %}<p class="nota">{{ lido.instrucao }}</p>{% endif %}
-  {% if lido.exigencia_mudou %}<p class="nota">A exigência deste documento mudou desde a apresentação de origem.</p>{% endif %}
-
-  {% if lido.apresentacoes %}
-  <ol class="versoes" aria-label="Versões apresentadas">
-    {% for apresentacao in lido.apresentacoes %}
-    <li>
-      <span>Versão {{ apresentacao.numero }}{% if forloop.last %} (vigente){% endif %} —
-      {% if apresentacao.documento_da_inscricao_id %}documento enviado na inscrição em {{ apresentacao.documento_da_inscricao.uploaded_at|date:"d/m/Y H:i" }}
-      {% elif apresentacao.apresentacao_de_origem_id %}aproveitado da chamada anterior, apresentado em {{ apresentacao.apresentacao_de_origem.apresentado_em|date:"d/m/Y H:i" }}
-      {% else %}apresentado em {{ apresentacao.apresentado_em|date:"d/m/Y H:i" }}{% endif %}</span>
-      <a class="acao" href="{% url 'interface:documento-da-convocacao' edital.id marco_id raiz.id apresentacao.id %}" target="_blank" rel="noopener">Abrir</a>
-      <a class="acao secundaria" href="{% url 'interface:documento-da-convocacao' edital.id marco_id raiz.id apresentacao.id %}?baixar=1">Baixar</a>
-      {% if apresentacao.id in abertas_por_voce %}<span class="aberto-por-voce">aberto por você</span>{% endif %}
-    </li>
-    {% endfor %}
-  </ol>
-  {% else %}
-  <p class="nenhuma">Nada apresentado.</p>
-  {% endif %}
-
-  {% if lido.conferencias %}
-  <details class="como-preencher">
-    <summary>Conferências registradas ({{ lido.conferencias|length }})</summary>
-    <ul class="conferencias">
-      {% for conferencia in lido.conferencias %}
-      <li>{{ conferencia.get_resultado_display }} — {% nome_de_pessoa conferencia.conferido_por %}, unidade {{ conferencia.unidade_de_atuacao }}, em {{ conferencia.conferido_em|date:"d/m/Y H:i" }}{% if conferencia.apresentacao_id %}, versão {{ conferencia.apresentacao.numero }}{% endif %}{% if conferencia.motivo %}: {{ conferencia.motivo }}{% endif %}{% if conferencia.motivo_da_substituicao %} (revisão: {{ conferencia.motivo_da_substituicao }}){% endif %}</li>
-      {% endfor %}
-    </ul>
-  </details>
-  {% endif %}
-
-  {% if pode_conferir %}
-  {% comment %}
-  Aberto só quando há versão esperando conferência: nos itens já julgados, o formulário recolhido
-  é a revisão, e não o trabalho do dia. E aberto quando a última conferência deste item foi
-  recusada: a recusa mora dentro dele.
-  {% endcomment %}
-  <details class="como-preencher" {% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" or recusa.item == lido.item.id %}open{% endif %}>
-    <summary>{% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" %}Conferir a versão {{ lido.vigente.numero }}{% elif lido.conferencias %}Registrar outra conferência{% else %}Conferir este documento{% endif %}</summary>
-  <form method="post" action="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" class="confirmar">
-    {% csrf_token %}
-    <input type="hidden" name="lista" value="{{ lista_id }}">
-    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ forloop.counter }}">
-    {% if lido.vigente %}<input type="hidden" name="apresentacao" value="{{ lido.vigente.id }}">{% endif %}
-    {% comment %}
-    **A recusa no lugar do gesto** (FR-3611). Ficava no topo da página, e o endereço levava a tela
-    ao cartão: a recusa existia e ninguém a via. Recebe o foco ao carregar, e oferece abrir a versão
-    só quando é a abertura que falta.
-    {% endcomment %}
-    {% if recusa.item == lido.item.id %}
-    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ lido.item.id }}"><strong>A conferência não foi registrada.</strong> {{ recusa.detalhe }}{% if recusa.falta_abrir and lido.vigente and lido.vigente.id not in abertas_por_voce %} <a href="{% url 'interface:documento-da-convocacao' edital.id marco_id raiz.id lido.vigente.id %}" target="_blank" rel="noopener">Abrir a versão {{ lido.vigente.numero }}</a>{% endif %}</p>
-    {% endif %}
-    <fieldset class="opcoes">
-      <legend>Resultado {% if lido.vigente %}da versão {{ lido.vigente.numero }}{% endif %}</legend>
-      {% comment %}
-      **Antes do clique, e não só na recusa** (FR-3611, FR-4460): o "conforme" — e o "não se
-      aplica", quando há arquivo — só se registra depois que quem confere abre a versão. A frase é
-      a do carregamento da página: aberta em outra aba, a versão só perde a frase ao recarregar, e o
-      comando aceita assim mesmo.
-      {% endcomment %}
-      {% if lido.vigente and lido.vigente.id not in abertas_por_voce %}
-      <p class="ajuda" id="abertura-{{ forloop.counter }}">Você ainda não abriu a versão {{ lido.vigente.numero }}. O «conforme»{% if lido.admite_nao_se_aplica %} e o «não se aplica»{% endif %} só se registra{% if lido.admite_nao_se_aplica %}m{% endif %} depois de abri-la.</p>
-      {% endif %}
-      {% if lido.vigente %}
-      <p class="opcao"><input type="radio" id="conforme-{{ forloop.counter }}" name="resultado" value="CONFORME" required{% if recusa.item == lido.item.id and recusa.resultado == "CONFORME" %} checked{% endif %}{% if lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ forloop.counter }}"{% endif %}>
-        <label for="conforme-{{ forloop.counter }}">Conforme ao exigido pelo Edital</label></p>
-      {% endif %}
-      <p class="opcao"><input type="radio" id="pendente-{{ forloop.counter }}" name="resultado" value="PENDENTE" required{% if recusa.item == lido.item.id and recusa.resultado == "PENDENTE" %} checked{% endif %}>
-        <label for="pendente-{{ forloop.counter }}">Pendente</label></p>
-      {% if lido.admite_nao_se_aplica %}
-      <p class="opcao"><input type="radio" id="nao-se-aplica-{{ forloop.counter }}" name="resultado" value="NAO_SE_APLICA" required{% if recusa.item == lido.item.id and recusa.resultado == "NAO_SE_APLICA" %} checked{% endif %}{% if lido.vigente and lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ forloop.counter }}"{% endif %}>
-        <label for="nao-se-aplica-{{ forloop.counter }}">Não se aplica: a condição publicada não alcança esta pessoa</label></p>
-      {% endif %}
-    </fieldset>
-    <p class="campo">
-      {% if lido.admite_nao_se_aplica %}
-      <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente e não se aplica. No "não se aplica", que fato da pessoa a põe fora da condição? A pessoa convocada lê este texto.)</span></label>
-      {% else %}
-      <label for="motivo-{{ forloop.counter }}">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
-      {% endif %}
-      <textarea id="motivo-{{ forloop.counter }}" name="motivo" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo }}{% endif %}</textarea>
-    </p>
-    {% comment %}
-    O motivo da revisão: sobre a mesma versão (FR-3586 da `115`), e sempre que o "não se aplica"
-    entra ou sai, haja ou não arquivo (131, FR-4462).
-    {% endcomment %}
-    {% if lido.conferencia and lido.vigente and lido.conferencia.apresentacao_id == lido.vigente.id or lido.conferencia and lido.admite_nao_se_aplica or lido.conferencia and lido.estado == "NAO_SE_APLICA" %}
-    <p class="campo">
-      <label for="revisao-{{ forloop.counter }}">Por que mudar a conferência desta versão</label>
-      <textarea id="revisao-{{ forloop.counter }}" name="motivo_da_substituicao" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo_da_substituicao }}{% endif %}</textarea>
-    </p>
-    {% endif %}
-    <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
-  </form>
-  </details>
-  {% endif %}
-</article>
+{% include "interface/_documento_da_convocacao.html" %}
 {% endfor %}
+</div>
+</div>
+<p class="oculto" role="status" aria-live="polite" data-anuncio></p>
 
 <p class="volta-da-conferencia"><a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Voltar à convocação</a> · <a href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">Esta pessoa na convocação</a>{% if vizinhas.proxima_a_conferir %} · <a href="{% url 'interface:documentos-da-convocacao' edital.id marco_id vizinhas.proxima_a_conferir.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Próxima com documento a conferir</a>{% endif %}</p>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+<script src="{% static 'interface/visualizador.js' %}" defer></script>
 {% endblock %}

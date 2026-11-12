@@ -95,6 +95,17 @@ class Selecao:
         }
 
 
+def proximo_dia_do_pedido(agora):
+    """O dia local em que um novo pedido de aviso pode ser feito por quem já foi avisada hoje.
+
+    Só para o texto (157, FR-6541, UX-650): nada é agendado para esse dia, e o pedido continua
+    sendo um gesto de quem confere.
+    """
+    from datetime import timedelta
+
+    return (inicio_do_dia(agora) + timedelta(days=1)).date()
+
+
 def inicio_do_dia(agora):
     """O começo do dia local da instalação: o "por dia" do limite é o do calendário."""
     fuso = ZoneInfo(settings.TIME_ZONE)
@@ -151,7 +162,7 @@ def _raizes_avisadas_hoje(convocacoes, *, agora):
     return {raiz.id for raiz in raizes.values()}
 
 
-def selecionar(*, edital, perfil_id, marco_id, lista_id, agora, conducao=None):
+def selecionar(*, edital, perfil_id, marco_id, lista_id, agora, conducao=None, convocacao_id=None):
     """Quem o gesto alcança neste recorte, agora, e quem fica de fora (FR-4606 a FR-4608).
 
     **Em número fixo de consultas**: as convocações do recorte com desfechos e comunicações, a
@@ -161,6 +172,10 @@ def selecionar(*, edital, perfil_id, marco_id, lista_id, agora, conducao=None):
     `conducao` é o que a tela de condução já leu — `{"convocacoes", "raizes", "leituras"}`, as
     três da mesma fotografia —, para que a prévia não leia o recorte e as listas uma segunda vez a
     cada abertura da tela. O gesto não a passa: ele relê tudo sob a trava.
+
+    `convocacao_id` é o **recorte de uma pessoa** (157, FR-6537; FR-4603 da `134`, revista): a
+    convocação vigente dela. A regra é a mesma — as exclusões, o dia, os avisados hoje pelo recorte
+    inteiro —, só a seleção para nela.
     """
     from processo_seletivo.convocacao.application import documentos
     from processo_seletivo.convocacao.application.selectors import (
@@ -179,6 +194,8 @@ def selecionar(*, edital, perfil_id, marco_id, lista_id, agora, conducao=None):
         todas = conducao["convocacoes"]
         em_vigor = vigentes(todas)
         raizes, leituras = conducao["raizes"], conducao["leituras"]
+    if convocacao_id is not None:
+        em_vigor = [vigente for vigente in em_vigor if vigente.id == convocacao_id]
     candidatas = []
     for vigente in em_vigor:
         pendentes, complementados = _pendentes(leituras.get(raizes[vigente.id].id))
@@ -332,8 +349,14 @@ def avisar_pendencias(
     endereco_do_portal,
     idempotency_key,
     correlation_id,
+    convocacao_id=None,
 ):
     """O gesto: grava um aviso de pendência por pessoa alcançada, e não envia nada (FR-4618).
+
+    Com `convocacao_id`, o **pedido de uma pessoa** (157, D-008; FR-4603 da `134`, revista): o
+    mesmo comando, a mesma trava, a mesma autorização, o mesmo limite de um por dia — o lote e o
+    pedido individual se enxergam, porque gravam o mesmo aviso. A recusa diz o motivo daquela
+    pessoa, e a trilha diz que o recorte foi de uma pessoa (FR-4620 da `134`, acrescida).
 
     **A ordem dos comandos de aviso** (`comando_de_aviso`): a chave, a transação, a trava do
     Processo filtrado pelo escopo, a autorização, o estado do Processo e a reserva. A autorização é
@@ -378,14 +401,24 @@ def avisar_pendencias(
                 "edital": str(edital.id),
                 "marco": str(marco_id),
                 "lista": str(lista_id or ""),
+                **({"convocacao": str(convocacao_id)} if convocacao_id else {}),
             },
         )
         if reserva.response_status is not None:
             return reserva.result_payload
         selecao = selecionar(
-            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id, agora=agora
+            edital=edital,
+            perfil_id=perfil_id,
+            marco_id=marco_id,
+            lista_id=lista_id,
+            agora=agora,
+            convocacao_id=convocacao_id,
         )
         alcancadas = selecao.alcancadas
+        if not alcancadas and convocacao_id is not None:
+            raise DomainError(
+                nomes.AVISO_SEM_PENDENCIA_A_AVISAR, _por_que_nao_esta(selecao, agora=agora), 409
+            )
         if not alcancadas:
             # Dentro da transação: a reserva desfaz junto, e o próximo clique, com outra lista,
             # não encontra uma chave "concluída" sem nada gravado (FR-4609).
@@ -446,7 +479,12 @@ def avisar_pendencias(
             now=agora,
             correlation_id=correlation_id,
             reason=(
-                f"Aviso de pendência documental na chamada do marco {marco_id}"
+                (
+                    "Pedido de aviso de pendência documental de uma pessoa"
+                    if convocacao_id
+                    else "Aviso de pendência documental"
+                )
+                + f" na chamada do marco {marco_id}"
                 f"{f', lista {lista_id}' if lista_id else ''}: {len(avisos)} aviso(s) "
                 f"registrado(s) para envio; fora: {exclusoes}."
             ),
@@ -456,11 +494,30 @@ def avisar_pendencias(
                 "lista": str(lista_id or ""),
                 "avisos": [str(aviso.id) for aviso in avisos],
                 **resumo,
+                **(
+                    {"recorte": "pessoa", "convocacao": str(convocacao_id)}
+                    if convocacao_id
+                    else {"recorte": "chamada"}
+                ),
             },
         )
         declarado = {**resumo, "avisos": [str(aviso.id) for aviso in avisos]}
         finish_batch(reserva, 201, declarado)
         return declarado
+
+
+def _por_que_nao_esta(selecao, *, agora):
+    """A recusa do pedido de uma pessoa: o motivo dela, e quando o tempo o resolve (FR-6541)."""
+    if not selecao.pessoas:
+        return "O aviso não alcança esta pessoa agora: não há documento pendente."
+    motivo = selecao.pessoas[0].exclusao
+    if motivo == JA_AVISADA_HOJE:
+        dia = proximo_dia_do_pedido(agora)
+        return (
+            "Esta pessoa já foi avisada hoje nesta chamada. Um novo pedido poderá ser feito a "
+            f"partir de {dia:%d/%m/%Y}."
+        )
+    return f"O aviso não alcança esta pessoa agora: {motivo}."
 
 
 def _por_que_ninguem(selecao):
@@ -488,5 +545,6 @@ __all__ = [
     "inicio_do_dia",
     "motivo_para_nao_enviar",
     "previa",
+    "proximo_dia_do_pedido",
     "selecionar",
 ]

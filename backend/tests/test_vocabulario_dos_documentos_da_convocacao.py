@@ -96,7 +96,9 @@ def test_a_conducao_diz_apto_para_formalizacao():
 
 
 def test_a_conferencia_diz_conforme_ao_exigido():
+    # O formulário saiu da página para o cartão de cada item na 157
+    # (`_documento_da_convocacao.html`), que o registro sem recarga devolve sozinho.
     assert (
         "conforme ao exigido pelo edital"
-        in visivel(TEMPLATES / "convocacao_documentos.html").lower()
+        in visivel(TEMPLATES / "_documento_da_convocacao.html").lower()
     )

@@ -613,6 +613,16 @@
       ],
       "port": 8144,
       "url": "http://localhost:8144"
+    },
+    {
+      "name": "conferencia-157",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_157 DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true AVISOS_AOS_CANDIDATOS=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/-Users-saymoncastro-Projetos-processo-seletivo--claude-worktrees-confident-borg-92ee89/5bf8945f-cd34-4327-8359-e8a3fa70ee7a/scratchpad/arquivos157 uv run python manage.py runserver 8157"
+      ],
+      "port": 8157,
+      "url": "http://localhost:8157"
     }
   ]
 }
