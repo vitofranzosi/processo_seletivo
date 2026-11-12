@@ -424,6 +424,62 @@ def _sem_nada(fx):
     return Cenario("sem-documento-nem-requerimento", c[0], pessoa, conv)
 
 
+# --- Os cenários da `154`: a convocação depois do envio ---------------------------------------
+# **T** é o `E` (tudo enviado, nada conferido) e **Tc** é o `H` (todo obrigatório conferido): os
+# dois já existiam. Os de baixo são os casos-limite que a `154` acrescentou (achado 20 do estudo).
+
+_QUATRO = (CERTIDAO, HISTORICO, CERTIFICADO_DO_MEDIO, RESIDENCIA)
+
+
+def _tudo_enviado(fx, *, prefixo, letra, **convocar_kwargs):
+    c = certame(fx, prefixo=prefixo, documentos=cenarios.documentos_do_aluno())
+    pessoa, conv = convocar(c, fx.gestor, letra=letra, **convocar_kwargs)
+    for req in _QUATRO:
+        cenarios.apresentar(pessoa, conv, req, corpo=f"{letra}-{req}".encode())
+    return c, pessoa, conv
+
+
+def _t_pendencia_nova(fx):
+    """T, e depois a comissão registra pendência num obrigatório: volta a haver providência."""
+    c, pessoa, conv = _tudo_enviado(fx, prefixo="j154-tp", letra="tp")
+    cenarios.conferir(
+        fx.gestor, conv, HISTORICO, "PENDENTE", chave="tp-p1-154", motivo=MOTIVO_DO_HISTORICO
+    )
+    return Cenario("T-pendencia-nova", c[0], pessoa, conv)
+
+
+def _t_sem_vencimento(fx):
+    """T numa convocação sem vencimento registrado."""
+    c, pessoa, conv = _tudo_enviado(fx, prefixo="j154-tv", letra="tv", vencimento_em=None)
+    return Cenario("T-sem-vencimento", c[0], pessoa, conv)
+
+
+def _t_prazo_nao_iniciado(fx):
+    """T antes de a comunicação sair: a pessoa pode enviar antes de o prazo começar."""
+    c, pessoa, conv = _tudo_enviado(fx, prefixo="j154-tn", letra="tn", comunicar=False)
+    return Cenario("T-prazo-nao-iniciado", c[0], pessoa, conv)
+
+
+def _t_menos_um(fx):
+    """T menos a residência: uma tarefa só, para o envio que a tira (FR-6203 da `154`)."""
+    c = certame(fx, prefixo="j154-t1", documentos=cenarios.documentos_do_aluno())
+    pessoa, conv = convocar(c, fx.gestor, letra="t1")
+    for req in _QUATRO[:-1]:
+        cenarios.apresentar(pessoa, conv, req, corpo=f"t1-{req}".encode())
+    return Cenario("T-menos-um", c[0], pessoa, conv)
+
+
+def _so_facultativo(fx):
+    """Só um facultativo pedido na chamada, sem envio: nenhuma providência (caso-limite, `154`)."""
+    # A identidade (da inscrição) e o opcional (da chamada); os dois obrigatórios da chamada saem.
+    documentos = [
+        d for d in documentos_com_opcional() if d["moment"] != "AT_CALL" or not d["required"]
+    ]
+    c = certame(fx, prefixo="j154-sf", documentos=documentos)
+    pessoa, conv = convocar(c, fx.gestor, letra="sf")
+    return Cenario("so-facultativo", c[0], pessoa, conv)
+
+
 CENARIOS = {
     "A": _a,
     "B": _b,
@@ -447,6 +503,11 @@ CENARIOS = {
     "N0": _n0,
     "G0": _g0,
     "sem-documento-nem-requerimento": _sem_nada,
+    "T-pendencia-nova": _t_pendencia_nova,
+    "T-sem-vencimento": _t_sem_vencimento,
+    "T-prazo-nao-iniciado": _t_prazo_nao_iniciado,
+    "T-menos-um": _t_menos_um,
+    "so-facultativo": _so_facultativo,
 }
 
 

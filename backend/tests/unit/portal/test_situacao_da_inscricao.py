@@ -682,3 +682,119 @@ class TestSemDocumentoComoHoje:
     def test_a_frase_do_aceite_so_nos_desfechos_que_incluem(self, especie, frase):
         acao = calcular(convocacao=convocacao(), desfecho=desfecho(especie)).o_que_fazer
         assert acao.aceite == frase
+
+
+class TestAConsequenciaSoComProvidencia:
+    """154, FR-6208, FR-6209 e FR-6201: a advertência só com providência pendente; o prazo, sempre.
+
+    O achado 20 do estudo da jornada final: quem já tinha enviado tudo lia que a comissão poderia
+    registrar o não atendimento. As duas montagens da ação — com documento, pela projeção, e sem
+    documento, pela política do Requerimento — perguntam agora se há o que a pessoa deixou de fazer.
+    """
+
+    @staticmethod
+    def _projetar(itens, **kwargs):
+        from tests.unit.portal import test_obrigacoes_da_convocacao as projecao
+
+        return projecao.projetar(itens, obrigacoes.ABERTA, **kwargs)
+
+    @staticmethod
+    def _lido(*args, **kwargs):
+        from tests.unit.portal.test_obrigacoes_da_convocacao import lido
+
+        return lido(*args, **kwargs)
+
+    @staticmethod
+    def _disp(*args, **kwargs):
+        from tests.unit.portal.test_obrigacoes_da_convocacao import disp
+
+        return disp(*args, **kwargs)
+
+    def _acao(self, projetada, requerimento=""):
+        return calcular(
+            convocacao=convocacao(),
+            estado=EM_CURSO,
+            requerimento=requerimento,
+            obrigacoes=projetada,
+        ).o_que_fazer
+
+    def test_com_documento_sem_tarefa_o_prazo_fica_e_a_advertencia_sai(self):
+        from processo_seletivo.requerimentos.domain import nomes as req
+
+        projetada = self._projetar(
+            [self._lido(convocacao_nomes.ITEM_RECEBIDO)] * 2,
+            requerimento=self._disp(status=req.ENVIADO),
+        )
+        acao = self._acao(projetada, requerimento="conferir")
+
+        assert acao.principal == situacao.NADA_POR_ENQUANTO
+        assert acao.conclusao == obrigacoes.FRASE_DE_CONCLUSAO
+        assert acao.prazo == INSTANTE, "FR-6208: o prazo continua sem providência"
+        assert acao.consequencia == ""
+
+    @pytest.mark.parametrize(
+        "estado",
+        [convocacao_nomes.ITEM_A_APRESENTAR, convocacao_nomes.ITEM_PENDENTE],
+        ids=["a_enviar", "a_corrigir"],
+    )
+    def test_com_documento_com_tarefa_a_advertencia_continua(self, estado):
+        projetada = self._projetar([self._lido(estado), self._lido(convocacao_nomes.ITEM_RECEBIDO)])
+        acao = self._acao(projetada)
+
+        assert acao.prazo == INSTANTE
+        assert acao.consequencia == situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+
+    def test_com_documento_so_o_requerimento_a_preencher_e_providencia(self):
+        """Caso-limite *Requerimento como única tarefa restante*."""
+        projetada = self._projetar(
+            [self._lido(convocacao_nomes.ITEM_RECEBIDO)], requerimento=self._disp()
+        )
+        acao = self._acao(projetada, requerimento="preencher")
+
+        assert acao.consequencia == situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+
+    def test_com_documento_so_opcional_nao_e_providencia(self):
+        """Caso-limite *só facultativo*: o opcional não é providência pendente."""
+        projetada = self._projetar(
+            [self._lido(convocacao_nomes.ITEM_A_APRESENTAR, obrigatorio=False)]
+        )
+        acao = self._acao(projetada)
+
+        assert acao.prazo == INSTANTE
+        assert acao.consequencia == ""
+
+    @pytest.mark.parametrize(
+        ("requerimento", "status", "momento", "advertencia"),
+        [
+            ("preencher", "", None, True),
+            ("conferir", "ENVIADO", None, False),
+            # O Requerimento da inscrição, enviado: a chamada não pede nada pelo portal (D-006).
+            ("conferir", "ENVIADO", "AT_ENROLLMENT", True),
+            ("", None, "nada", True),
+        ],
+        ids=[
+            "so_requerimento_nao_enviado",
+            "so_requerimento_enviado",
+            "requerimento_da_inscricao_enviado",
+            "nada_pedido",
+        ],
+    )
+    def test_sem_documento_so_o_requerimento_da_chamada_enviado_tira_a_advertencia(
+        self, requerimento, status, momento, advertencia
+    ):
+        if momento == "nada":
+            politica = self._disp(None)
+        elif momento is None:
+            politica = self._disp(status=status)
+        else:
+            politica = self._disp(momento, status=status)
+        acao = calcular(
+            convocacao=convocacao(),
+            estado=EM_CURSO,
+            requerimento=requerimento,
+            politica_do_requerimento=politica,
+        ).o_que_fazer
+
+        assert acao.prazo == INSTANTE, "FR-6208: o prazo continua com e sem providência"
+        esperada = situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO if advertencia else ""
+        assert acao.consequencia == esperada

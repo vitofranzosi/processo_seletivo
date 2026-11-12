@@ -238,8 +238,10 @@ def test_b_e_b2_sem_documento_ficam_como_hoje(fx, client, letra):
     pagina = main(abrir(client, cenario, "convocacao"))
     assert "O que fazer agora" not in titulos(pagina)
     # O título de primeiro nível passou a ser o da chamada (121, FR-3868), e "O que fazer" subiu um
-    # nível, para não pular do h1 ao h3.
-    assert titulo_da_pagina(pagina) == obrigacoes.TITULO_ABERTA
+    # nível, para não pular do h1 ao h3. Com o Requerimento — o único pedido da chamada — já
+    # enviado, não há providência pendente, e o título é o de acompanhar (154, FR-6201, D-006).
+    esperado = obrigacoes.TITULO_ABERTA if letra == "B" else obrigacoes.TITULO_SEM_PROVIDENCIA
+    assert titulo_da_pagina(pagina) == esperado
     assert "<h2>O que fazer</h2>" in pagina
     assert situacao.SIGA_AS_INSTRUCOES.rstrip(".") in texto(pagina)
     assert any(href == requerimento for href, _ in links(pagina))

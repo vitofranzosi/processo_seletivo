@@ -2667,6 +2667,12 @@ def _chamada_da_tela(chamada, projecao, politica, da_convocacao, versao, selecao
             fechado_pelo_processo=politica is not None and politica.fechado_pelo_processo,
         )
         titulo = obrigacoes.TITULOS[momento]
+        if momento == obrigacoes.ABERTA and not obrigacoes.providencia_pendente_sem_documento(
+            politica
+        ):
+            # Só o Requerimento pedido nesta chamada, e já enviado (154, FR-6201, D-006). A página
+            # sem documento continua sem a advertência, como hoje (D-007 da `154`).
+            titulo = obrigacoes.TITULO_SEM_PROVIDENCIA
         cartao = (
             obrigacoes.cartao_do_prazo(
                 prazo_nao_iniciado=(

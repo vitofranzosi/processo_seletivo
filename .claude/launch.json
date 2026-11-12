@@ -633,6 +633,16 @@
       ],
       "port": 8157,
       "url": "http://localhost:8157"
+    },
+    {
+      "name": "convocacao-154",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps154 DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/-Users-saymoncastro-Projetos-processo-seletivo--claude-worktrees-sweet-tesla-217cc9/362682de-32d1-4bc9-8e43-fe8b67937862/scratchpad/arquivos154 uv run python manage.py runserver 8154"
+      ],
+      "port": 8154,
+      "url": "http://localhost:8154"
     }
   ]
 }
