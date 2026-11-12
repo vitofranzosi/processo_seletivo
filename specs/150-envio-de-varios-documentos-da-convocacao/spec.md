@@ -6,6 +6,9 @@
 
 **Status**: Spec escrita em 11/11/2026, a partir de um relato de uso na área do candidato e do
 diagnóstico do código. As decisões estão em [research.md](research.md), para revisão no PR.
+Revista em 11/11/2026 para incluir o achado 11 do estudo da jornada final — o mesmo arquivo em dois
+documentos (User Story 5, FR-5615 a FR-5619, UX-504, SC-1806, SC-1807, D-006) —, com o plano e as
+tarefas.
 
 **Input**: *"Na área do candidato, na convocação que pede documentos, o candidato escolhe arquivos em
 vários cartões e clica em Enviar num deles: só o arquivo daquele cartão é enviado, a página recarrega
@@ -156,10 +159,55 @@ cartão; enviar um documento e conferir a volta de hoje.
 2. **Given** o script ligado, **When** a pessoa abre a mesma convocação, **Then** essa frase não
    aparece.
 
+---
+
+### User Story 5 — Saber, antes de enviar, que o arquivo é o mesmo de outro documento (Priority: P2)
+
+*(Acrescentada em 2026-11-11, pelo achado 11 do estudo da jornada final.)*
+
+A pessoa escolhe para um documento o mesmo arquivo que escolheu — ou que já enviou — para outro. Antes
+de enviar, o cartão lhe diz isso; ela troca o arquivo ou envia assim mesmo.
+
+**Why this priority**: No estudo, o mesmo PDF foi aceito como "Diploma" e como "Comprovante de
+residência", e o erro só apareceu na conferência: uma rodada de pendência, aviso e reenvio, com prazo
+correndo. O envio de vários torna o engano mais provável — quatro escolhas seguidas na mesma tela. É
+P2 porque o aviso não muda o que se recebe; poupa a rodada.
+
+**Independent Test**: Numa convocação com "Diploma" e "Comprovante de residência", escolher o mesmo
+PDF nos dois cartões; conferir o aviso nos dois, antes do envio, e que o envio dos dois continua
+possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprovante e conferir o aviso
+"que você já enviou para Diploma".
+
+**Acceptance Scenarios**:
+
+1. **Given** dois documentos a enviar, **When** a pessoa escolhe `diploma.pdf` para o primeiro e o
+   mesmo arquivo, renomeado `residencia.pdf`, para o segundo, **Then** o cartão do segundo diz que o
+   arquivo é o mesmo escolhido para o primeiro, o do primeiro diz o mesmo do segundo, e o botão dos
+   dois continua "Enviar os 2 documentos escolhidos".
+2. **Given** o aviso nos dois cartões, **When** a pessoa troca o arquivo do segundo por outro, **Then**
+   o aviso some dos dois.
+3. **Given** o diploma já enviado, **When** a pessoa escolhe o mesmo PDF no cartão do comprovante,
+   **Then** o cartão diz que o arquivo é o mesmo que ela já enviou para o diploma, e ela pode enviá-lo
+   assim mesmo, com a confirmação de hoje.
+4. **Given** dois arquivos diferentes de mesmo nome, **When** a pessoa os escolhe em dois cartões,
+   **Then** nenhum aviso aparece.
+
 ### Edge Cases
 
-- **O mesmo arquivo escolhido em dois cartões.** Cada cartão o envia como envio próprio; o sistema não
-  compara arquivos entre documentos hoje, e esta spec não cria a regra.
+- **O mesmo arquivo escolhido em dois cartões** *(revista em 2026-11-11, pelo achado 11 do estudo da
+  jornada final — a redação anterior está ao fim desta alínea)*. Cada cartão o envia como envio
+  próprio, e nenhum dos dois é recusado; mas, antes do envio, os dois cartões dizem que o arquivo é o
+  mesmo (FR-5615 a FR-5619). Vale também para o arquivo escolhido que é idêntico ao já enviado para
+  outro documento da convocação. O aviso não bloqueia (D-006).
+
+  > **Redação anterior, preservada:** Cada cartão o envia como envio próprio; o sistema não compara
+  > arquivos entre documentos hoje, e esta spec não cria a regra.
+- **O mesmo arquivo de novo no mesmo cartão.** Não é a regra do arquivo repetido entre documentos: o
+  servidor já o reconhece e diz *"Este arquivo já tinha sido recebido."* (`FR-3581` da `115`). O aviso
+  da FR-5615 não compara o cartão com o próprio arquivo recebido.
+- **Mesmo nome, conteúdo diferente — ou nomes diferentes, mesmo conteúdo.** O que decide é o
+  conteúdo: dois arquivos de nome igual e conteúdo diferente não produzem aviso; dois de nome
+  diferente e conteúdo idêntico produzem.
 - **O prazo vence no meio do envio de vários.** Cada documento é julgado no instante em que chega,
   pela regra de hoje (`FR-3578` da `115`): os que chegaram antes são recebidos, os seguintes recebem a
   recusa de prazo no cartão.
@@ -241,6 +289,37 @@ cartão; enviar um documento e conferir a volta de hoje.
   MAY vir num script estático próprio, ou nos já carregados, sem biblioteca nova e sem script ou
   estilo escritos no template, que a política de conteúdo recusa.
 
+#### E. O mesmo arquivo em dois documentos
+
+*(Acrescentada em 2026-11-11, pelo achado 11 do estudo da jornada final,
+`doc/estudo-jornada-final-2026-11-11/`: o candidato enviou o mesmo PDF como "Diploma" e como
+"Comprovante de residência"; o GPS conhecia o resumo SHA-256 dos dois e aceitou sem alerta, e o erro
+só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
+
+- **FR-5615**: Com script, ao escolher um arquivo num cartão, a tela MUST compará-lo, **pelo
+  conteúdo** (o resumo SHA-256 que a `115` já guarda em cada apresentação), com:
+  - o arquivo escolhido, e ainda não enviado, em cada **outro** cartão da tela; e
+  - o arquivo vigente de cada **outro** documento da mesma convocação que já tenha apresentação —
+    aguardando conferência, conferido, com pendência, ou aproveitado da inscrição.
+
+  Sendo idêntico a algum deles, o cartão MUST dizer, junto ao nome do arquivo escolhido e antes do
+  envio, com qual documento o arquivo coincide: *"Atenção: este arquivo é o mesmo que você escolheu
+  para ‹documento›."* ou *"Atenção: este arquivo é o mesmo que você já enviou para ‹documento›."* —
+  e, coincidindo com mais de um, o nome de cada um.
+- **FR-5616**: O aviso da FR-5615 MUST NOT impedir o envio, pedir confirmação, mudar o rótulo ou o
+  destaque do botão, nem tirar o cartão do envio de vários: um mesmo documento pode servir
+  legitimamente a dois itens (D-006). O envio do arquivo avisado segue a FR-5605, sem regra de
+  aceitação nova.
+- **FR-5617**: Quando dois cartões com arquivo escolhido coincidem entre si, o aviso MUST aparecer
+  **nos dois**, cada um nomeando o outro. O aviso MUST sumir do cartão quando a escolha que o causou
+  for trocada ou removida (FR-5603), aqui ou no outro cartão.
+- **FR-5618**: A comparação MUST acontecer no navegador, sem enviar ao servidor o arquivo, o resumo
+  ou o nome antes do ato de enviar — escolher continua não enviando nada (D-003) — e sem guardar nada
+  no navegador (FR-5611).
+- **FR-5619**: Sem script, ou quando o navegador não consegue calcular o resumo, não há aviso antes
+  do envio, e a tela MUST NOT dizer que comparou o arquivo; o envio segue como na FR-5612. Se a
+  comparação ainda não terminou quando a pessoa aciona o envio, o envio MUST seguir sem esperá-la.
+
 ### Requisitos de experiência
 
 - **UX-500**: O botão "Enviar os N documentos escolhidos" é o destaque de cada cartão com arquivo
@@ -251,6 +330,10 @@ cartão; enviar um documento e conferir a volta de hoje.
   horizontal, quebrando a linha se preciso.
 - **UX-503**: "Remover a escolha" é ação secundária, de texto, ao lado do nome do arquivo escolhido;
   o nome acessível dela diz o documento ("Remover a escolha: ‹documento›").
+- **UX-504**: O aviso do arquivo repetido (FR-5615) é texto de atenção, em palavra e não só em cor,
+  logo abaixo do nome do arquivo escolhido, e faz parte da descrição acessível do campo do cartão. Ele
+  é anunciado a quem usa leitor de tela quando aparece, sem roubar o foco, e cabe a 375 px sem rolagem
+  horizontal.
 
 ### Key Entities
 
@@ -275,6 +358,13 @@ cada uma com o seu registro e a sua trilha.
   ouve o progresso e a confirmação; a 375 px, nenhuma etapa provoca rolagem horizontal.
 - **SC-1805**: Numa sessão de validação com pelo menos três pessoas que nunca viram a tela, todas
   enviam os quatro documentos pedidos na primeira tentativa, sem orientação.
+- **SC-1806**: Numa convocação com dois documentos pedidos, com script, escolher o mesmo PDF nos dois
+  cartões — com o mesmo nome ou com nomes diferentes —, ou escolher para um o PDF já enviado para o
+  outro, mostra o aviso da FR-5615 antes do envio em **todos** os casos; e o envio continua possível,
+  com o mesmo número de cliques de hoje.
+- **SC-1807**: Arquivos de conteúdo diferente — inclusive os de mesmo nome — produzem **zero**
+  avisos; e o reenvio do mesmo arquivo para o mesmo documento continua com a frase de hoje, sem o
+  aviso da FR-5615.
 
 ## Decisões
 
@@ -285,6 +375,29 @@ As decisões estão com a razão e as alternativas descartadas em [research.md](
 - **D-003** — nada se envia ao escolher o arquivo.
 - **D-004** — a inscrição fica fora, registrada como achado.
 - **D-005** — sem script, uma frase, e não um formulário único.
+- **D-006** — o arquivo repetido entre documentos é avisado no cartão, antes do envio, e não
+  bloqueado (acrescentada em 2026-11-11, pelo achado 11 do estudo da jornada final).
+
+## Perguntas ao usuário
+
+Abertas em 2026-11-11, com a revisão do achado 11. A spec, como está escrita, adota a resposta
+indicada em cada uma; a implementação não depende de outra resposta para começar.
+
+- **Pergunta 1 — Sem script, o aviso vem depois do recebimento?** A FR-5619 deixa o caminho sem
+  script sem aviso nenhum: o envio é um formulário por cartão, e não há onde comparar antes. O
+  servidor poderia dizer, na confirmação, que o arquivo recebido é idêntico ao já enviado para outro
+  documento — regra nova no servidor, depois do ato, que também cobriria o navegador sem o cálculo do
+  resumo. **Como está:** não; o aviso é só antes do envio, com script.
+- **Pergunta 2 — A comissão vê a coincidência na conferência?** O achado 11 nasceu do lado do
+  candidato, mas a comissão também ganharia ao saber, na conferência, que dois documentos da pessoa
+  têm o mesmo arquivo. É mudança na gestão, que esta spec deixa fora, e a tela de conferência está
+  sendo mexida pela `157` (o visualizador). **Como está:** fora desta spec.
+- **Pergunta 3 — O aviso alcança documentos de outra chamada?** A FR-5615 compara só dentro da mesma
+  convocação. Uma pessoa convocada de novo, depois de vaga reaberta, pode reaproveitar arquivos
+  legitimamente. **Como está:** só a mesma convocação.
+
+O bloqueio total foi considerado e não é proposto: o usuário decidiu que o aviso não bloqueia
+(D-006).
 
 ## Assumptions
 
@@ -301,4 +414,6 @@ As decisões estão com a razão e as alternativas descartadas em [research.md](
 - Arrastar e soltar arquivos, ou escolher vários arquivos de uma vez num campo só e distribuí-los
   entre os documentos.
 - Retomada de envio interrompido, envio em pedaços ou envio em segundo plano.
-- Qualquer mudança na gestão, na conferência ou na trilha.
+- Qualquer mudança na gestão, na conferência ou na trilha — inclusive mostrar à comissão que dois
+  documentos têm o mesmo arquivo (Pergunta 2).
+- Recusar, no servidor, o arquivo idêntico ao de outro documento (D-006).
