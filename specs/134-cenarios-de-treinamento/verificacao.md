@@ -119,8 +119,48 @@ Os casos do C06 e do C07 em `test_proxima_acao.py` e o sorteio pela tela de
 Suíte completa (`make check test-pg`, 4 workers): **17 474 passando, 20 pulados, sem falha, em
 774 s**.
 
+## Provisionamento da formalização (12/11)
+
+Revisão da FR-4615 por decisão do usuário (FR-6720 a FR-6729). No banco novo `ps_treino_nav`
+(`make preparar`, uma autoridade cadastrada pelo comando do Gestor, nenhum outro dado), a carga do
+C16 e do C17 com `--autoridade`:
+
+- a pré-visualização disse `pessoa treino.formalizacao: criar; papel Formalização em cefor:
+  conceder` nos dois, e a carga criou os dois em 1 pessoa e 1 vínculo;
+- **entrar como o setor:** página de acesso → *Opções avançadas de demonstração* → *Nome na
+  auditoria* `treino.formalizacao`, *Formalização* marcada. A lista do setor trouxe **só o
+  `SIM16/2026`**, com *Todos os Perfis*; o `SIM17` não aparece, porque nele a pessoa não está
+  designada;
+- **exportar:** *Verificar e exportar todos os aptos (3)* → *Pacote completo: 3 de 3 pessoas
+  incluídas · 3 documentos · 2 KB* → *Baixar pacote*: 200, e uma exportação registrada por
+  `treino.formalizacao`;
+- **o Centro como Gestor**, fase Conclusão: no `SIM16`, *Feito · Quem recebe: 1 pessoa designada* e
+  *Feito · Pessoas disponibilizadas: 3 de 3*, e nenhuma ocorrência de "ninguém designado" — o N-03
+  da reavaliação sumiu; no `SIM17`, *Em aberto · Quem recebe: ninguém designado (quem administra os
+  acessos da unidade)* e a providência *designar quem recebe os documentos*, sem o "antes, é preciso
+  conceder o papel" da FR-6113 da `153`, porque a pessoa já está habilitada.
+
+O exercício de **designar** não foi feito pela tela: o seletor não oferece o Administrador de
+acessos (ver *Limitações* na spec). A suíte o faz pelo comando, com `treino.acessos`, e confere que a
+presidência é recusada.
+
+`tests/integration/treinamento/test_formalizacao_nos_cenarios.py`: a exportação pela tela e o
+Centro no C16 (SC-2210), a lista do setor e o Centro no C17 (SC-2211), as contagens de pessoa e
+vínculo na carga, na segunda carga e na restauração (SC-2212), a pessoa inativa que não é reativada,
+e a restauração do C16 que revoga a designação anterior (FR-6726).
+
+Suíte completa (`make lint check test-pg`, 4 workers, sem o grupo `navegador`): **19 031
+passando, 23 pulados, sem falha, em 908 s**.
+
+**Observação, sem mudança:** o *O que fazer agora* do `SIM16` também mostra a classificação da lista
+PPP, em que ninguém concorreu, e o resultado definitivo à espera do prazo recursal. É o estado da
+cadeia de notas que o C10 a C12 já percorrem, e não é da formalização.
+
 ## Pendente
 
 - **SC-1456 (humana):** uma pessoa da comissão percorrer um cenário só com o guia.
 - **A carga na homologação compartilhada** é do administrador, depois do backup e do ensaio do
   [manual](../../doc/cenarios-de-treinamento/manual-de-operacao.md). Nada foi carregado lá.
+- **O exercício de designar pela demonstração** (C17) depende da revisão da `117` que dá a designação
+  à presidência, em curso em 12/11; até lá, é de quem tem o Administrador de acessos pela entrada
+  institucional.

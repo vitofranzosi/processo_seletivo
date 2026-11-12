@@ -52,16 +52,16 @@
 
 - [x] T021 Revisar a FR-4615, a FR-4650 e a SC-1455, com a redação anterior; FR-6720 a FR-6729,
   SC-2210 a SC-2212, D-009 e D-010.
-- [ ] T022 Passos de `construcao.py`: `treino.acessos`, a identidade, o aceite, a definição, o
+- [x] T022 Passos de `construcao.py`: `treino.acessos`, a identidade, o aceite, a definição, o
   vínculo e a designação (FR-6721 a FR-6724, FR-6728).
-- [ ] T023 C16 e C17 no catálogo; a pré-visualização da identidade e do vínculo (FR-6720, FR-6725).
-- [ ] T024 A restauração revoga as designações da rodada anterior (FR-6726).
-- [ ] T025 Testes: a exportação pela tela e o Centro no C16 (SC-2210); a lista do setor e o Centro no
+- [x] T023 C16 e C17 no catálogo; a pré-visualização da identidade e do vínculo (FR-6720, FR-6725).
+- [x] T024 A restauração revoga as designações da rodada anterior (FR-6726).
+- [x] T025 Testes: a exportação pela tela e o Centro no C16 (SC-2210); a lista do setor e o Centro no
   C17 (SC-2211); pessoa e vínculos contados na carga, na segunda carga e na restauração (SC-2212);
   a contagem dos dezessete (SC-1455).
-- [ ] T026 Guia da equipe e manual de operação: as fichas do C16 e do C17, a entrada como
+- [x] T026 Guia da equipe e manual de operação: as fichas do C16 e do C17, a entrada como
   `treino.formalizacao`, e a dependência do exercício de designar.
-- [ ] T027 Verificação no navegador num banco novo; registro na [verificação](verificacao.md).
+- [x] T027 Verificação no navegador num banco novo; registro na [verificação](verificacao.md).
 
 ## Pendente
 
