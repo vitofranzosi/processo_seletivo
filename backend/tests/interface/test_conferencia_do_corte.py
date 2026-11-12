@@ -111,17 +111,50 @@ def test_confirmada_a_emissao_acontece_uma_vez(cliente_no_corte):  # noqa: F811
     assert "Corte emitido" in client.get(primeira["Location"]).content.decode()
 
 
-def test_o_calculo_que_mudou_e_recusado_sem_emitir(cliente_no_corte):  # noqa: F811
-    """FR-5831: história 4, cenário 3 — a assinatura que não confere volta ao corte com a razão."""
+def test_o_corte_emitido_no_intervalo_recusa_a_confirmacao(cliente_no_corte, gestor):  # noqa: F811
+    """FR-5831: história 4, cenário 3 — o cálculo mudou de verdade entre a conferência e o clique.
+
+    Outra pessoa emite o corte com a conferência aberta: a geração vista não é mais a de agora, e
+    o comando recusa a confirmação sem emitir.
+    """
+    from tests.fixtures.corte import emitir
+
     client, edital, marco = cliente_no_corte
     url = reverse("interface:emitir-corte", args=[edital.id, marco])
     conferencia = _conferir_o_corte(client, edital, marco)
+    emitir(edital, gestor, chave="outra-pessoa-152")
 
-    resposta = _confirmar(client, url, conferencia, confirmacao_do_calculo="outra-faixa")
+    resposta = _confirmar(client, url, conferencia)
 
     assert resposta.status_code == 302
-    assert Corte.objects.count() == 0
-    assert "A faixa mudou desde a sua leitura" in client.get(resposta["Location"]).content.decode()
+    assert Corte.objects.count() == 1, "só o da outra pessoa"
+    pagina = client.get(resposta["Location"]).content.decode()
+    assert "Outro corte foi emitido depois da sua leitura" in pagina
+
+
+def test_a_tela_sem_geracao_aberta_depois_do_outro_corte_e_dita(
+    cliente_no_corte,
+    gestor,  # noqa: F811
+):
+    """Revisão do #502: a conferência pedida da tela de antes do primeiro corte não vira sucessão
+    em silêncio — ela diz que outro corte foi emitido, com a frase do comando."""
+    from tests.fixtures.corte import emitir
+
+    client, edital, marco = cliente_no_corte
+    tela = _tela(client, edital, marco)
+    emitir(edital, gestor, chave="outra-pessoa-152b")
+
+    pagina = client.post(
+        reverse("interface:emitir-corte", args=[edital.id, marco]),
+        {
+            "chave_idempotencia": _campo(tela, "chave_idempotencia"),
+            "confirmacao_do_calculo": _campo(tela, "confirmacao_do_calculo"),
+        },
+    ).content.decode()
+
+    assert "Outro corte foi emitido depois da sua leitura" in pagina
+    assert "O cálculo mudou desde que você abriu o corte." not in pagina
+    assert "Sucessão da geração vigente." in pagina
 
 
 def test_a_tela_antiga_e_dita_na_conferencia(cliente_no_corte):  # noqa: F811
@@ -135,17 +168,25 @@ def test_a_tela_antiga_e_dita_na_conferencia(cliente_no_corte):  # noqa: F811
     assert "O cálculo mudou desde que você abriu o corte." in pagina
 
 
-def test_a_sucessao_pede_o_motivo_e_diz_que_a_vigente_continua(cliente_no_corte):  # noqa: F811
-    """FR-5826: na sucessão, o motivo e que a geração vigente continua legível."""
+def test_a_sucessao_passa_pela_conferencia(cliente_no_corte):  # noqa: F811
+    """FR-5825, FR-5826: na sucessão, o motivo e que a geração vigente continua legível; e só a
+    confirmação nela emite a sucessora."""
     client, edital, marco = cliente_no_corte
     _emitir(client, edital, marco)
+    url = reverse("interface:emitir-corte", args=[edital.id, marco])
 
-    pagina = _conferir_o_corte(client, edital, marco, motivo="Recurso deferido.").content.decode()
+    conferencia = _conferir_o_corte(client, edital, marco, motivo="Recurso deferido.")
 
+    pagina = conferencia.content.decode()
     assert "Sucessão da geração vigente." in pagina
     assert "A geração vigente continua legível" in pagina
     assert re.search(r'name="motivo"[^>]*required[^>]*>Recurso deferido\.</textarea>', pagina)
     assert Corte.objects.count() == 1
+
+    _confirmar(client, url, conferencia)
+
+    sucessora = Corte.objects.exclude(corte_anterior=None).get()
+    assert sucessora.motivo == "Recurso deferido."
 
 
 def _conferir_a_faixa_seguinte(client, edital, marco, **dados):
@@ -180,6 +221,23 @@ def test_a_faixa_seguinte_passa_pela_conferencia(cliente_no_corte):  # noqa: F81
     _confirmar(client, url, conferencia)
 
     assert Corte.objects.count() == 2
+
+
+def test_a_faixa_seguinte_alem_do_resto_e_mostrada_sem_recusa(cliente_no_corte):  # noqa: F811
+    """Caso-limite e T027: o comando aceita e alcança só quem resta (FR-5846); a conferência mostra
+    a quantidade pedida ao lado de quantas a faixa alcança, antes do botão."""
+    client, edital, marco = cliente_no_corte
+    _emitir(client, edital, marco)
+
+    _, conferencia = _conferir_a_faixa_seguinte(
+        client, edital, marco, quantidade="99", motivo="Muitas desistências."
+    )
+
+    pagina = conferencia.content.decode()
+    assert "Não é possível emitir agora" not in pagina
+    assert "Pedida: 99." in pagina
+    assert re.search(r"A faixa seguinte alcança \d+ (pessoa|pessoas)", pagina)
+    assert "Emitir a faixa seguinte</button>" in pagina
 
 
 def test_a_faixa_seguinte_sem_a_assinatura_nao_emite(cliente_no_corte):  # noqa: F811

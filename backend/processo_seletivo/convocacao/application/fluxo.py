@@ -35,7 +35,11 @@ from processo_seletivo.classificacao.domain.universo import por_identidade
 from processo_seletivo.comissoes.application import comando_de_comissao, exigir_base_de_comissao
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
-from processo_seletivo.convocacao.application.comunicar import comunicar, previa_das_mensagens
+from processo_seletivo.convocacao.application.comunicar import (
+    SEM_FORMA_DECLARADA,
+    comunicar,
+    previa_das_mensagens,
+)
 from processo_seletivo.convocacao.application.convocar import (
     _ESPECIE_POR_EXTENSO,
     _edital_do_processo,
@@ -548,6 +552,17 @@ def conferencia_da_chamada(
     especie = verificada.especie
     contexto = verificada.contexto
     forma = forma_vigente(verificada.versao, perfil)
+    if forma is None:
+        # **Antes do botão, e só aqui** (FR-5817). O comando de hoje grava a convocação e o envio
+        # a recusa depois, com esta mesma frase: a chamada nasceria sem comunicação possível. A
+        # conferência a recusa antes, e como a confirmação só pratica o que ela mostrou, a tela
+        # não chega mais ao comando nesse caso. O comando não muda (FR-5846).
+        return {
+            "recusa": {
+                "codigo": nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA,
+                "detalhe": SEM_FORMA_DECLARADA,
+            }
+        }
     canal = vocabulario_do_canal.canal(forma)
     texto_do_edital, texto_do_recorte = rotulos(
         edital, verificada.versao, perfil_id=perfil, lista_id=lista

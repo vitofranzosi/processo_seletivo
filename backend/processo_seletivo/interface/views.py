@@ -10260,7 +10260,12 @@ def _conferir_a_chamada(request, ator, edital, marco_id, lista_id, chave):
             "lista": "" if lista_id is None else str(lista_id),
             "chave": chave,
             "inscricao": str(inscricao),
-            "especie": especie,
+            # **A espécie conferida, e não a do formulário** (revisão do #502): a da fila chega
+            # vazia, e o comando derivaria outra sem dizer. Levada aqui, a confirmação que chega
+            # depois de uma apuração nova é recusada por `especie_divergente_da_posicao`.
+            "especie": (conferencia.get("especie") or especie)
+            if conferencia["recusa"] is None
+            else especie,
             "vencimento": vencimento,
             "evento": evento_id,
             "justifica_precedencia": "1" if justifica else "",
@@ -10272,12 +10277,19 @@ def _conferir_a_chamada(request, ator, edital, marco_id, lista_id, chave):
 
 
 def _texto_conferido_da_chamada(conferencia):
-    """O que o resumo da chamada assina (FR-5816): pessoa, espécie, fundamento, mensagem e prazo."""
+    """O que o resumo da chamada assina (FR-5816): pessoa, espécie, fundamento, mensagem e prazo.
+
+    E quem ela passa à frente e o Resultado que a regularização sucede: os dois são mostrados na
+    conferência, e um deles mudado depois dela é outra coisa a confirmar (revisão do #502).
+    """
+    resultado = conferencia.get("resultado") or {}
     partes = [
         str(conferencia["pessoa"]["id"]),
         conferencia["especie"],
         conferencia["fundamento"],
         conferencia["prazo"]["frase"],
+        ",".join(str(pessoa["id"]) for pessoa in conferencia["passa_a_frente_de"]),
+        f"{resultado.get('em') or ''}|{resultado.get('motivo') or ''}",
     ]
     for mensagem in conferencia["mensagens"]:
         partes += [mensagem["assunto"], mensagem["corpo"]]
@@ -11057,8 +11069,10 @@ def emitir_corte_view(request, edital_id, marco_id):
         except DomainError as recusa:
             if recusa.status == 404:
                 raise Http404 from recusa
-            request.session["erro_do_corte"] = recusa.detail
-            return redirect(destino)
+            # Na própria página, e não na sessão (FR-5830): a conferência não grava nada.
+            return _pagina_da_conferencia_do_corte(
+                request, edital, marco_id, lista_id, destino=destino, recusa=recusa.detail
+            )
         _com_a_inscricao(proposta["itens"])
         # **A assinatura é recomposta aqui**, pela razão de `emitir_ordenacao`: o que se confirma
         # é o que **esta** página declara, e a divergência com a tela anterior é dita.
@@ -11073,6 +11087,14 @@ def emitir_corte_view(request, edital_id, marco_id):
             geracao=geracao,
             assinatura=recomposta,
             calculo_mudou=bool(confirmacao_do_calculo and confirmacao_do_calculo != recomposta),
+            # **O primeiro corte que outra pessoa emitiu no intervalo** (revisão do #502): a tela
+            # assinou a faixa sem geração, e agora há uma. Sem dizê-lo, a página viraria sucessão
+            # em silêncio; a frase é a da recusa `corte_ja_emitido` do comando.
+            outro_corte=bool(
+                geracao
+                and confirmacao_do_calculo
+                and confirmacao_do_calculo == assinatura_do_corte(proposta, geracao=())
+            ),
             # Os avisos da tela do corte, com o mesmo texto e as mesmas condições (FR-5828).
             espera=None if geracao else _espera_do_corte(edital, marco_id, lista_id),
             reingressos=_reingressos_no_corte(edital, marco_id),
@@ -11189,6 +11211,7 @@ def _pagina_da_conferencia_do_corte(
     geracao=(),
     assinatura="",
     calculo_mudou=False,
+    outro_corte=False,
     espera=None,
     reingressos=0,
     motivo="",
@@ -11215,7 +11238,8 @@ def _pagina_da_conferencia_do_corte(
                 "ficam_fora": [item for item in itens if item["consequencia"] != "PROGREDIU"],
                 "geracao": geracao,
                 "confirmacao_do_calculo": assinatura,
-                "calculo_mudou": calculo_mudou,
+                "calculo_mudou": calculo_mudou and not outro_corte,
+                "outro_corte": outro_corte,
                 "espera_do_corte": espera,
                 "reingressos": reingressos,
                 "motivo": motivo,

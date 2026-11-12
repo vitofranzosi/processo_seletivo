@@ -167,7 +167,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - **Sem efeito**: a prévia não grava ato, trilha, chave nem sessão.
   - **Confirmação**: a emissão é praticada, e o duplo POST produz um ato só.
   - **Divergência**: o cálculo mudou entre a prévia e a confirmação.
-  - **Sucessão e faixa seguinte**: a sucessão com motivo; a faixa seguinte com quantidade válida e com quantidade além do resto.
+  - **Sucessão e faixa seguinte**: a sucessão com motivo; a faixa seguinte com quantidade válida e com quantidade além do resto, que a conferência mostra sem recusar.
   - **Avisos e autorização**: os avisos se repetem, e a autorização é a de hoje.
 - [x] T028 [US4] Ajustar os helpers e casos que postam `emitir-corte` e `continuar-corte`: `backend/tests/integration/classificacao/test_faixa_seguinte.py`, `backend/tests/integration/classificacao/test_emissao_do_corte.py`, `backend/tests/interface/test_publicacao_de_convocados.py` e os que o `grep "emitir-corte\|continuar-corte"` achar.
 

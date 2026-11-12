@@ -326,3 +326,51 @@ def test_a_chamada_para_regularizar_passa_pela_mesma_conferencia(
     _confirmar(client, edital, conferencia)
 
     assert Convocacao.objects.get().especie == nomes.PARA_REGULARIZAR
+
+
+def test_sem_forma_de_comunicar_declarada_a_conferencia_recusa_antes_do_botao(
+    client, seletor_ligado, db, gestor, api_client, manager_headers, process_payload,
+    raiz_de_arquivos,
+):  # fmt: skip
+    """FR-5817 (revisão do #502): antes, a confirmação gravava a convocação e o envio a recusava."""
+    from processo_seletivo.convocacao.application.comunicar import SEM_FORMA_DECLARADA
+    from tests.fixtures.legado import sem_as_regras_da_046
+
+    # O Edital publicado antes da `051`, que cortava sem declarar a forma: hoje ele não publica.
+    with sem_as_regras_da_046():
+        edital, _, _ = _cenario(gestor, api_client, manager_headers, process_payload, forma="")
+    identificar(client, "carlos", ["gestor"])
+    proxima = _fila(edital)[0]
+
+    pagina = _pedir(client, edital, proxima["id"]).content.decode()
+    forjada = _pedir(client, edital, proxima["id"], etapa="confirmar", texto_conferido="x")
+
+    assert "Não é possível convocar agora" in pagina
+    assert SEM_FORMA_DECLARADA in pagina
+    assert 'name="texto_conferido"' not in pagina
+    assert forjada.status_code == 200
+    assert Convocacao.objects.count() == 0
+    assert mail.outbox == []
+
+
+def test_a_especie_conferida_viaja_e_a_divergente_e_recusada(
+    client, seletor_ligado, cenario_da_tela
+):
+    """Revisão do #502: a espécie da fila chegava vazia, e o comando derivava outra sem dizer.
+
+    A virada de espécie entre a conferência e a confirmação não se monta com os dados de hoje — a
+    desistência de uma titular deixa a suplente "para vaga que vagou" —, e por isso o caso é o do
+    formulário que chega com a espécie de antes: a confirmação é recusada, e nada é praticado.
+    """
+    edital, _, _ = cenario_da_tela
+    identificar(client, "carlos", ["gestor"])
+    conferencia = _pedir(client, edital, _fila(edital)[0]["id"])
+
+    assert campos_da_conferencia(conferencia)["especie"] == nomes.VAGA_INICIAL
+    resposta = _confirmar(client, edital, conferencia, especie=nomes.SUPLENCIA)
+
+    pagina = resposta.content.decode()
+    assert resposta.status_code == 200
+    assert "não é a que a posição desta pessoa determina" in pagina
+    assert Convocacao.objects.count() == 0
+    assert mail.outbox == []

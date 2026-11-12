@@ -25,6 +25,9 @@ mudou entre esta página e o clique é recusada sem emitir.
 {% else %}
 <p class="sub">{% if continuacao %}Faixa seguinte da geração vigente.{% elif geracao %}Sucessão da geração vigente.{% else %}Primeiro corte deste recorte.{% endif %} Nada foi gravado até aqui: a emissão acontece quando você confirmar, no fim desta página.</p>
 
+{% if outro_corte %}
+<p class="aviso" role="status"><strong>Outro corte foi emitido depois da sua leitura; confira a faixa atual antes de tentar de novo.</strong> O que está abaixo é a sucessão daquele corte, e exige motivo.</p>
+{% endif %}
 {% if calculo_mudou %}
 <p class="aviso" role="status"><strong>O cálculo mudou desde que você abriu o corte.</strong> O que está declarado abaixo é a faixa de agora — confira antes de emitir.</p>
 {% endif %}
