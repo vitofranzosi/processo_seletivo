@@ -940,6 +940,25 @@ class Obrigacoes:
             self.que_falta or self.opcionais_a_enviar or self.requerimento_a_preencher_na_chamada
         )
 
+    # --- O envio dos arquivos escolhidos (150, D-001 revista em 12/11/2026) ----------------------
+    # Um botão só para a página, e não um por cartão: ele mora no fim do primeiro bloco que tem
+    # cartão com envio. *O que falta* quando há o que mandar ali; senão, *O que você já
+    # apresentou*, onde só há substituição. Os cartões de substituição que ficam abaixo do botão
+    # apontam para ele.
+
+    @property
+    def envio_no_que_falta(self):
+        return any(i.pode_enviar for i in self.que_falta + self.opcionais_a_enviar)
+
+    @property
+    def envio_no_que_ja_apresentou(self):
+        return not self.envio_no_que_falta and any(i.pode_enviar for i in self.ja_apresentados)
+
+    @property
+    def um_so_com_envio(self):
+        """Um cartão só com envio: a frase de como se envia não fala em "cada documento"."""
+        return sum(1 for i in self.itens if i.pode_enviar) == 1
+
     @property
     def primeira_ancora(self):
         """A âncora da primeira tarefa da FR-3726 — e a do Requerimento quando ele é a única (121,

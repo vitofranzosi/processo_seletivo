@@ -1,24 +1,32 @@
-/* O envio de vários documentos da convocação (150, FR-5600 a FR-5611).
+/* O envio dos documentos da convocação: um seletor por documento, um botão de envio só (150).
 
    Cada cartão da convocação é um formulário que envia só o seu arquivo e recarrega a página. Quem
    escolhia os quatro arquivos e clicava em "Enviar" num deles via um chegar e os outros três
    voltarem a "Nenhum arquivo escolhido", sem aviso nenhum — e o prazo corria.
 
-   Com dois ou mais arquivos escolhidos, o botão de cada cartão escolhido passa a dizer "Enviar os N
-   documentos escolhidos" e envia todos (D-001). **Um por requisição, em sequência** (D-002): o
-   proxy limita o corpo do portal a um arquivo, e cada documento continua um envio próprio, com a
-   validação, o prazo e a trilha de hoje. A rota é a mesma do envio de um; o cabeçalho
-   `X-Envio-De-Varios: k/n` só troca o redirecionamento por JSON, que o `fetch` consegue ler (R-002).
+   **Um botão só, no fim da lista** (D-001, revista em 12/11/2026). A primeira versão desta spec
+   transformava o botão de cada cartão escolhido em "Enviar os N documentos escolhidos": com dois
+   escolhidos, a pessoa via dois botões iguais para uma operação só, e lia cada um como o envio
+   daquele cartão. Agora o botão do cartão sai de vista; o cartão diz o arquivo escolhido e que
+   ainda não foi enviado, e oferece trocá-lo ou remover a escolha (FR-5603). O envio é o do fim da
+   lista, que diz quantos vão — e com um só escolhido também: o caminho é o mesmo.
+
+   **Um por requisição, em sequência** (D-002): o proxy limita o corpo do portal a um arquivo, e
+   cada documento continua um envio próprio, com a validação, o prazo e a trilha de hoje. A rota é
+   a mesma do envio de um; o cabeçalho `X-Envio-De-Varios: k/n` só troca o redirecionamento por
+   JSON, que o `fetch` consegue ler (R-002). Com `n = 1` o servidor monta a confirmação de hoje.
 
    **A recusa de um não para os seguintes** (FR-5606). O arquivo acima do limite nem viaja: vai só o
    tamanho, e o servidor recusa com a frase de hoje (R-009). Terminado o lote, a página é recarregada
    na âncora que o servidor indicou — a confirmação, ou o cartão do primeiro recusado (R-004).
 
-   **Queda de conexão ou acesso expirado no meio** (FR-5610): a página fica, diz o que chegou e o que
-   não foi enviado, e o que não foi continua escolhido. Do documento que estava subindo quando a
-   conexão caiu não se sabe se chegou: a frase diz isso, e não "não recebido" (R-010).
+   **Queda de conexão ou acesso expirado no meio** (FR-5610): a página fica, diz junto do botão o
+   que chegou e o que não foi enviado, e o que não foi continua escolhido. Do documento que estava
+   subindo quando a conexão caiu não se sabe se chegou: a frase diz isso, e não "não recebido"
+   (R-010).
 
-   Com um arquivo só, nada muda: o envio é o de hoje, com o progresso de `envio.js`.
+   Sem script, nada disto existe: a área do envio nasce escondida, e cada cartão envia o seu, como
+   antes (FR-5612).
 
    **Nada é guardado no navegador** (FR-5611): nem nome de arquivo, nem progresso. */
 (function () {
@@ -33,37 +41,36 @@
   var EM_VOO =
     ": não é possível saber se chegou — a conexão caiu durante o envio. Recarregue a página para " +
     "conferir, ou envie de novo: se já tinha chegado, o sistema reconhece o mesmo arquivo.";
+  var SEM_ARQUIVO = "Escolha um arquivo PDF antes de enviar.";
   var RECEBIDO_AGORA = "Recebido agora.";
   var NENHUM = "Nenhum arquivo escolhido";
+  var AINDA_NAO_UM = "O arquivo ainda não foi enviado à comissão.";
+  var AINDA_NAO_VARIOS = "Os arquivos ainda não foram enviados à comissão.";
 
   var formularios = Array.prototype.slice.call(document.querySelectorAll("form[data-envio]"));
-  if (!formularios.length) return;
+  var area = document.querySelector("[data-envio-dos-documentos]");
+  if (!formularios.length || !area) return;
   var anuncio = document.querySelector("[data-anuncio-de-varios]");
-  /* O rótulo e a frase de progresso de cada cartão, como vieram do servidor: com um escolhido, ou
-     nenhum, o botão volta a ser exatamente o de hoje, com o nome do documento para o leitor de
-     tela (FR-3745 da `118`). */
-  var originais = formularios.map(function (formulario) {
-    var botao = botaoDe(formulario);
-    var ajuda = ajudaDoProgresso(formulario);
-    return {
-      rotulo: botao ? botao.innerHTML : "",
-      progresso: ajuda ? ajuda.textContent : "",
-    };
-  });
+  var botaoDoEnvio = area.querySelector("[data-enviar-os-escolhidos]");
+  var contagem = area.querySelector("[data-contagem-da-escolha]");
+  var orientacao = area.querySelector("[data-orientacao-da-escolha]");
+  var progresso = area.querySelector("[data-progresso-do-lote]");
+  var ajudaDoProgresso = progresso ? progresso.querySelector(".ajuda") : null;
+  var progressoOriginal = ajudaDoProgresso ? ajudaDoProgresso.textContent : "";
+  var recado = area.querySelector("[data-recado-do-lote]");
+  /* A orientação sem escolha vem do servidor, que sabe se há um documento ou vários. */
+  var orientacaoVazia = orientacao ? orientacao.textContent : "";
+  /* Só com substituição, o rodapé aparece depois da escolha (`_envio_dos_documentos.html`). */
+  var soComEscolha = Boolean(area.hasAttribute && area.hasAttribute("data-so-com-escolha"));
   var emCurso = false;
   var ultimaContagem = 0;
 
-  function botaoDe(formulario) {
-    return formulario.querySelector("button[type=submit]");
+  function no(formulario, seletor) {
+    return formulario.querySelector(seletor);
   }
 
   function campoDe(formulario) {
-    return formulario.querySelector("[data-arquivo]");
-  }
-
-  function ajudaDoProgresso(formulario) {
-    var bloco = formulario.querySelector(".progresso");
-    return bloco ? bloco.querySelector(".ajuda") : null;
+    return no(formulario, "[data-arquivo]");
   }
 
   function arquivoDe(formulario) {
@@ -80,6 +87,14 @@
     return (cartao && cartao.getAttribute("data-documento")) || "";
   }
 
+  /* O "de M" conta as tarefas — o que falta enviar e o que a comissão pediu para corrigir —, e não
+     a substituição espontânea nem o opcional: "1 de 4" com três substituições possíveis leria como
+     três faltando. O servidor marca a tarefa no cartão. */
+  function pendente(formulario) {
+    var cartao = cartaoDe(formulario);
+    return Boolean(cartao && cartao.hasAttribute && cartao.hasAttribute("data-tarefa"));
+  }
+
   function escolhidos() {
     return formularios.filter(arquivoDe);
   }
@@ -88,19 +103,59 @@
     if (anuncio) anuncio.textContent = texto;
   }
 
-  /* O rótulo de cada botão segue a contagem (FR-5601, FR-5613). Com dois ou mais, o nome acessível
-     é o texto visível: todos os botões fazem então a mesma coisa. */
+  function mostrar(elemento, sim) {
+    if (elemento) elemento.hidden = !sim;
+  }
+
+  function documentos(quantos) {
+    return quantos === 1 ? "1 documento" : quantos + " documentos";
+  }
+
+  /* O que a área e cada cartão dizem, a cada escolha (FR-5601, FR-5602, FR-5603, UX-501). */
   function rotular() {
-    var quantos = escolhidos().length;
-    formularios.forEach(function (formulario, indice) {
-      var botao = botaoDe(formulario);
-      if (!botao) return;
-      if (quantos >= 2 && arquivoDe(formulario)) {
-        botao.textContent = "Enviar os " + quantos + " documentos escolhidos";
-      } else {
-        botao.innerHTML = originais[indice].rotulo;
-      }
+    var lote = escolhidos();
+    var quantos = lote.length;
+    var pendentes = formularios.filter(pendente).length;
+    var escolhidosPendentes = lote.filter(pendente).length;
+
+    formularios.forEach(function (formulario) {
+      var tem = Boolean(arquivoDe(formulario));
+      mostrar(no(formulario, "[data-estado-da-escolha]"), tem);
+      mostrar(no(formulario, "[data-remover-escolha]"), tem);
+      mostrar(no(formulario, "[data-rotulo-escolher]"), !tem);
+      mostrar(no(formulario, "[data-rotulo-trocar]"), tem);
+      var cartao = cartaoDe(formulario);
+      if (cartao && cartao.classList) cartao.classList.toggle("com-escolha", tem);
+      var situacao = cartao ? cartao.querySelector("[data-some-com-a-escolha]") : null;
+      if (situacao && situacao.classList) situacao.classList.toggle("oculto", tem);
     });
+
+    /* Sem escolha, a área fica leve — contorno tracejado, sem a contagem —, e diz só o que fazer:
+       uma caixa cinza com "Nenhum arquivo selecionado" pesava como um aviso. */
+    if (area.classList) area.classList.toggle("vazia", quantos === 0);
+    /* Durante o lote, e com o recado de um lote que parou, o rodapé fica: é onde a frase está. */
+    if (soComEscolha) area.hidden = quantos === 0 && !emCurso && !(recado && !recado.hidden);
+    mostrar(contagem, quantos > 0);
+
+    if (contagem) {
+      contagem.textContent =
+        quantos === 0
+          ? "Nenhum arquivo selecionado"
+          : quantos === escolhidosPendentes && pendentes > 1
+            ? /* "1 de 2 arquivos": concorda com o total, como se lê em voz alta. */
+              quantos + " de " + pendentes + " arquivos selecionados"
+            : quantos === 1
+              ? "1 arquivo selecionado"
+              : quantos + " arquivos selecionados";
+    }
+    if (orientacao) {
+      orientacao.textContent =
+        quantos === 0 ? orientacaoVazia : quantos === 1 ? AINDA_NAO_UM : AINDA_NAO_VARIOS;
+    }
+    if (botaoDoEnvio) {
+      botaoDoEnvio.textContent = quantos === 0 ? "Enviar documentos" : "Enviar " + documentos(quantos);
+      botaoDoEnvio.disabled = emCurso || quantos === 0;
+    }
     if (quantos !== ultimaContagem) {
       ultimaContagem = quantos;
       anunciar(
@@ -116,56 +171,56 @@
 
   function travar(sim) {
     formularios.forEach(function (formulario) {
-      var botao = botaoDe(formulario);
       var campo = campoDe(formulario);
-      if (botao) botao.disabled = sim;
+      var remover = no(formulario, "[data-remover-escolha]");
       if (campo) campo.disabled = sim;
+      if (remover) remover.disabled = sim;
     });
+    if (botaoDoEnvio) botaoDoEnvio.disabled = sim;
   }
 
-  function mostrarProgresso(formulario, texto) {
-    var bloco = formulario.querySelector(".progresso");
-    if (!bloco) return;
-    bloco.hidden = false;
-    var barra = bloco.querySelector("progress");
-    if (barra) barra.removeAttribute("value");
-    var ajuda = ajudaDoProgresso(formulario);
-    if (ajuda) ajuda.textContent = texto;
+  function mostrarProgresso(texto) {
+    if (progresso) {
+      progresso.hidden = false;
+      var barra = progresso.querySelector("progress");
+      if (barra) barra.removeAttribute("value");
+    }
+    if (ajudaDoProgresso) ajudaDoProgresso.textContent = texto;
     anunciar(texto);
   }
 
   function esconderProgresso() {
-    formularios.forEach(function (formulario, indice) {
-      var bloco = formulario.querySelector(".progresso");
-      if (bloco) bloco.hidden = true;
-      var ajuda = ajudaDoProgresso(formulario);
-      if (ajuda) ajuda.textContent = originais[indice].progresso;
-    });
+    mostrar(progresso, false);
+    if (ajudaDoProgresso) ajudaDoProgresso.textContent = progressoOriginal;
   }
 
-  /* A frase no cartão, no lugar onde a pessoa está olhando — a mesma marca de `envio.js`. */
+  /* A frase no cartão — a recusa de um documento —, com a mesma marca de `envio.js`. */
   function dizerNoCartao(formulario, texto) {
     var alvo = cartaoDe(formulario) || formulario;
-    var recado = alvo.querySelector(".recusa-do-envio");
-    if (!recado) {
-      recado = document.createElement("p");
-      recado.className = "recusa recusa-do-envio";
-      recado.setAttribute("role", "alert");
-      alvo.appendChild(recado);
+    var frase = alvo.querySelector(".recusa-do-envio");
+    if (!frase) {
+      frase = document.createElement("p");
+      frase.className = "recusa recusa-do-envio";
+      frase.setAttribute("role", "alert");
+      alvo.appendChild(frase);
     }
+    frase.textContent = texto;
+  }
+
+  function dizerNoEnvio(texto) {
+    if (!recado) return;
     recado.textContent = texto;
+    recado.hidden = !texto;
   }
 
   function limparEscolha(formulario, texto) {
     var campo = campoDe(formulario);
     if (campo) campo.value = "";
-    var nome = formulario.querySelector("[data-nome-do-arquivo]");
+    var nome = no(formulario, "[data-nome-do-arquivo]");
     if (nome) {
       nome.textContent = texto || NENHUM;
       if (nome.classList) nome.classList.remove("escolhido");
     }
-    var botao = botaoDe(formulario);
-    if (botao && botao.classList) botao.classList.remove("pronta");
   }
 
   function nomes(lista) {
@@ -181,7 +236,7 @@
   function pedir(formulario, posicao, total) {
     var arquivo = arquivoDe(formulario);
     var limite = parseInt(formulario.getAttribute("data-limite-em-bytes"), 10);
-    var ficha = formulario.querySelector("[name=csrfmiddlewaretoken]");
+    var ficha = no(formulario, "[name=csrfmiddlewaretoken]");
     var corpo = new FormData();
     corpo.append("csrfmiddlewaretoken", ficha ? ficha.value : "");
     if (limite && arquivo.size > limite) {
@@ -208,8 +263,9 @@
     });
   }
 
-  /* O lote parou no meio (FR-5610): a página fica, e a frase diz o que chegou e o que não. */
-  function parar(acionado, recebidos, recusados, naoEnviados, emVoo, frase) {
+  /* O lote parou no meio (FR-5610): a página fica, e a frase, junto do botão, diz o que chegou e o
+     que não. */
+  function parar(recebidos, recusados, naoEnviados, emVoo, frase) {
     emCurso = false;
     travar(false);
     esconderProgresso();
@@ -228,13 +284,28 @@
     if (recebidos.length) partes.push("Recebemos: " + nomes(recebidos) + ".");
     if (naoEnviados.length) partes.push("Não foram enviados: " + nomes(naoEnviados) + ".");
     if (emVoo) partes.push(nomeDe(emVoo) + EM_VOO);
-    dizerNoCartao(acionado, partes.join(" "));
+    dizerNoEnvio(partes.join(" "));
     rotular();
   }
 
-  function enviarTodos(lote, acionado) {
+  /* A volta precisa ser **outro** endereço, ou o navegador não recarrega: ir da página para ela
+     mesma com âncora só rola a tela (R-004). O `?lote=N` do servidor resolve a primeira vez, e não a
+     segunda — dois envios seguidos do mesmo tamanho, o caso comum com um documento por vez,
+     voltavam ao endereço em que a página já estava, e ela ficava parada com o progresso à mostra.
+     Quando coincide, a volta ganha `de-novo=1`; na vez seguinte, sem ele, já é outro endereço. */
+  function voltar(volta) {
+    var local = window.location;
+    var atual = local && local.pathname !== undefined ? local.pathname + local.search : null;
+    if (atual !== null && volta.split("#")[0] === atual) {
+      volta = volta.replace("?", "?de-novo=1&");
+    }
+    local.assign(volta);
+  }
+
+  function enviarTodos(lote) {
     emCurso = true;
     travar(true);
+    dizerNoEnvio("");
     /* A confirmação no topo é a da volta anterior. Se o lote parar no meio, a página fica, e ela
        contradiria a frase nova — "não foi recebido" de um documento que acabou de chegar. */
     var anterior = document.querySelector("#confirmacao");
@@ -246,19 +317,20 @@
 
     function passo(indice) {
       if (indice >= total) {
-        window.location.assign(volta);
+        voltar(volta);
         return null;
       }
       var formulario = lote[indice];
       mostrarProgresso(
-        acionado,
-        "Enviando " + (indice + 1) + " de " + total + ": " + nomeDe(formulario) +
-          "… Não feche esta página."
+        total === 1
+          ? "Enviando " + nomeDe(formulario) + "… Não feche esta página."
+          : "Enviando " + (indice + 1) + " de " + total + ": " + nomeDe(formulario) +
+              "… Não feche esta página."
       );
       return pedir(formulario, indice + 1, total).then(
         function (resultado) {
           if (!resultado.dados) {
-            parar(acionado, recebidos, recusados, lote.slice(indice), null, resultado.frase);
+            parar(recebidos, recusados, lote.slice(indice), null, resultado.frase);
             return null;
           }
           volta = resultado.dados.volta;
@@ -270,7 +342,7 @@
           return passo(indice + 1);
         },
         function () {
-          parar(acionado, recebidos, recusados, lote.slice(indice + 1), formulario, CONEXAO);
+          parar(recebidos, recusados, lote.slice(indice + 1), formulario, CONEXAO);
           return null;
         }
       );
@@ -279,24 +351,57 @@
     return passo(0);
   }
 
+  /* Com script, a área aparece, a frase do envio único também, e o botão de cada cartão sai de
+     vista: o envio é um só. O limite do arquivo, dito na frase de cima, deixa de se repetir em cada
+     cartão — e continua na descrição acessível do campo (FR-3745 da `118`). */
+  area.hidden = soComEscolha;
+  Array.prototype.slice
+    .call(document.querySelectorAll("[data-instrucao-com-script]"))
+    .forEach(function (frase) {
+      frase.hidden = false;
+    });
+
   formularios.forEach(function (formulario) {
+    mostrar(no(formulario, "[data-envio-do-cartao]"), false);
+    var limite = no(formulario, "[data-limite-do-cartao]");
+    if (limite && limite.classList) limite.classList.add("oculto");
+
     var campo = campoDe(formulario);
     if (campo) campo.addEventListener("change", rotular);
-    /* No próprio formulário, e não no `document.body` como `envio.js`: este ouvinte corre antes, e
-       com dois ou mais escolhidos o envio nativo — que levaria um e descartaria os outros — não
-       acontece. */
+
+    var remover = no(formulario, "[data-remover-escolha]");
+    if (remover) {
+      remover.addEventListener("click", function () {
+        limparEscolha(formulario);
+        rotular();
+        /* O foco volta ao campo, e não se perde no botão que acabou de sumir. */
+        if (campo && campo.focus) campo.focus();
+      });
+    }
+
+    /* O formulário não tem mais botão à vista, mas ainda é formulário: um envio que escape por ele
+       — o Enter de algum navegador, uma extensão — também vai pelo lote, e nunca leva um só e
+       descarta os outros (FR-5600). Sem nada escolhido, a frase de hoje, no cartão (FR-5604). */
     formulario.addEventListener("submit", function (evento) {
-      if (emCurso) {
-        evento.preventDefault();
-        return;
-      }
-      var lote = escolhidos();
-      if (lote.length < 2 || !arquivoDe(formulario)) return;
       evento.preventDefault();
       evento.stopPropagation();
-      enviarTodos(lote, formulario);
+      if (emCurso) return;
+      var lote = escolhidos();
+      if (!lote.length) {
+        dizerNoCartao(formulario, SEM_ARQUIVO);
+        return;
+      }
+      enviarTodos(lote);
     });
   });
+
+  if (botaoDoEnvio) {
+    botaoDoEnvio.addEventListener("click", function () {
+      if (emCurso) return;
+      var lote = escolhidos();
+      if (lote.length) enviarTodos(lote);
+    });
+  }
 
   /* A volta pelo "voltar" do navegador restaura a página como estava no instante da navegação —
      com os botões travados e o progresso à mostra. */

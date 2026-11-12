@@ -112,8 +112,8 @@ segundo, e o cartão dele traz a recusa de hoje (SC-1802).
 
 **Independent Test**: três escolhidos, remover dois, enviar o restante; só ele recebido.
 
-- [ ] T026 [P] [US3] Em `backend/tests/javascript/varios.test.js`, testar: o botão de remover aparece com arquivo e some sem; remover limpa o campo, volta o nome a "Nenhum arquivo escolhido", tira o `pronta` e refaz o N dos outros (FR-5603, UX-503); `submit` num cartão sem arquivo não sai da página, escreve "Escolha um arquivo PDF antes de enviar." no cartão e mantém as escolhas (FR-5604)
-- [ ] T027 [US3] Em `backend/processo_seletivo/portal/static/portal/varios.js`, revelar e ligar `[data-remover-escolha]` e tratar o cartão vazio
+- [x] T026 [P] [US3] Em `backend/tests/javascript/varios.test.js`, testar: o botão de remover aparece com arquivo e some sem; remover limpa o campo, volta o nome a "Nenhum arquivo escolhido", tira o `pronta` e refaz o N dos outros (FR-5603, UX-503); `submit` num cartão sem arquivo não sai da página, escreve "Escolha um arquivo PDF antes de enviar." no cartão e mantém as escolhas (FR-5604)
+- [x] T027 [US3] Em `backend/processo_seletivo/portal/static/portal/varios.js`, revelar e ligar `[data-remover-escolha]` e tratar o cartão vazio
 
 **Checkpoint**: US3 verde; com uma escolha restante, o envio é o de hoje.
 
@@ -150,8 +150,8 @@ nos dois, envio possível; depois de enviar o diploma, o mesmo PDF no comprovant
 **Independent Test**: com o script desligado, a frase antes do primeiro cartão com envio; envio de um,
 como hoje (SC-1803).
 
-- [ ] T033 [P] [US4] Em `backend/tests/interface/test_portal_documentos_da_convocacao.py`, testar: com documento a enviar, um `<noscript>` com a frase da FR-5612 antes do primeiro cartão com envio, e nenhum sem documento a enviar; a frase não aparece fora do `<noscript>`; o envio sem cabeçalho volta como hoje (FR-5612, SC-1803)
-- [ ] T034 [US4] Em `backend/processo_seletivo/portal/templates/portal/convocacao.html`, o `<noscript><p class="instrucao">…</p></noscript>` antes do primeiro cartão com envio (R-007)
+- [x] T033 [P] [US4] Em `backend/tests/interface/test_portal_documentos_da_convocacao.py`, testar: com documento a enviar, um `<noscript>` com a frase da FR-5612 antes do primeiro cartão com envio, e nenhum sem documento a enviar; a frase não aparece fora do `<noscript>`; o envio sem cabeçalho volta como hoje (FR-5612, SC-1803)
+- [x] T034 [US4] Em `backend/processo_seletivo/portal/templates/portal/convocacao.html`, o `<noscript><p class="instrucao">…</p></noscript>` antes do primeiro cartão com envio (R-007)
 
 ---
 
@@ -206,3 +206,12 @@ T013 (interface)  |  T014 → T015 (varios.test.js)  |  T016 (integration)
 3. **US3, US5, US4** em qualquer ordem; US5 (achado 11) pode ir num PR próprio, por depender só da
    marcação.
 4. Cada fase fecha com o diretório tocado verde contra PostgreSQL; a suíte inteira, uma vez, em T039.
+
+## Revisão de 12/11/2026: um botão de envio só (D-001 revista)
+
+Feitas na revisão, fora da ordem das fases: T026 e T027 (remover a escolha), e T033 e T034 (a frase
+sem script — que mora em `portal/_instrucao_do_envio.html`, incluída antes do primeiro cartão com
+envio, e não em `convocacao.html`). Os testes do servidor estão em `TestUmBotaoDeEnvioSo`, de
+`tests/interface/test_portal_documentos_da_convocacao.py`; os do script, em
+`tests/javascript/varios.test.js`, reescrito para a área única. As capturas e o registro estão em
+`doc/polish-envio-unico-2026-11-12/`. Continuam abertas a US5 (T028 a T032) e a fase final.

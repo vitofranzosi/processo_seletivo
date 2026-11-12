@@ -611,6 +611,56 @@ details.como-converter li{margin-bottom:.4rem}
 .envio .acao.pronta:hover{background:var(--verde-escuro)}
 .envio .limite{display:block;color:var(--texto-fraco);font-size:.875rem;margin-top:.4rem}
 
+/* Escolher não é enviar (150, D-001 revista em 12/11/2026). O nome do arquivo e a frase "ainda não
+   enviado" ficam juntos, numa caixa cinza — sem verde nem marca de concluído, que leriam como
+   recebido. Escolhido o arquivo, o seletor vira "Trocar arquivo", de texto, à direita, e "Remover a
+   escolha" ao lado: as duas ações mudam a escolha e não enviam nada. A ordem do Tab segue a do
+   documento — campo, remover —, que é a mesma da esquerda para a direita. */
+/* A base de 14rem põe nome e estado numa linha só; no celular, "Trocar" e "Remover" descem juntos
+   para a linha de baixo, em vez de espremer a frase em três linhas. */
+.escolher .escolha{display:flex;flex-direction:column;gap:.1rem;flex:1 1 14rem;min-width:0}
+.escolher .escolha .nome-do-arquivo{flex:none}
+.estado-da-escolha{color:var(--texto-fraco);font-size:.875rem}
+.ir-ao-envio{display:block;width:fit-content;margin-top:.15rem;font-weight:600}
+.cartao-do-documento.com-escolha .escolher{background:var(--cinza-fundo);border-radius:6px;
+  padding:.5rem .75rem}
+.cartao-do-documento.com-escolha .escolher .escolha{order:-1}
+.cartao-do-documento.com-escolha .escolher .botao-arquivo{border-color:transparent;
+  background:transparent;padding:.55rem .25rem;text-decoration:underline;
+  text-underline-offset:3px;min-height:44px}
+.remover-a-escolha{min-height:44px;padding:.55rem .25rem;border:0;background:transparent;
+  color:var(--texto-fraco);font:inherit;font-size:.875rem;text-decoration:underline;
+  text-underline-offset:3px;cursor:pointer}
+.remover-a-escolha:hover{color:var(--texto)}
+.remover-a-escolha[hidden]{display:none}
+.instrucao-do-envio{margin:.25rem 0 .75rem;max-width:var(--leitura)}
+/* O envio dos escolhidos é o rodapé da lista, e não um cartão a mais (polish de 12/11/2026). A caixa
+   cinza de meia largura, embaixo de uma grade de duas colunas, se lia como um quinto cartão,
+   desligado dos documentos. Agora é um divisor e uma linha da largura da lista: a contagem e a frase
+   à esquerda, o botão à direita; no celular, empilhados, com o botão na largura toda. Sem escolha, só
+   a orientação e o botão indisponível. */
+.envio-dos-documentos{display:grid;grid-template-columns:minmax(0,1fr);gap:.25rem 1.5rem;
+  align-items:center;margin:1.25rem 0 0;padding:1rem 0 0;border-top:1px solid var(--borda)}
+.envio-dos-documentos[hidden]{display:none}
+.envio-dos-documentos.vazia .orientacao-da-escolha{color:var(--texto)}
+.contagem-da-escolha[hidden]{display:none}
+.envio-dos-documentos:focus{outline:3px solid var(--verde);outline-offset:2px}
+.contagem-da-escolha{margin:0;font-weight:600}
+.orientacao-da-escolha{margin:0;color:var(--texto-fraco);font-size:.9375rem}
+.enviar-os-escolhidos{margin-top:.5rem;width:100%;min-height:48px;padding:.6rem 1.5rem;
+  border-radius:6px;border:1px solid var(--verde);background:var(--verde);color:var(--branco);
+  font:inherit;font-weight:600;cursor:pointer}
+.enviar-os-escolhidos:hover{background:var(--verde-escuro)}
+.enviar-os-escolhidos[disabled]{background:var(--branco);border-color:var(--borda);
+  color:var(--texto-fraco);cursor:not-allowed}
+.envio-dos-documentos .progresso, .envio-dos-documentos .recusa-do-envio{grid-column:1/-1}
+.envio-dos-documentos .recusa-do-envio{margin:.25rem 0 0}
+@media (min-width:40rem){
+  .envio-dos-documentos{grid-template-columns:minmax(0,1fr) auto}
+  .envio-dos-documentos .enviar-os-escolhidos{grid-column:2;grid-row:1/span 2;width:auto;
+    margin:0}
+}
+
 /* Uma ação só no comprovante: baixar o arquivo. Enquanto existiam duas, elas dividiam a decisão —
    e o PDF é melhor do que a impressão da página em tudo o que importa aqui (nome próprio, folha
    limpa, bytes verificáveis). A página continua imprimível pelo navegador para quem apertar
@@ -1137,6 +1187,19 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
   .pagina-da-convocacao .requisitos-lista:has(>li+li){grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 .pagina-da-convocacao .requisitos-lista>li:only-child{max-width:var(--leitura)}
+/* **O bloco em que se envia é um formulário, numa coluna só** (polish de 12/11/2026). Em duas
+   colunas, os cartões de alturas diferentes se igualavam com espaço vazio, e a ordem de
+   preenchimento ziguezagueava. Aqui a lista e o rodapé do envio têm a mesma largura, de até 56rem —
+   leitura confortável numa tela larga, sem esticar a linha —, e cada cartão tem a altura do que
+   diz. As duas colunas ficam para *O que você já apresentou* quando o envio não mora nele: ali se
+   consulta, e não se preenche — na mesma largura de cima, para as bordas dos blocos se alinharem. */
+.pagina-da-convocacao>.bloco-da-convocacao.bloco-com-envio,
+.pagina-da-convocacao>#o-que-voce-ja-apresentou{max-width:56rem}
+/* Cada cartão na altura do que diz: igualar a linha deixava um cartão curto com meia tela vazia ao
+   lado de uma substituição aberta. */
+.pagina-da-convocacao .requisitos-lista{align-items:start}
+.pagina-da-convocacao .bloco-com-envio .requisitos-lista{grid-template-columns:minmax(0,1fr)}
+.pagina-da-convocacao .bloco-com-envio .requisitos-lista>li:only-child{max-width:none}
 .pagina-da-convocacao .cartao-do-documento{display:flex;flex-direction:column;min-width:0}
 .cabeca-do-documento{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
   margin:0 0 .35rem}

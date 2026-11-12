@@ -52,8 +52,9 @@ palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
 {% endif %}
 
 {% if o.tem_bloco_que_falta %}
-<section class="bloco-da-convocacao" id="{% if o.que_falta or o.requerimento_a_preencher_na_chamada %}o-que-falta{% else %}documentos-opcionais{% endif %}" aria-labelledby="bloco-falta">
+<section class="bloco-da-convocacao{% if o.envio_no_que_falta %} bloco-com-envio{% endif %}" id="{% if o.que_falta or o.requerimento_a_preencher_na_chamada %}o-que-falta{% else %}documentos-opcionais{% endif %}" aria-labelledby="bloco-falta">
   <h2 id="bloco-falta">{% if o.encerrada %}O que ficou sem envio{% elif o.que_falta or o.requerimento_a_preencher_na_chamada %}O que falta{% else %}Documentos opcionais{% endif %}</h2>
+  {% if o.envio_no_que_falta %}{% include "portal/_instrucao_do_envio.html" %}{% endif %}
   {% if o.que_falta %}
   <ul class="requisitos-lista">
     {% for item in o.que_falta %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
@@ -72,17 +73,24 @@ palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
     {% for item in o.opcionais_a_enviar %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
   </ul>
   {% endif %}
+  {% if o.envio_no_que_falta %}{% include "portal/_envio_dos_documentos.html" %}{% endif %}
 </section>
 {% endif %}
 
 {% if o.ja_apresentados or o.requerimento_enviado %}
-<section class="bloco-da-convocacao" id="o-que-voce-ja-apresentou" aria-labelledby="bloco-apresentado">
+<section class="bloco-da-convocacao{% if o.envio_no_que_ja_apresentou %} bloco-com-envio{% endif %}" id="o-que-voce-ja-apresentou" aria-labelledby="bloco-apresentado">
   <h2 id="bloco-apresentado">O que você já apresentou</h2>
+  {% if o.envio_no_que_ja_apresentou %}{% include "portal/_instrucao_do_envio.html" with so_substituicao=True %}{% endif %}
+  {% comment %}
+  Com o botão de envio em *O que falta*, acima, a substituição escolhida aqui embaixo aponta para
+  ele (`link_ao_envio`): o arquivo escolhido conta no mesmo envio, e a pessoa precisa achar o botão.
+  {% endcomment %}
   {% if o.ja_apresentados %}
   <ul class="requisitos-lista">
-    {% for item in o.ja_apresentados %}{% include "portal/_cartao_do_documento_da_convocacao.html" %}{% endfor %}
+    {% for item in o.ja_apresentados %}{% include "portal/_cartao_do_documento_da_convocacao.html" with link_ao_envio=o.envio_no_que_falta %}{% endfor %}
   </ul>
   {% endif %}
+  {% if o.envio_no_que_ja_apresentou %}{% include "portal/_envio_dos_documentos.html" with so_substituicao=True %}{% endif %}
   {% include "portal/_requerimento_nas_obrigacoes.html" with so_o_enviado=True %}
 </section>
 {% endif %}
