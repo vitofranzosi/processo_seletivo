@@ -18,7 +18,11 @@
         {% if vinculo.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
       {% if vinculo.funcao == "PRESIDENTE" %}
       {% comment %} Quem preside precisa de rota até a própria comissão: o acesso existia desde
-         sempre, e o caminho não — a pessoa tinha de achar o Processo na lista geral. {% endcomment %}
+         sempre, e o caminho não — a pessoa tinha de achar o Processo na lista geral. E o trabalho
+         da presidência está nos Editais (classificar, cortar, convocar, conferir), e não só na
+         comissão: sem o Processo aqui, a entrada recomendada não levava a ele (achado 24 do estudo
+         de 11/11/2026). {% endcomment %}
+      <a class="acao" href="{% url 'interface:processo-detalhe' vinculo.processo_id %}">Abrir o Processo e os Editais</a>
       <a class="acao" href="{% url 'interface:comissao' vinculo.processo_id %}">Gerir comissão</a>
       <a class="acao" href="{% url 'interface:alocacoes' vinculo.processo_id %}">Alocação por Etapa</a>
       {% endif %}

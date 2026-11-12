@@ -8953,6 +8953,7 @@ def convocacao(request, edital_id, marco_id):
     confere = pode_emitir or pode_conferir_documentos(ator, edital, perfil_id) is not None
     # **O índice responde perguntas, e não prioriza** (143, D-002): a ordem é fixa, e o próximo do
     # andamento continua aparecendo depois de cada ato.
+    contexto_do_recorte = conducao_da_convocacao.contexto_do_recorte(edital, marco_id, lista_id)
     perguntas = conducao_da_convocacao.indice(
         leitura=leitura,
         # **Para todos os que leem** (revisão do #453): quem não convoca lê que há titulares
@@ -9000,9 +9001,8 @@ def convocacao(request, edital_id, marco_id):
                 ),
                 "publicadas_no_gps": _publicadas_no_gps(leitura),
                 # O lugar do recorte, no alto (143, FR-5000), e o índice (FR-5001 a FR-5004).
-                "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
-                    edital, marco_id, lista_id
-                ),
+                "contexto_do_recorte": contexto_do_recorte,
+                "continuacao_admitida": contexto_do_recorte["continuacao_admitida"],
                 "perguntas": perguntas,
                 "sem_providencia": conducao_da_convocacao.sem_providencia(perguntas),
                 "confere": confere,
@@ -9105,6 +9105,22 @@ def convocacao_historico(request, edital_id, marco_id):
     posicoes = {str(item["id"]): indice for indice, item in enumerate(contexto["fila"], start=1)}
     forma_do_recorte = contexto["formaDoRecorte"]
     identificadas = identidades_de({c.inscricao_id for c in convocacoes})
+    # **O ato citado pela data em que foi emitido, e não pelo identificador** (achado 19 do estudo
+    # de 11/11/2026): o UUID só servia a quem consulta o banco. Duas consultas para a série
+    # inteira; o identificador continua no `title`, para quem rastreia.
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao
+    from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+
+    apuracoes_citadas = dict(
+        ApuracaoDeOcupacao.objects.filter(id__in={c.apuracao_id for c in convocacoes}).values_list(
+            "id", "emitida_em"
+        )
+    )
+    ordens_citadas = dict(
+        AtoDeOrdenacao.objects.filter(
+            id__in={c.ato_de_ordenacao_id for c in convocacoes}
+        ).values_list("id", "emitido_em")
+    )
     return marcar_como_privada(
         render(
             request,
@@ -9125,6 +9141,8 @@ def convocacao_historico(request, edital_id, marco_id):
                         **comunicacao_da_linha(convocacao, forma_do_recorte),
                         "vigente": convocacao.id in em_vigor,
                         "posicaoNaFila": posicoes.get(str(convocacao.inscricao_id)),
+                        "apuracaoEmitidaEm": apuracoes_citadas.get(convocacao.apuracao_id),
+                        "ordemEmitidaEm": ordens_citadas.get(convocacao.ato_de_ordenacao_id),
                     }
                     for convocacao in convocacoes
                 ],

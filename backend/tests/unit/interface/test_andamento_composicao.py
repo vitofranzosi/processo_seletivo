@@ -368,3 +368,35 @@ def test_a_etapa_citada_por_um_marco_do_perfil_fica_na_sequencia():
     """Item 4 do code review do B2: sem ela a `jornada()` poria o marco no começo."""
     citadas = a._citadas_pelos_marcos([pontuacao(stages=["p"], desempate=["ent"])])
     assert citadas == {"p", "ent"}
+
+
+# --- A faixa seguinte só onde o Edital a publicou (achado 02 do estudo de 11/11/2026) ------------
+
+
+def _fila_esgotada(**extra):
+    return {
+        "apuracao": a.Celula(a.FEITO),
+        "faltando": 1,
+        "em_aberto": 0,
+        "fila": 0,
+        "esgotou": True,
+        "corte_vigente": True,
+        "com_quadro": True,
+        **extra,
+    }
+
+
+def test_com_continuacao_publicada_a_providencia_e_pedir_a_faixa_seguinte():
+    _, providencias = a.situacoes_da_convocacao(_fila_esgotada(continuacao_admitida=True))
+
+    assert [p.ato for p in providencias] == ["Pedir a faixa seguinte"]
+
+
+def test_sem_continuacao_publicada_a_vaga_fica_a_ocupar_e_a_razao_diz_por_que():
+    """O comando recusaria a faixa (`continuacao_nao_publicada`): sugeri-la era mandar a uma
+    recusa, e a vaga da cota sem concorrente ficava com essa sugestão para sempre."""
+    _, providencias = a.situacoes_da_convocacao(_fila_esgotada(continuacao_admitida=False))
+
+    assert [p.ato for p in providencias] == ["Ocupar a vaga"]
+    assert providencias[0].situacao == a.IMPEDIDO
+    assert "o Edital não publicou continuação além da faixa" in providencias[0].razao

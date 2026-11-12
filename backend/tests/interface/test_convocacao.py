@@ -167,7 +167,11 @@ class TestOsEstadosDistintos:
         pagina = abrir(client, edital).content.decode()
 
         assert "Não há mais quem chamar dentro da faixa" in pagina
-        assert "Ampliar a faixa é ato do corte" in pagina
+        # **O cenário publica o 14/2026, que não admite continuação** (014, D-011): mandar pedir a
+        # faixa seguinte na ocupação era mandar a uma recusa (achado 02 do estudo de 11/11/2026).
+        # A tela diz por que a fila acabou, e não oferece o caminho.
+        assert "este Edital não publicou continuação além dela" in pagina
+        assert "Ir para a ocupação e pedir a faixa seguinte" not in pagina
 
 
 class TestAConfirmacaoAntesDoAtoIrreversivel:

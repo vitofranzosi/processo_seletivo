@@ -226,7 +226,7 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   padrao do PR #120 e o bloqueio anunciado antes da tentativa, e botao desabilitado nao diz por
   que.
   {% endcomment %}
-  {% if recorte.faixaDisponivel %}
+  {% if recorte.faixaDisponivel and recorte.continuacaoAdmitida %}
   <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">
@@ -234,6 +234,8 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
     <p class="ajuda">O déficit apurado de {{ recorte.faltando }} vaga(s) será a causa do ato, e a faixa anterior não é revogada.</p>
     <button type="submit" class="botao">Pedir a faixa seguinte com este déficit</button>
   </form>
+  {% elif recorte.faixaDisponivel %}
+  <p class="nota">Este Edital não publicou que admite chamar além da faixa: a faixa é o que ele publicou, e por isso não há faixa seguinte a pedir. A vaga fica a ocupar; o que fazer com ela é o que o Edital disser.</p>
   {% else %}
   <p class="nota">Este marco não declara regra de corte, e a faixa nasce do corte: sem a regra não há faixa a continuar, e por isso não há faixa seguinte a pedir. Declarar a regra é ato de Retificação do Edital.</p>
   {% endif %}
