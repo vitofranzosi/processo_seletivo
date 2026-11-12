@@ -446,8 +446,12 @@ administra os acessos da unidade também designa, pela tela de acessos.
 **Resultado esperado:** designação registrada; o Centro deixa de dizer que ninguém recebe, e o
 pacote é exportado.
 
-**Atenção:** a pessoa `treino.formalizacao` só aparece para designar nos Editais de treinamento —
-nos Editais reais da unidade ela não é oferecida nem contada.
+**Atenção:** hoje o passo 3 **é recusado pela tela**, com a frase *"Esta pessoa não está disponível
+para receber acesso"*: a tela de designar só aceita pessoas da entrada institucional, e
+`treino.formalizacao` não é uma. A correção está à espera de uma decisão; até lá, faça os passos 1,
+2 e o começo do 3 (ver que a presidência chega à designação e que a pessoa é oferecida), e use o
+C16 para exportar. A pessoa `treino.formalizacao` só aparece para designar nos Editais de
+treinamento — nos Editais reais da unidade ela não é oferecida nem contada.
 
 ---
 

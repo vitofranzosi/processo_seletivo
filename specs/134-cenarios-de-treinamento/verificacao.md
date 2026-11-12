@@ -160,6 +160,16 @@ anterior. Num segundo banco novo (`ps_treino_nav2`), o mesmo percurso no navegad
 resultado. Suíte completa: **19 033 passando, 23 pulados, sem falha, em 1396 s** (com outras
 suítes no mesmo cluster).
 
+**Depois do merge da revisão da `117` (12/11):** no banco novo `ps_treino_nav3`, com o C17, a
+presidência (`treino.presidencia`, pelo grupo Comissões) chega pelo Centro a *Designar quem recebe
+os documentos*, e a lista oferece **só** *Formalização Treinamento*. Ao designar, a tela recusa:
+*"Esta pessoa não está disponível para receber acesso: está suspensa ou desativada, ou o
+identificador não é de pessoa institucional."* — a tela resolve a pessoa por
+`pessoa_institucional`, que exige o prefixo `pessoa-`. O comando aceita a designação (a suíte o
+prova); a tela, não. Conflito registrado nas limitações da spec, à espera de decisão.
+Suíte completa depois do merge da main (`make lint check test-pg`, 4 workers): **19 109 passando,
+23 pulados, sem falha, em 582 s**.
+
 **Observação, sem mudança:** o *O que fazer agora* do `SIM16` também mostra a classificação da lista
 PPP, em que ninguém concorreu, e o resultado definitivo à espera do prazo recursal. É o estado da
 cadeia de notas que o C10 a C12 já percorrem, e não é da formalização.

@@ -687,7 +687,10 @@ CENARIOS = (
             "Formalização: ver o Edital e exportar."
         ),
         resultado_esperado="Designação vigente; o Centro deixa de dizer que ninguém recebe.",
-        dependencias=(),
+        dependencias=(
+            "Hoje a tela de designar recusa treino.formalizacao, que não é pessoa institucional; "
+            "a correção espera decisão (limitações da spec 134).",
+        ),
         montar=montar_c17,
         provisiona_formalizacao=True,
     ),

@@ -70,6 +70,9 @@
 - [x] T029 Depois do merge da revisão da `117` (presidência designa): o C17 pela presidência, e as
   identidades `treino.*` só contadas e oferecidas nos Editais de treinamento (FR-6730, SC-2213).
 
+- [ ] T030 **Bloqueada por decisão do usuário**: a tela de designar recusa `treino.formalizacao`,
+  que não é pessoa institucional (ver *Limitações*). Opções (a) e (b) na spec.
+
 ## Pendente
 
 - [ ] T017 Carga na homologação compartilhada, pelo administrador, depois do ensaio.
