@@ -745,6 +745,18 @@ o admite: enquanto houver aprovado, não há ausência.
 | B | como a `016` faz hoje: a cada apuração, a vaga não ocupada naquele momento | a vaga vai à ampla (V-3) | sim | a definição da `016` (*"ainda que a lista tenha gente"*); **contraria o 8.8** |
 | C | a primeira leitura desta spec: ninguém da faixa vigente pode ocupar | o autodeclarado da faixa é chamado; o de fora dela, não | sim, pela faixa | nenhum: as cláusulas não falam de faixa |
 
+**Um exemplo, o mesmo para as quatro.** Um Perfil com reversão por saldo, como o 57/2026, e 2 vagas
+na PPI. A ordem sorteada da PPI tem quatro autodeclarados habilitados: A e B nas vagas; C entre os
+suplentes analisados para chamada imediata (8.13), dentro da faixa vigente; D depois deles, fora da
+faixa. A desiste.
+
+| Opção | Depois da desistência de A | Se C também desistir |
+|---|---|---|
+| **A2** | C é chamado (8.8); nada vai à ampla | D é chamado pela chamada de suplentes (8.14.1). A vaga só vai à ampla quando a ordem acabar, **ou** quando a administração encerrar a chamada de suplentes da PPI por ato próprio, citando o item |
+| A1 | C é chamado; nada vai à ampla | D é chamado. A vaga só vai à ampla quando a ordem acabar; a administração não tem como encerrar a chamada antes disso |
+| B | a vaga vai à ampla na apuração seguinte, e C nunca é chamado | — |
+| C | C é chamado, porque está na faixa | a vaga vai à ampla, e D, que a ordem alcançaria, não é chamado |
+
 **Recomendação: A2.** É a única que guarda a diferença entre as duas espécies com apoio no texto. O
 encerramento da chamada de suplentes seria um ato a mais, com "Confira antes", fundamento — o item do
 Edital — e registro, e os impedimentos da FR-6306 continuariam valendo. Com A1, a FR-6305 passa a
