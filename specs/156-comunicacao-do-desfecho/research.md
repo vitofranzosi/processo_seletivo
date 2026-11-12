@@ -209,7 +209,7 @@ edição do registro de unidades, com motivo e trilha, e só com `CENARIOS_DE_TR
 
 | Incremento | Estado em 12/11 | Arquivos em comum | Como fica |
 |---|---|---|---|
-| `152` (prevenção) | plano mergeado (#480); MVP só em `claude/152-prevencao-mvp` | `desfechar.py`, `conducao_da_convocacao.py`, `interface/convocacao.html`, `interface/views.py`, `convocacao/application/documentos.py` | esta parte da `main`; a ciência do pedido e a da `152` são marcas distintas; antes da validação final, integrar o que já estiver mergeado |
+| `152` (prevenção) | plano (#480) e MVP, história 1 (#489, o atalho do indeferimento), na `main` em 12/11; o resto em curso | `desfechar.py`, `conducao_da_convocacao.py`, `interface/convocacao.html`, `interface/views.py`, `convocacao/application/documentos.py` | esta parte da `main`; a ciência do pedido e a da `152` são marcas distintas; antes da validação final, integrar o que já estiver mergeado |
 | `154` (depois do envio) | plano no #484 | `portal/obrigacoes.py`, `portal/situacao.py`, `_chamada_da_convocacao.html`, `_obrigacoes_da_convocacao.html` | a `154` mexe nas chamadas abertas; esta, no estado decidido e no fundamento. Conflitos de texto, não de regra |
 | `150` (vários documentos) | plano no #483 | `_cartao_do_documento_da_convocacao.html`, `portal/static/portal/envio.js`, `portal/views.py` | esta não toca o cartão do documento; só `portal/views.py` em comum |
 | `153` (formalização) | mergeada (#486) | `interface/andamento.py`, `interface/encerramento.py`, `relatorio_do_edital.py` | parte dela: o molde das providências e da advertência |

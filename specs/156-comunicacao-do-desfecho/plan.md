@@ -110,7 +110,7 @@ Estão em [research.md](research.md) (R-001 a R-016). As que mais pesam:
 ## Dependências e cruzamentos
 
 - **Antes de implementar**: a revisão da spec (PR #488) na `main`. As tarefas são escritas sobre ela.
-- **A `152`** (implementação não mergeada, branch `claude/152-prevencao-mvp`) toca `desfechar.py`,
+- **A `152`** (o MVP, história 1, entrou na `main` pelo #489 em 12/11; o resto segue em curso) toca `desfechar.py`,
   `conducao_da_convocacao.py` e o cartão. A ciência do pedido é marca própria, que se soma à dela.
 - **A `154`** (#484) e a **`150`** (#483) tocam o portal da convocação: a `154` nas chamadas abertas, a
   `150` no cartão do documento. Esta toca o estado decidido, o fundamento e os rótulos.
