@@ -233,9 +233,19 @@ def test_c11(client, cenario, settings):
     )
     docs.apresentar(inscricao, bernardo, pendente.item.requisito_id, corpo=b"nova versao legivel")
     cartao = _cartao(_abrir(client, edital, marco_id).content.decode(), bernardo.id)
-    assert "Conferir de novo: o candidato reenviou 1 documento que estava pendente." in cartao
-    assert "reenviou o documento pendente em" in cartao
+    # Um nome só para o reenviado, no passo, na contagem do cartão e na página de documentos
+    # (154, FR-6212, SC-2004; achado 23 do estudo da jornada final).
+    assert "Conferir de novo: 1 documento reenviado — aguardando nova conferência." in cartao
+    assert "· 1 reenviado — aguardando nova conferência" in cartao
+    assert "O candidato reenviou o documento pendente em" in cartao
+    assert "complementad" not in cartao.lower()
     assert "pode ser pedido agora" not in cartao
+    pagina = client.get(
+        reverse("interface:documentos-da-convocacao", args=[edital.id, marco_id, bernardo.id])
+    ).content.decode()
+    assert "<strong>1</strong>Reenviado — aguardando nova conferência</li>" in pagina
+    assert pagina.count("Reenviado — aguardando nova conferência") == 2, "o item e a contagem"
+    assert "complementad" not in re.sub(r'"COMPLEMENTADO"', "", pagina).lower()
 
     # Quem só consulta lê tudo, e nenhuma ação lhe é oferecida (FR-5012).
     identificar(client, "auditora-143", ["auditor"])

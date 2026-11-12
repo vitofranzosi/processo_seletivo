@@ -309,6 +309,8 @@ def test_item_reenviado_depois_da_pendencia_nao_entra(cenario, alocado):
 
     assert erro.code == nomes.AVISO_SEM_PENDENCIA_A_AVISAR
     assert pendencias.COMPLEMENTADA in erro.detail
+    # O nome da página de documentos (154, FR-6212, cenário 4 da US3).
+    assert "documento reenviado — aguardando nova conferência" in erro.detail
 
 
 def test_so_o_item_ainda_pendente_entra_no_texto(cenario, alocado):
