@@ -43,5 +43,5 @@
 - **Verificação humana.** SC-2149 (teclado e leitor de tela), SC-2150 (celulares reais) e SC-2151
   (antes e depois, com quem conduz) não se automatizam; o comportamento do PDF dentro da moldura em
   iOS e Android muda entre versões, e só o aparelho responde.
-- **Citações.** Só requisitos definidos na `main` em `ef568113`; a `154` (PR #479) é citada pelo número
-  da feature, e os achados do estudo como "achado NN".
+- **Citações.** Só requisitos definidos na `main` (a `154` entrou pelo #479 durante a escrita e é
+  citada pela FR-6211); os achados do estudo, como "achado NN".

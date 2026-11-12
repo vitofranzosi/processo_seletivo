@@ -125,7 +125,9 @@ mesmo dia não grava aviso novo para quem já foi avisado.
    aviso, e a resposta a conta como *"vencimento decorrido"*.
 2. **Dado** uma convocação com desfecho, **então** ela não recebe aviso (*"desfecho registrado"*).
 3. **Dado** uma pessoa cujo único item pendente já foi reenviado, **então** ela não recebe aviso
-   (*"documento reenviado, aguardando conferência"*).
+   (*"documento reenviado — aguardando nova conferência"*). *Revisto pela `154` em 2026-11-11, que
+   vigora com a implementação dela (FR-6212 da `154`); a redação anterior dizia "documento
+   reenviado, aguardando conferência", e é o texto que os avisos já registrados guardam.*
 4. **Dado** uma pessoa com um item reenviado e outro ainda pendente, **então** o aviso nomeia só o
    pendente.
 5. **Dado** uma pessoa avisada hoje nesta chamada, **quando** o gesto corre de novo, **então** ela não
@@ -220,8 +222,16 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
   - tem ao menos um item da lista no estado *pendente* (conferência vigente pendente, sem
     apresentação posterior a ela);
   - não foi avisada de pendência **nesta chamada** no mesmo dia local da instalação.
-- **FR-4607**: Item *"complementado"* (reenviado depois da pendência, aguardando conferência) MUST NOT
+- **FR-4607** *(acrescida pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Item *"complementado"* (reenviado depois da pendência, aguardando conferência) MUST NOT
   entrar no aviso. A pessoa cujos itens pendentes foram todos complementados MUST ficar de fora.
+
+  **Acréscimo da `154`.** O estado se chama *"Reenviado — aguardando nova conferência"* (FR-6211 da
+  `154`), e a pessoa de fora é contada como *"documento reenviado — aguardando nova conferência"*
+  (FR-6212 da `154`). Os avisos já registrados guardam o texto do dia em que foram gravados (FR-6215
+  da `154`).
+
+  > **Redação anterior à `154`:** a mesma, sem este acréscimo.
 - **FR-4608**: A pessoa sem endereço MUST ficar de fora, contada à parte.
 - **FR-4609**: Sem nenhuma pessoa alcançada, o gesto MUST ser recusado com
   `aviso_sem_pendencia_a_avisar` e MUST NOT gravar nada.

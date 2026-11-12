@@ -1,6 +1,6 @@
 # Feature Specification: Conferência com o documento à vista
 
-**Feature Branch**: `claude/confident-borg-92ee89`, sobre a `main` em `ef568113`
+**Feature Branch**: `claude/confident-borg-92ee89`, sobre a `main` em `d1ec1e0a`
 
 **Created**: 2026-11-11
 
@@ -30,8 +30,7 @@ reaproveitar o visualizador da Mesa; e nenhuma conferência em lote.
 > compartilhadas das sessões de 11/11, ao lado das da `152` a `156`.
 >
 > **Como esta spec cita outras.** Requisito de outra feature, pelo identificador e pela feature ("a
-> FR-3611 da `115`"); decisão de outra feature, pelo assunto, nunca pelo identificador. A `154` (PR
-> #479) ainda não está na `main`, e é citada só pelo número da feature.
+> FR-3611 da `115`"); decisão de outra feature, pelo assunto, nunca pelo identificador.
 >
 > **Origem.** O
 > [estudo da jornada final de 11/11/2026](../../doc/estudo-jornada-final-2026-11-11/index.html)
@@ -42,9 +41,10 @@ reaproveitar o visualizador da Mesa; e nenhuma conferência em lote.
 >
 > **O estado de partida.** Desde o #473, a recusa da conferência aparece no cartão do documento, com o
 > que foi marcado e digitado, e o aviso *"Você ainda não abriu a versão N"* aparece antes do clique,
-> ligado às opções que ele condiciona. A `154` (PR #479) muda os nomes dos estados de documento —
-> *"Reenviado — aguardando nova conferência"*, entre outros. Esta spec **não nomeia estado**: o
-> cartão mostra o rótulo vigente, seja o de hoje, seja o da `154` quando ela entrar.
+> ligado às opções que ele condiciona. A `154` (#479, mergeada em 11/11, ainda sem código) dá ao
+> documento reenviado o nome *"Reenviado — aguardando nova conferência"* (FR-6211 da `154`). Esta spec
+> **não nomeia estado**: o cartão mostra o rótulo vigente, o de hoje até a `154` ser implementada e o
+> dela depois.
 
 ## Por que esta feature existe
 
@@ -613,7 +613,8 @@ Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuár
 - A página continua emitindo uma chave de idempotência por formulário, e a recusa continua sendo
   devolvida com o código do comando.
 - O C09 da `134` serve de caso de verificação; o resultado do estudo nele é o "antes".
-- A `154`, se entrar antes, só muda os rótulos dos estados, que esta spec não nomeia.
+- A implementação da `154`, antes ou depois desta, só muda os rótulos dos estados, que esta spec não
+  nomeia.
 
 ## Fora do escopo
 

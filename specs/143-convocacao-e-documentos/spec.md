@@ -176,7 +176,9 @@ pode ser pedido agora"; depois do gesto, "aviso registrado, sai pelo despacho do
 2. **Given** uma chamada com pendência registrada e nenhum aviso depois dela, **When** a tela abre,
    **Then** o cartão não usa "avisado", "comunicado", "enviado" nem "entregue" para a pendência.
 3. **Given** o candidato reenviou o documento pendente, **When** a tela abre, **Then** o cartão diz
-   "documento reenviado: nova conferência" e não oferece o aviso.
+   "documento reenviado — aguardando nova conferência" e não oferece o aviso. *Revisto pela `154` em
+   2026-11-11, que vigora com a implementação dela (FR-6212 da `154`); a redação anterior dizia
+   "documento reenviado: nova conferência".*
 4. **Given** quem só consulta (auditoria) ou quem só confere, **When** a tela abre, **Then** o
    cartão diz o passo, mas não oferece ação que essa pessoa não pode praticar.
 
@@ -297,10 +299,17 @@ formulário de chamar uma pessoa da fila continua o mesmo.
 
 - **FR-5010**: Cada chamada MUST ter um identificador estável, derivado da convocação vigente, que
   não depende da ordem da tela.
-- **FR-5011**: Cada chamada MUST começar pelo passo dela, lido do estado do prazo e do estado
+- **FR-5011** *(revista pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Cada chamada MUST começar pelo passo dela, lido do estado do prazo e do estado
   documental já derivados: desfecho registrado; comunicação a emitir; vencimento decorrido sem
-  desfecho; documentos a conferir; documento reenviado, a conferir de novo; pendência aguardando o
-  candidato; aguardando o envio dos documentos; pronta para o desfecho; aguardando a resposta.
+  desfecho; documentos a conferir; documento reenviado — aguardando nova conferência; pendência
+  aguardando o candidato; aguardando o envio dos documentos; pronta para o desfecho; aguardando a
+  resposta. O passo do reenviado nomeia o estado como a FR-6211 da `154`; a ação dele (*"Conferir de
+  novo"*) e a explicação de quem reenviou e quando podem segui-lo (FR-6212 da `154`).
+
+  > **Redação anterior à `154`, preservada:** a mesma lista, com *"documento reenviado, a conferir
+  > de novo"* no quinto passo. *Por que mudou:* o mesmo fato tinha três nomes entre a gestão e o
+  > portal (achado 23 do estudo da jornada final, decisão do usuário de 11/11/2026).
 - **FR-5012**: O passo MUST oferecer a ação rotineira dele só a quem pode praticá-la: conferir, para
   quem confere; o desfecho, a emissão e o não atendimento, para quem conduz.
 - **FR-5013**: Na chamada pronta para o desfecho, e na de vencimento decorrido sem desfecho, o
