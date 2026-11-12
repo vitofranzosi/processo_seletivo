@@ -100,7 +100,12 @@ def test_a_continuacao_repetida_nao_emite_duas_faixas(cliente_no_corte):
     chave_da_emissao = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
     client.post(
         reverse("interface:emitir-corte", args=[edital.id, marco]),
-        {"chave_idempotencia": chave_da_emissao, "confirmacao_do_calculo": confirmacao},
+        # A confirmação da conferência (152, FR-5825): o mesmo cálculo que a tela assinou.
+        {
+            "chave_idempotencia": chave_da_emissao,
+            "confirmacao_do_calculo": confirmacao,
+            "confirmar": "1",
+        },
     )
     assert Corte.objects.count() == 1, "o cenário começa com a faixa inicial emitida"
 
@@ -113,9 +118,15 @@ def test_a_continuacao_repetida_nao_emite_duas_faixas(cliente_no_corte):
     )
     chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
     continuar = {"chave_idempotencia": chave, "quantidade": "1", "motivo": "um indeferimento"}
+    url = reverse("interface:continuar-corte", args=[edital.id, marco])
+    # A conferência da faixa seguinte (152, FR-5829) não emite; a confirmação leva a assinatura.
+    conferencia = client.post(url, continuar).content.decode()
+    assert Corte.objects.count() == 1, "a conferência não emite"
+    assinatura = re.search(r'name="confirmacao_do_calculo" value="([^"]+)"', conferencia).group(1)
+    confirmar = {**continuar, "confirmacao_do_calculo": assinatura, "confirmar": "1"}
 
-    client.post(reverse("interface:continuar-corte", args=[edital.id, marco]), continuar)
-    client.post(reverse("interface:continuar-corte", args=[edital.id, marco]), continuar)
+    client.post(url, confirmar)
+    client.post(url, confirmar)
 
     assert Corte.objects.count() == 2, "duplo clique na continuação não emite duas faixas"
 
@@ -145,7 +156,9 @@ def test_quantidade_que_nao_e_numero_nao_derruba_a_rota(cliente_no_corte):
         {"quantidade": "abc", "motivo": "tentativa"},
     )
 
-    assert resposta.status_code == 302, "volta à tela pelo POST-redirect-GET, e não explode"
+    # A conferência recusa com a razão do comando, antes do botão (152, FR-5829), e não explode.
+    assert resposta.status_code == 200
+    assert "Não é possível emitir agora" in resposta.content.decode()
 
 
 @pytest.fixture
@@ -177,7 +190,7 @@ def _emitir_pela_tela(client, edital, marco):
     chave = re.search(r'name="chave_idempotencia" value="([^"]+)"', corpo).group(1)
     return client.post(
         reverse("interface:emitir-corte", args=[edital.id, marco]),
-        {"confirmacao_do_calculo": confirmacao, "chave_idempotencia": chave},
+        {"confirmacao_do_calculo": confirmacao, "chave_idempotencia": chave, "confirmar": "1"},
     )
 
 
