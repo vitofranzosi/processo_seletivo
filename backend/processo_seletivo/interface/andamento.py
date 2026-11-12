@@ -75,6 +75,9 @@ ESPERADA, CONDICIONAL, SEM_EFEITO = "esperada", "condicional", "sem_efeito"
 #: o que a tela escreve antes do ato da providência de outro papel ("Quem publica resultado: …").
 CONDUZ, PUBLICA, AVALIA = "conduz", "publica", "avalia"
 JULGA, RETIFICA, CONFERE, RETIFICACAO = "julga", "retifica", "confere", "retificacao"
+#: Os dois papéis da passagem ao setor (153, FR-6108): nenhum é da comissão, e por isso a frase
+#: nomeia quem os exerce na unidade.
+ACESSOS, SETOR = "acessos", "setor"
 PAPEIS = {
     CONDUZ: "Quem conduz a seleção",
     PUBLICA: "Quem publica resultado",
@@ -83,9 +86,12 @@ PAPEIS = {
     CONFERE: "Quem conduz ou confere documentos",
     RETIFICA: "Quem elabora Retificações",
     RETIFICACAO: "Quem age na Retificação",
+    ACESSOS: "Quem administra os acessos da unidade",
+    SETOR: "O setor da formalização",
 }
-#: A ordem dos grupos de outros papéis no nível 1 (FR-4082).
-ORDEM_DOS_PAPEIS = (CONDUZ, AVALIA, CONFERE, PUBLICA, JULGA, RETIFICACAO, RETIFICA)
+#: A ordem dos grupos de outros papéis no nível 1 (FR-4082). Os da passagem ao setor vêm por último
+#: (153, FR-6114): o que eles fazem vem depois de tudo o que a comissão faz.
+ORDEM_DOS_PAPEIS = (CONDUZ, AVALIA, CONFERE, PUBLICA, JULGA, RETIFICACAO, RETIFICA, ACESSOS, SETOR)
 
 #: As naturezas, para o agrupamento (D-016) e para o teste de coerência (SC-1230).
 RELACAO, SEMENTE, SORTEIO, ORDEM = "relacao", "semente", "sorteio", "ordem"
@@ -93,6 +99,8 @@ CORTE, APURACAO, RESULTADO, CONVOCACAO = "corte", "apuracao", "resultado", "conv
 DISTRIBUIR, AVALIAR, CONSOLIDAR, REAVALIAR = "distribuir", "avaliar", "consolidar", "reavaliar"
 CONFERIR, RECURSO = "conferir", "recurso"
 ETAPA = "etapa"
+#: A passagem ao setor da formalização (153): definir, designar, exportar.
+FORMALIZACAO = "formalizacao"
 
 #: O que a Etapa "sem efeito" diz no nível 1 (D-010). Não manda fazer nada.
 SEM_EFEITO_NO_GPS = "está declarada no Edital, e nenhum ato do GPS depende do resultado dela"
@@ -1567,6 +1575,8 @@ class Andamento:
     #: O `Alcance` com que o andamento foi lido. O Centro (136) diz o papel da pessoa por ele, e
     #: recalculá-lo consultaria de novo a comissão e a Retificação.
     alcance: object = None
+    #: A passagem ao setor (153), que o bloco da fase Conclusão desenha; `None` sem pessoa apta.
+    formalizacao: object = None
 
     # A apresentação do nível 1 mora em `providencias.py`; estas propriedades só a expõem.
     @property
@@ -1751,6 +1761,7 @@ class _Leitor:
             and (pedidos is None or str(perfil.get("id")) in pedidos)
         ]
         self._providencias_da_104(em_curso)
+        formalizacao = self._providencias_da_formalizacao() if pedidos is None else None
         return Andamento(
             perfis=perfis,
             providencias=self.providencias,
@@ -1758,6 +1769,7 @@ class _Leitor:
             ve_a_matriz=self.alcance.consulta,
             e_sua=self.e_sua,
             alcance=self.alcance,
+            formalizacao=formalizacao,
             inscricoes={
                 "estado": self.periodo.estado,
                 "fim": self.periodo.fim,
@@ -2467,6 +2479,60 @@ class _Leitor:
         # a diz pelas frases da `104` (FR-2819, FR-2820), logo abaixo das providências. Repeti-la
         # aqui faria o mesmo trabalho aparecer duas vezes no mesmo cartão.
 
+    def _providencias_da_formalizacao(self):
+        """Uma providência por causa com pessoa apta pendente (153, FR-6108 a FR-6113).
+
+        **A contagem é da `formalizacao`, e não daqui** (D-004 da `153`): o relatório e as duas
+        confirmações de encerrar leem a mesma `Passagem`, e uma segunda conta divergiria delas.
+
+        **"Sua" pelo predicado da tela de destino** (FR-6111), e não por `Alcance.pratica`: o
+        encerramento do Processo fecha os atos da comissão, mas não a formalização (FR-3710 da
+        `117`). Quem conduz continua definindo, quem administra os acessos continua designando, e
+        o setor continua exportando.
+        """
+        from processo_seletivo.formalizacao.application import passagem as pa
+        from processo_seletivo.formalizacao.domain import nomes as nomes_da_formalizacao
+        from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
+        from processo_seletivo.interface.providencias import Providencia
+        from processo_seletivo.seguranca.acessos import GERIR
+
+        passagem = pa.da_passagem(self.edital)
+        if passagem is None:
+            return None
+        edital_id = self.edital.id
+        for causa, quantas in passagem.causas:
+            if causa == pa.SEM_DEFINICAO:
+                responsavel = CONDUZ
+                sua = self.alcance.conduz
+                url = reverse("interface:formalizacao-definicao", args=[edital_id])
+                url += "#documentos-definidos"
+            elif causa == pa.SEM_QUEM_RECEBA:
+                responsavel = ACESSOS
+                sua = self.ator.can(GERIR)
+                url = f"{reverse('interface:acessos-formalizacao')}?edital={edital_id}"
+            else:
+                responsavel = SETOR
+                sua = (
+                    self.ator.can(nomes_da_formalizacao.CAPACIDADE)
+                    and designacoes_vigentes(pessoa=self.ator.subject, edital=self.edital).exists()
+                )
+                url = reverse("interface:formalizacao-edital", args=[edital_id])
+            self.providencias.append(
+                Providencia(
+                    natureza=FORMALIZACAO,
+                    chave=(FORMALIZACAO, causa),
+                    onde=razao_da_passagem(causa, quantas, passagem),
+                    lugar=razao_da_passagem(causa, quantas, passagem),
+                    ato=ATOS_DA_PASSAGEM[causa],
+                    situacao=PENDENTE,
+                    responsavel=responsavel,
+                    sua=sua,
+                    url=url if sua else "",
+                    contagem=quantas,
+                )
+            )
+        return passagem
+
     # --- a providência ---------------------------------------------------------------------
 
     def _acrescentar(self, celula, *, onde, marco=None, perfil=None, lista=None, chave=None):
@@ -2527,6 +2593,34 @@ class _Leitor:
 
     def _pode_conferir(self, perfil):
         return self.alcance.conduz or (perfil is not None and self._confere(perfil))
+
+
+# ---------------------------------------------------------------------------------------------
+# A passagem ao setor (153)
+# ---------------------------------------------------------------------------------------------
+
+#: O ato de cada causa (FR-6108). Sem número, para que o agrupamento da `127` não os junte (D-016).
+ATOS_DA_PASSAGEM = {
+    "sem_definicao": "Definir os documentos que vão ao setor",
+    "sem_quem_receba": "Designar quem recebe os documentos",
+    "a_exportar": "Exportar os documentos das pessoas aptas",
+}
+
+
+def razao_da_passagem(causa, quantas, passagem):
+    """A contagem da causa, numa frase só (FR-6110, FR-6113). Contagem do Edital, sem Perfil."""
+    pessoas = _n(quantas, "pessoa apta", "pessoas aptas")
+    if causa == "sem_definicao":
+        return f"{pessoas} para formalização; nenhum documento definido para o setor"
+    if causa == "sem_quem_receba":
+        if not passagem.designadas:
+            frase = "ninguém está designado para receber os documentos deste Edital"
+        else:
+            frase = f"{pessoas} de {'Perfil' if quantas == 1 else 'Perfis'} sem designação"
+        if not passagem.com_o_papel:
+            frase += ". Antes, é preciso conceder o papel Formalização a alguém do setor"
+        return frase
+    return f"{pessoas} ainda sem documentos disponibilizados"
 
 
 # ---------------------------------------------------------------------------------------------

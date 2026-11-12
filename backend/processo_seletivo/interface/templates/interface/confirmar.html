@@ -67,7 +67,7 @@ pedir: o caminho só é oferecido a quem a tela de destino aceita.
 <div class="aviso" role="status">
   <p><strong>{{ desfecho.titulo_das_advertencias }}</strong></p>
   <ul>{% for item in desfecho.advertencias %}
-    <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% endif %}</li>
+    <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% elif item.a_quem_pedir %} {{ item.a_quem_pedir }}{% endif %}</li>
   {% endfor %}</ul>
 </div>
 {% endif %}

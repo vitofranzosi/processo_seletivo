@@ -200,6 +200,22 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
   {% elif fase.chave == 'conclusao' %}
   {% if edital.status == 'ENCERRADO' %}<p>O Edital foi encerrado. Os atos de todas as fases estão no histórico e nos documentos publicados.</p>
   {% else %}<p>O Edital se encerra quando nenhuma lista tiver ato em aberto. O encerramento é do Gestor, em <a href="#administracao">Administração e histórico</a>, e a tela dele mostra antes o que ainda falta.</p>{% endif %}
+  {% comment %} A passagem ao setor (153, FR-6118 a FR-6121): o estado de cada passo, em texto (UX-561). O link de cada linha é o da providência da mesma causa, que só quem pratica o ato recebe (FR-6119). {% endcomment %}
+  {% if centro.passagem %}{% with bloco=centro.passagem %}
+  <section class="cc-passagem" aria-labelledby="passagem-titulo">
+    <h3 id="passagem-titulo">Disponibilizar ao setor</h3>
+    <p>{{ bloco.frase_das_aptas }}.</p>
+    {% if bloco.linhas %}
+    <ul class="cc-lista-simples">
+      {% for linha in bloco.linhas %}
+      <li><span class="cc-fraco">{% if linha.feito %}Feito{% else %}Em aberto{% endif %} ·</span> <strong>{{ linha.rotulo }}:</strong> {{ linha.texto }}{% if not linha.feito and linha.item %}{% if linha.item.p.url %} — <a href="{{ linha.item.p.url }}">{{ linha.item.titulo }}</a>{% else %} <span class="cc-fraco">({{ linha.item.p.texto_do_papel|inicial_minuscula }})</span>{% endif %}{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% if bloco.conclusao %}<p>{{ bloco.conclusao }}</p>{% endif %}
+    <p class="cc-nota">{{ bloco.limite }}</p>
+  </section>
+  {% endwith %}{% endif %}
   {% elif not centro.ve_a_matriz %}
   <p class="cc-nota">O detalhe desta fase por lista é de quem conduz ou audita a seleção. O que depende de você está em "O que fazer agora".</p>
   {% elif not fase.perfis %}

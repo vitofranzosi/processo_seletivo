@@ -515,6 +515,18 @@
   padding-left: 1rem;
 }
 
+/* A passagem ao setor na fase Conclusão (153): separada do texto do encerramento, porque é outra
+   pergunta — o que falta para os documentos chegarem ao setor, e não se o Edital pode ser encerrado. */
+.cc-passagem {
+  margin-top: 1rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--borda);
+}
+
+.cc-passagem h3 {
+  margin: 0 0 .4rem;
+}
+
 .cc-quem div {
   display: flex;
   gap: .4rem;

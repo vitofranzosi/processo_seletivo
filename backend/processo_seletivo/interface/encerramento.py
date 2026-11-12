@@ -75,7 +75,7 @@ def da_confirmacao(edital, ator, *, acao, agora):
         for situacao in situacoes
         if situacao.especie == p.ADVERTENCIA
     ]
-    advertencias.extend(_providencias_da_099(edital, agora))
+    advertencias.extend(_providencias_da_099(edital, agora, ator))
     return Confirmacao(
         impedimentos=impedimentos,
         advertencias=tuple(advertencias),
@@ -143,10 +143,12 @@ DA_099 = (
     p.RESULTADO_NAO_DIVULGADO,
     p.DEFINITIVO_NAO_PUBLICADO,
     p.APURACAO_DESATUALIZADA,
+    # A passagem ao setor (153, FR-6124): advertência no Edital e no Processo, pela mesma regra.
+    p.APTAS_SEM_DISPONIBILIZACAO,
 )
 
 
-def _providencias_da_099(edital, agora):
+def _providencias_da_099(edital, agora, ator=None):
     """As providências do relatório, somadas no Edital, com a frase do relatório (FR-3535)."""
     from processo_seletivo.interface.relatorio_do_edital import (
         Pendencia,
@@ -185,9 +187,58 @@ def _providencias_da_099(edital, agora):
             vistos.add(chave)
             somadas.append(pendencia)
     return [
-        Item(_frase_da_099(texto_da_pendencia(pendencia)), tipo=pendencia.tipo)
+        _item_da_passagem(pendencia, edital, ator)
+        if pendencia.tipo == p.APTAS_SEM_DISPONIBILIZACAO
+        else Item(_frase_da_099(texto_da_pendencia(pendencia)), tipo=pendencia.tipo)
         for pendencia in somadas
     ]
+
+
+#: O caminho de cada causa da passagem ao setor, e a quem pedir (153, FR-6126, FR-3538 da `113`).
+_A_QUEM_PEDIR_NA_PASSAGEM = {
+    "sem_definicao": "Peça a quem conduz a seleção.",
+    "sem_quem_receba": "Peça a quem administra os acessos da unidade.",
+    "a_exportar": "Peça ao setor da formalização.",
+}
+
+
+def _item_da_passagem(pendencia, edital, ator):
+    """A frase do relatório, com o caminho da causa (FR-6124 a FR-6126).
+
+    **A frase é a do relatório, sem acréscimo** (FR-4351 da `130`): que a exportação continua já é
+    o que o título do bloco diz, "Continuam depois do encerramento".
+
+    **O caminho é o da primeira causa**, que é a que prende as demais (D-004 da `153`): sem
+    definição, não adianta designar. Vai só a quem a tela de destino aceita; aos demais, a frase diz
+    a quem pedir.
+    """
+    from processo_seletivo.formalizacao.domain import nomes as nomes_da_formalizacao
+    from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
+    from processo_seletivo.interface.relatorio_do_edital import texto_da_pendencia
+    from processo_seletivo.seguranca.acessos import GERIR
+
+    mensagem = _frase_da_099(texto_da_pendencia(pendencia))
+    causa = pendencia.detalhe[0][0] if pendencia.detalhe else ""
+    if ator is None or not causa:
+        return Item(mensagem, tipo=pendencia.tipo)
+    if causa == "sem_definicao":
+        pode = pode_gerir_comissao(ator, edital.processo) is not None
+        url = reverse("interface:formalizacao-definicao", args=[edital.id])
+        rotulo = "Definir os documentos"
+    elif causa == "sem_quem_receba":
+        pode = ator.can(GERIR)
+        url = f"{reverse('interface:acessos-formalizacao')}?edital={edital.id}"
+        rotulo = "Designar quem recebe"
+    else:
+        pode = (
+            ator.can(nomes_da_formalizacao.CAPACIDADE)
+            and designacoes_vigentes(pessoa=ator.subject, edital=edital).exists()
+        )
+        url = reverse("interface:formalizacao-edital", args=[edital.id])
+        rotulo = "Exportar"
+    if pode:
+        return Item(mensagem, url, rotulo, tipo=pendencia.tipo)
+    return Item(mensagem, a_quem_pedir=_A_QUEM_PEDIR_NA_PASSAGEM[causa], tipo=pendencia.tipo)
 
 
 def _frase_da_099(texto):
@@ -301,7 +352,7 @@ def do_processo(processo, ator, *, agora):
             for situacao in p.situacoes(edital, agora=agora, ato="encerrar", com_advertencias=True)
             if situacao.tipo in TIPOS_NO_PROCESSO
         ]
-        itens.extend(_providencias_da_099(edital, agora))
+        itens.extend(_providencias_da_099(edital, agora, ator))
         if itens:
             grupos.append(GrupoDoEdital(edital, tuple(itens)))
     return AdvertenciaDoProcesso.de(grupos)
