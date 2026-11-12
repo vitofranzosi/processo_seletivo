@@ -8,10 +8,14 @@ envio é um: escolher não envia nada (D-003), e o botão diz quantos vão.
 **Nasce escondido, e quem o mostra é `varios.js`**: sem script, cada cartão envia o seu, como hoje
 (FR-5612), e um botão que não funciona não pode estar na tela. A frase de recado é a do lote que
 parou no meio (FR-5610): diz o que chegou e o que não foi enviado, no lugar onde a pessoa acionou.
+
+**Só com substituição** — tudo já enviado, o rodapé em *O que você já apresentou* —, ele aparece só
+depois de uma escolha (`data-so-com-escolha`): um botão de envio indisponível embaixo de "você não
+precisa fazer nada agora" pareceria uma tarefa pendente.
 {% endcomment %}
-<div class="envio-dos-documentos" id="envio-dos-documentos" tabindex="-1" data-envio-dos-documentos hidden>
+<div class="envio-dos-documentos" id="envio-dos-documentos" tabindex="-1" data-envio-dos-documentos{% if so_substituicao %} data-so-com-escolha{% endif %} hidden>
   <p class="contagem-da-escolha" data-contagem-da-escolha>Nenhum arquivo selecionado</p>
-  <p class="orientacao-da-escolha" data-orientacao-da-escolha>Escolha o arquivo PDF de cada documento acima.</p>
+  <p class="orientacao-da-escolha" data-orientacao-da-escolha>{% if obrigacoes.um_so_com_envio %}Escolha o arquivo PDF acima.{% else %}Escolha o arquivo PDF de cada documento acima.{% endif %}</p>
   <button type="button" class="acao enviar-os-escolhidos" data-enviar-os-escolhidos disabled>Enviar documentos</button>
   <p class="progresso" data-progresso-do-lote hidden>
     <progress max="100" aria-label="Progresso do envio"></progress>

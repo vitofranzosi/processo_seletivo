@@ -992,6 +992,9 @@ class TestUmBotaoDeEnvioSo:
         apresentou = _secao(corpo, "o-que-voce-ja-apresentou")
         assert "data-envio-dos-documentos" in apresentou
         assert "data-instrucao-com-script" in apresentou
+        assert "data-envio-dos-documentos data-so-com-escolha hidden>" in apresentou
+        assert "Para substituir um arquivo enviado, escolha o novo PDF" in apresentou
+        assert "para cada documento" not in apresentou, "quem já mandou tudo não tem tarefa"
         assert "Ir ao botão de envio" not in apresentou, "o botão está no mesmo bloco"
 
     def test_depois_do_prazo_nao_ha_area(self, aluno, gestor, client):
@@ -1047,4 +1050,5 @@ class TestOPolishDoEnvioUnico:
             corpo = tela(client, pessoa)
 
         assert "e envie pelo botão logo abaixo." in corpo
+        assert "data-orientacao-da-escolha>Escolha o arquivo PDF acima.</p>" in corpo
         assert "para cada documento" not in corpo

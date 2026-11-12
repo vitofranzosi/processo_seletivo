@@ -168,7 +168,7 @@ function html(status) {
 }
 
 /* A área do envio, como o servidor a desenha: escondida, com o botão indisponível. */
-function areaDoEnvio() {
+function areaDoEnvio({ soComEscolha = false } = {}) {
   const barra = { atributos: { value: "0" }, removeAttribute(chave) { delete this.atributos[chave]; } };
   const ajuda = { textContent: "Enviando… não feche esta página." };
   const progresso = { hidden: true, querySelector: (s) => ({ progress: barra, ".ajuda": ajuda })[s] || null };
@@ -179,6 +179,7 @@ function areaDoEnvio() {
   return {
     hidden: true,
     classList: classes(),
+    hasAttribute: (chave) => chave === "data-so-com-escolha" && soComEscolha,
     botao,
     contagem,
     orientacao,
@@ -201,11 +202,11 @@ function areaDoEnvio() {
 
 /* Cada chamada do `fetch` fica pendente até o teste respondê-la: assim se vê que o lote espera a
    resposta de um documento antes de mandar o seguinte. */
-function carregar(cartoes, { comArea = true } = {}) {
+function carregar(cartoes, { comArea = true, soComEscolha = false } = {}) {
   const chamadas = [];
   const janela = {};
   const anuncio = { textContent: "" };
-  const area = areaDoEnvio();
+  const area = areaDoEnvio({ soComEscolha });
   const instrucao = { hidden: true };
   global.window = {
     location: { assign: (destino) => (janela.destino = destino) },
@@ -668,4 +669,40 @@ test("a volta que coincide com o endereço atual ganha `de-novo`, e a seguinte n
 
     assert.equal(tela.janela.destino, esperado, atual);
   }
+});
+
+test("só com substituição, o rodapé aparece com a escolha e some sem ela", () => {
+  const a = cartao("Histórico", { substituicao: true });
+  const tela = carregar([a], { soComEscolha: true });
+
+  assert.equal(tela.area.hidden, true, "nada a fazer: nenhum botão indisponível à vista");
+  a.escolherArquivo();
+  assert.equal(tela.area.hidden, false);
+  assert.equal(tela.area.botao.textContent, "Enviar 1 documento");
+  a.remover.clicar();
+  assert.equal(tela.area.hidden, true);
+});
+
+test("só com substituição, o recado de um lote que parou fica à vista", async () => {
+  const a = cartao("Histórico", { substituicao: true });
+  const tela = carregar([a], { soComEscolha: true });
+  a.escolherArquivo();
+
+  tela.area.botao.clicar();
+  assert.equal(tela.area.hidden, false, "durante o envio");
+  tela.chamadas[0].rejeitar(new TypeError("Failed to fetch"));
+  await esperar();
+
+  assert.equal(tela.area.hidden, false, "a frase da queda está no rodapé");
+  assert.ok(tela.area.recado.textContent.startsWith(CONEXAO));
+});
+
+test("a orientação sem escolha é a que o servidor escreveu", () => {
+  const [a] = tres();
+  const tela = carregar([a]);
+  tela.area.orientacao.textContent = "Escolha o arquivo PDF acima.";
+  a.escolherArquivo();
+  a.remover.clicar();
+  assert.equal(tela.area.orientacao.textContent, "Escolha o arquivo PDF de cada documento acima.",
+    "lida ao carregar, e não depois");
 });

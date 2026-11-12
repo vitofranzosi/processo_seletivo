@@ -16,7 +16,9 @@ só.** Com dois arquivos escolhidos, cada cartão mostrava "Enviar os 2 document
 botões para uma operação só, que a pessoa lia como o envio de cada cartão. Agora cada documento tem o
 seu seletor, o cartão diz o arquivo escolhido e que ainda não foi enviado, e o envio é um botão só,
 no fim da lista, que diz quantos vão. Mudaram a D-001, a FR-5601, a FR-5613 e a UX-500 (redação
-anterior preservada em cada uma); entraram a FR-5620 a FR-5622, a UX-505 e o SC-1808. Os cenários das
+anterior preservada em cada uma); entraram a FR-5620 a FR-5622, a UX-505 e o SC-1808. No mesmo dia,
+um polish trocou a grade de duas colunas por uma lista e a caixa do envio por um rodapé da lista
+(UX-500 de novo, UX-506, FR-5621). Os cenários das
 User Stories que falam do botão de cada cartão se leem com o botão do fim da lista.
 
 **Input**: *"Na área do candidato, na convocação que pede documentos, o candidato escolhe arquivos em
@@ -375,15 +377,19 @@ só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
   do recebido ficam. O cartão de substituição que fica depois do botão de envio — em *O que você já
   apresentou*, quando o botão está em *O que falta* — MUST ligar a ele, numa linha própria ("Ir ao
   botão de envio").
-- **FR-5621**: O botão de envio MUST ficar numa área própria, no fim do primeiro bloco que tem cartão
-  com envio — *O que falta*, ou, sem nada a enviar ali, *O que você já apresentou* —, e a área MUST
-  dizer:
+- **FR-5621**: O botão de envio MUST ficar no rodapé da lista, no fim do primeiro bloco que tem
+  cartão com envio — *O que falta*, ou, sem nada a enviar ali, *O que você já apresentou* —, e o
+  rodapé MUST dizer:
   - quantos arquivos estão escolhidos: *"2 de 2 arquivos selecionados"*, com o total das tarefas — o
     que falta enviar e o que a comissão pediu para corrigir —; *"1 arquivo selecionado"* quando a
     conta inclui substituição espontânea ou opcional;
   - que eles ainda não foram enviados: *"Os arquivos ainda não foram enviados à comissão."*; sem
-    escolha, só o que fazer: *"Escolha o arquivo PDF de cada documento acima."*, com o botão
-    indisponível e a área em contorno tracejado, sem a contagem.
+    escolha, só o que fazer — *"Escolha o arquivo PDF de cada documento acima."*, ou *"…o arquivo
+    PDF acima."* com um documento só —, com o botão indisponível e sem a contagem.
+
+  Quando o rodapé está em *O que você já apresentou* — só há substituição —, ele MUST aparecer só
+  depois de uma escolha, e a frase antes dos cartões MUST falar de substituição, e não de "cada
+  documento": quem já mandou tudo não tem tarefa.
 
   O recado do lote que parou no meio (FR-5610) MUST aparecer na área, junto do botão; a recusa de cada
   documento continua no cartão dele (FR-5608, FR-5609). Antes do primeiro cartão, a frase de como se
@@ -396,11 +402,17 @@ só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
 
 ### Requisitos de experiência
 
-- **UX-500** *(revista em 2026-11-12 com a D-001; redação anterior ao fim)*: O botão de envio é um
-  só, sólido quando há o que enviar e indisponível, em contorno cinza, quando não há; ele mora numa
-  área cinza no fim da lista, e não há botão flutuante nem barra fixa na tela.
+- **UX-500** *(revista de novo em 2026-11-12, no polish da lista; redações anteriores ao fim)*: O
+  botão de envio é um só, sólido quando há o que enviar e indisponível, em contorno cinza, quando não
+  há. Ele mora no **rodapé da lista**, separado dela por um divisor e da mesma largura: a contagem e a
+  frase à esquerda, o botão à direita; no celular, empilhados, com o botão na largura toda. Não há
+  caixa nem cartão próprio para ele, nem botão flutuante ou barra fixa.
 
-  > **Redação anterior:** O botão "Enviar os N documentos escolhidos" é o destaque de cada cartão com
+  > **Redação de 12/11/2026, antes do polish da lista:** O botão de envio é um só, sólido quando há o
+  > que enviar e indisponível, em contorno cinza, quando não há; ele mora numa área cinza no fim da
+  > lista, e não há botão flutuante nem barra fixa na tela.
+  >
+  > **Redação original:** O botão "Enviar os N documentos escolhidos" é o destaque de cada cartão com
   > arquivo escolhido, como o "Enviar" já é hoje; não há botão flutuante nem barra fixa na tela.
 - **UX-501**: A mudança do N é anunciada a quem usa leitor de tela, sem roubar o foco: "3 documentos
   escolhidos para enviar." O progresso do envio de vários também, a cada documento.
@@ -416,6 +428,10 @@ só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
   negrito e "Selecionado — ainda não enviado." embaixo; "Trocar arquivo" e "Remover a escolha" são
   ações de texto, à direita, com alvo de toque de 44 px. Nenhum verde nem marca de concluído antes do
   recebimento.
+- **UX-506** *(2026-11-12, polish da lista)*: O bloco em que se envia é uma lista de **uma coluna**,
+  em qualquer largura, com a lista e o rodapé de até 56rem; cada cartão tem a altura do que diz, sem
+  espaço para igualar a linha. *O que você já apresentou*, quando o envio não mora nele, pode ter duas
+  colunas, na mesma largura do bloco de cima.
 
 ### Key Entities
 

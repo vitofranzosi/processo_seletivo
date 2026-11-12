@@ -44,7 +44,6 @@
   var SEM_ARQUIVO = "Escolha um arquivo PDF antes de enviar.";
   var RECEBIDO_AGORA = "Recebido agora.";
   var NENHUM = "Nenhum arquivo escolhido";
-  var ORIENTACAO_VAZIA = "Escolha o arquivo PDF de cada documento acima.";
   var AINDA_NAO_UM = "O arquivo ainda não foi enviado à comissão.";
   var AINDA_NAO_VARIOS = "Os arquivos ainda não foram enviados à comissão.";
 
@@ -59,6 +58,10 @@
   var ajudaDoProgresso = progresso ? progresso.querySelector(".ajuda") : null;
   var progressoOriginal = ajudaDoProgresso ? ajudaDoProgresso.textContent : "";
   var recado = area.querySelector("[data-recado-do-lote]");
+  /* A orientação sem escolha vem do servidor, que sabe se há um documento ou vários. */
+  var orientacaoVazia = orientacao ? orientacao.textContent : "";
+  /* Só com substituição, o rodapé aparece depois da escolha (`_envio_dos_documentos.html`). */
+  var soComEscolha = Boolean(area.hasAttribute && area.hasAttribute("data-so-com-escolha"));
   var emCurso = false;
   var ultimaContagem = 0;
 
@@ -130,6 +133,8 @@
     /* Sem escolha, a área fica leve — contorno tracejado, sem a contagem —, e diz só o que fazer:
        uma caixa cinza com "Nenhum arquivo selecionado" pesava como um aviso. */
     if (area.classList) area.classList.toggle("vazia", quantos === 0);
+    /* Durante o lote, e com o recado de um lote que parou, o rodapé fica: é onde a frase está. */
+    if (soComEscolha) area.hidden = quantos === 0 && !emCurso && !(recado && !recado.hidden);
     mostrar(contagem, quantos > 0);
 
     if (contagem) {
@@ -145,7 +150,7 @@
     }
     if (orientacao) {
       orientacao.textContent =
-        quantos === 0 ? ORIENTACAO_VAZIA : quantos === 1 ? AINDA_NAO_UM : AINDA_NAO_VARIOS;
+        quantos === 0 ? orientacaoVazia : quantos === 1 ? AINDA_NAO_UM : AINDA_NAO_VARIOS;
     }
     if (botaoDoEnvio) {
       botaoDoEnvio.textContent = quantos === 0 ? "Enviar documentos" : "Enviar " + documentos(quantos);
@@ -349,7 +354,7 @@
   /* Com script, a área aparece, a frase do envio único também, e o botão de cada cartão sai de
      vista: o envio é um só. O limite do arquivo, dito na frase de cima, deixa de se repetir em cada
      cartão — e continua na descrição acessível do campo (FR-3745 da `118`). */
-  area.hidden = false;
+  area.hidden = soComEscolha;
   Array.prototype.slice
     .call(document.querySelectorAll("[data-instrucao-com-script]"))
     .forEach(function (frase) {

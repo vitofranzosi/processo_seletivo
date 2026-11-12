@@ -5,6 +5,9 @@ Duas frases, e só uma aparece. Com script, a do envio único: o limite do arqui
 aqui, e não repetido em cada cartão, onde continua na descrição acessível do campo (FR-3745 da
 `118`). Sem script, cada cartão envia o seu e recarrega a página, e a escolha feita nos outros se
 perde: a tela diz isso antes que a pessoa escolha vários.
+
+Em *O que você já apresentou*, sem nada a enviar acima, o envio só substitui: a frase diz isso, e
+não pede "cada documento" de quem já mandou tudo.
 {% endcomment %}
-<p class="instrucao-do-envio" data-instrucao-com-script hidden>{% if obrigacoes.um_so_com_envio %}Escolha um arquivo PDF, de até {% limite_de_arquivo %}, e envie pelo botão logo abaixo.{% else %}Escolha um arquivo PDF, de até {% limite_de_arquivo %}, para cada documento. Depois, envie todos de uma vez pelo botão no fim da lista.{% endif %}</p>
+<p class="instrucao-do-envio" data-instrucao-com-script hidden>{% if so_substituicao %}Para substituir um arquivo enviado, escolha o novo PDF, de até {% limite_de_arquivo %}, e envie pelo botão no fim da lista.{% elif obrigacoes.um_so_com_envio %}Escolha um arquivo PDF, de até {% limite_de_arquivo %}, e envie pelo botão logo abaixo.{% else %}Escolha um arquivo PDF, de até {% limite_de_arquivo %}, para cada documento. Depois, envie todos de uma vez pelo botão no fim da lista.{% endif %}</p>
 <noscript><p class="instrucao-do-envio">Envie um documento de cada vez: ao enviar um, o arquivo escolhido nos outros documentos não é guardado.</p></noscript>
