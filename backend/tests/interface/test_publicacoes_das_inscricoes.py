@@ -193,6 +193,7 @@ def test_a_previa_mostra_a_contagem_e_os_nomes_por_lista(
         ("Pessoas com deficiência", 1),
         ("Pretos, pardos e indígenas", 1),
     ):
-        assert f"<td>{lista}</td>\n      <td>{quantas}</td>" in corpo
+        # A linha da tabela pelas células, e não pela indentação do template.
+        assert re.search(rf"<td>{re.escape(lista)}</td>\s*<td>{quantas}</td>", corpo)
         assert f"· {lista} ({quantas})</summary>" in corpo
     assert inscricoes[1].nome in corpo

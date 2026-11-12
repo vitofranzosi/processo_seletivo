@@ -45,7 +45,7 @@ def modalidade_ampla_apontada(seed):
     return identificador(484, seed)
 
 
-def _com_cotas(rascunho, seed):
+def _com_cotas(rascunho, seed, *, apontar_a_ampla=True):
     """O Perfil com PcD e PPI reservadas e a Modalidade apontada como a ampla (D-011 da 148).
 
     A apontada entra de propósito: é a grafia-armadilha da `122`, e o ato tem de tratá-la como a
@@ -60,7 +60,10 @@ def _com_cotas(rascunho, seed):
     ]
     for modalidade in perfil["competitionModalities"]:
         modalidade["vacancies"] = 0
-    perfil["generalCompetitionModalityId"] = modalidade_ampla_apontada(seed)
+    # Sem o apontamento, a Modalidade "Ampla concorrência" vira recorte reservado — o acervo
+    # anterior à `122` —, e o ato tem de distingui-la da ampla de verdade pelo código.
+    if apontar_a_ampla:
+        perfil["generalCompetitionModalityId"] = modalidade_ampla_apontada(seed)
     perfil["vacancyTable"] = [
         {"id": identificador(485, seed), "modalityId": None, "immediateVacancies": 7},
         {
@@ -89,11 +92,12 @@ def montar(
     fim_do_recurso="2099-12-31T23:59:00-03:00",
     cronograma_extra=(),
     com_cotas=False,
+    apontar_a_ampla=True,
 ):
     """Edital publicado com a Análise documental decisória, comissão e banca alocada."""
     rascunho = rascunho_com_etapas(seed, decisoria=decisoria)
     if com_cotas:
-        rascunho = _com_cotas(rascunho, seed)
+        rascunho = _com_cotas(rascunho, seed, apontar_a_ampla=apontar_a_ampla)
     rascunho["schedule"] = [
         *rascunho["schedule"],
         {

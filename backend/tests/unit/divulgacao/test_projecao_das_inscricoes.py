@@ -461,3 +461,75 @@ def test_a_assinatura_da_previa_muda_com_a_versao_citada():
 
     assert assinatura_da_previa(afericao("v1")) == assinatura_da_previa(afericao("v1"))
     assert assinatura_da_previa(afericao("v1")) != assinatura_da_previa(afericao("v2"))
+
+
+# ---------------------------------------------------------------------------
+# O nome público das listas — achados do code review do PR #507 (FR-5440a)
+# ---------------------------------------------------------------------------
+
+
+def test_a_lista_homonima_da_ampla_leva_o_codigo():
+    """A Modalidade "Ampla concorrência" sem apontamento não pode virar uma segunda ampla."""
+    assert dominio.nomes_das_listas(
+        [
+            ("m1", "Ampla concorrência", "AC"),
+            ("m2", "Pretos, pardos e indígenas", "PPI"),
+            ("m3", "AMPLA CONCORRENCIA", "AC2"),
+        ]
+    ) == [
+        ("m1", "Ampla concorrência (AC)"),
+        ("m2", "Pretos, pardos e indígenas"),
+        ("m3", "AMPLA CONCORRENCIA (AC2)"),
+    ]
+
+
+def test_duas_reservadas_homonimas_se_distinguem_pelo_codigo():
+    assert dominio.nomes_das_listas(
+        [("m1", "Escola pública", "EP1"), ("m2", "Escola pública", "EP2")]
+    ) == [("m1", "Escola pública"), ("m2", "Escola pública (EP2)")]
+
+
+def test_a_lista_sem_nome_nunca_publica_o_identificador():
+    """FR-5421: sem nome, o código; sem código, um nome neutro — nunca o UUID da Modalidade."""
+    uuid = "3f2a0000-0000-0000-0000-0000000000aa"
+
+    nomes = dominio.nomes_das_listas([(uuid, "", "PCD"), ("m2", None, None)])
+
+    assert nomes == [(uuid, "PCD"), ("m2", "Lista reservada 2")]
+    assert uuid not in " ".join(nome for _id, nome in nomes)
+
+
+def test_as_listas_do_edital_saem_dos_recortes_com_o_nome_publico():
+    """Nome e código vão ao domínio; a Modalidade apontada como a ampla fica fora."""
+    from processo_seletivo.divulgacao.application.inscricoes import _listas_reservadas
+
+    conteudo = {
+        "profiles": [
+            {
+                "id": PERFIL_A,
+                "generalCompetitionModalityId": AMPLA_APONTADA,
+                "competitionModalities": [
+                    {"id": PCD, "code": "PCD", "name": "Pessoas com deficiência"},
+                    {"id": AMPLA_APONTADA, "code": "AC", "name": "Ampla concorrência"},
+                    {"id": PPI, "code": "PPI", "name": ""},
+                ],
+            },
+            {
+                "id": PERFIL_B,
+                "competitionModalities": [
+                    {"id": AMPLA_APONTADA, "code": "AC", "name": "Ampla concorrência"},
+                ],
+            },
+        ]
+    }
+
+    assert _listas_reservadas(conteudo) == {
+        PERFIL_A: [(PCD, "Pessoas com deficiência"), (PPI, "PPI")],
+        PERFIL_B: [(AMPLA_APONTADA, "Ampla concorrência (AC)")],
+    }
+
+
+def test_o_resultado_e_a_relacao_nomeiam_a_ampla_do_mesmo_jeito():
+    from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
+
+    assert nome_da_lista({"lista": ""}) == dominio.AMPLA_CONCORRENCIA

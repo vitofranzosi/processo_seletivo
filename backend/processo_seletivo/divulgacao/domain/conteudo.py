@@ -27,6 +27,7 @@ from decimal import Decimal, InvalidOperation
 
 from processo_seletivo.classificacao.domain.nomes import edital_por_extenso, nomes_do_marco
 from processo_seletivo.classificacao.models import PosicaoNaOrdem
+from processo_seletivo.divulgacao.domain.inscricoes import AMPLA_CONCORRENCIA
 from processo_seletivo.divulgacao.models import Natureza, SituacaoDivulgada
 
 # As colunas que a projeção lê. `desempate` está **fora**, e a ausência é o requisito (FR-020).
@@ -220,7 +221,9 @@ def nome_da_lista(cabecalho):
     distingue. Uma função só para o documento e para a página, para que os dois não divirjam no
     nome do mesmo recorte.
     """
-    return cabecalho.get("lista") or "Ampla concorrência"
+    # A constante é a da relação das inscrições (148): os dois atos nomeiam a mesma lista, e uma
+    # grafia em cada módulo os deixaria divergir sem que teste algum comparasse.
+    return cabecalho.get("lista") or AMPLA_CONCORRENCIA
 
 
 def _escala(marco):

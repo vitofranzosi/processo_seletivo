@@ -13,7 +13,8 @@ cinco continuam esperando.
 > P-2: a modalidade aparece no ato, e o ato se reparte por lista, como os Editais do Ifes publicam.
 > Foram revistos a D-009, a FR-5419, a FR-5420, a FR-5421, o SC-1702 e o caso-limite do cotista, cada
 > um com a redação anterior preservada junto. Os requisitos novos estão na seção *A relação por
-> lista* (FR-5439 a FR-5447, UX-466, UX-467), e os critérios são o SC-1709 a SC-1711. A P-1 continua
+> lista* (FR-5439 a FR-5447, UX-466, UX-467), e os critérios são o SC-1709 a SC-1711. O code review do PR #507
+> acrescentou a FR-5440a, sobre o nome público das listas, com sufixo de letra e sem número novo. A P-1 continua
 > aberta, e a evidência colhida para ela está registrada junto da questão.
 
 **Input**: *"Evoluir o GPS para contemplar a publicação e homologação das inscrições,
@@ -210,6 +211,11 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
   versão citada não declara mais: consta só na ampla concorrência (FR-5441).
 - **Perfil sem Modalidade reservada**: tem uma lista só, a ampla concorrência, nomeada como as
   outras (FR-5440).
+- **Modalidade "Ampla concorrência" que o Perfil não aponta como a ampla** (o acervo anterior à
+  `122`): pela regra dos recortes ela é reservada, e continua lista. O título leva o código —
+  "Ampla concorrência (AC)" —, para que o ato não traga duas amplas (FR-5440a).
+- **Modalidade sem nome** (Edital publicado antes da validação de nome): a lista leva o código, e
+  nunca o identificador interno (FR-5440a).
 - **Ato publicado antes da revisão de 12/11**: continua como foi publicado, por Perfil e sem lista,
   na página e no documento (FR-5447).
 - **Inscrição enviada depois da relação publicada** — só possível se uma Retificação reabriu o
@@ -381,6 +387,11 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
   reservadas na ordem em que o Perfil as declara. Toda lista do Perfil MUST aparecer, inclusive vazia
   e inclusive quando a ampla for a única. A ampla MUST ser nomeada "Ampla concorrência", e cada
   reservada pelo nome publicado da Modalidade, como a divulgação do resultado já as nomeia.
+- **FR-5440a** *(ajuste do code review do PR #507, 12/11)*: O nome público de uma lista reservada
+  MUST ser o nome da Modalidade. Quando esse nome repetir o de outra lista do mesmo Perfil, inclusive
+  o da ampla (sem distinção de caixa nem de acento), MUST levar o código da Modalidade entre
+  parênteses. Sem nome, a lista MUST ser nomeada pelo código e, sem código, por um nome neutro. O
+  título MUST NOT conter o identificador interno da Modalidade (FR-5421).
 - **FR-5441**: A ampla concorrência MUST contemplar todas as inscrições do Perfil. A lista de uma
   Modalidade reservada MUST contemplar só as inscrições que a declararam. A inscrição cuja Modalidade
   não é lista na versão citada — a apontada como a ampla, ou uma que a versão não declara — MUST

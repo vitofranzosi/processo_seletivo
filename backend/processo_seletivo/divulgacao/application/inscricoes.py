@@ -223,24 +223,30 @@ def _listas_reservadas(conteudo):
 
     **A derivação é a dos recortes, e não uma leitura própria** (FR-5439): é ela que tira a
     Modalidade apontada como a ampla, e a mesma pergunta já é feita pela classificação, pelo sorteio
-    e pela ocupação. O rótulo dos recortes é o de gestão ("Nome (CÓDIGO)"); o ato publica o nome da
-    Modalidade, como a divulgação do resultado (FR-5440).
+    e pela ocupação. O nome que o ato publica **não** é o rótulo de gestão dos recortes, que cai no
+    UUID quando a Modalidade não tem nome: é o de `dominio.nomes_das_listas` (FR-5440a).
     """
     listas = {}
     for perfil in conteudo.get("profiles") or []:
         if not isinstance(perfil, dict):
             continue
         perfil_id = str(perfil.get("id"))
-        nomes = {
-            str(modalidade.get("id")): modalidade.get("name") or ""
+        declaradas = {
+            str(modalidade.get("id")): modalidade
             for modalidade in perfil.get("competitionModalities") or []
             if isinstance(modalidade, dict)
         }
-        listas[perfil_id] = [
-            (lista_id, nomes.get(lista_id) or rotulo)
-            for lista_id, rotulo in recortes_do_perfil(conteudo, perfil_id=perfil_id)
-            if lista_id
-        ]
+        listas[perfil_id] = dominio.nomes_das_listas(
+            [
+                (
+                    lista_id,
+                    declaradas.get(lista_id, {}).get("name"),
+                    declaradas.get(lista_id, {}).get("code"),
+                )
+                for lista_id, _rotulo in recortes_do_perfil(conteudo, perfil_id=perfil_id)
+                if lista_id
+            ]
+        )
     return listas
 
 
