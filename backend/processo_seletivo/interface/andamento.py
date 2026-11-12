@@ -1735,29 +1735,26 @@ class Alcance:
         }.get(responsavel, False)
 
 
-def do_edital(edital, ator, *, agora=None, em_curso=None, perfis=None):
+def do_edital(edital, ator, *, agora=None, em_curso=None, perfis=None, trabalho=None):
     """O andamento do Edital publicado ou encerrado, para este ator — ou `None` antes disso.
 
     `em_curso` são as Retificações em curso, que o detalhe já leu (103). Elas **não** viram
     providência (D-017): continuam ditas pelas frases da `104`, e servem aqui só à `104`.
     """
-    from processo_seletivo.publicacoes.application.selectors import (
-        agora_da_requisicao,
-        effective_version,
-    )
+    from processo_seletivo.publicacoes.application.selectors import effective_version
     from processo_seletivo.shared.api.problems import DomainError
 
     if edital.status not in ESTADOS_COM_ANDAMENTO:
         return None
-    # O instante da requisição, quando a view abriu o contexto da versão vigente (160, R-009): as
-    # funções de outras features recebem este `at`, e com ele encontram a versão já lida.
-    agora = agora or agora_da_requisicao() or timezone.now()
+    agora = agora or timezone.now()
     try:
         conteudo = effective_version(edital_id=edital.id, at=agora).content
     except DomainError:
         return None
     try:
-        return _Leitor(edital, ator, conteudo, agora).andamento(em_curso=em_curso, perfis=perfis)
+        return _Leitor(edital, ator, conteudo, agora).andamento(
+            em_curso=em_curso, perfis=perfis, trabalho=trabalho
+        )
     except Exception:  # noqa: BLE001 — orientação não derruba a página (item 2 do code review)
         # **A orientação não pode derrubar o detalhe do Edital.** A derivação lê vinte funções de
         # outras features; um conteúdo que uma delas não espere faria o detalhe responder 500 para
@@ -1845,7 +1842,7 @@ class _Leitor:
 
     # --- o todo ----------------------------------------------------------------------------
 
-    def andamento(self, *, em_curso=None, perfis=None):
+    def andamento(self, *, em_curso=None, perfis=None, trabalho=None):
         """O andamento; `perfis` restringe a leitura dos marcos a esses Perfis.
 
         A transição de um ato (FR-4090) lê o Perfil do marco, e não o Edital inteiro (item 3 do
@@ -1855,7 +1852,13 @@ class _Leitor:
 
         self.periodo = periodo_de_inscricoes(self.conteudo, self.agora)
         self.perfil_de, self.inscritos_por_perfil = self._perfis_das_inscricoes()
-        self.trabalho = self._trabalho_da_104(em_curso)
+        # `trabalho` chega de quem leu a `104` uma vez para vários Editais (160): sem ele, cada
+        # Edital relia as alocações da pessoa (revisão do #511).
+        self.trabalho = (
+            [o for o in trabalho if o.edital.id == self.edital.id]
+            if trabalho is not None
+            else self._trabalho_da_104(em_curso)
+        )
         expectativa = expectativa_das_etapas(self.conteudo)
         self.expectativa_do_edital = expectativa
         self.etapas_no_edital = self._etapas_no_edital(expectativa)

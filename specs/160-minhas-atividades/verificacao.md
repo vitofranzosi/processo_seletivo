@@ -10,9 +10,9 @@ identidade sem vínculo nenhum, no mesmo banco (R-012):
 
 | Cenário | Sem a versão por requisição | Com ela (R-009) | Teto gravado |
 |---|---|---|---|
-| sorteio (`certame_s1`), 3 e 30 inscrições | 23 e 23 | 19 e 19 | 23 |
-| pontuação (`certame_p1`) | 29 | 27 | 33 |
-| convocação (`montar_cenario_da_convocacao`) | 163 | 117 | 141 |
+| sorteio (`certame_s1`), 3 e 30 inscrições | 23 e 23 | 20 e 20 | 23 |
+| pontuação (`certame_p1`) | 29 | 28 | 33 |
+| convocação (`montar_cenario_da_convocacao`) | 163 | 118 | 141 |
 
 O termo não cresce com as inscrições. A versão vigente por requisição (incremento B, FR-6879) poupa
 de 7% a 28%, e mais onde a derivação lê mais listas: a convocação relia a versão em cada leitura de
@@ -48,11 +48,11 @@ cresce com o tamanho da banca, foi de 10 para 11.
 - **O incremento B no mesmo PR.** As tarefas o punham num PR próprio, depois do A na `main`. Ele é
   pequeno (um contexto em `publicacoes/application/selectors.py` e duas views que o abrem), foi
   medido junto, e vai num commit próprio, para ser revisto ou revertido à parte.
-- **A memória da versão é por `edital_id` e pelo instante da requisição.** `do_edital` passou a ler
-  com o instante do contexto quando há um (`agora_da_requisicao`), para que as funções de outras
-  features que recebem o `at` dela encontrem a versão já lida. Uma chamada com outro `at` vai ao
-  banco. Cada chamada recebe uma cópia do conteúdo, para que quem o altera em memória não contamine
-  a seguinte.
+- **A memória da versão vale entre a abertura da requisição e a próxima vigência do Edital**
+  (revisão de código do #511). A primeira versão congelava o instante da requisição em `do_edital`;
+  agora cada leitura usa o seu `now()`, e a memória custa uma consulta a mais por Edital — os
+  números da tabela acima já a incluem (eram 19, 27 e 117). Antes da abertura vai ao banco. Cada
+  chamada recebe uma cópia do conteúdo, para que quem o altera em memória não contamine a seguinte.
 
 ## Documentos (FR-6853)
 
@@ -109,4 +109,24 @@ implementação os avaliou. Entraram:
 
 Ficaram fora, por decisão da avaliação: priorização ou ordem nova, que não tem prioridade de negócio
 validada; designação; e mudança na derivação.
+
+## A revisão de código do #511 (12/11)
+
+Oito achados, todos tratados:
+- **Instante congelado** e **falta de versão sem memória**: corrigidos no contexto da versão vigente
+  (R-009, revisto).
+- **Ordem dos Editais pelo número em texto** (10/2026 antes do 9/2026): a ordem é natural, por
+  `ordem_do_edital`, nas linhas, no filtro e na leitura.
+- **As alocações da pessoa relidas por Edital presidido**: a `104` é lida uma vez para todos os
+  Editais da página, e entregue a cada `do_edital` (`trabalho=`), como o estudo propunha (R3).
+- **Os grupos recalculavam as mesmas propriedades a cada acesso do modelo**: `cached_property`.
+- **Nenhum teste de página da espera da convocação**: entrou
+  `test_a_espera_da_convocacao_nao_tem_base_e_o_prazo_e_do_candidato`.
+- **A cópia do conteúdo a cada leitura memorizada**: medida e mantida. Num conteúdo de 10 KB dos
+  cenários de treinamento, a cópia custa 0,075 ms, e a consulta que ela poupa, 0,85 ms; sem a
+  cópia, quem altera o conteúdo em memória contaminaria a leitura seguinte.
+- **Os Editais encerrados lidos a cada abertura**: mantidos. Um Edital encerrado pode ter pendência
+  (o relatório do Edital diz "encerrado com pendências"), e nenhum comando da comissão recusa ato por
+  o Edital estar encerrado; tirá-los da leitura poderia esconder um ato que o Centro diz ser da
+  pessoa, contra a FR-6860.
 
