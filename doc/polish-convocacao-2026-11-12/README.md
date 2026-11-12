@@ -52,9 +52,10 @@ Medido nos cenários da jornada do convocado (`tests/fixtures/jornada_do_convoca
 ## O que não mudou, e por quê
 
 - **O título e a mensagem do estado "tudo enviado"** ("Você foi convocado!" e a frase de
-  consequência com tudo enviado) são o objeto da spec `154`, já decidida e em implementação na
-  branch `claude/154-implementacao` (título *"Acompanhe sua convocação"*, consequência só com
-  providência pendente). Este polish não toca nessas linhas, para não colidir com ela.
+  consequência com tudo enviado) são o objeto da spec `154` (título *"Acompanhe sua convocação"*,
+  consequência só com providência pendente), mergeada no #497 enquanto este polish corria. Este
+  polish não toca nessas linhas; as capturas "depois" daqui são de antes da 154, e por isso ainda
+  mostram o título e a frase antigos.
 - **A ordem prazo → resumo** é a da FR-3859 da `121`; o destaque foi para o resumo, sem reordenar.
 - **Seção expansível em "Sobre esta convocação"**: a FR-3740 da `118` exige o bloco visível, sem
   `details`. Ficou compacto, e não recolhido.
@@ -73,7 +74,7 @@ Medido nos cenários da jornada do convocado (`tests/fixtures/jornada_do_convoca
   indicadores em linhas e pelo alvo de toque das ações; no desktop caiu 38 % (2083 → ~1280 px).
 - **"Se você não atender no prazo…" logo depois de "você não tem mais documentos para enviar"** gera
   dúvida sobre obrigação restante. É o achado 20 do estudo da jornada final, resolvido pela spec
-  `154` (consequência só com providência pendente), em implementação noutra branch.
+  `154` (consequência só com providência pendente), mergeada no #497.
 
 ## Capturas
 
