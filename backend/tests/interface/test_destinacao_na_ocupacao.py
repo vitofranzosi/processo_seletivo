@@ -117,7 +117,7 @@ class TestOcupacao:
 
         pagina = ocupacao(client, disponivel)
 
-        assert "1 vaga da Pretos, pardos e indígenas" in pagina
+        assert "1 vaga da lista «Pretos, pardos e indígenas" in pagina
         assert "sem quem a ocupe" in pagina
         assert "O Edital declara: «" in pagina
         assert "ON_EXHAUSTION" not in pagina
@@ -306,6 +306,23 @@ class TestOEditalSilente:
         assert BOTAO not in pagina, "FR-6320: sem reversão declarada, nada vai à ampla"
         # Só a seção da PPP: a faixa de outra lista depende de quem o sorteio pôs onde.
         assert "Pedir a faixa seguinte" not in secao_da_ppi(pagina)
+
+    def test_quem_nao_retifica_ve_o_caminho_nomeado(
+        self, client, seletor_ligado, silente, prazo_encerrado
+    ):
+        """FR-6321: a fase admite a Retificação, e quem apura sem elaborar vê o caminho nomeado.
+
+        O defeito que este caso prende: a condição lia a permissão de quem olha junto com a fase, e
+        a presidência do C09 — que apura e não elabora — via só a declaração de não preenchida,
+        como se a Retificação não existisse.
+        """
+        identificar(client, "carlos", ["gestor"])
+
+        pagina = ocupacao(client, silente)
+
+        assert SILENTE in pagina
+        assert "que é ato de quem elabora o Edital" in pagina
+        assert "abrir a Retificação deste Edital" not in pagina
 
     def test_o_centro_tem_um_ato_por_caminho(
         self, client, seletor_ligado, silente, prazo_encerrado

@@ -8518,7 +8518,9 @@ def ocupacao(request, edital_id, marco_id):
                 "pode_retificar": ator.can("retificacao:elaborar"),
                 # O caminho da Retificação no Edital silente (155, FR-6321): o predicado da ação
                 # "Retificar" do Edital, que inclui a fase.
-                "retificacao_admitida": acoes.pode_retificar(edital, ator),
+                # A fase admite a Retificação (155, FR-6321); quem pode praticá-la é outra pergunta,
+                # e a tela nomeia o caminho mesmo para quem não o pratica.
+                "retificacao_admitida": edital.status == "PUBLICADO",
                 # A chave nasce no GET pela razão que o corte já registra: gerada a cada POST, um
                 # duplo clique produziria duas apurações sucessivas sem que ninguém pedisse.
                 "chave_idempotencia": uuid4().hex,

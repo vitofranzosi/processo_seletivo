@@ -21,23 +21,23 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `.env` com `DB_NAME` próprio (`ps_elegant_robinson_155`) e `POSTGRES_USER=$USER`, `manage.py migrate --check` limpo, em `backend/.env`
-- [ ] T002 Escrever `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` com **todas** as linhas desde o início, uma por FR, SC e UX da spec, a coluna do teste preenchida ao longo das tarefas: o guardião cobra a cobertura assim que o arquivo existe
+- [x] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `.env` com `DB_NAME` próprio (`ps_elegant_robinson_155`) e `POSTGRES_USER=$USER`, `manage.py migrate --check` limpo, em `backend/.env`
+- [x] T002 Escrever `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` com **todas** as linhas desde o início, uma por FR, SC e UX da spec, a coluna do teste preenchida ao longo das tarefas: o guardião cobra a cobertura assim que o arquivo existe
 
 ## Phase 2: Foundational (bloqueia todas as histórias)
 
-- [ ] T003 Teste das constraints e do gatilho das colunas novas e da tabela nova (inserção válida, `UPDATE`/`DELETE` recusados, `ck_*` de cada regra do data-model) em `tests/unit/ocupacao/test_vaga_nao_preenchida_append_only.py` e `tests/unit/ocupacao/test_movimento_com_recorte.py`
-- [ ] T004 Acrescentar ao `MovimentoDeVaga` as colunas `edital`, `perfil_id`, `marco_id`, `gatilho`, `fundamento`, `versao`, `desfaz`, a espécie `DESFAZIMENTO_DA_REVERSAO`, `apuracao` nula e as constraints `ck_movimento_especie`, `ck_movimento_com_recorte` e `ck_desfazimento_cita_o_movimento`, em `processo_seletivo/ocupacao/models.py`
-- [ ] T005 Criar o modelo `VagaNaoPreenchida` (append-only por `save`/`delete`) e a coluna `ApuracaoDeOcupacao.nao_preenchidas`, com `ck_apuracao_ocupadas_no_limite` estendida, em `processo_seletivo/ocupacao/models.py`
-- [ ] T006 Escrever a migration `processo_seletivo/ocupacao/migrations/0005_destinacao_da_vaga.py`: as colunas, a tabela, o gatilho `reject_occupancy_mutation()` na tabela nova, guardado por `vendor == "postgresql"`, como a `0004`
-- [ ] T007 Registrar a tabela nova em `TABELAS_APPEND_ONLY`, com justificativa, em `processo_seletivo/seguranca/papeis.py`; atualizar `tests/seguranca/test_homologacao_preservada.py` (59 e o recorte final) e a contagem no `CLAUDE.md` ("são **59** com a vaga não preenchida da `155`")
-- [ ] T008 [P] Acrescentar a `processo_seletivo/ocupacao/domain/nomes.py`:
+- [x] T003 Teste das constraints e do gatilho das colunas novas e da tabela nova (inserção válida, `UPDATE`/`DELETE` recusados, `ck_*` de cada regra do data-model) em `tests/unit/ocupacao/test_vaga_nao_preenchida_append_only.py` e `tests/unit/ocupacao/test_movimento_com_recorte.py`
+- [x] T004 Acrescentar ao `MovimentoDeVaga` as colunas `edital`, `perfil_id`, `marco_id`, `gatilho`, `fundamento`, `versao`, `desfaz`, a espécie `DESFAZIMENTO_DA_REVERSAO`, `apuracao` nula e as constraints `ck_movimento_especie`, `ck_movimento_com_recorte` e `ck_desfazimento_cita_o_movimento`, em `processo_seletivo/ocupacao/models.py`
+- [x] T005 Criar o modelo `VagaNaoPreenchida` (append-only por `save`/`delete`) e a coluna `ApuracaoDeOcupacao.nao_preenchidas`, com `ck_apuracao_ocupadas_no_limite` estendida, em `processo_seletivo/ocupacao/models.py`
+- [x] T006 Escrever a migration `processo_seletivo/ocupacao/migrations/0005_destinacao_da_vaga.py`: as colunas, a tabela, o gatilho `reject_occupancy_mutation()` na tabela nova, guardado por `vendor == "postgresql"`, como a `0004`
+- [x] T007 Registrar a tabela nova em `TABELAS_APPEND_ONLY`, com justificativa, em `processo_seletivo/seguranca/papeis.py`; atualizar `tests/seguranca/test_homologacao_preservada.py` (59 e o recorte final) e a contagem no `CLAUDE.md` ("são **59** com a vaga não preenchida da `155`")
+- [x] T008 [P] Acrescentar a `processo_seletivo/ocupacao/domain/nomes.py`:
   - `PASSAGEM_ENTRE_COTAS` e `DECLARACOES_DE_REVERSAO`;
   - as espécies novas;
   - os códigos de recusa do contrato;
   - a causa `CAUSA_DECLARACAO_POSTERIOR`.
-- [ ] T009 Fazer `_movimentos_que_alcancam` e `_movimento_posterior` lerem também o recorte próprio do movimento, e acrescentar a causa `declaracao_posterior` a `causas_de_obsolescencia`, em `processo_seletivo/ocupacao/application/selectors.py`; teste de que nenhuma leitura por `apuracao__edital` ficou sem o recorte próprio em `tests/unit/ocupacao/test_leitura_do_movimento_sem_apuracao.py`
-- [ ] T010 Ensinar `calculo.apurar` a ler o desfazimento como movimento e `faltando` a descontar `nao_preenchidas`, em `processo_seletivo/ocupacao/domain/apuracao.py`, com casos em `tests/unit/ocupacao/test_apuracao_com_destinacao.py`
+- [x] T009 Fazer `_movimentos_que_alcancam` e `_movimento_posterior` lerem também o recorte próprio do movimento, e acrescentar a causa `declaracao_posterior` a `causas_de_obsolescencia`, em `processo_seletivo/ocupacao/application/selectors.py`; teste de que nenhuma leitura por `apuracao__edital` ficou sem o recorte próprio em `tests/unit/ocupacao/test_leitura_do_movimento_sem_apuracao.py`
+- [x] T010 Ensinar `calculo.apurar` a ler o desfazimento como movimento e `faltando` a descontar `nao_preenchidas`, em `processo_seletivo/ocupacao/domain/apuracao.py`, com casos em `tests/unit/ocupacao/test_apuracao_com_destinacao.py`
 
 **Checkpoint**: `make test-pg` verde com as migrations novas e nenhum comportamento mudado.
 
@@ -49,14 +49,14 @@
 **Independent Test**: Perfil com a resposta nova publica; `quantidade_a_reverter` devolve 0; a
 destinação e a não preenchida são recusadas com `passagem_entre_cotas`.
 
-- [ ] T011 [P] [US4] Testes da validação e da não cessão em `tests/unit/editais/test_reversao_declarada.py` e `tests/unit/ocupacao/test_reversao.py` (a resposta nova é aceita; não entra em `ESPECIES_DE_REVERSAO`; cede 0)
-- [ ] T012 [US4] `reversao.declarada` devolve as três respostas e `especie_que_move` só as duas, em `processo_seletivo/ocupacao/domain/reversao.py`; revisar os chamadores (`emissao.py:233`, `acrescimo.py:74`, `rodada_da_previa.py:89`, `interface/views.py:3487`)
-- [ ] T013 [US4] Aceitar a resposta nova em `processo_seletivo/editais/domain/validation.py::_reversao_declarada` (mensagem com as três) e nos *choices* de `processo_seletivo/editais/models/perfis.py`, com a migration nova de `editais` e o ajuste do guardião de contagem em `tests/migrations/test_migrations.py`
-- [ ] T014 [P] [US4] A terceira `<option>` em `processo_seletivo/interface/templates/interface/_perfil.html` e `compor_perfis.html`; leitura em `processo_seletivo/interface/forms.py`, sem palavra que a varredura da composição exija em `<dfn>`
-- [ ] T015 [P] [US4] As frases nos dois dicionários de `processo_seletivo/publicacoes/infrastructure/pdf.py`, contendo "de um código", e o caso em `tests/unit/publicacoes/test_redacao_das_frases.py`
-- [ ] T016 [P] [US4] Retificação, revisão e palavras: `processo_seletivo/interface/retificacao.py`, `aplicacao_na_retificacao.py`, `revisao.py`, `aplicacao.py::_valor_do_campo_em_palavras`; testes em `tests/interface/test_retificar_reversao.py` e `tests/interface/test_correcoes_de_norma_na_revisao.py`
-- [ ] T017 [P] [US4] O rótulo em `processo_seletivo/duvidas/domain/rotulos.py` e nas prévias `processo_seletivo/interface/previa_da_classificacao.py` e `previa_do_sorteio.py` ("o Edital manda passar por outras cotas; o GPS ainda não aplica"); casos em `tests/unit/duvidas/test_casos_da_revisao.py` e `tests/interface/test_previa_por_recorte.py`
-- [ ] T018 [P] [US4] O `enum` e a descrição em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (raiz do repositório)
+- [x] T011 [P] [US4] Testes da validação e da não cessão em `tests/unit/editais/test_reversao_declarada.py` e `tests/unit/ocupacao/test_reversao.py` (a resposta nova é aceita; não entra em `ESPECIES_DE_REVERSAO`; cede 0)
+- [x] T012 [US4] `reversao.declarada` devolve as três respostas e `especie_que_move` só as duas, em `processo_seletivo/ocupacao/domain/reversao.py`; revisar os chamadores (`emissao.py:233`, `acrescimo.py:74`, `rodada_da_previa.py:89`, `interface/views.py:3487`)
+- [x] T013 [US4] Aceitar a resposta nova em `processo_seletivo/editais/domain/validation.py::_reversao_declarada` (mensagem com as três) e nos *choices* de `processo_seletivo/editais/models/perfis.py`, com a migration nova de `editais` e o ajuste do guardião de contagem em `tests/migrations/test_migrations.py`
+- [x] T014 [P] [US4] A terceira `<option>` em `processo_seletivo/interface/templates/interface/_perfil.html` e `compor_perfis.html`; leitura em `processo_seletivo/interface/forms.py`, sem palavra que a varredura da composição exija em `<dfn>`
+- [x] T015 [P] [US4] As frases nos dois dicionários de `processo_seletivo/publicacoes/infrastructure/pdf.py`, contendo "de um código", e o caso em `tests/unit/publicacoes/test_redacao_das_frases.py`
+- [x] T016 [P] [US4] Retificação, revisão e palavras: `processo_seletivo/interface/retificacao.py`, `aplicacao_na_retificacao.py`, `revisao.py`, `aplicacao.py::_valor_do_campo_em_palavras`; testes em `tests/interface/test_retificar_reversao.py` e `tests/interface/test_correcoes_de_norma_na_revisao.py`
+- [x] T017 [P] [US4] O rótulo em `processo_seletivo/duvidas/domain/rotulos.py` e nas prévias `processo_seletivo/interface/previa_da_classificacao.py` e `previa_do_sorteio.py` ("o Edital manda passar por outras cotas; o GPS ainda não aplica"); casos em `tests/unit/duvidas/test_casos_da_revisao.py` e `tests/interface/test_previa_por_recorte.py`
+- [x] T018 [P] [US4] O `enum` e a descrição em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (raiz do repositório)
 
 **Checkpoint**: a passagem entre cotas é declarável e inerte.
 
@@ -193,15 +193,15 @@ ausência comprovada.
 
 ## Phase 11: Polish
 
-- [ ] T051 [P] Varreduras:
+- [x] T051 [P] Varreduras:
   - `tests/test_vocabulario_da_ocupacao.py` cobre os arquivos novos da ocupação;
   - `tests/test_gramatica_das_portas.py` cobre as views novas e cada `Http404` no inventário da `033`;
   - `tests/test_citacoes_de_requisito.py`;
   - uma varredura nova, em `tests/test_gravacao_da_destinacao.py`, de que só os comandos de `ocupacao/application/destinacao.py` e o ramo por saldo de `emissao.py` criam `MovimentoDeVaga` e `VagaNaoPreenchida` (SC-2103).
-- [ ] T052 [P] Completar `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` e marcar no README a linha da `155`
-- [ ] T053 Integrar o que entrou na `main` nos mesmos arquivos (o #489 e outros) e resolver os conflitos preservando os requisitos de cada incremento
-- [ ] T054 `cd backend && make lint check test-pg`, com o resultado no PR
-- [ ] T055 A jornada do quickstart no navegador: o C09, um Edital por esgotamento e um com a passagem entre cotas, a 1366 e a 390 px, sem violação da CSP; capturas no PR
+- [x] T052 [P] Completar `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` e marcar no README a linha da `155`
+- [x] T053 Integrar o que entrou na `main` nos mesmos arquivos (o #489 e outros) e resolver os conflitos preservando os requisitos de cada incremento
+- [x] T054 `cd backend && make lint check test-pg`, com o resultado no PR
+- [ ] T055 *(parcial: o C09 de ponta a ponta, a 1366 e a 390 px; o Edital por esgotamento e a passagem entre cotas ficaram nos testes de tela)* A jornada do quickstart no navegador: o C09, um Edital por esgotamento e um com a passagem entre cotas, a 1366 e a 390 px, sem violação da CSP; capturas no PR
 
 ## Dependencies
 

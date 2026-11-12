@@ -542,7 +542,9 @@ def frase_da_situacao(leitura, rotulo):
     quem a ocupe segue o caminho da fila, e a tela já o diz.
     """
     situacao = leitura["situacao"]
-    lista = rotulo or "esta lista"
+    # **"da lista «PPP»", e não "da PPP"** (155, UX-600): o rótulo é o nome publicado da
+    # Modalidade, e "1 vaga da Pessoas pretas, pardas e indígenas" não concorda.
+    lista = f"lista «{rotulo}»" if rotulo else "lista"
     reservada = leitura.get("listaId") is not None
     declaracao = leitura["declaracao"]
     destina = declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and reservada

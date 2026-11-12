@@ -164,7 +164,8 @@ def declarar_nao_preenchida(request, edital_id, marco_id):
         chave=chave,
         aviso=aviso,
         texto=fundamento,
-        retificacao_admitida=acoes.pode_retificar(edital, ator),
+        retificacao_admitida=edital.status == "PUBLICADO",
+        pode_retificar=acoes.pode_retificar(edital, ator),
     )
 
 

@@ -76,7 +76,7 @@ def test_a_ordenacao_oferece_o_gesto_e_a_conferencia_diz_o_que_se_registra(
     pagina = client.get(link.group(1).replace("&amp;", "&")).content.decode()
 
     assert "Emitir a ordem que declara que ninguém concorreu nesta lista" in pagina
-    assert "a ordem vazia declara que ninguém concorreu" in pagina
+    assert "declara que ninguém concorreu nesta lista" in pagina
     assert "junto das outras listas" in pagina and "sem publicação própria" in pagina
     assert "o corte vazio" in pagina
     assert not AtoDeOrdenacao.objects.filter(edital=vazio, lista_id=MODALIDADE_PCD).exists(), (

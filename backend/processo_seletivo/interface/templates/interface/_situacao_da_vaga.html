@@ -60,7 +60,7 @@ e a declaracao de vaga nao preenchida, com fundamento escrito.
 </form>
 {% else %}
 {% if recorte.vaga.silente and retificacao_admitida %}
-<p class="nota">Para que a vaga vá à ampla concorrência, o Edital precisa declarar a reversão: <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>. Ou declare a vaga não preenchida, com o fundamento escrito.</p>
+<p class="nota">Para que a vaga vá à ampla concorrência, o Edital precisa declarar a reversão, por Retificação{% if pode_retificar %}: <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% else %}, que é ato de quem elabora o Edital{% endif %}. Ou declare a vaga não preenchida, com o fundamento escrito.</p>
 {% endif %}
 <form method="post" action="{% url 'interface:declarar-nao-preenchida' edital.id marco_id %}" class="acoes">
   {% csrf_token %}

@@ -46,7 +46,7 @@ efetivas e a quantidade publicada ficam como estao (D-003).
 O fundamento nao move a vaga (FR-6320, D-006): nenhum texto escrito no ato substitui a declaracao
 publicada. Onde o Edital deveria declarar a reversao, o caminho e a Retificacao.
 {% endcomment %}
-{% if lista_id %}<p class="nota">O fundamento diz por que a vaga fica sem ocupante, e não a leva a lugar nenhum. Se a vaga devia ir à ampla concorrência, o caminho é declarar a reversão por Retificação{% if retificacao_admitida %} — <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% endif %}.</p>{% endif %}
+{% if lista_id %}<p class="nota">O fundamento diz por que a vaga fica sem ocupante, e não a leva a lugar nenhum. Se a vaga devia ir à ampla concorrência, o caminho é declarar a reversão por Retificação{% if retificacao_admitida and pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% elif retificacao_admitida %}, que é ato de quem elabora o Edital{% endif %}.</p>{% endif %}
 
 <p class="imutavel">A declaração não se apaga. Se estiver errada, desfaça-a por outro ato, com motivo.</p>
 

@@ -47,8 +47,16 @@ def primeira_da_fila(certame):
 
 
 def test_a_chamada_na_ampla_cita_a_destinacao(destinada, gestor):
+    # **A espécie é a que a posição determina**, e não "vaga inicial" fixa: quem o sorteio põe
+    # além das vagas iniciais da ampla é chamado para a vaga que vagou — e é justamente a destinada
+    # que ela ocupa. Fixar a espécie tornava o caso dependente da semente do sorteio.
     declarado = chamar(
-        destinada, gestor, primeira_da_fila(destinada), lista_id=None, chave="fund-155-chamar"
+        destinada,
+        gestor,
+        primeira_da_fila(destinada),
+        lista_id=None,
+        chave="fund-155-chamar",
+        especie=None,
     )
 
     texto = Convocacao.objects.get(id=declarado["id"]).fundamento
