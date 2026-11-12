@@ -28,6 +28,8 @@ from processo_seletivo.interface import conceitos as c
 from processo_seletivo.interface import providencias as p
 
 PRESIDENCIA, ALOCACAO = "Presidência", "Alocação"
+#: A linha que espera: não é ato de ninguém agora, e por isso não diz por que seria da pessoa.
+SEM_BASE = ""
 
 #: As providências que a presidência pratica e esta página mostra (R-003 da `160`). Publicar e
 #: julgar são papéis da unidade (D-004); a formalização fica fora (7ª decisão do estudo); a
@@ -362,7 +364,10 @@ def ler(ator, *, vinculos, atribuicoes, carga, agora=None):
         governadas = centro.etapas_governadas(andamento.perfis)
         if base == PRESIDENCIA:
             fazer += linhas_do_edital(da_presidencia(itens), edital, base, governadas)
-            espera += linhas_do_edital(esperas(itens), edital, base, governadas)
+            # **A espera não tem base** (revisão visual de 12/11): ninguém age até a data, e o ato
+            # seguinte pode ser do Publicador ou do candidato. A marca "Presidência" ali atribuía à
+            # pessoa o que não é dela. A base é só de quem pratica (FR-6861).
+            espera += linhas_do_edital(esperas(itens), edital, SEM_BASE, governadas)
         else:
             fazer += linhas_do_edital(da_conferencia(itens, perfis), edital, base, governadas)
 

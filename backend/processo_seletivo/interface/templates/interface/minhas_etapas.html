@@ -22,7 +22,7 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
 <section aria-labelledby="para-fazer-titulo" class="secao-de-atividades">
   <h2 id="para-fazer-titulo">Para fazer agora{% if atividades.para_fazer %} <span class="contagem-da-secao">· {{ atividades.quantos_atos }} ato{{ atividades.quantos_atos|pluralize }} em {{ atividades.quantos_editais }} Edita{{ atividades.quantos_editais|pluralize:"l,is" }}</span>{% endif %}</h2>
   {% if atividades.para_fazer %}
-  <ul class="providencias suas">
+  <ul class="providencias">
     {% for grupo in atividades.para_fazer %}{% include "interface/_atividade.html" %}{% endfor %}
   </ul>
   {% elif not atividades.nao_lidos %}
@@ -47,72 +47,22 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
 <section aria-labelledby="avaliacao-titulo" class="secao-de-atividades">
 <h2 id="avaliacao-titulo">Suas Etapas de avaliação{% if atribuicoes %} <span class="contagem-da-secao">· {{ atribuicoes|length }}</span>{% endif %}</h2>
 {% if atribuicoes %}
-<ul class="comissao" aria-label="Etapas atribuídas a você">
-  {% for item in atribuicoes %}
-  <li>
-    <div class="cabeca">
-      <strong class="operacao">{{ item.nome }}</strong>
-    </div>
-    {% comment %}
-    Uma linha por fato. Os três saíam num `.corpo` que só tem regra sob `.auditoria`, então o
-    Edital, o Processo e a contagem viravam uma frase corrida — "Concurso Docente 2027 — Campus
-    Serra 115 pendentes de 255" — em que nada tinha começo nem fim.
-    {% endcomment %}
-    <p class="contexto">
-      <span class="agregado">Edital {{ item.edital.number }}/{{ item.edital.year }}</span>
-      <span class="ator">{{ item.processo.title }}</span>
-    </p>
-    {% comment %}
-    Quanto falta, antes de entrar. A tela listava Etapas e um botão, e quem tinha centenas de
-    inscrições atribuídas só descobria isso abrindo cada uma.
-
-    São duas perguntas, e por isso dois números: quanto falta **para mim** — a contagem pendente,
-    que é o que se age — e quanto já andou, que é o que se compara entre cartões. "115 pendentes
-    de 255" respondia a primeira e deixava a segunda para a aritmética de quem lê; ao lado de "200
-    pendentes de 200", descobrir qual das duas nem começou custava duas divisões. A barra é a
-    mesma do progresso de documentos no portal — mesma trilha, mesmo verde, mesmo estado completo.
-    {% endcomment %}
-    {% if item.carga.total %}
-    <div class="medidor{% if not item.carga.pendentes %} completo{% endif %}">
-      <p class="numeros">
-        {% if item.carga.pendentes %}
-        <span class="restante"><strong>{{ item.carga.pendentes }}</strong>
-          pendente{{ item.carga.pendentes|pluralize:"s" }}</span>
-        {% else %}
-        {% comment %} "0 pendentes" é a mesma notícia dita pela ausência; quem terminou merece a
-           palavra. {% endcomment %}
-        <span class="restante">Concluída</span>
-        {% endif %}
-        <span class="taxa">{{ item.carga.percentual }}%</span>
-      </p>
-      {% comment %} A barra não é lida: o texto acima e abaixo dela já diz o mesmo em número, e
-         anunciá-la seria dizer três vezes a mesma coisa a quem usa leitor de tela. A cor também
-         não carrega nada sozinha, pelo mesmo motivo. {% endcomment %}
-      <div class="trilha-do-medidor" aria-hidden="true">
-        <div class="feito largura-{{ item.carga.percentual }}"></div>
-      </div>
-      <p class="detalhe">{{ item.carga.concluidas }} de {{ item.carga.total }}
-        avalia{{ item.carga.total|pluralize:"ção,ções" }}
-        conclu{{ item.carga.total|pluralize:"ída,ídas" }}</p>
-    </div>
-    {% else %}
-    {% comment %}
-    Alocação sem distribuição: a pessoa responde pela Etapa e ainda não recebeu inscrição nenhuma.
-    Esconder a linha inteira — o que a condição anterior fazia — deixava o cartão idêntico ao de
-    quem não sabe informar, e a diferença entre "nada para fazer" e "não sei" é o dia de quem lê.
-    {% endcomment %}
-    <p class="detalhe sem-distribuicao">Nenhuma inscrição distribuída a você ainda.</p>
-    {% endif %}
-    {% comment %} `.salvar` é a barra de gravação de formulário, e o cartão a usava só por ter um
-       botão: vinham junto o filete e os 48px de rodapé de um formulário, que aqui viravam um vão
-       morto abaixo do "Abrir" — o mesmo empréstimo de classe que embaralhava a leitura acima.
-       {% endcomment %}
-    <p class="acao-do-cartao">
-      <a class="botao" href="{% url 'interface:minha-etapa' item.edital.id item.etapa_id %}">Abrir</a>
-    </p>
-  </li>
-  {% endfor %}
+{% if etapas_abertas %}
+<ul class="comissao" aria-label="Etapas com avaliação pendente">
+  {% for item in etapas_abertas %}{% include "interface/_cartao_da_etapa.html" %}{% endfor %}
 </ul>
+{% endif %}
+{% if etapas_recolhidas %}
+{% comment %} Concluídas e sem inscrição distribuída ficam recolhidas: com 27 Etapas, quase todas
+   "Concluída 100%", a página do avaliador passava de 4500 px por causa de um ato só. Abrem por
+   elemento nativo, sem script, que a política de conteúdo recusaria (revisão visual de 12/11). {% endcomment %}
+<details class="etapas-recolhidas">
+  <summary>Concluídas ou sem inscrição distribuída · {{ etapas_recolhidas|length }}</summary>
+  <ul class="comissao" aria-label="Etapas concluídas ou sem inscrição distribuída">
+    {% for item in etapas_recolhidas %}{% include "interface/_cartao_da_etapa.html" %}{% endfor %}
+  </ul>
+</details>
+{% endif %}
 {% else %}
 {% comment %} §26 da 011: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
    bloqueada — ela simplesmente não pertence a esta área. A frase fala com quem lê (160, FR-6876):

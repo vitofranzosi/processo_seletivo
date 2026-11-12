@@ -12176,6 +12176,13 @@ def minhas_etapas(request):
             "cobertura_do_gestor": atividades.COBERTURA_DO_GESTOR,
             "nada_para_fazer": atividades.NADA_PARA_FAZER,
             "atribuicoes": atribuicoes,
+            # As Etapas com avaliação pendente ficam abertas; as concluídas e as sem inscrição
+            # distribuída, recolhidas (160, revisão visual de 12/11): eram 27 cartões abertos
+            # para um ato só.
+            "etapas_abertas": [i for i in atribuicoes if (i["carga"] or {}).get("pendentes")],
+            "etapas_recolhidas": [
+                i for i in atribuicoes if not (i["carga"] or {}).get("pendentes")
+            ],
             # Quanto falta em cada Etapa. Sem isto a tela listava Etapas e um botão “Abrir”, e a
             # primeira pergunta de quem trabalha — quanto falta — só era respondida entrando.
             # As comissões que a pessoa integra, com destaque para as que ela preside: sem isto,

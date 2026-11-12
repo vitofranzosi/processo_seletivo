@@ -224,6 +224,9 @@ def test_a_espera_fica_recolhida_com_a_origem_da_data_e_sem_atraso(client, base)
     assert '<details class="em-espera-da-pagina" open' not in html
     for grupo in atividades.em_espera:
         assert grupo.providencia.razao in espera
+    # A espera não é ato da pessoa: sem marca de base (revisão visual de 12/11).
+    assert all(grupo.base == at.SEM_BASE for grupo in atividades.em_espera)
+    assert "base-da-atividade" not in espera
     texto = re.sub(r"<[^>]+>", " ", html).lower()
     assert "atrasad" not in texto
     assert "seu prazo" not in texto
@@ -326,3 +329,33 @@ def test_o_membro_alocado_a_outro_perfil_nao_ve_a_conferencia(chamada, client):
     atividades, _ = abrir(client)
 
     assert conferencias(atividades) == []
+
+
+# --- a revisão visual de 12/11 ---------------------------------------------------------------
+
+
+def test_para_fazer_so_diz_a_situacao_quando_nao_e_pendente_e_sem_destaque(client, base):
+    certame_p1(*base)
+    identificar(client, "maria", [])
+    atividades, html = abrir(client)
+
+    secao = secao_para_fazer(html)
+    assert atividades.para_fazer and all(g.situacao == a.PENDENTE for g in atividades.para_fazer)
+    assert "situacao-do-andamento" not in secao
+    assert '<ul class="providencias">' in secao
+    assert "providencias suas" not in secao
+
+
+def test_as_etapas_concluidas_ou_sem_inscricao_ficam_recolhidas(client, base):
+    certame_p1(*base, distribuidas=2)
+    identificar(client, "joao", [])
+    resposta = client.get(reverse("interface:minhas-etapas"))
+    html = resposta.content.decode()
+
+    abertas, recolhidas = resposta.context["etapas_abertas"], resposta.context["etapas_recolhidas"]
+    assert [i["carga"]["pendentes"] for i in abertas] == [2]
+    assert all(not (i["carga"] or {}).get("pendentes") for i in recolhidas)
+    if recolhidas:
+        assert '<details class="etapas-recolhidas">' in html
+        assert f"Concluídas ou sem inscrição distribuída · {len(recolhidas)}" in html
+        assert '<details class="etapas-recolhidas" open' not in html

@@ -85,3 +85,15 @@
 .nao-lidos a {
   overflow-wrap: anywhere;
 }
+
+/* As Etapas concluídas ou sem inscrição distribuída, recolhidas (revisão visual de 12/11): abrem
+   pelo próprio `details`, e o resumo diz quantas são. */
+.etapas-recolhidas {
+  margin: .75rem 0 0;
+}
+
+.etapas-recolhidas summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--verde-texto);
+}

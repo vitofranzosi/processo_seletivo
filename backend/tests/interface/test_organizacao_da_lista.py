@@ -367,7 +367,7 @@ def test_quem_gere_ve_comissao_e_alocacao_e_quem_nao_gere_nao_ve():
 # ---------------------------------------------------------------------------------------------
 
 FAMILIAS = (
-    "Classificação",
+    "classificação",
     "sorteio",
     "resultado",
     "convocação",
@@ -410,7 +410,9 @@ def test_a_frase_vazia_nomeia_as_mesmas_familias_da_mesma_fonte():
 def test_a_nota_diz_onde_esta_cada_familia_e_nao_conta_atividades():
     """160, FR-6880 e FR-6881: o que é da presidência ou de alocação está em "Minhas atividades";
     o resultado continua no detalhe, porque publicar é papel da unidade (D-004 da `160`)."""
-    assert "está em Minhas atividades" in trabalho.FORA_DA_FAIXA
     assert "no detalhe de cada Edital" in trabalho.FORA_DA_FAIXA
-    antes = trabalho.FORA_DA_FAIXA.split("está em Minhas atividades")[0]
-    assert "resultado" not in antes.split("não entram aqui.")[1]
+    # As famílias continuam no detalhe; a página reúne só o que é da comissão da pessoa, e por isso
+    # a frase não promete nela o resultado, que é papel da unidade.
+    assert trabalho.FORA_DA_FAIXA.endswith("o que é da sua comissão está reunido em")
+    # Uma frase, e não seis linhas (revisão visual de 12/11): nenhum ponto final no meio.
+    assert "." not in trabalho.COBERTURA

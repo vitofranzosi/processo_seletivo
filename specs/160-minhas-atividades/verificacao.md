@@ -67,3 +67,26 @@ cresce com o tamanho da banca, foi de 10 para 11.
 - **SC-2281** é humano: a tarefa "sem abrir nenhum Edital, diga o que você tem a fazer e faça o
   primeiro", com a comissão real.
 - **UX-714** (375 px) é conferida pelas capturas da sessão que pediu a implementação.
+
+## A revisão visual de 12/11 (cenários de treinamento, banco `ps_minhas_atividades`)
+
+O usuário pediu quatro correções no PR ("Sim, corrigir no #511"):
+
+1. **A espera não tem marca de base.** Como `treino.presidencia`, "Publicar o resultado definitivo"
+   (do Publicador) e "Resposta de 3 convocações" (do candidato) apareciam com "Presidência". A
+   espera não é ato de ninguém agora; a marca de base fica só onde a pessoa pratica (FR-6861). Preso
+   em `test_a_espera_fica_recolhida_com_a_origem_da_data_e_sem_atraso`.
+2. **O prazo da convocação diz de quem é.** A derivação dizia "o prazo corre até …", que se lia
+   como prazo da comissão; passou a dizer "o prazo do candidato corre até …" (e "o prazo do
+   candidato está correndo", sem data). A mudança é na `127`, e vale também no Centro (FR-6869).
+3. **As Etapas concluídas ou sem inscrição ficam recolhidas.** Com 27 Etapas, quase todas
+   "Concluída 100%", a página do avaliador passava de 4500 px. As com avaliação pendente ficam
+   abertas; as demais, em `details`, com a contagem. Sem script.
+4. **Menos ruído.** Em "Para fazer agora", a situação só aparece quando não é *Pendente*, e a lista
+   perdeu o fundo de destaque. Na Lista, a nota da faixa virou uma frase só, que nomeia as oito
+   famílias da FR-4324 da `129`, diz que ficam no detalhe de cada Edital e termina no link
+   "Minhas atividades".
+
+Depois das correções: `make lint` e `make check` passam; `tests/interface`, `tests/unit/interface`,
+os testes de desempenho da página, do Centro, da faixa, da Lista e da comissão, e os guardiões de
+citação e do README deram 6288 passados e 1 pulado, contra PostgreSQL.

@@ -18,8 +18,11 @@ pede identificação, como hoje. Não exige permissão: o estado vazio não é r
 
 - `h2#para-fazer-titulo`: "Para fazer agora", com a contagem dentro do título, em
   `span.contagem-da-secao`: "N ato(s) em M Edital(is)" (UX-711). Sem linha, só "Para fazer agora".
-- `ul.providencias.suas` (as regras do nível 1 do Centro). Cada `li.atividade` traz:
-  - o sinal e a palavra da situação (`span.situacao`, UX-715);
+- `ul.providencias` (as regras do nível 1 do Centro, sem o fundo de destaque). Cada `li.atividade`
+  traz:
+  - o sinal e a palavra da situação (`span.situacao-do-andamento`, UX-715), **só quando ela não é
+    *Pendente*** — todas as linhas da seção são *Pendente* ou *Obsoleto*, e o *Obsoleto* precisa ser
+    visto (revisão visual de 12/11);
   - o ato, em `strong.ato`, com o texto da derivação;
   - `p.onde-da-atividade`: "Edital N/AAAA · <lugar> · <fase>". Num grupo: "N Editais · <lugar comum,
     se houver> · <fase>";
@@ -34,14 +37,18 @@ pede identificação, como hoje. Não exige permissão: o estado vazio não é r
 - `summary`: "Em espera nos seus Editais · N" (UX-712). Ausente quando N = 0.
 - `p.explicacao`: "Ninguém precisa agir até a data; cada uma diz de onde ela vem."
 - `ul.providencias.em-espera`. Cada `li` traz o sinal e a palavra (*Aguarda* ou *Impedido*), o ato, o
-  Edital ou "N Editais", e `span.razao` com a razão da derivação, que diz a origem da data (FR-6869).
-  No *Impedido*, quem o resolve (`texto_de_quem_resolve`). Sem link de ato.
+  Edital ou "N Editais", e `span.razao` com a razão da derivação, que diz a origem da data (FR-6869):
+  "o prazo do candidato corre até …". No *Impedido*, quem o resolve (`texto_de_quem_resolve`). Sem
+  link de ato e **sem marca de base**: a espera não é ato da pessoa, e o que vem depois pode ser do
+  Publicador ou do candidato (revisão visual de 12/11).
 - Nenhum texto da seção diz "seu prazo" nem "atrasado" (SC-2277).
 
 ### 3. "Suas Etapas de avaliação" — `ul.comissao[aria-label]`
 
-Os cartões de hoje, sem mudança: o medidor, "Concluída", "Nenhuma inscrição distribuída a você ainda"
-e "Abrir". O `h2` "Suas Etapas de avaliação · N" vem antes. Sem alocação, o estado vazio de hoje,
+Os cartões de hoje: o medidor, "Concluída", "Nenhuma inscrição distribuída a você ainda" e "Abrir".
+As Etapas com avaliação pendente ficam abertas; as concluídas e as sem inscrição distribuída ficam em
+`details.etapas-recolhidas`, com o `summary` "Concluídas ou sem inscrição distribuída · N" (revisão
+visual de 12/11). O `h2` "Suas Etapas de avaliação · N" vem antes. Sem alocação, o estado vazio de hoje,
 revisto (FR-6876):
 - **quem preside**: "Presidir uma comissão não atribui trabalho de avaliação." O resto da frase de
   hoje fica;
@@ -82,8 +89,10 @@ O bloco de hoje, sem mudança, depois das três seções (FR-6875).
 
 - Os itens e a contagem da faixa ficam como hoje. Nenhuma contagem de "Minhas atividades" (FR-6880).
 - A nota (`p.cobertura-da-faixa`) e a frase vazia continuam contendo `trabalho.FORA_DA_FAIXA` por
-  inteiro. A constante passa a dizer onde está cada família (R-010). Depois dela vem
-  `a.para-minhas-atividades` "Minhas atividades", para `interface:minhas-etapas`.
+  inteiro. A constante é **uma frase**: o que a faixa reúne, as oito famílias fora (a FR-4324 da
+  `129`), que ficam no detalhe de cada Edital, e "o que é da sua comissão está reunido em", seguida
+  do link `a.para-minhas-atividades` "Minhas atividades", para `interface:minhas-etapas` (R-010;
+  revisão visual de 12/11).
 - A Lista não chama a derivação do andamento (FR-6882).
 
 ## A 375 px (UX-714)

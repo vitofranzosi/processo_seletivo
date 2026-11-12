@@ -1317,16 +1317,18 @@ def situacoes_da_convocacao(f):
                 ato=f"Resposta de {_n(em_curso, 'convocação', 'convocações')}",
                 # Com a hora, como a convocação a mostra, e com a concordância: "1 aguardam" e um
                 # prazo de horas sem a hora eram o que o Centro dizia (problema novo N-02 da
-                # reavaliação de 12/11/2026).
+                # reavaliação de 12/11/2026). **E de quem é o prazo** (160, FR-6869): "o prazo
+                # corre até" lia-se como prazo da comissão, que não existe — a data é a do fim da
+                # resposta do candidato, e é ela que a espera explica.
                 razao=(
-                    f"o prazo corre até {_data_e_hora(f.get('ate'))}"
+                    f"o prazo do candidato corre até {_data_e_hora(f.get('ate'))}"
                     + (
                         f"; {_n(aguardando, 'aguarda', 'aguardam')} documentos"
                         if aguardando
                         else ""
                     )
                     if f.get("ate")
-                    else "o prazo está correndo"
+                    else "o prazo do candidato está correndo"
                 ),
                 url=com_ancora(url, "chamadas"),
                 ate=f.get("ate"),

@@ -408,7 +408,7 @@ def test_o_prazo_em_curso_diz_a_hora_e_concorda_com_o_numero():
     [espera] = [c for c in providencias if c.situacao == a.AGUARDA]
     local = timezone.localtime(ate)
     assert espera.razao == (
-        f"o prazo corre até {local:%d/%m/%Y} às {local:%H:%M}; 1 aguarda documentos"
+        f"o prazo do candidato corre até {local:%d/%m/%Y} às {local:%H:%M}; 1 aguarda documentos"
     )
     _, providencias = convocacao(em_curso=3, ate=ate, aguardando_documentos=2)
     [espera] = [c for c in providencias if c.situacao == a.AGUARDA]
