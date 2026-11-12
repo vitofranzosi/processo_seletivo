@@ -451,8 +451,9 @@ fundamento.
 ### User Story 3 — A convocação ainda aberta diz por que a pessoa foi chamada (Priority: P2)
 
 Antes de qualquer desfecho, a página da convocação diz em uma frase por que a pessoa foi chamada —
-porque a posição dela está dentro das vagas, ou porque uma vaga ficou livre — e recolhe o fundamento
-derivado da norma.
+para uma das vagas da lista, pela posição dela, ou porque uma vaga ficou livre — e recolhe o
+fundamento derivado da norma. *(Revisto em 2026-11-11: antes, "porque a posição dela está dentro das
+vagas".)*
 
 **Why this priority**: o mesmo jargão do achado 18, numa tela que a pessoa lê antes de agir.
 
@@ -462,7 +463,9 @@ recolhido; *"faixa vigente"* e *"recorte"* não aparecem fora dele.
 **Acceptance Scenarios**:
 
 1. **Given** uma convocação para vaga inicial, **When** a pessoa abre a convocação, **Then** lê que foi
-   chamada porque a posição dela na lista está dentro das vagas da lista.
+   chamada para uma das vagas da lista, pela posição dela na classificação. *(Revisto em 2026-11-11:
+   antes, "porque a posição dela na lista está dentro das vagas da lista", expressão que a UX-158 da
+   `063` proíbe.)*
 2. **Given** uma convocação para vaga que vagou, **Then** lê que foi chamada porque uma vaga da lista
    ficou livre e ela é a próxima na classificação.
 3. **Given** o complemento do fundamento escrito por quem convocou, **Then** ele aparece dentro do
@@ -716,11 +719,12 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
   **registrado** descreve o ato, e não é frase de consequência; a regra das duas frases neutras
   continua valendo antes do desfecho.
 - **FR-6442** *(acrescida em 2026-11-11, pelas decisões do usuário)*: A frase simples da convocação sem desfecho MUST ser, por espécie: vaga
-  inicial — *"Você foi chamado porque a sua posição na lista ‹nome da lista› está dentro das vagas
-  desta lista."*; vaga que vagou — *"Você foi chamado porque uma vaga da lista ‹nome da lista› ficou
+  inicial — *"Você foi chamado para uma das vagas da lista ‹nome da lista›, pela sua posição na
+  classificação."*; vaga que vagou — *"Você foi chamado porque uma vaga da lista ‹nome da lista› ficou
   livre e você é a próxima pessoa na classificação."*; para regularizar — *"Você foi chamado para
   regularizar a sua situação na lista ‹nome da lista›, porque há vaga."*. A User Story 3 pedia estas
-  frases, e nenhuma alínea as fixava.
+  frases, e nenhuma alínea as fixava. Nenhuma delas MUST dizer *"dentro das vagas"*, que a UX-158 da
+  `063` proíbe no acompanhamento porque se lê como aprovação.
 
 #### C. O próximo passo do aceite e da regularização
 
