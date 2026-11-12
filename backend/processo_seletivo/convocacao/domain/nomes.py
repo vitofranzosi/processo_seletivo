@@ -275,6 +275,10 @@ MOTIVO_SEM_CONTEUDO = "motivo_sem_conteudo"
 # A ciência de quem desfecha sobre as inaplicabilidades (131, FR-4468).
 CIENCIA_DAS_INAPLICABILIDADES = "ciencia_das_inaplicabilidades"
 INAPLICABILIDADES_MUDARAM = "inaplicabilidades_mudaram"
+# A ciência de quem indefere com o prazo em curso (152, FR-5805, D-003). **O comando a confere, e
+# não só a tela**: um formulário antigo, ou outra tela que um dia registre desfecho, não pode
+# pular a marca — a regra afeta desfecho, e validação de interface não é fronteira.
+CIENCIA_DO_PRAZO_EM_CURSO = "ciencia_do_prazo_em_curso"
 RESULTADO_DA_CONFERENCIA_INVALIDO = "resultado_da_conferencia_invalido"
 DOCUMENTO_JA_RECEBIDO = "documento_ja_recebido"
 DOCUMENTO_JA_CONFERIDO = "documento_ja_conferido"

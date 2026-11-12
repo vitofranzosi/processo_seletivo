@@ -143,6 +143,22 @@ def fundamento_das_pendencias(pendentes):
 
 _FECHAM_A_FRASE = (".", "?", "!", "…")
 
+#: O que o fundamento do atalho diz do obrigatório que não chegou (152, FR-5801).
+NAO_APRESENTADO_NO_PRAZO = "não apresentado no prazo"
+
+
+def fundamento_do_atalho(pendentes, nao_apresentados):
+    """O fundamento pré-redigido do atalho, irmão de `fundamento_das_pendencias` (152, FR-5801).
+
+    `pendentes` são pares `(nome, motivo)`; `nao_apresentados`, os nomes dos obrigatórios que não
+    chegaram até o vencimento. **Só o que fez o atalho aparecer**: o conforme, o que aguarda a
+    comissão e o que ainda está no prazo não são falta da pessoa, e o fundamento é mostrado a ela no
+    portal.
+    """
+    return fundamento_das_pendencias(
+        [*pendentes, *((nome, NAO_APRESENTADO_NO_PRAZO) for nome in nao_apresentados)]
+    )
+
 
 def _sem_ponto_final(motivo):
     """O motivo sem o ponto final simples, que cede à pontuação da frase (132, FR-4516, D-008).
