@@ -207,6 +207,12 @@ comandos da aplicação que a tela usa.
   nenhum documento na convocação, e a definição leva a identificação. O aceite com documento
   obrigatório da convocação exige conferência *conforme*, que exige a abertura do arquivo pela tela,
   e o gerador não a fabrica (D-007, D-010).
+- **FR-6730**: **Só no treinamento.** As identidades `treino.` só são oferecidas para designar, e
+  só contam como pessoa com o papel ou designação efetiva (as FR-6107 e FR-6113 da `153`), num Edital
+  de Processo que o manifesto registra. Em todo outro Edital da unidade — e na tela de acessos sem
+  Edital escolhido — elas não aparecem nem contam, embora o vínculo seja da unidade. A autorização
+  da `117` não muda: só a oferta e a contagem. O Processo se reconhece pelo manifesto, lido pelo
+  registro de apps, sem que o domínio importe o app de treinamento (D-001).
 - **FR-6729**: **A primeira autoridade.** O provisionamento não usa autoridade: o C16 e o C17 assinam
   os atos do certame com a mesma autoridade dos outros cenários (FR-4616).
 
@@ -230,7 +236,9 @@ comandos da aplicação que a tela usa.
   pessoa designada, e não "ninguém designado".
 - **SC-2211**: No C17 carregado, a lista do setor diz a `treino.formalizacao` que ainda não foi
   designada, e o Centro conta uma pessoa com o papel e nenhuma designada, com as três pessoas aptas
-  sem quem receba.
+  sem quem receba. `treino.presidencia` a designa pela tela, e o setor então exporta.
+- **SC-2213**: Num Edital real da mesma unidade, com a pessoa de treino vinculada e até designada,
+  o Centro não a conta e nenhuma tela de designar a oferece.
 - **SC-2212**: A carga do C16 e do C17 juntos cria uma pessoa e um vínculo; a segunda carga, e a
   restauração, não criam pessoa nem vínculo. Nenhum vínculo além do Formalização da identidade
   `treino.formalizacao` nasce de carga ou restauração.
@@ -324,11 +332,10 @@ não os da convocação.
   entrega. Para exercitar o portal (C02, C08, C11), a equipe se inscreve com o próprio e-mail, ou
   lê o código no mailpit da homologação, com o e-mail do candidato, que segue um padrão (guia).
 - **Os PDFs fictícios** são válidos e marcados, mas não imitam documento real.
-- **Designar pela demonstração.** O exercício do C17 pede quem tenha a permissão de designar, que é
-  a do Administrador de acessos da unidade, segundo a `117`. O seletor de demonstração não oferece
-  esse papel, e o gerador não o provisiona (FR-6724). Na homologação com entrada institucional, o
-  exercício é de quem tem o vínculo; pela demonstração, depende da revisão da `117` em curso em
-  12/11/2026, que dá a designação também à presidência.
+- **Designar pela demonstração.** Desde a revisão da `117` de 12/11/2026 (a FR-6700 dela), a
+  presidência da comissão do Processo também designa, e o exercício do C17 se faz pela demonstração
+  com `treino.presidencia`. O Administrador de acessos continua fora do seletor e do gerador
+  (FR-6724).
 - **Arquivos.** Os documentos fictícios vão para `ARQUIVOS_CANDIDATOS_RAIZ`. Se a transação de um
   cenário falha depois de gravar um arquivo, o arquivo pode ficar órfão no disco: o banco não
   aponta para ele.

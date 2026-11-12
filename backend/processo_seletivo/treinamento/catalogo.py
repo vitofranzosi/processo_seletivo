@@ -678,16 +678,16 @@ CENARIOS = (
             f"{FORMALIZACAO} com o papel Formalização e sem designação."
         ),
         precondicoes=(f"{FORMALIZACAO} tem o papel Formalização na unidade.",),
-        papeis=("Administrador de acessos da unidade", f"Formalização ({FORMALIZACAO})"),
+        papeis=(
+            f"Presidência ({PRESIDENCIA}), ou quem administra os acessos da unidade",
+            f"Formalização ({FORMALIZACAO})",
+        ),
         proxima_acao=(
-            f"Administrador de acessos: designar {FORMALIZACAO}; Formalização: ver o Edital."
+            f"Presidência (ou quem administra os acessos): designar {FORMALIZACAO}; "
+            "Formalização: ver o Edital e exportar."
         ),
         resultado_esperado="Designação vigente; o Centro deixa de dizer que ninguém recebe.",
-        dependencias=(
-            "Quem designa tem o papel Administrador de acessos, que o seletor de demonstração "
-            "não oferece: pela demonstração, o exercício depende da revisão da 117 que dá a "
-            "designação à presidência.",
-        ),
+        dependencias=(),
         montar=montar_c17,
         provisiona_formalizacao=True,
     ),

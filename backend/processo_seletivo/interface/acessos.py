@@ -672,7 +672,7 @@ def formalizacao(request):
                     "nome": acessos.nome_legivel(v.pessoa),
                     "email": v.pessoa.email,
                 }
-                for v in designar.pessoas_com_o_papel(ator)
+                for v in designar.pessoas_com_o_papel(ator, alvo=escolhido)
             ],
             "vigentes": [
                 {

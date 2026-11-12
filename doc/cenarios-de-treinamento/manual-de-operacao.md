@@ -32,7 +32,9 @@ trazem uma pessoa fictícia do setor, para que o fim do certame se treine pela t
   motivo e trilha, e só se ela ainda não o tiver;
 - no C16, a designação dela para o Edital `SIM16`.
 
-Quem concede e designa na trilha é `treino.acessos`, que não é pessoa nem tem vínculo: ninguém entra
+Ela só existe nos Editais de treinamento: nos Editais reais da unidade, a tela de designar não a
+oferece e o Centro não a conta, embora o vínculo seja da unidade (FR-6730). Quem concede e designa
+na trilha é `treino.acessos`, que não é pessoa nem tem vínculo: ninguém entra
 com esse poder. Nenhum outro papel é concedido, e nada é revogado na carga. A pré-visualização do
 C16 e do C17 diz se a pessoa e o papel serão criados ou mantidos. Uma `treino.formalizacao`
 desativada ou suspensa não é reativada: o cenário falha com `pessoa_indisponivel`.

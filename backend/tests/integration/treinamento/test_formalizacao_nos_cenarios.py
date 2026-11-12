@@ -86,10 +86,20 @@ def test_c16_o_setor_entra_verifica_e_exporta_e_o_centro_conta_a_designacao(clie
 def test_c17_a_pessoa_so_habilitada_ve_que_nao_foi_designada_e_o_centro_pede_a_designacao(
     client, cenario
 ):
-    """SC-2211, e a próxima ação da ficha: quem administra os acessos designa (FR-4655)."""
+    """SC-2211, e a próxima ação da ficha: a presidência designa (FR-4655, a revisão da 117).
+
+    E o avesso da FR-6730: no Edital de treinamento, a pessoa de treino é contada e oferecida.
+    """
+    from processo_seletivo.formalizacao.application.designar import pessoas_com_o_papel
+
     edital = cenario("C17")
     lido = passagem.da_passagem(edital)
     assert (lido.aptas, lido.designadas, lido.com_o_papel) == (3, 0, 1)
+    acessos = k.ator(k.ACESSOS, "cefor")
+    assert [v.pessoa.username for v in pessoas_com_o_papel(acessos, alvo=edital)] == [
+        k.FORMALIZACAO
+    ]
+    assert not pessoas_com_o_papel(acessos).exists(), "sem Edital escolhido, não se sabe"
     assert lido.pendentes[passagem.SEM_QUEM_RECEBA] == 3
     assert "ninguém está designado" in _centro(client, edital)
 
@@ -99,18 +109,22 @@ def test_c17_a_pessoa_so_habilitada_ve_que_nao_foi_designada_e_o_centro_pede_a_d
 
     m = retomar(CenarioDeTreinamento.objects.get(codigo="C17"), autoridade=AUTORIDADE)
     pessoa = get_user_model().objects.get(username=k.FORMALIZACAO)
-    # Quem a ficha não nomeia não designa: a presidência conduz, e não dá acesso (18.6).
-    with pytest.raises(DomainError):
+    # Quem a ficha não nomeia não designa: avaliar não é presidir (18.6). O código é o da recusa de
+    # autorização, e não um erro qualquer.
+    with pytest.raises(DomainError) as recusa:
         designar(
-            m.ator(k.PRESIDENCIA),
+            m.ator(k.AVALIACAO_1),
             edital_id=edital.id,
             pessoa=pessoa,
             perfis=[],
             motivo="Exercício.",
             now=m.agora,
         )
+    assert recusa.value.status == 403
+    # A presidência do Processo designa (a revisão da 117 de 12/11), sem nenhuma permissão de
+    # acesso: a base é a comissão, como na tela.
     designar(
-        m.ator(k.ACESSOS),
+        m.ator(k.PRESIDENCIA),
         edital_id=edital.id,
         pessoa=pessoa,
         perfis=[],

@@ -429,7 +429,8 @@ arquivo para conferi-lo, e isso é você quem faz, não o gerador (C12).
 **Você começa com:** o Edital `SIM17`, no mesmo ponto do C16 — 3 pessoas aptas e a definição
 gravada —, mas `treino.formalizacao` tem só o papel, **sem designação**.
 
-**Quem faz:** quem administra os acessos da unidade; depois, o setor (`treino.formalizacao`).
+**Quem faz:** a presidência (`treino.presidencia`); depois, o setor (`treino.formalizacao`). Quem
+administra os acessos da unidade também designa, pela tela de acessos.
 
 **Seu desafio:**
 
@@ -437,15 +438,16 @@ gravada —, mas `treino.formalizacao` tem só o papel, **sem designação**.
    você ainda não foi designado.
 2. Como **Gestor**, abra o Edital `SIM17`, aba **Conclusão**: o GPS diz que ninguém está designado
    e a quem pedir.
-3. Quem administra os acessos designa `treino.formalizacao` para o Edital, com o motivo.
-4. Entre de novo como o setor: o Edital `SIM17` aparece, pronto para exportar.
+3. Entre como a presidência (`treino.presidencia`, no grupo **Comissões**). No Edital `SIM17`, abra
+   **Documentos para a formalização** e, em **Quem acessa os documentos**, escolha *Formalização
+   Treinamento*, deixe os Perfis sem marcar (todos), escreva o motivo e clique em **Designar**.
+4. Entre de novo como o setor: o Edital `SIM17` aparece. Verifique e exporte, como no C16.
 
-**Resultado esperado:** designação registrada; o Centro deixa de dizer que ninguém recebe.
+**Resultado esperado:** designação registrada; o Centro deixa de dizer que ninguém recebe, e o
+pacote é exportado.
 
-**Atenção:** a página de demonstração **não oferece** o papel de quem administra os acessos, e o
-cenário não o cria — dar esse poder a qualquer um na demonstração seria pior que o problema. O
-passo 3 se faz pela entrada institucional, por quem tem esse papel; pela demonstração, ele depende
-de uma mudança em andamento que deixa também a presidência designar.
+**Atenção:** a pessoa `treino.formalizacao` só aparece para designar nos Editais de treinamento —
+nos Editais reais da unidade ela não é oferecida nem contada.
 
 ---
 
