@@ -38,6 +38,11 @@ Se um cenário já foi restaurado, a versão nova termina em `-R2`, `-R3`… e a
      (Gestor, Elaborador, Homologador, Publicador, Julgador de recursos). Se preferir que a
      auditoria registre o seu nome, use o campo **Nome na auditoria** e marque o papel.
 
+   - para os exercícios do **setor da formalização** (C16 e C17), escreva `treino.formalizacao`
+     no campo **Nome na auditoria** e marque o papel **Formalização**. Ela não aparece na lista
+     de sugestões, de propósito: é a pessoa fictícia do setor, que o cenário já traz com o papel
+     concedido na unidade.
+
 **Para chegar ao lugar do exercício**, a presidência começa em **Minhas Etapas**, que lista as
 comissões de que ela faz parte; os demais papéis, em **Processos Seletivos**. Abra o Processo e, nele,
 o Edital (`SIM07/2026`, por exemplo). No alto da página do Edital, o quadro **O que fazer agora**
@@ -387,6 +392,57 @@ documental; ninguém na cota. Corte e apuração já emitidos.
 3. Tente convocar a terceira e leia a mensagem.
 
 **Resultado esperado:** duas convocações; vagas restantes apontadas como não preenchidas.
+
+## C16 — Exportação à formalização
+
+**Objetivo:** como o setor que formaliza, receber os documentos das pessoas aptas.
+
+**Você começa com:** o Edital `SIM16`, 3 convocados que **aceitaram a vaga** e estão aptos para
+formalização. A presidência já definiu o que vai ao setor (o documento de identificação), e a
+pessoa fictícia do setor, `treino.formalizacao`, já tem o papel Formalização **e** está designada
+para este Edital.
+
+**Quem faz:** o setor (`treino.formalizacao`, com o papel **Formalização** — veja *Como entrar*).
+
+**Seu desafio:**
+
+1. Antes, entre como **Gestor** e abra o Edital `SIM16`, aba **Conclusão**: o quadro da passagem ao
+   setor diz *"Quem recebe: 1 pessoa designada"* e quantas pessoas faltam disponibilizar.
+2. Saia e entre como `treino.formalizacao`. Abra **Formalização** e, nela, o Edital `SIM16`.
+3. **Verifique** o que vai receber, leia a lista e **baixe** o pacote.
+4. Volte ao Edital como Gestor e veja o quadro: as pessoas aparecem como disponibilizadas.
+
+**Resultado esperado:** pacote baixado e registrado; o Centro conta as 3 pessoas como
+disponibilizadas.
+
+**Atenção:** o pacote traz só o documento de identificação. Para o aceite nascer pronto, este
+Edital não pede documento na convocação — os da convocação exigiriam que alguém abrisse cada
+arquivo para conferi-lo, e isso é você quem faz, não o gerador (C12).
+
+## C17 — Designação para a formalização
+
+**Objetivo:** designar quem do setor vai receber os documentos do Edital.
+
+**Você começa com:** o Edital `SIM17`, no mesmo ponto do C16 — 3 pessoas aptas e a definição
+gravada —, mas `treino.formalizacao` tem só o papel, **sem designação**.
+
+**Quem faz:** quem administra os acessos da unidade; depois, o setor (`treino.formalizacao`).
+
+**Seu desafio:**
+
+1. Entre como `treino.formalizacao` (papel **Formalização**) e abra **Formalização**: a tela diz que
+   você ainda não foi designado.
+2. Como **Gestor**, abra o Edital `SIM17`, aba **Conclusão**: o GPS diz que ninguém está designado
+   e a quem pedir.
+3. Quem administra os acessos designa `treino.formalizacao` para o Edital, com o motivo.
+4. Entre de novo como o setor: o Edital `SIM17` aparece, pronto para exportar.
+
+**Resultado esperado:** designação registrada; o Centro deixa de dizer que ninguém recebe.
+
+**Atenção:** a página de demonstração **não oferece** o papel de quem administra os acessos, e o
+cenário não o cria — dar esse poder a qualquer um na demonstração seria pior que o problema. O
+passo 3 se faz pela entrada institucional, por quem tem esse papel; pela demonstração, ele depende
+de uma mudança em andamento que deixa também a presidência designar.
 
 ---
 

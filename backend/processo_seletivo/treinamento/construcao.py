@@ -41,6 +41,15 @@ AVALIACAO_1 = "treino.avaliacao1"
 AVALIACAO_2 = "treino.avaliacao2"
 EQUIPE = (GESTAO, ELABORACAO, HOMOLOGACAO, PUBLICACAO, PRESIDENCIA, AVALIACAO_1, AVALIACAO_2)
 
+# O provisionamento de treinamento da formalização (FR-6720 a FR-6729): quem concede o papel e
+# designa, e a pessoa do setor. **`ACESSOS` só existe em memória** (FR-6724): não recebe vínculo nem
+# é pessoa, e por isso ninguém entra com o poder de conceder. **`FORMALIZACAO` é pessoa**, porque a
+# designação e o vínculo apontam para um usuário — e é o vínculo que faz o Centro contar a
+# designação como efetiva (a FR-6107 da `153`). O identificador não começa por `pessoa-`: a busca da
+# gestão de acessos e a entrada institucional não a alcançam.
+ACESSOS = "treino.acessos"
+FORMALIZACAO = "treino.formalizacao"
+
 # Os papéis que cada ator exerce, nos nomes do seletor (`interface/identidade.PAPEIS`). O gerador
 # não inventa capacidade: cada ator recebe só as permissões que o papel dele dá na tela.
 _PERMISSOES = {
@@ -60,6 +69,9 @@ _PERMISSOES = {
     ),
     HOMOLOGACAO: ("edital:homologar", "retificacao:homologar"),
     PUBLICACAO: ("edital:publicar", "retificacao:publicar", "resultado:publicar"),
+    # O Administrador de acessos da unidade do catálogo da `107`, que o seletor não oferece: é a
+    # exceção à FR-4642 que a FR-6724 nomeia, e só concede e designa.
+    ACESSOS: ("acesso:gerir", "acesso:consultar"),
     # Presidir e avaliar não são papéis: a base é o vínculo com a comissão do Processo.
     PRESIDENCIA: (),
     AVALIACAO_1: (),
@@ -215,6 +227,18 @@ def documentos_de_notas():
             "modalityId": RESERVADA,
         },
     ]
+
+
+def documentos_da_formalizacao():
+    """Só a identificação, na inscrição — nenhum documento na convocação (D-010).
+
+    O aceite com obrigatório da convocação exige a conferência *conforme*, que exige a abertura do
+    arquivo pela tela, e o gerador não a fabrica (D-007). Sem documento na convocação, o aceite
+    passa sem conferência e a pessoa nasce apta; o que vai ao setor é a identificação, que a `117`
+    leva sem conferência por ser da inscrição.
+    """
+    identificacao, *_ = documentos_de_notas()
+    return [identificacao]
 
 
 def documentos_de_sorteio():
@@ -864,6 +888,89 @@ class Montagem:
             idempotency_key=self.chave(f"conferir-{str(item.id)[:8]}"),
             correlation_id=self.correlacao,
         )
+
+    def desfechar(self, convocacao, ordem, especie="ACEITE"):
+        from processo_seletivo.convocacao.application.desfechar import desfechar
+
+        return desfechar(
+            actor=self.ator(PRESIDENCIA),
+            processo_id=self.processo.id,
+            convocacao_id=convocacao.id,
+            especie=especie,
+            fundamento=f"Aceite de treinamento. {MARCA}.",
+            idempotency_key=self.chave(f"desfechar-{ordem:02d}"),
+            correlation_id=self.correlacao,
+        )
+
+    # -- Formalização (FR-6720 a FR-6729) ------------------------------------------------------
+
+    def definir_formalizacao(self, requisitos):
+        """A definição dos documentos que vão ao setor, pela presidência, com motivo (117)."""
+        from processo_seletivo.formalizacao.application.definir import definir
+
+        definicao = definir(
+            actor=self.ator(PRESIDENCIA),
+            edital_id=self.edital.id,
+            requisitos=[self.id(requisito) for requisito in requisitos],
+            motivo=f"Documentos para a formalização do treinamento. {MARCA}.",
+            correlation_id=self.correlacao,
+        )
+        self.anotar("definicao_da_formalizacao", definicao.id)
+        return definicao
+
+    def habilitar_formalizacao(self):
+        """A pessoa do setor, e o papel Formalização dela na unidade — só o que faltar.
+
+        **A única pessoa escrita pelo ORM** (FR-6721), como a identidade do candidato fictício:
+        no GPS a pessoa institucional nasce do provedor, e o gerador não é provedor. Ela nasce sem
+        senha utilizável e sem identidade externa, e quem já existe não é tocado — inclusive a
+        inativa, que a concessão recusa, e o cenário falha com a frase do domínio. O vínculo é pelo
+        comando da `107`, com motivo e trilha (FR-6722).
+        """
+        from django.contrib.auth import get_user_model
+
+        from processo_seletivo.formalizacao.domain import nomes
+        from processo_seletivo.seguranca.application import acessos
+
+        pessoa = get_user_model().objects.filter(username=FORMALIZACAO).first()
+        if pessoa is None:
+            pessoa = get_user_model()(
+                username=FORMALIZACAO,
+                first_name="Formalização Treinamento",
+                email=f"formalizacao@{ids.DOMINIO}",
+            )
+            pessoa.set_unusable_password()
+            pessoa.save()
+            self.anotar("pessoa_da_formalizacao", pessoa.pk)
+        vigente = acessos.vigentes().filter(pessoa=pessoa, escopo=self.unidade, papel=nomes.PAPEL)
+        if not vigente.exists():
+            vinculo = acessos.conceder(
+                self.ator(ACESSOS),
+                pessoa=pessoa,
+                escopo=self.unidade,
+                papel=nomes.PAPEL,
+                motivo=f"Pessoa fictícia do setor, para o treinamento da formalização. {MARCA}.",
+                now=timezone.now(),
+                correlation_id=self.correlacao,
+            )
+            self.anotar("vinculo_da_formalizacao", vinculo.pk)
+        return pessoa
+
+    def designar_formalizacao(self, pessoa):
+        """A designação da pessoa para o Edital, sem restringir Perfil (FR-6723)."""
+        from processo_seletivo.formalizacao.application.designar import designar
+
+        designacao = designar(
+            self.ator(ACESSOS),
+            edital_id=self.edital.id,
+            pessoa=pessoa,
+            perfis=[],
+            motivo=f"Designação do treinamento da formalização. {MARCA}.",
+            now=timezone.now(),
+            correlation_id=self.correlacao,
+        )
+        self.anotar("designacao_da_formalizacao", designacao.id)
+        return designacao
 
     # -- Sorteio -----------------------------------------------------------------------------
 

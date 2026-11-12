@@ -81,7 +81,7 @@ def test_a_pre_visualizacao_mostra_o_destino_e_o_plano_sem_gravar(treinamento):
     assert "Banco " in saida
     for codigo in ("C01", "C07", "C15"):
         assert codigo in saida
-    assert saida.count("CRIAR") == 15
+    assert saida.count("CRIAR") == 17
     _nada_gravado()
 
 

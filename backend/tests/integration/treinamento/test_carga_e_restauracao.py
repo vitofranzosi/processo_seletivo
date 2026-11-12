@@ -205,15 +205,18 @@ def test_propriedade_que_nao_se_comprova_bloqueia_a_restauracao(treinamento):
     assert "INCONSISTENTE" in verificar("C03")
 
 
-def test_a_carga_dos_quinze_cria_cenarios_independentes(treinamento):
-    """O catálogo inteiro coexiste, cada um no seu Processo, sem identificador partilhado."""
+def test_a_carga_dos_dezessete_cria_cenarios_independentes(treinamento):
+    """O catálogo inteiro coexiste, cada um no seu Processo, sem identificador partilhado (SC-1455).
+
+    Eram quinze; o C16 e o C17 da formalização entraram com a revisão de 12/11/2026 (FR-4650).
+    """
     saida = carregar(autoridade=str(AUTORIDADE_DA_SUITE))
-    assert saida.count("CRIADO") == 15, saida
+    assert saida.count("CRIADO") == 17, saida
     processos = ProcessoSeletivo.objects.filter(institutional_code__startswith="SIM-TREINAMENTO-")
-    assert processos.count() == 15
-    assert CenarioDeTreinamento.objects.filter(situacao="PRONTO").count() == 15
-    assert Edital.objects.filter(number__startswith="SIM").count() == 15
-    assert verificar().count("INTACTO") == 15
+    assert processos.count() == 17
+    assert CenarioDeTreinamento.objects.filter(situacao="PRONTO").count() == 17
+    assert Edital.objects.filter(number__startswith="SIM").count() == 17
+    assert verificar().count("INTACTO") == 17
 
 
 def test_autoridade_nunca_usada_so_com_escolha_expressa(treinamento):

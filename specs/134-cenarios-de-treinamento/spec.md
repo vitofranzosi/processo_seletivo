@@ -4,7 +4,8 @@
 
 **Created**: 2026-11-08
 
-**Status**: Implementada em 08/11/2026, sem merge. Uma migration (`treinamento/0001`), um app
+**Status**: Implementada em 08/11/2026. Revista em 12/11/2026 pelo provisionamento de treinamento
+da formalização (FR-4615, FR-6720 a FR-6729), sem merge. Uma migration (`treinamento/0001`), um app
 novo, quatro comandos de gestão e nenhuma tela. Verificação em [verificacao.md](verificacao.md).
 Nenhuma carga foi feita no banco compartilhado de homologação: ela é do administrador, pelo
 [manual de operação](../../doc/cenarios-de-treinamento/manual-de-operacao.md).
@@ -61,8 +62,26 @@ comandos da aplicação que a tela usa.
   trilha (o registro de criação com a correlação da rodada), e não pelo prefixo do código.
 - **FR-4614**: Um Processo com o código reservado de um cenário e sem manifesto é relatado como
   conflito e não é reaproveitado, alterado nem restaurado.
-- **FR-4615**: O gerador não cria nem altera configuração institucional: unidade, autoridade,
-  papel, vínculo ou usuário.
+- **FR-4615** *(revista em 2026-11-12, por decisão do usuário sobre o achado 06 da reavaliação da
+  jornada final — a redação anterior está ao fim desta alínea)*: O gerador não cria nem altera
+  configuração institucional: unidade, autoridade ou papel. Não altera usuário nem vínculo que
+  existam, e não concede vínculo de papel de condução nem de acesso administrativo. **A única
+  exceção** é o provisionamento de treinamento da formalização, das FR-6720 a FR-6729: uma
+  identidade fictícia `treino.formalizacao`, o vínculo dela no papel Formalização na unidade do
+  cenário, e a designação dela para o Edital do cenário de exportar.
+
+  > **Redação anterior, preservada:** O gerador não cria nem altera configuração institucional:
+  > unidade, autoridade, papel, vínculo ou usuário.
+  >
+  > *Por que mudou:* o fim da jornada não podia ser treinado pela interface (achado 06 da
+  > reavaliação da jornada final de 12/11/2026). O papel Formalização do seletor vale só para a
+  > sessão e não é vínculo, e por isso o Centro dizia "ninguém designado" com o setor exportando — a
+  > designação efetiva da FR-6107 da `153` exige o papel vigente na unidade. Decisão do usuário, em
+  > 12/11/2026: *"O cenário destinado a exercitar a formalização deve nascer com pessoa fictícia
+  > identificável, vínculo vigente no papel Formalização e designação válida para o Edital."* E a
+  > forma: *"permitir o provisionamento controlado das identidades e vínculos fictícios necessários,
+  > com as proteções de ambiente, isolamento e idempotência existentes. O exercício de exportar já
+  > pode vir pronto; um exercício específico de designar pode partir apenas da pessoa habilitada."*
 - **FR-4616**: Sem pedido expresso (`--autoridade`), o gerador só assina com autoridade vigente que
   já foi usada, porque o primeiro uso torna o cadastro dela imutável (a FR-1121 da `060`).
 - **FR-4617**: A verificação diz, por cenário: ausente, intacto, exercitado (com as diferenças em
@@ -114,9 +133,14 @@ comandos da aplicação que a tela usa.
 
 ### Catálogo
 
-- **FR-4650**: O catálogo tem quinze cenários, C01 a C15, cada um com nome, objetivo, tipo de
-  seleção, método, estado inicial, pré-condições, papéis, próxima ação, resultado esperado,
-  dependências e restauração.
+- **FR-4650** *(revista em 2026-11-12, com a FR-4615)*: O catálogo tem dezessete cenários, C01 a
+  C17, cada um com nome, objetivo, tipo de seleção, método, estado inicial, pré-condições, papéis,
+  próxima ação, resultado esperado, dependências e restauração. Os dois últimos são os da
+  formalização (FR-6720).
+
+  > **Redação anterior, preservada:** O catálogo tem quinze cenários, C01 a C15, cada um com nome,
+  > objetivo, tipo de seleção, método, estado inicial, pré-condições, papéis, próxima ação,
+  > resultado esperado, dependências e restauração.
 - **FR-4651**: Os Processos dos cenários se chamam `SIM-TREINAMENTO-NNN` (e `-RN` a partir da
   segunda rodada), com título terminado em "(FICTÍCIO)"; os Editais, `SIMNN/ano`.
 - **FR-4652**: As datas são contadas do instante da geração; o cenário com prazo que corre declara
@@ -130,6 +154,58 @@ comandos da aplicação que a tela usa.
   pedida só aos cotistas, na convocação. O C07 nasce com as duas relações congeladas, e a mesma
   ocorrência semeia os dois sorteios (D-008).
 
+### Provisionamento de treinamento da formalização (revisão de 12/11/2026)
+
+> **Faixa de identificadores.** A revisão abre em **FR-6720** e **SC-2210**. A faixa reservada em
+> 12/11/2026 vai até o requisito funcional seis mil setecentos e trinta e nove, o critério dois mil
+> duzentos e dezenove e, nos de experiência, de setecentos e dez a setecentos e dezenove, que esta
+> revisão não usa. Os vinte requisitos funcionais anteriores a ela ficaram com a revisão da `117`
+> em curso no mesmo dia.
+
+- **FR-6720**: O catálogo ganha dois cenários da formalização, que partem do mesmo estado: um Edital
+  por notas com três pessoas convocadas, com aceite registrado e, por isso, aptas (a FR-3669 da
+  `117`), e a definição dos documentos para a formalização gravada pela presidência.
+  - **C16 — Exportação à formalização**: a pessoa do setor nasce habilitada **e** designada para o
+    Edital; o exercício é verificar e exportar.
+  - **C17 — Designação para a formalização**: a pessoa do setor nasce **só habilitada**, sem
+    designação; o exercício é designá-la.
+- **FR-6721**: **A identidade fictícia.** O gerador cria, quando ela não existe, uma pessoa só, de
+  identificador `treino.formalizacao`, com o nome "Formalização Treinamento" e e-mail de
+  `treinamento.exemplo.test`, sem senha utilizável e sem identidade externa. Por isso ela não entra
+  pela autenticação institucional, e a busca de pessoas da gestão de acessos não a encontra, porque
+  só lê identificadores institucionais. Ela se reaproveita entre cenários, rodadas e unidades, sem
+  nenhuma escrita. O gerador nunca a altera: inativa, o cenário falha pela recusa do domínio
+  (`FALHOU`, FR-4612), e ela não é reativada.
+- **FR-6722**: **O vínculo.** O gerador concede à identidade o papel Formalização na unidade do
+  cenário, pelo comando de concessão da `107`, com motivo e trilha, só quando ela não o tem vigente
+  ali. Nenhum outro papel é concedido, a ela ou a qualquer pessoa, e nenhum vínculo é revogado.
+- **FR-6723**: **A designação.** No C16, o gerador designa a identidade para o Edital do cenário,
+  sem restringir Perfil, pelo comando de designação da `117`, com motivo. No C17 não designa.
+- **FR-6724**: **Quem concede e designa.** Os dois atos são praticados por `treino.acessos`, ator
+  só do gerador, com as permissões do papel Administrador de acessos da unidade, em memória. Ele não
+  recebe vínculo, não existe como pessoa e não entra pela página de acesso: o gerador não
+  provisiona acesso administrativo a ninguém. É a exceção à FR-4642, porque o seletor não oferece
+  esse papel.
+- **FR-6725**: **As proteções são as mesmas.** O provisionamento só acontece dentro da montagem do
+  C16 ou do C17, e por isso está sob a chave e o banco por extenso (FR-4601, FR-4602), na transação
+  do cenário (FR-4612) e na idempotência da carga (FR-4611): cenário pronto não provisiona de novo.
+  A pré-visualização do C16 e do C17 diz se a identidade e o vínculo seriam criados ou mantidos
+  (FR-4604).
+- **FR-6726**: **Restaurar não exclui.** A restauração do C16 ou do C17 cria a rodada seguinte, como
+  a dos outros (FR-4621): a identidade e o vínculo são reaproveitados, e as designações vigentes no
+  Edital da rodada anterior são revogadas pelo comando de revogação da `117`, com motivo, antes de o
+  Edital ser cancelado. Sem isso, a lista do setor continuaria oferecendo o Edital cancelado.
+- **FR-6727**: **A entrada.** A identidade fica fora das sugestões por papel da página de acesso,
+  como todo ator `treino.` (o plano desta spec); a lista das comissões da FR-4653 não a alcança,
+  porque ela não integra comissão. A equipe entra pelo campo livre, com `treino.formalizacao`,
+  marcando "Formalização"; o guia o diz.
+- **FR-6728**: **Os documentos.** O Edital do C16 e do C17 pede a identificação na inscrição e
+  nenhum documento na convocação, e a definição leva a identificação. O aceite com documento
+  obrigatório da convocação exige conferência *conforme*, que exige a abertura do arquivo pela tela,
+  e o gerador não a fabrica (D-007, D-010).
+- **FR-6729**: **A primeira autoridade.** O provisionamento não usa autoridade: o C16 e o C17 assinam
+  os atos do certame com a mesma autoridade dos outros cenários (FR-4616).
+
 ## Critérios de sucesso
 
 - **SC-1451**: Sobre um banco já populado, a carga deixa toda linha preexistente idêntica, campo a
@@ -138,9 +214,22 @@ comandos da aplicação que a tela usa.
 - **SC-1453**: Exercitar um cenário não muda o retrato de outro.
 - **SC-1454**: A restauração do C07 depois de um sorteio feito pela tela muda só as linhas do
   Processo, do Edital e do manifesto da rodada anterior, e a rodada nova sorteia de novo.
-- **SC-1455**: Os quinze cenários se criam juntos e a próxima ação de cada um é executada na suíte.
+- **SC-1455** *(revisto em 2026-11-12, com a FR-4650)*: Os dezessete cenários se criam juntos e a
+  próxima ação de cada um é executada na suíte.
+
+  > **Redação anterior, preservada:** Os quinze cenários se criam juntos e a próxima ação de cada
+  > um é executada na suíte.
 - **SC-1456**: Uma pessoa da comissão identifica o cenário pela lista, entende o exercício pelo
   guia e o executa sem ajuda técnica. **Humano, pendente.**
+- **SC-2210**: No C16 carregado, quem entra como `treino.formalizacao` com o papel Formalização
+  verifica e exporta, pela tela, o pacote das três pessoas aptas; e o Centro do Edital conta uma
+  pessoa designada, e não "ninguém designado".
+- **SC-2211**: No C17 carregado, a lista do setor diz a `treino.formalizacao` que ainda não foi
+  designada, e o Centro conta uma pessoa com o papel e nenhuma designada, com as três pessoas aptas
+  sem quem receba.
+- **SC-2212**: A carga do C16 e do C17 juntos cria uma pessoa e um vínculo; a segunda carga, e a
+  restauração, não criam pessoa nem vínculo. Nenhum vínculo além do Formalização da identidade
+  `treino.formalizacao` nasce de carga ou restauração.
 
 ## Decisões
 
@@ -198,6 +287,25 @@ duas relações — a da ampla com todos, a da cota com quem a declarou (021, D-
 conferência do comprovante depois do sorteio **não** ganhou cenário próprio: os cenários de
 convocação (C10 a C12) partem de um Edital por notas.
 
+#### D-009 — O provisionamento da formalização é exceção nomeada, e não regra nova
+
+Decisão do usuário de 12/11/2026 (FR-4615). Havia duas formas: um comando de provisionamento
+separado, ou o provisionamento dentro da montagem do cenário. A segunda foi a escolhida, porque
+herda sem código novo a chave, o banco por extenso, a transação e a idempotência, e porque o que se
+provisiona só faz sentido junto do Edital do cenário. A exceção é estreita de propósito: uma
+identidade, um papel e as designações do Edital do cenário. Oferecer o Administrador de acessos no
+seletor resolveria o mesmo achado, mas daria a qualquer um na demonstração o poder de conceder
+papel — e o achado era sobre a formalização, não sobre a gestão de acessos.
+
+#### D-010 — O aceite sem conferência, por um Edital sem documento na convocação
+
+Para nascer apta, a pessoa precisa de aceite, e o aceite exige os obrigatórios da convocação
+conferidos *conforme* (a FR-3592 da `115`), o que exige a abertura do arquivo pela tela (D-007).
+Fabricar a abertura contrariaria a D-007. Por isso o Edital do C16 e do C17 pede documento só na
+inscrição, e é esse documento que vai ao setor, sem conferência, como a `117` prevê para o que vem
+da inscrição. O custo é declarado na ficha: o pacote do exercício tem um documento por pessoa, e
+não os da convocação.
+
 ## Limitações e o que fica de fora
 
 - **Sem Loteria Federal real.** O C07 sorteia com a Fonte de demonstração (D-004). Um cenário com a
@@ -212,6 +320,11 @@ convocação (C10 a C12) partem de um Edital por notas.
   entrega. Para exercitar o portal (C02, C08, C11), a equipe se inscreve com o próprio e-mail, ou
   lê o código no mailpit da homologação, com o e-mail do candidato, que segue um padrão (guia).
 - **Os PDFs fictícios** são válidos e marcados, mas não imitam documento real.
+- **Designar pela demonstração.** O exercício do C17 pede quem tenha a permissão de designar, que é
+  a do Administrador de acessos da unidade, segundo a `117`. O seletor de demonstração não oferece
+  esse papel, e o gerador não o provisiona (FR-6724). Na homologação com entrada institucional, o
+  exercício é de quem tem o vínculo; pela demonstração, depende da revisão da `117` em curso em
+  12/11/2026, que dá a designação também à presidência.
 - **Arquivos.** Os documentos fictícios vão para `ARQUIVOS_CANDIDATOS_RAIZ`. Se a transação de um
   cenário falha depois de gravar um arquivo, o arquivo pode ficar órfão no disco: o banco não
   aponta para ele.

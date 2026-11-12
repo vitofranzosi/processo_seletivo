@@ -29,6 +29,8 @@ from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.treinamento import ambiente
 from processo_seletivo.treinamento.catalogo import CENARIOS, POR_CODIGO, concurso_da_rodada
 from processo_seletivo.treinamento.construcao import (
+    ACESSOS,
+    FORMALIZACAO,
     GESTAO,
     MARCA,
     Montagem,
@@ -263,10 +265,48 @@ def planejar(codigos, unidade):
             continue
         rodada = _proxima_rodada(cenario, unidade)
         conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano)
-        plano.append(
-            (cenario, "RECUSAR" if conflitos else "CRIAR", conflitos or [f"rodada {rodada}"])
-        )
+        detalhes = conflitos or [f"rodada {rodada}", *_provisionamento(cenario, unidade)]
+        plano.append((cenario, "RECUSAR" if conflitos else "CRIAR", detalhes))
     return plano
+
+
+def _provisionamento(cenario, unidade):
+    """O que o C16 e o C17 criariam ou manteriam da pessoa do setor (FR-6725)."""
+    if not cenario.provisiona_formalizacao:
+        return []
+    from django.contrib.auth import get_user_model
+
+    from processo_seletivo.formalizacao.domain import nomes
+    from processo_seletivo.seguranca.application import acessos
+
+    pessoa = get_user_model().objects.filter(username=FORMALIZACAO).first()
+    com_o_papel = (
+        pessoa is not None
+        and acessos.vigentes().filter(pessoa=pessoa, escopo=unidade, papel=nomes.PAPEL).exists()
+    )
+    return [
+        f"pessoa {FORMALIZACAO}: {'manter' if pessoa else 'criar'}",
+        f"papel Formalização em {unidade}: {'manter' if com_o_papel else 'conceder'}",
+    ]
+
+
+def _revogar_designacoes(editais, unidade, motivo, correlacao):
+    """As designações vigentes nos Editais da rodada anterior, revogadas com motivo (FR-6726).
+
+    Pelo comando da `117`, e não por exclusão: a designação fica no histórico do Edital cancelado,
+    e a lista do setor deixa de oferecê-lo.
+    """
+    from processo_seletivo.formalizacao.application.designar import revogar
+    from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
+
+    for designacao in designacoes_vigentes().filter(edital__in=editais).order_by("id"):
+        revogar(
+            ator(ACESSOS, unidade),
+            designacao_id=designacao.id,
+            motivo=motivo,
+            now=timezone.now(),
+            correlation_id=correlacao,
+        )
 
 
 def _correio_inerte():
@@ -457,7 +497,9 @@ def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=
             f"{novo.rodada} ({novo.processo.institutional_code}). {MARCA}."
         )
         correlacao = f"{anterior.correlation_id}-substituida"
-        for edital in _editais_a_cancelar(anterior.processo, travar=True):
+        a_cancelar = _editais_a_cancelar(anterior.processo, travar=True)
+        _revogar_designacoes(a_cancelar, unidade, motivo, correlacao)
+        for edital in a_cancelar:
             cancel_edital(
                 actor=gestor,
                 edital_id=edital.id,

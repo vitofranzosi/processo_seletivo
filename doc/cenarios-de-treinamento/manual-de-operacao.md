@@ -6,7 +6,7 @@ o servidor de homologação. O roteiro de cada exercício, para a equipe de sele
 
 ## O que o gerador faz, e o que ele não faz
 
-Ele **acrescenta** ao banco até quinze Processos fictícios, `SIM-TREINAMENTO-001` a `015`, cada um
+Ele **acrescenta** ao banco até dezessete Processos fictícios, `SIM-TREINAMENTO-001` a `017`, cada um
 parado numa etapa do certame e pronto para a próxima ação. Cria tudo pelos mesmos comandos que a
 tela usa: publica, inscreve, avalia, classifica, convoca. Por isso cada cenário tem a trilha de
 auditoria e o histórico completos.
@@ -15,9 +15,27 @@ Ele **não**:
 
 - apaga nada, nem na carga nem na restauração (não há `flush`, `TRUNCATE`, `DELETE` ou dump);
 - altera Edital, inscrição, pessoa, unidade, autoridade ou permissão que não tenha criado;
+- concede papel, com uma exceção só, a da formalização (abaixo);
 - roda sozinho — nem no `git pull`, nem na migration, nem ao reiniciar o servidor;
 - envia e-mail: durante a carga o correio fica na memória do processo;
 - roda em produção: são três barreiras, descritas abaixo.
+
+### A exceção: a pessoa do setor da formalização (C16 e C17)
+
+Desde a revisão de 12/11/2026 (FR-4615 e FR-6720 a FR-6729 da spec), os cenários da formalização
+trazem uma pessoa fictícia do setor, para que o fim do certame se treine pela tela:
+
+- a pessoa `treino.formalizacao`, criada se não existir, **sem senha e sem identidade
+  institucional** — ela não entra pelo login institucional, e a busca de pessoas de **Acessos da
+  unidade** não a encontra;
+- o papel **Formalização** dela na unidade, concedido pelo mesmo comando da tela de acessos, com
+  motivo e trilha, e só se ela ainda não o tiver;
+- no C16, a designação dela para o Edital `SIM16`.
+
+Quem concede e designa na trilha é `treino.acessos`, que não é pessoa nem tem vínculo: ninguém entra
+com esse poder. Nenhum outro papel é concedido, e nada é revogado na carga. A pré-visualização do
+C16 e do C17 diz se a pessoa e o papel serão criados ou mantidos. Uma `treino.formalizacao`
+desativada não é reativada: o cenário falha, com a frase da recusa.
 
 ## As três barreiras
 
@@ -153,6 +171,10 @@ Depois, confirmando com o código:
 ```bash
 uv run python manage.py restaurar_cenario_de_treinamento --cenario C07 --banco processo_seletivo --confirmar C07
 ```
+
+No C16 e no C17, a restauração também **revoga**, com motivo, as designações para a formalização
+no Edital cancelado — senão o setor continuaria vendo o Edital antigo na lista dele. A pessoa
+`treino.formalizacao` e o papel dela ficam como estão.
 
 A restauração é recusada quando a propriedade do Processo não se comprova pelo manifesto e pela
 trilha, quando o cenário não tem rodada em uso, ou quando a rodada nova encontraria conflito. Nesses

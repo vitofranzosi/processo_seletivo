@@ -83,3 +83,45 @@ backend/processo_seletivo/treinamento/
 
 `cd backend && make lint check test-pg`, com os testes da feature em
 `tests/integration/treinamento/` e `tests/unit/treinamento/`.
+
+## Revisão de 12/11/2026 — o provisionamento da formalização
+
+Spec: FR-4615 revista, FR-6720 a FR-6729, SC-2210 a SC-2212, D-009 e D-010.
+
+### O que já existia, e o que serviu
+
+| Recurso | Uso |
+|---|---|
+| `seguranca.application.acessos.conceder` (107) | o vínculo Formalização, com motivo e trilha; recusa pessoa inativa e vínculo já vigente |
+| `formalizacao.application.designar.designar` e `revogar` (117) | a designação do C16, e a revogação na restauração |
+| `formalizacao.application.definir.definir` (117) | a definição dos documentos, pela presidência |
+| `convocacao.application.desfechar.desfechar` (019) | o aceite que torna a pessoa apta |
+| `_FORA_DA_EQUIPE` em `interface/demonstracao.py` | `treino.formalizacao` fica fora das sugestões sem mudança nenhuma |
+
+### O que precisou ser desenvolvido
+
+- em `construcao.py`: o ator `treino.acessos`, a identidade `treino.formalizacao` (a única escrita
+  pelo ORM, como a do candidato fictício), e os passos `desfechar`, `definir_formalizacao`,
+  `habilitar_formalizacao` e `designar_formalizacao`;
+- em `catalogo.py`: o C16 e o C17, sobre um Edital de notas com documento só na inscrição (D-010);
+- em `servico.py`: a linha da pré-visualização sobre a identidade e o vínculo, e a revogação das
+  designações da rodada anterior na restauração (FR-6726).
+
+### Restrições que decidiram o desenho
+
+1. **A designação exige o vínculo** (a FR-3663 da `117`): o vínculo vem antes, na mesma transação.
+2. **Ninguém designa a si mesmo**, nem pelo banco: quem designa é `treino.acessos`, e quem é
+   designada, `treino.formalizacao`.
+3. **O aceite exige os obrigatórios da convocação conformes**, e conforme exige abertura pela tela:
+   daí o Edital sem documento na convocação (D-010).
+4. **A pessoa institucional começa por `pessoa-`.** `treino.formalizacao` não começa, e por isso não
+   entra na busca da gestão de acessos nem pela autenticação institucional — o isolamento é o do
+   formato, e não uma regra nova.
+
+### Riscos
+
+| Risco | Mitigação |
+|---|---|
+| Uma pessoa chamada `treino.formalizacao` que o gerador não criou | a entrada institucional só cria `pessoa-…`; criada à mão (um `createsuperuser`), é reaproveitada sem alteração e recebe o vínculo — num banco de treinamento, o nome é do gerador (FR-6721) |
+| O gerador concedendo mais que o papel | `conceder` é chamado com um papel só, e a suíte conta os vínculos (SC-2212) |
+| O exercício de designar sem quem designe pela demonstração | declarado na ficha e nas limitações; depende da revisão da `117` |
