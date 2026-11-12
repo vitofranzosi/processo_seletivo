@@ -7,6 +7,7 @@ botão que pratica o ato. A prévia é do servidor, e por isso o cliente de test
 script, a vê como quem não tem script (FR-3995).
 """
 
+import html
 import re
 
 import pytest
@@ -189,11 +190,16 @@ def test_o_desfecho_passa_sempre_pela_previa(client, seletor_ligado, cenario_da_
     assert DesfechoDaConvocacao.objects.get().fundamento == "Desistiu por escrito."
 
 
-def test_a_chamada_individual_com_complemento_tambem_confere(
+def test_a_chamada_individual_com_complemento_confere_na_conferencia_da_chamada(
     client, seletor_ligado, cenario_da_tela
 ):
-    """O fundamento da espécie derivada, seguido do complemento, para 1 pessoa."""
+    """Uma conferência só (152, FR-5821): a da chamada, que mostra o fundamento com o complemento.
+
+    Até a 152 a chamada com complemento abria a conferência de texto da `125`; agora toda chamada
+    individual passa pela conferência da chamada, e ela substitui a de texto nestes gestos.
+    """
     from processo_seletivo.convocacao.application import fluxo
+    from tests.interface.test_convocacao_em_fluxo import campos_da_conferencia
 
     edital, _, _ = cenario_da_tela
     identificar(client, "carlos", ["gestor"])
@@ -202,25 +208,25 @@ def test_a_chamada_individual_com_complemento_tambem_confere(
     derivado = fluxo.fundamentos_por_especie(
         edital=edital, perfil_id=_perfil(), lista_id=None, apuracao=leitura["apuracao"]
     )["VAGA_INICIAL"]
+    url = reverse("interface:convocar", args=[edital.id, MARCO])
 
-    pagina = _seguir(
-        client,
-        client.post(
-            reverse("interface:convocar", args=[edital.id, MARCO]),
-            {
-                "inscricao": pessoa,
-                "vencimento": VENCIMENTO,
-                "chave": "individual-125",
-                "complemento": COMPLEMENTO,
-            },
-        ),
+    resposta = client.post(
+        url,
+        {
+            "inscricao": pessoa,
+            "vencimento": VENCIMENTO,
+            "chave": "individual-125",
+            "complemento": COMPLEMENTO,
+        },
     )
 
+    pagina = resposta.content.decode()
+    assert resposta.status_code == 200
     assert Convocacao.objects.count() == 0
-    assert f"{derivado} Complemento: {COMPLEMENTO}" in pagina
-    assert "Este texto será mostrado a 1 pessoa." in pagina
-    acao, campos = _campos_da_conferencia(pagina)
-    client.post(acao, {**campos, "etapa": "confirmar"})
+    assert "Confira antes de convocar" in pagina
+    assert html.unescape(f"{derivado} Complemento: {COMPLEMENTO}") in html.unescape(pagina)
+    assert 'id="conferir-o-texto"' not in pagina
+    client.post(url, {**campos_da_conferencia(resposta), "etapa": "confirmar"})
     assert Convocacao.objects.get().fundamento == f"{derivado} Complemento: {COMPLEMENTO}"
 
 

@@ -404,7 +404,7 @@ def test_a_tela_do_corte_avisa_do_reingresso_e_continua_emitindo(c08, client, se
 
     assert "1 inscrição reabilitada " + AVISO in pagina
     assert "fora da faixa, porque está sem posição" in pagina
-    assert "Emitir corte</button>" in pagina, "o aviso não tira o botão"
+    assert "Conferir antes de emitir</button>" in pagina, "o aviso não tira o botão"
     # E o comando aceita, como antes (FR-4842).
     _emitir_corte(m, "apesar-do-aviso")
 

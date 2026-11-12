@@ -129,7 +129,8 @@ BOTOES = {
             "Realizar o sorteio desta lista",
         ),
     ],
-    "corte.html": [("botao", "Emitir corte"), ("botao", "Emitir faixa seguinte")],
+    # Os dois abrem a conferência (152, FR-5825, FR-5829, UX-531): até a 152 gravavam no clique.
+    "corte.html": [("botao", "Conferir antes de emitir"), ("botao", "Conferir a faixa seguinte")],
     "corte_historico.html": [],
     "ocupacao.html": [
         ("botao", "Apurar a ocupação deste recorte"),
@@ -178,8 +179,9 @@ BOTOES = {
         # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
         ("acao", "{{ linha.canal.emitir_de_novo }}"),
         ("botao", "{{ linha.canal.emitir }}"),
-        ("botao", "Convocar"),
-        ("botao", "Convocar para regularizar"),
+        # A chamada individual e a para regularizar abrem a conferência (152, FR-5822, UX-530).
+        ("botao", "Conferir antes de convocar"),
+        ("botao", "Conferir antes de convocar"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],

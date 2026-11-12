@@ -8,7 +8,10 @@ do registro, que só existe para pacote gerado: verificação sem download não 
   {% for linha in linhas %}
   <li>
     <p><strong>{{ linha.exportacao.exportado_em|date:"d/m/Y H:i" }}</strong> — {{ linha.autor }} ({{ linha.exportacao.unidade_de_atuacao }}) · {{ linha.alcance }}</p>
-    <p>{{ linha.resultado }} · {{ linha.exportacao.quantidade_de_arquivos }} arquivos · {{ linha.tamanho }}</p>
+    {% comment %} O tamanho aqui é o do ZIP, com o manifesto, e o da verificação é a soma dos
+       documentos: sem dizer qual é qual, o mesmo pacote aparecia com dois tamanhos (problema novo
+       N-06 da reavaliação de 12/11/2026). {% endcomment %}
+    <p>{{ linha.resultado }} · {{ linha.exportacao.quantidade_de_arquivos }} arquivos · pacote de {{ linha.tamanho }}, com o manifesto</p>
     <p class="nota">Pessoas incluídas: {% for pessoa in linha.incluidas %}{{ pessoa.protocolo }} {{ pessoa.nome }}{% if not forloop.last %}; {% endif %}{% empty %}nenhuma{% endfor %}</p>
     {% if linha.nao_incluidas %}<p class="nota">Não incluídas: {% for pessoa in linha.nao_incluidas %}{{ pessoa.protocolo }} {{ pessoa.nome }} — {{ pessoa.motivo }}{% if not forloop.last %}; {% endif %}{% endfor %}</p>{% endif %}
     <p class="hash-do-pacote">SHA-256 do pacote: <code>{{ linha.exportacao.hash_do_pacote }}</code></p>

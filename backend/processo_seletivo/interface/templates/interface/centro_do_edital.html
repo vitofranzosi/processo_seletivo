@@ -332,6 +332,7 @@ pela mesma razão. Só os Perfis que a pessoa alcança, como lá.
     <div class="cartao">
       <h3>Documentos publicados</h3>
       <ul class="cc-lista-simples">{% for d in documentos %}<li><a href="{{ d.url }}">{{ d.ato }} nº {{ d.ordem }}</a>{% if d.publicada_em %} <span class="cc-fraco">{{ d.publicada_em|date:"d/m/Y" }}</span>{% endif %}{% if d.retificacao_id %} · <a href="{% url 'interface:retificacao-detalhe' d.retificacao_id %}">o que mudou</a>{% endif %}</li>{% endfor %}</ul>
+      {% if publicacao_das_convocacoes %}<p><a href="{% url 'interface:publicacao-de-convocados' edital.id %}">Publicação das convocações</a> <span class="cc-fraco">— a relação de convocados na página pública</span></p>{% endif %}
       {% if retificacoes_em_curso %}<p>{{ retificacoes_em_curso|length }} {% if retificacoes_em_curso|length == 1 %}Retificação em curso{% else %}Retificações em curso{% endif %}.</p>{% else %}<p class="cc-fraco">Nenhuma Retificação em curso.</p>{% endif %}
     </div>
     <div class="cartao">

@@ -398,6 +398,23 @@ def test_os_quatro_estados_da_convocacao():
     ]
 
 
+def test_o_prazo_em_curso_diz_a_hora_e_concorda_com_o_numero():
+    """Problema novo N-02 da reavaliação de 12/11/2026: "1 aguardam documentos", e um prazo que
+    acaba no meio da tarde dito só pelo dia."""
+    from django.utils import timezone
+
+    ate = AGORA + timedelta(days=4)
+    _, providencias = convocacao(em_curso=2, ate=ate, aguardando_documentos=1)
+    [espera] = [c for c in providencias if c.situacao == a.AGUARDA]
+    local = timezone.localtime(ate)
+    assert espera.razao == (
+        f"o prazo corre até {local:%d/%m/%Y} às {local:%H:%M}; 1 aguarda documentos"
+    )
+    _, providencias = convocacao(em_curso=3, ate=ate, aguardando_documentos=2)
+    [espera] = [c for c in providencias if c.situacao == a.AGUARDA]
+    assert espera.razao.endswith("; 2 aguardam documentos")
+
+
 def test_a_forma_por_publicacao_registra_a_publicacao():
     _, providencias = convocacao(pendentes=2, por_publicacao=True)
     assert providencias[0].ato == "Registrar a publicação de 2 convocações"

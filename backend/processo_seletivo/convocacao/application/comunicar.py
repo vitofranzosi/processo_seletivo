@@ -91,6 +91,14 @@ class Envio:
 REVISAO_DA_FR_084 = "2026-09-12"
 
 
+#: A recusa da comunicação sem forma declarada, dita uma vez: o envio e a conferência da chamada
+#: (152, FR-5817) a dizem com as mesmas palavras.
+SEM_FORMA_DECLARADA = (
+    "O Perfil publicado não declarou como este Edital comunica a convocação: declare a forma por "
+    "Retificação antes de emitir."
+)
+
+
 def guarda_da_revisao_da_010():
     """Recusa a mensagem individual enquanto a `FR-084` da `010` não estiver revisada (`FR-289`).
 
@@ -174,12 +182,7 @@ def comunicar(
     convocacao = _convocacao_do_processo_id(processo_id, convocacao_id, actor=actor)
     forma = forma_declarada(convocacao)
     if forma is None:
-        raise DomainError(
-            nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA,
-            "O Perfil publicado não declarou como este Edital comunica a convocação: declare "
-            "a forma por Retificação antes de emitir.",
-            409,
-        )
+        raise DomainError(nomes.FORMA_DE_COMUNICACAO_NAO_DECLARADA, SEM_FORMA_DECLARADA, 409)
     agora = timezone.now()
     _recusar_convocacao_desfechada(convocacao)
     _recusar_vencimento_anterior_ao_envio(convocacao, agora=agora)

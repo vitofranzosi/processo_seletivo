@@ -86,7 +86,8 @@ PAPEIS = {
     CONFERE: "Quem conduz ou confere documentos",
     RETIFICA: "Quem elabora Retificações",
     RETIFICACAO: "Quem age na Retificação",
-    ACESSOS: "Quem administra os acessos da unidade",
+    # Desde a revisão de 12/11 da `117` (D-025, FR-6708), a presidência também designa.
+    ACESSOS: "A presidência ou quem administra os acessos da unidade",
     SETOR: "O setor da formalização",
 }
 #: A ordem dos grupos de outros papéis no nível 1 (FR-4082). Os da passagem ao setor vêm por último
@@ -1305,9 +1306,16 @@ def situacoes_da_convocacao(f):
                 AGUARDA,
                 natureza=CONVOCACAO,
                 ato=f"Resposta de {_n(em_curso, 'convocação', 'convocações')}",
+                # Com a hora, como a convocação a mostra, e com a concordância: "1 aguardam" e um
+                # prazo de horas sem a hora eram o que o Centro dizia (problema novo N-02 da
+                # reavaliação de 12/11/2026).
                 razao=(
-                    f"o prazo corre até {_data(f.get('ate'))}"
-                    + (f"; {aguardando} aguardam documentos" if aguardando else "")
+                    f"o prazo corre até {_data_e_hora(f.get('ate'))}"
+                    + (
+                        f"; {_n(aguardando, 'aguarda', 'aguardam')} documentos"
+                        if aguardando
+                        else ""
+                    )
                     if f.get("ate")
                     else "o prazo está correndo"
                 ),
@@ -2607,14 +2615,17 @@ class _Leitor:
 
         **"Sua" pelo predicado da tela de destino** (FR-6111), e não por `Alcance.pratica`: o
         encerramento do Processo fecha os atos da comissão, mas não a formalização (FR-3710 da
-        `117`). Quem conduz continua definindo, quem administra os acessos continua designando, e
-        o setor continua exportando.
+        `117`). Quem conduz continua definindo, quem administra os acessos e a presidência continuam
+        designando, e o setor continua exportando.
+
+        **Designar segue `pode_designar`** (FR-6708 da `117`, como a D-006 da `153` previa), e o
+        link vai à tela de cada base: a de acessos para `acesso:gerir`, a da definição para a
+        presidência.
         """
         from processo_seletivo.formalizacao.application import passagem as pa
         from processo_seletivo.formalizacao.domain import nomes as nomes_da_formalizacao
         from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
         from processo_seletivo.interface.providencias import Providencia
-        from processo_seletivo.seguranca.acessos import GERIR
 
         passagem = pa.da_passagem(self.edital)
         if passagem is None:
@@ -2628,8 +2639,7 @@ class _Leitor:
                 url += "#documentos-definidos"
             elif causa == pa.SEM_QUEM_RECEBA:
                 responsavel = ACESSOS
-                sua = self.ator.can(GERIR)
-                url = f"{reverse('interface:acessos-formalizacao')}?edital={edital_id}"
+                sua, url = _onde_designar(self.ator, self.edital)
             else:
                 responsavel = SETOR
                 sua = (
@@ -2849,6 +2859,13 @@ def _data(instante):
     return f"{instante:%d/%m/%Y}"
 
 
+def _data_e_hora(instante):
+    """O vencimento da convocação é instante, e não dia: o prazo pode acabar no meio da tarde."""
+    if isinstance(instante, datetime):
+        return f"{timezone.localtime(instante):%d/%m/%Y às %H:%M}"
+    return _data(instante)
+
+
 def _lista_de_nomes(nomes):
     nomes = list(nomes)
     if len(nomes) <= 1:
@@ -3011,3 +3028,20 @@ __all__ = [
     "resumo_do_perfil",
     "sequencia_do_perfil",
 ]
+
+
+def _onde_designar(ator, edital):
+    """Se o ator designa neste Edital, e a tela em que ele o faz (FR-6708 da `117`).
+
+    A de acessos para `acesso:gerir`, que é a dele desde a `117`; a seção "Quem acessa os
+    documentos" da definição para a presidência, que não alcança a de acessos.
+    """
+    from processo_seletivo.formalizacao.domain.autorizacao import pode_designar
+    from processo_seletivo.seguranca.acessos import GERIR
+
+    base = pode_designar(ator, edital)
+    if base is None:
+        return False, ""
+    if base == GERIR:
+        return True, f"{reverse('interface:acessos-formalizacao')}?edital={edital.id}"
+    return True, f"{reverse('interface:formalizacao-definicao', args=[edital.id])}#quem-acessa"

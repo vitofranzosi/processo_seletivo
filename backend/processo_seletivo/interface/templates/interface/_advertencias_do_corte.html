@@ -1,0 +1,11 @@
+{% load interface_extras %}{% comment %}
+Os avisos da tela do corte antes do botão, ditos uma vez: a tela e a conferência os repetem com o
+mesmo texto (152, FR-5828).
+{% endcomment %}
+{% if espera_do_corte %}<p class="aviso" role="note"><strong>Recomendação: aguarde.</strong> {{ espera_do_corte.razao }}. Emitir agora continua possível.</p>{% endif %}
+{% comment %}
+O reingresso pendente (141, FR-4840, UX-342): a mesma pergunta que segura o corte no andamento e
+que recusa a publicação. A conferência da ordem já avisa a parcial; aqui, o que a parcial faz com
+a faixa. O botão continua: o comando aceita (FR-4841).
+{% endcomment %}
+{% if reingressos %}<p class="aviso" role="note"><strong>{{ reingressos }} {{ reingressos|plural:"inscrição reabilitada,inscrições reabilitadas" }} por recurso {{ reingressos|plural:"está,estão" }} sem resultado numa Etapa deste marco.</strong> Emitido agora, o corte {{ reingressos|plural:"a deixa,as deixa" }} fora da faixa, porque {{ reingressos|plural:"está,estão" }} sem posição. Quando o resultado for consolidado, a ordem e este corte ficarão para trás, e suceder os dois exigirá motivo. Emitir agora continua possível.</p>{% endif %}

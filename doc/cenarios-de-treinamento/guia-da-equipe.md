@@ -272,7 +272,8 @@ deste Edital não admite recurso, e por isso o definitivo veio direto.
 
 1. Leia o resultado definitivo como o público lê.
 2. Como `treino.presidencia`, conclua a Etapa "Análise documental" (habilitar ou não cada um).
-3. Emita a faixa de corte e apure a ocupação das vagas.
+3. Na tela do corte, clique em "Conferir antes de emitir", leia a faixa na conferência — quem
+   progride, quem fica fora e por quê — e só então emita o corte. Depois, apure a ocupação das vagas.
 
 **Resultado esperado:** apuração emitida, pronta para convocar.
 
@@ -288,8 +289,10 @@ emitidas, ninguém convocado.
 **Seu desafio:**
 
 1. Abra a convocação do marco "Classificação final".
-2. Convoque a primeira pessoa da fila, com fundamento e prazo.
-3. Comunique a convocação.
+2. Em "Chamar uma pessoa da fila", escolha a primeira pessoa, informe o prazo e clique em "Conferir
+   antes de convocar". Leia a conferência — a espécie, o fundamento, o e-mail e o prazo — e só então
+   confirme. Nada é gravado nem enviado antes da confirmação.
+3. Confira, na tela da convocação, que a comunicação saiu no mesmo ato da confirmação.
 4. Confira a lista de documentos pedida a ela. A autodeclaração étnico-racial é só da cota: para
    quem concorre na ampla, ela não aparece na lista.
 

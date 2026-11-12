@@ -158,7 +158,22 @@ def previa_da_publicacao(*, edital, recortes=None, at):
             }
         )
 
+    # **Na ordem em que foram convocadas, e no mesmo gesto, na ordem da fila** (FR-5714). As de um
+    # gesto nascem no mesmo instante, e o desempate saía pelo identificador interno: a relação do
+    # C10 listava Bernardo, Cecília e Alice, embora Alice fosse a primeira da classificação e a
+    # primeira chamada. A fila é a classificação, e por isso a posição vem antes do protocolo.
+    posicao = _posicoes_na_classificacao(
+        [x["convocacao"] for r in por_recorte.values() for x in r["linhas"]]
+    )
     for recorte in por_recorte.values():
+        recorte["linhas"].sort(
+            key=lambda x: (
+                x["convocacao"].criado_em,
+                posicao.get((x["convocacao"].ato_de_ordenacao_id, x["convocacao"].inscricao_id))
+                or 10**9,
+                x["linha"]["protocolo"],
+            )
+        )
         recorte["convoca"] = sum(1 for x in recorte["linhas"] if x["linha"]["efeito"] == "CONVOCA")
         recorte["divulga"] = len(recorte["linhas"]) - recorte["convoca"]
         recorte["escolhido"] = bool(recorte["linhas"]) and (
@@ -187,6 +202,25 @@ def previa_da_publicacao(*, edital, recortes=None, at):
         "convoca": sum(1 for _, efeito, _ in itens if efeito == dominio.CONVOCA),
         "divulga": sum(1 for _, efeito, _ in itens if efeito == dominio.DIVULGA),
         "assinatura": dominio.assinatura(edital_id=edital.id, numero=numero, itens=itens),
+    }
+
+
+def _posicoes_na_classificacao(convocacoes):
+    """`{(ato, inscrição): posição}` das convocações, numa consulta só (FR-5736).
+
+    A posição é a do ato de ordenação que a convocação citou, e não a da ordem vigente: é a fila
+    que valia quando ela foi chamada.
+    """
+    from processo_seletivo.classificacao.models import PosicaoNaOrdem
+
+    if not convocacoes:
+        return {}
+    return {
+        (linha["ato_id"], linha["inscricao_id"]): linha["posicao"]
+        for linha in PosicaoNaOrdem.objects.filter(
+            ato_id__in={c.ato_de_ordenacao_id for c in convocacoes},
+            inscricao_id__in={c.inscricao_id for c in convocacoes},
+        ).values("ato_id", "inscricao_id", "posicao")
     }
 
 

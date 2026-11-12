@@ -40,7 +40,8 @@ def test_a_tela_do_corte_diz_a_consequencia_antes_do_botao_e_o_botao_continua(cl
     corpo = client.get(reverse("interface:corte", args=[edital.id, m900.MARCO_1])).content.decode()
 
     aviso = corpo.index("Recomendação: aguarde.")
-    assert aviso < corpo.index('<button type="submit" class="botao">Emitir corte</button>')
+    botao = '<button type="submit" class="botao">Conferir antes de emitir</button>'
+    assert aviso < corpo.index(botao)
     assert "obsoleto" in corpo
 
 
@@ -49,3 +50,25 @@ def test_emitir_o_corte_na_espera_continua_aceito(client, cenario):
     m900._cortar(cenario, m900.MARCO_1)
 
     assert Corte.objects.filter(edital=edital, marco_id=m900.MARCO_1).count() == len(m900.LISTAS)
+
+
+def test_a_conferencia_do_corte_repete_o_aviso_da_espera(client, cenario):
+    """152, FR-5828: o aviso que a tela dá antes do botão se repete na conferência, igual."""
+    import re
+
+    edital = cenario["edital"]
+    tela = client.get(reverse("interface:corte", args=[edital.id, m900.MARCO_1])).content.decode()
+    aviso = re.search(r"<p class=\"aviso\" role=\"note\">.*?</p>", tela, re.S).group(0)
+
+    conferencia = client.post(
+        reverse("interface:emitir-corte", args=[edital.id, m900.MARCO_1]),
+        {
+            "chave_idempotencia": re.search(r'name="chave_idempotencia" value="([^"]+)"', tela)[1],
+            "confirmacao_do_calculo": re.search(
+                r'name="confirmacao_do_calculo" value="([^"]+)"', tela
+            )[1],
+        },
+    ).content.decode()
+
+    assert "Confira antes de emitir o corte" in conferencia
+    assert aviso in conferencia

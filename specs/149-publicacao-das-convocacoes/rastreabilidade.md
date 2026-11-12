@@ -10,7 +10,7 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 - `mi` = `migrations/test_migrations.py` e `seguranca/test_homologacao_preservada.py`
 - `nav` = validação em navegador real, com as capturas em `capturas/` (ver [verificacao](verificacao.md))
 
-A faixa abre em **FR-5701** e **SC-1851**, e gasta até FR-5736 e SC-1865. Nenhum `UX-` foi aberto.
+A faixa abre em **FR-5701** e **SC-1851**, e gasta até FR-5737 e SC-1866 (os dois últimos acrescentados em 12/11/2026). Nenhum `UX-` foi aberto.
 
 ## Os doze casos de validação do pedido
 
@@ -46,7 +46,7 @@ A faixa abre em **FR-5701** e **SC-1851**, e gasta até FR-5736 e SC-1865. Nenhu
 | FR-5711 | T005 | `ato::test_a_publicacao_nativa_convoca_e_o_prazo_corre_dela` (trilha) |
 | FR-5712 | T003, T006, T010 | `int::test_a_pagina_e_o_documento_nao_publicam_dado_pessoal_alem_dos_quatro` |
 | FR-5713 | T005, T006, T010 | `int::test_pagina_documento_e_area_do_candidato_dizem_o_mesmo` |
-| FR-5714 | T003 | `ato::test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada` |
+| FR-5714 | T003, T021 | `ato::test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada`, `ato::test_no_mesmo_gesto_a_relacao_segue_a_classificacao` |
 | FR-5715 | T003, T006, T010 | `int::test_pagina_documento_e_area_do_candidato_dizem_o_mesmo` (prazo do grupo) |
 | FR-5716 | T003, T010 | `int::test_a_secao_a_relacao_e_o_documento_abrem_sem_sessao` |
 | FR-5717 | T003, T004 | `ato::test_a_correcao_de_convocacao_publicada_sai_marcada_na_seguinte` |
@@ -68,6 +68,7 @@ A faixa abre em **FR-5701** e **SC-1851**, e gasta até FR-5736 e SC-1865. Nenhu
 | FR-5733 | T018 | `ato::test_a_publicacao_externa_registrada_continua_e_a_relacao_a_cita` |
 | FR-5734 | T015, T018 | `int::test_a_tela_do_recorte_leva_a_publicar_no_gps_e_mantem_o_registro_externo`, a suíte da `125` |
 | FR-5735 | T018 | `ato::test_o_aviso_da_chamada_publicada_alcanca_a_publicacao_nativa`, `nav` |
+| FR-5737 | T022 | `int::test_por_mensagem_a_tela_e_o_centro_levam_a_publicacao` |
 | FR-5736 | T004, T009 | `int::test_a_pagina_publica_custa_o_mesmo_com_mais_gente`, `ato::test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada` |
 
 ## Critérios de sucesso
@@ -88,4 +89,5 @@ A faixa abre em **FR-5701** e **SC-1851**, e gasta até FR-5736 e SC-1865. Nenhu
 | SC-1862 | `int::test_pagina_documento_e_area_do_candidato_dizem_o_mesmo` |
 | SC-1863 | `nav` — medido `scrollWidth == innerWidth` em 375, 1280 e 1920 px |
 | SC-1864 | `ato::test_a_previa_mostra_o_que_seria_publicado_e_nao_grava_nada`, `int::test_a_previa_da_gestao_nao_grava_e_o_formulario_publica` |
+| SC-1866 | `int::test_por_mensagem_a_tela_e_o_centro_levam_a_publicacao`, `ato::test_no_mesmo_gesto_a_relacao_segue_a_classificacao` |
 | SC-1865 | `int::test_a_pagina_publica_custa_o_mesmo_com_mais_gente`, `ato::test_uma_publicacao_com_duas_listas_tem_um_grupo_para_cada` (a prévia com um e com dois recortes) |

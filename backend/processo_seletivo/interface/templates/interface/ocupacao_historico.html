@@ -47,16 +47,16 @@ que ela apurou, e quem audita precisa ver as duas.
   quantidade sozinha nao identifica a linha.
   {% endcomment %}
   <dl class="meta">
-    <dt>Versão do conteúdo lida</dt><dd>{{ passo.apuracao.versao_id }}</dd>
-    <dt>Linha do quadro</dt><dd>{{ passo.apuracao.linha_do_quadro_id|default_if_none:"—" }}</dd>
-    <dt>Ordem</dt><dd>{{ passo.apuracao.ato_id }}</dd>
+    <dt>Versão do conteúdo lida</dt><dd title="{{ passo.apuracao.versao_id }}">{% if passo.versaoVigenteDesde %}a que vigorava desde {{ passo.versaoVigenteDesde|date:"d/m/Y H:i" }}{% else %}{{ passo.apuracao.versao_id }}{% endif %}</dd>
+    <dt>Linha do quadro</dt><dd{% if passo.apuracao.linha_do_quadro_id %} title="{{ passo.apuracao.linha_do_quadro_id }}"{% endif %}>{% if passo.apuracao.linha_do_quadro_id %}a desta lista, no quadro de vagas daquela versão{% else %}—{% endif %}</dd>
+    <dt>Ordem</dt><dd title="{{ passo.apuracao.ato_id }}">{% if passo.ordemEmitidaEm %}emitida em {{ passo.ordemEmitidaEm|date:"d/m/Y H:i" }}{% else %}{{ passo.apuracao.ato_id }}{% endif %}</dd>
     {% comment %}
     **Nulo aqui diz "nao havia corte quando ela apurou", e nao "este marco nao corta".** O
     percurso conduzido encontrou a segunda frase numa apuracao de marco que corta: ela foi emitida
     antes do corte existir, o que e legitimo — e a tela afirmava, sobre a regra publicada, algo que
     o Edital nao diz. As duas situacoes produzem o mesmo `NULL`, e a frase precisa valer nas duas.
     {% endcomment %}
-    <dt>Corte</dt><dd>{{ passo.apuracao.corte_id|default_if_none:"nenhum corte alimentou esta apuração" }}</dd>
+    <dt>Corte</dt><dd{% if passo.apuracao.corte_id %} title="{{ passo.apuracao.corte_id }}"{% endif %}>{% if passo.corteEmitidoEm %}emitido em {{ passo.corteEmitidoEm|date:"d/m/Y H:i" }}{% else %}{{ passo.apuracao.corte_id|default_if_none:"nenhum corte alimentou esta apuração" }}{% endif %}</dd>
   </dl>
 
   {% if passo.movimentos %}

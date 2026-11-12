@@ -299,3 +299,57 @@ def test_a_tela_do_recorte_leva_a_publicar_no_gps_e_mantem_o_registro_externo(
     assert reverse("interface:publicacao-de-convocados", args=[edital.id]) + "?" in corpo
     assert "Publicada fora do GPS?" in corpo
     assert 'name="referencia_da_publicacao"' in corpo
+
+
+# --- O caminho até a publicação em qualquer forma (FR-5737, SC-1866) ------------------------------
+
+
+def test_por_mensagem_a_tela_e_o_centro_levam_a_publicacao(
+    client,
+    seletor_ligado,
+    settings,
+    gestor,
+    api_client,
+    manager_headers,
+    process_payload,
+    raiz_de_arquivos,
+):
+    """O caso do C10 na homologação: convocou por mensagem e não achou onde publicar a lista.
+
+    O "Publicar no GPS" das pendentes só aparece na forma por publicação; a mensagem enviada não
+    deixa pendência. A tela do recorte e o Centro de Controle passam a levar à publicação.
+    """
+    from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+        FORMA_POR_MENSAGEM_INDIVIDUAL,
+    )
+    from tests.fixtures.corte import MARCO
+
+    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    settings.DEFAULT_FROM_EMAIL = "nao-responda@exemplo.test"
+    cenario = montar_cenario_da_convocacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="i149-msg",
+        forma=FORMA_POR_MENSAGEM_INDIVIDUAL,
+    )
+    edital = cenario[0]
+    _, convocacao = cenarios.convocar_primeira(
+        cenario, gestor, chave="i149-msg-c", vencimento=timezone.now() + timedelta(days=5)
+    )
+    cenarios.comunicar(edital, gestor, convocacao, chave="i149-msg-envio")
+    identificar(client, "carlos", ["gestor"])
+    publicacao = reverse("interface:publicacao-de-convocados", args=[edital.id])
+
+    recorte = client.get(reverse("interface:convocacao", args=[edital.id, MARCO])).content.decode()
+    centro = client.get(reverse("interface:detalhe", args=[edital.id])).content.decode()
+
+    assert "Na página pública da seleção" in recorte
+    assert "1 convocação comunicada ainda não está" in recorte
+    assert f'href="{publicacao}?' in recorte
+    assert f'href="{publicacao}"' in centro, "o Centro de Controle leva à publicação"
+
+    publicar(edital, gestor, "i149-msg-pub")
+    depois = client.get(reverse("interface:convocacao", args=[edital.id, MARCO])).content.decode()
+    assert "Na página pública da seleção" not in depois, "publicada, a seção sai"
