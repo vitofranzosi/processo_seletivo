@@ -662,7 +662,7 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
 
 def _item(providencia, governadas, por_chave):
     chave = fase_da_providencia(providencia, governadas)
-    dados = c.conceito(providencia.natureza)
+    dados = c.conceito_da_providencia(providencia.natureza, providencia.ato)
     titulo = c.ato_simples(providencia.natureza, providencia.ato)
     no_gps = providencia.ato if titulo != providencia.ato else ""
     return ItemDeProvidencia(providencia, chave, dados, titulo, no_gps, por_chave[chave].paralela)

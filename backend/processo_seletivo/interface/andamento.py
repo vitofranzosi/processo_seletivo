@@ -1306,9 +1306,16 @@ def situacoes_da_convocacao(f):
                 AGUARDA,
                 natureza=CONVOCACAO,
                 ato=f"Resposta de {_n(em_curso, 'convocação', 'convocações')}",
+                # Com a hora, como a convocação a mostra, e com a concordância: "1 aguardam" e um
+                # prazo de horas sem a hora eram o que o Centro dizia (problema novo N-02 da
+                # reavaliação de 12/11/2026).
                 razao=(
-                    f"o prazo corre até {_data(f.get('ate'))}"
-                    + (f"; {aguardando} aguardam documentos" if aguardando else "")
+                    f"o prazo corre até {_data_e_hora(f.get('ate'))}"
+                    + (
+                        f"; {_n(aguardando, 'aguarda', 'aguardam')} documentos"
+                        if aguardando
+                        else ""
+                    )
                     if f.get("ate")
                     else "o prazo está correndo"
                 ),
@@ -2850,6 +2857,13 @@ def _data(instante):
     if isinstance(instante, datetime):
         return f"{timezone.localtime(instante):%d/%m/%Y}"
     return f"{instante:%d/%m/%Y}"
+
+
+def _data_e_hora(instante):
+    """O vencimento da convocação é instante, e não dia: o prazo pode acabar no meio da tarde."""
+    if isinstance(instante, datetime):
+        return f"{timezone.localtime(instante):%d/%m/%Y às %H:%M}"
+    return _data(instante)
 
 
 def _lista_de_nomes(nomes):
