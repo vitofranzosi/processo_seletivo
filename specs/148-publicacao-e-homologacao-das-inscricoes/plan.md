@@ -2,6 +2,10 @@
 
 **Branch**: `claude/gps-inscricoes-publicacao-93355f` | **Date**: 2026-11-11 | **Spec**: [spec.md](spec.md)
 
+> **Revisão de 12/11/2026 (D-011)**, na branch `claude/lista-inscritos-modalidade-766f6f`: o
+> conteúdo público passa a se repartir por lista de concorrência dentro do Perfil. O desenho dela está
+> em *Revisão de 12/11 — a relação por lista*, ao fim deste plano, e a Fase E a executa.
+
 ## Summary
 
 Um agregado novo no app `divulgacao` — `PublicacaoDasInscricoes`, com a projeção individual
@@ -57,7 +61,8 @@ Entrada: inscrições enviadas (id, Perfil, nome, protocolo), resultados vigente
 inscrição), natureza, nomes dos Perfis da versão. Saída: `{perfis: [{nome, constam:[{protocolo,
 nome}], indeferidas: n}], itens: [{inscricao_id, situacao, resultado_id}], pendentes: n}`. Ordem:
 `(casefold sem acento do nome, protocolo)`. É a mesma função para a prévia, a publicação e a
-divergência — três leituras de uma conta.
+divergência — três leituras de uma conta. *(Desde a revisão de 12/11, cada Perfil leva `listas`
+em vez de `constam` e `indeferidas` — ver o fim deste plano.)*
 
 ### Recusas (em ordem)
 
@@ -70,7 +75,8 @@ divergência — três leituras de uma conta.
 6. inscrições sem resultado na Etapa.
 7. preliminar: período de recurso não escolhido, Evento inexistente ou já encerrado.
 8. homologação com análise: recurso pendente, reavaliação pendente, prazo correndo.
-9. prévia obsoleta (assinatura de `{natureza, etapa, anterior, itens}`).
+9. prévia obsoleta (assinatura de `{natureza, versao, etapa, anterior, itens}` — a versão entrou na
+   revisão de 12/11, porque as listas saem dela).
 
 ### Integração com o recurso
 
@@ -103,3 +109,38 @@ segunda barreira.
 - **C** — telas da gestão e do portal, situação do candidato, PDF; testes de view, autorização,
   CSP e vocabulário.
 - **D** — validação no navegador, documentação operacional, rastreabilidade, PR.
+- **E** — revisão de 12/11 (D-011): a relação por lista de concorrência.
+
+## Revisão de 12/11 — a relação por lista
+
+**Nenhuma tabela, coluna ou migration.** Muda só a forma dos bytes canônicos do ato, e o resto do
+agregado não muda.
+
+- **Projeção.** `projetar` recebe `listas` (`{perfil_id: [(modalidade_id, nome)]}`, só as reservadas)
+  e o `modalidade_id` de cada inscrição. Cada Perfil sai com
+  `listas: [{lista, constam, nao_constam}]`, com a ampla primeiro. Os `itens` continuam um por
+  inscrição, e por isso a linha gravada, a assinatura e a divergência não contam aparições.
+- **De onde vêm as listas.** `application/inscricoes.py::_listas_reservadas` chama
+  `editais.domain.recortes.recortes_do_perfil`, a derivação que a classificação, o sorteio e a
+  ocupação já usam (`122`). Ela tira a Modalidade apontada como a ampla. O nome publicado é o da
+  Modalidade, e não o rótulo de gestão `Nome (CÓDIGO)`.
+- **Leitura dos bytes gravados.** `dominio.grupos_publicados` aceita os dois formatos. O ato anterior
+  vira uma lista sem nome por Perfil, e então a página e o documento omitem o título de lista
+  (FR-5447). A página, o PDF e a gestão leem por essa função, nunca o JSON cru.
+- **Frase das listas.** `FRASE_DAS_LISTAS` aparece uma vez, só quando algum Perfil tem reservada
+  (`tem_lista_reservada`), na página, no documento e na prévia.
+- **Assinatura da prévia.** Passa a citar a versão: uma Retificação publicada entre a prévia e a
+  confirmação mudaria as listas sem mudar as inscrições.
+
+**Alternativas descartadas.**
+- **Coluna "concorre também em"** (a alternativa escrita na P-2). Repetiria a Modalidade em cada
+  linha, e não é o formato do Ifes.
+- **Regra de lista própria do ato.** Divergiria da ocupação na primeira Retificação, que é o defeito
+  que a `122` fechou.
+- **Regenerar os atos de 11/11.** A imutabilidade proíbe, e o resumo conferido mudaria.
+
+**Constitution Check da revisão.**
+- **II.** Os bytes publicados não mudam.
+- **III.** A Modalidade passa a ser pública só como lista, com a mesma base da relação do sorteio e do
+  resultado (D-011), e a linha continua mínima.
+- **V.** Nenhum agregado, campo ou capacidade nova.

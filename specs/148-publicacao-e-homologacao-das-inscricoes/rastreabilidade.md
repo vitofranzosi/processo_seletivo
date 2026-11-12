@@ -43,3 +43,23 @@ Caminhos relativos a `backend/`. Testes de integração rodam contra PostgreSQL.
 | SC-1706 | mesma fonte | `test_a_homologacao_e_a_relacao_do_sorteio_leem_a_mesma_fonte` |
 | SC-1707 | idempotência e prévia | `test_a_mesma_chave_devolve_o_mesmo_ato_e_a_previa_obsoleta_e_recusada` |
 | SC-1708 | 375 px e CSP | [verificacao.md](verificacao.md); `test_a_pagina_publica_mostra_quem_consta_e_nenhum_dado_pessoal` |
+
+## Revisão de 12/11/2026 — a relação por lista de concorrência (D-011)
+
+| Requisito | Implementação | Verificação |
+|---|---|---|
+| FR-5419 a FR-5421 *(revistas)* | `dominio.projetar` (grupo por Perfil e lista); a linha continua com duas chaves | `test_a_linha_da_lista_reservada_tambem_tem_so_protocolo_e_nome`, `test_o_conteudo_publico_tem_so_protocolo_e_nome` |
+| FR-5439 | `application/inscricoes.py::_listas_reservadas`, pela `recortes_do_perfil` da `122` | `tests/integration/divulgacao/test_relacao_por_lista.py::test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez` |
+| FR-5440 | `dominio.projetar` (ampla primeiro, toda lista declarada, `AMPLA_CONCORRENCIA`) | `test_as_listas_vem_na_ordem_dos_recortes_e_aparecem_mesmo_vazias`, `test_o_preliminar_nomeia_deferidas_conta_indeferidas_e_congela_o_prazo` |
+| FR-5441, FR-5442 | `dominio.projetar` (destinos da inscrição) | `test_o_cotista_consta_na_ampla_e_na_lista_dele_e_e_uma_inscricao_so`, `test_modalidade_que_nao_e_lista_fica_so_na_ampla` |
+| FR-5443 | `dominio.projetar` (contagem por lista) | `test_a_indeferida_e_contada_em_cada_lista_a_que_pertence`, `test_o_preliminar_conta_a_indeferida_em_cada_lista_a_que_ela_pertence` |
+| FR-5444, FR-5430 | `Projecao.itens` continua por inscrição; `divergencia` intocada; `assinatura_da_previa` passa a citar a versão, de onde as listas saem | `test_o_cotista_consta_na_ampla_e_na_lista_dele_e_e_uma_inscricao_so`; `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez`; `test_a_assinatura_da_previa_muda_com_a_versao_citada` |
+| FR-5445 | `interface/publicacoes_das_inscricoes.html` (tabela por Perfil e lista; conferência por lista) | `tests/interface/test_publicacoes_das_inscricoes.py::test_a_previa_mostra_a_contagem_e_os_nomes_por_lista`; [verificacao.md](verificacao.md) |
+| FR-5446 | `dominio.FRASE_DAS_LISTAS`, `tem_lista_reservada`; documento e página | `test_o_documento_nomeia_as_listas_e_explica_a_repeticao`, `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez` |
+| FR-5447 | `dominio.grupos_publicados` (os dois formatos); `portal/views.py::publicacao_das_inscricoes`; `render_inscricoes_pdf` | `test_o_ato_anterior_a_revisao_e_lido_como_uma_lista_sem_nome`, `test_o_documento_do_ato_anterior_a_revisao_nao_ganha_lista`, `test_o_ato_no_formato_anterior_a_revisao_continua_como_foi_publicado` |
+| UX-466 | `portal/publicacao_das_inscricoes.html` (`<h3>` por lista, com a quantidade) | `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez`; [verificacao.md](verificacao.md) (375 px) |
+| UX-467 | a ampla reúne todos (FR-5441) | `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez` |
+| SC-1702 *(revisto)* | fronteira pública por construção; Modalidade só como lista | `test_a_linha_da_lista_reservada_tambem_tem_so_protocolo_e_nome`, `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez` (nenhum identificador de Modalidade nos bytes) |
+| SC-1709 | ato, PDF e página por lista | `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez`, `test_o_preliminar_conta_a_indeferida_em_cada_lista_a_que_ela_pertence` |
+| SC-1710 | leitura dos dois formatos | `test_o_ato_no_formato_anterior_a_revisao_continua_como_foi_publicado` |
+| SC-1711 | a apontada como a ampla fora de `listas` | `test_modalidade_que_nao_e_lista_fica_so_na_ampla`, `test_a_relacao_de_recebidas_reparte_por_lista_e_grava_cada_inscricao_uma_vez` |

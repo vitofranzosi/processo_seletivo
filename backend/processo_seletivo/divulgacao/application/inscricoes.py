@@ -42,6 +42,7 @@ from processo_seletivo.divulgacao.models import (
     NaturezaDasInscricoes,
     PublicacaoDasInscricoes,
 )
+from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.publicacoes.application.contexto_do_ato import (
@@ -139,9 +140,13 @@ def assinatura_da_previa(afericao):
     só existe no POST. Prazo, motivo e autoridade são escolha do operador, submetidos no mesmo
     pedido, e não têm como envelhecer — são validados, não assinados.
     """
+    # **A versão entra desde a revisão de 12/11** (D-011): as listas do ato saem dela, e uma
+    # Retificação publicada entre a prévia e a confirmação mudaria as listas com as mesmas
+    # inscrições — a comissão confirmaria uma repartição que não viu (FR-5430).
     return canonical_sha256(
         {
             "natureza": afericao.natureza,
+            "versao": str(afericao.versao.pk) if afericao.versao is not None else None,
             "etapa": (afericao.etapa or {}).get("id"),
             "anterior": str(afericao.anterior.id) if afericao.anterior is not None else None,
             "itens": [
@@ -188,7 +193,7 @@ def _enviadas(edital):
     return list(
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
         .order_by("id")
-        .values("id", "profile_id", "nome", "protocolo")
+        .values("id", "profile_id", "modality_id", "nome", "protocolo")
     )
 
 
@@ -213,12 +218,39 @@ def _perfis(conteudo):
     ]
 
 
+def _listas_reservadas(conteudo):
+    """`{perfil_id: [(modalidade_id, nome)]}` — as reservadas de cada Perfil, pelos recortes.
+
+    **A derivação é a dos recortes, e não uma leitura própria** (FR-5439): é ela que tira a
+    Modalidade apontada como a ampla, e a mesma pergunta já é feita pela classificação, pelo sorteio
+    e pela ocupação. O rótulo dos recortes é o de gestão ("Nome (CÓDIGO)"); o ato publica o nome da
+    Modalidade, como a divulgação do resultado (FR-5440).
+    """
+    listas = {}
+    for perfil in conteudo.get("profiles") or []:
+        if not isinstance(perfil, dict):
+            continue
+        perfil_id = str(perfil.get("id"))
+        nomes = {
+            str(modalidade.get("id")): modalidade.get("name") or ""
+            for modalidade in perfil.get("competitionModalities") or []
+            if isinstance(modalidade, dict)
+        }
+        listas[perfil_id] = [
+            (lista_id, nomes.get(lista_id) or rotulo)
+            for lista_id, rotulo in recortes_do_perfil(conteudo, perfil_id=perfil_id)
+            if lista_id
+        ]
+    return listas
+
+
 def projetar_agora(edital, *, natureza, etapa_id, conteudo, sem_analise=False):
     """A projeção desta natureza agora — a conta da prévia, do ato e da divergência."""
     inscricoes = [
         {
             "id": linha["id"],
             "perfil_id": linha["profile_id"],
+            "modalidade_id": linha["modality_id"],
             "nome": linha["nome"],
             "protocolo": linha["protocolo"],
         }
@@ -234,7 +266,11 @@ def projetar_agora(edital, *, natureza, etapa_id, conteudo, sem_analise=False):
     else:
         resultados = _resultados_vigentes(edital, etapa_id)
     return dominio.projetar(
-        natureza=natureza, inscricoes=inscricoes, resultados=resultados, perfis=_perfis(conteudo)
+        natureza=natureza,
+        inscricoes=inscricoes,
+        resultados=resultados,
+        perfis=_perfis(conteudo),
+        listas=_listas_reservadas(conteudo),
     )
 
 

@@ -47,3 +47,23 @@ Constraints: única por `(publicacao, inscricao)`; `RECEBIDA` ⇔ sem resultado 
 - **divergência**: itens do vigente × projeção de agora (inscrição nova, situação mudada,
   resultado sucedido).
 - **situação do candidato**: a linha da inscrição no vigente, mais o `ResultadoEtapa` visível.
+
+## O conteúdo público (`conteudo_publico`) — revisão de 12/11/2026 (D-011)
+
+Nenhuma coluna nem migration nova: muda só a forma dos bytes canônicos que o comando grava.
+
+```text
+perfis: [
+  { perfil: "<nome publicado>",
+    listas: [
+      { lista: "Ampla concorrência", constam: [{protocolo, candidato}], nao_constam: N },
+      { lista: "<nome da Modalidade reservada>", constam: [...], nao_constam: N },
+      ...
+    ] }
+]
+```
+
+A ampla reúne todas as inscrições do Perfil; cada reservada, as que a declararam (FR-5441). O ato
+gravado antes da revisão tem a forma anterior — `{perfil, constam, nao_constam}` por Perfil — e é
+lido como uma lista sem nome (`grupos_publicados`, FR-5447). `quantidade` e
+`divulgacao_inscricaonapublicacao` continuam por inscrição (FR-5444).

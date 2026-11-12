@@ -163,3 +163,36 @@ def test_o_edital_oferece_o_caminho_a_quem_publica(client, cenario):
 
     assert url(cenario) in corpo
     assert "Publicações das inscrições" in corpo
+
+
+def test_a_previa_mostra_a_contagem_e_os_nomes_por_lista(
+    client, gestor, api_client, manager_headers, seletor_ligado
+):
+    """FR-5445 (revisão de 12/11, D-011): a comissão confere por lista o que vai publicar.
+
+    O total continua por inscrição, e a tela diz por que a soma das listas passa dele.
+    """
+    from tests.fixtures.inscricoes_publicadas import modalidade_pcd, modalidade_ppi
+
+    cenario = montar(gestor, api_client, manager_headers, seed=1501, codigo="1501", com_cotas=True)
+    inscricoes = inscrever_no(
+        cenario,
+        3,
+        primeiro=311,
+        modalidades={1: modalidade_ppi(1501), 2: modalidade_pcd(1501)},
+    )
+    identificar(client, "paula.publicadora", ["publicador"])
+
+    corpo = client.get(url(cenario)).content.decode()
+
+    assert "<strong>3</strong> inscrições contempladas" in corpo
+    assert "consta também na ampla concorrência" in corpo
+    assert "O total conta cada inscrição uma vez." in corpo
+    for lista, quantas in (
+        ("Ampla concorrência", 3),
+        ("Pessoas com deficiência", 1),
+        ("Pretos, pardos e indígenas", 1),
+    ):
+        assert f"<td>{lista}</td>\n      <td>{quantas}</td>" in corpo
+        assert f"· {lista} ({quantas})</summary>" in corpo
+    assert inscricoes[1].nome in corpo

@@ -2,11 +2,19 @@
 
 **Feature Branch**: `claude/gps-inscricoes-publicacao-93355f`, sobre a `main` em `d3e98a89`
 
-**Created**: 2026-11-11
+**Created**: 2026-11-11 · **Revista**: 2026-11-12 (a relação por lista de concorrência, D-011)
 
 **Status**: Spec, plano, tarefas e implementação em 11/11/2026. Seis questões (P-1 a P-6, ao fim)
-esperam validação institucional, e nenhuma bloqueia o que foi entregue: cada uma tem um padrão
-conservador escrito.
+foram abertas para validação institucional, e nenhuma bloqueia o que foi entregue: cada uma tem um
+padrão conservador escrito. **A P-2 foi respondida pelo usuário em 12/11/2026** (D-011); as outras
+cinco continuam esperando.
+
+> **Revisão de 12/11/2026 — a relação por lista de concorrência (D-011).** O usuário respondeu à
+> P-2: a modalidade aparece no ato, e o ato se reparte por lista, como os Editais do Ifes publicam.
+> Foram revistos a D-009, a FR-5419, a FR-5420, a FR-5421, o SC-1702 e o caso-limite do cotista, cada
+> um com a redação anterior preservada junto. Os requisitos novos estão na seção *A relação por
+> lista* (FR-5439 a FR-5447, UX-466, UX-467), e os critérios são o SC-1709 a SC-1711. A P-1 continua
+> aberta, e a evidência colhida para ela está registrada junto da questão.
 
 **Input**: *"Evoluir o GPS para contemplar a publicação e homologação das inscrições,
 independentemente da modalidade de classificação: relação de inscrições recebidas, resultado
@@ -24,6 +32,12 @@ completo e o diagnóstico estão em [research.md](research.md).
 > O teto foi medido em 11/11/2026, na `main` e em todas as branches remotas: requisito cinco mil
 > trezentos e vinte e três, critério mil seiscentos e sessenta e seis, UX quatrocentos e quarenta e
 > quatro. A `147` está no PR #466, aberto. Por isso esta é a `148`.
+>
+> **A revisão de 12/11 usa números livres da própria faixa**: os requisitos funcionais de cinco mil
+> quatrocentos e trinta e nove a cinco mil quatrocentos e quarenta e sete, os critérios de mil
+> setecentos e nove a mil setecentos e onze, e os requisitos de experiência quatrocentos e sessenta e
+> seis e quatrocentos e sessenta e sete. Antes de usá-los, eles foram procurados nas specs de todas as
+> worktrees desta máquina, e nenhuma os citava. A decisão nova é a `D-011`.
 >
 > **Como esta spec cita outras.** Requisito de outra feature, pelo identificador e pela feature;
 > decisão de outra feature, pelo assunto, nunca pelo identificador.
@@ -69,7 +83,7 @@ recebida e nenhum outro dado pessoal.
 **Acceptance Scenarios**:
 
 1. **Given** um Edital publicado com inscrições enviadas e período encerrado, **When** quem publica
-   abre a prévia da relação de recebidas, **Then** vê o total e a contagem por Perfil, o que
+   abre a prévia da relação de recebidas, **Then** vê o total e a contagem por Perfil e por lista (FR-5445), o que
    acontece ao confirmar, e que nada foi gravado.
 2. **Given** a prévia, **When** confirma com a autoridade signatária, **Then** a relação é publicada,
    congelada, com PDF gravado, e aparece na página pública da seleção.
@@ -100,7 +114,7 @@ ver o motivo e interpor recurso; entrar como outro candidato deferido e não ver
    quantas faltam e não oferece a publicação.
 2. **Given** todas concluídas e consolidadas, **When** publica com o período de recurso escolhido,
    **Then** o ato publica protocolo e nome das deferidas e só a **quantidade** de indeferidas, por
-   Perfil, com o prazo de recurso impresso.
+   Perfil e por lista *(por lista desde a revisão de 12/11, D-011)*, com o prazo de recurso impresso.
 3. **Given** o preliminar publicado, **When** o candidato indeferido abre a inscrição, **Then** lê
    "Inscrição indeferida", o motivo, a data-limite e a ação de recorrer.
 4. **Given** o prazo encerrado, **When** o mesmo candidato tenta recorrer, **Then** a ação não aparece
@@ -187,8 +201,17 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 
 - **Candidato com duas inscrições** (dois Perfis): aparece uma vez em cada Perfil, cada uma com o
   seu protocolo; a situação de uma não alcança a outra.
-- **Cotista**: a inscrição é uma só, e aparece uma vez — a lista de concorrência não divide a
-  inscrição (`D-009`).
+- **Cotista** *(revisto em 2026-11-12, D-011)*: a inscrição é uma só, e consta na ampla
+  concorrência **e** na lista da Modalidade que declarou, com o mesmo protocolo, porque concorre nas
+  duas. A projeção individual, o total e a divergência continuam a contá-la uma vez (FR-5444).
+  *Redação anterior, preservada: "a inscrição é uma só, e aparece uma vez — a lista de concorrência
+  não divide a inscrição (`D-009`)."*
+- **Inscrição numa Modalidade que não é lista** — a que o Perfil aponta como a ampla, ou uma que a
+  versão citada não declara mais: consta só na ampla concorrência (FR-5441).
+- **Perfil sem Modalidade reservada**: tem uma lista só, a ampla concorrência, nomeada como as
+  outras (FR-5440).
+- **Ato publicado antes da revisão de 12/11**: continua como foi publicado, por Perfil e sem lista,
+  na página e no documento (FR-5447).
 - **Inscrição enviada depois da relação publicada** — só possível se uma Retificação reabriu o
   período: a relação vigente passa a divergir; a correção é um sucessor.
 - **Inscrição alterada depois da publicação**: impossível — a enviada é imutável por gatilho (A-03);
@@ -267,13 +290,30 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 
 #### Conteúdo, documento e histórico
 
-- **FR-5419**: O conteúdo público MUST ser agrupado por Perfil, com o nome publicado na versão que o
-  ato cita, e MUST expor, por inscrição contemplada, **somente** protocolo e nome.
-- **FR-5420**: Na relação de recebidas MUST constar toda inscrição enviada; no preliminar e na
-  homologação MUST constar nominalmente só a deferida (homologada), e a indeferida MUST ser apenas
-  **contada** por Perfil.
-- **FR-5421**: O conteúdo público MUST NOT expor CPF, e-mail, telefone, identificador interno,
-  modalidade declarada, motivo do indeferimento nem resultado de outra Etapa.
+- **FR-5419** *(revista em 2026-11-12, D-011 — a redação anterior está ao fim desta alínea)*: O
+  conteúdo público MUST ser agrupado por Perfil, com o nome publicado na versão que o ato cita, e,
+  dentro do Perfil, por lista de concorrência (FR-5439). Cada linha MUST expor **somente** protocolo
+  e nome.
+
+  > **Redação anterior à revisão de 12/11, preservada:** O conteúdo público MUST ser agrupado por
+  > Perfil, com o nome publicado na versão que o ato cita, e MUST expor, por inscrição contemplada,
+  > **somente** protocolo e nome.
+- **FR-5420** *(revista em 2026-11-12, D-011 — a redação anterior está ao fim desta alínea)*: Na
+  relação de recebidas MUST constar toda inscrição enviada; no preliminar e na homologação MUST
+  constar nominalmente só a deferida (homologada), e a indeferida MUST ser apenas **contada**, em
+  cada lista do Perfil (FR-5443).
+
+  > **Redação anterior à revisão de 12/11, preservada:** Na relação de recebidas MUST constar toda
+  > inscrição enviada; no preliminar e na homologação MUST constar nominalmente só a deferida
+  > (homologada), e a indeferida MUST ser apenas **contada** por Perfil.
+- **FR-5421** *(revista em 2026-11-12, D-011 — a redação anterior está ao fim desta alínea)*: O
+  conteúdo público MUST NOT expor CPF, e-mail, telefone, identificador interno, motivo do
+  indeferimento nem resultado de outra Etapa. A Modalidade declarada MUST aparecer só pela lista em
+  que a inscrição consta (FR-5442).
+
+  > **Redação anterior à revisão de 12/11, preservada:** O conteúdo público MUST NOT expor CPF,
+  > e-mail, telefone, identificador interno, modalidade declarada, motivo do indeferimento nem
+  > resultado de outra Etapa.
 - **FR-5422**: A ordem das inscrições dentro do Perfil MUST ser determinística: nome sem distinção
   de caixa e acento, depois protocolo.
 - **FR-5423**: O sistema MUST congelar, no instante da publicação, os bytes canônicos do conteúdo e o
@@ -294,14 +334,21 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 
 - **FR-5429**: Publicar MUST exigir a capacidade de publicar resultado (`resultado:publicar`) e o
   Edital no escopo institucional do ator; consultar a tela MUST admitir também a auditoria.
-- **FR-5430**: A publicação MUST ser idempotente pela chave do pedido, serializada com os demais
-  comandos do Processo, e MUST recusar a confirmação quando a projeção ou a cadeia mudaram desde a
-  prévia.
+- **FR-5430** *(revista em 2026-11-12, D-011 — a redação anterior está ao fim desta alínea)*: A
+  publicação MUST ser idempotente pela chave do pedido, serializada com os demais comandos do
+  Processo, e MUST recusar a confirmação quando a projeção, a cadeia ou a versão do Edital que o ato
+  cita mudaram desde a prévia. A versão entra porque as listas de concorrência saem dela (FR-5439):
+  uma Retificação publicada entre a prévia e a confirmação mudaria a repartição sem mudar as
+  inscrições.
+
+  > **Redação anterior à revisão de 12/11, preservada:** A publicação MUST ser idempotente pela
+  > chave do pedido, serializada com os demais comandos do Processo, e MUST recusar a confirmação
+  > quando a projeção ou a cadeia mudaram desde a prévia.
 - **FR-5431**: A publicação MUST gravar a trilha de auditoria com ator, operação, ato, versão citada
   e sucessão, sem dado pessoal.
 - **FR-5432**: A tela da gestão MUST mostrar, antes da confirmação: a natureza, a Etapa, o prazo, o
-  total e a contagem por Perfil, as pendências que impedem, o aviso de sucessão, o que acontece ao
-  confirmar e qual documento ficará disponível.
+  total e a contagem por Perfil (e, desde a revisão de 12/11, por lista — FR-5445), as pendências
+  que impedem, o aviso de sucessão, o que acontece ao confirmar e qual documento ficará disponível.
 - **FR-5433**: A tela MUST oferecer só as naturezas permitidas no estado atual, e dizer por que as
   demais não estão.
 
@@ -323,6 +370,38 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 - **FR-5438**: A relação de habilitados do sorteio MUST continuar projetada e congelada pelas regras
   da `021`, sem ler nem exigir a publicação das inscrições.
 
+#### A relação por lista (revisão de 12/11/2026, D-011)
+
+- **FR-5439**: Dentro de cada Perfil, o conteúdo público MUST ser repartido pelas **listas de
+  concorrência** do Perfil na versão que o ato cita. As listas MUST ser derivadas pela mesma regra
+  que dá os recortes à classificação, ao sorteio e à ocupação (a da `122`): a ampla concorrência e
+  uma lista por Modalidade reservada. A Modalidade que o Perfil aponta como a ampla MUST NOT ter
+  lista própria.
+- **FR-5440**: As listas MUST vir na ordem dos recortes: a ampla concorrência primeiro, e as
+  reservadas na ordem em que o Perfil as declara. Toda lista do Perfil MUST aparecer, inclusive vazia
+  e inclusive quando a ampla for a única. A ampla MUST ser nomeada "Ampla concorrência", e cada
+  reservada pelo nome publicado da Modalidade, como a divulgação do resultado já as nomeia.
+- **FR-5441**: A ampla concorrência MUST contemplar todas as inscrições do Perfil. A lista de uma
+  Modalidade reservada MUST contemplar só as inscrições que a declararam. A inscrição cuja Modalidade
+  não é lista na versão citada — a apontada como a ampla, ou uma que a versão não declara — MUST
+  constar só na ampla.
+- **FR-5442**: A inscrição que declarou Modalidade reservada MUST constar na ampla **e** na lista
+  dela, com o mesmo protocolo. A Modalidade MUST aparecer só pela lista em que a inscrição consta, e
+  nenhuma linha MUST ganhar coluna de Modalidade.
+- **FR-5443**: No preliminar e na homologação, a indeferida MUST continuar apenas contada (P-1),
+  agora em cada lista: na ampla, todas as indeferidas do Perfil; na reservada, as que declararam
+  aquela Modalidade.
+- **FR-5444**: O total do ato, as linhas por inscrição (FR-5423), a assinatura da prévia (FR-5430)
+  e a divergência (FR-5427) MUST continuar contando inscrições, uma vez cada, e não as vezes em que
+  elas constam nas listas.
+- **FR-5445**: A prévia da gestão MUST mostrar a contagem por Perfil e por lista, e a conferência
+  dos nomes por lista.
+- **FR-5446**: A página pública e o documento MUST dizer, uma vez, que quem se inscreveu para vaga
+  reservada consta também na ampla concorrência, porque concorre nas duas.
+- **FR-5447**: O ato publicado antes desta revisão MUST continuar legível como foi publicado, por
+  Perfil e sem lista, na página e no documento. Nenhum ato MUST ser regenerado, e nenhuma migration
+  MUST alterar dado.
+
 ### Requisitos de experiência
 
 - **UX-460**: A tela da gestão MUST ser uma só — "Publicações das inscrições" —, alcançável da tela
@@ -334,6 +413,11 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
   "pode mudar até a homologação"; "você pode recorrer até …".
 - **UX-464**: A página pública do ato MUST ser legível a 375 px sem rolagem horizontal da página.
 - **UX-465**: Nenhum estilo ou script inline (CSP); toda classe nova com regra na folha.
+- **UX-466** *(revisão de 12/11, D-011)*: Na página pública, cada lista MUST ser um título abaixo do
+  Perfil, com a quantidade de inscrições nomeadas nela — as indeferidas são contadas à parte
+  (FR-5443) —, e a tabela legível a 375 px.
+- **UX-467** *(revisão de 12/11, D-011)*: O candidato que procura o próprio nome MUST encontrá-lo na
+  ampla concorrência, qualquer que seja a Modalidade que declarou: a ampla é a lista de todos.
 
 ### Key Entities
 
@@ -351,8 +435,11 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
   planilha, num Edital com análise e recurso.
 - **SC-1701**: Um Edital sem Etapa decisória atravessa avaliação, classificação e publicação de
   resultado sem abrir a tela desta feature.
-- **SC-1702**: Nenhum documento publicado contém CPF, e-mail, telefone, identificador interno,
-  modalidade ou motivo — verificado por teste sobre os bytes e sobre o PDF.
+- **SC-1702** *(revisto em 2026-11-12, D-011)*: Nenhum documento publicado contém CPF, e-mail,
+  telefone, identificador interno ou motivo, e nenhuma linha tem outra coisa além de protocolo e
+  nome: a Modalidade só aparece como lista — verificado por teste sobre os bytes e sobre o PDF.
+  *Redação anterior, preservada: "Nenhum documento publicado contém CPF, e-mail, telefone,
+  identificador interno, modalidade ou motivo — verificado por teste sobre os bytes e sobre o PDF."*
 - **SC-1703**: Alterar, excluir ou renumerar a publicação, suas linhas ou seu documento é recusado
   pela aplicação e pelo banco.
 - **SC-1704**: O candidato indeferido vê o motivo e interpõe recurso pela própria área; outro
@@ -364,6 +451,13 @@ análise pela Mesa ──────►├─► resultado preliminar ─► re
 - **SC-1707**: A publicação repetida com a mesma chave devolve o mesmo ato; a confirmação com prévia
   obsoleta é recusada.
 - **SC-1708**: A tela pública do ato e a da gestão funcionam a 375 px e não violam a CSP.
+- **SC-1709** *(revisão de 12/11, D-011)*: Num Edital com ampla, PcD e PPI, o ato publicado traz o
+  cotista na ampla e na lista dele, a pessoa sem cota só na ampla, a indeferida contada em cada lista
+  a que pertence, e grava uma linha por inscrição — verificado sobre os bytes, o PDF e a página.
+- **SC-1710** *(revisão de 12/11, D-011)*: Um ato publicado no formato anterior à revisão continua
+  com os mesmos bytes, o mesmo resumo, e página e PDF legíveis por Perfil.
+- **SC-1711** *(revisão de 12/11, D-011)*: A Modalidade apontada como a ampla não aparece como lista,
+  e quem a declarou consta só na ampla.
 
 ## Decisões
 
@@ -434,12 +528,18 @@ individual (FR-5412).
 divulgação de resultado; fora dele, 404. A capacidade é `resultado:publicar`, a do mesmo papel que já
 divulga resultados (P-4). Nada é exigido de Editais existentes; a migration só cria tabelas.
 
-### D-009 — Por Perfil; a lista não divide a inscrição
+### D-009 — Por Perfil e por lista; a lista não divide a inscrição *(revista em 2026-11-12, D-011)*
 
 **Pergunta 9.** A análise é por inscrição, e a inscrição é uma, num Perfil, com no máximo uma
-modalidade. O ato agrupa por Perfil e não reparte por lista: o cotista consta uma vez. Repartir por
-lista, como o sorteio faz, publicaria a modalidade declarada — dado que pode ser sensível (PcD) — sem
-necessidade para a finalidade do ato.
+modalidade. **A decisão, a linha gravada e a contagem continuam por inscrição**: o que se reparte por
+lista é só o conteúdo público, que agrupa por Perfil e, dentro dele, pelas listas de concorrência
+(D-011). O cotista consta na ampla e na lista dele, e é uma inscrição só no total, nas linhas e na
+divergência.
+
+> **Redação anterior à revisão de 12/11, preservada:** A análise é por inscrição, e a inscrição é
+> uma, num Perfil, com no máximo uma modalidade. O ato agrupa por Perfil e não reparte por lista: o
+> cotista consta uma vez. Repartir por lista, como o sorteio faz, publicaria a modalidade declarada —
+> dado que pode ser sensível (PcD) — sem necessidade para a finalidade do ato.
 
 ### D-010 — O que é público
 
@@ -447,14 +547,53 @@ necessidade para a finalidade do ato.
 contagem de indeferidas por Perfil, Etapa, prazo, autoridade e resumo. Só do titular: a própria
 situação, o motivo, a modalidade e o recurso. Nunca: CPF, e-mail, telefone, identificador interno. É
 a regra da divulgação de resultado (017), que não nomeia publicamente quem foi eliminado; publicar
-os indeferidos nominalmente é escolha institucional (P-1).
+os indeferidos nominalmente é escolha institucional (P-1). *(Desde a revisão de 12/11, a Modalidade
+deixa de ser só do titular: ela é pública pela lista em que a inscrição consta, D-011.)*
+
+### D-011 — A relação se reparte por lista, como o Ifes publica *(revisão de 12/11/2026)*
+
+**Pergunta: a Modalidade aparece no ato? (P-2).** Sim. O usuário respondeu em 12/11/2026, depois de
+uma consulta aos Editais publicados pelo Ifes, que mostrou o padrão da D-009 mais restrito do que a
+prática da instituição:
+
+- **No Cefor**, a página de cada Edital publica, por polo, a *"Lista de inscritos e habilitados para
+  sorteio"*. A lista é nominal (inscrição, nome, modalidade de vaga, situação e número do sorteio),
+  repartida em ampla concorrência, PcD e PPI. Junto vem a *"Relação candidato x vaga"* por
+  modalidade. Exemplos: Edital 28/2026 (publicado em 08/05/2026) e Edital 81/2025, polo Serra.
+- **No campus Colatina**, a *"Homologação das inscrições"* do PS 111/2024 é nominal e repartida por
+  *"Modalidade da vaga"*: ampla, PcD e PPI.
+- **Na Reitoria**, os técnicos publicam a concorrência por modalidade em números (PS 55/2021, PS
+  72/2025).
+
+**O GPS já publicava a Modalidade em dois atos.** A relação do sorteio é por recorte e traz o nome da
+Modalidade. A divulgação do resultado nomeia a lista de concorrência e tem coluna de Modalidade. A
+D-009 tornava a relação das inscrições o único ato que a escondia. A finalidade é a mesma nos três:
+o candidato e os demais concorrentes conferem em que lista cada um está, e recorrem do erro.
+
+**A regra das listas é a dos recortes**, e não uma nova (FR-5439). A ampla concorrência reúne todos,
+e a reservada só quem a declarou. Isso porque o cotista concorre nas duas, pela concorrência
+concomitante que a resolução do Ifes determina e que a classificação e o sorteio já aplicam. É também
+o formato do Cefor em 2026. Uma regra própria deste ato divergiria da ocupação na primeira
+Retificação, que é o defeito que a `122` existiu para fechar.
+
+**Só o conteúdo público muda.** Decisão, linha gravada, total, assinatura da prévia e divergência
+continuam por inscrição (FR-5444). Um ato já publicado não muda. A página e o documento leem os
+bytes dele como foram gravados (FR-5447), porque publicação é ato imutável.
+
+**LGPD.** A Modalidade PcD é dado sensível. A base para publicá-la por lista é a mesma que já
+sustenta a relação do sorteio e o resultado: a execução da política de reserva de vagas e a
+publicidade do certame. Se a validação institucional de LGPD exigir outra forma, ela alcança os três
+atos juntos, e não só este.
 
 ## Questões para validação institucional
 
 - **P-1 — Indeferidos nominalmente?** Padrão: só contados. Alternativa: listar por protocolo, sem
-  nome. Custo: uma coluna no ato e uma decisão de LGPD.
-- **P-2 — Modalidade na relação?** Padrão: não publicada. Alternativa: coluna "concorre também em".
-  Custo: dado potencialmente sensível no ato público.
+  nome. Custo: uma coluna no ato e uma decisão de LGPD. *Evidência colhida em 12/11/2026, sem
+  decisão:* a homologação de Colatina (PS 111/2024) nomeia os indeferidos, e a lista do Edital 81/2025
+  do Cefor traz a situação "Não habilitado" com o nome.
+- **P-2 — Modalidade na relação?** **Respondida pelo usuário em 12/11/2026: sim, por lista (D-011).**
+  *Redação anterior, preservada:* "Padrão: não publicada. Alternativa: coluna 'concorre também em'.
+  Custo: dado potencialmente sensível no ato público."
 - **P-3 — Prazo pelo Evento ou por dias?** Padrão: o Evento do Cronograma. Alternativa: declaração
   em dias na Etapa, como o marco faz. Custo: campo normativo novo.
 - **P-4 — Capacidade própria?** Padrão: `resultado:publicar`. Alternativa: `inscricoes:publicar`.
@@ -479,3 +618,6 @@ os indeferidos nominalmente é escolha institucional (P-1).
 - Publicação coletiva do resultado de Etapa **pontuada** — continua sendo a do marco.
 - Exportação da relação em planilha.
 - Recurso contra a relação de recebidas (P-6).
+- A *"relação candidato x vaga"* por Modalidade, que o Cefor publica ao lado da lista. A página do
+  ato mostra quantas inscrições há em cada lista (UX-466), mas a razão pelas vagas do quadro é outro
+  ato. Fica registrada na revisão de 12/11, sem desenvolver.

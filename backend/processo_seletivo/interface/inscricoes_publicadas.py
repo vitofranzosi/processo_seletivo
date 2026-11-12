@@ -137,6 +137,10 @@ def _renderizar(request, ator, edital, pode_publicar, *, natureza, etapa_id, err
                 "explicacao": frase_da_natureza(escolhida),
                 "constam": dominio.CONSTAM[escolhida],
                 "nao_constam": dominio.NAO_CONSTAM.get(escolhida, ""),
+                # A prévia avisa por que a soma das listas passa do total (FR-5444, FR-5445).
+                "tem_lista_reservada": afericao is not None
+                and dominio.tem_lista_reservada(afericao.projecao.perfis),
+                "frase_das_listas": dominio.FRASE_DAS_LISTAS,
                 "escolher_etapa": _escolher_etapa(afericao, etapas),
                 "pede_motivo": vigente is not None and vigente.natureza == escolhida,
                 "pode_publicar": pode_publicar,

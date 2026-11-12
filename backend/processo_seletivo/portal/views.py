@@ -3593,6 +3593,11 @@ def publicacao_das_inscricoes(request, publicacao_id):
     vigente; o vigente leva aos anteriores.
     """
     from processo_seletivo.divulgacao.application import inscricoes as atos_das_inscricoes
+    from processo_seletivo.divulgacao.domain.inscricoes import (
+        FRASE_DAS_LISTAS,
+        grupos_publicados,
+        tem_lista_reservada,
+    )
     from processo_seletivo.divulgacao.infrastructure.documento_das_inscricoes import (
         frase_da_natureza,
         frase_da_sucessao,
@@ -3611,6 +3616,9 @@ def publicacao_das_inscricoes(request, publicacao_id):
         aberto = timezone.now() <= publicacao.recurso_ate
         prazo = {"fecha": publicacao.recurso_ate, "aberto": aberto}
     cabecalho = conteudo["cabecalho"]
+    # Os dois formatos dos bytes numa leitura só (FR-5447): o ato anterior à revisão de 12/11 vem
+    # como uma lista sem nome por Perfil, e o template não ganha um segundo caminho.
+    grupos = grupos_publicados(conteudo)
     return render(
         request,
         "portal/publicacao_das_inscricoes.html",
@@ -3618,6 +3626,8 @@ def publicacao_das_inscricoes(request, publicacao_id):
             "publicacao": publicacao,
             "cabecalho": cabecalho,
             "conteudo": conteudo,
+            "grupos": grupos,
+            "frase_das_listas": FRASE_DAS_LISTAS if tem_lista_reservada(grupos) else "",
             "explicacao": frase_da_natureza(cabecalho["natureza"]),
             "sucessao": frase_da_sucessao(cabecalho.get("sucede")),
             "sem_recurso": (cabecalho.get("prazo") or {}).get("admite") is False,

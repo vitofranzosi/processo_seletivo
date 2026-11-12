@@ -25,9 +25,15 @@ mostra o que já foi publicado, os três atos possíveis e a prévia do escolhid
 
 | Ato | Quando | O que publica |
 |---|---|---|
-| Relação de inscrições recebidas | Depois do fim do período de inscrições | Protocolo e nome de toda inscrição enviada, por Perfil |
+| Relação de inscrições recebidas | Depois do fim do período de inscrições | Protocolo e nome de toda inscrição enviada, por Perfil e lista de concorrência |
 | Resultado preliminar da análise das inscrições | Depois de a análise estar concluída e consolidada para todas as inscrições | Protocolo e nome das deferidas; só a quantidade de indeferidas; o prazo de recurso |
 | Homologação das inscrições | Depois do prazo, sem recurso pendente nem reavaliação pendente | Protocolo e nome das aceitas; só a quantidade das não aceitas |
+
+**Por lista de concorrência** (desde a revisão de 12/11, D-011): dentro de cada Perfil, o ato traz a
+ampla concorrência, com todos, e uma lista por Modalidade reservada, com quem a declarou. O cotista
+consta nas duas, e a indeferida é contada em cada lista a que pertence. A prévia mostra a contagem
+por Perfil e por lista, e o total conta cada inscrição uma vez. Um ato publicado antes da revisão
+continua como foi publicado, por Perfil.
 
 Combinações comuns: só a relação de recebidas; preliminar e homologação; só a homologação (quando o
 Edital não prevê recurso contra a análise); ou nenhuma.

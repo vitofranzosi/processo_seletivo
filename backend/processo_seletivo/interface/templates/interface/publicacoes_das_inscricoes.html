@@ -88,37 +88,39 @@ depende da escolha, e é recomposta pelo GET — nada é gravado até a confirma
 
 <div class="tabela-rolavel">
 <table aria-describedby="total-da-previa">
-  <caption class="oculto">Inscrições contempladas, por Perfil</caption>
+  <caption class="oculto">Inscrições contempladas, por Perfil e lista de concorrência</caption>
   <thead>
     <tr>
       <th scope="col">Perfil</th>
+      <th scope="col">Lista</th>
       <th scope="col">{{ constam }}</th>
       {% if nao_constam %}<th scope="col">{{ nao_constam|capfirst }}</th>{% endif %}
     </tr>
   </thead>
   <tbody>
-  {% for grupo in afericao.projecao.perfis %}
+  {% for grupo in afericao.projecao.perfis %}{% for lista in grupo.listas %}
     <tr>
       <td>{{ grupo.perfil|default:"Perfil" }}</td>
-      <td>{{ grupo.constam|length }}</td>
-      {% if nao_constam %}<td>{{ grupo.nao_constam }}</td>{% endif %}
+      <td>{{ lista.lista }}</td>
+      <td>{{ lista.constam|length }}</td>
+      {% if nao_constam %}<td>{{ lista.nao_constam }}</td>{% endif %}
     </tr>
-  {% endfor %}
+  {% endfor %}{% endfor %}
   </tbody>
 </table>
 </div>
-<p id="total-da-previa"><strong>{{ afericao.projecao.total }}</strong> inscriç{{ afericao.projecao.total|pluralize:"ão,ões" }} contemplada{{ afericao.projecao.total|pluralize }}{% if afericao.projecao.pendentes %}; <strong>{{ afericao.projecao.pendentes }}</strong> ainda sem conclusão na análise{% endif %}.</p>
+<p id="total-da-previa"><strong>{{ afericao.projecao.total }}</strong> inscriç{{ afericao.projecao.total|pluralize:"ão,ões" }} contemplada{{ afericao.projecao.total|pluralize }}{% if afericao.projecao.pendentes %}; <strong>{{ afericao.projecao.pendentes }}</strong> ainda sem conclusão na análise{% endif %}.{% if tem_lista_reservada %} {{ frase_das_listas }} O total conta cada inscrição uma vez.{% endif %}</p>
 
 {% comment %}
-A conferência pela comissão: os nomes que serão publicados, recolhidos por Perfil. Só quem consta —
-o indeferido não é nomeado no ato (D-010), e a prévia não ensina o contrário.
+A conferência pela comissão: os nomes que serão publicados, por Perfil e lista (FR-5445). Só quem
+consta — o indeferido não é nomeado no ato (D-010), e a prévia não ensina o contrário.
 {% endcomment %}
-{% for grupo in afericao.projecao.perfis %}{% if grupo.constam %}
+{% for grupo in afericao.projecao.perfis %}{% for lista in grupo.listas %}{% if lista.constam %}
 <details class="conferir-nomes">
-  <summary>Conferir os nomes — {{ grupo.perfil|default:"Perfil" }} ({{ grupo.constam|length }})</summary>
-  <ul>{% for linha in grupo.constam %}<li>{{ linha.candidato }} · {{ linha.protocolo }}</li>{% endfor %}</ul>
+  <summary>Conferir os nomes — {{ grupo.perfil|default:"Perfil" }} · {{ lista.lista }} ({{ lista.constam|length }})</summary>
+  <ul>{% for linha in lista.constam %}<li>{{ linha.candidato }} · {{ linha.protocolo }}</li>{% endfor %}</ul>
 </details>
-{% endif %}{% endfor %}
+{% endif %}{% endfor %}{% endfor %}
 
 {% if afericao.impedimentos %}
 {% comment %}Havendo impedimento, a recusa é nomeada e o botão não é oferecido (FR-5432).{% endcomment %}
@@ -130,7 +132,7 @@ o indeferido não é nomeado no ato (D-010), e a prévia não ensina o contrári
 <section class="consequencias irreversivel" aria-labelledby="titulo-consequencias">
   <h3 id="titulo-consequencias">O que acontece ao confirmar</h3>
   <ul>
-    <li>O ato passa a ser <strong>público</strong> no portal, em página e em PDF, num endereço estável: protocolo e nome de quem consta{% if nao_constam %}, e só a quantidade de {{ nao_constam }}{% endif %}. Nenhum outro dado pessoal.</li>
+    <li>O ato passa a ser <strong>público</strong> no portal, em página e em PDF, num endereço estável: protocolo e nome de quem consta, por Perfil e lista de concorrência{% if nao_constam %}, e só a quantidade de {{ nao_constam }}{% endif %}. Nenhum outro dado pessoal.</li>
     {% if escolhida == "RECEBIDAS" %}<li>Nenhuma inscrição muda de situação: constar na relação não é ser aceito.</li>{% else %}<li>Cada candidato passa a ver, na própria inscrição, se foi aceito{% if escolhida == "PRELIMINAR" %}, e o indeferido vê o motivo e pode recorrer até o fim do prazo escolhido abaixo{% endif %}.</li>{% endif %}
     {% if vigente %}<li>Este ato <strong>sucede</strong> o vigente ({{ vigente.get_natureza_display }}, de {{ vigente.publicado_em|date:"d/m/Y" }}), que continua consultável dizendo que foi sucedido.</li>{% endif %}
     <li>O ato é <strong>imutável e não se despublica</strong>. Corrigir é publicar de novo, com o motivo.</li>

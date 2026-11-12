@@ -57,8 +57,8 @@ def test_a_ordem_ignora_caixa_e_acento_e_desempata_pelo_protocolo():
         natureza=dominio.RECEBIDAS, inscricoes=INSCRICOES, resultados=None, perfis=PERFIS
     )
 
-    nomes = [linha["candidato"] for linha in projecao.perfis[0]["constam"]]
-    protocolos = [linha["protocolo"] for linha in projecao.perfis[0]["constam"]]
+    nomes = [linha["candidato"] for linha in projecao.perfis[0]["listas"][0]["constam"]]
+    protocolos = [linha["protocolo"] for linha in projecao.perfis[0]["listas"][0]["constam"]]
     assert nomes == ["ana Lima", "Ana Lima", "Érica Souza"]
     assert protocolos == ["INS-2026-0002", "INS-2026-0004", "INS-2026-0001"]
 
@@ -75,7 +75,7 @@ def test_o_preliminar_le_o_resultado_e_so_conta_a_indeferida():
         natureza=dominio.PRELIMINAR, inscricoes=INSCRICOES, resultados=resultados, perfis=PERFIS
     )
 
-    matematica = projecao.perfis[0]
+    matematica = projecao.perfis[0]["listas"][0]
     assert [linha["protocolo"] for linha in matematica["constam"]] == [
         "INS-2026-0004",
         "INS-2026-0001",
@@ -96,7 +96,9 @@ def test_perfil_sem_inscricao_aparece_vazio_e_nao_some():
         "Professor de Matemática",
         "Tutor a distância",
     ]
-    assert projecao.perfis[1]["constam"] == []
+    assert projecao.perfis[1]["listas"] == [
+        {"lista": dominio.AMPLA_CONCORRENCIA, "constam": [], "nao_constam": 0}
+    ]
 
 
 def test_inscricao_sem_resultado_e_pendente_e_fica_fora():
@@ -138,8 +140,9 @@ def test_o_conteudo_publico_tem_so_protocolo_e_nome():
     )
 
     for grupo in conteudo["perfis"]:
-        for linha in grupo["constam"]:
-            assert set(linha) == {"protocolo", "candidato"}
+        for lista in grupo["listas"]:
+            for linha in lista["constam"]:
+                assert set(linha) == {"protocolo", "candidato"}
     texto = canonical_bytes(conteudo).decode()
     for proibido in ("resultado_id", "inscricao_id", "habilitada", "10000000-0000"):
         assert proibido not in texto
@@ -200,3 +203,261 @@ def test_evento_de_recurso_so_com_termino_por_vir():
     }
 
     assert [evento["id"] for evento in dominio.eventos_de_recurso(conteudo, agora)] == ["f"]
+
+
+# ---------------------------------------------------------------------------
+# A relação por lista — revisão de 12/11/2026 (D-011)
+# ---------------------------------------------------------------------------
+
+PCD = "00000000-0000-0000-0000-0000000000c1"
+PPI = "00000000-0000-0000-0000-0000000000c2"
+AMPLA_APONTADA = "00000000-0000-0000-0000-0000000000c3"
+LISTAS = {PERFIL_A: [(PCD, "Pessoas com deficiência"), (PPI, "Pretos, pardos e indígenas")]}
+
+
+def com_modalidade(numero, nome, modalidade, perfil=PERFIL_A):
+    return {**inscricao(numero, nome, perfil), "modalidade_id": modalidade}
+
+
+COTAS = [
+    com_modalidade(1, "Ana Lima", None),
+    com_modalidade(2, "Bruno Alves", PPI),
+    com_modalidade(3, "Carla Dias", PCD),
+    com_modalidade(4, "Davi Reis", PPI),
+]
+
+
+def _listas(grupo):
+    return {
+        lista["lista"]: [linha["protocolo"] for linha in lista["constam"]]
+        for lista in grupo["listas"]
+    }
+
+
+def test_o_cotista_consta_na_ampla_e_na_lista_dele_e_e_uma_inscricao_so():
+    """FR-5441, FR-5442 e FR-5444: duas vezes no grupo, uma vez nos itens e no total."""
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS,
+        inscricoes=COTAS,
+        resultados=None,
+        perfis=PERFIS,
+        listas=LISTAS,
+    )
+
+    assert _listas(projecao.perfis[0]) == {
+        "Ampla concorrência": [
+            "INS-2026-0001",
+            "INS-2026-0002",
+            "INS-2026-0003",
+            "INS-2026-0004",
+        ],
+        "Pessoas com deficiência": ["INS-2026-0003"],
+        "Pretos, pardos e indígenas": ["INS-2026-0002", "INS-2026-0004"],
+    }
+    assert projecao.total == 4
+    assert sorted(item.inscricao_id for item in projecao.itens) == sorted(
+        item["id"] for item in COTAS
+    )
+
+
+def test_as_listas_vem_na_ordem_dos_recortes_e_aparecem_mesmo_vazias():
+    """FR-5440: a ampla primeiro, as reservadas na ordem do Perfil; sem cota, só a ampla."""
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS,
+        inscricoes=COTAS[:1],
+        resultados=None,
+        perfis=PERFIS,
+        listas=LISTAS,
+    )
+
+    matematica, tutor = projecao.perfis
+    assert [lista["lista"] for lista in matematica["listas"]] == [
+        "Ampla concorrência",
+        "Pessoas com deficiência",
+        "Pretos, pardos e indígenas",
+    ]
+    assert matematica["listas"][1]["constam"] == []
+    assert [lista["lista"] for lista in tutor["listas"]] == ["Ampla concorrência"]
+
+
+def test_modalidade_que_nao_e_lista_fica_so_na_ampla():
+    """FR-5441 e SC-1711: a apontada como a ampla, e a que a versão não declara, não abrem lista."""
+    inscricoes = [
+        com_modalidade(1, "Ana Lima", AMPLA_APONTADA),
+        com_modalidade(2, "Bruno Alves", "00000000-0000-0000-0000-0000000000ff"),
+    ]
+
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS,
+        inscricoes=inscricoes,
+        resultados=None,
+        perfis=PERFIS[:1],
+        listas=LISTAS,
+    )
+
+    assert _listas(projecao.perfis[0]) == {
+        "Ampla concorrência": ["INS-2026-0001", "INS-2026-0002"],
+        "Pessoas com deficiência": [],
+        "Pretos, pardos e indígenas": [],
+    }
+
+
+def test_a_indeferida_e_contada_em_cada_lista_a_que_pertence():
+    """FR-5443: o cotista indeferido conta na ampla e na lista dele, e não é nomeado em nenhuma."""
+    resultados = {
+        COTAS[0]["id"]: resultado(1, True),
+        COTAS[1]["id"]: resultado(2, False),
+        COTAS[2]["id"]: resultado(3, True),
+        COTAS[3]["id"]: resultado(4, True),
+    }
+
+    projecao = dominio.projetar(
+        natureza=dominio.PRELIMINAR,
+        inscricoes=COTAS,
+        resultados=resultados,
+        perfis=PERFIS[:1],
+        listas=LISTAS,
+    )
+
+    ampla, pcd, ppi = projecao.perfis[0]["listas"]
+    assert (ampla["nao_constam"], pcd["nao_constam"], ppi["nao_constam"]) == (1, 0, 1)
+    assert "INS-2026-0002" not in {
+        linha["protocolo"] for lista in projecao.perfis[0]["listas"] for linha in lista["constam"]
+    }
+    assert projecao.indeferidas == 1
+
+
+def test_a_linha_da_lista_reservada_tambem_tem_so_protocolo_e_nome():
+    """SC-1702 revisto: a Modalidade aparece como lista, e nunca como coluna."""
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS,
+        inscricoes=COTAS,
+        resultados=None,
+        perfis=PERFIS[:1],
+        listas=LISTAS,
+    )
+
+    for lista in projecao.perfis[0]["listas"]:
+        for linha in lista["constam"]:
+            assert set(linha) == {"protocolo", "candidato"}
+    texto = canonical_bytes(projecao.perfis).decode()
+    for proibido in (PCD, PPI, "modalidade"):
+        assert proibido not in texto
+
+
+ANTERIOR_A_REVISAO = {
+    "cabecalho": {
+        "titulo": "Relação de inscrições recebidas",
+        "natureza": "RECEBIDAS",
+        "processo": "Processo 2026",
+        "edital": "Edital 01/2026",
+        "etapa": "",
+        "publicado_em": "2026-11-11T12:00:00+00:00",
+        "signatario_nome": "",
+        "signatario_cargo": "Diretoria",
+        "signatario_ato_de_nomeacao": "",
+        "unidade": {"sigla": "Cefor", "nome": "Cefor", "cabecalho": ["Cefor"]},
+    },
+    "rotulo_constam": "Inscrições recebidas",
+    "rotulo_nao_constam": "",
+    "perfis": [
+        {
+            "perfil": "Professor de Matemática",
+            "constam": [{"protocolo": "INS-2026-0001", "candidato": "Ana Lima"}],
+            "nao_constam": 0,
+        }
+    ],
+    "total": 1,
+}
+
+
+def test_o_ato_anterior_a_revisao_e_lido_como_uma_lista_sem_nome():
+    """FR-5447: o formato gravado em 11/11 continua legível, e não ganha "Ampla concorrência"."""
+    grupos = dominio.grupos_publicados(ANTERIOR_A_REVISAO)
+
+    assert grupos == [
+        {
+            "perfil": "Professor de Matemática",
+            "listas": [
+                {
+                    "lista": "",
+                    "constam": [{"protocolo": "INS-2026-0001", "candidato": "Ana Lima"}],
+                    "nao_constam": 0,
+                }
+            ],
+        }
+    ]
+    assert not dominio.tem_lista_reservada(grupos)
+
+
+def test_o_documento_nomeia_as_listas_e_explica_a_repeticao():
+    from processo_seletivo.divulgacao.infrastructure.documento_das_inscricoes import (
+        render_inscricoes_pdf,
+    )
+    from tests.unit.publicacoes.test_pdf import texto_de
+
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS,
+        inscricoes=COTAS,
+        resultados=None,
+        perfis=PERFIS[:1],
+        listas=LISTAS,
+    )
+    conteudo = dominio.conteudo_publico(
+        projecao=projecao,
+        natureza=dominio.RECEBIDAS,
+        processo="Processo 2026",
+        edital="Edital 01/2026",
+        etapa="",
+        prazo=None,
+        publicado_em=datetime(2026, 11, 12, 12, tzinfo=UTC),
+        signatario=SimpleNamespace(nome="", cargo="Diretoria", ato_de_nomeacao=""),
+        unidade=SimpleNamespace(sigla="Cefor", nome="Cefor", cabecalho=("Cefor",)),
+    )
+
+    texto = texto_de(render_inscricoes_pdf(conteudo))
+
+    for titulo in (
+        "Ampla concorrência (4)",
+        "Pessoas com deficiência (1)",
+        "Pretos, pardos e indígenas (2)",
+    ):
+        assert titulo in texto
+    assert "consta também na ampla concorrência" in " ".join(texto.split())
+
+
+def test_o_documento_do_ato_anterior_a_revisao_nao_ganha_lista():
+    from processo_seletivo.divulgacao.infrastructure.documento_das_inscricoes import (
+        render_inscricoes_pdf,
+    )
+    from tests.unit.publicacoes.test_pdf import texto_de
+
+    texto = texto_de(render_inscricoes_pdf(ANTERIOR_A_REVISAO))
+
+    assert "Ana Lima" in texto
+    assert "Ampla concorrência" not in texto
+    assert "consta também" not in texto
+
+
+def test_a_assinatura_da_previa_muda_com_a_versao_citada():
+    """FR-5430 depois da D-011: as listas vêm da versão, e a confirmação tem de tê-la visto."""
+    from processo_seletivo.divulgacao.application.inscricoes import Afericao, assinatura_da_previa
+
+    projecao = dominio.projetar(
+        natureza=dominio.RECEBIDAS, inscricoes=COTAS, resultados=None, perfis=PERFIS[:1]
+    )
+
+    def afericao(versao):
+        return Afericao(
+            natureza=dominio.RECEBIDAS,
+            conteudo={},
+            versao=SimpleNamespace(pk=versao),
+            etapa=None,
+            etapas=[],
+            eventos=[],
+            anterior=None,
+            projecao=projecao,
+        )
+
+    assert assinatura_da_previa(afericao("v1")) == assinatura_da_previa(afericao("v1"))
+    assert assinatura_da_previa(afericao("v1")) != assinatura_da_previa(afericao("v2"))

@@ -33,6 +33,51 @@ def evento_de_recurso(seed):
     return identificador(EVENTO_DE_RECURSO, seed)
 
 
+def modalidade_pcd(seed):
+    return identificador(482, seed)
+
+
+def modalidade_ppi(seed):
+    return identificador(483, seed)
+
+
+def modalidade_ampla_apontada(seed):
+    return identificador(484, seed)
+
+
+def _com_cotas(rascunho, seed):
+    """O Perfil com PcD e PPI reservadas e a Modalidade apontada como a ampla (D-011 da 148).
+
+    A apontada entra de propósito: é a grafia-armadilha da `122`, e o ato tem de tratá-la como a
+    classificação trata — sem lista própria. O quadro é o do cenário 7/1/2 da `034`, com o total do
+    Perfil acompanhando as linhas, senão o Edital não publica.
+    """
+    perfil = rascunho["profiles"][0]
+    perfil["competitionModalities"] = [
+        {"id": modalidade_pcd(seed), "code": "PCD", "name": "Pessoas com deficiência"},
+        {"id": modalidade_ppi(seed), "code": "PPI", "name": "Pretos, pardos e indígenas"},
+        {"id": modalidade_ampla_apontada(seed), "code": "AC", "name": "Ampla concorrência"},
+    ]
+    for modalidade in perfil["competitionModalities"]:
+        modalidade["vacancies"] = 0
+    perfil["generalCompetitionModalityId"] = modalidade_ampla_apontada(seed)
+    perfil["vacancyTable"] = [
+        {"id": identificador(485, seed), "modalityId": None, "immediateVacancies": 7},
+        {
+            "id": identificador(486, seed),
+            "modalityId": modalidade_pcd(seed),
+            "immediateVacancies": 1,
+        },
+        {
+            "id": identificador(487, seed),
+            "modalityId": modalidade_ppi(seed),
+            "immediateVacancies": 2,
+        },
+    ]
+    perfil["immediateVacancies"] = 10
+    return rascunho
+
+
 def montar(
     gestor,
     api_client,
@@ -43,9 +88,12 @@ def montar(
     decisoria=True,
     fim_do_recurso="2099-12-31T23:59:00-03:00",
     cronograma_extra=(),
+    com_cotas=False,
 ):
     """Edital publicado com a Análise documental decisória, comissão e banca alocada."""
     rascunho = rascunho_com_etapas(seed, decisoria=decisoria)
+    if com_cotas:
+        rascunho = _com_cotas(rascunho, seed)
     rascunho["schedule"] = [
         *rascunho["schedule"],
         {
@@ -87,10 +135,14 @@ def montar(
     }
 
 
-def inscrever_no(cenario, quantas, *, primeiro):
+def inscrever_no(cenario, quantas, *, primeiro, modalidades=None):
     """Inscrições enviadas no Perfil **deste** Edital — o Perfil deriva do `seed`."""
     return inscrever(
-        cenario["edital"], quantas, primeiro=primeiro, perfil=identificador(401, cenario["seed"])
+        cenario["edital"],
+        quantas,
+        primeiro=primeiro,
+        perfil=identificador(401, cenario["seed"]),
+        modalidades=modalidades,
     )
 
 

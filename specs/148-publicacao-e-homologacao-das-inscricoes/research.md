@@ -124,7 +124,7 @@ usa Etapa decisória continua a usá-la; o ato só acrescenta a publicação col
 | 6 — snapshot, versão e retificação | `D-006` | bytes congelados + linhas; sucessão com motivo; divergência derivada |
 | 7 — Editais sem deferimento individual | `D-007` | só a relação de recebidas, ou homologação sem análise |
 | 8 — unidade e compatibilidade | `D-008` | escopo institucional, capacidade existente, nada obrigatório |
-| 9 — vagas, listas e modalidades | `D-009` | por Perfil; a lista não divide a inscrição |
+| 9 — vagas, listas e modalidades | `D-009`, `D-011` | por Perfil e por lista desde a revisão de 12/11; a lista não divide a inscrição |
 | 10 — o que é público | `D-010` | protocolo e nome de quem consta; indeferida só contada |
 
 ## 4. Alternativas descartadas
@@ -168,3 +168,20 @@ usa Etapa decisória continua a usá-la; o ato só acrescenta a publicação col
 - Aviso por e-mail ao publicar (P-5): uma origem nova nos avisos da `066`.
 - Informar na tela da relação do sorteio se a homologação das inscrições já foi publicada —
   informação, nunca trava (D-005).
+
+## 8. Revisão de 12/11/2026 — a relação por lista (D-011)
+
+A P-2 foi levada à prática do Ifes. Os Editais publicados mostraram o padrão da D-009 mais restrito
+que a instituição: o Cefor publica, por polo, a lista nominal de inscritos e habilitados para o
+sorteio, repartida em ampla concorrência, PcD e PPI. Junto vem a relação candidato x vaga por
+Modalidade (Edital 28/2026, Edital 81/2025). A homologação das inscrições de Colatina (PS 111/2024)
+também se reparte por Modalidade da vaga. O GPS já publicava a Modalidade na relação do sorteio e no
+resultado.
+
+A revisão reaproveita a derivação dos recortes da `122`, e não cria regra. A ampla tem todos, e a
+reservada tem quem a declarou. A Modalidade apontada como a ampla não abre lista. Só os bytes
+públicos mudam: projeção individual, assinatura e divergência ficam por inscrição. O ato anterior é
+lido nos dois formatos, sem regeneração.
+
+Ficam registrados, sem desenvolver: a razão candidato x vaga por Modalidade (o Cefor a publica como
+documento à parte) e a P-1, para a qual a mesma consulta colheu evidência.
