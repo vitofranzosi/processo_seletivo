@@ -242,3 +242,9 @@ RETIFICACAO_EM_CURSO = "Retificação em curso — ela pode mudar datas, vagas o
 CONCLUSAO_PRONTA = "Listas concluídas — o encerramento é do Gestor"
 CONCLUSAO_DEPOIS = "Depois das convocações"
 MATRICULA_FORA = "A matrícula acontece fora do GPS."
+#: O limite da responsabilidade do GPS na passagem ao setor (153, FR-6120). Sem "encaminhado",
+#: "entregue" nem "recebido": o GPS afirma só o que ele fez (a decisão de terminologia da `117`).
+LIMITE_DA_PASSAGEM = (
+    "O GPS termina ao disponibilizar os documentos ao setor. A matrícula, a bolsa ou o contrato "
+    "acontecem fora do GPS, e ele não registra o recebimento."
+)
