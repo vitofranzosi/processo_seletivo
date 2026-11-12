@@ -96,7 +96,10 @@ AJUDA = "Ajuda"
 # A ordem é a da barra. "Novo Processo Seletivo" não está aqui: é ação, e não lugar (DP-1).
 SECOES = (
     Secao("Processos Seletivos", "interface:lista", TRABALHO, _toda_identidade, "i-pasta"),
-    Secao("Minhas Etapas", "interface:minhas-etapas", TRABALHO, _toda_identidade, "i-prancheta"),
+    # "Minhas Etapas" até a `160` (D-001): o nome mudou, e o endereço não.
+    Secao(
+        "Minhas atividades", "interface:minhas-etapas", TRABALHO, _toda_identidade, "i-prancheta"
+    ),
     Secao("Visão Geral", "interface:visao-geral", TRABALHO, pode_ver_visao, "i-grafico"),
     # Toda identidade, como a lista: a agenda só mostra cronograma publicado (101, `D-004`).
     Secao("Agenda", "interface:agenda", TRABALHO, _toda_identidade, "i-calendario"),

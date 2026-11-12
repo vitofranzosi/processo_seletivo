@@ -18,7 +18,7 @@ pede identificação, como hoje. Não exige permissão: o estado vazio não é r
 
 - `h2#para-fazer-titulo`: "Para fazer agora", com a contagem dentro do título, em
   `span.contagem-da-secao`: "N ato(s) em M Edital(is)" (UX-711). Sem linha, só "Para fazer agora".
-- `ul.atividades.para-fazer`. Cada `li.atividade` traz:
+- `ul.providencias.suas` (as regras do nível 1 do Centro). Cada `li.atividade` traz:
   - o sinal e a palavra da situação (`span.situacao`, UX-715);
   - o ato, em `strong.ato`, com o texto da derivação;
   - `p.onde-da-atividade`: "Edital N/AAAA · <lugar> · <fase>". Num grupo: "N Editais · <lugar comum,
@@ -33,7 +33,7 @@ pede identificação, como hoje. Não exige permissão: o estado vazio não é r
 
 - `summary`: "Em espera nos seus Editais · N" (UX-712). Ausente quando N = 0.
 - `p.explicacao`: "Ninguém precisa agir até a data; cada uma diz de onde ela vem."
-- `ul.atividades.em-espera`. Cada `li` traz o sinal e a palavra (*Aguarda* ou *Impedido*), o ato, o
+- `ul.providencias.em-espera`. Cada `li` traz o sinal e a palavra (*Aguarda* ou *Impedido*), o ato, o
   Edital ou "N Editais", e `span.razao` com a razão da derivação, que diz a origem da data (FR-6869).
   No *Impedido*, quem o resolve (`texto_de_quem_resolve`). Sem link de ato.
 - Nenhum texto da seção diz "seu prazo" nem "atrasado" (SC-2277).

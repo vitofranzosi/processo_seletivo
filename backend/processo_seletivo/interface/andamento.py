@@ -441,7 +441,7 @@ def situacoes_da_etapa(f):
             _c(
                 PENDENTE,
                 natureza=AVALIAR,
-                ato=f"Avaliar {_n(minhas, 'inscrição', 'inscrições')}",
+                ato=ato_de_avaliar(minhas),
                 responsavel=AVALIA,
                 url=f.get("url_da_mesa") or "",
                 contagem=minhas,
@@ -492,6 +492,15 @@ def situacoes_da_etapa(f):
     return celula, [celula]
 
 
+def ato_de_avaliar(quantas):
+    """A frase da avaliação, a mesma no Centro e em "Minhas atividades" (160, FR-6864).
+
+    A página pessoal monta a linha da avaliação pela carga, sem a derivação (D-003 da `160`); com a
+    frase escrita lá, as duas divergiriam na primeira mudança de texto.
+    """
+    return f"Avaliar {_n(quantas, 'inscrição', 'inscrições')}"
+
+
 def _avaliar_minhas(f):
     minhas = f.get("minhas") or 0
     if not minhas or not f.get("url_da_mesa"):
@@ -500,7 +509,7 @@ def _avaliar_minhas(f):
         _c(
             PENDENTE,
             natureza=AVALIAR,
-            ato=f"Avaliar {_n(minhas, 'inscrição', 'inscrições')}",
+            ato=ato_de_avaliar(minhas),
             responsavel=AVALIA,
             url=f["url_da_mesa"],
             contagem=minhas,

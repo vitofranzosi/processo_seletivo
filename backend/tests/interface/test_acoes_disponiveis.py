@@ -398,8 +398,10 @@ def test_i_minhas_etapas_diz_o_que_cobre_e_a_agenda_e_a_visao_seguem_de_pe(edita
 
     etapas = bruno.get(reverse("interface:minhas-etapas")).content.decode()
 
-    assert "Você não possui Etapas atribuídas no momento." in etapas
-    assert "Esta área é da avaliação" in etapas
+    # Revisto pela `160` (FR-6876): a página reúne mais que a avaliação, e o estado vazio da
+    # terceira seção diz que ela é a da avaliação, com o caminho para os atos de Edital.
+    assert "Você não tem Etapa de avaliação atribuída." in etapas
+    assert "Os atos de Edital e de\n  Retificação estão em" in etapas
     assert reverse("interface:lista") in etapas
     assert bruno.get(reverse("interface:agenda")).status_code == 200
     gestor = sessao("gabi.visao", ["gestor"])

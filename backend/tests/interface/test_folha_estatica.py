@@ -319,7 +319,13 @@ QUEM_CARREGA = {
     # O Centro de Controle (136) lê as situações da 127 e a moldura das tabelas desta folha, e tem a
     # sua por cima. A tela do sorteio (142) mostra as mesmas situações em cada passo, com as mesmas
     # classes: a cor de cada situação não pode divergir entre o Centro e a tela do ato.
-    "interface/telas/andamento.css": {"centro_do_edital.html", "detalhe.html", "sorteio.html"},
+    # "Minhas atividades" (160) lê o nível 1 do Centro entre Editais, com as mesmas regras.
+    "interface/telas/andamento.css": {
+        "centro_do_edital.html",
+        "detalhe.html",
+        "minhas_etapas.html",
+        "sorteio.html",
+    },
     # A página do Processo (147) usa o topo, a grade e a administração do Centro — o mesmo desenho
     # nas duas páginas é requisito (UX-441) —, e a faixa de trabalho e a marca da Retificação da
     # Lista. A folha dela só acrescenta o que é do Processo.

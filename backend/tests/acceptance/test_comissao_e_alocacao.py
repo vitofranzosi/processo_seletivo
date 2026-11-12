@@ -107,7 +107,7 @@ def test_o_percurso_completo_da_organizacao_do_trabalho(
         == 404
     )
     depois = do_joao.get(reverse("interface:minhas-etapas")).content.decode()
-    assert "Você não possui Etapas atribuídas" in depois
+    assert "Você não tem Etapa de avaliação atribuída" in depois
 
 
 def _chave(corpo):

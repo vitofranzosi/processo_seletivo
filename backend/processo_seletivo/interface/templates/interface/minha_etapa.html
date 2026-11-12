@@ -10,7 +10,7 @@
   <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> ›
   <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> ›
   {% else %}
-  <a href="{% url 'interface:minhas-etapas' %}">Minhas Etapas</a> ›
+  <a href="{% url 'interface:minhas-etapas' %}">Minhas atividades</a> ›
   {% endif %}
   <span aria-current="page">{{ etapa.name }}</span>
 </nav>{% endblock %}

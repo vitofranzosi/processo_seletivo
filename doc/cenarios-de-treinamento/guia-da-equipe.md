@@ -43,11 +43,14 @@ Se um cenário já foi restaurado, a versão nova termina em `-R2`, `-R3`… e a
      de sugestões, de propósito: é a pessoa fictícia do setor, que o cenário já traz com o papel
      concedido na unidade.
 
-**Para chegar ao lugar do exercício**, a presidência começa em **Minhas Etapas**, que lista as
-comissões de que ela faz parte; os demais papéis, em **Processos Seletivos**. Abra o Processo e, nele,
-o Edital (`SIM07/2026`, por exemplo). No alto da página do Edital, o quadro **O que fazer agora**
-mostra as providências em aberto e marca com **SUA** as que cabem a você. É o melhor ponto de
-partida de quase todos os exercícios.
+**Para chegar ao lugar do exercício**, a presidência começa em **Minhas atividades**. Em **Para fazer
+agora** estão os atos que são dela em todos os Editais que preside, cada um com o Edital, o Perfil e o
+link direto para a tela do ato: não é preciso abrir Edital por Edital. A seção **Em espera nos seus
+Editais**, recolhida, diz o que aguarda uma data, e de onde a data vem. Quem avalia encontra ali a
+avaliação pendente e as Etapas; os demais papéis começam em **Processos Seletivos**. Para ver tudo o
+que está em aberto num Edital, de todos os papéis, abra o Processo e, nele, o Edital (`SIM07/2026`,
+por exemplo): no alto da página, o quadro **O que fazer agora** mostra as providências e marca com
+**SUA** as que cabem a você.
 
 Cada exercício diz **quem** faz cada passo. Quando um passo é de outro papel, saia e entre de novo
 com o papel indicado: o GPS separa quem elabora, quem homologa e quem publica, e é parte do

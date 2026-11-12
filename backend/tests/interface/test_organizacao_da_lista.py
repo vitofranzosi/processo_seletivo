@@ -387,7 +387,9 @@ def test_a_nota_vem_antes_do_primeiro_item_e_nomeia_as_familias():
     assert faixa.index("</h2>") < faixa.index('class="cobertura-da-faixa"')
     assert faixa.index('class="cobertura-da-faixa"') < faixa.index('class="item-de-trabalho"')
     nota = faixa.split('class="cobertura-da-faixa">')[1].split("</p>")[0]
-    assert nota == trabalho.COBERTURA
+    assert nota.startswith(trabalho.COBERTURA)
+    # Desde a `160`, a nota leva à página pessoal, sem número (FR-6880, FR-6881).
+    assert 'class="para-minhas-atividades" href="/gestao/minhas-etapas"' in nota
     for familia in FAMILIAS:
         assert familia in nota, familia
 
@@ -402,3 +404,13 @@ def test_a_frase_vazia_nomeia_as_mesmas_familias_da_mesma_fonte():
     )
     assert trabalho.FORA_DA_FAIXA in vazia
     assert trabalho.FORA_DA_FAIXA in trabalho.COBERTURA
+    assert 'class="para-minhas-atividades" href="/gestao/minhas-etapas"' in vazia
+
+
+def test_a_nota_diz_onde_esta_cada_familia_e_nao_conta_atividades():
+    """160, FR-6880 e FR-6881: o que é da presidência ou de alocação está em "Minhas atividades";
+    o resultado continua no detalhe, porque publicar é papel da unidade (D-004 da `160`)."""
+    assert "está em Minhas atividades" in trabalho.FORA_DA_FAIXA
+    assert "no detalhe de cada Edital" in trabalho.FORA_DA_FAIXA
+    antes = trabalho.FORA_DA_FAIXA.split("está em Minhas atividades")[0]
+    assert "resultado" not in antes.split("não entram aqui.")[1]

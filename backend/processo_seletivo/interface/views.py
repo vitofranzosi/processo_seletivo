@@ -165,6 +165,7 @@ from processo_seletivo.inscricoes.application.consulta import (
 from processo_seletivo.interface import (
     acoes,
     andamento,
+    atividades,
     atos,
     atos_processo,
     atos_retificacao,
@@ -12142,7 +12143,7 @@ def trilha_da_avaliacao(request, edital_id, etapa_id):
 
 @require_http_methods(["GET"])
 def minhas_etapas(request):
-    """A área pessoal de quem trabalha (US5 da 011).
+    """A área pessoal de quem trabalha (US5 da 011), "Minhas atividades" desde a `160`.
 
     Não exige permissão nenhuma: para quem não tem alocação, ela é o estado vazio — e não uma
     recusa. Mostrar as Etapas alheias como bloqueadas seria dizer que existem (UX-011).
@@ -12157,10 +12158,17 @@ def minhas_etapas(request):
     for item in atribuicoes:
         item["carga"] = carga.get((item["edital"].id, str(item["etapa_id"])))
     vinculos = comissao_selectors.comissoes_da_pessoa(ator)
+    # O que é da pessoa entre Editais (160): a leitura recebe os vínculos, as alocações e a carga
+    # que a página já leu, para que quem não preside pague o mesmo de antes (FR-6877).
+    leitura = atividades.ler(ator, vinculos=vinculos, atribuicoes=atribuicoes, carga=carga)
     return render(
         request,
         "interface/minhas_etapas.html",
         {
+            "atividades": leitura,
+            "cobertura": atividades.COBERTURA,
+            "cobertura_do_gestor": atividades.COBERTURA_DO_GESTOR,
+            "nada_para_fazer": atividades.NADA_PARA_FAZER,
             "atribuicoes": atribuicoes,
             # Quanto falta em cada Etapa. Sem isto a tela listava Etapas e um botão “Abrir”, e a
             # primeira pergunta de quem trabalha — quanto falta — só era respondida entrando.
