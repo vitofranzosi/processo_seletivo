@@ -8888,16 +8888,22 @@ def _exigir_alcance_da_conferencia(ator, edital, perfil_id, pode_emitir):
         raise Http404
 
 
-def _documentos_por_linha(linhas, *, ordem=""):
+def _documentos_por_linha(linhas, *, ordem="", agora=None):
     """O estado documental e as contagens de cada linha da condução (115, FR-3607, FR-3610).
 
     **Uma leitura para o recorte**, em três consultas, e não uma por linha. A ordem `documentos`
     põe primeiro o que pede trabalho: vencimento mais próximo, depois o estado.
 
+    E o atalho do indeferimento (152, FR-5800 a FR-5802): o que o faz aparecer, o fundamento dele e
+    o que aguarda conferência, lidos da mesma leitura, sem consulta nova.
+
     Devolve as raízes e as leituras, para a prévia do aviso de pendência (134) não as ler de novo.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
+    from processo_seletivo.convocacao.domain import prazo as prazo_da_convocacao
+
+    agora = agora or timezone.now()
 
     raizes = documentos_app.raizes_das(linha["convocacao"] for linha in linhas)
     decididas = {
@@ -8910,6 +8916,19 @@ def _documentos_por_linha(linhas, *, ordem=""):
         linha["rotulo_documental"] = (
             ROTULO_DOCUMENTAL.get(leitura.estado, "") if linha["documentos"] else ""
         )
+        # **A regra de `documentos.prazo_decorrido`**, com o envio que a leitura do recorte já leu:
+        # pela função da aplicação, cada linha pagaria a leitura do envio de novo.
+        decorrido = prazo_da_convocacao.decorrido(
+            vencimento=linha["convocacao"].vencimento,
+            enviado_em=linha.get("enviadaEm"),
+            agora=agora,
+        )
+        if linha["documentos"]:
+            linha["motivos_do_atalho"] = leitura.motivos_do_atalho(prazo_decorrido=decorrido)
+            linha["fundamento_do_atalho"] = leitura.fundamento_do_atalho(prazo_decorrido=decorrido)
+        else:
+            linha["motivos_do_atalho"] = []
+            linha["fundamento_do_atalho"] = ""
         # **"Apto para formalização"**, e nunca matriculado, vinculado ou encaminhado (D-005).
         linha["apto"] = (
             linha["desfecho"] is not None
@@ -8966,7 +8985,7 @@ def convocacao(request, edital_id, marco_id):
     )
     # Os documentos de cada linha, numa leitura só para o recorte inteiro (115, FR-3607).
     raizes, leituras_documentais = _documentos_por_linha(
-        leitura["linhas"], ordem=request.GET.get("ordem") or ""
+        leitura["linhas"], ordem=request.GET.get("ordem") or "", agora=agora
     )
     recusa_da_correcao = request.session.pop("recusa_da_correcao", None)
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra

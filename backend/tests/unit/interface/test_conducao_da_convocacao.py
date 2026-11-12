@@ -19,7 +19,7 @@ from processo_seletivo.interface import conducao_da_convocacao as c
 AGORA = datetime(2026, 11, 10, 12, 0, tzinfo=ZoneInfo("America/Sao_Paulo"))
 
 
-def documentos(estado, **contagens):
+def documentos(estado, *, houve_apresentacao=True, **contagens):
     base = {
         "recebidos": 0,
         "complementados": 0,
@@ -30,7 +30,12 @@ def documentos(estado, **contagens):
         "obrigatorios": 0,
         "total": 2,
     }
-    return SimpleNamespace(estado=estado, contagens={**base, **contagens}, pedidos=[])
+    return SimpleNamespace(
+        estado=estado,
+        contagens={**base, **contagens},
+        pedidos=[],
+        houve_apresentacao=houve_apresentacao,
+    )
 
 
 def desfecho(especie="ACEITE", rotulo="Aceite"):
@@ -96,6 +101,41 @@ def test_a_precedencia_do_passo(estado, docs, codigo, acao):
     )
 
     assert (passo.codigo, passo.acao) == (codigo, acao)
+
+
+def test_vencida_sem_nada_apresentado_aponta_o_nao_atendimento():
+    """FR-5809, UX-535, D-011: o lugar do passo, com o vencimento, e o código de sempre."""
+    vencimento = AGORA - timedelta(days=1)
+    passo = c.passo_da_chamada(
+        estado=nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+        desfecho=None,
+        documentos=documentos(
+            nomes.DOCUMENTOS_AGUARDANDO, a_apresentar=2, houve_apresentacao=False
+        ),
+        vencimento=vencimento,
+    )
+
+    assert (passo.codigo, passo.tom, passo.acao) == (c.VENCIDA, "alerta", c.DESFECHO)
+    assert passo.frase == (
+        f"O prazo venceu em {c._quando(vencimento)} sem nenhum documento apresentado. O desfecho "
+        "que descreve isso é o não atendimento à convocação."
+    )
+
+
+@pytest.mark.parametrize("docs", [None, documentos(nomes.DOCUMENTOS_AGUARDANDO, a_apresentar=1)])
+def test_vencida_com_algo_apresentado_ou_sem_exigencia_diz_o_passo_de_sempre(docs):
+    """Sem documento pedido não há o que apresentar; com algo apresentado, a pessoa respondeu."""
+    passo = c.passo_da_chamada(
+        estado=nomes.CONVOCADO_VENCIMENTO_DECORRIDO,
+        desfecho=None,
+        documentos=docs,
+        vencimento=AGORA - timedelta(days=1),
+    )
+
+    assert passo.codigo == c.VENCIDA
+    assert passo.frase == (
+        "Registrar o desfecho: o vencimento decorreu, e nenhum desfecho nasce dele."
+    )
 
 
 def test_com_desfecho_o_passo_e_a_situacao_e_nao_ha_acao():

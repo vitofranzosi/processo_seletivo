@@ -43,3 +43,15 @@
   tratamento (dado, finalidade, hipóteses de base legal, operador, retenção, direitos), o que ela
   impede (só o envio do aviso) e o que não impede.
 - **SC-2121** é validação humana (rodada do estudo com pessoas), e não automatizável.
+
+## Revisão de 11/11/2026 (decisões do usuário)
+
+- As nove perguntas foram respondidas (1ª a 9ª decisão, em *Clarifications*). Nenhuma fica aberta, e
+  nenhuma se reabre.
+- Cada alínea alterada traz *"revista em 2026-11-11"* e a redação mergeada (PR #485) ao fim; as
+  novas, *"acrescida em 2026-11-11"* (FR-6442 a FR-6445, SC-2129 a SC-2131, D-015 a D-017). Nenhum
+  identificador mergeado mudou de número nem de sentido.
+- A validação institucional do envio separa o exigido pela `066`, pela `134` e pela `010` das
+  hipóteses H-1 e H-2 desta proposta; o responsável, a abrangência e a existência do pedido são as
+  pendências PI-1 a PI-3, e nenhum texto os afirma.
+- As revisões de outras specs estão escritas nas specs de origem, com a redação anterior preservada.
