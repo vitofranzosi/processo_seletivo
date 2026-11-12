@@ -187,10 +187,11 @@ class SituacaoDoAviso:
     def frase_do_aviso(self):
         """A situação do aviso desde a pendência — com as palavras da `066` (UX-172 dela).
 
-        **Três grupos** (157, FR-6543, UX-649): *solicitado, aguardando envio* — pendente, em envio,
-        ou em falha temporária, que o despacho tenta de novo sozinho —; *enviado*, que é aceito pelo
-        servidor de correio, e nunca "entregue" nem "lido" (FR-5016 da `143`); e *não enviado*, com o
-        estado que o explica. O cartão da convocação e a página dos documentos leem esta mesma frase.
+        **Três grupos** (157, FR-6543, UX-649): *solicitado, aguardando envio* — pendente, em
+        envio, ou em falha temporária, que o despacho tenta de novo sozinho —; *enviado*, que é
+        aceito pelo servidor de correio, e nunca "entregue" nem "lido" (FR-5016 da `143`); e *não
+        enviado*, com o estado que o explica. O cartão da convocação e a página dos documentos leem
+        esta mesma frase.
         """
         from processo_seletivo.avisos.domain import nomes as avisos
 

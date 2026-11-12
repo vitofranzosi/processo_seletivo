@@ -27,7 +27,7 @@ tem; não há caminho oferecido aqui que a outra tela vá recusar.
 {% endcomment %}
 <p class="sub"><a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> — {{ processo.title }}</p>
 
-<div class="mesa-trabalho trabalho-com-documento" data-visualizador data-foco-ao-fechar="#pontuacao, [data-ficha-do-barema] input" data-guardar=".painel-avaliacao form" data-prefixo-do-retorno="Voltar ao documento " data-retorno-ao-documento>
+<div class="trabalho-com-documento" data-visualizador data-foco-ao-fechar="{% if ficha %}.ficha-do-barema input{% else %}#pontuacao{% endif %}" data-guardar=".painel-avaliacao form" data-prefixo-do-retorno="Voltar ao documento " data-retorno-ao-documento>
 
 {% comment %}
 **Ler e registrar na mesma tela.** O documento abria por cima da página, e ler e avaliar eram duas

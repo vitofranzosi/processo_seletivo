@@ -18,7 +18,6 @@ from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
-ABERTURA = "Abra o documento antes de conferi-lo como conforme."
 RECUSADA = "A conferência não foi registrada."
 
 
@@ -86,7 +85,9 @@ def test_o_conforme_sem_abertura_volta_recusado_ao_cartao_do_documento(chamada, 
     assert corpo.index(f'id="item-{chamada["item"]}"') < posicao, "mora no cartão do item"
     assert corpo.index("Situação desta convocação") < posicao
     assert 'class="erro"' in trecho and 'role="alert"' in trecho and "autofocus" in trecho
-    assert RECUSADA in trecho and ABERTURA in trecho
+    # A frase diz o que falta e como prosseguir, com o preenchimento mantido (157, UX-651).
+    assert RECUSADA in trecho and "Você ainda não abriu a versão 1." in trecho
+    assert "Abra a versão 1 e registre de novo; o que você marcou continua aqui." in trecho
     assert chamada["arquivo"] in trecho, "a recusa oferece abrir a versão que falta"
     assert 'value="CONFORME" required checked' in corpo, "o resultado marcado volta"
     assert ">Legível.</textarea>" in corpo, "o motivo digitado volta"

@@ -86,9 +86,7 @@ Lê `lido` (a leitura do item) e o contexto de `_contexto_do_cartao` na vista.
   este cartão, a situação e a confirmação no lugar; sem script, o envio de sempre, com a recarga e a
   volta ao cartão (FR-6517). A rota e o comando são os mesmos nos dois caminhos.
   {% endcomment %}
-  <form method="post" action="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" class="confirmar"
-        hx-post="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" hx-target="#item-{{ lido.item.id }}" hx-swap="outerHTML"
-        data-formulario-do-item="item-{{ lido.item.id }}">
+  <form method="post" action="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" class="confirmar">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ lista_id }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ lido.item.id }}">
@@ -104,7 +102,7 @@ Lê `lido` (a leitura do item) e o contexto de `_contexto_do_cartao` na vista.
     só quando é a abertura que falta — e diz como prosseguir (157, FR-6516, UX-651).
     {% endcomment %}
     {% if recusa.item == lido.item.id %}
-    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ lido.item.id }}"><strong>A conferência não foi registrada{% if recusa.falta_abrir and lido.vigente %}: você ainda não abriu a versão {{ lido.vigente.numero }}.{% else %}.{% endif %}</strong> {% if recusa.falta_abrir and lido.vigente %}Abra a versão {{ lido.vigente.numero }} e registre de novo; o que você marcou continua aqui.{% else %}{{ recusa.detalhe }}{% endif %}{% if recusa.falta_abrir and lido.vigente and lido.vigente.id not in abertas_por_voce %} <a href="{{ urls_dos_documentos|dicionario_simples:lido.vigente.id }}" target="_blank" rel="noopener"
+    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ lido.item.id }}"><strong>A conferência não foi registrada.</strong> {% if recusa.sem_abertura and lido.vigente %}Você ainda não abriu a versão {{ lido.vigente.numero }}. Abra a versão {{ lido.vigente.numero }} e registre de novo; o que você marcou continua aqui.{% else %}{{ recusa.detalhe }}{% endif %}{% if recusa.falta_abrir and lido.vigente and lido.vigente.id not in abertas_por_voce %} <a href="{{ urls_dos_documentos|dicionario_simples:lido.vigente.id }}" target="_blank" rel="noopener"
        data-abrir-documento data-documento="{{ lido.nome }}" data-rotulo="{{ lido.nome }} — versão {{ lido.vigente.numero }}" data-tamanho="{{ tamanhos|dicionario_simples:lido.vigente.id }}" data-baixar="{{ urls_dos_documentos|dicionario_simples:lido.vigente.id }}?baixar=1"
        data-cartao="{% url 'interface:cartao-do-documento-da-convocacao' edital.id marco_id raiz.id lido.item.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}" data-alvo="item-{{ lido.item.id }}">Abrir a versão {{ lido.vigente.numero }}</a>{% endif %}</p>
     {% endif %}
@@ -157,7 +155,10 @@ Lê `lido` (a leitura do item) e o contexto de `_contexto_do_cartao` na vista.
       <p>«Aberto por você» quer dizer que o arquivo desta versão foi acessado por você nesta chamada. Não comprova que ele foi exibido nem lido.</p>
       <p>O arquivo não abre, ou abre em branco? Registre como pendente e diga no motivo que o arquivo não pôde ser lido.</p>
     </details>
-    <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
+    {% comment %} O gatilho do htmx é o botão, e não o formulário: o guardião de acessibilidade só
+    admite controle em elemento nativo. O htmx inclui os campos do formulário que o envolve. {% endcomment %}
+    <p class="acoes"><button type="submit" class="botao"
+       hx-post="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" hx-target="#item-{{ lido.item.id }}" hx-swap="outerHTML">Registrar conferência</button></p>
   </form>
   </details>
   {% endif %}

@@ -67,13 +67,13 @@ depois de uma abertura, e a marca "aberto" volta da trilha, sem recarregar a pá
         <a class="acao" href="{{ url_do_documento }}"
            target="_blank" rel="noopener"
            data-abrir-documento
-           data-documento="{{ documento.nome }}"
            data-rotulo="{{ documento.nome }}"
            data-tamanho="{{ documento.tamanho }}"
            data-baixar="{{ url_do_documento }}?baixar=1"
            data-cartao="{% url 'interface:mesa-documentos' edital.id etapa_id inscricao.id %}"
            data-alvo="documentos-da-inscricao"
            {% if documento.aberto_em %}data-aberto{% endif %}
+           data-documento="{{ documento.nome }}"
            {% if forloop.first and not ja_abriu_documento and not aviso and avaliacao.estado != "CONCLUIDA" %}autofocus{% endif %}
            aria-label="Abrir {{ documento.nome }}">Abrir</a>
         <span class="tamanho">{{ documento.tamanho }}</span>

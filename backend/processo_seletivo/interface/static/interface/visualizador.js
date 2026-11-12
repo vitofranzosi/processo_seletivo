@@ -538,7 +538,9 @@
   });
 
   function falhou(evento) {
-    var formulario = evento.detail && evento.detail.elt;
+    var elemento = evento.detail && evento.detail.elt;
+    // O gatilho é o botão; a mensagem mora no formulário que o envolve.
+    var formulario = elemento && elemento.closest ? elemento.closest("form") : elemento;
     var mensagem = formulario && formulario.querySelector ? formulario.querySelector("[data-mensagem]") : null;
     if (mensagem) mensagem.textContent = FALHA_DE_REDE;
   }

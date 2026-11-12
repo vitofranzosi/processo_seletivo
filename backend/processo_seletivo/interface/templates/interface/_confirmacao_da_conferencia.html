@@ -1,10 +1,14 @@
-{% comment %}
+{% load interface_extras %}{% comment %}
 **O que foi registrado, e o passo seguinte** (157, FR-6519 a FR-6522, UX-642, UX-647). Vem dentro do
 cartão que acabou de ser registrado, sem recarga: é onde a pessoa está olhando. **Oferece, e não abre
 nem registra**: o próximo documento é um link de abrir como os do cartão, e abre por gesto (D-003 da
 157). Terminada a pessoa com pendência, o pedido de aviso dela (D-008 da 157).
 {% endcomment %}
 <div class="confirmacao-da-conferencia" role="status" data-confirmacao>
+  {% if resultado_do_pedido %}
+  {% comment %} O resultado do pedido de aviso, no lugar da confirmação (UX-648, UX-650). {% endcomment %}
+  <p>{{ resultado_do_pedido }}</p>
+  {% else %}
   <p><strong>Conferência registrada: {{ confirmacao.nome }}, {{ confirmacao.resultado }}.</strong>{% if confirmacao.pendente %} Nenhum aviso foi pedido; {{ confirmacao.pessoa }} vê a pendência no portal.{% endif %}</p>
   {% with proximo=confirmacao.proximo %}
   {% if proximo %}
@@ -24,13 +28,13 @@ nem registra**: o próximo documento é um link de abrir como os do cartão, e a
   {% if confirmacao.pedido_de_aviso %}
   {% with pedido=confirmacao.pedido_de_aviso %}
   {% if pedido.alcancavel %}
-  <form method="post" action="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" class="pedido-de-aviso"
-        hx-post="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" hx-target="closest .confirmacao-da-conferencia" hx-swap="outerHTML">
+  <form method="post" action="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" class="pedido-de-aviso">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ lista_id }}">
     <input type="hidden" name="chave" value="{{ chave_idempotencia }}-aviso">
     <p class="ajuda">O aviso não muda o prazo e não é a convocação.</p>
-    <p class="acoes"><button type="submit" class="botao secundario">Pedir aviso para {{ confirmacao.pessoa }}</button></p>
+    <p class="acoes"><button type="submit" class="botao secundario"
+       hx-post="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" hx-target="closest [data-confirmacao]" hx-swap="outerHTML">Pedir aviso para {{ confirmacao.pessoa }}</button></p>
   </form>
   {% elif pedido.desabilitado %}
   <p class="ajuda">O aviso de pendência não pode ser pedido: envio de avisos desabilitado nesta instalação.</p>
@@ -48,4 +52,5 @@ nem registra**: o próximo documento é um link de abrir como os do cartão, e a
   {% endif %}
   {% endif %}
   {% endwith %}
+  {% endif %}
 </div>

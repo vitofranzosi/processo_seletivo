@@ -20,6 +20,11 @@ RAIZ = Path(__file__).resolve().parents[2] / "processo_seletivo"
 GESTAO = RAIZ / "interface/templates/interface"
 PORTAL = RAIZ / "portal/templates/portal"
 FOLHA = sem_prosa(FOLHA_COMUM)
+# O painel do documento saiu da folha comum para a do visualizador na 157; a barra dele continua
+# sendo a exceção da D-008 da 055, e a varredura a lê de lá.
+VISUALIZADOR = sem_prosa(
+    (RAIZ / "interface/static/interface/grupos/visualizador.css").read_text(encoding="utf-8")
+)
 # A folha do portal saiu do `base.html` na 092; o modelo não tem mais regra nenhuma.
 FOLHA_DO_PORTAL = sem_prosa(PORTAL_CSS.read_text())
 
@@ -196,7 +201,7 @@ def test_nenhum_conteiner_poe_h2_no_tamanho_de_h3():
     """
     encolhem = [
         seletor.strip()
-        for seletor, corpo in re.findall(r"([^{}\n]*\bh2)\{([^}]*)\}", FOLHA)
+        for seletor, corpo in re.findall(r"([^{}\n]*\bh2)\{([^}]*)\}", FOLHA + VISUALIZADOR)
         if "font-size:1rem" in corpo.replace(" ", "")
     ]
 

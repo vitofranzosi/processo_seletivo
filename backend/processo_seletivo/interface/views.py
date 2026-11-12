@@ -9790,6 +9790,13 @@ def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id
                 nomes_da_convocacao.CONFORME_SEM_ABERTURA,
                 nomes_da_convocacao.NAO_SE_APLICA_SEM_ABERTURA,
             ),
+            # A recusa por falta de abertura diz o que falta e como prosseguir (157, UX-651); a
+            # da versão superada fica com a frase do comando, que nomeia a versão nova.
+            "sem_abertura": erro.code
+            in (
+                nomes_da_convocacao.CONFORME_SEM_ABERTURA,
+                nomes_da_convocacao.NAO_SE_APLICA_SEM_ABERTURA,
+            ),
             **preenchido,
             # O juízo era sobre a versão anterior: marcado de volta, ele apareceria como juízo sobre
             # a nova, que a pessoa ainda não viu. O texto digitado fica, para ser relido.
@@ -9883,7 +9890,7 @@ def _confirmacao_da_conferencia(contexto, lido):
         "nome": lido.nome,
         "resultado": resultado,
         "pendente": pendente,
-        "pessoa": contexto["inscricao"].nome,
+        "pessoa": contexto["inscricao"]["nome"],
         "proximo": proximo,
         "proxima_pessoa": contexto["vizinhas"].get("proxima_a_conferir"),
         "pedido_de_aviso": pedido,
@@ -9961,7 +9968,9 @@ def pedir_aviso_de_pendencia_view(request, edital_id, marco_id, convocacao_id):
         )
     contexto = _contexto_dos_documentos(request, ator, edital, marco_id, convocacao)
     corpo = render_to_string(
-        "interface/_resultado_do_pedido_de_aviso.html", {"frase": frase}, request=request
+        "interface/_confirmacao_da_conferencia.html",
+        {**contexto, "confirmacao": {}, "resultado_do_pedido": frase},
+        request=request,
     ) + render_to_string(
         "interface/_situacao_dos_documentos.html", {**contexto, "oob": True}, request=request
     )

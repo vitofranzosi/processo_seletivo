@@ -48,7 +48,7 @@
 
 /* A recusa da entrega, dentro da moldura (157, FR-6510): um documento pequeno, sem a barra da
    gestão. */
-.recusa-no-painel{margin:0;padding:1rem;background:var(--branco)}
+html[data-recusa-no-painel] body{margin:0;padding:1rem;background:var(--branco)}
 
 /* A volta de um documento aberto fora da página (157, FR-6528, FR-6547): o caminho de volta ao
    ponto de trabalho, e a frase de quando o preenchimento foi restaurado. */
