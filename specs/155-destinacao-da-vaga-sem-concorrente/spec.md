@@ -627,12 +627,18 @@ continuam válidos e contam como destinação feita (FR-6316).
 cabível, e a declaração fundamentada de vaga não preenchida. *"Texto livre não pode substituir a
 autorização normativa para mover a vaga."*
 
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Nos demais pontos, mantenha as respostas anteriores, inclusive que fundamento escrito não substitui autorização normativa para reverter."*
+
 ### D-007 — Esgotamento é ninguém mais que possa ocupar pela reserva
 
 *Decisão do usuário, 11/11/2026 (terceira pergunta).* Conta quem ainda pode ocupar pela lista
 reservada; a pendência da `095` sobre quem ocupa pela ampla é decidida aqui, com cenários para
 ocupação pela ampla, desistência e eliminação. *"Situações ainda reversíveis por recurso ou chamadas
 pendentes não devem produzir esgotamento definitivo."* A inabilitação (V-2) é tratada como eliminação.
+
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Incluir nesta entrega o caso de quem ocupa pela ampla e a pendência da 095, com os respectivos cenários. Recursos e chamadas pendentes precisam ser considerados antes de afirmar esgotamento."*
 
 ### D-008 — A passagem entre cotas tem spec própria, e a 155 mostra a limitação
 
@@ -641,12 +647,18 @@ o Edital exige destinos intermediários. O trabalho fica encaminhado em
 [`doc/encaminhamento-passagem-entre-cotas.md`](../../doc/encaminhamento-passagem-entre-cotas.md). Como a
 tela fica sabendo que o Edital os exige é a D-016.
 
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Passagem entre cotas fica em spec própria, já encaminhada. Enquanto não estiver representada, impedir reversão direta à ampla quando o Edital exigir destinos intermediários."*
+
 ### D-009 — Cada gatilho com a sua condição, e impedimentos comuns
 
 *Decisão do usuário, 11/11/2026 (quinta pergunta), com a correção dele:* a `016` distingue esgotamento
 de saldo, e exigir lista esgotada para os dois mudaria a regra. Por esgotamento, ausência de pessoas
 ainda elegíveis (FR-6304); por saldo, a condição própria (FR-6305, lida pela D-015). Os impedimentos —
 resultado provisório, recurso, chamada em curso — são comuns (FR-6306), sem fundir os gatilhos.
+
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Preservar a diferença entre reversão por saldo e por esgotamento. «Ninguém mais pode ser chamado» não pode virar condição universal das duas modalidades."* É contra esta frase que a D-015 precisa ser conferida.
 
 ### D-010 — A lista vazia num gesto, sem candidato fabricado
 
@@ -659,6 +671,9 @@ candidato inexistente.
 *Decisão do usuário, 11/11/2026 (sétima pergunta, opção a).* *"Ausência de registro não significa
 lista vazia."* A prova é a relação definitiva pertinente (FR-6332).
 
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Dispensar apuração artificial somente quando a ausência de concorrentes estiver comprovada na relação definitiva pertinente. Ausência de registro não significa lista vazia."*
+
 ### D-012 — Correção por ato contrário, e o impedimento dito
 
 *Decisão do usuário, 11/11/2026 (oitava pergunta, opção a).* Com chamada dependente, nada se desfaz
@@ -669,6 +684,9 @@ pedem (FR-6335).
 
 *Decisão do usuário, 11/11/2026 (nona pergunta, com a página pública incluída).* Página pública da
 seleção e relatório, com origem, destino, quantidade e fundamento.
+
+
+*Reafirmada pelo usuário em 11/11/2026, numa segunda mensagem em que ele pediu que não se aplicasse aprovação geral às recomendações da spec:* *"Mostrar a destinação também na página pública da seleção, com origem, destino, quantidade e fundamento, sem exigir PDF novo."*
 
 ### D-014 — A ampla também esgotada admite a declaração de não preenchida
 
