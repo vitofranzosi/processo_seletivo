@@ -129,7 +129,7 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 - [X] T042 [US2] A seção "Quem acessa os documentos" da definição designa e revoga, com dois POST novos em `interface/views_formalizacao.py`; linha nova no inventário da `033` (UX-700 a UX-702)
 - [X] T043 [P] O andamento e a advertência do encerramento seguem o predicado (FR-6708)
 - [X] T044 `test_a_presidencia_nao_designa` vira a prova da regra e dos limites; casos da tela; `test_passagem_ao_setor.py` atualizado (SC-2200 a SC-2204)
-- [ ] T045 `rastreabilidade.md` e `verificacao.md`
-- [ ] T046 `cd backend && make lint check test-pg`, e verificação no navegador com dados sintéticos
+- [X] T045 `rastreabilidade.md` e `verificacao.md`
+- [X] T046 `cd backend && make lint check test-pg`, e verificação no navegador com dados sintéticos
 
 **Dependências da revisão:** T040 → T041 → T042 e T043, em paralelo → T044 → T045 → T046.

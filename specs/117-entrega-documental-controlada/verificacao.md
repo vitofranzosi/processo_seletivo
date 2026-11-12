@@ -198,3 +198,8 @@ demonstração, presidido por `paulo.presidente`):
 7. A 375 px, a seção cabe sem rolagem horizontal (`scrollWidth` igual a 375), com o "Revogar"
    abaixo do motivo (`capturas/revisao-1211-presidencia-375.jpg`). O console mostra só o 403
    esperado do passo 5, sem violação de CSP.
+
+**A suíte**, depois de integrar a `main` em `fe86f6d0` (#499): `make lint check test-pg`, com os grupos
+`dev`, `assistente` e `navegador`, banco próprio, 4 workers: ruff e formato limpos, `check` sem
+problema, nenhuma migration pendente, **19111 passando e 12 pulados, sem falha**, em 1142 s
+(12/11/2026). Os 12 pulados são os de quem tem os dois grupos, como no CI.
