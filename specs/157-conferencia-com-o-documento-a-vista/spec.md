@@ -4,13 +4,20 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — três questões abertas para o usuário (ao fim, em "Questões para o usuário")
+**Status**: Draft — quatro questões abertas para o usuário (ao fim, em "Questões para o usuário")
 
 **Nenhuma regra nova.** Quem confere, o que o "conforme" exige, a recusa, a idempotência, os estados
 e a trilha continuam os da `115`, da `131` e da `143`. Muda **onde** o arquivo aparece e **o que a
 página faz** depois do registro: o arquivo ao lado do formulário, a conferência registrada sem
 recarregar a página inteira, e o caminho ao próximo documento. Não há tabela, permissão, estado nem
-evento de trilha novos.
+evento de trilha novos. A única exceção possível é a da Questão 4 — o aviso de pendência oferecido
+junto da conferência —, e ela depende da resposta do usuário.
+
+**Acréscimo de 11/11.** A sessão que coordena as specs do estudo pediu, depois da primeira versão,
+que o achado 09 entrasse como questão, porque mexe no mesmo formulário: registrar a pendência não
+avisa o candidato, e o aviso é outro gesto, na tela da convocação, seguido do despacho. A decisão do
+usuário de 08/11 registrada na `134` — o aviso sai por gesto da comissão, nunca por evento — **não se
+reverte aqui**. A spec só propõe, como pergunta, onde o gesto aparece.
 
 **Input**: orientação do usuário, literal: *"escreva a spec para conferir o documento mantendo os
 dados e os controles de análise visíveis, incluindo uso em telas pequenas e alternativa para arquivos
@@ -35,9 +42,9 @@ reaproveitar o visualizador da Mesa; e nenhuma conferência em lote.
 > **Origem.** O
 > [estudo da jornada final de 11/11/2026](../../doc/estudo-jornada-final-2026-11-11/index.html)
 > (PR #472), achado 10 do inventário e passo C2 do percurso, sobre o cenário de treinamento C09 da
-> `134`, com as capturas C03 e C04. No estudo os achados levam o prefixo dos requisitos de
-> experiência; aqui eles se escrevem "achado 10", para que a varredura de citações não os leia como
-> requisitos desta spec.
+> `134`, com as capturas C03 e C04; e o achado 09 e o passo C3, com as capturas C10, C12 e D01. No
+> estudo os achados levam o prefixo dos requisitos de experiência; aqui eles se escrevem "achado 10",
+> para que a varredura de citações não os leia como requisitos desta spec.
 >
 > **O estado de partida.** Desde o #473, a recusa da conferência aparece no cartão do documento, com o
 > que foi marcado e digitado, e o aviso *"Você ainda não abriu a versão N"* aparece antes do clique,
@@ -271,6 +278,39 @@ roteiro de verificação humana registra o que foi ouvido em cada passo.
 
 ---
 
+### User Story 7 — A pendência registrada, e o aviso à vista (Priority: P3)
+
+O presidente confere os dois documentos de Bernardo: o comprovante, conforme; o "diploma", pendente,
+porque é outro comprovante. Ao registrar a pendência, a confirmação diz que nenhum aviso foi pedido e
+que Bernardo vê a pendência no portal. Terminada a conferência de Bernardo, a página mostra a situação
+do aviso e o caminho para pedi-lo — onde, depende da Questão 4. Ninguém sai da página achando que
+Bernardo foi avisado.
+
+**Why this priority**: é o achado 09, que a sessão coordenadora pediu para tratar aqui por tocar o
+mesmo formulário. A `134` e a `143` já dão o gesto e a situação do envio; o ganho é de lugar e de
+clareza, e o achado 10 se resolve sem ele.
+
+**Independent Test**: no C09, registrar a pendência do diploma de Bernardo sem recarregar a página;
+nenhum aviso é gravado pelo registro, a confirmação diz que nenhum aviso foi pedido, e a situação do
+aviso na página é a mesma do cartão da convocação.
+
+**Acceptance Scenarios**:
+
+1. **Given** o diploma de Bernardo aberto, *Pendente* marcado e o motivo digitado, **When** o
+   presidente registra, **Then** a conferência é gravada, nenhum aviso é gravado por ela, e a
+   confirmação diz que nenhum aviso foi pedido e que Bernardo vê a pendência no portal.
+2. **Given** a conferência de Bernardo terminada com uma pendência, **When** a confirmação aparece,
+   **Then** a seção *"Situação desta convocação"* diz, sem recarga, que nenhum aviso foi registrado
+   desde a pendência e se o gesto do aviso alcançaria Bernardo agora, ou por que não (FR-5017 da
+   `143`).
+3. **Given** um aviso registrado para Bernardo, **When** a página é lida antes do despacho, **Then**
+   ela diz que o aviso foi registrado e ainda não foi enviado; depois do despacho, a situação do envio
+   com as palavras da `066`, nunca "entregue" nem "lido" (FR-5016 da `143`).
+4. **Given** a proposta da Questão 4, **When** a confirmação oferece *"Avisar Bernardo agora"* e o
+   presidente o usa, **Then** é gravado um aviso pela regra da `134` — um por pessoa, por chamada, por
+   dia, com as mesmas exclusões —, a resposta diz que a mensagem sai pelo despacho, e a situação passa
+   a *"registrado, ainda não enviado"*.
+
 ### Edge Cases
 
 - **Abrir um documento não autoriza outro.** A abertura do diploma não conta para o comprovante, nem a
@@ -412,12 +452,33 @@ roteiro de verificação humana registra o que foi ouvido em cada passo.
 - **FR-6530**: Cruzar a fronteira da tela larga com um arquivo aberto MUST levá-lo ao outro arranjo
   sem perder o que foi marcado e digitado e sem pedir o arquivo de novo.
 
+#### A pendência e o aviso
+
+- **FR-6534**: Registrar uma conferência pendente MUST NOT gravar aviso de pendência, como a FR-4604
+  da `134` exige, qualquer que seja a resposta à Questão 4, salvo a opção B dela.
+- **FR-6535**: A confirmação de uma conferência pendente MUST dizer que nenhum aviso foi pedido por
+  ela e que a pessoa vê a pendência no portal. Nenhum texto MUST tratar a pendência registrada como
+  comunicação ao candidato (FR-5018 da `143`).
+- **FR-6536**: A situação do aviso da pessoa — nenhum aviso desde a pendência, com o alcance do gesto
+  agora (FR-5017 da `143`), ou aviso registrado com a situação do envio (FR-5016 da `143`) — MUST se
+  atualizar na página sem recarga depois de cada registro, e MUST aparecer na confirmação quando a
+  conferência da pessoa termina com pendência.
+- **FR-6537**: Terminada com pendência a conferência da pessoa — nenhum documento dela a conferir —,
+  a confirmação MUST oferecer o gesto *"Avisar ‹nome› agora"*, só dela, quando o gesto da `134` a
+  alcançaria agora, e o motivo quando não alcançaria. O gesto MUST seguir as regras da `134` — quem
+  pode, a chave de envio, um aviso por pessoa por chamada por dia, as exclusões, a idempotência, o
+  texto e o despacho — e MUST NOT ser oferecido por documento, nem no meio da conferência da pessoa
+  (proposta, pendente da Questão 4).
+- **FR-6538**: Nenhum gesto desta spec MUST enviar a mensagem na requisição: o aviso sai pelo
+  despacho da `066`, e a página diz isso.
+
 #### Comum
 
 - **FR-6531**: Nada desta spec MUST usar estilo ou script escrito no template, nem afrouxar a política
   de conteúdo: script e estilo continuam só de arquivo, e moldura e objeto, só da própria origem.
 - **FR-6532**: Nada desta spec MUST mudar quem pode conferir, o comando da conferência, a FR-3611 da
-  `115`, a FR-4460 da `131`, os estados e os rótulos deles, a trilha, nem o portal do candidato.
+  `115`, a FR-4460 da `131`, os estados e os rótulos deles, a trilha, nem o portal do candidato. A
+  única exceção possível é o gesto da FR-6537, que depende da Questão 4.
 - **FR-6533**: O painel da conferência MUST ter o mesmo desenho e os mesmos rótulos comuns do painel
   da Mesa — a barra, *"Abrir em aba própria"*, *"Fechar"*, o foco ao abrir. O que a Mesa ganha desta
   spec depende da Questão 3.
@@ -443,6 +504,11 @@ roteiro de verificação humana registra o que foi ouvido em cada passo.
   arquivo não pôde ser lido."*
 - **UX-646**: A falha da FR-6518 MUST dizer *"A conferência não foi registrada."* e a razão, quando
   conhecida: *"Sua sessão terminou; entre de novo. O que você marcou continua aqui."*
+- **UX-647**: A confirmação da pendência MUST dizer: *"Conferência registrada: Diploma de graduação,
+  pendente. Nenhum aviso foi pedido; Bernardo vê a pendência no portal."*
+- **UX-648**: O gesto da FR-6537 MUST dizer *"Avisar Bernardo agora"*, com a frase da `134` antes do
+  botão — o aviso não muda o prazo e não é a convocação —; e a resposta, *"Aviso de pendência
+  registrado para Bernardo. A mensagem sai pelo despacho dos avisos, e não neste clique."*
 
 ### Key Entities
 
@@ -481,6 +547,12 @@ Nenhuma entidade nova. A **apresentação** (a versão do documento que a pessoa
 - **SC-2151** *(verificação humana)*: Uma pessoa que conduz convocações confere os documentos do C09
   antes e depois desta feature; o roteiro registra o tempo e os gestos dos dois percursos, e nenhum
   arquivo conferido é de uma pessoa diferente da do formulário.
+- **SC-2152**: Em 100% dos registros de conferência pendente do teste, nenhum aviso de pendência é
+  gravado pelo registro; com a proposta da Questão 4, o gesto da FR-6537 grava exatamente os avisos
+  que o gesto em lote da `134` gravaria para a mesma pessoa no mesmo instante, e nenhum no dia em que
+  ela já foi avisada.
+- **SC-2153**: Depois de cada registro do teste, a situação do aviso mostrada sem recarga é, em
+  texto, a do cartão da pessoa na tela da convocação.
 
 ## Decisões
 
@@ -557,9 +629,22 @@ achados registrados.
 **Por quê**: o usuário pediu a conferência da convocação. Na Mesa a abertura só informa, e o risco
 da D-002 é menor; mudá-la aqui alargaria o escopo de uma feature de outra tela.
 
+### D-008 — O aviso continua gesto, oferecido quando a conferência da pessoa termina
+
+*Proposta, pendente da Questão 4.* O registro da pendência não grava aviso (FR-6534). Quando não
+resta documento da pessoa a conferir e há pendência, a confirmação oferece o gesto da `134` só para
+aquela pessoa (FR-6537); a situação do envio fica à vista e se atualiza (FR-6536).
+
+**Por quê**: a decisão do usuário de 08/11 na `134` é que o aviso sai por gesto da comissão, e nunca
+por evento — e o gesto continua sendo gesto. Oferecê-lo no fim da pessoa, e não por documento, segue
+a regra de um aviso por pessoa, por chamada, por dia: avisar a primeira pendência gastaria o aviso
+do dia, e a segunda, registrada minutos depois, só seria avisada no dia seguinte se a mensagem já
+tivesse saído. O custo é acrescentar à `134` o recorte de uma pessoa a um gesto que ela desenhou em
+lote; o texto, as exclusões e o despacho são os dela.
+
 ## Questões para o usuário
 
-Cada questão traz a proposta da spec em primeiro lugar. As decisões D-005, D-006 e D-007 seguem a
+Cada questão traz a proposta da spec em primeiro lugar. As decisões D-005 a D-008 seguem a
 proposta até a resposta.
 
 ### Questão 1 — O *Conforme* fica disponível antes de abrir o arquivo?
@@ -587,6 +672,22 @@ proposta até a resposta.
   para spec própria (D-007).
 - **B**: sim. A Mesa ganha a alternativa sem prévia, a mensagem de recusa dentro do painel e o
   arranjo estreito, com requisitos acrescentados aqui e o escopo alargado à `012`.
+
+### Questão 4 — O aviso de pendência aparece junto da conferência?
+
+O achado 09: registrar a pendência não avisa o candidato; o aviso é o gesto em lote da tela da
+convocação, e a mensagem só sai no despacho. A comissão pode supor que avisou. Nas três opções, o
+aviso continua sendo gesto da comissão, como o usuário decidiu em 08/11 para a `134`, e a situação do
+envio fica à vista na página dos documentos (FR-6536).
+
+- **A (proposta)**: o gesto *"Avisar ‹nome› agora"*, só daquela pessoa, na confirmação, quando a
+  conferência dela termina com pendência (D-008, FR-6537). Separado do registro: o registro não grava
+  aviso. Acrescenta à `134` o recorte de uma pessoa, com as mesmas regras.
+- **B**: uma marca opcional *"Avisar a pessoa desta pendência"* no próprio formulário da pendência, no
+  mesmo envio. Um gesto a menos, mas revê a letra da FR-4604 da `134` — o registro passaria a gravar
+  aviso quando marcado —, e o aviso por documento gasta o aviso do dia na primeira pendência.
+- **C**: nenhum gesto novo. A confirmação diz que nenhum aviso foi pedido e leva ao gesto em lote da
+  tela da convocação; a situação do envio fica à vista. Nada muda na `134`.
 
 ## Achados registrados
 
@@ -621,8 +722,10 @@ Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuár
 - Conferência em lote, "conferir todos" ou registrar vários itens num gesto (FR-3609 da `115`).
 - Controles próprios de zoom e rotação: são do visualizador do navegador, como decidiu a Mesa.
 - Converter, reparar ou validar arquivos; ler imagens; reconhecimento de texto.
-- O envio de vários documentos pelo portal (`150`), o aviso de pendência no gesto da conferência
-  (achado 09 do estudo) e o alerta de arquivo repetido (achado 11 do estudo).
+- O envio de vários documentos pelo portal (`150`) e o alerta de arquivo repetido (achado 11 do
+  estudo).
+- O texto do aviso de pendência, as exclusões, o limite por dia e o despacho, que são da `134` e da
+  `066`; o envio do aviso dentro do clique.
 - Os nomes dos estados de documento, que são da `154`.
 - A Mesa do avaliador além do desenho comum, salvo resposta B à Questão 3.
 - O portal do candidato.

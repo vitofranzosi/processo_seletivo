@@ -31,10 +31,10 @@
 
 ## Notes
 
-- **Sem marcador inline, com três questões abertas.** As decisões que são do usuário estão em
-  "Questões para o usuário" (Questões 1 a 3), cada uma com a proposta da spec em primeiro lugar; as
+- **Sem marcador inline, com quatro questões abertas.** As decisões que são do usuário estão em
+  "Questões para o usuário" (Questões 1 a 4), cada uma com a proposta da spec em primeiro lugar; as
   decisões D-005, D-006 e D-007 seguem a proposta até a resposta. O `/speckit-plan` pode partir das
-  propostas, mas a FR-6527 e a extensão da FR-6533 mudam com a resposta às Questões 2 e 3.
+  propostas, mas a FR-6527 e a extensão da FR-6533 mudam com a resposta às Questões 2 e 3, e a FR-6537 com a resposta à 4.
 - **Detalhe de implementação, deliberado.** A spec diz que a rota do arquivo não se deixa emoldurar
   hoje e que a da Mesa sim (FR-6504). É o fato que separa "reaproveitar a Mesa" de "funcionar": sem
   ele, o painel não carrega. A técnica — decorador, cabeçalho, fragmento, biblioteca — fica para o
@@ -45,3 +45,7 @@
   iOS e Android muda entre versões, e só o aparelho responde.
 - **Citações.** Só requisitos definidos na `main` (a `154` entrou pelo #479 durante a escrita e é
   citada pela FR-6211); os achados do estudo, como "achado NN".
+- **Achado 09, acrescentado em 11/11** a pedido da sessão coordenadora (User Story 7, FR-6534 a
+  FR-6538, UX-647, UX-648, SC-2152, SC-2153, D-008, Questão 4). A decisão do usuário de 08/11 na `134`
+  — aviso por gesto, nunca por evento — fica intacta nas três opções; a B revê só a letra da FR-4604
+  da `134`, e por isso é opção, e não proposta.
