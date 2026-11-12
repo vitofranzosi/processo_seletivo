@@ -449,6 +449,31 @@ def test_o_titulo_no_meio_da_frase_so_baixa_a_inicial():
     assert item.titulo_no_meio_da_frase == "consolidar a Prova Prática da PPP"
 
 
+@pytest.mark.parametrize(
+    "ato", ["Declarar a vaga não preenchida", "Retificar o Edital para declarar a reversão"]
+)
+def test_o_ato_da_vaga_sem_ocupante_mantem_o_proprio_nome_e_a_propria_frase(ato):
+    """Problema novo N-01 da reavaliação de 12/11/2026: os atos da 155 vêm com a natureza da
+    apuração, e o Centro os anunciava como "Distribuir as vagas entre as listas", com a frase de
+    quem apura."""
+    item = cc._item(
+        prov(a.APURACAO, ato=ato),
+        set(),
+        {c.VAGAS: cc.Macrofase(c.VAGAS, c.EM_CURSO)},
+    )
+    assert (item.titulo, item.no_gps) == (ato, "")
+    assert item.conceito is c.CONCEITOS_DE_ATO[ato]
+    assert item.conceito["curta"] != c.CONCEITOS[a.APURACAO]["curta"]
+    # A apuração continua traduzida: o nome próprio é do ato, e não da natureza.
+    assert c.ato_simples(a.APURACAO, "Apurar a ocupação") == c.CONCEITOS[a.APURACAO]["simples"]
+
+
+def test_o_conceito_de_ato_tem_as_mesmas_cinco_frases_da_natureza():
+    for ato, dados in c.CONCEITOS_DE_ATO.items():
+        assert set(dados) == {"simples", "termo", "curta", "porque", "ao_confirmar"}, ato
+        assert all(texto.strip() for texto in dados.values()), ato
+
+
 def test_o_ato_em_jargao_se_traduz_num_lugar_so():
     """Item 7 da revisão: a providência, a tabela da fase e a linha da lista leem a mesma função."""
     assert c.ato_simples(a.ORDEM, "Emitir a ordem") == c.CONCEITOS[a.ORDEM]["simples"]

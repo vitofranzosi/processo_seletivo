@@ -8678,10 +8678,52 @@ def ocupacao_historico(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "lista_id": lista_id,
-                "serie": historico_do_recorte(edital=edital, marco_id=marco_id, lista_id=lista_id),
+                "serie": _com_as_datas_citadas(
+                    historico_do_recorte(edital=edital, marco_id=marco_id, lista_id=lista_id)
+                ),
             },
         )
     )
+
+
+def _com_as_datas_citadas(serie):
+    """Cada apuração cita a versão, a ordem e o corte que leu **pela data**, e não pelo UUID.
+
+    O identificador só servia a quem consulta o banco (problema novo N-05 da reavaliação de
+    12/11/2026, o mesmo do achado 19 na convocação); ele continua no `title`, para quem rastreia.
+    Três consultas para a série inteira, e só das colunas de data: a versão traz o conteúdo
+    publicado inteiro, que não se carrega para ler um instante.
+    """
+    from processo_seletivo.classificacao.models import AtoDeOrdenacao, Corte
+    from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
+
+    apuracoes = [passo["apuracao"] for passo in serie]
+    if not apuracoes:
+        return serie
+    versoes = dict(
+        VersaoConsolidada.objects.filter(id__in={a.versao_id for a in apuracoes}).values_list(
+            "id", "valid_from"
+        )
+    )
+    ordens = dict(
+        AtoDeOrdenacao.objects.filter(id__in={a.ato_id for a in apuracoes}).values_list(
+            "id", "emitido_em"
+        )
+    )
+    cortes = dict(
+        Corte.objects.filter(
+            id__in={a.corte_id for a in apuracoes if a.corte_id is not None}
+        ).values_list("id", "emitido_em")
+    )
+    return [
+        {
+            **passo,
+            "versaoVigenteDesde": versoes.get(passo["apuracao"].versao_id),
+            "ordemEmitidaEm": ordens.get(passo["apuracao"].ato_id),
+            "corteEmitidoEm": cortes.get(passo["apuracao"].corte_id),
+        }
+        for passo in serie
+    ]
 
 
 @require_http_methods(["POST"])
@@ -9096,6 +9138,9 @@ def convocacao(request, edital_id, marco_id):
                 "continuacao_admitida": contexto_do_recorte["continuacao_admitida"],
                 "perguntas": perguntas,
                 "sem_providencia": conducao_da_convocacao.sem_providencia(perguntas),
+                # **Sem vaga a ocupar, a frase é essa**, e não a da faixa esgotada, que soava como
+                # problema com as vagas cheias (problema novo N-04 da reavaliação de 12/11/2026).
+                "vagas_sem_chamada": conducao_da_convocacao.vagas_sem_chamada(leitura),
                 "confere": confere,
                 "aptas": sum(1 for linha in leitura["linhas"] if linha.get("apto")),
                 # A conferência do texto pendente, consumida aqui (125, FR-3993).
