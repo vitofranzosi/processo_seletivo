@@ -122,8 +122,14 @@ def continuar_corte(
     quantidade,
     motivo,
     lista_id=None,
+    confirmacao_do_calculo=None,
 ):
-    """Emite a faixa seguinte da mesma geração, onde a regra publicada a admite (FR-202, FR-226)."""
+    """Emite a faixa seguinte da mesma geração, onde a regra publicada a admite (FR-202, FR-226).
+
+    `confirmacao_do_calculo`, quando vem, é a assinatura da conferência da faixa seguinte (152,
+    R-007, FR-5831), conferida como na emissão. A tela do corte sempre a manda; a faixa causada pela
+    ocupação (`016`) não a manda, e continua como era.
+    """
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
@@ -132,6 +138,8 @@ def continuar_corte(
         "quantidade": int(quantidade or 0),
         "motivo": (motivo or "").strip(),
     }
+    if confirmacao_do_calculo is not None:
+        payload["confirmacao"] = confirmacao_do_calculo
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
@@ -142,71 +150,25 @@ def continuar_corte(
         if ctx.repetido:
             return ctx.desfecho_anterior
         edital = _edital_do_processo(ctx.processo, edital_id)
-        texto_do_motivo = (motivo or "").strip()
-        if not texto_do_motivo:
-            raise DomainError(
-                "continuacao_sem_motivo",
-                "Declare por que a faixa seguinte é necessária: o sistema não o sabe.",
-                422,
-                campo="motivo",
-            )
-        vigente = geracao_vigente(
-            edital=edital,
-            perfil_id=identificador(perfil_id),
-            marco_id=identificador(marco_id),
-            lista_id=identificador(lista_id) if lista_id else None,
-        )
-        if not vigente:
-            raise DomainError(
-                "sem_faixa_anterior",
-                "Não há geração vigente neste recorte: emita o corte antes de continuá-lo.",
-                409,
-            )
-        if int(quantidade or 0) < 1:
-            raise DomainError(
-                "continuacao_sem_quantidade",
-                "Declare quantos a faixa seguinte deve alcançar: o sistema não decide por ninguém.",
-                422,
-                campo="quantidade",
-            )
-        anterior = vigente[-1]
-        if anterior.continuacoes.exists():
-            raise DomainError(
-                "continuacao_ja_emitida",
-                "Esta faixa já tem continuação.",
-                409,
-            )
-        proposta = _calcular(
+        previa = previa_da_continuacao(
             edital=edital,
             perfil_id=perfil_id,
             marco_id=marco_id,
             lista_id=lista_id,
+            quantidade=quantidade,
+            motivo=motivo,
             at=ctx.now,
-            # **A última posição é a da geração, e não a da faixa imediatamente anterior.** Uma
-            # faixa que não alcançou ninguém grava `None`, e `anterior.ultima_posicao or 0` fazia a
-            # continuação seguinte recomeçar da primeira posição — realcançando quem já estava
-            # dentro. O máximo da geração é a única resposta que não volta atrás.
-            desde=max((item.ultima_posicao for item in vigente if item.ultima_posicao), default=0),
-            faixa_anterior=anterior,
-            quantidade=int(quantidade),
         )
-        if not faixa.admite_continuacao(proposta["regra"]):
+        if confirmacao_do_calculo is not None and confirmacao_do_calculo != previa["assinatura"]:
             raise DomainError(
-                "continuacao_nao_publicada",
-                "Este Edital não publicou que admite continuação além da faixa: a faixa é o que "
-                "ele publicou.",
+                "calculo_divergente",
+                "A faixa mudou desde a sua leitura; confira o cálculo atual antes de emitir.",
                 422,
+                campo="confirmacao_do_calculo",
             )
-        # **A ordem citada pela faixa anterior precisa ser a vigente** (FR-205). A geração sucedida
-        # já é impossível por construção — `geracao_vigente` só devolve a que ninguém sucedeu.
-        if str(anterior.ato_id) != str(proposta["ato"].id):
-            raise DomainError(
-                "continuacao_sobre_ordem_sucedida",
-                "A ordem mudou desde a faixa anterior: emita a geração nova sobre a ordem nova.",
-                409,
-            )
+        anterior = previa["anterior"]
         corte = _gravar(
-            proposta,
+            previa["proposta"],
             edital=edital,
             perfil_id=perfil_id,
             marco_id=marco_id,
@@ -215,9 +177,91 @@ def continuar_corte(
             now=ctx.now,
             raiz=anterior.raiz or anterior,
             faixa_anterior=anterior,
-            motivo=texto_do_motivo,
+            motivo=previa["motivo"],
         )
-        return _concluir(ctx, corte, proposta, actor, correlation_id, idempotency_key, CONTINUAR)
+        return _concluir(
+            ctx, corte, previa["proposta"], actor, correlation_id, idempotency_key, CONTINUAR
+        )
+
+
+def previa_da_continuacao(*, edital, perfil_id, marco_id, lista_id, quantidade, motivo, at=None):
+    """A faixa seguinte que o comando emitiria agora, com as recusas dele — **sem gravar nada**.
+
+    **Uma verificação só, para o comando e para a conferência** (152, R-007, FR-5829): o comando a
+    chama sob a trava; a conferência, sem ela, para recusar antes do botão o que o comando
+    recusaria. A ordem das recusas é a de sempre.
+
+    Devolve `{"proposta", "assinatura", "anterior", "motivo"}`.
+    """
+    texto_do_motivo = (motivo or "").strip()
+    if not texto_do_motivo:
+        raise DomainError(
+            "continuacao_sem_motivo",
+            "Declare por que a faixa seguinte é necessária: o sistema não o sabe.",
+            422,
+            campo="motivo",
+        )
+    vigente = geracao_vigente(
+        edital=edital,
+        perfil_id=identificador(perfil_id),
+        marco_id=identificador(marco_id),
+        lista_id=identificador(lista_id) if lista_id else None,
+    )
+    if not vigente:
+        raise DomainError(
+            "sem_faixa_anterior",
+            "Não há geração vigente neste recorte: emita o corte antes de continuá-lo.",
+            409,
+        )
+    if int(quantidade or 0) < 1:
+        raise DomainError(
+            "continuacao_sem_quantidade",
+            "Declare quantos a faixa seguinte deve alcançar: o sistema não decide por ninguém.",
+            422,
+            campo="quantidade",
+        )
+    anterior = vigente[-1]
+    if anterior.continuacoes.exists():
+        raise DomainError(
+            "continuacao_ja_emitida",
+            "Esta faixa já tem continuação.",
+            409,
+        )
+    proposta = _calcular(
+        edital=edital,
+        perfil_id=perfil_id,
+        marco_id=marco_id,
+        lista_id=lista_id,
+        at=at,
+        # **A última posição é a da geração, e não a da faixa imediatamente anterior.** Uma
+        # faixa que não alcançou ninguém grava `None`, e `anterior.ultima_posicao or 0` fazia a
+        # continuação seguinte recomeçar da primeira posição — realcançando quem já estava
+        # dentro. O máximo da geração é a única resposta que não volta atrás.
+        desde=max((item.ultima_posicao for item in vigente if item.ultima_posicao), default=0),
+        faixa_anterior=anterior,
+        quantidade=int(quantidade),
+    )
+    if not faixa.admite_continuacao(proposta["regra"]):
+        raise DomainError(
+            "continuacao_nao_publicada",
+            "Este Edital não publicou que admite continuação além da faixa: a faixa é o que "
+            "ele publicou.",
+            422,
+        )
+    # **A ordem citada pela faixa anterior precisa ser a vigente** (FR-205). A geração sucedida
+    # já é impossível por construção — `geracao_vigente` só devolve a que ninguém sucedeu.
+    if str(anterior.ato_id) != str(proposta["ato"].id):
+        raise DomainError(
+            "continuacao_sobre_ordem_sucedida",
+            "A ordem mudou desde a faixa anterior: emita a geração nova sobre a ordem nova.",
+            409,
+        )
+    return {
+        "proposta": proposta,
+        "assinatura": assinatura_da_proposta(proposta, geracao=vigente),
+        "anterior": anterior,
+        "motivo": texto_do_motivo,
+    }
 
 
 def _calcular(**kwargs):

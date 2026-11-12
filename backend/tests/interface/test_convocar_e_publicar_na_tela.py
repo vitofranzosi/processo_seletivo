@@ -158,3 +158,54 @@ def test_o_registro_externo_explica_a_divulgacao_e_nao_a_mensagem():
 
     assert "citando onde foi publicada" in html and "O prazo corre do registro" in html
     assert "Se a mensagem sair" not in html
+
+
+def test_a_chamada_de_uma_pessoa_confere_e_publica_no_gps_na_mesma_confirmacao(
+    client, seletor_ligado, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+):
+    """D-009: com a conferência da `152`, a chamada individual escolhe o veículo no botão dela."""
+    from processo_seletivo.convocacao.application import selectors
+
+    edital, _, _ = montar_cenario_da_convocacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="t159-chamada",
+        forma=FORMA_POR_PUBLICACAO,
+    )
+    fila = selectors.contexto_do_recorte(
+        edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+    )["fila"]
+    identificar(client, "carlos", ["gestor"])
+    endereco = reverse("interface:convocar", args=[edital.id, MARCO])
+    dados = {
+        "lista": "",
+        "chave": "t159-chamada-chave",
+        "inscricao": str(fila[0]),
+        "vencimento": (timezone.localtime() + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M"),
+    }
+
+    conferencia = client.post(endereco, dados).content.decode()
+
+    assert 'value="confirmar-gps"' in conferencia and 'name="autoridade"' in conferencia
+    assert PublicacaoDeConvocados.objects.count() == 0, "a conferência não publica nada"
+    especie = re.search(r'name="especie" value="([^"]*)"', conferencia).group(1)
+    resumo = re.search(r'name="texto_conferido" value="([^"]*)"', conferencia).group(1)
+
+    confirmada = client.post(
+        endereco,
+        {
+            **dados,
+            "especie": especie,
+            "etapa": "confirmar-gps",
+            "texto_conferido": resumo,
+            "autoridade": str(AUTORIDADE_DO_RESULTADO),
+            "declaracao_do_veiculo": "item 7.2 do Edital",
+        },
+    )
+
+    assert confirmada.status_code == 302
+    [ato] = PublicacaoDeConvocados.objects.filter(edital=edital)
+    [vinculo] = ConvocacaoPublicada.objects.filter(publicacao=ato)
+    assert vinculo.efeito == "CONVOCA" and str(vinculo.convocacao.inscricao_id) == str(fila[0])

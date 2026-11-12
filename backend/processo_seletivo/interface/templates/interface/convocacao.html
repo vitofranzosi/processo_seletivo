@@ -760,15 +760,15 @@ praticadas". {% endcomment %}
     <p class="campo">
       <label for="complemento-individual">Complemento do fundamento <span class="opcional">(opcional)</span></label>
       <textarea id="complemento-individual" name="complemento" rows="2" aria-describedby="ajuda-complemento-individual"></textarea>
-      <span class="ajuda" id="ajuda-complemento-individual"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado.</span>
+      <span class="ajuda" id="ajuda-complemento-individual"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, e você o relê na conferência, antes de convocar.</span>
     </p>
     <p class="campo escolha">
       <label><input type="checkbox" name="justifica_precedencia" value="1" aria-describedby="ajuda-precedencia"> Convocar à frente de quem ainda não foi chamado</label>
     </p>
     <span class="ajuda" id="ajuda-precedencia">Marque apenas se esta pessoa não é a próxima da fila e há fundamento para passá-la à frente. A exceção fica registrada na trilha.</span>
-    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=canal_declarado.publicacao sufixo="individual" %}
-    {% if canal_declarado.publicacao %}<p class="acoes"><button type="submit" class="botao" name="veiculo" value="GPS">Convocar e publicar no GPS</button> <button type="submit" class="botao" name="veiculo" value="EXTERNO" formnovalidate>Convocar (a publicação será registrada depois)</button></p>
-    {% else %}<p class="acoes"><button type="submit" class="botao">Convocar, enviar a mensagem e publicar</button></p>{% endif %}
+    {% comment %} A chamada individual passa pela conferência do lote (152, FR-5810, FR-5822, UX-530): até a 152 este botão convocava e enviava a mensagem no primeiro clique. {% endcomment %}
+    <p class="acoes"><button type="submit" class="botao">Conferir antes de convocar</button></p>
+    <p class="ajuda">Abre a conferência: a pessoa, a espécie, o texto que ela lerá e o prazo. Nada é praticado nem enviado antes de você confirmar nela.</p>
   </form>
   </details>
   {% endif %}
@@ -821,11 +821,10 @@ classificado antes do primeiro.
     <p class="campo">
       <label for="complemento-regularizar">Complemento do fundamento <span class="opcional">(opcional)</span></label>
       <textarea id="complemento-regularizar" name="complemento" rows="2" aria-describedby="ajuda-complemento-regularizar"></textarea>
-      <span class="ajuda" id="ajuda-complemento-regularizar"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado.</span>
+      <span class="ajuda" id="ajuda-complemento-regularizar"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, e você o relê na conferência, antes de convocar.</span>
     </p>
-    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=canal_declarado.publicacao sufixo="regularizar" %}
-    {% if canal_declarado.publicacao %}<p class="acoes"><button type="submit" class="botao" name="veiculo" value="GPS">Convocar para regularizar e publicar no GPS</button> <button type="submit" class="botao" name="veiculo" value="EXTERNO" formnovalidate>Convocar para regularizar (a publicação será registrada depois)</button></p>
-    {% else %}<p class="acoes"><button type="submit" class="botao">Convocar para regularizar, enviar a mensagem e publicar</button></p>{% endif %}
+    <p class="acoes"><button type="submit" class="botao">Conferir antes de convocar</button></p>
+    <p class="ajuda">Abre a conferência: a pessoa, o Resultado que ela regulariza, o texto que ela lerá e o prazo. Nada é praticado nem enviado antes de você confirmar nela.</p>
   </form>
   </details>
   {% endif %}

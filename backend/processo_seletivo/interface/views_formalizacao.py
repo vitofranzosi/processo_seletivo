@@ -1,7 +1,9 @@
 """As telas da entrega documental à formalização (117): a do setor e a da definição, na condução.
 
 **Três funções, três donos** (matriz da spec). A condução define **o quê**, na tela da definição; a
-gestão de acessos define **quem**, em `acessos.py`; e o setor **exporta**, nas telas daqui.
+gestão de acessos define **quem**, em `acessos.py`; e o setor **exporta**, nas telas daqui. Desde a
+revisão de 12/11 (D-025), a presidência do Processo também designa, na seção "Quem acessa os
+documentos" da definição, entre quem a gestão de acessos já fez do setor.
 
 **A porta do setor é o predicado único** (FR-3664): `pode_acessar` decide a página, cada arquivo, a
 verificação e a exportação, na mesma requisição. Fora do alcance é *inexistente*; sem o papel, a
@@ -19,18 +21,20 @@ from django.db import transaction
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.comissoes.domain.autorizacao import (
     BASES_DA_GESTAO_DA_COMISSAO,
     pode_gerir_comissao,
 )
-from processo_seletivo.formalizacao.application import conjunto, definir, exportar
+from processo_seletivo.formalizacao.application import conjunto, definir, designar, exportar
 from processo_seletivo.formalizacao.domain import caminhos, nomes
 from processo_seletivo.formalizacao.domain.autorizacao import (
     designacoes_vigentes,
     exigir_o_papel,
     pode_acessar,
+    pode_designar,
 )
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import identidade
@@ -458,7 +462,8 @@ def _edital_da_definicao(ator, edital_id):
     return edital, pode_gravar
 
 
-def _designacoes_para_leitura(edital):
+def _designacoes_para_leitura(edital, ator=None, pode=False):
+    """As designações vigentes; `revogavel` só para quem designa e nunca a própria (FR-6702)."""
     from processo_seletivo.seguranca.application.acessos import nomes_dos_autores
 
     vigentes = list(designacoes_vigentes(edital=edital).order_by("designado_em", "id"))
@@ -472,9 +477,32 @@ def _designacoes_para_leitura(edital):
             "pessoa": nomes_legiveis.get(d.pessoa, d.pessoa),
             "por": nomes_legiveis.get(d.designado_por, d.designado_por),
             "perfis": [perfis.get(str(p), "Perfil") for p in d.perfis],
+            "revogavel": pode and ator is not None and d.pessoa != ator.subject,
         }
         for d in vigentes
     ]
+
+
+def _quem_designa(ator, edital):
+    """O que a seção "Quem acessa os documentos" oferece a este ator (UX-700, UX-701).
+
+    `None` para quem só lê. Para quem designa, as pessoas com o papel e os Perfis do Edital — e o
+    formulário só no estado em que a designação cabe, publicado ou encerrado (FR-6706).
+    """
+    from processo_seletivo.formalizacao.application.designar import ESTADOS_DESIGNAVEIS
+    from processo_seletivo.seguranca.application.acessos import nome_legivel
+
+    if pode_designar(ator, edital) is None:
+        return None
+    return {
+        "designavel": edital.status in ESTADOS_DESIGNAVEIS,
+        "papel": nomes.NOME_DO_PAPEL,
+        "perfis": definir.perfis_do_edital(edital),
+        "pessoas": [
+            {"identificador": v.pessoa.username, "nome": nome_legivel(v.pessoa)}
+            for v in designar.pessoas_com_o_papel(ator, edital=edital)
+        ],
+    }
 
 
 @require_http_methods(["GET", "POST"])
@@ -514,6 +542,7 @@ def definicao(request, edital_id):
     from processo_seletivo.interface.navegacao import declarar_secao
 
     declarar_secao(request, "interface:lista")
+    quem_designa = _quem_designa(ator, edital_da_tela)
     return marcar_como_privada(
         render(
             request,
@@ -525,7 +554,12 @@ def definicao(request, edital_id):
                 "marcados": marcados,
                 "pode_gravar": pode_gravar,
                 "historico": definir.historico(edital_da_tela, requisitos),
-                "designacoes": _designacoes_para_leitura(edital_da_tela),
+                "designacoes": _designacoes_para_leitura(
+                    edital_da_tela, ator, pode=quem_designa is not None
+                ),
+                "quem_designa": quem_designa,
+                "designacao_feita": request.session.pop("aviso_da_designacao", None),
+                "erro_da_designacao": request.session.pop("erro_da_designacao_na_definicao", ""),
                 "exportacoes": _historico_de_exportacoes(edital_da_tela),
                 "erro": erro,
                 "motivo": motivo,
@@ -534,3 +568,85 @@ def definicao(request, edital_id):
             status=422 if erro else 200,
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Designar e revogar pela presidência, na definição (revisão de 12/11/2026, D-025)
+# ---------------------------------------------------------------------------
+
+
+def _de_volta_a_quem_acessa(edital_id):
+    url = reverse("interface:formalizacao-definicao", args=[edital_id])
+    return redirect(f"{url}#quem-acessa")
+
+
+def _recusa_de_negocio(recusa):
+    """A recusa que volta à seção com a frase (UX-702): motivo, papel, autodesignação, vigente."""
+    return recusa.status in (409, 422) or recusa.code == nomes.AUTODESIGNACAO
+
+
+@require_http_methods(["POST"])
+def designar_na_definicao(request, edital_id):
+    """A designação nova pela seção "Quem acessa os documentos" (FR-6700 a FR-6702, UX-700).
+
+    **O mesmo comando da tela de acessos**, que confere o escopo e a base de novo, dentro da
+    transação, depois de trancar o Processo: a presidência que mudou entre esta view e a gravação
+    é recusada ali. A primeira conferência, aqui, vem antes de procurar a pessoa: quem não designa
+    recebe a recusa de autorização, e não aprende pelo erro quem é pessoa institucional.
+    """
+    from processo_seletivo.seguranca.application import acessos
+
+    ator = _ator(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        edital_da_tela, _ = designar.edital_da_unidade(ator, edital_id)
+        designar.designar(
+            ator,
+            edital_id=edital_da_tela.id,
+            pessoa=acessos.pessoa_institucional(request.POST.get("pessoa", "")),
+            perfis=request.POST.getlist("perfil"),
+            motivo=request.POST.get("motivo", ""),
+            now=timezone.now(),
+            correlation_id=_correlacao(request, "designar"),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        if not _recusa_de_negocio(recusa):
+            raise
+        request.session["erro_da_designacao_na_definicao"] = recusa.detail
+        return _de_volta_a_quem_acessa(edital_id)
+    request.session["aviso_da_designacao"] = "Designação gravada. Vale na próxima ação da pessoa."
+    return _de_volta_a_quem_acessa(edital_id)
+
+
+@require_http_methods(["POST"])
+def revogar_na_definicao(request, edital_id, designacao_id):
+    """A revogação de qualquer designação deste Edital, com motivo (FR-6703).
+
+    Designação de outro Edital ou de outra unidade é inexistente aqui (FR-6707).
+    """
+    ator = _ator(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        designar.revogar(
+            ator,
+            designacao_id=designacao_id,
+            edital_id=edital_id,
+            motivo=request.POST.get("motivo", ""),
+            now=timezone.now(),
+            correlation_id=_correlacao(request, "revogar"),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise Http404 from recusa
+        if not _recusa_de_negocio(recusa):
+            raise
+        request.session["erro_da_designacao_na_definicao"] = recusa.detail
+        return _de_volta_a_quem_acessa(edital_id)
+    request.session["aviso_da_designacao"] = (
+        "Designação revogada. A pessoa perde o acesso na próxima ação."
+    )
+    return _de_volta_a_quem_acessa(edital_id)

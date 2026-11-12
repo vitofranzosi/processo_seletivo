@@ -309,8 +309,9 @@ para vaga inicial e encontrá-lo.
 - **Formulário antigo ou forjado com "confirmar"** — na chamada, no corte ou na faixa seguinte. Sem o
   resumo do que foi conferido, ou com resumo que não confere, o pedido abre a conferência; nunca
   pratica.
-- **Faixa seguinte maior que o resto da ordem.** A conferência recusa com a razão do comando, antes do
-  botão.
+- **Faixa seguinte maior que o resto da ordem.** O comando a aceita e alcança só quem resta — às
+  vezes ninguém (FR-5846). A conferência mostra a quantidade pedida ao lado de quantas pessoas a
+  faixa alcança, antes do botão.
 - **Duplo clique na confirmação** — chamada, corte ou faixa seguinte. A chave de idempotência já
   concluída devolve o resultado do ato praticado, sem ato novo.
 - **Quem só lê** — o membro alocado à conferência de documentos e a auditoria — não vê nenhum dos
@@ -421,9 +422,11 @@ para vaga inicial e encontrá-lo.
   Quantidade que o comando recusaria MUST ser recusada na conferência, antes do botão.
 - **FR-5830**: Pedir a conferência do corte ou da faixa seguinte MUST NOT gravar ato, evento na
   trilha, chave de idempotência nem nada na sessão de quem pede.
-- **FR-5831**: A confirmação MUST levar a chave de idempotência e a conferência do cálculo que a tela
-  do corte emitiu, intactas, e o comando MUST conferi-las como hoje. Cálculo mudado MUST recusar com
-  a razão, sem emitir, e devolver à tela do corte com a faixa de agora.
+- **FR-5831**: A confirmação MUST levar intacta a chave de idempotência que a tela do corte emitiu, e
+  a conferência do cálculo da faixa que a conferência mostrou, recomposta nela; o comando MUST
+  conferi-la como hoje. O que mudou entre a tela do corte e a conferência MUST ser dito na
+  conferência. Cálculo mudado entre a conferência e a confirmação MUST recusar com a razão, sem
+  emitir, e devolver à tela do corte com a faixa de agora.
 - **FR-5832**: Um pedido de confirmação cuja chave já foi concluída MUST ir direto ao comando, que
   repete o resultado do ato já praticado.
 - **FR-5833**: A conferência e a confirmação do corte MUST exigir a mesma autorização de hoje, e a

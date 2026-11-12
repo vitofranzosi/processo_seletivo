@@ -279,6 +279,7 @@ def test_depois_de_emitir_o_corte_a_sucessao_vem_recolhida_e_a_mensagem_diz_o_qu
         {
             "chave_idempotencia": _campo(antes, "chave_idempotencia"),
             "confirmacao_do_calculo": _campo(antes, "confirmacao_do_calculo"),
+            "confirmar": "1",
         },
     )
     depois = client.get(endereco).content.decode()
@@ -435,6 +436,7 @@ def test_a_marca_da_faixa_seguinte_nao_sobra_para_o_corte_seguinte(client, ordem
         {
             "chave_idempotencia": _campo(antes, "chave_idempotencia"),
             "confirmacao_do_calculo": _campo(antes, "confirmacao_do_calculo"),
+            "confirmar": "1",
         },
     )
     texto = " ".join(client.get(endereco).content.decode().split())

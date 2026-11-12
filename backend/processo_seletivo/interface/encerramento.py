@@ -197,7 +197,7 @@ def _providencias_da_099(edital, agora, ator=None):
 #: O caminho de cada causa da passagem ao setor, e a quem pedir (153, FR-6126, FR-3538 da `113`).
 _A_QUEM_PEDIR_NA_PASSAGEM = {
     "sem_definicao": "Peça a quem conduz a seleção.",
-    "sem_quem_receba": "Peça a quem administra os acessos da unidade.",
+    "sem_quem_receba": "Peça à presidência ou a quem administra os acessos da unidade.",
     "a_exportar": "Peça ao setor da formalização.",
 }
 
@@ -215,7 +215,6 @@ def _item_da_passagem(pendencia, edital, ator):
     from processo_seletivo.formalizacao.domain import nomes as nomes_da_formalizacao
     from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
     from processo_seletivo.interface.relatorio_do_edital import texto_da_pendencia
-    from processo_seletivo.seguranca.acessos import GERIR
 
     mensagem = _frase_da_099(texto_da_pendencia(pendencia))
     causa = pendencia.detalhe[0][0] if pendencia.detalhe else ""
@@ -226,8 +225,10 @@ def _item_da_passagem(pendencia, edital, ator):
         url = reverse("interface:formalizacao-definicao", args=[edital.id])
         rotulo = "Definir os documentos"
     elif causa == "sem_quem_receba":
-        pode = ator.can(GERIR)
-        url = f"{reverse('interface:acessos-formalizacao')}?edital={edital.id}"
+        # A presidência também designa, desde a revisão de 12/11 da `117` (FR-6708).
+        from processo_seletivo.interface.andamento import _onde_designar
+
+        pode, url = _onde_designar(ator, edital)
         rotulo = "Designar quem recebe"
     else:
         pode = (

@@ -310,6 +310,18 @@ urlpatterns = [
         views_formalizacao.definicao,
         name="formalizacao-definicao",
     ),
+    # Designar e revogar na mesma tela, pela presidência do Processo (117, revisão de 12/11, D-025):
+    # filhas da definição, porque é ali que a presidência vê quem acessa os documentos (UX-700).
+    path(
+        "editais/<uuid:edital_id>/formalizacao/designar",
+        views_formalizacao.designar_na_definicao,
+        name="formalizacao-designar",
+    ),
+    path(
+        "editais/<uuid:edital_id>/formalizacao/designacoes/<uuid:designacao_id>/revogar",
+        views_formalizacao.revogar_na_definicao,
+        name="formalizacao-designacao-revogar",
+    ),
     # A exportação de matrículas (031). Pende do **Edital**, e não do marco: o que se exporta é o
     # conjunto de pessoas que vai se matricular naquele certame, e a população — convocados de um
     # marco, ou um resultado divulgado — é escolhida **dentro** da tela, porque é a escolha que a

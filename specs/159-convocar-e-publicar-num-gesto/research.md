@@ -73,6 +73,12 @@ parcial comum, a autoridade, o veículo (na forma por publicação), a declaraç
 público, e o botão que diz as consequências. A conferência antes de chamar uma pessoa da `152` (PR
 #502) é tela própria; quando ela entrar, estes campos vão para ela — o comando já os recebe.
 
+**Cumprido no merge com a `main`, em 12/11** (#502 mergeado antes do #504): a chamada da fila e a
+regularização passam pela conferência compartilhada (`convocacao_conferir.html`), que ganhou a seção
+«Na página pública da seleção» para os dois casos, e os botões por veículo nomeiam a pessoa. O
+formulário da tela da convocação voltou a ser só "Conferir antes de convocar"; a correção, que não
+tem a conferência da `152`, continua com o parcial no próprio cartão.
+
 ## D-010 — Sem autoridade informada, o comando não publica
 
 O comando de convocar continua aceitando a chamada sem autoridade — é o que mantém os demais caminhos

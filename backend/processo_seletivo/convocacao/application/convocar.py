@@ -14,6 +14,8 @@ menos que venha motivo, e aí nasce a sucessora, sem tocar na anterior. É a mes
 `emitir_apuracao` usa, e pela mesma razão: a tabela é append-only, e `UPDATE` não existe nela.
 """
 
+from typing import NamedTuple
+
 from django.utils import timezone
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
@@ -101,153 +103,25 @@ def convocar(
         marco = identificador(marco_id)
         lista = identificador(lista_id) if lista_id else None
         inscricao = identificador(inscricao_id)
-        # **O marco intermediário não convoca** (133, FR-4534): ele decidiu quem foi à Etapa
-        # seguinte, e as vagas são do marco que a lê. Antes de tudo, porque nenhuma outra recusa
-        # diria o motivo verdadeiro — e porque a correção da `120` também passa por aqui.
-        marco_intermediario.recusar(
-            effective_version(edital_id=edital.id, at=ctx.now).content, perfil, marco
-        )
-        informada = _especie(especie) if (especie or "").strip() else ""
         texto_do_fundamento = (fundamento or "").strip()
-        if not texto_do_fundamento and fundamento_por_especie is None:
-            # O *"no interesse da Administração"* do 77/2026 entra aqui, e é o que faz a chamada
-            # ser ato motivado em vez de linha numa planilha.
-            raise DomainError(
-                nomes.FUNDAMENTO_OBRIGATORIO,
-                "Declare o fundamento da convocação.",
-                422,
-                campo="fundamento",
-            )
-
-        # **A ordem tem de ser a vigente** (`FR-265`): chamar segundo uma ordem já sucedida é
-        # convocar pela lista de ontem, e a pessoa chamada pode não ser mais a próxima.
-        ato = ato_vigente(edital=edital, marco_id=marco, lista_id=lista)
-        if ato is None:
-            raise DomainError(
-                nomes.ORDEM_NAO_VIGENTE,
-                "Este recorte não tem ordem vigente: não há de onde tirar quem é o próximo.",
-                409,
-            )
-
-        contexto = selectors.contexto_do_recorte(
-            edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista, at=ctx.now
-        )
-        apuracao = contexto["apuracao"]
-        if apuracao is None:
-            # **Chamar para vaga que ninguém apurou é prometer o que não se sabe existir.** Não é
-            # o mesmo que "não há vaga": é não saber, e a recusa diz isso.
-            raise DomainError(
-                nomes.APURACAO_AUSENTE,
-                "Este recorte não tem apuração de ocupação emitida: não há vaga faltante "
-                "conhecida para a qual convocar.",
-                409,
-            )
-        if contexto["causasDeObsolescencia"]:
-            causas = ", ".join(contexto["causasDeObsolescencia"])
-            raise DomainError(
-                nomes.APURACAO_OBSOLETA,
-                f"A apuração vigente deste recorte já se sabe para trás ({causas}): emita a "
-                "apuração seguinte antes de convocar.",
-                409,
-            )
-
-        anterior = _em_aberto_da_pessoa(contexto, inscricao)
-        texto_do_motivo = (motivo or "").strip()
-        if correcao is not None:
-            # **Depois da repetição, e não antes** (`R-002` da `120`): o segundo clique do mesmo
-            # formulário já voltou com o resultado do primeiro, lá em cima. O que chega aqui é outro
-            # formulário — e, se ele viu uma convocação que já não está em aberto, é recusado.
-            _conferir_a_nomeada(
-                contexto,
-                inscricao=inscricao,
-                anterior=anterior,
-                nomeada_id=correcao["convocacao_id"],
-            )
-            if not texto_do_motivo:
-                raise DomainError(
-                    nomes.MOTIVO_DA_CORRECAO_OBRIGATORIO,
-                    "Declare o motivo da correção: ele fica na convocação e na trilha, ao lado da "
-                    "convocação corrigida.",
-                    422,
-                    campo="motivo",
-                )
-        if anterior is not None:
-            derivada = especie_da_posicao.especie_da_sucessora(
-                inscricao,
-                ocupando=contexto["ocupando"],
-                alcancados=contexto["alcancados"],
-                regularizaveis=contexto["regularizaveis"],
-                anterior=anterior,
-            )
-        else:
-            derivada = especie_da_posicao.derivada(
-                inscricao,
-                ocupando=contexto["ocupando"],
-                alcancados=contexto["alcancados"],
-                regularizaveis=contexto["regularizaveis"],
-            )
-        # Sem espécie derivável, a pessoa não é chamável por nenhuma: as recusas abaixo dizem por
-        # quê, e a espécie de trabalho só decide qual delas se aplica.
-        especie = informada or derivada or nomes.SUPLENCIA
-        # **A versão é lida uma vez, sob a trava**, e serve à assinatura e à gravação: lida duas
-        # vezes, uma Retificação entre as leituras gravaria um fundamento que a prévia não mostrou.
-        versao = effective_version(edital_id=edital.id, at=ctx.now)
-        if correcao is not None:
-            _conferir_a_previa(
-                correcao,
-                anterior=anterior,
-                apuracao=apuracao,
-                versao=versao,
-                perfil=perfil,
-                especie=especie,
-            )
-        if anterior is not None and not texto_do_motivo:
-            raise DomainError(
-                nomes.CONVOCACAO_VIGENTE_EXISTENTE,
-                "Esta Inscrição tem convocação neste recorte aguardando desfecho. Para corrigi-la, "
-                "declare o motivo da sucessão; para chamá-la de novo, registre antes o desfecho da "
-                "chamada anterior.",
-                409,
-            )
-
-        # **A ordem é conferida antes do déficit, e a ordem das recusas é ela mesma uma decisão.**
-        # Quem tenta convocar alguém fora da faixa num recorte sem vaga faltante recebe duas
-        # verdades, e só uma delas diz o que fazer: *"não há vaga"* manda emitir apuração, e o
-        # problema era outro. A recusa mais específica vem primeiro.
-        if especie == nomes.PARA_REGULARIZAR:
-            _recusar_por_regularizacao(
-                contexto,
-                inscricao=inscricao,
-                sucede=anterior,
-                justifica_precedencia=justifica_precedencia,
-            )
-        else:
-            _recusar_por_ordem(
-                contexto,
-                inscricao=inscricao,
-                sucede=anterior,
-                justifica_precedencia=justifica_precedencia,
-            )
-        _recusar_por_deficit(
-            contexto,
-            especie=especie,
+        verificada = verificar_chamada(
+            edital=edital,
+            perfil=perfil,
+            marco=marco,
+            lista=lista,
             inscricao=inscricao,
-            apuracao=apuracao,
-            sucede=anterior,
+            especie=especie,
+            agora=ctx.now,
+            sem_fundamento=not texto_do_fundamento and fundamento_por_especie is None,
+            motivo=motivo,
+            justifica_precedencia=justifica_precedencia,
+            correcao=correcao,
         )
-        # **Depois das recusas de ordem e de vaga, e a ordem é deliberada.** Quem convoca alguém
-        # fora da faixa "para vaga inicial" precisa ouvir que a pessoa está fora da faixa — a
-        # espécie errada é o sintoma, e não o problema.
-        if informada and derivada and informada != derivada:
-            raise DomainError(
-                nomes.ESPECIE_DIVERGENTE_DA_POSICAO,
-                "A espécie informada não é a que a posição desta pessoa determina: "
-                f"{_ESPECIE_POR_EXTENSO[derivada]}. A espécie é consequência da posição na fila, "
-                "e não escolha.",
-                422,
-                campo="especie",
-            )
-
+        especie = verificada.especie
+        contexto = verificada.contexto
+        apuracao = verificada.apuracao
+        anterior = verificada.anterior
+        texto_do_motivo = verificada.motivo
         if fundamento_por_especie is not None:
             texto_do_fundamento = fundamento_por_especie(especie, apuracao)
         # **A sucessora copia o número da raiz que corrige**; a chamada nova recebe o seguinte. É
@@ -267,9 +141,9 @@ def convocar(
             vencimento=vencimento,
             fundamento=texto_do_fundamento,
             apuracao=apuracao,
-            ato_de_ordenacao_id=ato.id,
+            ato_de_ordenacao_id=verificada.ato.id,
             corte_id=contexto["corte"].id if contexto["corte"] is not None else None,
-            versao=versao,
+            versao=verificada.versao,
             convocacao_anterior=anterior,
             motivo_da_sucessao=texto_do_motivo if anterior is not None else "",
             chamada=chamada,
@@ -281,7 +155,7 @@ def convocar(
         # sucessora que corrige vencimento ou fundamento herda pela raiz (D-009).
         from processo_seletivo.convocacao.application.documentos import gravar_lista_da_chamada
 
-        gravar_lista_da_chamada(convocacao, versao=versao)
+        gravar_lista_da_chamada(convocacao, versao=verificada.versao)
         # **O que nasce com a convocação, na mesma transação** (159, D-004): a publicação oficial no
         # GPS, quando é ela o veículo. A recusa dela desfaz a convocação — convocar e publicar no
         # GPS é um ato só —, e o que ela declara volta junto do que a convocação declarou.
@@ -297,6 +171,201 @@ def convocar(
             razao_adicional=razao_adicional,
             extra=extra,
         )
+
+
+class ChamadaVerificada(NamedTuple):
+    """O que a verificação da chamada leu, para o comando gravar e a conferência mostrar."""
+
+    especie: str
+    contexto: dict
+    apuracao: object
+    anterior: object
+    ato: object
+    versao: object
+    motivo: str
+
+
+def verificar_chamada(
+    *,
+    edital,
+    perfil,
+    marco,
+    lista,
+    inscricao,
+    especie,
+    agora,
+    sem_fundamento=False,
+    motivo="",
+    justifica_precedencia=False,
+    correcao=None,
+):
+    """As recusas da chamada individual pela leitura do recorte, na ordem do comando (152, R-004).
+
+    **Uma verificação só, para o comando e para a conferência** (FR-5817), pelo desenho de
+    `verificar_titulares` da `140`. O comando a chama sob a trava, e é ali que ela decide; a
+    conferência a chama sem trava, para não mostrar o botão de um ato que só pode ser recusado.
+    Duas listas de recusas divergiriam, e a conferência passaria a prometer o que o comando nega.
+
+    `correcao` é a da `120`: as conferências dela continuam aqui, na posição de sempre, porque a
+    ordem das recusas é ela mesma uma decisão. A conferência desta spec não a passa (FR-5823).
+
+    Devolve a `ChamadaVerificada`, ou levanta a `DomainError` que o comando levantaria.
+    """
+    # **O marco intermediário não convoca** (133, FR-4534): ele decidiu quem foi à Etapa
+    # seguinte, e as vagas são do marco que a lê. Antes de tudo, porque nenhuma outra recusa
+    # diria o motivo verdadeiro — e porque a correção da `120` também passa por aqui.
+    marco_intermediario.recusar(
+        effective_version(edital_id=edital.id, at=agora).content, perfil, marco
+    )
+    informada = _especie(especie) if (especie or "").strip() else ""
+    if sem_fundamento:
+        # O *"no interesse da Administração"* do 77/2026 entra aqui, e é o que faz a chamada
+        # ser ato motivado em vez de linha numa planilha.
+        raise DomainError(
+            nomes.FUNDAMENTO_OBRIGATORIO,
+            "Declare o fundamento da convocação.",
+            422,
+            campo="fundamento",
+        )
+
+    # **A ordem tem de ser a vigente** (`FR-265`): chamar segundo uma ordem já sucedida é
+    # convocar pela lista de ontem, e a pessoa chamada pode não ser mais a próxima.
+    ato = ato_vigente(edital=edital, marco_id=marco, lista_id=lista)
+    if ato is None:
+        raise DomainError(
+            nomes.ORDEM_NAO_VIGENTE,
+            "Este recorte não tem ordem vigente: não há de onde tirar quem é o próximo.",
+            409,
+        )
+
+    contexto = selectors.contexto_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista, at=agora
+    )
+    apuracao = contexto["apuracao"]
+    if apuracao is None:
+        # **Chamar para vaga que ninguém apurou é prometer o que não se sabe existir.** Não é
+        # o mesmo que "não há vaga": é não saber, e a recusa diz isso.
+        raise DomainError(
+            nomes.APURACAO_AUSENTE,
+            "Este recorte não tem apuração de ocupação emitida: não há vaga faltante "
+            "conhecida para a qual convocar.",
+            409,
+        )
+    if contexto["causasDeObsolescencia"]:
+        causas = ", ".join(contexto["causasDeObsolescencia"])
+        raise DomainError(
+            nomes.APURACAO_OBSOLETA,
+            f"A apuração vigente deste recorte já se sabe para trás ({causas}): emita a "
+            "apuração seguinte antes de convocar.",
+            409,
+        )
+
+    anterior = _em_aberto_da_pessoa(contexto, inscricao)
+    texto_do_motivo = (motivo or "").strip()
+    if correcao is not None:
+        # **Depois da repetição, e não antes** (`R-002` da `120`): o segundo clique do mesmo
+        # formulário já voltou com o resultado do primeiro, lá em cima. O que chega aqui é outro
+        # formulário — e, se ele viu uma convocação que já não está em aberto, é recusado.
+        _conferir_a_nomeada(
+            contexto,
+            inscricao=inscricao,
+            anterior=anterior,
+            nomeada_id=correcao["convocacao_id"],
+        )
+        if not texto_do_motivo:
+            raise DomainError(
+                nomes.MOTIVO_DA_CORRECAO_OBRIGATORIO,
+                "Declare o motivo da correção: ele fica na convocação e na trilha, ao lado da "
+                "convocação corrigida.",
+                422,
+                campo="motivo",
+            )
+    if anterior is not None:
+        derivada = especie_da_posicao.especie_da_sucessora(
+            inscricao,
+            ocupando=contexto["ocupando"],
+            alcancados=contexto["alcancados"],
+            regularizaveis=contexto["regularizaveis"],
+            anterior=anterior,
+        )
+    else:
+        derivada = especie_da_posicao.derivada(
+            inscricao,
+            ocupando=contexto["ocupando"],
+            alcancados=contexto["alcancados"],
+            regularizaveis=contexto["regularizaveis"],
+        )
+    # Sem espécie derivável, a pessoa não é chamável por nenhuma: as recusas abaixo dizem por
+    # quê, e a espécie de trabalho só decide qual delas se aplica.
+    especie = informada or derivada or nomes.SUPLENCIA
+    # **A versão é lida uma vez, sob a trava**, e serve à assinatura e à gravação: lida duas
+    # vezes, uma Retificação entre as leituras gravaria um fundamento que a prévia não mostrou.
+    versao = effective_version(edital_id=edital.id, at=agora)
+    if correcao is not None:
+        _conferir_a_previa(
+            correcao,
+            anterior=anterior,
+            apuracao=apuracao,
+            versao=versao,
+            perfil=perfil,
+            especie=especie,
+        )
+    if anterior is not None and not texto_do_motivo:
+        raise DomainError(
+            nomes.CONVOCACAO_VIGENTE_EXISTENTE,
+            "Esta Inscrição tem convocação neste recorte aguardando desfecho. Para corrigi-la, "
+            "declare o motivo da sucessão; para chamá-la de novo, registre antes o desfecho da "
+            "chamada anterior.",
+            409,
+        )
+
+    # **A ordem é conferida antes do déficit, e a ordem das recusas é ela mesma uma decisão.**
+    # Quem tenta convocar alguém fora da faixa num recorte sem vaga faltante recebe duas
+    # verdades, e só uma delas diz o que fazer: *"não há vaga"* manda emitir apuração, e o
+    # problema era outro. A recusa mais específica vem primeiro.
+    if especie == nomes.PARA_REGULARIZAR:
+        _recusar_por_regularizacao(
+            contexto,
+            inscricao=inscricao,
+            sucede=anterior,
+            justifica_precedencia=justifica_precedencia,
+        )
+    else:
+        _recusar_por_ordem(
+            contexto,
+            inscricao=inscricao,
+            sucede=anterior,
+            justifica_precedencia=justifica_precedencia,
+        )
+    _recusar_por_deficit(
+        contexto,
+        especie=especie,
+        inscricao=inscricao,
+        apuracao=apuracao,
+        sucede=anterior,
+    )
+    # **Depois das recusas de ordem e de vaga, e a ordem é deliberada.** Quem convoca alguém
+    # fora da faixa "para vaga inicial" precisa ouvir que a pessoa está fora da faixa — a
+    # espécie errada é o sintoma, e não o problema.
+    if informada and derivada and informada != derivada:
+        raise DomainError(
+            nomes.ESPECIE_DIVERGENTE_DA_POSICAO,
+            "A espécie informada não é a que a posição desta pessoa determina: "
+            f"{_ESPECIE_POR_EXTENSO[derivada]}. A espécie é consequência da posição na fila, "
+            "e não escolha.",
+            422,
+            campo="especie",
+        )
+
+    return ChamadaVerificada(
+        especie=especie,
+        contexto=contexto,
+        apuracao=apuracao,
+        anterior=anterior,
+        ato=ato,
+        versao=versao,
+        motivo=texto_do_motivo,
+    )
 
 
 # **Os rótulos do modelo, e não uma segunda grafia**: renomear a espécie na tela e esquecer a recusa
@@ -850,4 +919,4 @@ def _edital_do_processo(processo, edital_id):
         raise DomainError("edital_nao_encontrado", "Edital não encontrado.", 404) from erro
 
 
-__all__ = ["convocar"]
+__all__ = ["convocar", "verificar_chamada"]

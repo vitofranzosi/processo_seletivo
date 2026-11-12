@@ -49,8 +49,9 @@ Para o vocabulário de "apresentado", ver o [data-model](data-model.md).
    de emitir o corte" mostra a faixa e quem fica fora, e nenhum corte é gravado. Ao confirmar, o
    corte é emitido (SC-1904).
 4. **Com corte vigente, peça a faixa seguinte com quantidade 2.** A conferência mostra as duas
-   posições e as pessoas alcançadas. Uma quantidade além do resto da ordem é recusada antes do
-   botão (FR-5829).
+   posições e as pessoas alcançadas. Uma quantidade além do resto da ordem não é recusada: a
+   conferência mostra a quantidade pedida ao lado de quantas pessoas a faixa alcança — só quem
+   resta, às vezes ninguém —, antes do botão (FR-5829).
 
 ## 3. O seletor do desfecho e o atestado (achado 12)
 

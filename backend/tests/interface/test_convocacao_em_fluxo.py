@@ -80,6 +80,19 @@ def postar_titulares(client, edital, assinatura, **extra):
     )
 
 
+def postar_chamada(client, url, dados):
+    """A chamada individual inteira: a conferência, e a confirmação nela (152, FR-5810, FR-5816).
+
+    Sem botão de confirmar — a conferência recusou —, devolve a própria conferência.
+    """
+    conferencia = client.post(url, dados)
+    if conferencia.status_code != 200 or 'name="texto_conferido"' not in (
+        conferencia.content.decode()
+    ):
+        return conferencia
+    return client.post(url, {**campos_da_conferencia(conferencia), "etapa": "confirmar"})
+
+
 def test_a_previa_declara_o_alcance_antes_do_botao_e_nao_pratica_nada(
     client, seletor_ligado, cenario_da_tela
 ):
@@ -146,7 +159,8 @@ def test_a_chamada_individual_nao_pergunta_a_especie_e_ja_comunica(
     assert "O candidato lerá este fundamento, para vaga inicial" in pagina
 
     pessoa = previa(edital)["pessoas"][0]["id"]
-    client.post(
+    postar_chamada(
+        client,
         reverse("interface:convocar", args=[edital.id, MARCO]),
         {"inscricao": pessoa, "vencimento": VENCIMENTO, "chave": "individual"},
     )

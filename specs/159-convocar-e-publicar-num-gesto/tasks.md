@@ -12,3 +12,4 @@ Caminhos relativos a `backend/`.
 - [x] T008 Testes de integração: as três formas, falha parcial, repetição, suplente e correção (SC-2251 a SC-2256)
 - [x] T009 Testes de interface: a conferência e o botão; a página pública depois de uma confirmação
 - [x] T010 Suíte, navegador com o C10, rastreabilidade, PR
+- [x] T011 Integrar à conferência da chamada individual da `152` (D-009), depois do merge do #502

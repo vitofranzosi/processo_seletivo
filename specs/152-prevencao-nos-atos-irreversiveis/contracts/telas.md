@@ -41,7 +41,7 @@ o assunto e o corpo da mensagem (ou a frase da publicação) e a frase do prazo,
 | Pedido | Resposta |
 |---|---|
 | Sem `confirmar=1` | 200, `corte_confirmar.html`: faixa, progride e fica fora, avisos, motivo, assinatura recomposta, `calculo_mudou`; nada gravado (FR-5826 a FR-5828, FR-5830) |
-| Proposta recusada (ordem obsoleta, marco sem corte) | redirecionamento para a tela do corte com a frase, como hoje |
+| Proposta recusada (ordem obsoleta, marco sem corte) | 200, a página só com a razão e "Voltar ao corte"; nada na sessão (FR-5830) |
 | `confirmar=1` | `emitir_corte` de hoje: `confirmacao_do_corte_exigida`, `calculo_divergente`, `corte_ja_emitido`, `sucessao_sem_motivo` |
 
 ## `interface:continuar-corte` — faixa seguinte

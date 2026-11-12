@@ -44,3 +44,7 @@
 .definicao-da-formalizacao{max-width:44rem}
 .requisito-da-definicao{margin:.4rem 0}
 .aviso-da-definicao{margin:.1rem 0 .4rem 1.75rem}
+/* A designação pela presidência, na seção de quem acessa (117, revisão de 12/11, D-025). */
+.designacoes-vigentes li{margin-bottom:.75rem}
+.revogar-designacao{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.5rem;margin-top:.25rem}
+.revogar-designacao .campo{margin:0}

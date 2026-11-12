@@ -129,7 +129,8 @@ BOTOES = {
             "Realizar o sorteio desta lista",
         ),
     ],
-    "corte.html": [("botao", "Emitir corte"), ("botao", "Emitir faixa seguinte")],
+    # Os dois abrem a conferência (152, FR-5825, FR-5829, UX-531): até a 152 gravavam no clique.
+    "corte.html": [("botao", "Conferir antes de emitir"), ("botao", "Conferir a faixa seguinte")],
     "corte_historico.html": [],
     "ocupacao.html": [
         ("botao", "Apurar a ocupação deste recorte"),
@@ -180,14 +181,9 @@ BOTOES = {
         # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
         ("acao", "{{ linha.canal.emitir_de_novo }}"),
         ("botao", "{{ linha.canal.emitir }}"),
-        # A chamada individual e a regularização (159, FR-6816): por publicação, um botão por
-        # veículo, e nenhum presumido (D-006); por mensagem, o que a confirmação faz.
-        ("botao", "Convocar e publicar no GPS"),
-        ("botao", "Convocar (a publicação será registrada depois)"),
-        ("botao", "Convocar, enviar a mensagem e publicar"),
-        ("botao", "Convocar para regularizar e publicar no GPS"),
-        ("botao", "Convocar para regularizar (a publicação será registrada depois)"),
-        ("botao", "Convocar para regularizar, enviar a mensagem e publicar"),
+        # A chamada individual e a para regularizar abrem a conferência (152, FR-5822, UX-530).
+        ("botao", "Conferir antes de convocar"),
+        ("botao", "Conferir antes de convocar"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],
@@ -231,11 +227,8 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
     # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
     # Os desenhos de observar a semente e de sortear, na `142`: o mesmo `botao`, que passa a
     # secundário enquanto fixar é a tarefa de agora — perdem peso, e não ganham.
-    # Os 25º a 28º são da `159`: na forma por publicação, a chamada individual e a regularização
-    # têm um botão por veículo — o mesmo desenho do "Convocar" de antes, que eles desdobram, e não
-    # um peso novo: o ato continua o mesmo, e o veículo deixou de ser presumido.
     assert desenhos == {
-        "botao": 26,
+        "botao": 22,
         "botao{% if fixar_por_fazer %} secundario{% endif %}": 1,
         "botao{% if fixar_e_a_vez %} secundario{% endif %}": 1,
         "botao perigoso": 2,
