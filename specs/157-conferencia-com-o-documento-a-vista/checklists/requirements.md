@@ -31,10 +31,10 @@
 
 ## Notes
 
-- **Sem marcador inline, com quatro questões abertas.** As decisões que são do usuário estão em
-  "Questões para o usuário" (Questões 1 a 4), cada uma com a proposta da spec em primeiro lugar; as
+- **Sem marcador inline, com três questões abertas.** As decisões que são do usuário estão em
+  "Questões para o usuário" (Questões 1 a 3); a 4 foi respondida em 11/11, cada uma com a proposta da spec em primeiro lugar; as
   decisões D-005, D-006 e D-007 seguem a proposta até a resposta. O `/speckit-plan` pode partir das
-  propostas, mas a FR-6527 e a extensão da FR-6533 mudam com a resposta às Questões 2 e 3, e a FR-6537 com a resposta à 4.
+  propostas, mas a FR-6527 e a extensão da FR-6533 mudam com a resposta às Questões 2 e 3.
 - **Detalhe de implementação, deliberado.** A spec diz que a rota do arquivo não se deixa emoldurar
   hoje e que a da Mesa sim (FR-6504). É o fato que separa "reaproveitar a Mesa" de "funcionar": sem
   ele, o painel não carrega. A técnica — decorador, cabeçalho, fragmento, biblioteca — fica para o
@@ -49,3 +49,8 @@
   FR-6538, UX-647, UX-648, SC-2152, SC-2153, D-008, Questão 4). A decisão do usuário de 08/11 na `134`
   — aviso por gesto, nunca por evento — fica intacta nas três opções; a B revê só a letra da FR-4604
   da `134`, e por isso é opção, e não proposta.
+- **Questão 4 respondida em 11/11** (D-008): opção A com ajustes do usuário — *"Pedir aviso para
+  ‹nome›"*, todas as pendências elegíveis, sem exceção ao limite diário nem agendamento, situação em
+  solicitado, enviado e não enviado. A `134` foi revista na FR-4603, na FR-4605 e na FR-4620, com a
+  redação anterior preservada; a FR-4604 não muda. Faixa usada: FR-6500 a FR-6543, SC-2140 a SC-2154,
+  UX-640 a UX-650.

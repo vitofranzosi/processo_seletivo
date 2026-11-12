@@ -4,20 +4,22 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — quatro questões abertas para o usuário (ao fim, em "Questões para o usuário")
+**Status**: Draft — a Questão 4 respondida pelo usuário em 11/11/2026 (D-008); as Questões 1 a 3
+abertas (ao fim, em "Questões para o usuário")
 
 **Nenhuma regra nova.** Quem confere, o que o "conforme" exige, a recusa, a idempotência, os estados
 e a trilha continuam os da `115`, da `131` e da `143`. Muda **onde** o arquivo aparece e **o que a
 página faz** depois do registro: o arquivo ao lado do formulário, a conferência registrada sem
 recarregar a página inteira, e o caminho ao próximo documento. Não há tabela, permissão, estado nem
-evento de trilha novos. A única exceção possível é a da Questão 4 — o aviso de pendência oferecido
-junto da conferência —, e ela depende da resposta do usuário.
+evento de trilha novos. A única regra que muda é a do aviso de pendência, por decisão do usuário
+na Questão 4: o gesto da `134` passa a admitir o recorte de uma pessoa, oferecido quando a
+conferência dela termina, e a `134` é revista para isso, com a redação anterior preservada (D-008).
 
 **Acréscimo de 11/11.** A sessão que coordena as specs do estudo pediu, depois da primeira versão,
 que o achado 09 entrasse como questão, porque mexe no mesmo formulário: registrar a pendência não
 avisa o candidato, e o aviso é outro gesto, na tela da convocação, seguido do despacho. A decisão do
 usuário de 08/11 registrada na `134` — o aviso sai por gesto da comissão, nunca por evento — **não se
-reverte aqui**. A spec só propõe, como pergunta, onde o gesto aparece.
+reverte aqui**. O usuário respondeu em 11/11 onde o gesto aparece (Questão 4, D-008).
 
 **Input**: orientação do usuário, literal: *"escreva a spec para conferir o documento mantendo os
 dados e os controles de análise visíveis, incluindo uso em telas pequenas e alternativa para arquivos
@@ -283,8 +285,8 @@ roteiro de verificação humana registra o que foi ouvido em cada passo.
 O presidente confere os dois documentos de Bernardo: o comprovante, conforme; o "diploma", pendente,
 porque é outro comprovante. Ao registrar a pendência, a confirmação diz que nenhum aviso foi pedido e
 que Bernardo vê a pendência no portal. Terminada a conferência de Bernardo, a página mostra a situação
-do aviso e o caminho para pedi-lo — onde, depende da Questão 4. Ninguém sai da página achando que
-Bernardo foi avisado.
+do aviso e oferece *"Pedir aviso para Bernardo"*. Ninguém sai da página achando que Bernardo foi
+avisado.
 
 **Why this priority**: é o achado 09, que a sessão coordenadora pediu para tratar aqui por tocar o
 mesmo formulário. A `134` e a `143` já dão o gesto e a situação do envio; o ganho é de lugar e de
@@ -306,10 +308,19 @@ aviso na página é a mesma do cartão da convocação.
 3. **Given** um aviso registrado para Bernardo, **When** a página é lida antes do despacho, **Then**
    ela diz que o aviso foi registrado e ainda não foi enviado; depois do despacho, a situação do envio
    com as palavras da `066`, nunca "entregue" nem "lido" (FR-5016 da `143`).
-4. **Given** a proposta da Questão 4, **When** a confirmação oferece *"Avisar Bernardo agora"* e o
-   presidente o usa, **Then** é gravado um aviso pela regra da `134` — um por pessoa, por chamada, por
-   dia, com as mesmas exclusões —, a resposta diz que a mensagem sai pelo despacho, e a situação passa
-   a *"registrado, ainda não enviado"*.
+4. **Given** a conferência de Bernardo terminada com pendência elegível, **When** a confirmação
+   oferece *"Pedir aviso para Bernardo"* e o presidente o usa, **Then** é gravado um aviso pela regra
+   da `134`, com todas as pendências elegíveis de Bernardo naquele instante, e a resposta diz *"Aviso
+   solicitado; aguardando envio"*.
+5. **Given** Bernardo já avisado hoje nesta chamada, **When** a conferência dele termina com nova
+   pendência, **Then** a confirmação não oferece o gesto e diz por quê, e que o pedido poderá ser
+   feito a partir de amanhã; nada é agendado.
+6. **Given** a convocação de Bernardo com o vencimento decorrido, **When** a conferência termina com
+   pendência, **Then** a confirmação diz que o aviso não cabe mais, sem data para tentar de novo.
+7. **Given** o aviso pedido, **When** a página é lida depois do despacho, **Then** ela diz se o aviso
+   foi enviado — aceito pelo servidor de correio — ou falhou, com o estado da `066`.
+8. **Given** o gesto em lote da tela da convocação, **When** usado depois do pedido individual no
+   mesmo dia, **Then** Bernardo fica de fora por já ter sido avisado hoje, como a `134` já faz.
 
 ### Edge Cases
 
@@ -455,7 +466,7 @@ aviso na página é a mesma do cartão da convocação.
 #### A pendência e o aviso
 
 - **FR-6534**: Registrar uma conferência pendente MUST NOT gravar aviso de pendência, como a FR-4604
-  da `134` exige, qualquer que seja a resposta à Questão 4, salvo a opção B dela.
+  da `134` exige. O pedido de aviso é sempre um gesto à parte.
 - **FR-6535**: A confirmação de uma conferência pendente MUST dizer que nenhum aviso foi pedido por
   ela e que a pessoa vê a pendência no portal. Nenhum texto MUST tratar a pendência registrada como
   comunicação ao candidato (FR-5018 da `143`).
@@ -463,12 +474,31 @@ aviso na página é a mesma do cartão da convocação.
   agora (FR-5017 da `143`), ou aviso registrado com a situação do envio (FR-5016 da `143`) — MUST se
   atualizar na página sem recarga depois de cada registro, e MUST aparecer na confirmação quando a
   conferência da pessoa termina com pendência.
-- **FR-6537**: Terminada com pendência a conferência da pessoa — nenhum documento dela a conferir —,
-  a confirmação MUST oferecer o gesto *"Avisar ‹nome› agora"*, só dela, quando o gesto da `134` a
-  alcançaria agora, e o motivo quando não alcançaria. O gesto MUST seguir as regras da `134` — quem
-  pode, a chave de envio, um aviso por pessoa por chamada por dia, as exclusões, a idempotência, o
-  texto e o despacho — e MUST NOT ser oferecido por documento, nem no meio da conferência da pessoa
-  (proposta, pendente da Questão 4).
+- **FR-6537**: Terminada a conferência da pessoa — nenhum documento dela a conferir — com ao menos
+  uma pendência elegível pela FR-4606 da `134`, a confirmação MUST oferecer o gesto *"Pedir aviso
+  para ‹nome›"*, só dela. O gesto MUST NOT ser oferecido por documento, nem no meio da conferência da
+  pessoa (D-008).
+- **FR-6539**: O aviso pedido pelo gesto da FR-6537 MUST considerar todas as pendências elegíveis da
+  pessoa no instante do pedido, pelas mesmas regras do gesto em lote: o texto da FR-4614 da `134`
+  compõe todos os itens pendentes da lista, e não só o documento recém-conferido.
+- **FR-6540**: O gesto da FR-6537 MUST reaproveitar, sem exceção, as regras da `134`: quem pode
+  (FR-4603 da `134`), as exclusões (FR-4606 a FR-4608 da `134`), a chave de envio e o Processo em
+  estado final (FR-4610 da `134`), a trava e a idempotência (FR-4611 da `134`), o limite de um aviso
+  por pessoa, por chamada, por dia, o texto e o despacho. MUST NOT haver exceção ao limite diário, nem
+  agendamento automático do pedido para o dia seguinte.
+- **FR-6541**: Quando o gesto não alcançaria a pessoa, a confirmação MUST dizer o motivo, pela mesma
+  regra da prévia do gesto em lote (FR-4605 da `134`), e, quando houver, a partir de quando o pedido
+  poderá ser feito: no *"já avisada hoje nesta chamada"*, a partir do dia seguinte, no dia local da
+  instalação; nos demais motivos — vencimento decorrido, desfecho, item reenviado, sem endereço,
+  envio desabilitado, Processo encerrado —, sem data, porque o tempo sozinho não os resolve.
+- **FR-6542**: O gesto em lote *"Avisar as pessoas com pendência nesta chamada"* MUST continuar na
+  tela da convocação, como hoje. Os dois gestos gravam o mesmo aviso, e um conta para o limite do
+  outro.
+- **FR-6543**: A situação do aviso pedido MUST distinguir, com as palavras da `066`: *solicitado,
+  aguardando envio* (pendente, em envio, ou em falha temporária com nova tentativa automática);
+  *enviado*, isto é, aceito pelo servidor de correio, nunca "entregue", "recebido" nem "lido" (FR-5016
+  da `143`); e *não enviado*, com o estado que o explica — falha definitiva, indeterminada, expirada
+  sem envio ou interrompido antes do envio, com o motivo da interrupção.
 - **FR-6538**: Nenhum gesto desta spec MUST enviar a mensagem na requisição: o aviso sai pelo
   despacho da `066`, e a página diz isso.
 
@@ -478,7 +508,8 @@ aviso na página é a mesma do cartão da convocação.
   de conteúdo: script e estilo continuam só de arquivo, e moldura e objeto, só da própria origem.
 - **FR-6532**: Nada desta spec MUST mudar quem pode conferir, o comando da conferência, a FR-3611 da
   `115`, a FR-4460 da `131`, os estados e os rótulos deles, a trilha, nem o portal do candidato. A
-  única exceção possível é o gesto da FR-6537, que depende da Questão 4.
+  única exceção é o gesto individual do aviso (FR-6537 a FR-6543), pela revisão da `134` decidida na
+  Questão 4.
 - **FR-6533**: O painel da conferência MUST ter o mesmo desenho e os mesmos rótulos comuns do painel
   da Mesa — a barra, *"Abrir em aba própria"*, *"Fechar"*, o foco ao abrir. O que a Mesa ganha desta
   spec depende da Questão 3.
@@ -506,9 +537,14 @@ aviso na página é a mesma do cartão da convocação.
   conhecida: *"Sua sessão terminou; entre de novo. O que você marcou continua aqui."*
 - **UX-647**: A confirmação da pendência MUST dizer: *"Conferência registrada: Diploma de graduação,
   pendente. Nenhum aviso foi pedido; Bernardo vê a pendência no portal."*
-- **UX-648**: O gesto da FR-6537 MUST dizer *"Avisar Bernardo agora"*, com a frase da `134` antes do
-  botão — o aviso não muda o prazo e não é a convocação —; e a resposta, *"Aviso de pendência
-  registrado para Bernardo. A mensagem sai pelo despacho dos avisos, e não neste clique."*
+- **UX-648**: O gesto da FR-6537 MUST dizer *"Pedir aviso para Bernardo"*, com a frase da `134` antes
+  do botão — o aviso não muda o prazo e não é a convocação. A resposta MUST dizer *"Aviso solicitado;
+  aguardando envio. A mensagem sai pelo despacho dos avisos, e não neste clique."*
+- **UX-649**: A situação do aviso MUST usar três começos de frase, um por grupo da FR-6543: *"Aviso
+  solicitado em ‹data›; aguardando envio."*, *"Aviso enviado em ‹data›: aceito pelo servidor de
+  correio."* e *"Aviso não enviado: ‹estado da `066`›."*
+- **UX-650**: A recusa antecipada da FR-6541 MUST dizer o motivo e, quando houver, a data: *"Bernardo
+  já foi avisado hoje nesta chamada. Um novo pedido poderá ser feito a partir de 12/11/2026."*
 
 ### Key Entities
 
@@ -548,11 +584,24 @@ Nenhuma entidade nova. A **apresentação** (a versão do documento que a pessoa
   antes e depois desta feature; o roteiro registra o tempo e os gestos dos dois percursos, e nenhum
   arquivo conferido é de uma pessoa diferente da do formulário.
 - **SC-2152**: Em 100% dos registros de conferência pendente do teste, nenhum aviso de pendência é
-  gravado pelo registro; com a proposta da Questão 4, o gesto da FR-6537 grava exatamente os avisos
-  que o gesto em lote da `134` gravaria para a mesma pessoa no mesmo instante, e nenhum no dia em que
-  ela já foi avisada.
+  gravado pelo registro; o gesto da FR-6537 grava, para a pessoa, exatamente o aviso — com o mesmo
+  texto — que o gesto em lote da `134` gravaria para ela no mesmo instante, e nenhum no dia em que ela
+  já foi avisada, por qualquer dos dois gestos.
+- **SC-2154**: Em 100% das exclusões do teste, a confirmação diz o motivo, e só o *"já avisada hoje"*
+  traz data para novo pedido; nenhum pedido é gravado ou agendado para o dia seguinte.
 - **SC-2153**: Depois de cada registro do teste, a situação do aviso mostrada sem recarga é, em
   texto, a do cartão da pessoa na tela da convocação.
+
+## Revisões de requisitos anteriores
+
+- **FR-4603 da `134`** — revista pela `157` em 2026-11-11: o gesto do aviso admite o recorte de uma
+  pessoa, com as mesmas regras (D-008).
+- **FR-4605 da `134`** — acrescida pela `157` em 2026-11-11: a prévia do recorte individual diz se
+  alcança, o motivo e, no *"já avisada hoje"*, a partir de quando.
+- **FR-4620 da `134`** — acrescida pela `157` em 2026-11-11: o gesto individual é distinguível na
+  trilha.
+
+A redação anterior de cada uma fica ao fim da alínea, na `134`. A FR-4604 da `134` não muda.
 
 ## Decisões
 
@@ -631,9 +680,17 @@ da D-002 é menor; mudá-la aqui alargaria o escopo de uma feature de outra tela
 
 ### D-008 — O aviso continua gesto, oferecido quando a conferência da pessoa termina
 
-*Proposta, pendente da Questão 4.* O registro da pendência não grava aviso (FR-6534). Quando não
-resta documento da pessoa a conferir e há pendência, a confirmação oferece o gesto da `134` só para
-aquela pessoa (FR-6537); a situação do envio fica à vista e se atualiza (FR-6536).
+**Decisão do usuário (11/11/2026), Questão 4, opção A, com ajustes.** O registro da pendência não
+grava aviso (FR-6534). Quando não resta documento da pessoa a conferir e há pendência elegível, a
+confirmação oferece *"Pedir aviso para ‹nome›"*, só para aquela pessoa (FR-6537), com todas as
+pendências elegíveis dela no instante do pedido (FR-6539) e as autorizações, exclusões e limite
+diário da `134`, sem exceção nem agendamento (FR-6540). A recusa diz o motivo e, quando houver, a
+partir de quando (FR-6541). O gesto em lote fica (FR-6542). A situação distingue solicitado, enviado
+e não enviado (FR-6543). A `134` é revista expressamente para admitir o recorte individual, com a
+FR-4604 dela preservada.
+
+O rótulo é *"Pedir aviso"*, e não *"Avisar agora"*, por decisão do usuário: o clique solicita, e quem
+envia é o despacho.
 
 **Por quê**: a decisão do usuário de 08/11 na `134` é que o aviso sai por gesto da comissão, e nunca
 por evento — e o gesto continua sendo gesto. Oferecê-lo no fim da pessoa, e não por documento, segue
@@ -644,8 +701,8 @@ lote; o texto, as exclusões e o despacho são os dela.
 
 ## Questões para o usuário
 
-Cada questão traz a proposta da spec em primeiro lugar. As decisões D-005 a D-008 seguem a
-proposta até a resposta.
+Cada questão traz a proposta da spec em primeiro lugar. As decisões D-005 a D-007 seguem a
+proposta até a resposta. A Questão 4 foi respondida, e está em "Questões respondidas".
 
 ### Questão 1 — O *Conforme* fica disponível antes de abrir o arquivo?
 
@@ -673,21 +730,16 @@ proposta até a resposta.
 - **B**: sim. A Mesa ganha a alternativa sem prévia, a mensagem de recusa dentro do painel e o
   arranjo estreito, com requisitos acrescentados aqui e o escopo alargado à `012`.
 
-### Questão 4 — O aviso de pendência aparece junto da conferência?
+## Questões respondidas
 
-O achado 09: registrar a pendência não avisa o candidato; o aviso é o gesto em lote da tela da
-convocação, e a mensagem só sai no despacho. A comissão pode supor que avisou. Nas três opções, o
-aviso continua sendo gesto da comissão, como o usuário decidiu em 08/11 para a `134`, e a situação do
-envio fica à vista na página dos documentos (FR-6536).
-
-- **A (proposta)**: o gesto *"Avisar ‹nome› agora"*, só daquela pessoa, na confirmação, quando a
-  conferência dela termina com pendência (D-008, FR-6537). Separado do registro: o registro não grava
-  aviso. Acrescenta à `134` o recorte de uma pessoa, com as mesmas regras.
-- **B**: uma marca opcional *"Avisar a pessoa desta pendência"* no próprio formulário da pendência, no
-  mesmo envio. Um gesto a menos, mas revê a letra da FR-4604 da `134` — o registro passaria a gravar
-  aviso quando marcado —, e o aviso por documento gasta o aviso do dia na primeira pendência.
-- **C**: nenhum gesto novo. A confirmação diz que nenhum aviso foi pedido e leva ao gesto em lote da
-  tela da convocação; a situação do envio fica à vista. Nada muda na `134`.
+- **Questão 4 — O aviso de pendência aparece junto da conferência?** Respondida pelo usuário em
+  11/11/2026: opção A, com ajustes (D-008). O gesto *"Pedir aviso para ‹nome›"*, só daquela pessoa,
+  quando a conferência dela termina com pendência elegível; todas as pendências elegíveis dela no
+  pedido; as regras da `134` sem exceção ao limite diário e sem agendamento; a recusa com o motivo e,
+  quando houver, a data; o gesto em lote mantido; a situação em solicitado, enviado e não enviado; e a
+  `134` revista para admitir o recorte individual, preservando a FR-4604 dela. Descartados: a marca no
+  formulário da pendência, que revia a FR-4604 da `134` e gastava o aviso do dia na primeira
+  pendência; e nenhum gesto novo.
 
 ## Achados registrados
 
