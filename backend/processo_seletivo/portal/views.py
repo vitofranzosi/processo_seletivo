@@ -1747,7 +1747,26 @@ def inscricoes(request):
 
 @require_http_methods(["POST"])
 def sair(request):
+    """Encerra a identidade **e o que ela deixou a caminho**.
+
+    Só a identidade saía: o destino guardado pelo acesso ficava na sessão. Num computador
+    compartilhado, quem entrasse depois por "Minhas inscrições" via a vaga de quem tinha saído, e
+    depois do código caía em "Seus dados" a caminho dela. O pedido de código em curso, a volta à
+    vaga e as mensagens pendentes eram de quem saiu, e saem junto.
+    """
     identidade_do_candidato.encerrar(request)
+    for chave in (
+        CHAVE_DO_ENDERECO,
+        CHAVE_DO_DESAFIO,
+        CHAVE_DA_FINALIDADE,
+        CHAVE_DO_DESTINO,
+        CHAVE_DO_ENVIO,
+        CHAVE_DO_TETO,
+        CHAVE_DA_VOLTA,
+        CHAVE_DO_AVISO,
+        CHAVE_DA_RECUSA,
+    ):
+        request.session.pop(chave, None)
     return redirect(_destino_seguro(request, reverse("portal:vitrine")))
 
 
@@ -2667,6 +2686,12 @@ def _chamada_da_tela(chamada, projecao, politica, da_convocacao, versao, selecao
             fechado_pelo_processo=politica is not None and politica.fechado_pelo_processo,
         )
         titulo = obrigacoes.TITULOS[momento]
+        if momento == obrigacoes.ABERTA and not obrigacoes.providencia_pendente_sem_documento(
+            politica
+        ):
+            # Só o Requerimento pedido nesta chamada, e já enviado (154, FR-6201, D-006). A página
+            # sem documento continua sem a advertência, como hoje (D-007 da `154`).
+            titulo = obrigacoes.TITULO_SEM_PROVIDENCIA
         cartao = (
             obrigacoes.cartao_do_prazo(
                 prazo_nao_iniciado=(

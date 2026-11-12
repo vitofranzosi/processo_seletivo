@@ -112,7 +112,7 @@ VER_O_ATO = "Ver a relação publicada"
 # **Nenhuma promete perda.** A primeira não diz que haverá chamada; a segunda não diz que a pessoa
 # perde a convocação, porque o não atendimento só existe quando alguém o registra (FR-274) — e por
 # isso ela só aparece no estado em que é verdadeira: comunicação enviada, vencimento registrado,
-# prazo correndo.
+# prazo correndo **e providência pendente** (154, FR-6209): a quem já fez tudo, ela só assustava.
 NOVAS_CHAMADAS = "Novas chamadas, se houver, serão publicadas conforme o Edital."
 NAO_ATENDIMENTO_PODE_SER_REGISTRADO = (
     "Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação."
@@ -581,7 +581,11 @@ def _acao_das_obrigacoes(inscricao, convocacao, obrigacoes, recurso):
         aviso = " ".join(obrigacoes.frase_do_prazo)
     elif convocacao.vencimento is not None:
         prazo = convocacao.vencimento
-        consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+        # **Só com providência pendente** (154, FR-6209): quem já fez tudo o que a chamada pede não
+        # tem o que deixar de atender, e a advertência assustava justamente essa pessoa (achado 20
+        # do estudo da jornada final). O prazo fica (FR-6208).
+        if obrigacoes.providencia_pendente:
+            consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
     if obrigacoes.tarefas:
         rotulo = VER_E_CORRIGIR if obrigacoes.totais["a_corrigir"] else VER_O_QUE_FALTA
     else:
@@ -658,7 +662,10 @@ def _acao_da_convocacao(inscricao, convocacao, estado, requerimento, recurso, po
         # e a consequência prometeriam um ato que não existe mais, e a linha informativa já diz que
         # o envio encerrou.
         prazo = convocacao.vencimento
-        consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
+        # **Só o Requerimento pedido nesta chamada, e já enviado, a tira** (154, FR-6201): sem nada
+        # pedido pelo portal, o sistema não verifica o cumprimento, e a tela fica a de hoje.
+        if obrigacoes_da_convocacao.providencia_pendente_sem_documento(politica):
+            consequencia = NAO_ATENDIMENTO_PODE_SER_REGISTRADO
 
     return Acao(
         principal,

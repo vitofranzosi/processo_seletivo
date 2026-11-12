@@ -93,7 +93,7 @@ cada ato. A marca de "trabalho" é só estilo, para quem pode praticar aquele at
     <li class="pergunta{% if pergunta.trabalho %} com-trabalho{% endif %}{% if not pergunta.quantas %} sem-ninguem{% endif %}">{% if pergunta.ancora %}<a href="#{{ pergunta.ancora }}"><strong>{{ pergunta.quantas }}</strong> {{ pergunta.texto }}</a>{% else %}<span><strong>{{ pergunta.quantas }}</strong> {{ pergunta.texto }}</span>{% endif %}{% if pergunta.detalhe %} <span class="detalhe">{% if pergunta.detalhe_ancora %}<a href="#{{ pergunta.detalhe_ancora }}">{{ pergunta.detalhe }}</a>{% else %}{{ pergunta.detalhe }}{% endif %}</span>{% endif %}</li>
     {% endfor %}
   </ul>
-  {% if sem_providencia %}<p class="nota sem-providencia">Nenhum ato a praticar neste recorte agora{% if leitura.ocupacao.estado == "NOT_APPRAISED" %}: a ocupação dele ainda não foi apurada, e sem ela não há vaga conhecida para a qual convocar{% elif leitura.ocupacao.estado == "OBSOLETE" %}: a apuração dele está obsoleta, e convocar espera a apuração seguinte{% elif leitura.ocupacao.estado == "NO_VACANCY_TABLE" %}: o Edital não publicou quadro de vagas para ele{% elif leitura.esgotou and not titulares.pessoas and leitura.corte and continuacao_admitida %}: não há mais quem chamar na faixa que o corte alcançou — ampliá-la é pedir a faixa seguinte, na ocupação{% elif leitura.esgotou and not titulares.pessoas and leitura.corte %}: não há mais quem chamar na faixa que o corte alcançou, e o Edital não publicou continuação além dela{% elif leitura.esgotou and not titulares.pessoas %}: não há mais quem chamar na fila{% endif %}.</p>{% endif %}
+  {% if sem_providencia %}<p class="nota sem-providencia">Nenhum ato a praticar neste recorte agora{% if leitura.ocupacao.estado == "NOT_APPRAISED" %}: a ocupação dele ainda não foi apurada, e sem ela não há vaga conhecida para a qual convocar{% elif leitura.ocupacao.estado == "OBSOLETE" %}: a apuração dele está obsoleta, e convocar espera a apuração seguinte{% elif leitura.ocupacao.estado == "NO_VACANCY_TABLE" %}: o Edital não publicou quadro de vagas para ele{% elif not vagas_sem_chamada and leitura.ocupacao.apuracao.nao_preenchidas %}: não há vaga a ocupar — {{ leitura.ocupacao.apuracao.nao_preenchidas|contagem:"vaga foi declarada não preenchida,vagas foram declaradas não preenchidas" }}, na ocupação{% elif not vagas_sem_chamada %}: cada vaga deste recorte já tem alguém, ocupando ou com chamada em aberto{% elif leitura.esgotou and not titulares.pessoas and leitura.corte and continuacao_admitida %}: não há mais quem chamar na faixa que o corte alcançou — ampliá-la é pedir a faixa seguinte, na ocupação{% elif leitura.esgotou and not titulares.pessoas and leitura.corte %}: não há mais quem chamar na faixa que o corte alcançou, e o Edital não publicou continuação além dela{% elif leitura.esgotou and not titulares.pessoas %}: não há mais quem chamar na fila{% endif %}.</p>{% endif %}
   {% endif %}
 </nav>
 
@@ -348,6 +348,19 @@ A situação vai ao lado do nome, em cor e em palavra (a cor sozinha não é inf
 atestado abrem quando alguém os pede; e reenviar uma mensagem já enviada deixa de ser o botão mais
 chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pessoa.
 {% endcomment %}
+{% if a_divulgar_no_gps %}
+{% comment %}
+**O caminho até a página pública, em qualquer forma** (149, FR-5737). A convocação por mensagem
+enviada não deixa pendência, e o "Publicar no GPS" das pendentes não aparecia: a comissão convocava e
+não achava onde pôr a lista na área pública. Aqui a publicação só divulga — o prazo já correu do
+envio, ou do registro externo —, e a página de publicação diz isso antes do botão.
+{% endcomment %}
+<section aria-labelledby="pagina-publica">
+  <h2 id="pagina-publica">Na página pública da seleção</h2>
+  <p><strong>{{ a_divulgar_no_gps }} {{ a_divulgar_no_gps|plural:"convocação comunicada ainda não está,convocações comunicadas ainda não estão" }} na página pública.</strong> Publicar a relação não muda prazo nenhum nem envia mensagem: a convocação oficial já foi feita.</p>
+  <p class="acoes"><a class="acao" href="{{ publicar_no_gps }}">Publicar no GPS</a></p>
+</section>
+{% endif %}
 {% if chamadas_publicadas.itens %}
 <section aria-labelledby="avisos-das-chamadas">
   <h2 id="avisos-das-chamadas">Avisar os convocados de uma chamada publicada</h2>

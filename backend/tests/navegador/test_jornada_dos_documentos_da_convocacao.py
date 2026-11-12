@@ -76,7 +76,10 @@ def abrir_convocacao(pagina, servidor, pessoa):
     # O heading de primeiro nível é o título por estado (121, FR-3858), e não mais "Convocação".
     titulo = pagina.locator("main h1")
     expect(titulo).to_be_visible()
-    assert titulo.inner_text() in obrigacoes.TITULOS.values(), titulo.inner_text()
+    # Com a chamada aberta e nada a fazer, o título é o de acompanhar (154, FR-6202): o certificado
+    # aproveitado da inscrição, por exemplo, não deixa tarefa.
+    titulos = (*obrigacoes.TITULOS.values(), obrigacoes.TITULO_SEM_PROVIDENCIA)
+    assert titulo.inner_text() in titulos, titulo.inner_text()
 
 
 def enviar(pagina, item_id, arquivo):

@@ -34,3 +34,8 @@
 - [x] T018 Regressões: `emitir_pendentes`, visibilidade da `125`, avisos da `066` com a publicação nativa (FR-5733–FR-5735, SC-1861)
 - [x] T019 Navegador real: capturas da gestão e do portal em 375, 1280 e 1920 px (SC-1863)
 - [x] T020 `make lint check test-pg`; `CLAUDE.md` (o `M` do provisionamento); quickstart; PR
+
+## Fase 5 — Depois da demonstração de 12/11/2026
+
+- [x] T021 A relação na ordem da classificação dentro do mesmo gesto (FR-5714)
+- [x] T022 O caminho até a publicação em qualquer forma: a tela do recorte e o Centro de Controle (FR-5737)

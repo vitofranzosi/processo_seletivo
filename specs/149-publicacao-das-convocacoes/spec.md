@@ -332,7 +332,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   autoridade signatária.
 - **FR-5714**: As pessoas MUST vir agrupadas por vaga e, dentro dela, por lista, na ordem em que o
   Edital publicado declara vagas e listas; dentro do grupo, na ordem em que foram convocadas, com o
-  protocolo desempatando.
+  protocolo desempatando. *(Explicitada em 12/11/2026, depois da demonstração no cenário C10.)* As
+  convocadas num mesmo gesto nascem no mesmo instante, e a ordem entre elas é a da fila — a posição
+  na classificação que a convocação citou —, antes do protocolo.
 - **FR-5715**: O vencimento MUST ser dito uma vez no grupo quando for o mesmo para todos, e na linha de
   cada pessoa quando não for. Sem vencimento, MUST dizer que o prazo é o estabelecido no Edital, sem
   data.
@@ -412,6 +414,14 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-5736**: O custo de consulta da página de publicação MUST NOT crescer com o número de recortes
   nem de convocações, e o da página pública e da seção MUST NOT crescer com o número de pessoas.
 
+#### G. O caminho até a publicação *(acrescentado em 12/11/2026)*
+
+- **FR-5737**: A gestão MUST levar à página de publicação em qualquer forma de comunicar, e não só
+  pelas pendentes por publicação: a tela de convocação do recorte MUST dizer quantas convocações
+  comunicadas ainda não estão na página pública e oferecer *"Publicar no GPS"*; e o Centro de Controle
+  do Edital MUST levar à *Publicação das convocações* quando a fase Convocação tiver começado. Na
+  demonstração de 12/11/2026, com o cenário C10 por mensagem individual, nenhuma tela levava até ela.
+
 ### Key Entities
 
 - **Publicação de convocados**: o ato. Edital, número, instante, quem publicou, autoridade e unidade
@@ -461,6 +471,9 @@ Os doze casos de validação do pedido estão mapeados no fim da [rastreabilidad
   gestão, idem a 375 px e 1280 px.
 - **SC-1864**: Abrir a página de publicação, mudar os recortes escolhidos e ver a prévia não grava
   linha nenhuma, em tabela nenhuma.
+- **SC-1866**: Num Perfil por mensagem individual, depois de convocar os titulares, a tela de
+  convocação e o Centro de Controle levam à página de publicação; e a relação lista as pessoas na ordem
+  da classificação.
 - **SC-1865**: O número de consultas da página de publicação não muda de um para três recortes, e o
   da página pública não muda de uma para cinco pessoas.
 
