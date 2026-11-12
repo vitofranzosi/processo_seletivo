@@ -152,6 +152,14 @@ e a restauração do C16 que revoga a designação anterior (FR-6726).
 Suíte completa (`make lint check test-pg`, 4 workers, sem o grupo `navegador`): **19 031
 passando, 23 pulados, sem falha, em 908 s**.
 
+**Depois da revisão do #500** (achados 1, 3 a 7; o 2 espera a revisão da `117`): a restauração
+revoga as designações de todos os Editais do Processo, também do encerrado e em qualquer cenário,
+e a pré-visualização as conta; a pessoa suspensa com vínculo é recusada com `pessoa_indisponivel`;
+a pré-visualização do C16 e do C17 juntos diz que o C17 recebe a pessoa e o papel do cenário
+anterior. Num segundo banco novo (`ps_treino_nav2`), o mesmo percurso no navegador deu o mesmo
+resultado. Suíte completa: **19 033 passando, 23 pulados, sem falha, em 1396 s** (com outras
+suítes no mesmo cluster).
+
 **Observação, sem mudança:** o *O que fazer agora* do `SIM16` também mostra a classificação da lista
 PPP, em que ninguém concorreu, e o resultado definitivo à espera do prazo recursal. É o estado da
 cadeia de notas que o C10 a C12 já percorrem, e não é da formalização.
