@@ -101,6 +101,8 @@ escreve neles. As views ficam em módulo próprio.
 - `PAPEIS["formalizacao"] = {"formalizacao:acessar"}`. A tela da `107` já o oferece.
 - **Designação** em **Acessos**, na pessoa: `acesso:gerir`, sem autodesignação, `select_for_update`
   na pessoa, papel vigente, Perfis do Edital, trilha.
+  *(Desde a revisão de 12/11, D-025: também pela presidência do Processo, na tela da definição. Ver
+  a seção da revisão, ao fim.)*
 - `pode_acessar(ator, edital, inscricao=None)` → `ok` | `404` | `403(papel)`. É o único ponto de
   decisão.
 
@@ -250,3 +252,38 @@ existentes e as novas respondem 409 *"Arquivo indisponível"*, com evento.
 Não há violação. As quatro tabelas são quatro atos com donos distintos. A verificação em dois passos
 custa uma leitura extra e evita guardar pacote, processar em segundo plano ou servir um resultado que
 o operador não viu.
+
+## Revisão de 12/11/2026 — a presidência também designa (D-025)
+
+**Escopo.** FR-6700 a FR-6708, UX-700 a UX-702, SC-2200 a SC-2204. Nenhuma tabela, migration, tela
+ou evento de trilha novo.
+
+**Desenho.**
+
+- **Um predicado**, `pode_designar(ator, edital)`, em `formalizacao/domain/autorizacao.py`. Devolve a
+  base que autoriza, ou `None`: `acesso:gerir` na unidade do Edital, ou `comissao:presidir` quando o
+  ator é membro ativo com a função de presidente da comissão do Processo do Edital (`membro_ativo`,
+  da `011`). Não passa por `pode_gerir_comissao`, que aceitaria `comissao:gerir` (FR-6700).
+- **O mesmo comando.** `designar.designar` e `designar.revogar` buscam o Edital ou a designação com o
+  filtro de `institution_scope` (404) e só depois perguntam o predicado, com
+  `require_authorization_base` nomeando as duas bases (403, FR-6707). A base vai ao `record_event`,
+  e a trilha diz quem autorizou (FR-6705). As recusas da FR-3663 (papel, autodesignação, vigente,
+  Perfil) não mudam e valem para as duas bases.
+- **Quem tem o papel.** `pessoas_com_o_papel` passa a receber o Edital e pergunta o mesmo predicado,
+  para a tela da presidência desenhar a escolha (FR-6701).
+- **A tela.** A seção "Quem acessa os documentos" da definição ganha o formulário de designar e o
+  "Revogar" por linha quando `pode_designar` é verdadeiro (UX-700). Dois POST novos, filhos da
+  definição: `editais/<id>/formalizacao/designar` e
+  `editais/<id>/formalizacao/designacoes/<id>/revogar`. A recusa de negócio e o sucesso voltam à
+  seção pela sessão (UX-702). A designação de outro Edital é inexistente, e entra no inventário da
+  `033`.
+- **A jornada (`153`).** O andamento e a advertência do encerramento trocam `ator.can(GERIR)` pelo
+  predicado, e o link pela tela de cada base (FR-6708). O responsável e a frase de a quem pedir passam
+  a nomear a presidência.
+
+**Testes.** `tests/integration/formalizacao/test_acesso.py`: `test_a_presidencia_nao_designa` vira a
+prova da regra nova e dos limites (SC-2200 a SC-2204), mais a tela. `tests/interface/test_passagem_ao_setor.py`
+acompanha a FR-6708.
+
+**Riscos.** A presidência que também tem o papel continua sem se designar; outra pessoa pode
+designá-la, e então ela acessa pela designação, como qualquer acúmulo de papéis da matriz (FR-6704).

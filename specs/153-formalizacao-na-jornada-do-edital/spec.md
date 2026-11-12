@@ -8,6 +8,12 @@
 usuário em 11/11/2026, todas na alternativa recomendada (ver Clarifications). A P-6 e a P-7 ficaram fora,
 como a spec recomenda. As decisões D-001 a D-008, abaixo, são **propostas de desenho**.
 
+> **Revisão de 12/11/2026, pela `117` (a decisão de quem designa, FR-6700 da `117`).** O usuário decidiu que a presidência da
+> comissão do Processo também designa quem recebe os documentos. A D-006 desta spec previa a mudança:
+> a providência de designar segue o predicado, e passa a ser também da presidência. Foram revistos a
+> US2, a FR-6108 (o responsável), a FR-6111 e a D-006, com a redação anterior preservada (FR-6708 da
+> `117`).
+
 **Input**: o pedido de 11/11/2026, vindo da sessão do estudo da jornada final: *"levar a formalização
 para a jornada guiada do Edital"*. Ele trata o achado de experiência número 05 do
 [estudo da jornada final](../../doc/estudo-jornada-final-2026-11-11/index.html) (PR #472), chamado
@@ -150,8 +156,13 @@ some.
 A definição está gravada e há pessoas aptas, mas ninguém está designado para o Edital. A providência
 **"Designar quem recebe os documentos"** aparece:
 
-- para quem administra os acessos da unidade, como ação dele, com o link da designação;
-- para a presidência, como providência de outro papel, que nomeia quem o resolve.
+- para quem administra os acessos da unidade e para a presidência do Processo, como ação de cada um,
+  com o link da tela em que cada um designa;
+- para os demais, como providência de outro papel, que nomeia quem o resolve.
+
+> **Redação anterior à revisão de 12/11 (FR-6708 da `117`), preservada:** para quem administra os
+> acessos da unidade, como ação dele, com o link da designação; para a presidência, como providência
+> de outro papel, que nomeia quem o resolve.
 
 **Why this priority**: sem designação efetiva, ninguém do setor alcança os documentos (FR-3664 da
 `117`). No estudo, isso só se descobriu ao entrar como setor.
@@ -161,10 +172,17 @@ presidência e como administrador de acessos.
 
 **Acceptance Scenarios**:
 
-1. **Given** definição gravada, uma pessoa apta e nenhuma designação vigente, **When** a presidência
-   abre o Centro, **Then** aparece, entre as de outro papel, "Quem administra os acessos da unidade:
-   designar quem recebe os documentos", com a razão "ninguém está designado para receber os
-   documentos deste Edital" e sem link.
+1. *(revisto em 12/11, FR-6708 da `117`)* **Given** definição gravada, uma pessoa apta e nenhuma
+   designação vigente, **When** quem tem `comissao:gerir` sem presidir abre o Centro, **Then** aparece,
+   entre as de outro papel, "A presidência ou quem administra os acessos da unidade: designar quem
+   recebe os documentos", com a razão "ninguém está designado para receber os documentos deste Edital"
+   e sem link. **When** a presidência do Processo abre o Centro, **Then** a providência é dela, com o
+   link da seção "Quem acessa os documentos" da tela da definição.
+
+   > **Redação anterior, preservada:** **Given** definição gravada, uma pessoa apta e nenhuma
+   > designação vigente, **When** a presidência abre o Centro, **Then** aparece, entre as de outro
+   > papel, "Quem administra os acessos da unidade: designar quem recebe os documentos", com a razão
+   > "ninguém está designado para receber os documentos deste Edital" e sem link.
 2. **Given** o mesmo Edital, **When** quem tem `acesso:gerir` na unidade do Edital abre o Centro,
    **Then** a providência é dele, com o link da designação para a formalização.
 3. **Given** uma designação vigente só para o Perfil A e uma pessoa apta no Perfil B, **When**
@@ -345,10 +363,13 @@ sem designação e tudo disponibilizado) e conferir o bloco.
   | Causa | Ato | Responsável |
   |---|---|---|
   | sem definição | **"Definir os documentos que vão ao setor"** | quem conduz a seleção (a presidência ou `comissao:gerir`, FR-3654 da `117`) |
-  | sem quem receba | **"Designar quem recebe os documentos"** | quem administra os acessos da unidade (`acesso:gerir`, FR-3663 da `117`) |
+  | sem quem receba | **"Designar quem recebe os documentos"** | a presidência ou quem administra os acessos da unidade (FR-3663 e FR-6700 da `117`, revistas em 12/11) |
   | a exportar | **"Exportar os documentos das pessoas aptas"** | o setor da formalização (designação efetiva) |
 
   O rótulo comum das três é **"Disponibilizar ao setor"** (P-1).
+
+  > **Responsável da segunda linha antes da revisão de 12/11, preservado:** quem administra os
+  > acessos da unidade (`acesso:gerir`, FR-3663 da `117`).
 - **FR-6109**: Cada providência MUST ter a situação *Pendente*. Ela MUST NOT ter prazo: a `117` não
   fixa prazo para a passagem ao setor.
 - **FR-6110**: A razão de cada providência MUST dizer a contagem da causa:
@@ -357,13 +378,19 @@ sem designação e tudo disponibilizado) e conferir o bloco.
     documentos deste Edital";
   - **sem quem receba**, nos demais casos: "N pessoas aptas de Perfis sem designação";
   - **a exportar**: "N pessoas aptas ainda sem documentos disponibilizados".
-- **FR-6111**: A providência MUST ser **da pessoa** quando ela pode praticar o ato na tela real:
+- **FR-6111** *(revista em 2026-11-12 pela FR-6708 da `117` — a redação anterior está ao fim desta
+  alínea)*: A providência MUST ser **da pessoa** quando ela pode praticar o ato na tela real:
   - **definir**: o predicado de gravar a definição da `117`;
-  - **designar**: `acesso:gerir` na unidade do Edital;
+  - **designar**: o predicado de designar da `117` (FR-6700): `acesso:gerir` na unidade do Edital, com
+    o link da tela de acessos, ou a presidência do Processo, com o link da seção "Quem acessa os
+    documentos" da tela da definição;
   - **exportar**: designação efetiva do ator no Edital.
   
   Só então ela leva o link da tela do ato (FR-4084 da `127`, FR-4706 e FR-4707 da `136`). Para os
   demais, ela MUST nomear o papel e não ter link.
+
+  > **Redação anterior à revisão de 12/11, preservada:** a mesma, com **designar**: `acesso:gerir` na
+  > unidade do Edital.
 - **FR-6112**: A pessoa do setor só vê a providência de exportar como dela se o detalhe do Edital já a
   aceita. Esta spec MUST NOT abrir o Centro a quem só tem o papel Formalização (FR-3665 da `117`).
 - **FR-6113**: Sem nenhuma pessoa com o papel Formalização vigente na unidade, a razão da providência
@@ -586,6 +613,12 @@ dizem o que falta sem mexer no andamento.
 Se a proposta registrada no achado da `127` for aprovada, a presidência passa a ter a providência como
 dela sem que esta spec mude: muda o predicado, e a derivação o segue. Esta spec não decide nem
 antecipa nada sobre a proposta.
+
+**Atualização de 12/11/2026.** A proposta foi aprovada pelo usuário e entrou na `117` como revisão
+da decisão de 04/11 sobre quem concede o acesso (FR-6700 a FR-6708 da `117`). A derivação segue o
+predicado novo, como esta decisão previa. Duas coisas mudaram além do predicado, porque o texto as
+fixava: o nome do responsável (FR-6108) e o link, que leva cada pessoa à tela em que ela designa
+(FR-6111).
 
 ### D-007 — Contagens do Edital, sem Perfil
 

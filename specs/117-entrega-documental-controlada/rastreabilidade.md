@@ -34,12 +34,12 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | FR-3660 (os Editais existentes começam vazios; nenhuma migration cria definição) | T005, T011 | `df::test_a_definicao_comeca_vazia_e_nada_fica_disponivel`; `migrations/test_migrations.py` (a `0001` só cria tabelas e gatilhos) |
 | FR-3661 (o papel Formalização, uma capacidade, nenhum papel existente a ganha) | T007 | `pa::test_so_o_papel_da_formalizacao_tem_a_permissao`, `::test_o_papel_da_formalizacao_nao_concede_mais_nada`, `::test_a_grafia_e_a_mesma_nos_dois_lugares` |
 | FR-3662 (designação append-only com Perfis opcionais, revogação com motivo) | T004, T015 | `ac::test_designar_grava_com_motivo_e_vai_as_duas_trilhas`, `::test_revogar_e_designar_de_novo_muda_os_perfis`, `::test_designacao_e_revogacao_sao_append_only_por_gatilho` |
-| FR-3663 (`acesso:gerir`, papel vigente, sem autodesignação; mudar Perfis é revogar) | T015, T016 | `ac::test_designar_quem_nao_tem_o_papel_e_recusado_com_codigo_proprio`, `::test_ninguem_designa_a_si_mesmo`, `::test_a_autodesignacao_e_recusada_pelo_banco_tambem`, `::test_a_presidencia_nao_designa`, `::test_o_perfil_de_fora_do_edital_e_recusado`, `::test_uma_designacao_vigente_por_edital_e_pessoa`, `::test_duas_designacoes_simultaneas_gravam_uma`, `::test_a_tela_de_acessos_designa_e_revoga` |
+| FR-3663 (`acesso:gerir`, papel vigente, sem autodesignação; mudar Perfis é revogar) | T015, T016 | `ac::test_designar_quem_nao_tem_o_papel_e_recusado_com_codigo_proprio`, `::test_ninguem_designa_a_si_mesmo`, `::test_a_autodesignacao_e_recusada_pelo_banco_tambem`, `::test_a_presidencia_designa_no_proprio_processo` (até 12/11, `test_a_presidencia_nao_designa`), `::test_o_perfil_de_fora_do_edital_e_recusado`, `::test_uma_designacao_vigente_por_edital_e_pessoa`, `::test_duas_designacoes_simultaneas_gravam_uma`, `::test_a_tela_de_acessos_designa_e_revoga` |
 | FR-3664 (o predicado único, na mesma requisição) | T014, T020, T025 | `ac::test_sem_o_papel_a_recusa_nomeia_o_papel`, `::test_o_papel_sem_designacao_no_edital_e_inexistente`, `::test_pessoa_de_perfil_fora_da_designacao_e_inexistente`; `mx` (todas as linhas) |
 | FR-3665 (nenhuma outra base alcança; o predicado não alcança a conferência) | T014, T020 | `mx::test_as_demais_bases_nao_alcancam_a_pagina_do_setor` (cinco bases); `ac::test_quem_confere_nao_alcanca_a_formalizacao_e_o_setor_nao_alcanca_a_conferencia`; `nv::test_cenario_e_o_controle_de_acesso_pelas_urls` |
 | FR-3666 (404 fora do alcance; 403 nomeando o papel) | T014, T021 | `mx::test_formalizacao_no_perfil_a_e_pessoa_do_perfil_b`, `::test_formalizacao_sem_designacao_no_edital`, `::test_designacao_vigente_e_papel_revogado`, `::test_ator_de_outra_unidade_recebe_inexistente_em_tudo` |
 | FR-3667 (revogação do papel, da designação e suspensão cortam na seguinte) | T014 | `ac::test_o_papel_revogado_corta_todas_as_designacoes`, `::test_a_revogacao_da_designacao_corta_na_requisicao_seguinte`, `::test_a_suspensao_corta_o_acesso`; `cp::test_depois_da_revogacao_do_papel_e_recusa_de_autorizacao` |
-| FR-3668 (a condução vê as designações; trilha da unidade e do Edital) | T015, T016, T035 | `ac::test_a_presidencia_ve_as_designacoes_na_conducao_so_para_leitura`, `::test_designar_grava_com_motivo_e_vai_as_duas_trilhas` |
+| FR-3668 (a condução vê as designações; trilha da unidade e do Edital; revista em 12/11) | T015, T016, T035, T042 | `ac::test_quem_gere_a_comissao_sem_presidir_ve_as_designacoes_so_para_leitura` (até 12/11, `test_a_presidencia_ve_as_designacoes_na_conducao_so_para_leitura`), `::test_a_presidencia_designa_e_revoga_na_tela_da_definicao`, `::test_designar_grava_com_motivo_e_vai_as_duas_trilhas` |
 | FR-3669 (apto: desfecho vigente da chamada mais recente, lido na hora) | T018 | `cj::test_so_quem_tem_aceite_vigente_esta_apto`, `::test_os_desfechos_que_incluem_sao_os_da_convocacao`, `::test_o_aceite_sucedido_por_indeferimento_tira_a_pessoa`, `::test_a_convocacao_corrigida_le_a_vigente`, `::test_vale_a_chamada_mais_recente` |
 | FR-3670 (conjunto: item conforme da convocação e documento da inscrição) | T018 | `cj::test_o_da_inscricao_sai_sem_conferencia_e_diz_isso`, `::test_so_os_documentos_definidos_aparecem` |
 | FR-3671 (convocação sem conforme vigente não sai; inscrição sai e diz isso) | T018, T020, T024 | `cj::test_documento_da_convocacao_sem_conferencia_conforme_vigente_nao_sai`, `::test_o_da_inscricao_sai_sem_conferencia_e_diz_isso`; `nv::test_cenario_a_define_verifica_completo_e_baixa` (a nota na tela) |
@@ -107,3 +107,28 @@ Cada requisito → a tarefa que o implementa → o teste que o verifica. Caminho
 | SC-1112 (nenhuma tela com os termos vedados) | `vc` (todas) |
 | SC-1113 (o ZIP é o verificado; as cinco mudanças são defasada; comprovante recusado sem ler) | `ex::test_defasada_*` (seis casos); `cp` (todas) |
 | SC-1114 (nomes hostis: nada sai da pasta, nada se repete, nada vira fórmula) | `cm` (todas) |
+
+## Revisão de 12/11/2026 — a presidência também designa (D-025)
+
+Prefixos: `ac` = `tests/integration/formalizacao/test_acesso.py`; `ps` =
+`tests/interface/test_passagem_ao_setor.py`; `gp` = `tests/test_gramatica_das_portas.py`.
+
+| Requisito | Tarefas | Testes |
+|---|---|---|
+| FR-6700 (duas bases; só a presidência do próprio Processo; `comissao:gerir` sem presidir não basta) | T041, T044 | `ac::test_a_presidencia_designa_no_proprio_processo`, `::test_so_a_presidencia_do_proprio_processo_designa` (cinco atores) |
+| FR-6701 (o papel continua com `acesso:gerir`; só quem já o tem) | T041, T044 | `ac::test_a_presidencia_nao_designa_quem_nao_tem_o_papel`, `::test_designar_quem_nao_tem_o_papel_e_recusado_com_codigo_proprio` |
+| FR-6702 (sem autodesignação nem autorrevogação, em qualquer base) | T041, T044 | `ac::test_a_presidencia_nao_designa_a_si_mesma`, `::test_ninguem_designa_a_si_mesmo` |
+| FR-6703 (qualquer base revoga qualquer designação do Edital) | T041, T042, T044 | `ac::test_cada_base_revoga_a_designacao_da_outra`, `::test_a_presidencia_designa_e_revoga_na_tela_da_definicao` |
+| FR-6704 (designar não dá à presidência os documentos) | T044 | `ac::test_designar_nao_da_a_presidencia_acesso_aos_documentos` |
+| FR-6705 (as duas trilhas, com motivo, autor e base) | T041, T044 | `ac::test_a_presidencia_designa_no_proprio_processo`, `::test_cada_base_revoga_a_designacao_da_outra` |
+| FR-6706 (encerrar não revoga; a designação segue os estados de hoje) | T044 | `ac::test_o_encerramento_do_edital_nao_revoga_nem_impede_designar`, `::test_edital_sem_publicacao_nao_recebe_designacao` |
+| FR-6707 (404 fora do escopo ou de outro Edital; 403 nomeando as duas bases) | T041, T042, T044 | `ac::test_so_a_presidencia_do_proprio_processo_designa`, `::test_designacao_de_outro_edital_e_inexistente_na_tela`, `::test_quem_gere_a_comissao_sem_presidir_ve_as_designacoes_so_para_leitura`; `gp::test_o_inventario_cobre_toda_funcao_que_responde_inexistente` |
+| FR-6708 (a providência e a advertência seguem o predicado; a FR-6111 da `153` revista) | T043, T044 | `ps::test_sem_designacao_a_providencia_e_de_quem_administra_os_acessos`, `::test_a_presidencia_ve_a_designacao_como_dela`, `::test_a_tela_de_encerrar_diz_a_quem_pedir`, `::test_a_presidencia_recebe_o_caminho_da_designacao_ao_encerrar` |
+| UX-700 (a seção designa e revoga para quem pode; só leitura para os demais) | T042, T044 | `ac::test_a_presidencia_designa_e_revoga_na_tela_da_definicao`, `::test_quem_gere_a_comissao_sem_presidir_ve_as_designacoes_so_para_leitura` |
+| UX-701 (sem ninguém com o papel: a quem pedir, sem link à tela de acessos) | T042, T044 | `ac::test_sem_ninguem_com_o_papel_a_secao_diz_a_quem_pedir` |
+| UX-702 (recusa de negócio e sucesso voltam à seção) | T042, T044 | `ac::test_a_presidencia_designa_e_revoga_na_tela_da_definicao` |
+| SC-2200 | T044 | `ac::test_so_a_presidencia_do_proprio_processo_designa`, `::test_a_presidencia_designa_no_proprio_processo` |
+| SC-2201 | T044 | `ac::test_designar_nao_da_a_presidencia_acesso_aos_documentos` |
+| SC-2202 | T044 | `ac::test_cada_base_revoga_a_designacao_da_outra` |
+| SC-2203 | T044 | `ac::test_a_presidencia_nao_designa_a_si_mesma`, `::test_a_presidencia_nao_designa_quem_nao_tem_o_papel` |
+| SC-2204 | T044 | `ac::test_a_presidencia_designa_no_proprio_processo` |

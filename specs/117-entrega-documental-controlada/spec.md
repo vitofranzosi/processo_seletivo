@@ -3,7 +3,7 @@
 **Feature Branch**: `claude/gps-entrega-documental-627460`, sobre a `main` em `83cd5863`
 
 **Created**: 2026-11-04 · **Revista**: 2026-11-04 (revisão final) · **Consolidada**: 2026-11-04 ·
-**Ajustada**: 2026-11-04, depois da revisão independente
+**Ajustada**: 2026-11-04, depois da revisão independente · **Revista**: 2026-11-12 (quem designa, D-025)
 
 **Status**: **Aprovada quanto ao desenho pelo usuário em 04/11/2026**, com os ajustes da
 consolidação. Nenhum código, migration ou tela foi alterado. Situação das decisões:
@@ -34,6 +34,14 @@ consolidação. Nenhum código, migration ou tela foi alterado. Situação das d
   Nenhum número novo foi aberto: o PR #372, da implementação da `116`, já usa os números seguintes aos
   desta spec.
 
+> **Revisão de 12/11/2026 — a presidência também designa (D-025).** O usuário reabriu a D-013: a
+> presidência da comissão do Processo passa a designar e a revogar designações dos Editais dele, ao
+> lado do administrador de acessos. O papel continua só com a gestão de acessos, e a presidência
+> continua sem acesso aos documentos. Foram revistas a D-013, a FR-3663 e a FR-3668, a US2 (cenário 4)
+> e a matriz, com a redação anterior preservada junto de cada uma. Os requisitos novos estão na seção
+> J (FR-6700 a FR-6708, UX-700 a UX-702) e os critérios em SC-2200 a SC-2204. A D-006 da `153` previa
+> esta mudança, e a FR-6111 da `153` foi revista no arquivo dela.
+
 **A revisão da FR-069 da `009` e da FR-3606 da `115` está aprovada, e não aplicada.** Ela se aplica
 aos dois arquivos na T002, primeira tarefa da implementação (D-016).
 
@@ -53,6 +61,11 @@ e o [diagnóstico desta feature](diagnostico.md).
 > de letra (FR-3689a, FR-3689b), como a FR-053a da `009`. Em 04/11, a implementação da `116` (PR #372)
 > passou a usar o requisito três mil setecentos e quinze em diante e o critério mil cento e quinze em
 > diante, logo depois desta faixa.
+>
+> **A revisão de 12/11 (D-025)** usa a faixa reservada a ela: os requisitos funcionais de seis mil e
+> setecentos a seis mil setecentos e dezenove, os critérios de dois mil e duzentos a dois mil duzentos
+> e nove, e os de experiência de setecentos a setecentos e nove. A faixa funcional seguinte é de outra
+> sessão. Usados: FR-6700 a FR-6708, SC-2200 a SC-2204, UX-700 a UX-702.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-069 da `009`"). Uma decisão de outra feature, pelo assunto e pela feature. Os achados
@@ -128,6 +141,19 @@ passagem ao setor que formaliza.** Hoje:
 - Q: Quem concede o acesso? → A: A gestão de acessos (D-013).
 - Q: Pacote do Edital inteiro? → A: Não. Por pessoa, seleção ou recorte (D-014).
 - Q: "Obtido", "encaminhado", "recebido"? → A: Não (D-015).
+
+### Session 2026-11-12 (quem designa)
+
+- Q: Quem designa as pessoas do setor para o Edital e delimita os Perfis? → A: O administrador de
+  acessos e a presidência da comissão responsável pelo Processo. Conceder e revogar o papel continua
+  só com o administrador de acessos (D-025, FR-6700, FR-6701).
+- Q: A presidência revoga só o que ela designou? → A: Não. Os dois revogam qualquer designação do
+  Edital, independentemente de quem a concedeu (FR-6703).
+- Q: Quem tem `comissao:gerir` também designa? → A: Não. O pedido é específico sobre a presidência
+  (FR-6700).
+- Q: Designar dá à presidência acesso aos documentos? → A: Não (FR-6704).
+- Q: O encerramento do Edital encerra a designação? → A: Não. O acesso termina pela revogação do papel
+  ou da designação, ou pela suspensão (FR-6706).
 
 ### Session 2026-11-04 (consolidação)
 
@@ -211,8 +237,15 @@ conferindo a página depois de cada passo.
 2. **Given** a designação de quem não tem o papel, **When** gravada, **Then** é recusada com código
    próprio.
 3. **Given** o administrador de acessos, **When** tenta designar a si mesmo, **Then** é recusado.
-4. **Given** a presidência, **When** tenta designar, **Then** recebe a recusa de autorização. Ela vê as
-   designações vigentes, só para leitura.
+4. *(revisto em 2026-11-12, D-025)* **Given** a presidência da comissão do Processo, **When** designa
+   alguém com o papel, ou revoga uma designação do Edital, **Then** o ato é gravado, com motivo, nas
+   duas trilhas. A presidência de outro Processo e quem tem `comissao:gerir` sem presidir recebem a
+   recusa de autorização, e veem as designações só para leitura. Designar não abre à presidência a
+   página do setor.
+
+   > **Redação anterior à revisão de 12/11, preservada:** **Given** a presidência, **When** tenta
+   > designar, **Then** recebe a recusa de autorização. Ela vê as designações vigentes, só para
+   > leitura.
 5. **Given** Bia, só no Perfil de tutor, **When** tenta a URL de documento de outro Perfil, **Then**
    recebe a recusa de inexistente.
 6. **Given** Rui designado em três Editais, **When** o papel é revogado, **Then** a próxima requisição é
@@ -409,9 +442,16 @@ injetar uma exceção na geração e simular o tempo-limite.
 - **FR-3662**: MUST existir a **designação para a formalização**, com pessoa, Edital, Perfis opcionais
   (vazio = todos), motivo, quem designou, unidade de atuação e instante. Ela é append-only, com
   revogação append-only e motivo.
-- **FR-3663**: Designar e revogar MUST exigir `acesso:gerir` na unidade do Edital. A designação MUST ser
-  recusada, com código próprio, sem o papel Formalização vigente na unidade do Edital, ou para quem
-  designa (autodesignação). Mudar os Perfis é revogar e designar de novo.
+- **FR-3663** *(revista em 2026-11-12, D-025 — a redação anterior está ao fim desta alínea)*: Designar e
+  revogar MUST exigir `acesso:gerir` na unidade do Edital **ou a presidência da comissão do Processo do
+  Edital** (FR-6700). A designação MUST ser recusada, com código próprio, sem o papel Formalização
+  vigente na unidade do Edital, ou para quem designa (autodesignação). Mudar os Perfis é revogar e
+  designar de novo.
+
+  > **Redação anterior à revisão de 12/11, preservada:** Designar e revogar MUST exigir `acesso:gerir`
+  > na unidade do Edital. A designação MUST ser recusada, com código próprio, sem o papel Formalização
+  > vigente na unidade do Edital, ou para quem designa (autodesignação). Mudar os Perfis é revogar e
+  > designar de novo.
 - **FR-3664**: O predicado **pode acessar a documentação da formalização** MUST ser único para a página,
   cada arquivo, a verificação e a exportação. É verdadeiro quando, **na mesma requisição**:
   - o ator tem a capacidade do papel na unidade ativa;
@@ -428,8 +468,15 @@ injetar uma exceção na geração e simular o tempo-limite.
   - designação sem o papel recebe a **recusa de autorização**, nomeando o papel.
 - **FR-3667**: A revogação do papel, a revogação da designação e a suspensão da pessoa MUST cortar o
   acesso na requisição seguinte. Revogar o papel MUST cortar todas as designações da pessoa.
-- **FR-3668**: A presidência e `comissao:gerir` MUST ver, na condução, as designações vigentes, só para
-  leitura. A designação e a revogação MUST ir para a trilha da unidade e para a do Edital.
+- **FR-3668** *(revista em 2026-11-12, D-025 — a redação anterior está ao fim desta alínea)*: A
+  presidência e `comissao:gerir` MUST ver, na condução, as designações vigentes. A presidência do
+  Processo MUST também designar e revogar ali (UX-700); `comissao:gerir` sem presidir as vê só para
+  leitura. A designação e a revogação MUST ir para a trilha da unidade e para a do Edital, qualquer
+  que seja a base (FR-6705).
+
+  > **Redação anterior à revisão de 12/11, preservada:** A presidência e `comissao:gerir` MUST ver, na
+  > condução, as designações vigentes, só para leitura. A designação e a revogação MUST ir para a
+  > trilha da unidade e para a do Edital.
 
 #### C. População e conjunto documental
 
@@ -701,6 +748,54 @@ injetar uma exceção na geração e simular o tempo-limite.
 - **FR-3709**: A designação e a definição MUST ser por Edital, e não por Processo.
 - **FR-3710**: O encerramento do Edital (`113`) MUST NOT fechar a página nem a exportação.
 
+#### J. A designação pela presidência (revisão de 12/11/2026, D-025)
+
+- **FR-6700**: Designar e revogar designações MUST aceitar duas bases, cada uma suficiente sozinha: a
+  permissão `acesso:gerir` na unidade do Edital, e a **presidência da comissão do Processo do Edital**
+  (membro ativo com a função de presidente, como na `011`). A presidência MUST atuar só nos Editais do
+  Processo cuja comissão preside. `comissao:gerir` sem a presidência MUST NOT bastar, nem a presidência
+  de outro Processo.
+- **FR-6701**: Conceder e revogar o **papel** Formalização MUST continuar só com `acesso:gerir`
+  (FR-3661). A presidência MUST escolher apenas entre pessoas ativas com o papel vigente na unidade do
+  Edital. A designação de quem não o tem MUST ser recusada com o código da FR-3663, qualquer que seja a
+  base.
+- **FR-6702**: Ninguém MUST designar a si mesmo nem revogar a própria designação, qualquer que seja a
+  base (FR-3663).
+- **FR-6703**: Qualquer das duas bases MUST revogar qualquer designação vigente do Edital,
+  independentemente de quem a concedeu e por qual base.
+- **FR-6704**: Designar MUST NOT dar a quem designa acesso aos documentos. O predicado da FR-3664 não
+  muda, e a presidência continua recusada na página do setor, nos arquivos, na verificação e na
+  exportação (FR-3665), salvo se ela mesma tiver o papel e for designada por outra pessoa.
+- **FR-6705**: A designação e a revogação pela presidência MUST ir para as duas trilhas, a da unidade
+  e a do Edital, com motivo e autoria, como as de `acesso:gerir` (FR-3668). O registro MUST dizer a
+  base que autorizou: `acesso:gerir` ou a presidência (`comissao:presidir`, como na `011`).
+- **FR-6706**: O encerramento do Edital MUST NOT revogar designação. O acesso do setor termina só pela
+  revogação do papel ou da designação, ou pela suspensão da pessoa (FR-3667). A designação pela
+  presidência segue os estados em que a designação já cabe: Edital publicado ou encerrado (FR-3710).
+- **FR-6707**: As recusas seguem a FR-3666 e o inventário da `033`:
+  - Edital ou designação de outra unidade, inexistente, ou designação de outro Edital recebem a
+    **recusa de inexistente**;
+  - no escopo, sem nenhuma das duas bases, a **recusa de autorização**, nomeando as duas.
+- **FR-6708**: A providência de designar do Centro (`153`) e o caminho da advertência ao encerrar
+  MUST seguir o predicado da FR-6700, como a D-006 da `153` previa. O responsável passa a ser *a
+  presidência ou quem administra os acessos da unidade*, e o link vai à tela em que cada um designa:
+  a de acessos para `acesso:gerir`, a da definição para a presidência. Isso revê a FR-6111 da `153`,
+  no arquivo dela.
+
+**Experiência**
+
+- **UX-700**: Na tela "Documentos para a formalização", a seção "Quem acessa os documentos" MUST
+  oferecer a quem pode designar (FR-6700) a designação nova e, em cada designação vigente que não seja
+  do próprio ator, "Revogar", com motivo. A designação nova pede a pessoa, entre quem tem o papel
+  (FR-6701), os Perfis, quando o Edital tem mais de um (nenhum marcado: todos), e o motivo. Para quem
+  não pode designar, a seção continua só de leitura, e a nota diz quem designa.
+- **UX-701**: Sem ninguém com o papel na unidade, a seção MUST dizer que o papel é concedido por quem
+  administra os acessos da unidade. Ela MUST NOT levar link à tela de acessos, que a presidência não
+  alcança.
+- **UX-702**: A recusa de negócio (sem motivo, sem o papel, autodesignação, designação já vigente)
+  MUST voltar à mesma tela, na seção, com a frase do domínio. O sucesso também volta a ela, com a
+  confirmação.
+
 ### Matriz de permissões
 
 "404" é a recusa de inexistente; "403", a de autorização no escopo.
@@ -712,15 +807,18 @@ injetar uma exceção na geração e simular o tempo-limite.
 | Formalização, sem designação no Edital | 404 | 404 | 404 | 403 | 403 | 403 | 403 | 403 |
 | Designação vigente, papel revogado | 403, nomeando o papel | 403 | 403 | 403 | 403 | 403 | 403 | 403 |
 | `acesso:gerir` | 403 | 403 | 403 | 403 | 403 | **sim, exceto a si** | 403 | 403 |
-| Presidência da comissão | 403; vê as designações | 403 | 403 | **sim** | **sim** | 403 | sim (`115`) | sim (`115`) |
+| Presidência da comissão | 403; vê as designações | 403 | 403 | **sim** | **sim** | **sim, no Processo que preside, exceto a si** (D-025) | sim (`115`) | sim (`115`) |
 | `comissao:gerir` (Gestor) | 403; vê as designações | 403 | 403 | **sim** | **sim** | 403 | sim (`115`) | sim (`115`) |
 | Membro alocado à conferência | 403 | 403 | 403 | 403 | 403 | 403 | sim, no alcance | confere |
 | `inscricao:consultar`, `matricula:exportar` | 403 | 403 | 403 | 403 | 403 | 403 | 403 | 403 |
 | Auditor | 403; vê a trilha e o histórico de exportações | 403 | 403 | 403 | **sim, só leitura** | 403 | 403 | 403 |
 | Ator de outra unidade | 404 | 404 | 404 | 404 | 404 | 404 | 404 | 404 |
 
+> **Linha da presidência antes da revisão de 12/11, preservada:** "Designar e revogar": 403.
+
 **Três funções, três donos:** a condução define **o quê**, a gestão de acessos define **quem**, e o
-setor **exporta**. Quem acumula papéis tem a união das linhas, e cada acesso é decidido pelo seu
+setor **exporta**. *(Desde a revisão de 12/11, D-025: a gestão de acessos define quem é do setor, pelo
+papel; ela e a presidência do Processo escolhem, entre essas pessoas, quem atende cada Edital.)* Quem acumula papéis tem a união das linhas, e cada acesso é decidido pelo seu
 predicado.
 
 ### Key Entities
@@ -822,6 +920,8 @@ predicado.
 | **Gestão de acessos da `107`** | — | Ganha um papel e a tela de designação. O vínculo não muda |
 | **Doutrina "escopo alheio = 404" (`033`)** | — | Mantida |
 | **SC-016 da `009`** | a seleção verifica sem lote | Continua |
+| **D-013, FR-3663 e FR-3668 desta spec** | a presidência só via | **Revistas em 12/11 (D-025)**, com a redação anterior preservada |
+| **FR-6111 da `153`** | designar era só `acesso:gerir` | Revista no arquivo da `153` (FR-6708), como a D-006 da `153` previa |
 
 ## Decisões
 
@@ -886,6 +986,9 @@ Edital não exigiu, porque aí muda a obrigação.
 
 ### D-013 — Acesso: papel no catálogo + designação, os dois pela gestão de acessos
 
+*(Revista pelo usuário em 12/11/2026: a designação também pela presidência, D-025. O texto abaixo é o
+de 04/11, preservado.)*
+
 **Aprovada pelo usuário em 04/11.** O papel dá:
 
 - a barra sem consulta;
@@ -895,6 +998,31 @@ Edital não exigiu, porque aí muda a obrigação.
 A designação dá o recorte por Edital e Perfil. Os dois são concedidos por `acesso:gerir`, sem
 autodesignação, e a presidência só vê. A única estrutura nova é a designação. O vínculo da `107` não
 muda.
+
+### D-025 — A designação também pela presidência do Processo
+
+**Decidida pelo usuário em 12/11/2026**, reabrindo a D-013, a partir da proposta dele de 10/11
+(registrada no achado da designação pela presidência, na worktree da `127`):
+
+| Ato | Quem pode |
+|---|---|
+| Conceder ou revogar o papel Formalização na unidade | o administrador de acessos (sem mudança) |
+| Designar pessoas e delimitar os Perfis atendidos | o administrador de acessos e a presidência da comissão do Processo |
+| Revogar designações do Edital | os dois, independentemente de quem as concedeu |
+
+**Limites, também do usuário:** a presidência atua só nos Editais do Processo cuja comissão preside;
+ninguém designa a si mesmo; designar não dá à presidência acesso aos documentos; motivo e autoria
+continuam nas trilhas da unidade e do Edital; encerrar o Edital não encerra o acesso; quem tem
+`comissao:gerir` sem presidir não designa; e a presidência escolhe só entre quem já tem o papel.
+
+**O que se preserva da D-013.** A separação de funções que motivou a D-013 fica no papel: quem é do
+setor continua decidido pela gestão de acessos, e revogar o papel continua cortando todas as
+designações de uma vez. O que muda é que a presidência escolhe, entre essas pessoas, quem atende o
+Edital dela, sem depender de outra pessoa a cada processo.
+
+**Menor entrega.** Nenhuma tabela, migration, tela ou evento de trilha novo: o mesmo comando de
+designar e revogar, com o predicado ampliado, e a seção que a presidência já via na tela da definição
+passa a ter o formulário.
 
 ### D-014 — Alcance da exportação: pessoa, seleção, recorte
 
@@ -1048,6 +1176,20 @@ download.
 **Efeito colateral aceito.** Trocar a chave do sistema invalida os comprovantes em aberto. O operador
 verifica de novo.
 
+### Critérios da revisão de 12/11/2026 (D-025)
+
+- **SC-2200**: Em teste, a presidência do Processo designa e revoga no Edital dele. A presidência de
+  outro Processo, `comissao:gerir` sem presidir, o membro da comissão e o auditor recebem a recusa de
+  autorização, e o ator de outra unidade a de inexistente; nenhum deles grava.
+- **SC-2201**: Depois de designar, a presidência continua recusada na página do setor, nos arquivos e
+  na exportação.
+- **SC-2202**: A presidência revoga uma designação concedida pelo administrador de acessos, e o
+  administrador revoga uma concedida pela presidência.
+- **SC-2203**: A autodesignação e a designação de quem não tem o papel são recusadas pela presidência,
+  com os códigos da FR-3663, sem gravar.
+- **SC-2204**: O ato da presidência aparece na trilha do Edital e na da unidade, com motivo, autor e a
+  base `comissao:presidir`.
+
 ## MVP e o que fica para depois
 
 **MVP**: as US1 a US5, com o tratamento de arquivo indisponível nas views existentes. O primeiro corte
@@ -1069,7 +1211,7 @@ demonstrável é US1 a US3, que atende o Cenário B. O Cenário A exige a US4.
 | Unidade | seletor do conjunto: desfechos, sucessões, chamadas, momentos, deduplicação, situações, versão da definição | FR-3653, FR-3659, FR-3669 a FR-3674 |
 | Unidade | normalização de nomes e caminhos, colisões, neutralização do CSV | FR-3712, FR-3713, SC-1114 |
 | Integração | definição: vazia, motivo, versões, avisos, histórico, snapshot intacto | FR-3653 a FR-3658, FR-3660, FR-3711 |
-| Integração | acesso: papel, designação, autodesignação, presidência recusada, revogações, suspensão, append-only | FR-3661 a FR-3668 |
+| Integração | acesso: papel, designação, autodesignação, presidência do Processo designa e revoga, as demais bases recusadas, revogações, suspensão, append-only | FR-3661 a FR-3668, FR-6700 a FR-6707 |
 | Integração | verificação e download: resultado, parcial, defasada, pessoa única, recorte, POST forjado, limite | FR-3682 a FR-3691, FR-3694, FR-3697, SC-1105, SC-1113 |
 | Integração | trava: segunda operação recusada; liberada no commit, no rollback e na conexão fechada | FR-3692 |
 | Integração | comprovante: adulterado, fabricado (resumo sem assinatura, outro sal), expirado, de outro ator ou unidade, depois da revogação do papel e da designação, reusado dentro da validade | FR-3689a, SC-1113 |

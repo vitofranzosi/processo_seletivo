@@ -1,12 +1,15 @@
 """Designar e revogar quem do setor alcança os documentos de um Edital (117, US2, FR-3662).
 
-**A mesma mão que concede o papel** (D-013): `acesso:gerir`, na unidade do Edital. A presidência só
-vê. Quem conduz a seleção decidir quem recebe documentos de candidatos borraria a separação que a
-`D-002` afirma.
+**Duas mãos, desde a revisão de 12/11/2026** (D-025, FR-6700): `acesso:gerir` na unidade do
+Edital, e a presidência da comissão do Processo do Edital. A D-013, de 04/11, dava a designação só a
+quem concede o papel; o usuário a reabriu, e a separação de funções que ela protegia ficou no
+**papel**, que continua só com a gestão de acessos. A presidência escolhe só entre quem já o tem, e
+designar não lhe dá acesso aos documentos (FR-6704). `comissao:gerir` sem presidir não designa.
 
-**As recusas, na ordem da `107`**: sem `acesso:gerir` é 403, Edital de outra unidade é 404; a
-autodesignação é recusada com código próprio; a pessoa sem o papel Formalização vigente na unidade
-do Edital também (FR-3663). Mudar os Perfis é revogar e designar de novo.
+**As recusas**: Edital ou designação de outra unidade é 404, pelo filtro da consulta; no escopo, sem
+nenhuma das duas bases, 403 nomeando as duas (FR-6707). A autodesignação é recusada com código
+próprio; a pessoa sem o papel Formalização vigente na unidade do Edital também (FR-3663). Mudar os
+Perfis é revogar e designar de novo. A redação anterior desta docstring dizia "a presidência só vê".
 
 **A pessoa trancada serializa duas designações** do mesmo Edital, como a concessão da `107`: trancar
 a designação seria `FOR UPDATE` numa append-only, que a role de runtime não pode.
@@ -18,7 +21,10 @@ from django.db import IntegrityError, transaction
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.formalizacao.application.definir import perfis_do_edital
 from processo_seletivo.formalizacao.domain import nomes
-from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
+from processo_seletivo.formalizacao.domain.autorizacao import (
+    designacoes_vigentes,
+    exigir_quem_designa,
+)
 from processo_seletivo.formalizacao.models import (
     DesignacaoParaFormalizacao,
     RevogacaoDaDesignacao,
@@ -44,21 +50,35 @@ def _motivo(motivo):
 
 
 def edital_da_unidade(actor, edital_id):
-    """O Edital, se o ator tem `acesso:gerir` e está na unidade dele: 403 e 404 da matriz."""
-    require_permission(actor, GERIR)
-    edital = Edital.objects.filter(pk=edital_id, institution_scope=actor.institution_scope).first()
+    """O Edital e a base que autoriza designar nele: 404 fora do escopo, 403 sem base (FR-6707).
+
+    O escopo vem **antes**, pelo filtro da consulta: a presidência só se sabe depois de conhecido o
+    Processo, e um Edital de outra unidade não pode responder diferente de um inexistente (`033`).
+    """
+    edital = (
+        Edital.objects.filter(pk=edital_id, institution_scope=actor.institution_scope)
+        .select_related("processo")
+        .first()
+    )
     if edital is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
-    return edital
+    return edital, exigir_quem_designa(actor, edital)
 
 
 def tem_o_papel(pessoa, escopo):
     return nomes.PAPEL in acessos.papeis_vigentes(pessoa.pk, escopo)
 
 
-def pessoas_com_o_papel(actor):
-    """Quem tem o papel Formalização vigente na unidade do ator, para a tela escolher."""
-    require_permission(actor, GERIR)
+def pessoas_com_o_papel(actor, *, edital=None):
+    """Quem tem o papel Formalização vigente na unidade do ator, para a tela escolher (FR-6701).
+
+    Com `edital`, pergunta o predicado de designar nele — é o que a tela da presidência pede; sem,
+    exige `acesso:gerir`, como a tela de acessos, que não tem Edital escolhido de início.
+    """
+    if edital is None:
+        require_permission(actor, GERIR)
+    else:
+        exigir_quem_designa(actor, edital)
     return (
         acessos.vigentes()
         .filter(escopo=actor.institution_scope, papel=nomes.PAPEL, pessoa__is_active=True)
@@ -124,7 +144,7 @@ def conferir(actor, *, edital, pessoa, perfis):
 
 def designar(actor, *, edital_id, pessoa, perfis, motivo, now, correlation_id=""):
     """A designação nova, depois de todas as recusas, com a trilha da unidade e do Edital."""
-    edital = edital_da_unidade(actor, edital_id)
+    edital, base = edital_da_unidade(actor, edital_id)
     motivo = _motivo(motivo)
     with transaction.atomic():
         travada = get_user_model().objects.select_for_update().filter(pk=pessoa.pk).first()
@@ -140,22 +160,26 @@ def designar(actor, *, edital_id, pessoa, perfis, motivo, now, correlation_id=""
             unidade_de_atuacao=actor.institution_scope,
             designado_em=now,
         )
-        _registrar(actor, nomes.DESIGNAR, designacao, now, correlation_id, motivo)
+        _registrar(actor, base, nomes.DESIGNAR, designacao, now, correlation_id, motivo)
     return designacao
 
 
-def revogar(actor, *, designacao_id, motivo, now, correlation_id=""):
-    """A revogação, com a mesma autoridade da designação. A segunda o banco recusa."""
-    require_permission(actor, GERIR)
-    designacao = (
-        DesignacaoParaFormalizacao.objects.filter(
-            pk=designacao_id, edital__institution_scope=actor.institution_scope
-        )
-        .select_related("edital")
-        .first()
+def revogar(actor, *, designacao_id, motivo, now, correlation_id="", edital_id=None):
+    """A revogação, com a mesma autoridade da designação. A segunda o banco recusa.
+
+    **Qualquer designação do Edital**, quem quer que a tenha concedido e por qual base (FR-6703).
+    `edital_id`, quando dado, é o Edital da tela que pediu: designação de outro Edital é inexistente
+    ali, como a de outra unidade (FR-6707).
+    """
+    designacoes = DesignacaoParaFormalizacao.objects.filter(
+        pk=designacao_id, edital__institution_scope=actor.institution_scope
     )
+    if edital_id is not None:
+        designacoes = designacoes.filter(edital_id=edital_id)
+    designacao = designacoes.select_related("edital__processo").first()
     if designacao is None:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
+    base = exigir_quem_designa(actor, designacao.edital)
     if designacao.pessoa == actor.subject:
         raise DomainError(
             nomes.AUTODESIGNACAO,
@@ -179,15 +203,19 @@ def revogar(actor, *, designacao_id, motivo, now, correlation_id=""):
                 )
         except IntegrityError as erro:
             raise ja_revogada from erro
-        _registrar(actor, nomes.REVOGAR, designacao, now, correlation_id, motivo)
+        _registrar(actor, base, nomes.REVOGAR, designacao, now, correlation_id, motivo)
     return revogacao
 
 
-def _registrar(actor, operacao, designacao, now, correlation_id, motivo):
-    """Sob a designação: a trilha do Edital a reúne, e a da unidade a lê pelo tipo (FR-3668)."""
+def _registrar(actor, base, operacao, designacao, now, correlation_id, motivo):
+    """Sob a designação: a trilha do Edital a reúne, e a da unidade a lê pelo tipo (FR-3668).
+
+    `base` é a que autorizou, `acesso:gerir` ou `comissao:presidir` (FR-6705), como a `011` registra
+    a base da gestão da comissão.
+    """
     record_event(
         actor=actor,
-        permission=GERIR,
+        permission=base,
         operation=operacao,
         aggregate=designacao,
         now=now,

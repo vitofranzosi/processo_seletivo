@@ -23,11 +23,19 @@ revogar o papel corta todas as designações de uma vez, e suspender corta tudo 
 
 from dataclasses import dataclass
 
+from processo_seletivo.comissoes.domain.autorizacao import (
+    BASE_DA_PRESIDENCIA_DO_PROCESSO,
+    BASE_PRESIDENCIA,
+    membro_ativo,
+)
+from processo_seletivo.comissoes.models import Funcao
 from processo_seletivo.formalizacao.domain import nomes
 from processo_seletivo.formalizacao.models import DesignacaoParaFormalizacao
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.seguranca.acessos import GERIR
 from processo_seletivo.seguranca.application.authorization import (
     Base,
+    base_de_permissao,
     require_authorization_base,
 )
 from processo_seletivo.shared.api.problems import DomainError
@@ -90,3 +98,44 @@ def pode_acessar(actor, edital_id, *, perfil_id=None):
     if perfil_id is not None and not designacao.cobre(perfil_id):
         raise inexistente()
     return Acesso(edital=edital, designacao=designacao)
+
+
+# ---------------------------------------------------------------------------
+# Quem designa (FR-3663, revista pela D-025 em 12/11/2026; FR-6700 a FR-6707)
+# ---------------------------------------------------------------------------
+
+#: As duas bases que designam e revogam, ditas como recusa (FR-6707). A primeira é a frase que a
+#: tela de acessos já usa para `acesso:gerir`; a segunda é a da `011`, que nenhum papel concede.
+BASES_DE_DESIGNAR = (
+    base_de_permissao("conceder e revogar os acessos da unidade"),
+    BASE_DA_PRESIDENCIA_DO_PROCESSO,
+)
+
+
+def pode_designar(actor, edital):
+    """A base que autoriza designar e revogar neste Edital, ou `None` (FR-6700).
+
+    Duas bases, cada uma suficiente sozinha: `acesso:gerir` na unidade do Edital, e a presidência da
+    comissão **do Processo deste Edital**. **Não é `pode_gerir_comissao`**: ela aceitaria
+    `comissao:gerir`, e o pedido do usuário é específico sobre a presidência (D-025). O papel
+    continua só com `acesso:gerir`: quem é do setor a gestão de acessos decide, e a presidência
+    escolhe entre essas pessoas quem atende o Edital dela.
+
+    Nada aqui alcança os documentos: o acesso continua sendo de `pode_acessar`, que exige o papel e
+    a designação do próprio ator (FR-6704).
+    """
+    if actor is None or edital is None or actor.institution_scope != edital.institution_scope:
+        return None
+    if actor.can(GERIR):
+        return GERIR
+    membro = membro_ativo(actor, edital.processo)
+    if membro is not None and membro.funcao == Funcao.PRESIDENTE:
+        return BASE_PRESIDENCIA
+    return None
+
+
+def exigir_quem_designa(actor, edital):
+    """A base, ou a recusa que nomeia as duas (FR-6707). O escopo vem antes, no filtro."""
+    base = pode_designar(actor, edital)
+    require_authorization_base(base is not None, bases=BASES_DE_DESIGNAR)
+    return base

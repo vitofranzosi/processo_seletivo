@@ -2,11 +2,13 @@
 
 O papel abre a barra e a lista; a designação diz o Edital e os Perfis; o predicado decide na mesma
 requisição. A revogação do papel, a da designação e a suspensão cortam o acesso na requisição
-seguinte (FR-3667, SC-1110). A designação é concedida pela gestão de acessos, sem autodesignação, e
-a presidência só a vê (FR-3663, FR-3668).
+seguinte (FR-3667, SC-1110). A designação é concedida pela gestão de acessos ou, desde a revisão de
+12/11 (D-025), pela presidência do Processo, sem autodesignação (FR-3663, FR-3668, FR-6700 a
+FR-6707). A presidência escolhe entre quem já tem o papel, e designar não lhe dá os documentos.
 """
 
 import threading
+import uuid
 
 import pytest
 from django.db import DatabaseError, connection, transaction
@@ -15,13 +17,15 @@ from django.utils import timezone
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.auditoria.selectors import trilha_da_unidade, trilha_do_edital
+from processo_seletivo.comissoes.models import Funcao, MembroComissao
 from processo_seletivo.formalizacao.application import designar
 from processo_seletivo.formalizacao.domain import nomes
-from processo_seletivo.formalizacao.domain.autorizacao import pode_acessar
+from processo_seletivo.formalizacao.domain.autorizacao import pode_acessar, pode_designar
 from processo_seletivo.formalizacao.models import (
     DesignacaoParaFormalizacao,
     RevogacaoDaDesignacao,
 )
+from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.seguranca import acessos as catalogo
 from processo_seletivo.seguranca.application import acessos
 from processo_seletivo.seguranca.domain import Actor
@@ -34,6 +38,9 @@ from tests.seguranca.apoio import entrar, pessoa, vincular
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
 GIL = Actor("pessoa-gil", "cefor", frozenset({catalogo.GERIR, catalogo.CONSULTAR}))
+#: A presidência da comissão do Processo do cenário: `maria`, como em toda a suíte. Ela não tem
+#: permissão nenhuma do catálogo; a base é o vínculo com a comissão (`011`).
+MARIA = Actor("maria", "cefor", frozenset())
 OUTRO_PERFIL = "00000000-0000-0000-0000-00000000abcd"
 
 
@@ -217,19 +224,164 @@ def test_ninguem_designa_a_si_mesmo(cenario):
     assert recusa.value.code == nomes.AUTODESIGNACAO
 
 
-def test_a_presidencia_nao_designa(cenario, com_papel):
-    """FR-3663, matriz: sem `acesso:gerir`, 403 — a presidência só lê as designações."""
-    presidencia = Actor("maria", "cefor", frozenset())
+def _designar(ator, edital, alguem, *, motivo="Memorando 9/2026", perfis=()):
+    return designar.designar(
+        ator,
+        edital_id=edital.id,
+        pessoa=alguem,
+        perfis=list(perfis),
+        motivo=motivo,
+        now=timezone.now(),
+    )
+
+
+def _presidir(processo, subject):
+    """Uma presidência gravada direto: estado de partida, e não o ato de constituir."""
+    return MembroComissao.objects.create(
+        processo=processo,
+        identity_subject=subject,
+        funcao=Funcao.PRESIDENTE,
+        criado_em=timezone.now(),
+        criado_por="fixture",
+    )
+
+
+def _outro_processo():
+    agora = timezone.now()
+    return ProcessoSeletivo.objects.create(
+        institution_scope="cefor",
+        institutional_code=f"OUTRO-{uuid.uuid4().hex[:6]}",
+        title="Outro Processo",
+        created_at=agora,
+        created_by="fixture",
+        last_changed_at=agora,
+    )
+
+
+def test_a_presidencia_designa_no_proprio_processo(cenario, com_papel):
+    """FR-6700, FR-6705, SC-2200, SC-2204: grava com motivo, nas duas trilhas, com a base dela.
+
+    **Era `test_a_presidencia_nao_designa`**, que provava a recusa da D-013 de 04/11. A revisão de
+    12/11 (D-025) inverteu a regra para a presidência do Processo, e os limites dela estão nos casos
+    seguintes: só a própria comissão, nunca a si mesma, nunca quem não tem o papel, e sem acesso aos
+    documentos.
+    """
+    assert pode_designar(MARIA, cenario.edital) == "comissao:presidir"
+    designacao = _designar(MARIA, cenario.edital, com_papel)
+
+    assert designacao.designado_por == "maria"
+    evento = RegistroAuditoria.objects.get(operation=nomes.DESIGNAR)
+    assert evento.permission == "comissao:presidir"
+    assert evento.reason == "Memorando 9/2026"
+    do_edital, _ = trilha_do_edital(actor=GIL, edital=cenario.edital, limit=100)
+    assert evento in do_edital
+    da_unidade, _ = trilha_da_unidade(actor=GIL, assunto="acessos", limit=100)
+    assert evento in da_unidade
+
+
+@pytest.mark.parametrize(
+    ("quem", "status"),
+    [
+        ("presidência de outro Processo", 403),
+        ("comissao:gerir sem presidir", 403),
+        ("membro da comissão", 403),
+        ("auditor", 403),
+        ("presidência de outra unidade", 404),
+    ],
+)
+def test_so_a_presidencia_do_proprio_processo_designa(cenario, com_papel, quem, status):
+    """FR-6700, FR-6707, SC-2200: as demais bases são recusadas, e nenhuma grava.
+
+    `comissao:gerir` sem presidir continua recusado: o pedido é específico sobre a presidência.
+    """
+    atores = {
+        "presidência de outro Processo": Actor("lia", "cefor", frozenset()),
+        "comissao:gerir sem presidir": Actor("carlos", "cefor", frozenset({"comissao:gerir"})),
+        "membro da comissão": Actor("joao", "cefor", frozenset()),
+        "auditor": Actor("auditora", "cefor", frozenset({"auditoria:consultar"})),
+        "presidência de outra unidade": Actor("maria", "outra", frozenset()),
+    }
+    _presidir(_outro_processo(), "lia")
+    ator = atores[quem]
+
     with pytest.raises(DomainError) as recusa:
-        designar.designar(
-            presidencia,
-            edital_id=cenario.edital.id,
-            pessoa=com_papel,
-            perfis=[],
-            motivo="x",
-            now=timezone.now(),
-        )
+        _designar(ator, cenario.edital, com_papel)
+    assert recusa.value.status == status
+    if status == 403:
+        assert "presidência deste Processo" in recusa.value.detail
+        assert "acessos da unidade" in recusa.value.detail
+    assert not DesignacaoParaFormalizacao.objects.exists()
+
+    feita = _designar(GIL, cenario.edital, com_papel)
+    with pytest.raises(DomainError) as recusa:
+        designar.revogar(ator, designacao_id=feita.id, motivo="x", now=timezone.now())
+    assert recusa.value.status == status
+    assert not RevogacaoDaDesignacao.objects.exists()
+
+
+def test_a_presidencia_nao_designa_a_si_mesma(cenario):
+    """FR-6702, SC-2203: com o papel e a presidência, a autodesignação continua recusada."""
+    ana = pessoa("ana-presidente", nome="Ana Presidente")
+    vincular(ana, "cefor", nomes.PAPEL)
+    _presidir(cenario.edital.processo, ana.username)
+    a_propria = Actor(ana.username, "cefor", frozenset({nomes.CAPACIDADE}))
+
+    with pytest.raises(DomainError) as recusa:
+        _designar(a_propria, cenario.edital, ana)
+    assert recusa.value.code == nomes.AUTODESIGNACAO
+    assert not DesignacaoParaFormalizacao.objects.exists()
+
+    feita = _designar(GIL, cenario.edital, ana)
+    with pytest.raises(DomainError) as recusa:
+        designar.revogar(a_propria, designacao_id=feita.id, motivo="x", now=timezone.now())
+    assert recusa.value.code == nomes.AUTODESIGNACAO
+
+
+def test_a_presidencia_nao_designa_quem_nao_tem_o_papel(cenario):
+    """FR-6701, SC-2203: a presidência escolhe só entre quem já tem o papel."""
+    sem_papel = pessoa("ze", nome="Zé")
+    with pytest.raises(DomainError) as recusa:
+        _designar(MARIA, cenario.edital, sem_papel)
+    assert recusa.value.code == nomes.DESIGNADO_SEM_PAPEL
+    assert not DesignacaoParaFormalizacao.objects.exists()
+    assert sem_papel.username not in {
+        v.pessoa.username for v in designar.pessoas_com_o_papel(MARIA, edital=cenario.edital)
+    }
+
+
+def test_designar_nao_da_a_presidencia_acesso_aos_documentos(cenario, com_papel, client, seletor):
+    """FR-6704, SC-2201: depois de designar, a presidência continua fora da página do setor."""
+    _designar(MARIA, cenario.edital, com_papel)
+
+    with pytest.raises(DomainError) as recusa:
+        pode_acessar(MARIA, cenario.edital.id)
     assert recusa.value.status == 403
+    identificar(client, "maria", [])
+    assert client.get(_pagina(cenario.edital)).status_code == 403
+
+
+def test_cada_base_revoga_a_designacao_da_outra(cenario, com_papel):
+    """FR-6703, SC-2202: a revogação não depende de quem concedeu."""
+    da_gestao = _designar(GIL, cenario.edital, com_papel)
+    designar.revogar(MARIA, designacao_id=da_gestao.id, motivo="Troca", now=timezone.now())
+    assert RevogacaoDaDesignacao.objects.get(designacao=da_gestao).revogado_por == "maria"
+
+    da_presidencia = _designar(MARIA, cenario.edital, com_papel)
+    designar.revogar(GIL, designacao_id=da_presidencia.id, motivo="Saiu", now=timezone.now())
+    assert RevogacaoDaDesignacao.objects.get(designacao=da_presidencia).revogado_por == GIL.subject
+    evento = RegistroAuditoria.objects.filter(operation=nomes.REVOGAR).order_by("occurred_at")
+    assert [e.permission for e in evento] == ["comissao:presidir", catalogo.GERIR]
+
+
+def test_o_encerramento_do_edital_nao_revoga_nem_impede_designar(cenario, com_papel):
+    """FR-6706: encerrado, a designação continua vigente, e a presidência ainda designa."""
+    feita = _designar(GIL, cenario.edital, com_papel)
+    Edital.objects.filter(pk=cenario.edital.pk).update(status=Edital.Status.ENCERRADO)
+    cenario.edital.refresh_from_db()
+
+    assert not RevogacaoDaDesignacao.objects.filter(designacao=feita).exists()
+    designar.revogar(MARIA, designacao_id=feita.id, motivo="Troca", now=timezone.now())
+    assert _designar(MARIA, cenario.edital, com_papel).designado_por == "maria"
 
 
 def test_o_perfil_de_fora_do_edital_e_recusado(cenario, com_papel):
@@ -354,16 +506,94 @@ def test_designacao_e_revogacao_sao_append_only_por_gatilho(cenario, tabela):
 # --- A matriz pelas telas: quem designa e quem lê ------------------------------------------------
 
 
-def test_a_presidencia_ve_as_designacoes_na_conducao_so_para_leitura(cenario, client, seletor):
+def _definicao(edital):
+    return reverse("interface:formalizacao-definicao", args=[edital.id])
+
+
+def test_quem_gere_a_comissao_sem_presidir_ve_as_designacoes_so_para_leitura(
+    cenario, client, seletor, com_papel
+):
+    """FR-3668 revista, UX-700: `comissao:gerir` sem presidir lê; o POST forjado é recusado."""
     designar_direto(cenario.edital, "rui")
-    identificar(client, "maria", [])
-    corpo = client.get(
-        reverse("interface:formalizacao-definicao", args=[cenario.edital.id])
-    ).content.decode()
+    identificar(client, "carlos", ["gestor"])
+    corpo = client.get(_definicao(cenario.edital)).content.decode()
 
     assert "Quem acessa os documentos" in corpo
     assert "rui" in corpo
+    assert "só para leitura" in corpo
     assert "Revogar" not in corpo
+    assert "Designar para o" not in corpo
+    forjado = client.post(
+        reverse("interface:formalizacao-designar", args=[cenario.edital.id]),
+        {"pessoa": com_papel.username, "motivo": "x"},
+    )
+    assert forjado.status_code == 403
+    assert DesignacaoParaFormalizacao.objects.count() == 1
+
+
+def test_a_presidencia_designa_e_revoga_na_tela_da_definicao(cenario, client, seletor, com_papel):
+    """UX-700, UX-702, FR-6703: a seção ganha a designação e o "Revogar"; a recusa volta a ela."""
+    designar_direto(cenario.edital, "outra-pessoa")
+    identificar(client, "maria", [])
+    pagina = _definicao(cenario.edital)
+    corpo = client.get(pagina).content.decode()
+    assert "Rui Registro" in corpo
+    assert "Designar para o" in corpo
+    assert "Revogar" in corpo
+    assert "Designar não dá a você acesso aos documentos" in corpo
+
+    designar_url = reverse("interface:formalizacao-designar", args=[cenario.edital.id])
+    sem_motivo = client.post(designar_url, {"pessoa": com_papel.username, "motivo": ""})
+    assert sem_motivo.status_code == 302
+    assert sem_motivo["Location"].endswith("#quem-acessa")
+    assert "Informe o motivo" in client.get(pagina).content.decode()
+    assert not DesignacaoParaFormalizacao.objects.filter(pessoa=com_papel.username).exists()
+
+    feito = client.post(designar_url, {"pessoa": com_papel.username, "motivo": "Memorando 7"})
+    assert feito.status_code == 302
+    designacao = DesignacaoParaFormalizacao.objects.get(pessoa=com_papel.username)
+    assert designacao.designado_por == "maria"
+    assert "Designação gravada" in client.get(pagina).content.decode()
+
+    revogada = client.post(
+        reverse(
+            "interface:formalizacao-designacao-revogar", args=[cenario.edital.id, designacao.id]
+        ),
+        {"motivo": "Saiu do setor"},
+    )
+    assert revogada.status_code == 302
+    assert RevogacaoDaDesignacao.objects.filter(designacao=designacao).exists()
+    # A de outra pessoa, concedida fora da tela, também se revoga daqui.
+    da_gestao = DesignacaoParaFormalizacao.objects.get(pessoa="outra-pessoa")
+    client.post(
+        reverse(
+            "interface:formalizacao-designacao-revogar", args=[cenario.edital.id, da_gestao.id]
+        ),
+        {"motivo": "Troca"},
+    )
+    assert RevogacaoDaDesignacao.objects.filter(designacao=da_gestao).exists()
+
+
+def test_designacao_de_outro_edital_e_inexistente_na_tela(cenario, client, seletor, com_papel):
+    """FR-6707: a URL de revogar leva o Edital, e a designação de outro não é deste."""
+    designacao = designar_direto(cenario.edital, "rui")
+    identificar(client, "maria", [])
+    resposta = client.post(
+        reverse("interface:formalizacao-designacao-revogar", args=[uuid.uuid4(), designacao.id]),
+        {"motivo": "x"},
+    )
+    assert resposta.status_code == 404
+    assert not RevogacaoDaDesignacao.objects.exists()
+
+
+def test_sem_ninguem_com_o_papel_a_secao_diz_a_quem_pedir(cenario, client, seletor):
+    """UX-701: sem link à tela de acessos, que a presidência não alcança."""
+    identificar(client, "maria", [])
+    corpo = client.get(_definicao(cenario.edital)).content.decode()
+
+    assert "Ninguém nesta unidade tem o papel Formalização" in corpo
+    assert "Peça a quem administra os acessos da unidade" in corpo
+    assert reverse("interface:acessos-formalizacao") not in corpo
 
 
 def test_quem_confere_nao_alcanca_a_formalizacao_e_o_setor_nao_alcanca_a_conferencia(
