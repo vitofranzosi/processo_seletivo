@@ -172,18 +172,22 @@
     return lista.map(nomeDe).join(", ");
   }
 
-  /* Um documento do lote. O arquivo acima do limite vai sem o arquivo, só com o tamanho (R-009). */
+  /* Um documento do lote. O arquivo acima do limite vai sem o arquivo, só com o tamanho (R-009).
+
+     **O corpo é montado à mão, e não com `new FormData(formulario)`**: durante o lote os campos
+     estão desabilitados, e o navegador deixa campo desabilitado fora do `FormData` — o servidor
+     recebia o envio sem arquivo e recusava com "Escolha um arquivo PDF antes de enviar.". Achado na
+     verificação no navegador, que o teste com objetos simples não via. */
   function pedir(formulario, posicao, total) {
     var arquivo = arquivoDe(formulario);
     var limite = parseInt(formulario.getAttribute("data-limite-em-bytes"), 10);
-    var corpo;
+    var ficha = formulario.querySelector("[name=csrfmiddlewaretoken]");
+    var corpo = new FormData();
+    corpo.append("csrfmiddlewaretoken", ficha ? ficha.value : "");
     if (limite && arquivo.size > limite) {
-      corpo = new FormData();
-      var ficha = formulario.querySelector("[name=csrfmiddlewaretoken]");
-      corpo.append("csrfmiddlewaretoken", ficha ? ficha.value : "");
       corpo.append("tamanho_declarado", String(arquivo.size));
     } else {
-      corpo = new FormData(formulario);
+      corpo.append("arquivo", arquivo, arquivo.name);
     }
     return fetch(formulario.action, {
       method: "POST",
@@ -211,6 +215,10 @@
     esconderProgresso();
     recebidos.forEach(function (formulario) {
       limparEscolha(formulario, RECEBIDO_AGORA);
+      /* A recusa que a volta anterior pôs no cartão já não vale: o documento acabou de chegar. */
+      var cartao = cartaoDe(formulario);
+      var antiga = cartao ? cartao.querySelector("[data-recusa]") : null;
+      if (antiga && antiga.remove) antiga.remove();
     });
     recusados.forEach(function (recusado) {
       limparEscolha(recusado.formulario);
@@ -227,6 +235,10 @@
   function enviarTodos(lote, acionado) {
     emCurso = true;
     travar(true);
+    /* A confirmação no topo é a da volta anterior. Se o lote parar no meio, a página fica, e ela
+       contradiria a frase nova — "não foi recebido" de um documento que acabou de chegar. */
+    var anterior = document.querySelector("#confirmacao");
+    if (anterior) anterior.hidden = true;
     var total = lote.length;
     var recebidos = [];
     var recusados = [];

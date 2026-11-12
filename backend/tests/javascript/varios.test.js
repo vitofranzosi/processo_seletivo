@@ -60,10 +60,20 @@ function cartao(nome, { limite = 1000 } = {}) {
   const nomeDoArquivo = { textContent: "Nenhum arquivo escolhido", classList: classes() };
   const ficha = { value: "ficha-csrf" };
   const filhos = [];
+  /* A recusa que a volta anterior pôs no cartão, como o servidor a desenha. */
+  const recusaAntiga = {
+    removida: false,
+    remove() {
+      this.removida = true;
+    },
+  };
   const li = {
     getAttribute: (chave) => (chave === "data-documento" ? nome : null),
-    querySelector: (s) =>
-      s === ".recusa-do-envio" ? filhos.find((f) => f.className.includes("recusa-do-envio")) : null,
+    querySelector: (s) => {
+      if (s === ".recusa-do-envio") return filhos.find((f) => f.className.includes("recusa-do-envio"));
+      if (s === "[data-recusa]") return recusaAntiga.removida ? null : recusaAntiga;
+      return null;
+    },
     appendChild: (filho) => filhos.push(filho),
   };
   const ouvintesDoForm = {};
@@ -91,6 +101,7 @@ function cartao(nome, { limite = 1000 } = {}) {
     progresso,
     ajuda,
     nomeDoArquivo,
+    recusaAntiga,
     recado: () => filhos.find((f) => f.className.includes("recusa-do-envio")),
     escolher(arquivo = { name: `${nome}.pdf`, size: 10 }) {
       campo.files = [arquivo];
@@ -131,9 +142,11 @@ function carregar(cartoes) {
     location: { assign: (destino) => (janela.destino = destino) },
     addEventListener: (tipo, ouvinte) => (janela[tipo] = ouvinte),
   };
+  const confirmacaoAnterior = { hidden: false };
   global.document = {
     querySelectorAll: (s) => (s === "form[data-envio]" ? cartoes.map((c) => c.form) : []),
-    querySelector: (s) => (s === "[data-anuncio-de-varios]" ? anuncio : null),
+    querySelector: (s) =>
+      ({ "[data-anuncio-de-varios]": anuncio, "#confirmacao": confirmacaoAnterior })[s] || null,
     createElement: () => ({
       className: "",
       textContent: "",
@@ -143,9 +156,12 @@ function carregar(cartoes) {
       },
     }),
   };
+  /* Como no navegador: o campo desabilitado fica fora do `FormData` do formulário. O lote desabilita
+     os campos antes de enviar, e por isso o corpo precisa ser montado à mão. */
   global.FormData = class {
     constructor(form) {
-      this.campos = form ? [["arquivo", form.querySelector("[data-arquivo]").files[0]]] : [];
+      const campo = form && form.querySelector("[data-arquivo]");
+      this.campos = campo && !campo.disabled ? [["arquivo", campo.files[0]]] : [];
     }
     append(chave, valor) {
       this.campos.push([chave, valor]);
@@ -155,7 +171,7 @@ function carregar(cartoes) {
     new Promise((resolver, rejeitar) => chamadas.push({ url, opcoes, resolver, rejeitar }));
   delete require.cache[require.resolve(SCRIPT)];
   require(SCRIPT);
-  return { chamadas, janela, anuncio };
+  return { chamadas, janela, anuncio, confirmacaoAnterior };
 }
 
 async function esperar() {
@@ -282,7 +298,25 @@ test("o arquivo acima do limite não viaja: vai o tamanho, e o lote segue", asyn
   );
   await esperar();
   assert.equal(tela.chamadas.length, 2, "a recusa de um não para os seguintes");
-  assert.equal(tela.chamadas[1].opcoes.body.campos[0][0], "arquivo");
+  assert.deepEqual(
+    tela.chamadas[1].opcoes.body.campos.map(([chave]) => chave),
+    ["csrfmiddlewaretoken", "arquivo"]
+  );
+});
+
+test("o arquivo vai no corpo mesmo com o campo desabilitado pelo lote", () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b]);
+  a.escolher({ name: "certidao.pdf", size: 10 });
+  b.escolher();
+
+  a.enviar();
+
+  assert.equal(a.campo.disabled, true, "durante o lote, ninguém troca o arquivo");
+  assert.deepEqual(tela.chamadas[0].opcoes.body.campos, [
+    ["csrfmiddlewaretoken", "ficha-csrf"],
+    ["arquivo", { name: "certidao.pdf", size: 10 }],
+  ]);
 });
 
 // --- US2: o que não chegou (FR-5606, FR-5609, FR-5610, R-010) -----------------------------------
@@ -329,6 +363,9 @@ test("a página de acesso no meio: a página fica, diz o que chegou, e o resto c
   assert.ok(recado.includes("Não foram enviados: Histórico, Residência."));
   assert.equal(a.campo.value, "", "o que chegou perde a escolha");
   assert.equal(a.nomeDoArquivo.textContent, "Recebido agora.");
+  assert.equal(a.recusaAntiga.removida, true, "a recusa da volta anterior sai do que chegou");
+  assert.equal(b.recusaAntiga.removida, false, "e fica no que não foi enviado");
+  assert.equal(tela.confirmacaoAnterior.hidden, true, "a confirmação anterior não contradiz a nova");
   assert.equal(b.campo.files.length, 1, "o que não foi enviado continua escolhido");
   assert.equal(b.botao.innerHTML, "Enviar os 2 documentos escolhidos", "o botão volta, com o N novo");
   assert.equal(b.botao.disabled, false);
