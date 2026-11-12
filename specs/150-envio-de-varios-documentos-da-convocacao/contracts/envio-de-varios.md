@@ -12,7 +12,7 @@ hoje.
 
 | Parte | Valor |
 |---|---|
-| corpo | `multipart/form-data` do próprio formulário do cartão: `csrfmiddlewaretoken` e `arquivo` |
+| corpo | `multipart/form-data` do próprio formulário do cartão: `csrfmiddlewaretoken` e `arquivo`; ou, com o arquivo acima de `data-limite-em-bytes`, `csrfmiddlewaretoken` e `tamanho_declarado` (inteiro, em bytes), **sem** o arquivo (R-009) |
 | cabeçalho | `X-Envio-De-Varios: k/n` — posição (1 a n) e total do lote; inteiros, `1 ≤ k ≤ n` |
 
 Sem o cabeçalho — sem script, ou com N = 1 —, a resposta é a de hoje: `302` para `#confirmacao` ou
@@ -28,6 +28,9 @@ para `#item-‹id›` (FR-3870, FR-3871 da `121`). Cabeçalho malformado é trat
 {"resultado": "recusado",     "ancora": "item-<uuid>", "frase": "<a recusa de hoje>", "volta": "…"}
 ```
 
+- `tamanho_declarado` acima do limite produz `recusado` com a frase de tamanho de hoje de
+  `shared.arquivos.aceitar`; abaixo do limite, ou sem o cabeçalho do lote, é ignorado e vale a
+  ausência do arquivo. Ele nunca produz aceitação.
 - `recusado` cobre o arquivo ausente (*"Escolha um arquivo PDF antes de enviar."*), o arquivo
   inválido, o prazo decorrido, a chamada fechada e o documento já conferido — as frases de hoje, sem
   mudança.
@@ -35,10 +38,13 @@ para `#item-‹id›` (FR-3870, FR-3871 da `121`). Cabeçalho malformado é trat
   foi recebido; senão, o cartão do primeiro recusado. O script usa a `volta` da **última** resposta.
 - O 404 do comando continua `404` (item inexistente, convocação invisível ao candidato).
 
-**Resposta que não é JSON** — a página de acesso (sessão sem identidade), a 404, a 403 de CSRF, a 413
-do proxy, a 5xx — encerra o lote no navegador (FR-5610): o script não navega, diz o que foi recebido
-e o que não foi, com a frase de hoje para o acesso expirado (404 ou página de acesso) ou para a falha
-genérica, e devolve o botão para os não enviados.
+**Resposta que não é JSON** — a página de acesso (sessão sem identidade), a 404, a 403 de CSRF, a 5xx
+e, só com o proxy mal dimensionado, a 413 (R-002) — encerra o lote no navegador (FR-5610): o script
+não navega, diz o que foi recebido e o que não foi enviado, com a frase de hoje para o acesso expirado
+(404 ou página de acesso) ou para a falha genérica, e devolve o botão para os não enviados.
+
+**Falha de rede** (o `fetch` rejeita): o mesmo, e o documento daquela requisição é dito *"não é
+possível saber se chegou"*, e continua escolhido (FR-5610, R-010).
 
 **Efeito na sessão**: ver [data-model.md](../data-model.md). `k = 1` zera as listas.
 
@@ -62,6 +68,7 @@ No `<li class="cartao-do-documento">`:
 |---|---|---|
 | `data-documento` | sempre | o nome do documento |
 | `data-resumo-recebido` | há apresentação vigente | `content_hash` dela, hexadecimal minúsculo |
+| `data-limite-em-bytes` | há envio possível | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` (R-009) |
 
 Dentro do formulário (`form[data-envio]`), além do que já existe:
 
@@ -84,6 +91,10 @@ com a frase da FR-5612.
 | arquivo repetido, escolhido | *Atenção: este arquivo é o mesmo que você escolheu para ‹documento›.* |
 | arquivo repetido, enviado | *Atenção: este arquivo é o mesmo que você já enviou para ‹documento›.* |
 | confirmação | *Recebemos R de N documentos.* |
+| confirmação, com recusados | *1 documento não foi recebido:* / *K documentos não foram recebidos:* seguido do link para o cartão de cada um, pelo nome |
+| queda, recebidos até ali | *Recebemos: ‹documentos›.* (vazio, omitida) |
+| queda, não enviados | *Não foram enviados: ‹documentos›.* |
+| queda, documento em voo | *‹documento›: não é possível saber se chegou — a conexão caiu durante o envio. Recarregue a página para conferir, ou envie de novo: se já tinha chegado, o sistema reconhece o mesmo arquivo.* |
 | sem script | *Os documentos se enviam um de cada vez. Ao enviar um, o arquivo escolhido nos outros cartões não é guardado: escolha e envie um de cada vez.* |
 
 Com mais de um documento coincidente, o aviso nomeia cada um, unidos por vírgula e "e".

@@ -71,9 +71,12 @@ da FR-3858 da `121` para vencido, encerrado e decidido não mudam.
 
 ## A chamada aberta sem documento pedido (D-006)
 
-| Cenário | `providencia_pendente_sem_documento` | título | advertência (prazo correndo) |
+| Cenário | `providencia_pendente_sem_documento` | título | advertência no acompanhamento (prazo correndo) |
 |---|---|---|---|
 | só o Requerimento na chamada, não enviado | `True` | *Você foi convocado!* | sim |
 | só o Requerimento na chamada, enviado | `False` | *Acompanhe sua convocação* | não |
 | Requerimento na inscrição, enviado | `True` | *Você foi convocado!* | sim |
 | nada pedido pelo portal | `True` | *Você foi convocado!* | sim |
+
+A página da convocação sem documento **nunca** mostra a advertência, em nenhuma linha: o parcial da
+chamada só a põe com a projeção, que esse ramo não tem. Fica como hoje (D-007).

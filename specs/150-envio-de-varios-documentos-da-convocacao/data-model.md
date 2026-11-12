@@ -13,6 +13,7 @@ o resumo (`content_hash`) de hoje. O lote não existe no banco: é uma sequênci
 |---|---|---|
 | `content_hash` da apresentação vigente de cada item | `item.lido.vigente`, já no *prefetch* da projeção (`portal/obrigacoes.py`) | `data-resumo-recebido` do cartão (FR-5615, R-005) |
 | nome do documento | `item.nome` | `data-documento` e o texto do aviso |
+| limite do arquivo | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | `data-limite-em-bytes`, para não enviar o que passa do limite (R-009) |
 
 A apresentação aproveitada da inscrição (`documento_da_inscricao`) ou de outra chamada
 (`apresentacao_de_origem`) tem o mesmo `content_hash` da origem — o gatilho da `0005` da convocação

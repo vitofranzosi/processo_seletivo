@@ -40,3 +40,7 @@
   SC-1806, SC-1807, D-006). A spec diz "resumo SHA-256" porque é o resumo que a `115` já guarda em
   cada apresentação e o que torna a comparação objetiva; não diz como o navegador o calcula. As três
   perguntas abertas têm resposta adotada por padrão e não bloqueiam o plano.
+- Revista de novo em 2026-11-11, depois do `/speckit-analyze`: a FR-5610 deixa de afirmar "não
+  recebido" do documento em voo na queda de conexão (R-010); dois casos-limite novos (arquivo acima do
+  limite no meio do lote, R-009; dois lotes em duas abas); e uma seção *Achados registrados*, com a
+  tela da convocação sem `no-store`.

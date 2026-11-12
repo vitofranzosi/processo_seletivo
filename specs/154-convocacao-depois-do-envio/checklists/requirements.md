@@ -14,7 +14,7 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain — e nenhuma decisão pendente: D-001 a D-006 foram
+- [x] No [NEEDS CLARIFICATION] markers remain — e nenhuma decisão pendente: D-001 a D-007 foram
       fechadas pelo usuário em 11/11/2026.
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
@@ -35,6 +35,9 @@
 
 - Revalidada em 11/11/2026 depois das decisões do usuário sobre as propostas: D-002 e D-004 com a
   redação dele, e a pergunta sobre a chamada sem documento respondida como D-006.
+- Revista em 11/11/2026 depois do `/speckit-analyze`: a cena 5 da US2 e a SC-2001 diziam que a
+  página da convocação sem documento traz a advertência, e ela nunca a trouxe; o usuário decidiu
+  manter a página como hoje (D-007), e a SC-2001 passou a dizer "em cada tela que a mostra hoje".
 - O plano parte da `main` depois do merge do #477, que mexe nos mesmos arquivos da gestão.
 - A revisão foi aplicada também nos arquivos das features revistas (`063`, `115`, `118`, `121`,
   `134`, `143`), com a redação anterior preservada em cada alínea.
