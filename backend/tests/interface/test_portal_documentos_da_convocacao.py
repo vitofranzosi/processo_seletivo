@@ -20,10 +20,12 @@ from tests.fixtures.comissao import abrir_arquivo
 from tests.fixtures.documentos_da_convocacao import (
     CERTIDAO,
     CERTIFICADO,
+    CERTIFICADO_DO_MEDIO,
     CERTIFICADO_NA_CONVOCACAO,
     FICHA,
     HISTORICO,
     IDENTIDADE,
+    RESIDENCIA,
     apresentar,
     comunicar,
     conferir,
@@ -533,8 +535,9 @@ class TestARecusaNoCartao:
         assert 'id="confirmacao"' not in corpo
 
 
-def test_a_convocacao_carrega_os_tres_scripts_e_nenhum_outro(aluno, gestor, client):
-    """FR-3872: os três da inscrição, por arquivo estático, e nenhum script novo."""
+def test_a_convocacao_carrega_os_quatro_scripts_e_nenhum_outro(aluno, gestor, client):
+    """FR-3872 da `121`, revista pela FR-5614 da `150`: os três da inscrição e o do envio de
+    vários, antes de `envio.js` (R-001), por arquivo estático, e nenhum script embutido."""
     import re
 
     pessoa, _ = cenarios.convocar_primeira(aluno, gestor)
@@ -544,5 +547,349 @@ def test_a_convocacao_carrega_os_tres_scripts_e_nenhum_outro(aluno, gestor, clie
     scripts = re.findall(r'<script src="([^"]+)"', corpo)
     proprios = [s.rsplit("/", 1)[1].split("?")[0] for s in scripts if "/portal/" in s]
 
-    assert proprios[-3:] == ["arquivo.js", "envio.js", "recusa.js"]
+    assert proprios[-4:] == ["arquivo.js", "varios.js", "envio.js", "recusa.js"]
     assert not re.search(r"<script(?![^>]*\bsrc=)", corpo), "nenhum script embutido"
+
+
+# --- O envio de vários (150, US1, US2; contrato §1 e §2) -----------------------------------------
+
+
+def _no_lote(client, pessoa, alvo, posicao, arquivo=None, **campos):
+    dados = dict(campos)
+    if arquivo is not None:
+        dados["arquivo"] = arquivo
+    return client.post(
+        reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
+        dados,
+        HTTP_X_ENVIO_DE_VARIOS=posicao,
+    )
+
+
+def _foto():
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    return SimpleUploadedFile("foto.jpg", b"\xff\xd8\xff", content_type="image/jpeg")
+
+
+class TestORamoDoLote:
+    """R-002: com o cabeçalho, o resultado de cada documento em JSON; sem ele, nada muda."""
+
+    def test_recebido_responde_json_com_a_volta_da_confirmacao(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        resposta = _no_lote(client, pessoa, alvo, "1/2", cenarios.pdf(b"certidao"))
+
+        assert resposta.status_code == 200
+        assert resposta["Content-Type"].startswith("application/json")
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert resposta.json() == {
+            "resultado": "recebido",
+            "ancora": f"item-{alvo.id}",
+            "volta": f"{destino}?lote=2#confirmacao",
+        }
+        assert alvo.apresentacoes.count() == 1
+
+    def test_recusado_traz_a_frase_de_hoje_e_volta_ao_cartao(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        dados = _no_lote(client, pessoa, alvo, "1/2", _foto()).json()
+
+        assert dados["resultado"] == "recusado"
+        assert "imagem" in dados["frase"].lower()
+        assert dados["volta"].endswith(f"?lote=2#item-{alvo.id}")
+        assert not alvo.apresentacoes.exists()
+
+    def test_o_mesmo_arquivo_de_novo_e_ja_recebido(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+        _postar(client, pessoa, alvo, cenarios.pdf(b"igual"))
+
+        dados = _no_lote(client, pessoa, alvo, "1/2", cenarios.pdf(b"igual")).json()
+
+        assert dados["resultado"] == "ja_recebido"
+        assert alvo.apresentacoes.count() == 1
+
+    def test_sem_arquivo_e_a_recusa_de_hoje(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        dados = _no_lote(client, pessoa, item(convocacao, CERTIDAO), "1/2").json()
+
+        assert (dados["resultado"], dados["frase"]) == (
+            "recusado",
+            "Escolha um arquivo PDF antes de enviar.",
+        )
+
+    def test_o_tamanho_declarado_acima_do_limite_e_a_recusa_de_tamanho(
+        self, aluno, gestor, client, settings
+    ):
+        """R-009: o arquivo grande não viaja, e a recusa é a de `shared.arquivos.aceitar`."""
+        settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES = 1024 * 1024
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        grande = str(15 * 1024 * 1024)
+        dados = _no_lote(client, pessoa, alvo, "1/2", tamanho_declarado=grande).json()
+
+        assert dados["resultado"] == "recusado"
+        assert dados["frase"].startswith("O arquivo tem 15")
+        assert dados["frase"].endswith("Reduza o tamanho e envie novamente.")
+        assert not alvo.apresentacoes.exists()
+        corpo = tela(client, pessoa)
+        assert dados["frase"] in corpo, "a recusa chegou à sessão, e ao cartão"
+
+    def test_o_tamanho_declarado_abaixo_do_limite_vale_como_ausencia(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        dados = _no_lote(
+            client, pessoa, item(convocacao, CERTIDAO), "1/2", tamanho_declarado="10"
+        ).json()
+
+        assert dados["frase"] == "Escolha um arquivo PDF antes de enviar."
+
+    def test_o_tamanho_declarado_fora_do_lote_e_ignorado(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        resposta = _postar(client, pessoa, alvo)
+        corpo = tela(client, pessoa)
+
+        assert resposta.status_code == 302
+        assert "Escolha um arquivo PDF antes de enviar." in corpo
+
+    @pytest.mark.parametrize("cabecalho", ["x/0", "3/2", "abc", "0/2", "1-2", ""])
+    def test_cabecalho_malformado_e_o_envio_de_hoje(self, aluno, gestor, client, cabecalho):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        resposta = _no_lote(client, pessoa, alvo, cabecalho, cenarios.pdf(b"c"))
+
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert resposta.status_code == 302
+        assert resposta["Location"] == f"{destino}#confirmacao"
+
+    def test_o_item_inexistente_continua_404(self, aluno, gestor, client):
+        import uuid
+
+        pessoa, _ = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        resposta = client.post(
+            reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, uuid.uuid4()]),
+            {"arquivo": cenarios.pdf(b"x")},
+            HTTP_X_ENVIO_DE_VARIOS="1/2",
+        )
+
+        assert resposta.status_code == 404
+
+
+class TestASessaoDoLote:
+    """R-003: o lote acumula na sessão, `1/n` zera, e a volta lê também a forma antiga."""
+
+    def test_a_primeira_posicao_zera_e_as_seguintes_acumulam(self, aluno, gestor, client):
+        from processo_seletivo.portal.views import (
+            CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO,
+            CHAVE_DA_RECUSA_DA_CONVOCACAO,
+        )
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        _postar(client, pessoa, item(convocacao, RESIDENCIA), _foto())
+        _no_lote(client, pessoa, item(convocacao, CERTIDAO), "1/3", cenarios.pdf(b"a"))
+        _no_lote(client, pessoa, item(convocacao, HISTORICO), "2/3", _foto())
+        _no_lote(client, pessoa, item(convocacao, CERTIFICADO_DO_MEDIO), "3/3", cenarios.pdf(b"c"))
+
+        confirmacao = client.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO]
+        recusa = client.session[CHAVE_DA_RECUSA_DA_CONVOCACAO]
+        assert confirmacao["total"] == 3
+        assert [e["item_id"] for e in confirmacao["envios"]] == [
+            str(item(convocacao, CERTIDAO).id),
+            str(item(convocacao, CERTIFICADO_DO_MEDIO).id),
+        ]
+        assert [r["ancora"] for r in recusa["recusas"]] == [
+            f"item-{item(convocacao, HISTORICO).id}"
+        ], "a recusa do envio anterior, de fora do lote, foi zerada"
+
+    def test_o_envio_de_um_grava_a_lista_com_um(self, aluno, gestor, client):
+        from processo_seletivo.portal.views import CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        _postar(client, pessoa, item(convocacao, CERTIDAO), cenarios.pdf(b"a"))
+        _postar(client, pessoa, item(convocacao, HISTORICO), cenarios.pdf(b"b"))
+
+        confirmacao = client.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO]
+        assert confirmacao["total"] == 1
+        assert [e["item_id"] for e in confirmacao["envios"]] == [
+            str(item(convocacao, HISTORICO).id)
+        ], "fora do lote, cada envio começa o seu, como antes"
+
+    def test_a_forma_antiga_ainda_e_lida(self, aluno, gestor, client):
+        """A sessão aberta durante a implantação traz a forma de antes da `150`."""
+        from processo_seletivo.portal.views import (
+            CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO,
+            CHAVE_DA_RECUSA_DA_CONVOCACAO,
+        )
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        feita = apresentar(pessoa, convocacao, CERTIDAO, corpo=b"antes")
+        historico = item(convocacao, HISTORICO)
+        sessao = client.session
+        sessao[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
+            "inscricao": str(pessoa.id),
+            "item_id": str(item(convocacao, CERTIDAO).id),
+            "apresentacao_id": str(feita.apresentacao.id),
+            "ja_recebido": False,
+        }
+        sessao[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
+            "inscricao": str(pessoa.id),
+            "ancora": f"item-{historico.id}",
+            "frase": "Recusa guardada antes da 150.",
+        }
+        sessao.save()
+
+        corpo = tela(client, pessoa)
+
+        assert "Recebemos: Certidão de nascimento ou casamento" in _texto(_confirmacao(corpo))
+        cartao = corpo.split(f'id="item-{historico.id}"', 1)[1].split("</li>", 1)[0]
+        assert "data-recusa>Recusa guardada antes da 150." in cartao
+        assert 'id="confirmacao"' not in tela(client, pessoa), "consumida uma vez"
+
+
+class TestAMarcacaoDoLote:
+    """Contrato §3, só o que o envio de vários usa: o nome do documento e o limite."""
+
+    def test_o_cartao_diz_o_documento_e_o_formulario_o_limite(
+        self, aluno, gestor, client, settings
+    ):
+        import re
+
+        settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES = 3 * 1024 * 1024
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        corpo = tela(client, pessoa)
+
+        assert re.search(
+            rf'id="item-{alvo.id}" tabindex="-1" data-documento="Certidão de nascimento ou '
+            r'casamento"',
+            corpo,
+        )
+        formularios = re.findall(r"<form[^>]*data-envio[^>]*>", corpo)
+        assert formularios and all('data-limite-em-bytes="3145728"' in f for f in formularios), (
+            formularios
+        )
+        assert '<p class="oculto" role="status" aria-live="polite" data-anuncio-de-varios></p>' in (
+            corpo
+        )
+
+
+class TestAVoltaDoLote:
+    """FR-5608, FR-5609: a confirmação de vários, e a recusa no cartão de cada um."""
+
+    def test_quatro_recebidos(self, aluno, gestor, client):
+        from processo_seletivo.portal import obrigacoes
+
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        requisitos = (CERTIDAO, HISTORICO, CERTIFICADO_DO_MEDIO, RESIDENCIA)
+        for posicao, requisito in enumerate(requisitos, start=1):
+            dados = _no_lote(
+                client,
+                pessoa,
+                item(convocacao, requisito),
+                f"{posicao}/4",
+                cenarios.pdf(f"doc-{posicao}".encode()),
+            ).json()
+
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert dados["volta"] == f"{destino}?lote=4#confirmacao"
+        corpo = _texto(_confirmacao(tela(client, pessoa)))
+        assert corpo.startswith(
+            "Recebemos 4 de 4 documentos. Os arquivos aguardam a conferência da comissão."
+        )
+        for requisito in requisitos:
+            alvo = item(convocacao, requisito)
+            recebida = alvo.apresentacoes.get().apresentado_em
+            assert f"em {obrigacoes.data(recebida)}, às {obrigacoes.hora(recebida)}." in corpo
+        assert "Certidão de nascimento ou casamento, em" in corpo
+        assert "Comprovante de residência, em" in corpo
+        assert "Você não tem mais documentos para enviar agora." in corpo, "a conclusão de hoje"
+        assert "não foi recebido" not in corpo and "não foram recebidos" not in corpo
+        for proibido in ("aceito", "aprovado", "conferido", "atendido"):
+            assert proibido not in corpo.lower(), proibido
+
+    def test_um_recusado_no_meio(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        historico = item(convocacao, HISTORICO)
+        _no_lote(client, pessoa, item(convocacao, CERTIDAO), "1/4", cenarios.pdf(b"a"))
+        _no_lote(client, pessoa, historico, "2/4", _foto())
+        _no_lote(client, pessoa, item(convocacao, CERTIFICADO_DO_MEDIO), "3/4", cenarios.pdf(b"c"))
+        dados = _no_lote(
+            client, pessoa, item(convocacao, RESIDENCIA), "4/4", cenarios.pdf(b"d")
+        ).json()
+
+        assert dados["volta"].endswith("#confirmacao")
+        corpo = tela(client, pessoa)
+        confirmacao = _confirmacao(corpo)
+        assert _texto(confirmacao).startswith("Recebemos 3 de 4 documentos.")
+        assert "1 documento não foi recebido:" in _texto(confirmacao)
+        ligacao = f'<a href="#item-{historico.id}">Histórico escolar do ensino médio</a>'
+        assert ligacao in confirmacao
+        assert "Próxima tarefa: Histórico escolar do ensino médio" in _texto(confirmacao)
+        cartao = corpo.split(f'id="item-{historico.id}"', 1)[1].split("</li>", 1)[0]
+        assert 'role="alert" tabindex="-1" data-recusa>' in cartao
+        assert corpo.count("data-recusa") == 1
+
+    def test_dois_recusados_no_plural(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        _no_lote(client, pessoa, item(convocacao, CERTIDAO), "1/3", _foto())
+        _no_lote(client, pessoa, item(convocacao, HISTORICO), "2/3", cenarios.pdf(b"b"))
+        _no_lote(client, pessoa, item(convocacao, RESIDENCIA), "3/3", _foto())
+
+        corpo = tela(client, pessoa)
+
+        confirmacao = _texto(_confirmacao(corpo))
+        assert confirmacao.startswith(
+            "Recebemos 1 de 3 documentos. O arquivo aguarda a conferência da comissão."
+        )
+        assert "2 documentos não foram recebidos:" in confirmacao
+        assert corpo.count("data-recusa") == 2
+
+    def test_todos_recusados_voltam_ao_cartao_do_primeiro(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        certidao, historico = item(convocacao, CERTIDAO), item(convocacao, HISTORICO)
+        _no_lote(client, pessoa, certidao, "1/2", _foto())
+        dados = _no_lote(client, pessoa, historico, "2/2", _foto()).json()
+
+        destino = reverse("portal:convocacao", args=[pessoa.id])
+        assert dados["volta"] == f"{destino}?lote=2#item-{certidao.id}"
+        corpo = tela(client, pessoa)
+        assert 'id="confirmacao"' not in corpo
+        primeira = corpo.index("data-recusa")
+        assert corpo.rfind(f'id="item-{certidao.id}"', 0, primeira) > corpo.rfind(
+            f'id="item-{historico.id}"', 0, primeira
+        ), "a primeira recusa da página é a do primeiro recusado, que recusa.js foca"
+        assert corpo.count("data-recusa") == 2
+
+    def test_a_volta_com_o_parametro_do_lote_e_a_mesma_tela(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        resposta = client.get(reverse("portal:convocacao", args=[pessoa.id]) + "?lote=3")
+
+        assert resposta.status_code == 200

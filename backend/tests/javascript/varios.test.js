@@ -1,0 +1,414 @@
+/* O envio de vários documentos da convocação (150, US1 e US2).
+
+   Sem o shim de `dom.js`: objetos simples, como `envio.test.js` e `arquivo.test.js`. O que se prova
+   é a regra — a contagem e o rótulo, o lote um por vez e na ordem da tela, o arquivo grande que não
+   viaja, e o que a tela diz quando o lote para no meio. O foco, o anúncio pelo leitor de tela e a
+   volta à âncora são do navegador, e estão na verificação do quickstart. */
+
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const { test } = require("node:test");
+
+const SCRIPT = path.join(__dirname, "../../processo_seletivo/portal/static/portal/varios.js");
+
+const ACESSO_EXPIRADO = "Não foi possível enviar: o seu acesso expirou.";
+const CONEXAO = "Não foi possível enviar: a conexão falhou.";
+const FALHA = "Não foi possível enviar agora.";
+
+function classes(iniciais = []) {
+  const lista = new Set(iniciais);
+  return {
+    add: (nome) => lista.add(nome),
+    remove: (nome) => lista.delete(nome),
+    contains: (nome) => lista.has(nome),
+  };
+}
+
+function cartao(nome, { limite = 1000 } = {}) {
+  const ouvintes = {};
+  /* Como no navegador: zerar o `value` de um campo de arquivo esvazia a lista de arquivos. */
+  const campo = {
+    files: [],
+    get value() {
+      return this.files.length ? `C:\\fakepath\\${this.files[0].name}` : "";
+    },
+    set value(valor) {
+      if (valor === "") this.files = [];
+    },
+    disabled: false,
+    addEventListener: (tipo, ouvinte) => {
+      ouvintes[tipo] = ouvinte;
+    },
+  };
+  const botao = {
+    innerHTML: `Enviar<span class="oculto">: ${nome}</span>`,
+    disabled: false,
+    classList: classes(["acao", "pronta"]),
+    set textContent(texto) {
+      this.innerHTML = texto;
+    },
+    get textContent() {
+      return this.innerHTML.replace(/<[^>]+>/g, "");
+    },
+  };
+  const barra = { atributos: { value: "0" }, removeAttribute(chave) { delete this.atributos[chave]; } };
+  const ajuda = { textContent: "Enviando… não feche esta página." };
+  const progresso = {
+    hidden: true,
+    querySelector: (s) => ({ progress: barra, ".ajuda": ajuda })[s] || null,
+  };
+  const nomeDoArquivo = { textContent: "Nenhum arquivo escolhido", classList: classes() };
+  const ficha = { value: "ficha-csrf" };
+  const filhos = [];
+  const li = {
+    getAttribute: (chave) => (chave === "data-documento" ? nome : null),
+    querySelector: (s) =>
+      s === ".recusa-do-envio" ? filhos.find((f) => f.className.includes("recusa-do-envio")) : null,
+    appendChild: (filho) => filhos.push(filho),
+  };
+  const ouvintesDoForm = {};
+  const form = {
+    nome,
+    action: `/envio/${nome}`,
+    getAttribute: (chave) => (chave === "data-limite-em-bytes" ? String(limite) : null),
+    querySelector: (s) =>
+      ({
+        "button[type=submit]": botao,
+        "[data-arquivo]": campo,
+        ".progresso": progresso,
+        "[data-nome-do-arquivo]": nomeDoArquivo,
+        "[name=csrfmiddlewaretoken]": ficha,
+      })[s] || null,
+    closest: (s) => (s === ".cartao-do-documento" ? li : null),
+    addEventListener: (tipo, ouvinte) => {
+      ouvintesDoForm[tipo] = ouvinte;
+    },
+  };
+  return {
+    form,
+    campo,
+    botao,
+    progresso,
+    ajuda,
+    nomeDoArquivo,
+    recado: () => filhos.find((f) => f.className.includes("recusa-do-envio")),
+    escolher(arquivo = { name: `${nome}.pdf`, size: 10 }) {
+      campo.files = [arquivo];
+      ouvintes.change();
+    },
+    enviar() {
+      const evento = {
+        prevenido: false,
+        parado: false,
+        preventDefault() {
+          this.prevenido = true;
+        },
+        stopPropagation() {
+          this.parado = true;
+        },
+      };
+      ouvintesDoForm.submit(evento);
+      return evento;
+    },
+  };
+}
+
+function json(dados) {
+  return { ok: true, status: 200, headers: { get: () => "application/json" }, json: async () => dados };
+}
+
+function html(status) {
+  return { ok: status < 400, status, headers: { get: () => "text/html; charset=utf-8" } };
+}
+
+/* Cada chamada do `fetch` fica pendente até o teste respondê-la: assim se vê que o lote espera a
+   resposta de um documento antes de mandar o seguinte. */
+function carregar(cartoes) {
+  const chamadas = [];
+  const janela = {};
+  const anuncio = { textContent: "" };
+  global.window = {
+    location: { assign: (destino) => (janela.destino = destino) },
+    addEventListener: (tipo, ouvinte) => (janela[tipo] = ouvinte),
+  };
+  global.document = {
+    querySelectorAll: (s) => (s === "form[data-envio]" ? cartoes.map((c) => c.form) : []),
+    querySelector: (s) => (s === "[data-anuncio-de-varios]" ? anuncio : null),
+    createElement: () => ({
+      className: "",
+      textContent: "",
+      atributos: {},
+      setAttribute(chave, valor) {
+        this.atributos[chave] = valor;
+      },
+    }),
+  };
+  global.FormData = class {
+    constructor(form) {
+      this.campos = form ? [["arquivo", form.querySelector("[data-arquivo]").files[0]]] : [];
+    }
+    append(chave, valor) {
+      this.campos.push([chave, valor]);
+    }
+  };
+  global.fetch = (url, opcoes) =>
+    new Promise((resolver, rejeitar) => chamadas.push({ url, opcoes, resolver, rejeitar }));
+  delete require.cache[require.resolve(SCRIPT)];
+  require(SCRIPT);
+  return { chamadas, janela, anuncio };
+}
+
+async function esperar() {
+  for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+}
+
+function tres() {
+  return [cartao("Certidão"), cartao("Histórico"), cartao("Residência")];
+}
+
+// --- US1: a contagem e o rótulo (FR-5601, FR-5602, FR-5613, UX-500, UX-501) ----------------------
+
+test("com um escolhido, o botão é o de hoje e o envio é o nativo", () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b]);
+  const original = a.botao.innerHTML;
+
+  a.escolher();
+  const evento = a.enviar();
+
+  assert.equal(a.botao.innerHTML, original, "o nome do documento continua para o leitor de tela");
+  assert.equal(evento.prevenido, false, "o envio de um segue como hoje");
+  assert.equal(tela.chamadas.length, 0);
+  assert.equal(tela.anuncio.textContent, "1 documento escolhido para enviar.");
+});
+
+test("com dois ou mais, todo botão escolhido diz o total, e o vazio não muda", () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  const vazio = c.botao.innerHTML;
+
+  a.escolher();
+  b.escolher();
+
+  assert.equal(a.botao.innerHTML, "Enviar os 2 documentos escolhidos");
+  assert.equal(b.botao.innerHTML, "Enviar os 2 documentos escolhidos", "sem o nome oculto");
+  assert.equal(c.botao.innerHTML, vazio);
+  assert.equal(tela.anuncio.textContent, "2 documentos escolhidos para enviar.");
+  assert.ok(a.botao.classList.contains("pronta"), "o destaque de hoje continua no cartão (UX-500)");
+});
+
+test("escolher de novo no mesmo cartão troca a escolha e não muda a contagem", () => {
+  const [a, b, c] = tres();
+  carregar([a, b, c]);
+
+  a.escolher();
+  b.escolher();
+  b.escolher({ name: "outro.pdf", size: 20 });
+
+  assert.equal(b.botao.innerHTML, "Enviar os 2 documentos escolhidos");
+});
+
+test("a contagem conta todo cartão com envio, e cresce com o terceiro", () => {
+  const [a, b, c] = tres();
+  carregar([a, b, c]);
+
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  for (const cartao of [a, b, c]) {
+    assert.equal(cartao.botao.innerHTML, "Enviar os 3 documentos escolhidos");
+  }
+});
+
+// --- US1: o lote (FR-5605 a FR-5607, R-002, R-004, R-009) --------------------------------------
+
+test("o lote envia um por vez, na ordem da tela, e volta à âncora do servidor", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  const evento = b.enviar();
+
+  assert.equal(evento.prevenido, true, "o envio nativo levaria um e descartaria os outros");
+  assert.equal(evento.parado, true, "o ouvinte de `envio.js` não age sobre o lote");
+  assert.equal(tela.chamadas.length, 1, "o segundo só sai depois da resposta do primeiro");
+  assert.equal(tela.chamadas[0].url, "/envio/Certidão");
+  assert.equal(tela.chamadas[0].opcoes.headers["X-Envio-De-Varios"], "1/3");
+  assert.equal(b.progresso.hidden, false);
+  assert.equal(b.ajuda.textContent, "Enviando 1 de 3: Certidão… Não feche esta página.");
+  assert.equal(tela.anuncio.textContent, "Enviando 1 de 3: Certidão… Não feche esta página.");
+  for (const cartao of [a, b, c]) {
+    assert.equal(cartao.botao.disabled, true);
+    assert.equal(cartao.campo.disabled, true);
+  }
+
+  tela.chamadas[0].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+  assert.equal(tela.chamadas.length, 2);
+  assert.equal(tela.chamadas[1].opcoes.headers["X-Envio-De-Varios"], "2/3");
+  assert.equal(b.ajuda.textContent, "Enviando 2 de 3: Histórico… Não feche esta página.");
+
+  tela.chamadas[1].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+  tela.chamadas[2].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+
+  assert.deepEqual(
+    tela.chamadas.map((c) => c.url),
+    ["/envio/Certidão", "/envio/Histórico", "/envio/Residência"]
+  );
+  assert.equal(tela.janela.destino, "/c?lote=3#confirmacao");
+});
+
+test("o arquivo acima do limite não viaja: vai o tamanho, e o lote segue", async () => {
+  const a = cartao("Certidão", { limite: 100 });
+  const b = cartao("Histórico", { limite: 100 });
+  const tela = carregar([a, b]);
+  a.escolher({ name: "grande.pdf", size: 5000 });
+  b.escolher();
+
+  a.enviar();
+  const corpo = tela.chamadas[0].opcoes.body.campos;
+
+  assert.deepEqual(corpo, [
+    ["csrfmiddlewaretoken", "ficha-csrf"],
+    ["tamanho_declarado", "5000"],
+  ]);
+  tela.chamadas[0].resolver(
+    json({ resultado: "recusado", frase: "O arquivo tem…", volta: "/c?lote=2#item-a" })
+  );
+  await esperar();
+  assert.equal(tela.chamadas.length, 2, "a recusa de um não para os seguintes");
+  assert.equal(tela.chamadas[1].opcoes.body.campos[0][0], "arquivo");
+});
+
+// --- US2: o que não chegou (FR-5606, FR-5609, FR-5610, R-010) -----------------------------------
+
+test("a recusa de um não interrompe os seguintes, e a volta é a do servidor", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  a.enviar();
+  tela.chamadas[0].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+  tela.chamadas[1].resolver(
+    json({ resultado: "recusado", frase: "É uma imagem.", volta: "/c?lote=3#confirmacao" })
+  );
+  await esperar();
+  tela.chamadas[2].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+
+  assert.equal(tela.chamadas.length, 3);
+  assert.equal(tela.janela.destino, "/c?lote=3#confirmacao");
+});
+
+test("a página de acesso no meio: a página fica, diz o que chegou, e o resto continua escolhido", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  c.enviar();
+  tela.chamadas[0].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+  tela.chamadas[1].resolver(html(200));
+  await esperar();
+
+  assert.equal(tela.janela.destino, undefined, "não sai da página");
+  assert.equal(tela.chamadas.length, 2, "não tenta os seguintes");
+  const recado = c.recado().textContent;
+  assert.ok(recado.startsWith(ACESSO_EXPIRADO));
+  assert.ok(recado.includes("Recebemos: Certidão."));
+  assert.ok(recado.includes("Não foram enviados: Histórico, Residência."));
+  assert.equal(a.campo.value, "", "o que chegou perde a escolha");
+  assert.equal(a.nomeDoArquivo.textContent, "Recebido agora.");
+  assert.equal(b.campo.files.length, 1, "o que não foi enviado continua escolhido");
+  assert.equal(b.botao.innerHTML, "Enviar os 2 documentos escolhidos", "o botão volta, com o N novo");
+  assert.equal(b.botao.disabled, false);
+  assert.equal(c.progresso.hidden, true);
+});
+
+test("a 404 no meio é o acesso expirado; a 500, a falha genérica", async () => {
+  for (const [resposta, frase] of [
+    [html(404), ACESSO_EXPIRADO],
+    [{ ok: false, status: 500, headers: { get: () => "text/html" } }, FALHA],
+  ]) {
+    const [a, b] = tres();
+    const tela = carregar([a, b]);
+    a.escolher();
+    b.escolher();
+
+    a.enviar();
+    tela.chamadas[0].resolver(resposta);
+    await esperar();
+
+    assert.ok(a.recado().textContent.startsWith(frase), frase);
+    assert.ok(a.recado().textContent.includes("Não foram enviados: Certidão, Histórico."));
+  }
+});
+
+test("na queda de conexão, do documento em voo não se afirma nada", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  a.enviar();
+  tela.chamadas[0].resolver(json({ resultado: "recebido", volta: "/c?lote=3#confirmacao" }));
+  await esperar();
+  tela.chamadas[1].rejeitar(new TypeError("Failed to fetch"));
+  await esperar();
+
+  const recado = a.recado().textContent;
+  assert.ok(recado.startsWith(CONEXAO));
+  assert.ok(recado.includes("Recebemos: Certidão."));
+  assert.ok(recado.includes("Não foram enviados: Residência."));
+  assert.ok(recado.includes("Histórico: não é possível saber se chegou"));
+  assert.ok(!/não (foi )?recebid/i.test(recado), "nunca \"não recebido\"");
+  assert.equal(b.campo.files.length, 1, "o documento em voo continua escolhido");
+  assert.equal(c.campo.files.length, 1);
+  assert.equal(tela.janela.destino, undefined);
+});
+
+test("um recusado antes da queda traz a recusa no cartão dele", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c]);
+  a.escolher();
+  b.escolher();
+  c.escolher();
+
+  a.enviar();
+  tela.chamadas[0].resolver(
+    json({ resultado: "recusado", frase: "É uma imagem.", volta: "/c?lote=3#item-a" })
+  );
+  await esperar();
+  tela.chamadas[1].rejeitar(new TypeError("Failed to fetch"));
+  await esperar();
+
+  assert.ok(a.recado().textContent.startsWith(CONEXAO), "a frase da queda no cartão acionado");
+  assert.equal(a.campo.value, "");
+  assert.ok(!a.recado().textContent.includes("Recebemos"), "nada chegou");
+});
+
+test("a volta pelo cache do navegador devolve botões, rótulos e progresso", async () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b]);
+  a.escolher();
+  b.escolher();
+  a.enviar();
+
+  tela.janela.pageshow();
+
+  assert.equal(a.botao.disabled, false);
+  assert.equal(a.progresso.hidden, true);
+  assert.equal(a.ajuda.textContent, "Enviando… não feche esta página.");
+  assert.equal(a.botao.innerHTML, "Enviar os 2 documentos escolhidos");
+});

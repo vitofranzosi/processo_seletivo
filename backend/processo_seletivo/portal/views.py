@@ -2712,17 +2712,54 @@ def _da_inscricao(request, chave, registro):
     return {campo: valor for campo, valor in guardado.items() if campo != "inscricao"}
 
 
+def _envios_da_volta(guardado):
+    """Os envios guardados, como lista (150, R-003).
+
+    **Lê também a forma de antes da `150`** — um envio só, sem lista —, porque a sessão aberta
+    durante a implantação ainda a traz, e a volta dela chegaria vazia.
+    """
+    if not guardado:
+        return [], 0
+    if "envios" in guardado:
+        return list(guardado["envios"]), guardado.get("total") or len(guardado["envios"])
+    envio = {campo: guardado[campo] for campo in ("item_id", "apresentacao_id", "ja_recebido")}
+    return [envio], 1
+
+
+def _recusas_da_volta(guardado):
+    """As recusas guardadas, uma por cartão, como lista; também a forma de antes da `150`."""
+    if not guardado:
+        return []
+    if "recusas" in guardado:
+        return list(guardado["recusas"])
+    return [{"ancora": guardado["ancora"], "frase": guardado["frase"]}]
+
+
 def _volta_do_envio(request, registro, projecao):
-    """Consome os dois registros da volta do envio, lidos uma vez só, como `_mensagens`."""
-    confirmacao = _da_inscricao(request, CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, registro)
-    recusa = _da_inscricao(request, CHAVE_DA_RECUSA_DA_CONVOCACAO, registro)
+    """Consome os dois registros da volta do envio, lidos uma vez só, como `_mensagens`.
+
+    **No envio de vários** (150, FR-5608, FR-5609), os dois são listas: a confirmação diz quantos
+    chegaram e liga os recusados aos cartões deles, e cada cartão recusado traz a sua recusa.
+    """
+    envios, total = _envios_da_volta(
+        _da_inscricao(request, CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, registro)
+    )
+    recusas = _recusas_da_volta(_da_inscricao(request, CHAVE_DA_RECUSA_DA_CONVOCACAO, registro))
     return {
         "confirmacao_do_envio": (
-            obrigacoes.confirmacao_do_envio(projecao, **confirmacao)
-            if confirmacao and projecao is not None
+            obrigacoes.confirmacao_do_lote(
+                projecao,
+                envios=envios,
+                total=total,
+                # Os recusados só entram na confirmação do envio de vários: no de um, a recusa é a
+                # volta inteira (FR-3871 da `121`), e confirmação e recusa juntas viriam de duas
+                # abas, e não de um envio.
+                recusas=recusas if total > 1 else (),
+            )
+            if envios and projecao is not None
             else None
         ),
-        "recusa_do_envio": recusa,
+        "recusas_do_envio": recusas,
     }
 
 
@@ -2806,6 +2843,49 @@ def _documentos_da_convocacao_para_a_tela(chamada, agora):
     }
 
 
+#: O cabeçalho do envio de vários (150, R-002): a posição do documento no lote e o total, `k/n`.
+CABECALHO_DO_LOTE = "HTTP_X_ENVIO_DE_VARIOS"
+SEM_ARQUIVO = "Escolha um arquivo PDF antes de enviar."
+
+
+def _posicao_no_lote(request):
+    """`(k, n)` do cabeçalho do envio de vários, ou `None` — e malformado vale como ausente."""
+    k, barra, n = request.META.get(CABECALHO_DO_LOTE, "").strip().partition("/")
+    if not barra or not (k.isdigit() and n.isdigit()):
+        return None
+    k, n = int(k), int(n)
+    return (k, n) if 1 <= k <= n else None
+
+
+class _TamanhoDeclarado:
+    """O arquivo que não viajou, só com o tamanho que o navegador declarou (150, R-009).
+
+    O lote não manda o arquivo acima do limite: o proxy o recusaria sem frase do sistema, e acima
+    de 12 MB a recusa nem chegaria à sessão. Mandar só o tamanho ao comando de hoje faz a recusa
+    ser **a mesma**, pelas mesmas guardas e na mesma ordem — titularidade, conferido, chamada
+    fechada, prazo, e só então o limite, em `shared.arquivos.aceitar`, que olha o tamanho antes de
+    ler um byte. Só é usado acima do limite, e por isso só produz recusa: quem mentir o tamanho
+    recebe uma recusa no próprio cartão.
+    """
+
+    name = ""
+
+    def __init__(self, tamanho):
+        self.size = tamanho
+
+    def read(self, *_):
+        raise RuntimeError("o arquivo acima do limite não viaja e não se lê")
+
+
+def _tamanho_declarado_acima_do_limite(request):
+    """O tamanho declarado, só quando passa do limite; abaixo dele, vale a ausência do arquivo."""
+    bruto = request.POST.get("tamanho_declarado", "")
+    if not bruto.isdigit():
+        return None
+    tamanho = int(bruto)
+    return tamanho if tamanho > settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES else None
+
+
 @require_http_methods(["POST"])
 def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     """O titular apresenta um arquivo para um item da lista da convocação (115, FR-3578).
@@ -2818,16 +2898,27 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     para *O que você já apresentou* — sem dizer o que acontecera. A confirmação é o primeiro
     elemento da chamada, focável pela âncora sem script; a recusa fica no próprio cartão, e
     `recusa.js` lhe dá o foco.
+
+    **No envio de vários** (150, R-002, R-003), o cabeçalho `X-Envio-De-Varios: k/n` troca o
+    redirecionamento por JSON, porque o `fetch` segue o redirecionamento e perde a âncora: o script
+    não saberia se a volta era a confirmação ou o cartão. O comando é o mesmo, e cada documento é um
+    envio próprio (FR-5605); a sessão acumula o lote, e `k = 1` a zera.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_da_convocacao
 
     registro, identidade, _ = _inscricao_do_titular(request, inscricao_id)
+    lote = _posicao_no_lote(request)
+    if lote is not None and lote[0] == 1:
+        for chave in (CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, CHAVE_DA_RECUSA_DA_CONVOCACAO):
+            request.session.pop(chave, None)
     arquivo = request.FILES.get("arquivo")
-    convocacao_da_pessoa = reverse("portal:convocacao", args=[registro.id])
-    no_cartao = f"{convocacao_da_pessoa}#item-{item_id}"
+    if arquivo is None and lote is not None:
+        tamanho = _tamanho_declarado_acima_do_limite(request)
+        if tamanho is not None:
+            arquivo = _TamanhoDeclarado(tamanho)
     if arquivo is None:
-        _recusar_no_cartao(request, registro, item_id, "Escolha um arquivo PDF antes de enviar.")
-        return redirect(no_cartao)
+        _recusar_no_cartao(request, registro, item_id, SEM_ARQUIVO, lote)
+        return _volta_do_documento(request, registro, item_id, lote, "recusado", SEM_ARQUIVO)
     try:
         feita = documentos_da_convocacao.apresentar(
             identidade=identidade,
@@ -2840,24 +2931,74 @@ def apresentar_documento_da_convocacao(request, inscricao_id, item_id):
     except DomainError as recusa:
         if recusa.status == 404:
             raise
-        _recusar_no_cartao(request, registro, item_id, recusa.detail)
-        return redirect(no_cartao)
-    request.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = {
-        "inscricao": str(registro.id),
+        _recusar_no_cartao(request, registro, item_id, recusa.detail, lote)
+        return _volta_do_documento(request, registro, item_id, lote, "recusado", recusa.detail)
+    if isinstance(arquivo, _TamanhoDeclarado):
+        raise RuntimeError("o comando aceitou um arquivo que não viajou")
+    envio = {
         "item_id": str(item_id),
         "apresentacao_id": str(feita.apresentacao.id),
         "ja_recebido": feita.ja_recebido,
     }
-    return redirect(f"{convocacao_da_pessoa}#confirmacao")
+    guardado = _acumulado(request, CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO, registro, lote)
+    guardado.setdefault("envios", []).append(envio)
+    guardado["total"] = lote[1] if lote else 1
+    request.session[CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO] = guardado
+    resultado = "ja_recebido" if feita.ja_recebido else "recebido"
+    return _volta_do_documento(request, registro, item_id, lote, resultado, "")
 
 
-def _recusar_no_cartao(request, registro, item_id, frase):
-    """A recusa guardada para o cartão do item, e não para o topo (121, FR-3871)."""
-    request.session[CHAVE_DA_RECUSA_DA_CONVOCACAO] = {
-        "inscricao": str(registro.id),
-        "ancora": f"item-{item_id}",
-        "frase": frase,
+def _acumulado(request, chave, registro, lote):
+    """O registro da volta a acrescentar: o do lote em curso, ou um novo.
+
+    Fora do lote, cada envio começa o seu, como antes da `150`. No lote, o que a sessão guarda de
+    **outra** inscrição, ou na forma antiga, não se mistura: começa de novo.
+    """
+    guardado = request.session.get(chave) if lote is not None else None
+    if not guardado or guardado.get("inscricao") != str(registro.id):
+        return {"inscricao": str(registro.id)}
+    if "envios" not in guardado and "recusas" not in guardado:
+        return {"inscricao": str(registro.id)}
+    return dict(guardado)
+
+
+def _volta_do_documento(request, registro, item_id, lote, resultado, frase):
+    """O redirecionamento de hoje, ou, no lote, o resultado em JSON (150, contrato §1).
+
+    A `volta` do JSON é a do **acumulado**: a confirmação se algum documento do lote já chegou,
+    senão o cartão do primeiro recusado (FR-5608, FR-5609). O `?lote=` só obriga o navegador a
+    recarregar — ir da página para ela mesma com outra âncora só rolaria a tela (R-004) —, e a
+    convocação o ignora.
+    """
+    convocacao_da_pessoa = reverse("portal:convocacao", args=[registro.id])
+    ancora = f"item-{item_id}"
+    if lote is None:
+        destino = "confirmacao" if resultado != "recusado" else ancora
+        return redirect(f"{convocacao_da_pessoa}#{destino}")
+    confirmacao = request.session.get(CHAVE_DA_CONFIRMACAO_DA_CONVOCACAO) or {}
+    recusas = (request.session.get(CHAVE_DA_RECUSA_DA_CONVOCACAO) or {}).get("recusas") or []
+    if confirmacao.get("inscricao") == str(registro.id) and confirmacao.get("envios"):
+        destino = "confirmacao"
+    else:
+        destino = recusas[0]["ancora"] if recusas else ancora
+    corpo = {
+        "resultado": resultado,
+        "ancora": ancora,
+        "volta": f"{convocacao_da_pessoa}?lote={lote[1]}#{destino}",
     }
+    if frase:
+        corpo["frase"] = frase
+    return JsonResponse(corpo)
+
+
+def _recusar_no_cartao(request, registro, item_id, frase, lote=None):
+    """A recusa guardada para o cartão do item, e não para o topo (121, FR-3871).
+
+    No lote (150), as recusas se acumulam, uma por cartão.
+    """
+    guardado = _acumulado(request, CHAVE_DA_RECUSA_DA_CONVOCACAO, registro, lote)
+    guardado.setdefault("recusas", []).append({"ancora": f"item-{item_id}", "frase": frase})
+    request.session[CHAVE_DA_RECUSA_DA_CONVOCACAO] = guardado
 
 
 @require_http_methods(["GET"])

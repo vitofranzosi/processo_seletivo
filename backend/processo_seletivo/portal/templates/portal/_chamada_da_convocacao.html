@@ -21,6 +21,12 @@ Toda frase vem de `portal/obrigacoes.py`; o template só a coloca no lugar.
   {% if confirmacao_do_envio %}
   <div class="confirmacao-do-envio" id="confirmacao" tabindex="-1" role="status">
     <p>{{ confirmacao_do_envio.frase }}</p>
+    {% comment %}O envio de varios (150, FR-5608): cada recebido, e cada recusado ligado ao cartao dele.{% endcomment %}
+    {% if confirmacao_do_envio.recebidos %}<ul>{% for linha in confirmacao_do_envio.recebidos %}<li>{{ linha }}</li>{% endfor %}</ul>{% endif %}
+    {% if confirmacao_do_envio.nao_recebidos %}
+    <p>{{ confirmacao_do_envio.rotulo_dos_nao_recebidos }}</p>
+    <ul>{% for nome, ancora in confirmacao_do_envio.nao_recebidos %}<li><a href="#{{ ancora }}">{{ nome }}</a></li>{% endfor %}</ul>
+    {% endif %}
     {% if confirmacao_do_envio.proxima %}
     <p>{{ confirmacao_do_envio.rotulo }} <a href="#{{ confirmacao_do_envio.proxima_ancora }}">{{ confirmacao_do_envio.proxima.texto }}</a></p>
     {% elif confirmacao_do_envio.conclusao %}

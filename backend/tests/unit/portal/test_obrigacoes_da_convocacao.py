@@ -1029,6 +1029,84 @@ class TestAConfirmacaoDoEnvio:
             assert proibido not in lida
 
 
+class TestAConfirmacaoDoLote:
+    """150, FR-5608: "Recebemos R de N", cada recebido, e os recusados ligados aos cartões."""
+
+    def _envio(self, lido_, *, ja_recebido=False):
+        return {
+            "item_id": lido_.item.id,
+            "apresentacao_id": lido_.apresentacoes[0].id,
+            "ja_recebido": ja_recebido,
+        }
+
+    def test_com_um_so_e_a_confirmacao_de_hoje(self):
+        recebido = lido(nomes.ITEM_RECEBIDO, nome="Certidão", ordem=1)
+        projetada = projetar([recebido, lido(nomes.ITEM_A_APRESENTAR, ordem=2)])
+
+        lote = o.confirmacao_do_lote(projetada, envios=[self._envio(recebido)], total=1)
+
+        assert lote == o.confirmacao_do_envio(projetada, **self._envio(recebido))
+        assert "de 1" not in lote.frase
+
+    def test_dois_de_tres_com_um_recusado(self):
+        certidao = lido(nomes.ITEM_RECEBIDO, nome="Certidão", ordem=1)
+        residencia = lido(nomes.ITEM_RECEBIDO, nome="Residência", ordem=2)
+        historico = lido(nomes.ITEM_A_APRESENTAR, nome="Histórico", ordem=3)
+        projetada = projetar([certidao, residencia, historico])
+        recusa = {"ancora": f"item-{historico.item.id}", "frase": "É uma imagem."}
+
+        lote = o.confirmacao_do_lote(
+            projetada,
+            envios=[self._envio(certidao), self._envio(residencia)],
+            total=3,
+            recusas=[recusa],
+        )
+
+        assert lote.frase == (
+            "Recebemos 2 de 3 documentos. Os arquivos aguardam a conferência da comissão."
+        )
+        assert lote.recebidos == (
+            "Certidão, em 04/11/2026, às 09h05.",
+            "Residência, em 04/11/2026, às 09h05.",
+        )
+        assert lote.nao_recebidos == (("Histórico", f"item-{historico.item.id}"),)
+        assert lote.rotulo_dos_nao_recebidos == "1 documento não foi recebido:"
+        assert lote.proxima.texto == "Histórico", "a próxima tarefa é a de hoje, depois do último"
+
+    def test_o_mesmo_arquivo_no_lote_e_o_plural_dos_recusados(self):
+        certidao = lido(nomes.ITEM_RECEBIDO, nome="Certidão", ordem=1)
+        a = lido(nomes.ITEM_A_APRESENTAR, nome="A", ordem=2)
+        b = lido(nomes.ITEM_A_APRESENTAR, nome="B", ordem=3)
+        recusas = [{"ancora": f"item-{x.item.id}", "frase": "x"} for x in (a, b)]
+
+        lote = o.confirmacao_do_lote(
+            projetar([certidao, a, b]),
+            envios=[self._envio(certidao, ja_recebido=True)],
+            total=3,
+            recusas=recusas,
+        )
+
+        assert lote.frase == (
+            "Recebemos 1 de 3 documentos. O arquivo aguarda a conferência da comissão."
+        )
+        assert lote.recebidos == ("Certidão: este arquivo já tinha sido recebido.",)
+        assert lote.rotulo_dos_nao_recebidos == "2 documentos não foram recebidos:"
+
+    def test_nunca_aceito_aprovado_conferido_nem_atendido(self):
+        certidao = lido(nomes.ITEM_RECEBIDO, nome="Certidão", ordem=1)
+        residencia = lido(nomes.ITEM_RECEBIDO, nome="Residência", ordem=2)
+
+        lote = o.confirmacao_do_lote(
+            projetar([certidao, residencia]),
+            envios=[self._envio(certidao), self._envio(residencia)],
+            total=2,
+        )
+
+        lida = " ".join([lote.frase, *lote.recebidos, lote.conclusao]).lower()
+        for proibido in ("aceito", "aprovado", "conferido", "atendido"):
+            assert proibido not in lida
+
+
 # --- 131: o obrigatório condicional -------------------------------------------------------------
 
 
