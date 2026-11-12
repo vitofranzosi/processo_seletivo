@@ -16,7 +16,7 @@ nem registra**: o próximo documento é um link de abrir como os do cartão, e a
     {% with url=urls_dos_documentos|dicionario_simples:proximo.vigente.id %}
     <a class="acao" href="{{ url }}" target="_blank" rel="noopener"
        data-abrir-documento data-documento="{{ proximo.nome }}"
-       data-rotulo="{{ proximo.nome }} — versão {{ proximo.vigente.numero }}"
+       data-rotulo="{{ proximo.nome }} — versão {{ proximo.vigente.numero }}{% if proximo.vigente.apresentado_em %}, apresentada em {{ proximo.vigente.apresentado_em|date:'d/m/Y H:i' }}{% endif %}"
        data-tamanho="{{ tamanhos|dicionario_simples:proximo.vigente.id }}"
        data-baixar="{{ url }}?baixar=1"
        data-cartao="{% url 'interface:cartao-do-documento-da-convocacao' edital.id marco_id raiz.id proximo.item.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}"

@@ -53,5 +53,8 @@ html[data-recusa-no-painel] body{margin:0;padding:1rem;background:var(--branco)}
 /* A volta de um documento aberto fora da página (157, FR-6528, FR-6547): o caminho de volta ao
    ponto de trabalho, e a frase de quando o preenchimento foi restaurado. */
 .retorno-ao-ponto{margin:.5rem 0}
+/* O nome do documento pode ser longo: o caminho de volta quebra a linha em vez de passar da borda
+   do cartão a 390 px. */
+.retorno-ao-ponto .acao{white-space:normal;max-width:100%;}
 .retorno-ao-ponto:empty{display:none}
 .preenchimento-restaurado{margin:.5rem 0;color:var(--texto-fraco)}

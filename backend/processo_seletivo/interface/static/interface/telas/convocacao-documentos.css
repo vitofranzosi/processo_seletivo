@@ -52,3 +52,6 @@
 .ajuda-da-conferencia{margin:.5rem 0}
 .ajuda-da-conferencia p{margin:.25rem 0;color:var(--texto-fraco)}
 
+/* A mensagem da falha que não chegou ao comando (157, FR-6518): vazia, não ocupa lugar nem desenha
+   a faixa de erro. */
+.confirmar .erro:empty{display:none}
