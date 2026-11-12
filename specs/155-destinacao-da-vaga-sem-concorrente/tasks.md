@@ -15,29 +15,34 @@
 - E = US7 (pública e relatório);
 - **F = bloqueado pela D-015** (reversão por saldo).
 
+> **Entrega mínima, de 12/11/2026.** A implementação completa (T001 a T046) está preservada na
+> branch `claude/155-destinacao-completa` e na tag `155-destinacao-completa`. Nesta entrega ficaram
+> os grupos (a) e (b) da seção *Esta entrega* da spec; as tarefas do resto voltaram a abertas,
+> marcadas *(próxima entrega)*, e as que ficaram pela metade dizem o que entrou.
+
 ## Formato: `[ID] [P?] [Story] Descrição`
 
 ---
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `.env` com `DB_NAME` próprio (`ps_elegant_robinson_155`) e `POSTGRES_USER=$USER`, `manage.py migrate --check` limpo, em `backend/.env`
-- [ ] T002 Escrever `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` com **todas** as linhas desde o início, uma por FR, SC e UX da spec, a coluna do teste preenchida ao longo das tarefas: o guardião cobra a cobertura assim que o arquivo existe
+- [x] T001 Conferir o ambiente da worktree: `uv sync --extra dev`, `.env` com `DB_NAME` próprio (`ps_elegant_robinson_155`) e `POSTGRES_USER=$USER`, `manage.py migrate --check` limpo, em `backend/.env`
+- [x] T002 Escrever `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` com **todas** as linhas desde o início, uma por FR, SC e UX da spec, a coluna do teste preenchida ao longo das tarefas: o guardião cobra a cobertura assim que o arquivo existe
 
 ## Phase 2: Foundational (bloqueia todas as histórias)
 
-- [ ] T003 Teste das constraints e do gatilho das colunas novas e da tabela nova (inserção válida, `UPDATE`/`DELETE` recusados, `ck_*` de cada regra do data-model) em `tests/unit/ocupacao/test_vaga_nao_preenchida_append_only.py` e `tests/unit/ocupacao/test_movimento_com_recorte.py`
-- [ ] T004 Acrescentar ao `MovimentoDeVaga` as colunas `edital`, `perfil_id`, `marco_id`, `gatilho`, `fundamento`, `versao`, `desfaz`, a espécie `DESFAZIMENTO_DA_REVERSAO`, `apuracao` nula e as constraints `ck_movimento_especie`, `ck_movimento_com_recorte` e `ck_desfazimento_cita_o_movimento`, em `processo_seletivo/ocupacao/models.py`
-- [ ] T005 Criar o modelo `VagaNaoPreenchida` (append-only por `save`/`delete`) e a coluna `ApuracaoDeOcupacao.nao_preenchidas`, com `ck_apuracao_ocupadas_no_limite` estendida, em `processo_seletivo/ocupacao/models.py`
-- [ ] T006 Escrever a migration `processo_seletivo/ocupacao/migrations/0005_destinacao_da_vaga.py`: as colunas, a tabela, o gatilho `reject_occupancy_mutation()` na tabela nova, guardado por `vendor == "postgresql"`, como a `0004`
-- [ ] T007 Registrar a tabela nova em `TABELAS_APPEND_ONLY`, com justificativa, em `processo_seletivo/seguranca/papeis.py`; atualizar `tests/seguranca/test_homologacao_preservada.py` (59 e o recorte final) e a contagem no `CLAUDE.md` ("são **59** com a vaga não preenchida da `155`")
-- [ ] T008 [P] Acrescentar a `processo_seletivo/ocupacao/domain/nomes.py`:
+- [x] T003 Teste das constraints e do gatilho das colunas novas e da tabela nova (inserção válida, `UPDATE`/`DELETE` recusados, `ck_*` de cada regra do data-model) em `tests/unit/ocupacao/test_vaga_nao_preenchida_append_only.py` e `tests/unit/ocupacao/test_movimento_com_recorte.py` *(nesta entrega, só a tabela nova, em `test_vaga_nao_preenchida_append_only.py`; o teste do movimento com recorte é da próxima, preservado em `claude/155-destinacao-completa`)*
+- [ ] T004 Acrescentar ao `MovimentoDeVaga` as colunas `edital`, `perfil_id`, `marco_id`, `gatilho`, `fundamento`, `versao`, `desfaz`, a espécie `DESFAZIMENTO_DA_REVERSAO`, `apuracao` nula e as constraints `ck_movimento_especie`, `ck_movimento_com_recorte` e `ck_desfazimento_cita_o_movimento`, em `processo_seletivo/ocupacao/models.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [x] T005 Criar o modelo `VagaNaoPreenchida` (append-only por `save`/`delete`) e a coluna `ApuracaoDeOcupacao.nao_preenchidas`, com `ck_apuracao_ocupadas_no_limite` estendida, em `processo_seletivo/ocupacao/models.py`
+- [x] T006 Escrever a migration `processo_seletivo/ocupacao/migrations/0005_destinacao_da_vaga.py`: as colunas, a tabela, o gatilho `reject_occupancy_mutation()` na tabela nova, guardado por `vendor == "postgresql"`, como a `0004` *(reescrita em 12/11 como `0005_vaga_nao_preenchida.py`: só a tabela, o gatilho e a coluna da apuração; as colunas do movimento ficaram na branch preservada)*
+- [x] T007 Registrar a tabela nova em `TABELAS_APPEND_ONLY`, com justificativa, em `processo_seletivo/seguranca/papeis.py`; atualizar `tests/seguranca/test_homologacao_preservada.py` (59 e o recorte final) e a contagem no `CLAUDE.md` ("são **59** com a vaga não preenchida da `155`")
+- [x] T008 [P] Acrescentar a `processo_seletivo/ocupacao/domain/nomes.py`: *(nesta entrega, só as espécies da não preenchida, os códigos dela e a causa; a passagem entre cotas e a espécie do desfazimento do movimento: próxima entrega)*
   - `PASSAGEM_ENTRE_COTAS` e `DECLARACOES_DE_REVERSAO`;
   - as espécies novas;
   - os códigos de recusa do contrato;
   - a causa `CAUSA_DECLARACAO_POSTERIOR`.
-- [ ] T009 Fazer `_movimentos_que_alcancam` e `_movimento_posterior` lerem também o recorte próprio do movimento, e acrescentar a causa `declaracao_posterior` a `causas_de_obsolescencia`, em `processo_seletivo/ocupacao/application/selectors.py`; teste de que nenhuma leitura por `apuracao__edital` ficou sem o recorte próprio em `tests/unit/ocupacao/test_leitura_do_movimento_sem_apuracao.py`
-- [ ] T010 Ensinar `calculo.apurar` a ler o desfazimento como movimento e `faltando` a descontar `nao_preenchidas`, em `processo_seletivo/ocupacao/domain/apuracao.py`, com casos em `tests/unit/ocupacao/test_apuracao_com_destinacao.py`
+- [x] T009 Fazer `_movimentos_que_alcancam` e `_movimento_posterior` lerem também o recorte próprio do movimento, e acrescentar a causa `declaracao_posterior` a `causas_de_obsolescencia`, em `processo_seletivo/ocupacao/application/selectors.py`; teste de que nenhuma leitura por `apuracao__edital` ficou sem o recorte próprio em `tests/unit/ocupacao/test_leitura_do_movimento_sem_apuracao.py` *(nesta entrega, só a causa `declaracao_posterior`; a leitura pelo recorte próprio do movimento e a varredura dela: próxima entrega)*
+- [x] T010 Ensinar `calculo.apurar` a ler o desfazimento como movimento e `faltando` a descontar `nao_preenchidas`, em `processo_seletivo/ocupacao/domain/apuracao.py`, com casos em `tests/unit/ocupacao/test_apuracao_com_destinacao.py` *(nesta entrega, só o desconto em `faltando`, em `tests/unit/ocupacao/test_apuracao_com_nao_preenchida.py`; o desfazimento lido como movimento: próxima entrega)*
 
 **Checkpoint**: `make test-pg` verde com as migrations novas e nenhum comportamento mudado.
 
@@ -49,14 +54,14 @@
 **Independent Test**: Perfil com a resposta nova publica; `quantidade_a_reverter` devolve 0; a
 destinação e a não preenchida são recusadas com `passagem_entre_cotas`.
 
-- [ ] T011 [P] [US4] Testes da validação e da não cessão em `tests/unit/editais/test_reversao_declarada.py` e `tests/unit/ocupacao/test_reversao.py` (a resposta nova é aceita; não entra em `ESPECIES_DE_REVERSAO`; cede 0)
-- [ ] T012 [US4] `reversao.declarada` devolve as três respostas e `especie_que_move` só as duas, em `processo_seletivo/ocupacao/domain/reversao.py`; revisar os chamadores (`emissao.py:233`, `acrescimo.py:74`, `rodada_da_previa.py:89`, `interface/views.py:3487`)
-- [ ] T013 [US4] Aceitar a resposta nova em `processo_seletivo/editais/domain/validation.py::_reversao_declarada` (mensagem com as três) e nos *choices* de `processo_seletivo/editais/models/perfis.py`, com a migration nova de `editais` e o ajuste do guardião de contagem em `tests/migrations/test_migrations.py`
-- [ ] T014 [P] [US4] A terceira `<option>` em `processo_seletivo/interface/templates/interface/_perfil.html` e `compor_perfis.html`; leitura em `processo_seletivo/interface/forms.py`, sem palavra que a varredura da composição exija em `<dfn>`
-- [ ] T015 [P] [US4] As frases nos dois dicionários de `processo_seletivo/publicacoes/infrastructure/pdf.py`, contendo "de um código", e o caso em `tests/unit/publicacoes/test_redacao_das_frases.py`
-- [ ] T016 [P] [US4] Retificação, revisão e palavras: `processo_seletivo/interface/retificacao.py`, `aplicacao_na_retificacao.py`, `revisao.py`, `aplicacao.py::_valor_do_campo_em_palavras`; testes em `tests/interface/test_retificar_reversao.py` e `tests/interface/test_correcoes_de_norma_na_revisao.py`
-- [ ] T017 [P] [US4] O rótulo em `processo_seletivo/duvidas/domain/rotulos.py` e nas prévias `processo_seletivo/interface/previa_da_classificacao.py` e `previa_do_sorteio.py` ("o Edital manda passar por outras cotas; o GPS ainda não aplica"); casos em `tests/unit/duvidas/test_casos_da_revisao.py` e `tests/interface/test_previa_por_recorte.py`
-- [ ] T018 [P] [US4] O `enum` e a descrição em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (raiz do repositório)
+- [ ] T011 [P] [US4] Testes da validação e da não cessão em `tests/unit/editais/test_reversao_declarada.py` e `tests/unit/ocupacao/test_reversao.py` (a resposta nova é aceita; não entra em `ESPECIES_DE_REVERSAO`; cede 0) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T012 [US4] `reversao.declarada` devolve as três respostas e `especie_que_move` só as duas, em `processo_seletivo/ocupacao/domain/reversao.py`; revisar os chamadores (`emissao.py:233`, `acrescimo.py:74`, `rodada_da_previa.py:89`, `interface/views.py:3487`) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T013 [US4] Aceitar a resposta nova em `processo_seletivo/editais/domain/validation.py::_reversao_declarada` (mensagem com as três) e nos *choices* de `processo_seletivo/editais/models/perfis.py`, com a migration nova de `editais` e o ajuste do guardião de contagem em `tests/migrations/test_migrations.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T014 [P] [US4] A terceira `<option>` em `processo_seletivo/interface/templates/interface/_perfil.html` e `compor_perfis.html`; leitura em `processo_seletivo/interface/forms.py`, sem palavra que a varredura da composição exija em `<dfn>` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T015 [P] [US4] As frases nos dois dicionários de `processo_seletivo/publicacoes/infrastructure/pdf.py`, contendo "de um código", e o caso em `tests/unit/publicacoes/test_redacao_das_frases.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T016 [P] [US4] Retificação, revisão e palavras: `processo_seletivo/interface/retificacao.py`, `aplicacao_na_retificacao.py`, `revisao.py`, `aplicacao.py::_valor_do_campo_em_palavras`; testes em `tests/interface/test_retificar_reversao.py` e `tests/interface/test_correcoes_de_norma_na_revisao.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T017 [P] [US4] O rótulo em `processo_seletivo/duvidas/domain/rotulos.py` e nas prévias `processo_seletivo/interface/previa_da_classificacao.py` e `previa_do_sorteio.py` ("o Edital manda passar por outras cotas; o GPS ainda não aplica"); casos em `tests/unit/duvidas/test_casos_da_revisao.py` e `tests/interface/test_previa_por_recorte.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T018 [P] [US4] O `enum` e a descrição em `specs/001-processo-seletivo-editais/contracts/openapi.yaml` (raiz do repositório) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
 
 **Checkpoint**: a passagem entre cotas é declarável e inerte.
 
@@ -68,7 +73,7 @@ destinação e a não preenchida são recusadas com `passagem_entre_cotas`.
 pelo comando. **O saldo fica fora** (incremento F).
 **Independent Test**: os cenários 1 a 6 da US3 e o 7 por esgotamento, no caminho oficial.
 
-- [ ] T019 [P] [US3] Testes puros de `ainda_podem_ocupar`, `impedimentos` e `situacao` em `tests/unit/ocupacao/test_destinacao_dominio.py`:
+- [X] T019 [P] [US3] Testes puros de `ainda_podem_ocupar`, `impedimentos` e `situacao` em `tests/unit/ocupacao/test_destinacao_dominio.py`:
   - posição vazia;
   - excluído por desfecho;
   - ocupante da ampla com e sem aceite;
@@ -77,9 +82,9 @@ pelo comando. **O saldo fica fora** (incremento F).
   - prazo recursal e recurso pendente;
   - chamada em curso;
   - apuração obsoleta.
-- [ ] T020 [US3] Escrever `processo_seletivo/ocupacao/domain/destinacao.py` (R-004), com `situacao` devolvendo os estados do data-model; por saldo, `aguarda_d015`
-- [ ] T021 [US3] Escrever `processo_seletivo/interface/destinacao_da_vaga.py`: os fatos externos de `divulgacao` (`vigente_do_marco`, `janela_aberta_ate`), `recursos` (`recursos_pendentes_do_marco`) e `convocacao` (em aberto), uma vez por marco, e a situação de cada recorte (R-008)
-- [ ] T022 [US3] Testes de integração V-1, V-2, V-4 e V-5 com o resultado novo (destinação oferecida; sem aceite na ampla, impedida) em `tests/integration/ocupacao/test_condicao_do_esgotamento.py`, sobre `tests/fixtures/ocupacao_sorteada.py`
+- [X] T020 [US3] Escrever `processo_seletivo/ocupacao/domain/destinacao.py` (R-004), com `situacao` devolvendo os estados do data-model; por saldo, `aguarda_d015` *(nesta entrega, a reserva com reversão declarada vira `reversao_pela_apuracao`, sem ato; `aguarda_d015`, a destinação e a passagem: próxima entrega)*
+- [X] T021 [US3] Escrever `processo_seletivo/interface/destinacao_da_vaga.py`: os fatos externos de `divulgacao` (`vigente_do_marco`, `janela_aberta_ate`), `recursos` (`recursos_pendentes_do_marco`) e `convocacao` (em aberto), uma vez por marco, e a situação de cada recorte (R-008)
+- [X] T022 [US3] Testes de integração V-1, V-2, V-4 e V-5 com o resultado novo (destinação oferecida; sem aceite na ampla, impedida) em `tests/integration/ocupacao/test_condicao_do_esgotamento.py`, sobre `tests/fixtures/ocupacao_sorteada.py` *(nesta entrega, no Edital silente, com a declaração no lugar da destinação; a V-1 por esgotamento prova que a apuração não cede)*
 
 ---
 
@@ -89,7 +94,7 @@ pelo comando. **O saldo fica fora** (incremento F).
 **Independent Test**: a US1 com reversão por esgotamento: o registro, a soma, a idempotência, a
 sucessora da origem e a ampla obsoleta.
 
-- [ ] T023 [P] [US1] Testes do comando em `tests/integration/ocupacao/test_destinacao.py`:
+- [ ] T023 [P] [US1] Testes do comando em `tests/integration/ocupacao/test_destinacao.py`: *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
   - grava o movimento com as colunas novas;
   - a sucessora da origem lê o movimento;
   - a ampla fica obsoleta;
@@ -98,13 +103,13 @@ sucessora da origem e a ampla obsoleta.
   - as recusas do contrato;
   - o movimento antigo conta como destinação feita (FR-6316);
   - relido depois de uma Retificação, o ato devolve a declaração e a quantidade que leu (FR-6342).
-- [ ] T024 [US1] Escrever `previa_da_destinacao` e `destinar_vaga` em `processo_seletivo/ocupacao/application/destinacao.py`, no molde de `acrescimo.py` (assinatura, `comando_de_comissao`, `auditar` com `OCUPACAO_DESTINAR_VAGA`, sucessora no *savepoint*)
-- [ ] T025 [US1] Tirar o ramo de cessão de `_apurar` para a declaração por esgotamento — só a por saldo ainda move (R-010) — em `processo_seletivo/ocupacao/application/emissao.py`; ajustar `convocacao/application/desfechar.py::apuracao_seguinte`, que deixa de devolver `MOVERIA_VAGA` por esgotamento
-- [ ] T026 [US1] Rotas e views `interface:destinar-vaga` (prévia e confirmação) e a conferência `processo_seletivo/interface/templates/interface/ocupacao_destinacao.html`, no molde de `ocupacao_acrescimo.html`, com o lembrete da passagem entre cotas (FR-6309); regras de folha para toda classe nova em `processo_seletivo/interface/static/interface/gestao/` ou `interface/telas/`
-- [ ] T027 [US1] A situação de cada recorte e os botões em `processo_seletivo/interface/templates/interface/ocupacao.html` (parcial `_situacao_da_vaga.html`), com a frase de UX-600
-- [ ] T028 [US1] O Centro: o ramo `IMPEDIDO` de `situacoes_da_convocacao` lê a situação, em `processo_seletivo/interface/andamento.py`; a convocação: `_vaga_sem_chamada` cita a situação com a fila vazia, em `processo_seletivo/interface/conducao_da_convocacao.py` (anotar o conflito com o #489)
-- [ ] T029 [US1] As prévias e as equivalências (R-011): `processo_seletivo/ocupacao/domain/rodada_da_previa.py` usa a condição nova por esgotamento; `tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py` e `tests/integration/sorteios/test_previa_do_sorteio_equivale_ao_oficial.py` leem o lado oficial pela destinação; `tests/unit/ocupacao/test_ha_quem_ocupar.py` e `test_rodada_da_previa.py`
-- [ ] T030 [US1] Testes de tela em `tests/interface/test_destinacao_na_ocupacao.py`:
+- [ ] T024 [US1] Escrever `previa_da_destinacao` e `destinar_vaga` em `processo_seletivo/ocupacao/application/destinacao.py`, no molde de `acrescimo.py` (assinatura, `comando_de_comissao`, `auditar` com `OCUPACAO_DESTINAR_VAGA`, sucessora no *savepoint*) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T025 [US1] Tirar o ramo de cessão de `_apurar` para a declaração por esgotamento — só a por saldo ainda move (R-010) — em `processo_seletivo/ocupacao/application/emissao.py`; ajustar `convocacao/application/desfechar.py::apuracao_seguinte`, que deixa de devolver `MOVERIA_VAGA` por esgotamento *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T026 [US1] Rotas e views `interface:destinar-vaga` (prévia e confirmação) e a conferência `processo_seletivo/interface/templates/interface/ocupacao_destinacao.html`, no molde de `ocupacao_acrescimo.html`, com o lembrete da passagem entre cotas (FR-6309); regras de folha para toda classe nova em `processo_seletivo/interface/static/interface/gestao/` ou `interface/telas/` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [X] T027 [US1] A situação de cada recorte e os botões em `processo_seletivo/interface/templates/interface/ocupacao.html` (parcial `_situacao_da_vaga.html`), com a frase de UX-600 *(nesta entrega, a situação e a declaração; o botão da destinação: próxima entrega)*
+- [X] T028 [US1] O Centro: o ramo `IMPEDIDO` de `situacoes_da_convocacao` lê a situação, em `processo_seletivo/interface/andamento.py`; a convocação: `_vaga_sem_chamada` cita a situação com a fila vazia, em `processo_seletivo/interface/conducao_da_convocacao.py` (anotar o conflito com o #489)
+- [ ] T029 [US1] As prévias e as equivalências (R-011): `processo_seletivo/ocupacao/domain/rodada_da_previa.py` usa a condição nova por esgotamento; `tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py` e `tests/integration/sorteios/test_previa_do_sorteio_equivale_ao_oficial.py` leem o lado oficial pela destinação; `tests/unit/ocupacao/test_ha_quem_ocupar.py` e `test_rodada_da_previa.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [X] T030 [US1] Testes de tela em `tests/interface/test_destinacao_na_ocupacao.py`: *(nesta entrega, a vaga que não sai sob a reversão declarada, sem botão; a conferência da destinação: próxima entrega)*
   - a situação nas três telas;
   - a conferência;
   - a recusa a quem não pode;
@@ -119,7 +124,7 @@ sucessora da origem e a ampla obsoleta.
 **Goal**: sem reversão declarada, nada move; a declaração fundamentada, também na linha geral (D-014).
 **Independent Test**: a US2 no C09.
 
-- [ ] T031 [P] [US2] Testes em `tests/integration/ocupacao/test_nao_preenchida.py`:
+- [X] T031 [P] [US2] Testes em `tests/integration/ocupacao/test_nao_preenchida.py`: *(nesta entrega, sem a recusa `passagem_entre_cotas`, que é da próxima)*
   - a declaração com e sem fundamento;
   - na reserva sem reversão;
   - na linha geral;
@@ -127,18 +132,18 @@ sucessora da origem e a ampla obsoleta.
   - `faltando` desconta;
   - a causa `declaracao_posterior`;
   - a reprodução da declaração relida depois (FR-6342).
-- [ ] T032 [US2] Escrever `previa_da_nao_preenchida` e `declarar_nao_preenchida` em `processo_seletivo/ocupacao/application/destinacao.py`, com o evento `OCUPACAO_DECLARAR_NAO_PREENCHIDA` e a sucessora do recorte
-- [ ] T033 [US2] Rota `interface:declarar-nao-preenchida`, a conferência e o campo de fundamento (área de texto, molde da `058`), em `processo_seletivo/interface/views.py` e `templates/interface/ocupacao_destinacao.html`
-- [ ] T034 [US2] A frase do Edital silente com os dois caminhos — o link para a Retificação, quando a fase a admite, e a declaração — em `_situacao_da_vaga.html`; teste em `tests/interface/test_destinacao_na_ocupacao.py` (o C09)
+- [X] T032 [US2] Escrever `previa_da_nao_preenchida` e `declarar_nao_preenchida` em `processo_seletivo/ocupacao/application/destinacao.py`, com o evento `OCUPACAO_DECLARAR_NAO_PREENCHIDA` e a sucessora do recorte
+- [X] T033 [US2] Rota `interface:declarar-nao-preenchida`, a conferência e o campo de fundamento (área de texto, molde da `058`), em `processo_seletivo/interface/views.py` e `templates/interface/ocupacao_destinacao.html`
+- [X] T034 [US2] A frase do Edital silente com os dois caminhos — o link para a Retificação, quando a fase a admite, e a declaração — em `_situacao_da_vaga.html`; teste em `tests/interface/test_destinacao_na_ocupacao.py` (o C09)
 
 ## Phase 7: US6 — Os desfazimentos (incremento C, P3)
 
-- [ ] T035 [P] [US6] Testes em `tests/integration/ocupacao/test_desfazimento_da_destinacao.py`:
+- [X] T035 [P] [US6] Testes em `tests/integration/ocupacao/test_desfazimento_da_destinacao.py`: *(nesta entrega, só a não preenchida, em `test_desfazimento_da_nao_preenchida.py`; a destinação: próxima entrega)*
   - sem chamada dependente, os dois registros e a soma de volta;
   - com chamada dependente, a recusa 409 e o evento `OCUPACAO_DESFAZIMENTO_IMPEDIDO` gravado com as chamadas;
   - o mesmo para a não preenchida.
-- [ ] T036 [US6] Escrever `desfazer_destinacao` e `desfazer_nao_preenchida`, com `chamadas_dependentes` injetado (R-005), em `processo_seletivo/ocupacao/application/destinacao.py`; a composição do *callable* em `processo_seletivo/interface/destinacao_da_vaga.py`
-- [ ] T037 [US6] Rotas `interface:desfazer-destinacao` e `interface:desfazer-nao-preenchida`, a conferência com motivo, e a recusa que nomeia "pessoa chamada para esta vaga" (sem o vocabulário que a varredura da ocupação proíbe)
+- [X] T036 [US6] Escrever `desfazer_destinacao` e `desfazer_nao_preenchida`, com `chamadas_dependentes` injetado (R-005), em `processo_seletivo/ocupacao/application/destinacao.py`; a composição do *callable* em `processo_seletivo/interface/destinacao_da_vaga.py` *(nesta entrega, só `desfazer_nao_preenchida`; `desfazer_destinacao`: próxima entrega)*
+- [X] T037 [US6] Rotas `interface:desfazer-destinacao` e `interface:desfazer-nao-preenchida`, a conferência com motivo, e a recusa que nomeia "pessoa chamada para esta vaga" (sem o vocabulário que a varredura da ocupação proíbe) *(nesta entrega, só `interface:desfazer-nao-preenchida`, em `views_da_nao_preenchida.py`; a da destinação: próxima entrega)*
 
 ---
 
@@ -148,32 +153,34 @@ sucessora da origem e a ampla obsoleta.
 ausência comprovada.
 **Independent Test**: a US5 no C09 e num sorteio com a PPI vazia.
 
-- [ ] T038 [P] [US5] Testes em `tests/interface/test_lista_sem_concorrente.py`:
+- [ ] T038 [P] [US5] Testes em `tests/interface/test_lista_sem_concorrente.py`: *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
   - o gesto emite a ordem vazia e o corte vazio numa conferência;
   - nenhuma posição gravada (FR-6329);
   - recusa `lista_com_concorrente`;
   - a idempotência.
-- [ ] T039 [US5] A view `interface:registrar-lista-sem-concorrente` e a conferência, sobre `emitir_ordem` e `emitir_corte`, em `processo_seletivo/interface/views.py` e `templates/interface/ordenacao_lista_sem_concorrente.html`; o evento `CLASSIFICACAO_LISTA_SEM_CONCORRENTE`; a providência da `135` aponta o gesto em `processo_seletivo/interface/andamento.py`
-- [ ] T040 [P] [US5] Testes da publicação conjunta em `tests/integration/divulgacao/test_publicacao_conjunta.py`:
+- [ ] T039 [US5] A view `interface:registrar-lista-sem-concorrente` e a conferência, sobre `emitir_ordem` e `emitir_corte`, em `processo_seletivo/interface/views.py` e `templates/interface/ordenacao_lista_sem_concorrente.html`; o evento `CLASSIFICACAO_LISTA_SEM_CONCORRENTE`; a providência da `135` aponta o gesto em `processo_seletivo/interface/andamento.py` *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T040 [P] [US5] Testes da publicação conjunta em `tests/integration/divulgacao/test_publicacao_conjunta.py`: *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
   - a lista vazia publicada na mesma transação;
   - a assinatura cobre;
   - a natureza é a mesma;
   - não republica.
-- [ ] T041 [US5] A publicação conjunta em `processo_seletivo/divulgacao/application/publicar.py` e a prévia em `processo_seletivo/interface/views.py::publicar_resultado`; a célula do resultado da lista vazia no andamento
-- [ ] T042 [US5] O sorteio sem relação (R-007): a ausência comprovada em `processo_seletivo/interface/destinacao_da_vaga.py`, com o movimento sem apuração de origem; testes em `tests/integration/ocupacao/test_destinacao_no_sorteio.py` (relação da ampla congelada; não congelada não oferece)
+- [ ] T041 [US5] A publicação conjunta em `processo_seletivo/divulgacao/application/publicar.py` e a prévia em `processo_seletivo/interface/views.py::publicar_resultado`; a célula do resultado da lista vazia no andamento *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T042 [US5] O sorteio sem relação (R-007): a ausência comprovada em `processo_seletivo/interface/destinacao_da_vaga.py`, com o movimento sem apuração de origem; testes em `tests/integration/ocupacao/test_destinacao_no_sorteio.py` (relação da ampla congelada; não congelada não oferece) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
 
 ---
 
 ## Phase 9: US7 — O candidato vê para onde a vaga foi (incremento E, P3)
 
-- [ ] T043 [P] [US7] Testes em `tests/portal/test_destinacao_na_selecao.py` e `tests/interface/test_relatorio_do_edital.py`:
+- [ ] T043 [P] [US7] Testes em `tests/portal/test_destinacao_na_selecao.py` e `tests/interface/test_relatorio_do_edital.py`: *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
   - origem, destino, quantidade e fundamento;
   - o desfazimento citando;
   - nenhum nome nem protocolo;
   - sem PDF novo.
-- [ ] T044 [US7] O seletor `destinacoes_publicas` em `processo_seletivo/ocupacao/application/selectors.py`, o parcial `processo_seletivo/portal/templates/portal/_destinacao_das_vagas.html`, a inclusão em `portal/selecao.html` e o contexto em `processo_seletivo/portal/views.py::selecao`; regras na folha do portal
-- [ ] T045 [US7] A seção "Destinação das vagas" em `processo_seletivo/interface/relatorio_do_edital.py` e no template do relatório
-- [ ] T046 [US7] O fundamento da chamada para vaga destinada (FR-6340), lido do `movimentosLidos` da apuração da chamada, em `processo_seletivo/convocacao/application/` (o ponto exato no T046; anotar conflito com o #489)
+- [ ] T044 [US7] O seletor `destinacoes_publicas` em `processo_seletivo/ocupacao/application/selectors.py`, o parcial `processo_seletivo/portal/templates/portal/_destinacao_das_vagas.html`, a inclusão em `portal/selecao.html` e o contexto em `processo_seletivo/portal/views.py::selecao`; regras na folha do portal *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T045 [US7] A seção "Destinação das vagas" em `processo_seletivo/interface/relatorio_do_edital.py` e no template do relatório *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+- [ ] T046 [US7] O fundamento da chamada para vaga destinada (FR-6340), lido do `movimentosLidos` da apuração da chamada, em `processo_seletivo/convocacao/application/` (o ponto exato no T046; anotar conflito com o #489) *(próxima entrega; preservada em `claude/155-destinacao-completa`)*
+  - o ponto: `convocar.py`, nos dois lugares que gravam `Convocacao` (`convocar` e `convocar_em_sequencia`), e as prévias em `fluxo.py`; a citação vem de `ocupacao.application.selectors.destinacoes_lidas_por` e se escreve em `convocacao/domain/fundamento.py`;
+  - sem conflito com o #489: nenhum dos três arquivos dele (`interface/conducao_da_convocacao.py`, `interface/templates/interface/convocacao.html`, `interface/views.py`) foi tocado.
 
 ---
 
@@ -191,15 +198,15 @@ ausência comprovada.
 
 ## Phase 11: Polish
 
-- [ ] T051 [P] Varreduras:
+- [x] T051 [P] Varreduras: *(nesta entrega, a varredura de gravação permite a declaração só a `destinacao.py` e o movimento só à reversão de antes, em `movimento.py`)*
   - `tests/test_vocabulario_da_ocupacao.py` cobre os arquivos novos da ocupação;
   - `tests/test_gramatica_das_portas.py` cobre as views novas e cada `Http404` no inventário da `033`;
   - `tests/test_citacoes_de_requisito.py`;
   - uma varredura nova, em `tests/test_gravacao_da_destinacao.py`, de que só os comandos de `ocupacao/application/destinacao.py` e o ramo por saldo de `emissao.py` criam `MovimentoDeVaga` e `VagaNaoPreenchida` (SC-2103).
-- [ ] T052 [P] Completar `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` e marcar no README a linha da `155`
-- [ ] T053 Integrar o que entrou na `main` nos mesmos arquivos (o #489 e outros) e resolver os conflitos preservando os requisitos de cada incremento
-- [ ] T054 `cd backend && make lint check test-pg`, com o resultado no PR
-- [ ] T055 A jornada do quickstart no navegador: o C09, um Edital por esgotamento e um com a passagem entre cotas, a 1366 e a 390 px, sem violação da CSP; capturas no PR
+- [x] T052 [P] Completar `specs/155-destinacao-da-vaga-sem-concorrente/rastreabilidade.md` e marcar no README a linha da `155`
+- [x] T053 Integrar o que entrou na `main` nos mesmos arquivos (o #489 e outros) e resolver os conflitos preservando os requisitos de cada incremento
+- [x] T054 `cd backend && make lint check test-pg`, com o resultado no PR
+- [ ] T055 *(parcial: o C09 de ponta a ponta, a 1366 e a 390 px; o Edital por esgotamento e a passagem entre cotas ficaram nos testes de tela)* A jornada do quickstart no navegador: o C09, um Edital por esgotamento e um com a passagem entre cotas, a 1366 e a 390 px, sem violação da CSP; capturas no PR
 
 ## Dependencies
 

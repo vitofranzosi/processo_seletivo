@@ -29,7 +29,11 @@ pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 # 128 desde a `153` (FR-6127): a passagem ao setor lê a definição, as pessoas aptas pelo seletor da
 # `117`, as exportações, os vínculos do papel e as designações — oito consultas, que não crescem com
 # as inscrições nem com as pessoas aptas.
-ORCAMENTO = 128
+#
+# 126 desde a `155` (FR-6326): a obsolescência da apuração pergunta pelas três portas — efeito,
+# acréscimo e a declaração de vaga não preenchida, que a `155` acrescentou — numa consulta só por
+# recorte, em vez das duas de antes (−1 em cada um dos dois recortes do cenário).
+ORCAMENTO = 126
 
 
 @pytest.mark.parametrize("escala", [1, 10])

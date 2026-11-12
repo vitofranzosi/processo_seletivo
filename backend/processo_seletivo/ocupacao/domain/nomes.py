@@ -29,6 +29,14 @@ ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
 MOVIMENTO_REVERSAO = "REVERSAO_DE_COTA"
 ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO,)
 
+# --- A vaga não preenchida (155, R-002) ---------------------------------------------------------
+# **Não é acréscimo negativo.** Reduzir as efetivas diria que a vaga deixou de existir; ela existe,
+# e ninguém a preencheu. A declaração sai do "a ocupar" e não mexe nas efetivas. O desfazimento é o
+# ato contrário, na mesma tabela, citando a declaração — a forma da vaga acrescida.
+NAO_PREENCHIDA_DECLARACAO = "DECLARACAO"
+NAO_PREENCHIDA_DESFAZIMENTO = "DESFAZIMENTO"
+ESPECIES_DE_NAO_PREENCHIDA = (NAO_PREENCHIDA_DECLARACAO, NAO_PREENCHIDA_DESFAZIMENTO)
+
 # --- A vaga acrescida depois da publicação (097, `T-001`) -----------------------------------------
 # **Não é movimento, e a diferença é de onde a quantidade vem.** O movimento leva vaga de um recorte
 # a outro do mesmo Perfil, e nasce com a apuração que o determina. A vaga acrescida chega **de fora
@@ -72,6 +80,10 @@ CAUSA_EFEITO_POSTERIOR = "efeito_posterior"
 # **A sexta, e ela chegou com a `097`.** Vaga acrescida ou desfeita depois da apuração muda as
 # efetivas do recorte — o mesmo desenho das duas anteriores: obsolescência em vez de orquestração.
 CAUSA_ACRESCIMO_POSTERIOR = "acrescimo_posterior"
+# **A sétima, e ela chegou com a `155`.** Vaga declarada não preenchida, ou o desfazimento dessa
+# declaração, depois da apuração muda o "a ocupar" do recorte. O desenho das três anteriores:
+# obsolescência em vez de orquestração.
+CAUSA_DECLARACAO_POSTERIOR = "declaracao_posterior"
 
 # --- Espécies de efeito de ocupação (019, R-003) ------------------------------------------------
 # **A porta por onde a `019` mexe na contagem, e ela mora aqui porque a tabela mora aqui.** A `016`
@@ -113,3 +125,21 @@ ACRESCIMO_INEXISTENTE = "acrescimo_inexistente"
 DESFAZIMENTO_ALEM_DO_ACRESCIMO = "desfazimento_alem_do_acrescimo"
 DESFAZIMENTO_COM_PESSOAS_CHAMADAS = "desfazimento_com_pessoas_chamadas"
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
+
+# --- Recusas da vaga não preenchida (155, contrato `comandos-e-telas.md`) ----------------------
+# Os códigos ficam aqui pela razão do topo deste módulo: a aplicação, a tela e o teste os leem. As
+# grafias são as do contrato, que as escreveu para a destinação e a não preenchida juntas; a
+# destinação por ato próprio ficou para a próxima entrega, e os códigos dela com ela.
+AINDA_HA_QUEM_OCUPAR = "ainda_ha_quem_ocupar"
+DESTINACAO_IMPEDIDA = "destinacao_impedida"
+SEM_SALDO_A_DESTINAR = "sem_saldo_a_destinar"
+DESTINACAO_COM_CHAMADA_DEPENDENTE = "destinacao_com_chamada_dependente"
+# Onde o Edital declara a reversão, a vaga não é declarada não preenchida (FR-6327): o que ele manda
+# é a reversão, aplicada pela apuração da lista.
+O_EDITAL_MANDA_DESTINAR = "o_edital_manda_destinar"
+# Os desfazimentos (155, R-005): o ato que já foi desfeito e o que não existe neste Edital.
+ATO_JA_DESFEITO = "ato_ja_desfeito"
+ATO_INEXISTENTE = "ato_inexistente"
+# **A conta que o banco recusaria, dita pelo nome** (155, R-002): `ocupadas + nao_preenchidas`
+# acima das efetivas. A emissão e a declaração a recusam antes de chegar à constraint.
+NAO_PREENCHIDAS_ALEM_DAS_VAGAS = "nao_preenchidas_alem_das_vagas"

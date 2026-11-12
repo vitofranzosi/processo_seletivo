@@ -185,6 +185,12 @@ TABELAS_APPEND_ONLY = (
     "convocacao_publicacaodeconvocados",
     "convocacao_convocacaopublicada",
     "convocacao_documentodapublicacaodeconvocados",
+    # A vaga não preenchida (155): a declaração de que a vaga reservada, ou a da linha geral, não
+    # será preenchida, e o ato que a desfaz. Append-only pela razão das demais — nasce e não muda —,
+    # com um agravante próprio: é a única linha que explica por que um recorte com vaga efetiva não
+    # tem nada "a ocupar". Reescrevê-la poria a vaga de volta na conta, ou a tiraria, sem fundamento
+    # nem autor; e o desfazimento existe para que o erro se corrija com rastro (FR-6325).
+    "ocupacao_vaganaopreenchida",
 )
 
 

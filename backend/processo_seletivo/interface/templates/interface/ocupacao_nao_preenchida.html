@@ -1,0 +1,112 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}{% if modo == "nao_preenchida" %}Conferir a declaração de vaga não preenchida{% else %}Conferir o desfazimento da declaração de vaga não preenchida{% endif %}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> › <span aria-current="page">{% if modo == "nao_preenchida" %}Declarar a vaga não preenchida{% else %}Desfazer a declaração de vaga não preenchida{% endif %}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A conferencia comum da declaracao de vaga nao preenchida e do desfazimento dela (155, UX-601). O
+molde e o da conferencia do acrescimo (097): o que o ato muda, antes de ele ser praticado, e o
+efeito por extenso.
+{% endcomment %}
+{% if modo == "nao_preenchida" %}
+<h1>Conferir a declaração de {{ previa.quantidade|contagem:"vaga,vagas" }} não preenchida{{ previa.quantidade|pluralize }}</h1>
+{% else %}
+<h1>Desfazer a declaração de {{ previa.restante|contagem:"vaga,vagas" }} não preenchida{{ previa.restante|pluralize }} de {{ registro.registrado_em|date:"d/m/Y" }}</h1>
+{% endif %}
+<p class="sub">O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado ainda.</p>
+
+{% if aviso %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ aviso }}</p>{% endif %}
+
+{% if modo == "nao_preenchida" %}
+{% comment %}
+A declaracao de vaga nao preenchida (155, FR-6323, FR-6325, UX-601): o recorte, a quantidade, o
+que o Edital declara e a versao lida. A vaga nao vai a lugar nenhum: sai do "a ocupar", e as
+efetivas e a quantidade publicada ficam como estao (D-003).
+{% endcomment %}
+<h2>A vaga</h2>
+<dl class="meta">
+  <dt>Lista</dt><dd>{{ rotulo }}</dd>
+  <dt>Quantidade</dt><dd>{{ previa.quantidade|contagem:"vaga,vagas" }}</dd>
+  <dt>Por que ninguém a ocupa</dt><dd>ninguém mais na ordem de {{ rotulo }} pode ocupá-la</dd>
+  <dt>O que o Edital declara</dt><dd>{% if lista_id %}nada sobre a vaga reservada não preenchida{% else %}a ampla concorrência não tem para onde levar a vaga{% endif %}</dd>
+  <dt>Versão do Edital lida</dt><dd>a vigente desde {{ previa.versao.valid_from|date:"d/m/Y H:i" }}</dd>
+</dl>
+
+<h2>O efeito</h2>
+<ul class="resumo" aria-label="Vagas antes e depois deste ato">
+  <li><strong>{{ previa.efetivasAntes }}</strong>Efetivas em {{ rotulo }}, antes e depois</li>
+  <li><strong>{{ previa.saldo }}</strong>A ocupar hoje</li>
+  <li><strong>{{ previa.faltandoDepois }}</strong>A ocupar depois</li>
+</ul>
+<p class="nota">A vaga passa a aparecer como não preenchida: deixa de contar como "a ocupar", e a quantidade publicada e as vagas efetivas não mudam. A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o fundamento que você escrever.</p>
+{% comment %}
+O fundamento nao move a vaga (FR-6320, D-006): nenhum texto escrito no ato substitui a declaracao
+publicada. Onde o Edital deveria declarar a reversao, o caminho e a Retificacao.
+{% endcomment %}
+{% if lista_id %}<p class="nota">O fundamento diz por que a vaga fica sem ocupante, e não a leva a lugar nenhum. Se a vaga devia ir à ampla concorrência, o caminho é declarar a reversão por Retificação{% if retificacao_admitida and pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% elif retificacao_admitida %}, que é ato de quem elabora o Edital{% endif %}.</p>{% endif %}
+
+<p class="imutavel">A declaração não se apaga. Se estiver errada, desfaça-a por outro ato, com motivo.</p>
+
+<form method="post" action="{% url 'interface:declarar-nao-preenchida' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="leitura" value="{{ previa.assinatura }}">
+  {% comment %}
+  O controle de motivo da 058: area de texto de tres linhas, na largura de leitura.
+  {% endcomment %}
+  <p class="campo">
+    <label for="fundamento">Fundamento da declaração</label>
+    <textarea id="fundamento" name="fundamento" rows="3" required aria-describedby="ajuda-fundamento">{{ texto }}</textarea>
+    <span class="ajuda" id="ajuda-fundamento">Obrigatório. Fica no registro, com o seu nome e a data, e aparece onde a vaga é dita não preenchida.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao">Declarar {{ previa.quantidade|contagem:"vaga,vagas" }} não preenchida{{ previa.quantidade|pluralize }}</button>
+    <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
+  </p>
+</form>
+
+{% else %}
+{% comment %}
+O desfazimento (155, FR-6334 a FR-6336): o ato contrario cita o que desfaz, e os dois continuam
+legiveis. Com pessoa chamada para esta vaga, a tela mostra o impedimento no lugar do formulario e
+nomeia cada uma (FR-6335); o pedido enviado direto ao comando e recusado e fica na trilha.
+{% endcomment %}
+<h2>O ato desfeito</h2>
+<dl class="meta">
+  <dt>Declaração</dt><dd>{{ registro.quantidade|contagem:"vaga,vagas" }} de {{ rotulo|default:"ampla concorrência" }} não preenchida{{ registro.quantidade|pluralize }}, em {{ registro.registrado_em|date:"d/m/Y H:i" }}, por {% nome_de_pessoa registro.registrado_por %}</dd>
+  <dt>Fundamento dela</dt><dd>{{ registro.fundamento }}</dd>
+  <dt>O efeito</dt><dd>{{ previa.restante|contagem:"vaga volta,vagas voltam" }} a contar como a ocupar</dd>
+</dl>
+{% if previa.dependentes %}
+<p class="aviso" role="status">O desfazimento não cabe agora: há pessoa chamada para esta vaga.</p>
+<ul class="consequencias">
+  {% for chamada in previa.dependentes %}
+  <li>{{ chamada.rotulo|default:"pessoa sem identificação" }}: {% if chamada.ocupa %}ocupa a vaga, e só um desfecho que a libere permite desfazer o ato{% else %}a chamada precisa do seu desfecho antes{% endif %}.</li>
+  {% endfor %}
+</ul>
+{% endif %}
+<p class="imutavel">O desfazimento não se apaga, e o ato desfeito continua legível, ao lado dele.</p>
+{% if previa.dependentes %}
+<p class="salvar"><a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a></p>
+{% else %}
+<form method="post" action="{% url 'interface:desfazer-nao-preenchida' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="ato" value="{{ registro.id }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="leitura" value="{{ previa.assinatura }}">
+  <p class="campo">
+    <label for="motivo">Motivo do desfazimento</label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo">{{ texto }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">O ato desfeito não é alterado: o desfazimento o cita, e os dois continuam legíveis.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao">Desfazer a declaração</button>
+    <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
+  </p>
+</form>
+{% endif %}
+
+{% endif %}
+{% endblock %}

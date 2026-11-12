@@ -43,6 +43,14 @@ DA_016 = [
     RAIZ / "ocupacao/application/causar_faixa.py",
     RAIZ / "ocupacao/domain/apuracao.py",
     RAIZ / "ocupacao/domain/reversao.py",
+    # A vaga sem quem a ocupe e a não preenchida (155, FR-6344): a conta, o ato, a conferência e a
+    # frase da situação. A pessoa chamada para a vaga é dita assim, e nunca pelo termo da `019`.
+    TEMPLATES / "ocupacao_nao_preenchida.html",
+    TEMPLATES / "_situacao_da_vaga.html",
+    RAIZ / "ocupacao/domain/destinacao.py",
+    RAIZ / "ocupacao/application/destinacao.py",
+    RAIZ / "interface/destinacao_da_vaga.py",
+    RAIZ / "interface/views_da_nao_preenchida.py",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a

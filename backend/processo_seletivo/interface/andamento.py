@@ -1279,6 +1279,11 @@ def situacoes_da_convocacao(f):
             and f.get("corte_vigente")
             and f.get("com_quadro")
             and f.get("continuacao_admitida", True)
+            # **Com a ordem inteira lida e ninguém livre que ainda possa ocupar, a faixa seguinte
+            # não alcança ninguém** (155, FR-6304, UX-602): a situação da vaga diz o caminho — a
+            # declaração de não preenchida, o impedimento dela, ou a reversão que a apuração aplica
+            # —, e um ato por caminho. Oferecer a faixa ali mandaria pedir uma faixa vazia.
+            and not f.get("vaga")
         ):
             providencias.append(
                 _c(
@@ -1309,6 +1314,67 @@ def situacoes_da_convocacao(f):
                 url=com_ancora(url, "chamadas"),
                 ate=f.get("ate"),
                 contagem=em_curso,
+            )
+        )
+    vaga = f.get("vaga") or {}
+    # **O ato que a vaga pede**: a declaração de não preenchida, no Edital silente e na linha geral
+    # (155, FR-6321, D-014). Onde o Edital declara a reversão, nenhum: ela é da apuração.
+    ato_da_vaga = vaga.get("ato") or "Declarar a vaga não preenchida"
+    if not providencias and sem_chamada and not titulares and vaga.get("disponivel"):
+        # **O caminho disponível, e não "impedida"** (155, UX-602): ninguém mais pode ocupar a
+        # vaga, e nada impede — o ato próprio, na ocupação, com a conferência antes.
+        providencias.append(
+            _c(
+                PENDENTE,
+                natureza=APURACAO,
+                ato=ato_da_vaga,
+                responsavel=CONDUZ,
+                razao=_frase(vaga["frase"]),
+                url=f.get("url_da_ocupacao") or "",
+                contagem=vaga.get("quantidade") or sem_chamada,
+            )
+        )
+        if vaga.get("silente") and f.get("retificacao_admitida"):
+            # **O segundo caminho do Edital silente** (155, FR-6321): a Retificação que declara a
+            # reversão, só quando a fase a admite — o predicado da ação "Retificar" do Edital
+            # (`acoes.pode_retificar`), que o Leitor já consulta. Um ato por caminho (UX-602).
+            providencias.append(
+                _c(
+                    PENDENTE,
+                    natureza=APURACAO,
+                    ato="Retificar o Edital para declarar a reversão",
+                    responsavel=RETIFICA,
+                    razao="o Edital não declara o que acontece com a vaga reservada não preenchida",
+                    url=f.get("url_da_retificacao") or "",
+                )
+            )
+    elif not providencias and sem_chamada and not titulares and vaga.get("reversao"):
+        # **A reversão que a apuração aplica, e nenhum ato** (155, FR-6303, FR-6327): a frase diz
+        # por que a vaga ainda não saiu e qual é o próximo passo, no lugar do "não há mais quem
+        # chamar", que mandaria procurar um ato que esta entrega não tem.
+        providencias.append(
+            _c(
+                IMPEDIDO,
+                natureza=CONVOCACAO,
+                ato="Ocupar a vaga",
+                responsavel=CONDUZ,
+                razao=_frase(vaga["frase"]),
+                url=f.get("url_da_ocupacao") or url,
+                ate=next((i.get("ate") for i in vaga["impedimentos"] if i.get("ate")), None),
+            )
+        )
+    elif not providencias and sem_chamada and not titulares and vaga.get("impedimentos"):
+        # **O impedimento nomeado** (155, UX-602, FR-6303): qual fato impede o ato, e até quando,
+        # quando há data — e não "não há mais quem chamar", que só dizia o sintoma.
+        providencias.append(
+            _c(
+                IMPEDIDO,
+                natureza=CONVOCACAO,
+                ato=ato_da_vaga,
+                responsavel=CONDUZ,
+                razao="; ".join(i["frase"] for i in vaga["impedimentos"]),
+                url=f.get("url_da_ocupacao") or url,
+                ate=next((i.get("ate") for i in vaga["impedimentos"] if i.get("ate")), None),
             )
         )
     if not providencias and sem_chamada and not titulares:
@@ -2407,7 +2473,44 @@ class _Leitor:
             if self.alcance.consulta
             else "",
         }
+        fatos["vaga"] = self._vaga_sem_quem_a_ocupe(perfil, marco_id, lista, fatos)
+        # O segundo caminho do Edital silente (155, FR-6321): só quando a fase admite a Retificação.
+        fatos["retificacao_admitida"] = self.edital.status == "PUBLICADO"
+        fatos["url_da_retificacao"] = (
+            reverse("interface:retificar", args=[self.edital.id]) if self.alcance.retifica else ""
+        )
         return situacoes_da_convocacao(fatos)
+
+    def _vaga_sem_quem_a_ocupe(self, perfil, marco_id, lista, fatos):
+        """A situação da vaga do recorte, **só onde a providência a lê** (155, R-008, UX-602).
+
+        Perguntada quando há vaga a ocupar sem chamada, sem titular a chamar e sem ninguém na fila
+        — o único ramo que a diz. Os fatos externos de cada marco ficam na composição do pedido,
+        para o Centro manter o custo fixo por Edital (FR-4686 da `135`).
+        """
+        from processo_seletivo.interface import destinacao_da_vaga
+
+        sem_chamada = max((fatos.get("faltando") or 0) - (fatos.get("em_aberto") or 0), 0)
+        # A linha geral pergunta também (155, D-014): a ampla sem ninguém que a ocupe admite a
+        # declaração de não preenchida. **E só quando nenhuma providência vem antes** — chamada
+        # com prazo correndo, documentos a conferir, desfecho a registrar —: a situação só é lida
+        # por quem não tem outra providência, e lê-la ali custava ~48 consultas por recorte para
+        # nada (`test_andamento_em_escala.py`).
+        antes = ("titulares", "fila", "em_curso", "conferir", "decidir", "pendentes", "vencidos")
+        if not sem_chamada or any(fatos.get(chave) for chave in antes):
+            return None
+        if getattr(self, "_composicao_da_destinacao", None) is None:
+            self._composicao_da_destinacao = destinacao_da_vaga.Composicao(at=self.agora)
+        vaga = destinacao_da_vaga.situacao_do_recorte(
+            edital=self.edital,
+            perfil_id=perfil.get("id"),
+            marco_id=marco_id,
+            lista_id=lista,
+            rotulo=destinacao_da_vaga.rotulo_do_recorte(self.conteudo, perfil.get("id"), lista),
+            at=self.agora,
+            composicao=self._composicao_da_destinacao,
+        )
+        return vaga
 
     def _documentos(self, linhas):
         """Quantas chamadas têm documento a conferir, quantas estão prontas, e quantas aguardam.
