@@ -11,6 +11,14 @@ documentos (User Story 5, FR-5615 a FR-5619, UX-504, SC-1806, SC-1807, D-006) �
 tarefas. Depois da análise cruzada, a FR-5610 foi revista (o documento em voo na queda de
 conexão), entraram dois casos-limite e a seção *Achados registrados*.
 
+**Revista em 12/11/2026, por decisão do usuário, depois da implementação (#496): um botão de envio
+só.** Com dois arquivos escolhidos, cada cartão mostrava "Enviar os 2 documentos escolhidos" — dois
+botões para uma operação só, que a pessoa lia como o envio de cada cartão. Agora cada documento tem o
+seu seletor, o cartão diz o arquivo escolhido e que ainda não foi enviado, e o envio é um botão só,
+no fim da lista, que diz quantos vão. Mudaram a D-001, a FR-5601, a FR-5613 e a UX-500 (redação
+anterior preservada em cada uma); entraram a FR-5620 a FR-5622, a UX-505 e o SC-1808. Os cenários das
+User Stories que falam do botão de cada cartão se leem com o botão do fim da lista.
+
 **Input**: *"Na área do candidato, na convocação que pede documentos, o candidato escolhe arquivos em
 vários cartões e clica em Enviar num deles: só o arquivo daquele cartão é enviado, a página recarrega
 e as outras escolhas se perdem sem aviso. Corrigir para que o candidato possa enviar de uma vez todos
@@ -238,13 +246,21 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
 - **FR-5600**: Com script, nenhum envio iniciado na tela da convocação MUST descartar o arquivo
   escolhido em outro cartão sem que esse arquivo tenha sido enviado ou sem que a tela diga, no cartão
   dele, que não foi.
-- **FR-5601** *(revista em 2026-11-12 com a FR-3739 da `118` — a redação anterior está ao fim desta alínea)*:
-  Com dois ou mais cartões com arquivo escolhido, o botão de enviar de **cada um desses
-  cartões** MUST dizer "Enviar os N documentos escolhidos", com o N corrente, e enviar todos eles.
-  Com exatamente um, o botão MUST dizer o rótulo próprio do cartão e enviar só aquele: "Enviar", ou
-  "Enviar novo arquivo" no cartão que substitui um arquivo recebido (FR-3739 da `118`, revista).
+- **FR-5601** *(revista de novo em 2026-11-12, por decisão do usuário: um botão só — D-001; as
+  redações anteriores estão ao fim desta alínea)*: Com script, os cartões MUST NOT ter botão de envio
+  à vista. A página MUST ter **um** botão de envio, no fim da lista de documentos (FR-5621), que diz
+  quantos documentos vão — "Enviar 1 documento", "Enviar 3 documentos" — e envia todos os escolhidos,
+  com um só ou com vários, pelo mesmo caminho (FR-5605, FR-5606). Sem script, cada cartão continua com
+  o próprio botão, com o rótulo próprio do cartão: "Enviar", ou "Enviar novo arquivo" no cartão que
+  substitui um arquivo recebido (FR-3739 da `118`, revista; FR-5612).
 
-  > **Redação anterior:** Com exatamente um, o botão MUST dizer "Enviar" e enviar só aquele, como
+  > **Redação de 12/11/2026, antes do botão único:** Com dois ou mais cartões com arquivo escolhido, o
+  > botão de enviar de **cada um desses cartões** MUST dizer "Enviar os N documentos escolhidos", com
+  > o N corrente, e enviar todos eles. Com exatamente um, o botão MUST dizer o rótulo próprio do
+  > cartão e enviar só aquele: "Enviar", ou "Enviar novo arquivo" no cartão que substitui um arquivo
+  > recebido (FR-3739 da `118`, revista).
+  >
+  > **Redação original:** Com exatamente um, o botão MUST dizer "Enviar" e enviar só aquele, como
   > hoje. O resto, igual.
 - **FR-5602**: O N MUST contar todos os cartões da tela com envio possível e arquivo escolhido — os
   de "O que falta", os opcionais e os de substituição dos já apresentados (*"Substituir o arquivo
@@ -303,10 +319,17 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
 
 #### D. O que esta spec revisa
 
-- **FR-5613**: Esta spec revisa a `FR-3745` da `118` só no nome acessível do botão de enviar enquanto
-  houver dois ou mais escolhidos: ele MUST ser o texto visível, "Enviar os N documentos escolhidos",
-  porque todos os botões fazem então a mesma coisa. Com um só escolhido, ou nenhum, vale a `FR-3745`
-  como está.
+- **FR-5613** *(revista em 2026-11-12 com a D-001; redação anterior ao fim)*: Esta spec revisa a
+  `FR-3745` da `118` no botão de enviar. Com script, o botão de cada cartão sai de vista, e o botão
+  único do fim da lista MUST ter como nome acessível o texto visível ("Enviar 3 documentos"): ele não
+  é de um documento. O botão de escolher arquivo e a descrição acessível do campo continuam como a
+  `FR-3745` os pede, com o nome do documento, a situação e o limite. Sem script, vale a `FR-3745` como
+  está.
+
+  > **Redação anterior:** Esta spec revisa a `FR-3745` da `118` só no nome acessível do botão de
+  > enviar enquanto houver dois ou mais escolhidos: ele MUST ser o texto visível, "Enviar os N
+  > documentos escolhidos", porque todos os botões fazem então a mesma coisa. Com um só escolhido, ou
+  > nenhum, vale a `FR-3745` como está.
 - **FR-5614**: Esta spec revisa a `FR-3872` da `121` na parte "nenhum script novo": o envio de vários
   MAY vir num script estático próprio, ou nos já carregados, sem biblioteca nova e sem script ou
   estilo escritos no template, que a política de conteúdo recusa.
@@ -342,10 +365,43 @@ só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
   do envio, e a tela MUST NOT dizer que comparou o arquivo; o envio segue como na FR-5612. Se a
   comparação ainda não terminou quando a pessoa aciona o envio, o envio MUST seguir sem esperá-la.
 
+#### F. Um botão de envio só *(acrescentada em 2026-11-12, com a D-001 revista)*
+
+- **FR-5620**: Com script, o cartão com arquivo escolhido MUST dizer o nome do arquivo e *"Selecionado
+  — ainda não enviado."*, sem marca nem cor de recebido; o botão de escolher MUST passar a dizer
+  "Trocar arquivo", e "Remover a escolha" (FR-5603) MUST aparecer ao lado. No cartão sem arquivo
+  recebido e sem pendência, o *"Falta enviar."* MUST sair de vista enquanto houver escolha, e
+  continuar na descrição acessível do campo; a frase da pendência, que traz o motivo da comissão, e a
+  do recebido ficam. O cartão de substituição que fica depois do botão de envio — em *O que você já
+  apresentou*, quando o botão está em *O que falta* — MUST ligar a ele, numa linha própria ("Ir ao
+  botão de envio").
+- **FR-5621**: O botão de envio MUST ficar numa área própria, no fim do primeiro bloco que tem cartão
+  com envio — *O que falta*, ou, sem nada a enviar ali, *O que você já apresentou* —, e a área MUST
+  dizer:
+  - quantos arquivos estão escolhidos: *"2 de 2 arquivos selecionados"*, com o total das tarefas — o
+    que falta enviar e o que a comissão pediu para corrigir —; *"1 arquivo selecionado"* quando a
+    conta inclui substituição espontânea ou opcional;
+  - que eles ainda não foram enviados: *"Os arquivos ainda não foram enviados à comissão."*; sem
+    escolha, só o que fazer: *"Escolha o arquivo PDF de cada documento acima."*, com o botão
+    indisponível e a área em contorno tracejado, sem a contagem.
+
+  O recado do lote que parou no meio (FR-5610) MUST aparecer na área, junto do botão; a recusa de cada
+  documento continua no cartão dele (FR-5608, FR-5609). Antes do primeiro cartão, a frase de como se
+  envia MUST dizer o limite do arquivo uma vez, que deixa de se repetir em cada cartão e continua na
+  descrição acessível do campo; com um cartão só com envio, a frase fala dele, e não de "cada
+  documento".
+- **FR-5622**: Terminado o envio, a página MUST recarregar na volta que o servidor indicou mesmo
+  quando o endereço da volta coincide com o endereço em que ela já está — dois envios seguidos do
+  mesmo tamanho voltavam ao mesmo `?lote=N`, e o navegador só rolava a tela.
+
 ### Requisitos de experiência
 
-- **UX-500**: O botão "Enviar os N documentos escolhidos" é o destaque de cada cartão com arquivo
-  escolhido, como o "Enviar" já é hoje; não há botão flutuante nem barra fixa na tela.
+- **UX-500** *(revista em 2026-11-12 com a D-001; redação anterior ao fim)*: O botão de envio é um
+  só, sólido quando há o que enviar e indisponível, em contorno cinza, quando não há; ele mora numa
+  área cinza no fim da lista, e não há botão flutuante nem barra fixa na tela.
+
+  > **Redação anterior:** O botão "Enviar os N documentos escolhidos" é o destaque de cada cartão com
+  > arquivo escolhido, como o "Enviar" já é hoje; não há botão flutuante nem barra fixa na tela.
 - **UX-501**: A mudança do N é anunciada a quem usa leitor de tela, sem roubar o foco: "3 documentos
   escolhidos para enviar." O progresso do envio de vários também, a cada documento.
 - **UX-502**: A 375 px de largura, o botão com o texto mais longo cabe no cartão sem rolagem
@@ -356,6 +412,10 @@ só apareceu na conferência, ao custo de uma rodada de pendência e reenvio.)*
   logo abaixo do nome do arquivo escolhido, e faz parte da descrição acessível do campo do cartão. Ele
   é anunciado a quem usa leitor de tela quando aparece, sem roubar o foco, e cabe a 375 px sem rolagem
   horizontal.
+- **UX-505** *(2026-11-12)*: O arquivo escolhido aparece numa caixa cinza no cartão, com o nome em
+  negrito e "Selecionado — ainda não enviado." embaixo; "Trocar arquivo" e "Remover a escolha" são
+  ações de texto, à direita, com alvo de toque de 44 px. Nenhum verde nem marca de concluído antes do
+  recebimento.
 
 ### Key Entities
 
@@ -387,12 +447,16 @@ cada uma com o seu registro e a sua trilha.
 - **SC-1807**: Arquivos de conteúdo diferente — inclusive os de mesmo nome — produzem **zero**
   avisos; e o reenvio do mesmo arquivo para o mesmo documento continua com a frase de hoje, sem o
   aviso da FR-5615.
+- **SC-1808** *(2026-11-12)*: Com script, em todo cenário da convocação com envio — um documento, dois,
+  quatro, pendência, substituição, opcional —, a página tem **um** botão de envio à vista, e **zero**
+  dentro dos cartões; e dois envios seguidos de um documento cada recarregam a página as duas vezes.
 
 ## Decisões
 
 As decisões estão com a razão e as alternativas descartadas em [research.md](research.md). O resumo:
 
-- **D-001** — com dois ou mais escolhidos, todo botão de enviar envia todos, e diz isso.
+- **D-001** — um seletor por documento e um botão de envio só, no fim da lista *(revista em
+  12/11/2026; antes: com dois ou mais escolhidos, todo botão de enviar envia todos, e diz isso)*.
 - **D-002** — um envio por documento, em sequência, e não uma requisição com todos.
 - **D-003** — nada se envia ao escolher o arquivo.
 - **D-004** — a inscrição fica fora, registrada como achado.

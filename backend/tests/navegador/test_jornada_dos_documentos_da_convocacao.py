@@ -88,7 +88,20 @@ def enviar(pagina, item_id, arquivo):
     if resumo.count():
         resumo.click()
     cartao.locator("input[type=file]").set_input_files(arquivo)
-    cartao.get_by_role("button", name="Enviar").click()
+    enviar_os_escolhidos(pagina, cartao)
+
+
+def enviar_os_escolhidos(pagina, cartao=None):
+    """O envio dos arquivos escolhidos: com script, o botão único do fim da lista (150, D-001
+    revista em 12/11/2026), que envia pelo lote e recarrega a página com `?lote=`; sem script, o
+    "Enviar" do próprio cartão, que é o único escolhido."""
+    botao = pagina.locator("[data-enviar-os-escolhidos]")
+    if botao.is_visible():
+        # A espera é pela navegação, e não pelo endereço: o da volta anterior já tem `?lote=`.
+        with pagina.expect_navigation():
+            botao.click()
+    else:
+        (cartao or pagina).get_by_role("button", name=re.compile("^Enviar")).first.click()
     pagina.wait_for_load_state()
 
 

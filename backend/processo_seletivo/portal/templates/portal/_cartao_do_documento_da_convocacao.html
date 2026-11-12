@@ -16,7 +16,7 @@ aponta a situacao do item e o limite do arquivo.
 
 O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584 da 115).
 {% endcomment %}
-<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1" data-documento="{{ item.nome }}">
+<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1" data-documento="{{ item.nome }}"{% if item.tarefa %} data-tarefa{% endif %}>
   {% comment %}
   O nome e o selo na mesma linha, quando cabem: o estado se lê junto do documento, e o cartão perde
   a linha que o selo sozinho ocupava.
@@ -39,7 +39,13 @@ O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584
   <p class="instrucao"><a class="documento secundaria" href="{% url 'public-anexo' item.lido.modelo.artefato_id %}">Baixar o modelo: {{ item.lido.modelo.rotulo }}</a></p>
   {% endif %}
 
-  <p class="situacao-do-documento" id="situacao-{{ item.id }}">{{ item.texto }}</p>
+  {% comment %}
+  Escolhido o arquivo, o "Falta enviar." sai de vista e fica para o leitor de tela, que o lê na
+  descrição do campo: a caixa da escolha já diz o estado, e as duas frases juntas se contradiziam à
+  primeira leitura. Só no cartão sem arquivo recebido e sem pendência — a frase da pendência traz o
+  motivo da comissão, e a do recebido diz o que está com ela (150, revisão de 12/11/2026).
+  {% endcomment %}
+  <p class="situacao-do-documento" id="situacao-{{ item.id }}"{% if not item.lido.vigente and not item.com_motivo %} data-some-com-a-escolha{% endif %}>{{ item.texto }}</p>
 
   {% comment %}
   **Consultar primeiro, substituir embaixo e mais quieto.** "Ver o arquivo recebido" era uma faixa
@@ -66,14 +72,25 @@ O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584
           action="{% url 'portal:apresentar-documento-da-convocacao' inscricao.id item.id %}" data-envio
           data-limite-em-bytes="{% limite_de_arquivo_em_bytes %}">
       {% csrf_token %}
+      {% comment %}
+      **Escolher não é enviar** (150, D-001 revista em 12/11/2026). Com script, o botão do cartão sai
+      de vista e o envio é o do fim da lista; o cartão diz o que foi escolhido e que ainda não foi
+      enviado, e oferece trocar e remover a escolha (FR-5603, UX-503). O nome, o estado e os rótulos
+      alternativos nascem escondidos, e quem os mostra é `varios.js`: sem script, o cartão é o de
+      hoje, com o próprio "Enviar" (FR-5612).
+      {% endcomment %}
       <div class="escolher">
         <input type="file" id="arquivo-{{ item.id }}" name="arquivo" accept="application/pdf"
                aria-describedby="situacao-{{ item.id }}{% if item.envio_recolhido %} efeito-{{ item.id }}{% endif %} ajuda-envio-{{ item.id }}" data-arquivo>
-        <label class="botao-arquivo" for="arquivo-{{ item.id }}">Escolher arquivo PDF<span class="oculto"> para {{ item.nome }}</span></label>
-        <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
-        <button type="submit" class="acao">{% if item.envio_recolhido %}Enviar novo arquivo{% else %}Enviar{% endif %}<span class="oculto">: {{ item.nome }}</span></button>
+        <label class="botao-arquivo" for="arquivo-{{ item.id }}"><span data-rotulo-escolher>Escolher arquivo PDF</span><span data-rotulo-trocar hidden>Trocar arquivo</span><span class="oculto"> para {{ item.nome }}</span></label>
+        <span class="escolha">
+          <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
+          <span class="estado-da-escolha" data-estado-da-escolha hidden>Selecionado — ainda não enviado.{% if link_ao_envio %} <a class="ir-ao-envio" href="#envio-dos-documentos">Ir ao botão de envio</a>{% endif %}</span>
+        </span>
+        <button type="button" class="remover-a-escolha" data-remover-escolha hidden>Remover a escolha<span class="oculto">: {{ item.nome }}</span></button>
+        <button type="submit" class="acao" data-envio-do-cartao>{% if item.envio_recolhido %}Enviar novo arquivo{% else %}Enviar{% endif %}<span class="oculto">: {{ item.nome }}</span></button>
       </div>
-      <span class="ajuda limite" id="ajuda-envio-{{ item.id }}">Somente PDF, até {% limite_de_arquivo %}.</span>
+      <span class="ajuda limite" id="ajuda-envio-{{ item.id }}" data-limite-do-cartao>Somente PDF, até {% limite_de_arquivo %}.</span>
       <p class="progresso" hidden>
         <progress max="100" value="0" aria-label="Progresso do envio"></progress>
         <span class="ajuda">Enviando… não feche esta página.</span>

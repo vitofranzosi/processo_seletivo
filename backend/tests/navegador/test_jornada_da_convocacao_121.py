@@ -223,7 +223,9 @@ def test_com_script_o_foco_vai_a_recusa_no_cartao(tela, fx, gestor, pdfs):
 
     cartao = pagina.locator(f"#item-{item.id}")
     cartao.locator("input[type=file]").set_input_files(pdfs("foto", b"\xff\xd8\xff", "jpg"))
-    cartao.get_by_role("button", name="Enviar").click()
+    # Com script, o envio é o botão único do fim da lista (150, D-001 revista em 12/11/2026).
+    pagina.locator("[data-enviar-os-escolhidos]").click()
+    pagina.wait_for_url(re.compile(r"[?&]lote=1#item-"))
     pagina.wait_for_load_state()
 
     recusa = pagina.locator(f"#item-{item.id} [data-recusa]")

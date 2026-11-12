@@ -147,7 +147,8 @@ def test_f_pelo_teclado_a_ordem_e_a_visual_e_o_foco_se_ve(tela, fx):
                 break
             continue
         conteudo.append(passo)
-    assert len(conteudo) >= 10, conteudo
+    # Nove, e não dez, desde que o "Enviar" de cada cartão saiu de vista (150, D-001 revista).
+    assert len(conteudo) >= 9, conteudo
     alturas = [p["y"] for p in conteudo]
     assert alturas == sorted(alturas), conteudo
     rotulos = [p["texto"] for p in no_main]
@@ -155,7 +156,11 @@ def test_f_pelo_teclado_a_ordem_e_a_visual_e_o_foco_se_ve(tela, fx):
     # pendente se alcança pela ação e pelos controles dele, que dizem o nome do documento.
     assert any("Histórico escolar do ensino médio" in rotulo for rotulo in rotulos), rotulos
     assert "Ver o que preciso fazer" in rotulos
-    assert any(r.startswith("Enviar: ") for r in rotulos), rotulos
+    # O "Enviar: ‹documento›" do cartão saiu de vista com script (150, D-001 revista em
+    # 12/11/2026): o envio é o botão único do fim da lista, indisponível até haver o que enviar. O
+    # cartão se alcança pelo campo de arquivo, cujo nome acessível é "Escolher arquivo PDF para…".
+    assert any(p["tag"] == "INPUT" for p in no_main), no_main
+    assert not any(r.startswith("Enviar: ") for r in rotulos), rotulos
 
     # Ativar a âncora do pendente leva o foco ao cartão dele (quickstart).
     pagina.goto(tela.servidor.url + reverse("portal:convocacao", args=[cenario.pessoa.id]))

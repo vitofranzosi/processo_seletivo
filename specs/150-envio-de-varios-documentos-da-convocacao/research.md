@@ -31,7 +31,41 @@ O guia de implantação (`doc/implantacao-em-producao-ubuntu.md`, §14) limita o
 limite com dois arquivos grandes e voltaria 413 do proxy, sem frase nenhuma do sistema. A gestão tem
 limite de 60 MB porque a Retificação envia vários anexos num POST; o portal não tem.
 
-## D-001 — Com dois ou mais escolhidos, todo botão de enviar envia todos, e diz isso
+## D-001 — Um seletor por documento, e um botão de envio só, no fim da lista
+
+*Revista em 12/11/2026, por decisão do usuário, depois da implementação (#496). A decisão original e
+a razão dela seguem abaixo, preservadas.*
+
+**Decisão.** Cada documento tem o seu seletor; o cartão diz o arquivo escolhido e que ainda não foi
+enviado, e oferece trocá-lo e remover a escolha. O envio é um botão só, numa área no fim do primeiro
+bloco com cartão de envio, que diz quantos arquivos estão escolhidos e quantos documentos vão. Com
+um escolhido ou com vários, o caminho é o mesmo: o lote da D-002, que com um só monta a confirmação de
+hoje. Sem script, nada muda: cada cartão envia o seu (D-005).
+
+**Razão.** Na tela implementada, com dois arquivos escolhidos, os dois cartões mostravam o mesmo botão
+verde, "Enviar os 2 documentos escolhidos": duas entradas para uma operação só. A pessoa lia cada uma
+como o envio daquele cartão — o mesmo engano que a spec veio corrigir, agora sem perda, mas com
+dúvida. A revisão de UX que o usuário trouxe pede o padrão de formulário: escolher em cada documento,
+conferir, enviar uma vez; e distinguir *selecionado* de *recebido* — escolher não é enviar (D-003).
+
+**O que custou a original não ter visto.** O argumento "a 375 px o fim da lista fica várias telas
+abaixo" vale menos do que parecia: a pessoa percorre a lista para escolher, e o botão está onde ela
+termina. O cartão de substituição que fica depois do botão — em *O que você já apresentou* — liga a
+ele ("Ir para o envio").
+
+**Achado no caminho.** Com o botão único, todo envio passa pelo lote, e a volta do lote é
+`?lote=N#…`. Dois envios seguidos do mesmo tamanho — um documento, depois outro — voltavam ao endereço
+em que a página já estava, e o navegador só rolava a tela: o progresso ficava à mostra e nada
+recarregava. O defeito já existia com dois lotes seguidos do mesmo tamanho; o botão único o tornou o
+caso comum. A volta que coincide ganha `de-novo=1` (FR-5622).
+
+**Descartadas na revisão.**
+
+- *Manter o botão em cada cartão.* É o que a revisão de UX recusou.
+- *Botão fixo no rodapé da tela.* Resolve a distância, mas cobre conteúdo a 375 px e é um elemento
+  novo de navegação; a UX-500 já o excluía.
+
+### A decisão original (11/11/2026), preservada
 
 **Decisão.** Enquanto houver dois ou mais cartões com arquivo escolhido, o botão de enviar de cada um
 deles diz "Enviar os N documentos escolhidos" e envia todos. Com um só, "Enviar", como hoje. Quem quer

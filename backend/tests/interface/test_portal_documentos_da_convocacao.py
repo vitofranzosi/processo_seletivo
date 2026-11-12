@@ -893,3 +893,158 @@ class TestAVoltaDoLote:
         resposta = client.get(reverse("portal:convocacao", args=[pessoa.id]) + "?lote=3")
 
         assert resposta.status_code == 200
+
+
+def _secao(corpo, ident):
+    """O trecho da `<section id=ident>` até o fechamento dela."""
+    inicio = corpo.index(f'id="{ident}"')
+    return corpo[inicio : corpo.index("</section>", inicio)]
+
+
+class TestUmBotaoDeEnvioSo:
+    """150, D-001 revista em 12/11/2026: um seletor por documento e um botão de envio só.
+
+    O que o servidor desenha. Quem mostra a área, esconde o botão de cada cartão e diz o que foi
+    escolhido é `varios.js` (`tests/javascript/varios.test.js`); aqui se prova que tudo nasce no
+    lugar certo, e escondido, para que a tela sem script continue a de antes (FR-5612).
+    """
+
+    def test_a_area_e_uma_so_no_fim_do_que_falta_e_nasce_escondida(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        corpo = tela(client, pessoa)
+
+        assert corpo.count("data-envio-dos-documentos") == 1, "FR-5621, SC-1808"
+        falta = _secao(corpo, "o-que-falta")
+        assert "data-envio-dos-documentos" in falta
+        assert falta.rindex("cartao-do-documento") < falta.index("data-envio-dos-documentos"), (
+            "depois do último cartão"
+        )
+        assert (
+            '<div class="envio-dos-documentos" id="envio-dos-documentos" tabindex="-1" '
+            "data-envio-dos-documentos hidden>"
+        ) in corpo
+        assert "data-enviar-os-escolhidos disabled>Enviar documentos</button>" in corpo
+        assert ">Escolha o arquivo PDF de cada documento acima.</p>" in corpo
+
+    def test_a_frase_de_como_se_envia_com_e_sem_script(self, aluno, gestor, client, settings):
+        settings.ARQUIVOS_CANDIDATOS_LIMITE_BYTES = 10 * 1024 * 1024
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+
+        falta = _secao(tela(client, pessoa), "o-que-falta")
+
+        com_script = falta.index("data-instrucao-com-script hidden>")
+        assert "Escolha um arquivo PDF, de até 10 MB, para cada documento." in falta
+        assert '<noscript><p class="instrucao-do-envio">Envie um documento de cada vez' in falta
+        assert com_script < falta.index("cartao-do-documento"), "antes do primeiro cartão (FR-5612)"
+
+    def test_o_cartao_traz_o_estado_da_escolha_e_o_remover_escondidos(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        alvo = item(convocacao, CERTIDAO)
+
+        cartao = tela(client, pessoa).split(f'id="item-{alvo.id}"')[1].split("</li>")[0]
+
+        assert "data-estado-da-escolha hidden>Selecionado — ainda não enviado.</span>" in cartao
+        assert "data-remover-escolha hidden>Remover a escolha" in cartao
+        assert '<span class="oculto">: Certidão de nascimento ou casamento</span>' in cartao
+        assert "data-rotulo-trocar hidden>Trocar arquivo</span>" in cartao
+        assert "Ir ao botão de envio" not in cartao, "o cartão está acima do botão"
+        assert 'data-envio-do-cartao>Enviar<span class="oculto">' in cartao, "o envio sem script"
+
+    def test_a_substituicao_depois_do_botao_liga_a_ele(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        enviada = item(convocacao, CERTIDAO)
+        _no_lote(client, pessoa, enviada, "1/1", cenarios.pdf(b"certidao"))
+
+        corpo = tela(client, pessoa)
+
+        assert "data-envio-dos-documentos" in _secao(corpo, "o-que-falta")
+        apresentou = _secao(corpo, "o-que-voce-ja-apresentou")
+        assert "data-envio-dos-documentos" not in apresentou
+        assert f'id="item-{enviada.id}"' in apresentou
+        assert (
+            '<a class="ir-ao-envio" href="#envio-dos-documentos">Ir ao botão de envio</a>'
+            in apresentou
+        )
+
+    def test_sem_nada_a_enviar_no_que_falta_a_area_vai_ao_que_ja_apresentou(
+        self, aluno, gestor, client
+    ):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        requisitos = (CERTIDAO, HISTORICO, CERTIFICADO_DO_MEDIO, RESIDENCIA)
+        for posicao, requisito in enumerate(requisitos, start=1):
+            _no_lote(
+                client,
+                pessoa,
+                item(convocacao, requisito),
+                f"{posicao}/4",
+                cenarios.pdf(b"%d" % posicao),
+            )
+
+        corpo = tela(client, pessoa)
+
+        assert corpo.count("data-envio-dos-documentos") == 1
+        apresentou = _secao(corpo, "o-que-voce-ja-apresentou")
+        assert "data-envio-dos-documentos" in apresentou
+        assert "data-instrucao-com-script" in apresentou
+        assert "Ir ao botão de envio" not in apresentou, "o botão está no mesmo bloco"
+
+    def test_depois_do_prazo_nao_ha_area(self, aluno, gestor, client):
+        edital, _, _ = aluno
+        pessoa, convocacao = cenarios.convocar_primeira(
+            aluno, gestor, vencimento=timezone.now() + timedelta(minutes=1)
+        )
+        comunicar(edital, gestor, convocacao)
+        entrar_como(client, pessoa)
+
+        with mock.patch(
+            "django.utils.timezone.now", return_value=timezone.now() + timedelta(days=2)
+        ):
+            corpo = tela(client, pessoa)
+
+        assert "data-envio-dos-documentos" not in corpo
+        assert "data-instrucao-com-script" not in corpo
+
+
+class TestOPolishDoEnvioUnico:
+    """150, revisão de 12/11/2026: as marcas que o polish do envio único pôs no servidor."""
+
+    def test_a_tarefa_e_a_situacao_que_some_com_a_escolha(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        enviada = item(convocacao, CERTIDAO)
+        _no_lote(client, pessoa, enviada, "1/1", cenarios.pdf(b"certidao"))
+        a_enviar = item(convocacao, HISTORICO)
+
+        corpo = tela(client, pessoa)
+
+        cartao = corpo.split(f'id="item-{a_enviar.id}"')[1].split("</li>")[0]
+        assert cartao.startswith(
+            ' tabindex="-1" data-documento="Histórico escolar do ensino médio" data-tarefa>'
+        )
+        assert f'id="situacao-{a_enviar.id}" data-some-com-a-escolha>Falta enviar.</p>' in cartao
+        recebido = corpo.split(f'id="item-{enviada.id}"')[1].split("</li>")[0]
+        assert "data-tarefa" not in recebido.split(">")[0], "o recebido não é tarefa"
+        assert "data-some-com-a-escolha" not in recebido, "a frase do recebido fica"
+
+    def test_a_frase_no_singular_com_um_documento_so(self, aluno, gestor, client):
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        corpo = tela(client, pessoa)
+        assert "para cada documento. Depois, envie todos de uma vez" in corpo
+
+        from processo_seletivo.portal import obrigacoes
+
+        with mock.patch.object(
+            obrigacoes.Obrigacoes, "um_so_com_envio", new_callable=mock.PropertyMock
+        ) as um_so:
+            um_so.return_value = True
+            corpo = tela(client, pessoa)
+
+        assert "e envie pelo botão logo abaixo." in corpo
+        assert "para cada documento" not in corpo
