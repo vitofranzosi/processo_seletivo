@@ -248,14 +248,19 @@ def test_a_consulta_estreita_vence_a_regra_de_mesa_do_recuo(da_visao_geral):
     assert estreita > de_mesa, "a sobrescrita estreita precisa vir **depois** da regra de mesa"
 
 
-def test_o_painel_do_documento_respeita_o_atributo_hidden(da_gestao):
+def test_o_painel_do_documento_respeita_o_atributo_hidden():
     """`display` de autor vence o `display:none` que o `hidden` traz do navegador.
 
     Sem a guarda, o painel aparecia vazio no alto de **toda** inscrição, com o botão de fechar,
     antes de qualquer documento ser aberto — e empurrava a avaliação para fora da primeira tela.
     """
-    assert re.search(r"\.painel-documento:not\(\[hidden\]\)\{[^}]*display:flex", da_gestao)
-    assert not re.search(r"\.painel-documento\{[^}]*display:flex", da_gestao)
+    # A regra mora na folha do visualizador desde a 157, carregada pela Mesa e pela conferência.
+    folha = (
+        Path(__file__).resolve().parents[2]
+        / "processo_seletivo/interface/static/interface/grupos/visualizador.css"
+    ).read_text(encoding="utf-8")
+    assert re.search(r"\.painel-documento:not\(\[hidden\]\)\{[^}]*display:flex", folha)
+    assert not re.search(r"\.painel-documento\{[^}]*display:flex", folha)
 
 
 def test_os_numeros_da_distribuicao_sao_o_filtro(

@@ -197,22 +197,27 @@ class SituacaoDoAviso:
 
     @property
     def frase_do_aviso(self):
-        """A situação do aviso desde a pendência — com as palavras da `066` (UX-172 dela)."""
+        """A situação do aviso desde a pendência — com as palavras da `066` (UX-172 dela).
+
+        **Três grupos** (157, FR-6543, UX-649): *solicitado, aguardando envio* — pendente, em
+        envio, ou em falha temporária, que o despacho tenta de novo sozinho —; *enviado*, que é
+        aceito pelo servidor de correio, e nunca "entregue" nem "lido" (FR-5016 da `143`); e *não
+        enviado*, com o estado que o explica. O cartão da convocação e a página dos documentos leem
+        esta mesma frase.
+        """
         from processo_seletivo.avisos.domain import nomes as avisos
 
         if self.pendencia_em is None:
             return ""
         if self.aviso_em is not None:
-            registrado = f"Aviso de pendência registrado em {_quando(self.aviso_em)}"
-            if self.estado == avisos.PENDENTE:
-                return f"{registrado}; ele sai pelo despacho dos avisos e ainda não foi enviado."
-            if self.estado == avisos.EM_ENVIO:
-                return f"{registrado}; o envio está em curso."
+            if self.estado in (avisos.PENDENTE, avisos.EM_ENVIO, avisos.ESTADO_FALHA_TEMPORARIA):
+                return f"Aviso solicitado em {_quando(self.aviso_em)}; aguardando envio."
             if self.estado == avisos.ESTADO_ACEITA:
                 return (
-                    f"{registrado} e aceito pelo servidor de correio em {_quando(self.aceito_em)}."
+                    f"Aviso enviado em {_quando(self.aceito_em or self.aviso_em)}: aceito pelo "
+                    "servidor de correio."
                 )
-            return f"{registrado}: {avisos.ROTULO_DO_ESTADO.get(self.estado, self.estado)}."
+            return f"Aviso não enviado: {avisos.ROTULO_DO_ESTADO.get(self.estado, self.estado)}."
         frase = (
             "Nenhum aviso desde esta pendência: o candidato a vê no portal, e nenhum e-mail "
             "sobre ela foi pedido."

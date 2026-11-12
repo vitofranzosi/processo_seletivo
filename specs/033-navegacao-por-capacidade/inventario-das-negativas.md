@@ -218,6 +218,9 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 4019 | `pagina_anterior` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `138`** — a página anterior do Edital, por um ciclo: o detalhe de antes, com a mesma porta `obter_edital` da página do Edital, que filtra por escopo, e o mesmo 404 para o Edital de outra unidade ou inexistente. Não há recusa de autorização |
 | 3644 | `fragmento_criterio_de_avaliacao` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `146`** — a linha nova do barema no cartão da Etapa: a mesma porta `obter_edital` do `fragmento_etapa`, que filtra por escopo, e o mesmo 404 para o Edital de outra unidade ou inexistente. Não há recusa de autorização própria: a gravação da etapa confere `edital:elaborar` |
 | 3783 | `fragmento_retificacao_criterio_de_avaliacao` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `146`** — o critério do barema a acrescentar por Retificação: `obter_edital` filtra por escopo, e o Edital sem versão base não tem conteúdo — mesma porta do critério de desempate (048) |
+| 9981 | `cartao_do_documento_da_convocacao` | sim | não | objeto inexistente | **acrescentada pela `157`** — o cartão relido de um item que não está entre os pedidos desta chamada. A porta `_convocacao_para_conferir` decide escopo e autorização antes |
+| 7516 | `documentos_da_mesa` | sim | não | vínculo de **Atribuição** | **acrescentada pela `157`** — a lista de documentos da inscrição, relida pelo visualizador: a mesma recusa de `inscricao_da_mesa`, pela porta da Mesa |
+| 9924 | `pedir_aviso_de_pendencia_view` | sim | não | objeto inexistente | **acrescentada pela `157`** — o pedido de aviso de uma pessoa: a recusa de inexistente do comando do aviso. A porta `_convocacao_para_conferir` decide escopo e autorização antes |
 
 ---
 
@@ -240,6 +243,7 @@ O que mudou desde então, e por quê:
 | **+4 funções** | a `115` acrescentou os documentos da convocação: a porta `_convocacao_para_conferir`, o alcance por Perfil de quem só confere na condução, a apresentação que não é da chamada e o item que não é da lista |
 | **+4 funções** | a `117` acrescentou a entrega documental à formalização, em módulo de view próprio e em `acessos.py`: o Perfil fora do alcance na página do setor, o documento que não é do conjunto de uma pessoa apta do alcance, a porta da definição na condução e a designação de outra unidade. A porta do setor é o predicado `pode_acessar`, que responde 404 pela recusa do domínio, e não por `Http404` |
 | **+0 funções** | a `120` acrescentou um `raise Http404 from` em `convocar_view`, que já estava registrada: a convocação que a correção nomeia e que não é do recorte nem da inscrição do formulário é referência fora do escopo do ato, como o recorte que `_recorte_pedido` já recusa ali. A falta de base continua a recusa explicada |
+| **+3 funções** | a `157` acrescentou a conferência com o documento à vista: o cartão relido de um item, a lista de documentos da Mesa relida e o pedido de aviso de uma pessoa. As três passam pelas portas de hoje — `_convocacao_para_conferir` e a da Mesa — antes de qualquer `raise Http404` |
 
 **A linha da `031` é o detector funcionando, e na primeira oportunidade real.** Ela não veio desta
 feature: entrou pela `main`, no merge, e a `T038` reprovou a suíte pedindo que fosse classificada.

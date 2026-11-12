@@ -739,6 +739,19 @@ urlpatterns = [
         views.conferir_documento_view,
         name="conferir-documento",
     ),
+    # O cartão de um item, relido depois de uma abertura, e o pedido de aviso de uma pessoa (157).
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/"
+        "itens/<uuid:item_id>/cartao",
+        views.cartao_do_documento_da_convocacao,
+        name="cartao-do-documento-da-convocacao",
+    ),
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/"
+        "aviso-de-pendencia",
+        views.pedir_aviso_de_pendencia_view,
+        name="pedir-aviso-de-pendencia",
+    ),
     # O atestado de fato externo (019, US5). Pende da **Inscrição**, e não do marco: o fato é sobre
     # a pessoa — ela não acessou o ambiente, não apareceu na primeira semana —, e não sobre o
     # recorte. É por isso que ele existe antes e fora do desfecho que o cita.
@@ -892,6 +905,12 @@ urlpatterns = [
         "/documentos/<uuid:requirement_id>",
         views.documento_da_mesa,
         name="mesa-documento",
+    ),
+    # A lista de documentos da inscrição, relida depois de uma abertura (157, FR-6547).
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/documentos",
+        views.documentos_da_mesa,
+        name="mesa-documentos",
     ),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",

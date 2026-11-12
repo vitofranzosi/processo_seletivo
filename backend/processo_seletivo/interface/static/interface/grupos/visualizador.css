@@ -1,0 +1,60 @@
+/* O visualizador do documento: a Mesa do avaliador (012, FR-112) e a conferência dos documentos da
+   convocação (157). Um desenho para as duas telas (D-001 da 157): o documento à esquerda, o trabalho
+   à direita, e uma coluna só enquanto nada está aberto, que é como as telas sempre foram. O painel só
+   existe em tela larga; abaixo disso o link abre o documento fora da página. */
+.trabalho-com-documento{display:grid;gap:1.5rem}
+/* `:not([hidden])` **não é enfeite**: `display` de autor vence o `display:none` que o atributo
+   `hidden` traz do navegador, e sem esta guarda o painel aparecia vazio no alto de toda página,
+   com o botão de fechar, antes de qualquer documento ser aberto. */
+.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.75rem;min-width:0}
+/* Mesmo desenho da ficha do candidato, do outro lado: as duas colunas passam a começar na mesma
+   altura por construção, e não por ajuste de margem. */
+.barra-do-painel{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:.5rem 1rem;padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px}
+/* A margem à direita é o que leva as ações para a ponta: com vários filhos, o `space-between`
+   sozinho punha "Abrir em aba própria" no meio da barra, longe do "Fechar". */
+.barra-do-painel h2{margin:0 auto 0 0;font-size:1rem;overflow-wrap:anywhere}
+/* A segunda linha da barra, na conferência: de quem é o documento (157, UX-640). Ocupa a largura
+   inteira, abaixo do nome e das ações. */
+.identificacao-do-documento{flex:1 0 100%;margin:0;color:var(--texto-fraco);font-size:.9375rem;
+  overflow-wrap:anywhere}
+.identificacao-do-documento:empty{display:none}
+/* `line-height` herdado porque a barra tem links e um botão lado a lado: o link herda o 1,5 do
+   corpo, e o botão fica com o `normal` do navegador — 30 px e 25 px na mesma linha. */
+.barra-do-painel .acao{flex:0 0 auto;line-height:inherit}
+.painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--branco)}
+/* O texto do painel: o carregamento, a alternativa sem prévia e a recusa da entrega (157,
+   FR-6510, UX-643, UX-644). Vazio, não ocupa lugar. */
+.texto-do-painel{margin:0;padding:.75rem 1rem;border:1px solid var(--borda);border-radius:4px;
+  background:var(--branco)}
+.texto-do-painel:empty{display:none}
+
+/* Sem documento aberto, a coluna é uma só — e o formulário não tem o que fazer com 1.480 px. O
+   limite é da **página**, e não só do formulário: posto apenas no formulário, o cabeçalho
+   atravessava a tela inteira e o conteúdo parava antes. Com o painel aberto, o limite sai — quem
+   manda ali é o documento. */
+.pagina-da-inscricao{max-width:64rem}
+.pagina-da-inscricao.com-documento{max-width:none}
+.painel-avaliacao,.lista-da-conferencia{min-width:0}
+.documentos a[aria-current],.versoes a[aria-current]{font-weight:600;text-decoration:underline}
+@media (min-width:64rem){
+  .trabalho-com-documento.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+    align-items:start}
+  .trabalho-com-documento.com-documento .painel-documento{position:sticky;top:1rem;
+    height:calc(100vh - 5rem)}
+}
+
+/* A recusa da entrega, dentro da moldura (157, FR-6510): um documento pequeno, sem a barra da
+   gestão. */
+html[data-recusa-no-painel] body{margin:0;padding:1rem;background:var(--branco)}
+
+/* A volta de um documento aberto fora da página (157, FR-6528, FR-6547): o caminho de volta ao
+   ponto de trabalho, e a frase de quando o preenchimento foi restaurado. */
+.retorno-ao-ponto{margin:.5rem 0}
+/* O nome do documento pode ser longo: o caminho de volta quebra a linha em vez de passar da borda
+   do cartão a 390 px. */
+.retorno-ao-ponto .acao{white-space:normal;max-width:100%;}
+.retorno-ao-ponto:empty{display:none}
+.preenchimento-restaurado{margin:.5rem 0;color:var(--texto-fraco)}

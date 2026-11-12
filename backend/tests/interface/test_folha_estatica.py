@@ -245,6 +245,12 @@ QUEM_CARREGA = {
         "sem_acesso.html",
     },
     "interface/grupos/assistente.css": {"assistente.html", "duvidas.html"},
+    # O visualizador do documento (157): a Mesa, a conferência da convocação e a recusa no painel.
+    "interface/grupos/visualizador.css": {
+        "_recusa_no_painel.html",
+        "convocacao_documentos.html",
+        "mesa_inscricao.html",
+    },
     "interface/grupos/aviso.css": {
         "aviso.html",
         "aviso_previa.html",
