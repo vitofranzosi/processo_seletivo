@@ -3,8 +3,17 @@
 **Encontrado em**: 21/10/2026, escrevendo a equivalência da prévia do sorteio
 ([`098`](../specs/098-previa-do-sorteio/spec.md), T009), contra a `main` em `14efe941`.
 
-**Estado**: **registrado, não decidido.** A prévia do sorteio mostra o comportamento atual, como manda
-a FR-2507 da `098`. Se ele é a leitura certa da norma é decisão do usuário.
+**Estado**: **decidido pelo usuário em 11/11/2026, na
+[`155`](../specs/155-destinacao-da-vaga-sem-concorrente/spec.md)**, e ainda não implementado. A resposta
+não é nenhuma das duas primeiras perguntas abaixo: a relação vazia continua recusada, e não se cria
+apuração de lista sem ordem. A destinação passa a ser ato próprio, separado da apuração, e no sorteio
+dispensa a apuração da reservada quando a ausência está comprovada na relação definitiva — a da ampla
+congelada no marco, sem nenhuma inscrição daquela Modalidade. Ausência de registro não é lista vazia
+(FR-6332 e FR-6333 da `155`). O gatilho, a terceira pergunta, é o da `155` (FR-6304 a FR-6306).
+
+*Redação anterior do estado, preservada:* **registrado, não decidido.** A prévia do sorteio mostra o
+comportamento atual, como manda a FR-2507 da `098`. Se ele é a leitura certa da norma é decisão do
+usuário.
 
 > **Não vira escopo por estar escrito aqui.** O que se registra é o que o sistema faz, medido, e o que
 > uma decisão teria de responder.

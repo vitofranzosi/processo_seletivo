@@ -372,9 +372,34 @@ Cada número exibido tem trilha: qual ato o produziu, sobre qual ordem, com qual
   **mesmo** Perfil, e MUST NOT alcançar outro Perfil por nenhum caminho.
 - **FR-247**: A soma das quantidades por recorte depois da reversão MUST ser igual à soma antes
   dela. Reverter redistribui; não cria nem destrói vaga.
-- **FR-248**: Cada reversão MUST registrar origem, destino, quantidade e a causa que a autorizou.
-- **FR-249**: O Edital MUST declarar **qual espécie de gatilho** a reversão usa — por esgotamento
-  ou por saldo (`D-007`) —, e o gatilho MUST NOT ser inferido do estado das listas.
+- **FR-248** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: Cada reversão MUST ser ato próprio de quem pode emitir a
+  apuração, confirmado depois de ver origem, destino, quantidade e a declaração do Edital, e MUST
+  registrar origem, destino, quantidade, o gatilho, a declaração e a versão do Edital lidas e a causa
+  que a autorizou. A emissão da apuração MUST NOT gravar movimento; os movimentos que ela gravou antes
+  continuam válidos e contam como reversão feita (FR-6308, FR-6315 e FR-6316 da `155`).
+
+  > **Redação anterior à `155`, preservada:** "Cada reversão MUST registrar origem, destino,
+  > quantidade e a causa que a autorizou." Com ela, o movimento nascia dentro da emissão da apuração
+  > da reservada, na mesma transação, sem que o ato dissesse que ia ceder vaga.
+  >
+  > *Por que mudou:* a orientação do usuário de 11/11/2026 — *"não adote reversão automática"* — e o
+  > achado 02 do estudo da jornada final.
+- **FR-249** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: O Edital MUST declarar **qual espécie de gatilho** a reversão
+  usa — por esgotamento ou por saldo (`D-007`) —, ou que a vaga **passa antes por outras cotas**, na
+  ordem do Edital; o gatilho MUST NOT ser inferido do estado das listas. A terceira resposta MUST NOT
+  mover vaga enquanto a ordem entre cotas não for representada, e a tela MUST dizer essa limitação
+  (FR-6317 e FR-6318 da `155`). As condições das duas espécies são as da FR-6304 e da FR-6305 da
+  `155`, que continuam distintas.
+
+  > **Redação anterior à `155`, preservada:** "O Edital MUST declarar **qual espécie de gatilho** a
+  > reversão usa — por esgotamento ou por saldo (`D-007`) —, e o gatilho MUST NOT ser inferido do
+  > estado das listas."
+  >
+  > *Por que mudou:* três Editais do Cefor (140/2025, 173/2025, 90/2026) mandam passar a vaga entre os
+  > subgrupos de PPIQ antes da ampla, e a reversão direta os contrariaria. A ordem em si tem spec
+  > própria, encaminhada em `doc/encaminhamento-passagem-entre-cotas.md`.
 - **FR-250**: A declaração da espécie MUST ser conteúdo publicado, com elevação de versão
   canônica, caminho de leitura das versões anteriores, presença no documento e entrada no catálogo
   de Retificação.

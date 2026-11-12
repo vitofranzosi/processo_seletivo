@@ -16,23 +16,23 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 ## Phase 1: Setup
 
-- [ ] T001 Preparar a worktree: `uv sync --extra dev`, `.env` copiado do exemplo, `DB_NAME` próprio, e `make test-pg` verde na `main` antes de qualquer mudança. Ver o CLAUDE.md, *Subir o ambiente*.
+- [x] T001 Preparar a worktree: `uv sync --extra dev`, `.env` copiado do exemplo, `DB_NAME` próprio, e `make test-pg` verde na `main` antes de qualquer mudança. Ver o CLAUDE.md, *Subir o ambiente*.
 
 ## Phase 2: Foundational (bloqueia as histórias 2 e 5)
 
-- [ ] T002 [P] Criar `backend/processo_seletivo/convocacao/domain/desfechos_cabiveis.py` com os predicados puros da R-005.
+- [x] T002 [P] Criar `backend/processo_seletivo/convocacao/domain/desfechos_cabiveis.py` com os predicados puros da R-005.
   - Um predicado por guarda: compatibilidade com a espécie da chamada (`DESFECHOS_POR_ESPECIE`), não atendimento prematuro (mesma regra de `prazo.decorrido` e do canal), inércia sem ocupação, inércia sem atestado e inclusão com obrigatório por conferir.
   - Cada um devolve `None` ou `(codigo, frase, a_partir_de)`, com as frases **literais** que `desfechar.py` usa hoje.
   - Mais `cabiveis(...)`, que devolve `(cabem, ainda_nao)` na ordem de `ESPECIES_DE_DESFECHO` (FR-5835 a FR-5837, FR-5839).
   - Mais `exige_ciencia_do_prazo(...)` (R-002) e `admite_inercia(especie_da_chamada)`.
-- [ ] T003 [P] Testes de domínio em `backend/tests/unit/convocacao/test_desfechos_cabiveis.py`, sem banco.
+- [x] T003 [P] Testes de domínio em `backend/tests/unit/convocacao/test_desfechos_cabiveis.py`, sem banco.
   - A tabela espécie da chamada × prazo (sem envio, em curso, sem vencimento, decorrido) × atestado × ocupação × pendências.
   - As frases iguais às das recusas.
   - `exige_ciencia_do_prazo` nos casos da R-002.
-- [ ] T004 Fazer as guardas de `backend/processo_seletivo/convocacao/application/desfechar.py` levantarem `DomainError` a partir dos predicados da T002, sem mudar ordem, código, HTTP nem frase.
+- [x] T004 Fazer as guardas de `backend/processo_seletivo/convocacao/application/desfechar.py` levantarem `DomainError` a partir dos predicados da T002, sem mudar ordem, código, HTTP nem frase.
   - Rodar `backend/tests/integration/convocacao/` e o inventário de recusas antes de seguir.
   - Depende de T002.
-- [ ] T005 [P] Acrescentar `CIENCIA_DO_PRAZO_EM_CURSO = "ciencia_do_prazo_em_curso"` em `backend/processo_seletivo/convocacao/domain/nomes.py`, com o comentário do porquê (D-003).
+- [x] T005 [P] Acrescentar `CIENCIA_DO_PRAZO_EM_CURSO = "ciencia_do_prazo_em_curso"` em `backend/processo_seletivo/convocacao/domain/nomes.py`, com o comentário do porquê (D-003).
 
 ## Phase 3: User Story 1 — o atalho só onde há pendência (P1) 🎯 MVP
 
@@ -40,7 +40,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 **Independent Test**: C11 — Alice sem atalho; Bernardo com pendência e o atalho citando só o pendente; um convocado vencido sem envio com o passo apontando o não atendimento (quickstart §1).
 
-- [ ] T006 [P] [US1] Em `backend/processo_seletivo/convocacao/application/documentos.py`, acrescentar as leituras do data-model, sem consulta nova (R-003, R-006):
+- [x] T006 [P] [US1] Em `backend/processo_seletivo/convocacao/application/documentos.py`, acrescentar as leituras do data-model, sem consulta nova (R-003, R-006):
   - `ItemLido.apresentado_pela_pessoa`: alguma apresentação **da chamada** com arquivo;
   - `LeituraDocumental.houve_apresentacao`;
   - `motivos_do_atalho(*, prazo_decorrido)`;
@@ -48,15 +48,15 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - `fundamento_do_atalho(*, prazo_decorrido)`.
 
   Conferir que as apresentações já vêm no `prefetch` de `leituras_por_chamada`.
-- [ ] T007 [P] [US1] Em `backend/processo_seletivo/convocacao/domain/documentos.py`, criar `fundamento_do_atalho(pendentes, nao_apresentados)`, irmã de `fundamento_das_pendencias`. Ela cita o pendente com o motivo e o não apresentado com "não apresentado no prazo" (FR-5801).
-- [ ] T008 [US1] Em `_documentos_por_linha` de `backend/processo_seletivo/interface/views.py`, levar a cada linha `motivos_do_atalho`, `fundamento_do_atalho` e `aguardando_conferencia`, com `prazo_decorrido` lido pela regra de `documentos.prazo_decorrido` da vigente.
+- [x] T007 [P] [US1] Em `backend/processo_seletivo/convocacao/domain/documentos.py`, criar `fundamento_do_atalho(pendentes, nao_apresentados)`, irmã de `fundamento_das_pendencias`. Ela cita o pendente com o motivo e o não apresentado com "não apresentado no prazo" (FR-5801).
+- [x] T008 [US1] Em `_documentos_por_linha` de `backend/processo_seletivo/interface/views.py`, levar a cada linha `motivos_do_atalho`, `fundamento_do_atalho` e `aguardando_conferencia`, com `prazo_decorrido` lido pela regra de `documentos.prazo_decorrido` da vigente.
   - Medir antes e depois o número de consultas da tela da convocação: não pode subir.
   - Depende de T006 e T007.
-- [ ] T009 [US1] Em `backend/processo_seletivo/interface/templates/interface/convocacao.html`, condicionar o atalho a `linha.documentos.motivos_do_atalho` e pré-preencher com `fundamento_do_atalho` (FR-5800, FR-5801).
+- [x] T009 [US1] Em `backend/processo_seletivo/interface/templates/interface/convocacao.html`, condicionar o atalho a `linha.documentos.motivos_do_atalho` e pré-preencher com `fundamento_do_atalho` (FR-5800, FR-5801).
   - Nos dois formulários de indeferimento, a frase dos aguardando conferência (FR-5802).
   - Atualizar o comentário do template, que diz "só aparece onde há pendência".
-- [ ] T010 [US1] Em `backend/processo_seletivo/interface/conducao_da_convocacao.py`, o passo `VENCIDA` ganha a frase e o caminho da FR-5809 e do UX-535 quando a chamada pede documento e `houve_apresentacao` é falso. O código continua `VENCIDA`, para não mudar a precedência dos passos da `143`.
-- [ ] T011 [US1] Testes em `backend/tests/interface/test_indeferimento_pelas_pendencias.py`: os seis cenários de aceitação da história 1, o caso do só facultativo apresentado e o do aproveitado da inscrição que não conta (D-011). Cobre SC-1900 e SC-1910.
+- [x] T010 [US1] Em `backend/processo_seletivo/interface/conducao_da_convocacao.py`, o passo `VENCIDA` ganha a frase e o caminho da FR-5809 e do UX-535 quando a chamada pede documento e `houve_apresentacao` é falso. O código continua `VENCIDA`, para não mudar a precedência dos passos da `143`.
+- [x] T011 [US1] Testes em `backend/tests/interface/test_indeferimento_pelas_pendencias.py`: os seis cenários de aceitação da história 1, o caso do só facultativo apresentado e o do aproveitado da inscrição que não conta (D-011). Cobre SC-1900 e SC-1910.
 
 ## Phase 4: User Story 2 — indeferir no prazo pede ciência (P1)
 

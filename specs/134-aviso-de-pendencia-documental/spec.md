@@ -206,14 +206,35 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
 
 #### B. O gesto
 
-- **FR-4603**: A tela de condução da convocação de um recorte (Perfil, marco e lista) MUST oferecer o
+- **FR-4603** *(revista pela `157` em 2026-11-11, por decisão do usuário, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  A tela de condução da convocação de um recorte (Perfil, marco e lista) MUST oferecer o
   gesto *"Avisar as pessoas com pendência nesta chamada"* a quem pode conferir os documentos daquele
   Perfil (FR-3595 da `115`), o que inclui quem gere a comissão. Quem não pode MUST receber a recusa de
   inexistente.
+
+  **Acréscimo da `157`.** O mesmo gesto MUST admitir o **recorte de uma pessoa**: *"Pedir aviso para
+  ‹nome›"*, oferecido na página dos documentos da convocação quando a conferência daquela pessoa
+  termina com ao menos uma pendência elegível (FR-6537 da `157`). O recorte individual MUST seguir,
+  sem exceção, as regras desta spec para o gesto em lote — quem pode, as exclusões da FR-4606 à
+  FR-4608, a chave e o estado final da FR-4610, a trava e a idempotência da FR-4611, o limite de um
+  aviso por pessoa, por chamada, por dia, o texto, que compõe todas as pendências elegíveis da pessoa
+  no instante do pedido, e o despacho (FR-6539 e FR-6540 da `157`). MUST NOT haver exceção ao limite
+  diário nem agendamento automático para o dia seguinte. O gesto em lote continua como está, e os
+  dois contam para o mesmo limite. A FR-4604 não muda: registrar, mudar ou desfazer uma pendência
+  continua sem gravar aviso.
+
+  > **Redação anterior à `157`:** a mesma, sem este acréscimo.
 - **FR-4604**: O gesto MUST ser só humano: registrar, mudar ou desfazer uma pendência MUST NOT gravar
   aviso, e nada MUST gravar aviso de pendência por relógio ou por vencimento próximo.
-- **FR-4605**: Antes do gesto, a tela MUST mostrar quantas pessoas o gesto alcançaria e quantas ficam
+- **FR-4605** *(acrescida pela `157` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Antes do gesto, a tela MUST mostrar quantas pessoas o gesto alcançaria e quantas ficam
   de fora, por motivo, lidas da mesma regra que o gesto aplica.
+
+  **Acréscimo da `157`.** No recorte de uma pessoa, a prévia é dizer se o gesto a alcançaria e, se
+  não, o motivo, pela mesma regra; no *"já avisada hoje nesta chamada"*, também a partir de quando um
+  novo pedido poderá ser feito — o dia seguinte, no dia local da instalação (FR-6541 da `157`).
+
+  > **Redação anterior à `157`:** a mesma, sem este acréscimo.
 - **FR-4606**: O gesto MUST alcançar a pessoa cuja convocação **vigente** do recorte, ao mesmo tempo:
   - não tem desfecho;
   - tem a comunicação emitida (o prazo começou a correr);
@@ -272,8 +293,14 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
   nunca se reenvia sozinho (FR-1267 da `066`), limite por minuto, janela de despacho (FR-1283 da
   `066`) e um destinatário por mensagem (FR-1271 da `066`). O gesto MUST NOT enviar dentro da
   requisição (FR-1265 da `066`).
-- **FR-4620**: A trilha MUST registrar o gesto — recorte, autor, instante, quantos avisos e quantas
+- **FR-4620** *(acrescida pela `157` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  A trilha MUST registrar o gesto — recorte, autor, instante, quantos avisos e quantas
   exclusões por motivo —, sem endereço nem nome (FR-1278 da `066`).
+
+  **Acréscimo da `157`.** O gesto do recorte de uma pessoa MUST ficar distinguível do gesto em lote
+  na trilha, e o registro MUST apontar a convocação da pessoa, sem endereço nem nome.
+
+  > **Redação anterior à `157`:** a mesma, sem este acréscimo.
 - **FR-4621**: O despacho MUST registrar na trilha cada resultado de tentativa de um aviso de
   pendência — o aviso, o número da tentativa e o resultado —, sem endereço nem nome (FR-1279 da
   `066`).
@@ -363,6 +390,11 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
 
 - **FR-084 da `010`** — revisada pela `134` em 2026-11-08 (1ª decisão).
 - **FR-3614 da `115`** — revista pela `134` em 2026-11-08.
+
+**Revisões que esta spec recebeu.** A FR-4603, a FR-4605 e a FR-4620 foram revistas pela `157` em
+2026-11-11, por decisão do usuário daquela data, para admitir o recorte de uma pessoa no gesto do
+aviso. A 2ª decisão do usuário de 08/11 — o disparo é gesto da comissão, e não automático — e a
+FR-4604 continuam como estavam.
 
 ---
 

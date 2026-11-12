@@ -385,9 +385,15 @@ horizontal da página; com leitor de tela, a semente, o selo de fictícia e o re
 - **FR-2506**: O painel MUST dizer o que a prévia do sorteio simula e o que não — convocação, aceite,
   desistência, indeferimento, faixa seguinte, encadeamento de marcos, Etapa de habilitação antes do
   sorteio — e MUST NOT afirmar que o certame foi simulado.
-- **FR-2507**: Onde a prévia mostrar o comportamento registrado como pendente de decisão nas DP-1 e DP-2
-  da `095`, o painel MUST descrevê-lo como comportamento atual, na forma da FR-2337 da `095`, e esta
-  feature MUST NOT alterar a regra.
+- **FR-2507** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: Onde a prévia mostrar o comportamento registrado como pendente
+  de decisão na DP-1 da `095`, o painel MUST descrevê-lo como comportamento atual, na forma da FR-2337
+  da `095`, e esta feature MUST NOT alterar a regra. A DP-2 e a reservada sem inscrito estão decididas
+  pela `155` (FR-6304, FR-6332 e FR-6333 da `155`), e a prévia MUST mostrar o que a destinação faria.
+
+  > **Redação anterior à `155`, preservada:** "Onde a prévia mostrar o comportamento registrado como
+  > pendente de decisão nas DP-1 e DP-2 da `095`, o painel MUST descrevê-lo como comportamento atual,
+  > na forma da FR-2337 da `095`, e esta feature MUST NOT alterar a regra."
 - **FR-2508**: A prévia MUST usar o vocabulário da `094` e da `095` — "avançariam", "ocuparia pela
   ampla", "sem ocupante", "cederia" — e "sortear", "sorteado" e "posição sorteada" para o que é do
   sorteio.

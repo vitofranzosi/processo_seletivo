@@ -263,13 +263,21 @@ providências dos marcos. Nenhum dos dois números muda.
 - **FR-4670**: Para cada lista de um marco por pontuação cuja ordem ainda não foi emitida, a derivação
   do andamento MUST saber se alguma inscrição concorre por ela. O critério MUST ser o mesmo que a tela
   da ordenação usa para dizer "ninguém concorreu por este recorte".
-- **FR-4671**: Para lista em que ninguém concorre, a célula da ordem:
-  - MUST continuar *Pendente*, de quem conduz, com o mesmo link de hoje;
+- **FR-4671** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: Para lista em que ninguém concorre, a célula da ordem:
+  - MUST continuar *Pendente*, de quem conduz, e o link MUST levar ao gesto que registra, numa
+    conferência, a ordem vazia e o corte vazio (FR-6328 da `155`);
   - MUST trazer a nota de que ninguém concorre pela lista.
+
+  > **Redação anterior à `155`, preservada:** o primeiro item dizia "MUST continuar *Pendente*, de quem
+  > conduz, com o mesmo link de hoje".
 - **FR-4672**: A providência dessa célula MUST dizer, na própria frase do ato, que ninguém concorre
   pela lista e que emitir declara que ninguém concorreu, em linguagem simples e sem identificador
   interno. MUST NOT dizer que a lista não tem inscritos, que é falso quando as inscrições dela foram
-  eliminadas numa Etapa anterior. O texto exato é do plano.
+  eliminadas numa Etapa anterior. O texto exato é do plano. *(Acrescido pela `155` em 2026-11-11, que
+  vigora com a implementação dela:)* a mesma frase MUST abrir a conferência do gesto da lista vazia, e
+  MUST dizer que a lista entra na publicação do resultado do marco junto das outras (FR-6330 e FR-6331
+  da `155`).
 - **FR-4673**: A providência MUST carregar a informação de lista vazia também como dado, além do texto,
   para que a apresentação possa tratá-la sem ler a frase.
 - **FR-4674**: O agrupamento das providências (a decisão da `127` de uma providência por ato) MUST NOT juntar num mesmo item a ordem
