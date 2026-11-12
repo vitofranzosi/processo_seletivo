@@ -423,12 +423,10 @@ class TestADeclaracaoPelaTela:
 
 def chamar_na_ampla(certame, gestor, prefixo):
     """Chama quem a ampla alcança com a vaga recebida: a chamada lê o movimento (R-005)."""
-    from processo_seletivo.convocacao.application import fluxo
+    from processo_seletivo.convocacao.application import fluxo, selectors
     from tests.fixtures.edital import PROFILE_ID
     from tests.integration.convocacao.test_suplencia import chamar
     from tests.integration.ocupacao.test_concomitancia import apurar
-
-    from processo_seletivo.convocacao.application import selectors
 
     apurar(certame, gestor, chave=f"{prefixo}-ampla-recebe", motivo="Vaga recebida")
     # **Titular ou a primeira da fila, com a espécie que a posição determina.** Supor que a ampla
