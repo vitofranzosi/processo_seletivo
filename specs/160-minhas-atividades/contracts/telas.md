@@ -101,3 +101,24 @@ O bloco de hoje, sem mudança, depois das três seções (FR-6875).
 
 Sem rolagem horizontal. A seção 1 começa na primeira tela. O botão da linha vai para baixo do texto,
 pela regra da folha, sem `nowrap` que alargue o cartão.
+
+## A revisão de UX de 12/11 (FR-6885 a FR-6888)
+
+Prevalece sobre o que estiver acima:
+
+- **Título de "Para fazer agora"**: com uma base só, "· N atos em M Editais · pela presidência" (ou
+  "· pela alocação"), e as linhas sem `span.base-da-atividade`. Com bases misturadas, o título sem a
+  base, e a marca em cada linha.
+- **Filtro**, com mais de um Edital: `form.filtro-de-edital` (GET, para a própria página), com
+  `label[for=filtro-edital]` "Edital", `select#filtro-edital[name=edital]` — a primeira opção
+  "Todos os Editais (N)", as demais "Edital N/AAAA · K atos" ou "· só em espera" — e o botão
+  `.botao.secundario` "Filtrar". Valor que não serve mostra tudo, com status 200.
+- **Nota de cobertura**: `p.cobertura-da-pagina` com a frase de `atividades.COBERTURA`, e
+  `details.onde-encontrar` fechado, com o `summary` "Onde encontro as outras operações?" e um item por
+  destino (`atividades.ONDE_ENCONTRAR`); só Processos Seletivos é link. Ao Gestor, mais um item, o de
+  `COBERTURA_DO_GESTOR`.
+- **Avaliação sem atribuição**: o `h2` "Suas Etapas de avaliação · nenhuma", sem `p.vazio`. A quem
+  preside, `p.nota-da-secao`.
+- **Comissões**: `details.comissoes-da-pessoa`, com o `summary` "Comissões que você integra · N",
+  fechado, e `open` só quando a página não tem nada a fazer, nada em espera, nenhum não lido e
+  nenhuma Etapa. Os caminhos da presidência em `span.links-da-comissao`, separados por "·".

@@ -318,7 +318,8 @@ consultas da Lista continua o mesmo.
   na página (sozinha ou dentro de um grupo), nos Editais que a página lê, exceto as famílias que a
   nota de cobertura nomeia como fora.
 - **FR-6861**: Toda linha MUST dizer **por que é da pessoa**: "Presidência" ou "Alocação". A marca é
-  texto, e não só cor nem ícone.
+  texto, e não só cor nem ícone. *Emendado pela FR-6885*: com uma base só na página, ela é dita uma
+  vez, no título da seção; a espera não tem base.
 - **FR-6862**: Nos Editais que a pessoa preside, o que é dela só por papel na unidade (publicar o
   resultado, julgar recursos) MUST NOT entrar em "Para fazer agora", e a nota de cobertura MUST
   dizê-lo (D-004).
@@ -360,7 +361,8 @@ consultas da Lista continua o mesmo.
 
 - **FR-6871**: A página MUST ter uma nota de cobertura que diz o que ela reúne (os atos da presidência
   nos Editais que a pessoa preside, a avaliação e a conferência pelas alocações) e o que fica fora, com
-  onde está cada coisa.
+  onde está cada coisa. A forma é uma frase à vista e uma lista recolhida, "Onde encontro as outras
+  operações?", por destino (revisão de UX de 12/11/2026); o conteúdo é o mesmo.
 - **FR-6872**: A nota MUST nomear como fora, enquanto não entrarem: a formalização, que tem lista
   própria (7ª decisão do estudo); publicar o resultado e julgar recursos; os atos de
   Edital e de Retificação, que estão na Lista; a publicação das inscrições e das convocações; os avisos
@@ -377,10 +379,11 @@ consultas da Lista continua o mesmo.
 - **FR-6875**: A página MUST ter três seções, nesta ordem: "Para fazer agora", aberta; "Em espera nos
   seus Editais", recolhida; e "Suas Etapas de avaliação", com os cartões de hoje (medidor, "Abrir" e o
   estado de alocação sem distribuição). O bloco "Comissões que você integra" MUST continuar, depois
-  das três.
+  das três, recolhido (FR-6888).
 - **FR-6876**: Os estados vazios MUST falar com quem lê: quem preside e não avalia lê que presidir não
   atribui avaliação; quem não tem papel, vínculo nem alocação lê a orientação de hoje. O texto da
-  FR-2827 da `104` MUST ser revisto para dizer o que a página passa a cobrir.
+  FR-2827 da `104` MUST ser revisto para dizer o que a página passa a cobrir. A forma da seção vazia
+  da avaliação é a da FR-6887.
 
 #### H. O custo
 
@@ -413,6 +416,27 @@ consultas da Lista continua o mesmo.
   mudar as existentes.
 - **FR-6884**: A página MUST NOT gravar nada: nem tarefa, nem estado, nem marca de visto. Ela MUST NOT
   conceder nem verificar permissão nova: o link leva à tela do ato, que verifica pela porta de sempre.
+
+#### K. A revisão de UX de 12/11/2026
+
+O usuário trouxe dois feedbacks de UX depois das capturas dos cenários de treinamento e pediu as
+melhorias julgadas certas. A avaliação está na sessão que pediu a implementação; o que procedeu:
+
+- **FR-6885**: A marca de base MUST aparecer em cada linha **só quando a página mistura bases**.
+  Com uma base só, ela MUST ser dita uma vez, no título da seção ("Para fazer agora · 20 atos em 11
+  Editais · pela presidência") (D-012). A espera MUST NOT ter marca de base.
+- **FR-6886**: A página MUST oferecer um filtro por Edital, por formulário GET e sem script, com o
+  rótulo no campo, quando houver mais de um Edital. A opção padrão é "Todos os Editais (N)", e cada
+  opção diz quantos atos o Edital tem em "Para fazer". O filtro MUST restringir "Para fazer" e "Em
+  espera", e o grupo entre Editais MUST mostrar só o Edital escolhido. Valor inválido, ou de Edital
+  que não está na página, MUST mostrar tudo, sem recusa. O filtro MUST NOT mudar a derivação nem a
+  regra de "sua" (D-011).
+- **FR-6887**: Sem atribuição, a seção da avaliação MUST ser só o título, "Suas Etapas de
+  avaliação · nenhuma", sem quadro de estado vazio. A quem preside, MUST vir uma linha discreta:
+  presidir não atribui avaliação, e a alocação dos membros é em Alocação por Etapa.
+- **FR-6888**: "Comissões que você integra · N" MUST ficar recolhido, e MUST abrir sozinho só quando
+  é o único conteúdo da página (nada a fazer, nada em espera, nenhum Edital não lido, nenhuma
+  Etapa). Os caminhos da presidência MUST ser links de texto na linha do Processo.
 
 ### Requisitos de experiência
 
@@ -554,3 +578,18 @@ mostra. Reproduzir o limite fora da derivação exigiria ler o resumo de cada Et
 a D-003. A linha leva à Mesa e diz o número dela, o mesmo do cartão e da faixa da `104`. O teste de
 coerência compara a Etapa e o link sempre, e o número onde a Etapa não tem inscrição sem avaliador
 suficiente.
+
+### D-011 — Filtrar por Edital, e não agrupar por Edital
+
+A revisão de UX pediu para ver o trabalho por Edital. Agrupar por Edital desfaria o mesmo ato entre
+Editais (a D-006): as sete "ordens de lista vazia" voltariam a ser sete linhas, que era o achado que
+escondia a convocação. E somaria onze cabeçalhos para menos de dois atos por Edital. Um filtro dá a
+mesma pergunta — o que falta neste Edital — sem desfazer o agrupamento, e sem regra nova: é só
+apresentação, e um valor que não serve mostra tudo, sem recusa que diga que o Edital existe.
+
+### D-012 — A marca de base só quando distingue
+
+Com uma base só, "Presidência" em vinte linhas dizia vinte vezes o que o título diz uma. A FR-6861
+existia para que a pessoa soubesse por que a linha é dela; com bases misturadas, a marca continua em
+cada linha, e é aí que ela distingue.
+

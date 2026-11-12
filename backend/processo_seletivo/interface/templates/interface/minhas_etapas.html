@@ -20,7 +20,22 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
 {% endif %}
 
 <section aria-labelledby="para-fazer-titulo" class="secao-de-atividades">
-  <h2 id="para-fazer-titulo">Para fazer agora{% if atividades.para_fazer %} <span class="contagem-da-secao">· {{ atividades.quantos_atos }} ato{{ atividades.quantos_atos|pluralize }} em {{ atividades.quantos_editais }} Edita{{ atividades.quantos_editais|pluralize:"l,is" }}</span>{% endif %}</h2>
+  <h2 id="para-fazer-titulo">Para fazer agora{% if atividades.para_fazer %} <span class="contagem-da-secao">· {{ atividades.quantos_atos }} ato{{ atividades.quantos_atos|pluralize }} em {{ atividades.quantos_editais }} Edita{{ atividades.quantos_editais|pluralize:"l,is" }}{% if atividades.base_no_titulo %} · {{ atividades.base_no_titulo }}{% endif %}</span>{% endif %}</h2>
+  {% if opcoes_de_edital|length > 1 %}
+  {% comment %} Filtrar, e não agrupar por Edital (D-011): o agrupamento por Edital desfaria o mesmo
+     ato entre Editais (as sete ordens de lista vazia voltariam a ser sete linhas) e poria onze
+     cabeçalhos para menos de dois atos cada. Formulário GET, sem script: a política de conteúdo
+     recusaria o automático. Só apresentação: valor inválido mostra tudo (FR-6886). {% endcomment %}
+  <form method="get" action="{% url 'interface:minhas-etapas' %}" class="filtro-de-edital">
+    <label for="filtro-edital">Edital</label>
+    <select id="filtro-edital" name="edital">
+      <option value="">Todos os Editais ({{ opcoes_de_edital|length }})</option>
+      {% for opcao in opcoes_de_edital %}<option value="{{ opcao.edital.id }}"{% if edital_escolhido == opcao.edital.id|stringformat:"s" %} selected{% endif %}>Edital {{ opcao.edital.number }}/{{ opcao.edital.year }} · {% if opcao.atos %}{{ opcao.atos }} ato{{ opcao.atos|pluralize }}{% else %}só em espera{% endif %}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="botao secundario">Filtrar</button>
+  </form>
+  {% endif %}
   {% if atividades.para_fazer %}
   <ul class="providencias">
     {% for grupo in atividades.para_fazer %}{% include "interface/_atividade.html" %}{% endfor %}
@@ -28,7 +43,16 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
   {% elif not atividades.nao_lidos %}
   <p class="vazio" role="status">{{ nada_para_fazer }}</p>
   {% endif %}
-  <p class="cobertura-da-pagina">{{ cobertura }}{% if atividades.gestor %} {{ cobertura_do_gestor }}{% endif %}</p>
+  {% comment %} Uma frase à vista e o resto recolhido (FR-6871, FR-6872): o mesmo conteúdo, que
+     num parágrafo de seis linhas ninguém lia (revisão de UX de 12/11). {% endcomment %}
+  <p class="cobertura-da-pagina">{{ cobertura }}</p>
+  <details class="onde-encontrar">
+    <summary>Onde encontro as outras operações?</summary>
+    <ul>
+      {% for oque, preposicao, destino, complemento, rota in onde_encontrar %}<li>{{ oque }}: {{ preposicao }} {% if rota %}<a href="{% url rota %}">{{ destino }}</a>{% else %}{{ destino }}{% endif %}{{ complemento }}.</li>
+      {% endfor %}{% if atividades.gestor %}<li>{{ cobertura_do_gestor }}</li>{% endif %}
+    </ul>
+  </details>
 </section>
 
 {% if atividades.em_espera %}
@@ -45,7 +69,7 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
 {% endif %}
 
 <section aria-labelledby="avaliacao-titulo" class="secao-de-atividades">
-<h2 id="avaliacao-titulo">Suas Etapas de avaliação{% if atribuicoes %} <span class="contagem-da-secao">· {{ atribuicoes|length }}</span>{% endif %}</h2>
+<h2 id="avaliacao-titulo">Suas Etapas de avaliação <span class="contagem-da-secao">· {% if atribuicoes %}{{ atribuicoes|length }}{% else %}nenhuma{% endif %}</span></h2>
 {% if atribuicoes %}
 {% if etapas_abertas %}
 <ul class="comissao" aria-label="Etapas com avaliação pendente">
@@ -63,25 +87,23 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
   </ul>
 </details>
 {% endif %}
-{% else %}
-{% comment %} §26 da 011: estado válido, e não erro. Quem não tem atribuição não vê Etapa alheia
-   bloqueada — ela simplesmente não pertence a esta área. A frase fala com quem lê (160, FR-6876):
-   presidir não atribui avaliação, e o que é da presidência está em "Para fazer agora", acima. {% endcomment %}
-{% if atividades.preside %}
-<p class="vazio" role="status">Você não tem Etapa de avaliação atribuída — presidir uma comissão
-  não atribui trabalho de avaliação. Para organizar o trabalho da sua comissão, use
-  <strong>Gerir comissão</strong> e <strong>Alocação por Etapa</strong>, abaixo.</p>
-{% else %}
-<p class="vazio" role="status">Você não tem Etapa de avaliação atribuída. Os atos de Edital e de
-  Retificação estão em <a href="{% url 'interface:lista' %}">Processos Seletivos</a>.</p>
-{% endif %}
+{% elif atividades.preside %}
+{% comment %} §26 da 011: estado válido, e não erro. Sem atribuição a seção é o título — "nenhuma" —,
+   sem o quadro de estado vazio, que pesava como aviso (FR-6887). A quem preside, uma linha:
+   presidir não atribui avaliação, e o caminho para alocar. Aos demais, nada a mais. {% endcomment %}
+<p class="nota-da-secao">Presidir não atribui avaliação; a alocação dos membros é em Alocação por
+  Etapa, nas suas comissões.</p>
 {% endif %}
 </section>
 
 {% if vinculos %}
-<section aria-labelledby="comissoes-titulo" class="pendencias">
-  <h2 id="comissoes-titulo">Comissões que você integra</h2>
-  <ul>
+{% comment %} Recolhidas (FR-6888): a lista de comissões é caminho, e não trabalho, e onze linhas com
+   três botões cada empurravam a página. Abertas só quando são o único conteúdo — nada a fazer, nada
+   em espera, nenhuma Etapa. Os caminhos da presidência são links de texto na linha do Processo.
+   Quem preside precisa de rota até a própria comissão (achado 24 do estudo de 11/11/2026). {% endcomment %}
+<details class="comissoes-da-pessoa"{% if atividades.vazia and not atribuicoes %} open{% endif %}>
+  <summary>Comissões que você integra · {{ vinculos|length }}</summary>
+  <ul class="lista-de-comissoes">
     {% for vinculo in vinculos %}
     <li>
       <strong>{{ vinculo.processo.title }}</strong>
@@ -89,19 +111,12 @@ link dela. O que ela não cobre, a nota diz, para que "nada para fazer" não vir
       <span class="situacao s-{{ vinculo.funcao }}">
         {% if vinculo.funcao == "PRESIDENTE" %}Presidente{% else %}Membro{% endif %}</span>
       {% if vinculo.funcao == "PRESIDENTE" %}
-      {% comment %} Quem preside precisa de rota até a própria comissão: o acesso existia desde
-         sempre, e o caminho não — a pessoa tinha de achar o Processo na lista geral. E o trabalho
-         da presidência está nos Editais (classificar, cortar, convocar, conferir), e não só na
-         comissão: sem o Processo aqui, a entrada recomendada não levava a ele (achado 24 do estudo
-         de 11/11/2026). {% endcomment %}
-      <a class="acao" href="{% url 'interface:processo-detalhe' vinculo.processo_id %}">Abrir o Processo e os Editais</a>
-      <a class="acao" href="{% url 'interface:comissao' vinculo.processo_id %}">Gerir comissão</a>
-      <a class="acao" href="{% url 'interface:alocacoes' vinculo.processo_id %}">Alocação por Etapa</a>
+      <span class="links-da-comissao"><a href="{% url 'interface:processo-detalhe' vinculo.processo_id %}">Abrir o Processo e os Editais</a> · <a href="{% url 'interface:comissao' vinculo.processo_id %}">Gerir comissão</a> · <a href="{% url 'interface:alocacoes' vinculo.processo_id %}">Alocação por Etapa</a></span>
       {% endif %}
     </li>
     {% endfor %}
   </ul>
-</section>
+</details>
 {% endif %}
 
 {% if sem_papel_nem_atribuicao %}

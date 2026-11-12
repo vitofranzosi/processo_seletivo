@@ -182,3 +182,59 @@ def test_a_avaliacao_sai_da_carga_com_a_frase_do_andamento_e_o_numero_da_mesa():
     assert item.url == f"/gestao/minhas-etapas/{ed.id}/{etapa}"
     assert linhas[0].base == at.ALOCACAO
     assert linhas[0].fase == c.NOMES[c.AVALIACAO]
+
+
+# --- a marca só quando distingue (FR-6885) e o filtro por Edital (FR-6886) ------------------------
+
+
+def test_com_uma_base_so_a_marca_vai_para_o_titulo():
+    um = edital(1)
+    so_presidencia = at.Atividades(para_fazer=at.agrupar_entre_editais([linha(prov("Emitir"), um)]))
+    assert so_presidencia.base_unica == at.PRESIDENCIA
+    assert so_presidencia.base_no_titulo == "pela presidência"
+
+    misturada = at.Atividades(
+        para_fazer=at.agrupar_entre_editais(
+            [linha(prov("Emitir"), um), linha(prov("Conferir"), um, base=at.ALOCACAO)]
+        )
+    )
+    assert misturada.base_unica == ""
+    assert misturada.base_no_titulo == ""
+
+
+def atividades_em_dois_editais():
+    um, dois = edital(1), edital(2)
+    vazia = prov(a.ATO_DA_ORDEM_VAZIA, lista_vazia=True)
+    espera = prov("Publicar", situacao=a.AGUARDA, sua=False, razao="até 17/11/2026")
+    return (
+        at.Atividades(
+            para_fazer=at.agrupar_entre_editais(
+                [linha(vazia, um), linha(vazia, dois), linha(prov("Emitir o corte"), dois)]
+            ),
+            em_espera=at.agrupar_entre_editais([linha(espera, um, base=at.SEM_BASE)], espera=True),
+        ),
+        um,
+        dois,
+    )
+
+
+def test_o_filtro_mostra_so_o_edital_escolhido_e_o_grupo_so_com_ele():
+    atividades, um, dois = atividades_em_dois_editais()
+    filtrada, opcoes, escolhido = at.filtrar(atividades, str(dois.id))
+
+    assert escolhido == str(dois.id)
+    assert [(o.edital.number, o.atos) for o in opcoes] == [("1", 1), ("2", 2)]
+    assert [(g.ato, g.quantos_editais) for g in filtrada.para_fazer] == [
+        (a.ATO_DA_ORDEM_VAZIA, 1),
+        ("Emitir o corte", 1),
+    ]
+    assert filtrada.em_espera == []
+
+
+def test_valor_invalido_ou_de_edital_alheio_mostra_tudo():
+    atividades, _, _ = atividades_em_dois_editais()
+    for valor in ("", None, "nao-e-uuid", str(uuid.uuid4())):
+        filtrada, opcoes, escolhido = at.filtrar(atividades, valor)
+        assert filtrada is atividades
+        assert escolhido == ""
+        assert len(opcoes) == 2

@@ -64,7 +64,10 @@ def test_a_presidencia_ve_os_atos_dela_com_a_base_e_o_link(client, base):
     assert atividades.para_fazer, "a presidência do P1 tem a distribuição em aberto"
     assert {grupo.base for grupo in atividades.para_fazer} == {at.PRESIDENCIA}
     secao = secao_para_fazer(html)
-    assert 'class="base-da-atividade">Presidência<' in secao
+    # Uma base só na página: dita uma vez, no título, e não em cada linha (FR-6885).
+    assert atividades.base_unica == at.PRESIDENCIA
+    assert "· pela presidência</span>" in secao
+    assert "base-da-atividade" not in secao
     primeira = atividades.para_fazer[0]
     assert f'href="{primeira.providencia.url}"' in secao
     assert f"Edital {certame['edital'].number}/{certame['edital'].year}" in secao
@@ -140,7 +143,8 @@ def test_a_presidente_que_publica_nao_ve_publicar_o_resultado(client, base):
     suas = [item for item in andamento.nivel_1.itens if item.sua]
     assert any(item.responsavel == a.PUBLICA for item in suas), "o Centro diria sua a publicação"
     assert not any(grupo.providencia.responsavel == a.PUBLICA for grupo in atividades.para_fazer)
-    assert "publicar o resultado" in at.COBERTURA
+    onde = html.split('<details class="onde-encontrar">', 1)[1].split("</details>", 1)[0]
+    assert "Publicar o resultado" in onde
     assert at.COBERTURA in html
 
 
@@ -359,3 +363,83 @@ def test_as_etapas_concluidas_ou_sem_inscricao_ficam_recolhidas(client, base):
         assert '<details class="etapas-recolhidas">' in html
         assert f"Concluídas ou sem inscrição distribuída · {len(recolhidas)}" in html
         assert '<details class="etapas-recolhidas" open' not in html
+
+
+# --- a revisão de UX de 12/11: base, filtro, nota, avaliação vazia e comissões ---------------
+
+
+def test_com_bases_misturadas_cada_linha_diz_a_sua(client, base):
+    from tests.fixtures.comissao import alocar_em
+    from tests.fixtures.mesa import distribuir_para
+
+    gestor = base[0]
+    certame = certame_p1(*base, distribuidas=0)
+    alocar_em(
+        gestor,
+        certame["processo"],
+        certame["membros"]["maria"],
+        certame["edital"],
+        certame["etapa"],
+    )
+    distribuir_para(certame, gestor, ["maria"], certame["inscricoes"][:1], chave="160-misturada")
+    identificar(client, "maria", [])
+    atividades, html = abrir(client)
+
+    assert {g.base for g in atividades.para_fazer} == {at.PRESIDENCIA, at.ALOCACAO}
+    assert atividades.base_no_titulo == ""
+    secao = secao_para_fazer(html)
+    assert 'class="base-da-atividade">Presidência<' in secao
+    assert 'class="base-da-atividade">Alocação<' in secao
+
+
+def test_o_filtro_com_valor_invalido_mostra_tudo_e_nao_recusa(client, base):
+    certame_p1(*base)
+    identificar(client, "maria", [])
+    tudo, _ = abrir(client)
+    for valor in ("nao-e-uuid", "00000000-0000-0000-0000-000000000001"):
+        resposta = client.get(reverse("interface:minhas-etapas"), {"edital": valor})
+        assert resposta.status_code == 200
+        assert [g.ato for g in resposta.context["atividades"].para_fazer] == atos(tudo)
+        assert resposta.context["edital_escolhido"] == ""
+
+
+def test_a_nota_e_uma_frase_e_o_resto_fica_em_onde_encontro(client, base):
+    certame_s1(*base)
+    identificar(client, "carlos", ["gestor"])
+    _, html = abrir(client)
+
+    assert f'<p class="cobertura-da-pagina">{at.COBERTURA}</p>' in html
+    onde = html.split('<details class="onde-encontrar">', 1)[1].split("</details>", 1)[0]
+    assert "<summary>Onde encontro as outras operações?</summary>" in onde
+    for oque, _prep, destino, _resto, _rota in at.ONDE_ENCONTRAR:
+        assert oque in onde and destino in onde
+    assert at.COBERTURA_DO_GESTOR in onde
+
+
+def test_sem_atribuicao_a_avaliacao_e_uma_linha(client, base):
+    certame_s1(*base)
+    identificar(client, "maria", [])
+    _, html = abrir(client)
+    avaliacao = html.split('id="avaliacao-titulo"', 1)[1].split("</section>", 1)[0]
+    assert "· nenhuma</span>" in avaliacao
+    assert "Presidir não atribui avaliação" in avaliacao
+    assert 'class="vazio"' not in avaliacao
+
+
+def test_as_comissoes_ficam_recolhidas_e_abrem_quando_sao_o_unico_conteudo(client, base):
+    from processo_seletivo.comissoes.domain.funcoes import Funcao
+    from tests.fixtures.comissao import constituir
+
+    certame = certame_p1(*base)
+    identificar(client, "maria", [])
+    _, com_trabalho = abrir(client)
+    assert '<details class="comissoes-da-pessoa">' in com_trabalho
+    assert "<summary>Comissões que você integra · 1</summary>" in com_trabalho
+    assert 'class="links-da-comissao"' in com_trabalho
+
+    # Quem só integra a comissão, sem alocação: as comissões são o único conteúdo, e vêm abertas.
+    constituir(base[0], certame["processo"], [("lia", Funcao.MEMBRO)], prefixo="160-lia")
+    identificar(client, "lia", [])
+    atividades, sem_nada = abrir(client)
+    assert atividades.vazia
+    assert '<details class="comissoes-da-pessoa" open>' in sem_nada

@@ -97,3 +97,63 @@
   font-weight: 600;
   color: var(--verde-texto);
 }
+
+/* A revisão de UX de 12/11 (160): o filtro por Edital, a nota com o "onde encontro", a avaliação
+   vazia numa linha e as comissões recolhidas, com os caminhos da presidência como links de texto. */
+.filtro-de-edital {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: 0 0 .75rem;
+}
+
+.filtro-de-edital select {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.onde-encontrar {
+  margin: 0 0 .5rem;
+  font-size: .875rem;
+}
+
+.onde-encontrar summary {
+  cursor: pointer;
+  color: var(--verde-texto);
+}
+
+.onde-encontrar ul {
+  margin: .25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.nota-da-secao {
+  margin: 0 0 .75rem;
+  color: var(--texto-fraco);
+  font-size: .875rem;
+}
+
+.comissoes-da-pessoa {
+  margin: 0 0 1.25rem;
+}
+
+.comissoes-da-pessoa summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lista-de-comissoes {
+  margin: .5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.lista-de-comissoes li {
+  margin: 0 0 .35rem;
+  overflow-wrap: anywhere;
+}
+
+.links-da-comissao {
+  display: inline-block;
+  font-size: .875rem;
+}

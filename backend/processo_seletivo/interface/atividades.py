@@ -28,6 +28,8 @@ from processo_seletivo.interface import conceitos as c
 from processo_seletivo.interface import providencias as p
 
 PRESIDENCIA, ALOCACAO = "Presidência", "Alocação"
+#: A base dita uma vez, no título da seção, quando todas as linhas têm a mesma (FR-6885).
+NO_TITULO = {PRESIDENCIA: "pela presidência", ALOCACAO: "pela alocação"}
 #: A linha que espera: não é ato de ninguém agora, e por isso não diz por que seria da pessoa.
 SEM_BASE = ""
 
@@ -38,15 +40,33 @@ SEM_BASE = ""
 RESPONSAVEIS_DA_PRESIDENCIA = frozenset({a.CONDUZ, a.CONFERE})
 FORA_DA_PAGINA = frozenset({a.FORMALIZACAO, a.AVALIAR, a.RECURSO})
 
-#: A nota de cobertura (FR-6871, FR-6872): o que a página reúne, o que fica fora e onde está.
-#: "Nada para fazer agora" não pode virar "você não tem nada a fazer no GPS".
+#: A nota de cobertura (FR-6871, FR-6872): uma frase sempre à vista, e o resto num `details`
+#: (revisão de UX de 12/11). O conteúdo é o mesmo de antes; a forma deixou de ser um parágrafo de
+#: seis linhas que ninguém lia. "Nada para fazer agora" não pode virar "nada no GPS".
 COBERTURA = (
-    "Esta página reúne os atos da presidência nos Editais que você preside, a avaliação e a "
-    "conferência de documentos a que você foi alocado. Ficam fora, e estão em outro lugar: a "
-    "formalização, em Formalização, na barra; os atos de Edital e de Retificação e os recursos a "
-    "julgar, em Processos Seletivos; publicar o resultado, a publicação das inscrições e das "
-    "convocações, os avisos aos candidatos, o Requerimento de Matrícula e o encerramento, no "
-    "Centro de Controle de cada Edital."
+    "Aqui estão os atos da sua presidência e das suas alocações. Nenhuma linha aqui não quer dizer "
+    "que o Edital não tenha outras pendências."
+)
+#: "Onde encontro as outras operações?": o quê, e onde — `(o quê, preposição, destino, complemento,
+#: rota)`. Só Processos Seletivos tem link: a Formalização é do setor, e quem preside pode não a
+#: abrir; o Centro de Controle é de cada Edital, e não tem rota única.
+ONDE_ENCONTRAR = (
+    ("A formalização", "em", "Formalização", ", na barra", ""),
+    (
+        "Os atos de Edital e de Retificação e os recursos a julgar",
+        "em",
+        "Processos Seletivos",
+        "",
+        "interface:lista",
+    ),
+    (
+        "Publicar o resultado, a publicação das inscrições e das convocações, os avisos aos "
+        "candidatos, o Requerimento de Matrícula e o encerramento",
+        "no",
+        "Centro de Controle",
+        " de cada Edital",
+        "",
+    ),
 )
 #: Para o Gestor, que pode intervir em toda comissão e não vê a condução alheia como sua (D-002).
 COBERTURA_DO_GESTOR = (
@@ -156,6 +176,79 @@ class Atividades:
     @property
     def quantas_esperas(self):
         return len(self.em_espera)
+
+    @property
+    def base_unica(self):
+        """A base de todas as linhas, quando é uma só; vazia quando a página mistura bases.
+
+        **A marca só quando distingue** (FR-6885): com uma base só, "Presidência" em toda linha
+        repetia vinte vezes o que o título diz uma.
+        """
+        bases = {grupo.base for grupo in self.para_fazer}
+        return bases.pop() if len(bases) == 1 else ""
+
+    @property
+    def base_no_titulo(self):
+        return NO_TITULO.get(self.base_unica, "")
+
+    @property
+    def vazia(self):
+        """Sem nada a fazer, a esperar, a avisar: a página é só as comissões (FR-6888)."""
+        return not (self.para_fazer or self.em_espera or self.nao_lidos)
+
+
+@dataclass
+class Opcao:
+    """Um Edital no filtro (FR-6886): o Edital e quantos atos dele estão em "Para fazer"."""
+
+    edital: object
+    atos: int
+
+
+def _so_do_edital(grupos, edital_id):
+    saida = []
+    for grupo in grupos:
+        linhas = [linha for linha in grupo.linhas if str(linha.edital.id) == edital_id]
+        if linhas:
+            saida.append(Grupo(linhas))
+    return saida
+
+
+def filtrar(atividades, edital_id):
+    """`(atividades do Edital escolhido, opções, escolhido)` — só apresentação (FR-6886, D-011).
+
+    **Valor inválido, ou de Edital que não está na página, mostra tudo**, e não recusa: o filtro não
+    é porta, e um 404 novo diria que o Edital existe (o inventário de negativas da `033`). A
+    derivação e a regra de "sua" não mudam; o grupo entre Editais mostra só o Edital escolhido.
+    """
+    editais, atos = {}, {}
+    for grupo in [*atividades.para_fazer, *atividades.em_espera]:
+        for linha in grupo.linhas:
+            editais.setdefault(str(linha.edital.id), linha.edital)
+    for grupo in atividades.para_fazer:
+        for linha in grupo.linhas:
+            chave = str(linha.edital.id)
+            atos[chave] = atos.get(chave, 0) + 1
+    opcoes = [
+        Opcao(edital, atos.get(chave, 0))
+        for chave, edital in sorted(
+            editais.items(), key=lambda par: (par[1].year, par[1].number, par[0])
+        )
+    ]
+    escolhido = str(edital_id or "")
+    if escolhido not in editais:
+        return atividades, opcoes, ""
+    return (
+        Atividades(
+            para_fazer=_so_do_edital(atividades.para_fazer, escolhido),
+            em_espera=_so_do_edital(atividades.em_espera, escolhido),
+            nao_lidos=atividades.nao_lidos,
+            preside=atividades.preside,
+            gestor=atividades.gestor,
+        ),
+        opcoes,
+        escolhido,
+    )
 
 
 # ---------------------------------------------------------------------------------------------

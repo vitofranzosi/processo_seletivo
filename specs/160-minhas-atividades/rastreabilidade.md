@@ -9,7 +9,7 @@ Os caminhos são relativos a `backend/tests/`. Abreviações:
 - `lista` = `interface/test_organizacao_da_lista.py` (a nota da faixa)
 - `ver` = [verificacao.md](verificacao.md) (o que se conferiu fora da suíte)
 
-A faixa abre em **FR-6851**, **SC-2271** e **UX-711**, e gasta até FR-6884, SC-2281 e UX-715.
+A faixa abre em **FR-6851**, **SC-2271** e **UX-711**, e gasta até FR-6888, SC-2281 e UX-715.
 
 | Requisito | Tarefa | Teste |
 |---|---|---|
@@ -33,7 +33,7 @@ A faixa abre em **FR-6851**, **SC-2271** e **UX-711**, e gasta até FR-6884, SC-
 | FR-6868 | T021, T022 | `uni::test_a_espera_entra_qualquer_que_seja_o_papel_seguinte_menos_a_formalizacao`, `tela::test_a_espera_fica_recolhida_com_a_origem_da_data_e_sem_atraso` |
 | FR-6869 | T021 | `tela::test_a_espera_fica_recolhida_com_a_origem_da_data_e_sem_atraso` |
 | FR-6870 | T003, T021 | `uni::test_as_esperas_juntam_pela_razao_inteira_com_a_data` |
-| FR-6871 | T012 | `tela::test_a_presidencia_ve_os_atos_dela_com_a_base_e_o_link` (a nota na página) |
+| FR-6871 | T012 | `tela::test_a_nota_e_uma_frase_e_o_resto_fica_em_onde_encontro` |
 | FR-6872 | T012, T020 | `tela::test_a_presidente_que_publica_nao_ve_publicar_o_resultado`, `tela::test_o_gestor_sem_presidencia_nao_ve_conducao_e_a_derivacao_nao_roda` |
 | FR-6873 | T014 | `tela::test_o_membro_sem_pendencia_le_que_nada_depende_dele_no_que_a_pagina_cobre` |
 | FR-6874 | T006, T008 | `tela::test_o_edital_que_nao_pode_ser_lido_e_dito_e_nao_vira_nada_a_fazer` |
@@ -47,6 +47,10 @@ A faixa abre em **FR-6851**, **SC-2271** e **UX-711**, e gasta até FR-6884, SC-
 | FR-6882 | T029 | `performance/test_trabalho_em_escala.py`, `performance/test_lista_em_escala.py`, sem mudar os tetos |
 | FR-6883 | T012 | os títulos das seções no modelo; `ver` |
 | FR-6884 | T005, T006 | a leitura não grava (`atividades.py` não tem escrita); `coe::*` (o link leva à tela que verifica) |
+| FR-6885 | revisão de UX | `uni::test_com_uma_base_so_a_marca_vai_para_o_titulo`, `tela::test_a_presidencia_ve_os_atos_dela_com_a_base_e_o_link`, `tela::test_com_bases_misturadas_cada_linha_diz_a_sua`, `tela::test_a_espera_fica_recolhida_com_a_origem_da_data_e_sem_atraso` |
+| FR-6886 | revisão de UX | `uni::test_o_filtro_mostra_so_o_edital_escolhido_e_o_grupo_so_com_ele`, `uni::test_valor_invalido_ou_de_edital_alheio_mostra_tudo`, `tela::test_o_filtro_com_valor_invalido_mostra_tudo_e_nao_recusa` |
+| FR-6887 | revisão de UX | `tela::test_sem_atribuicao_a_avaliacao_e_uma_linha`; `authorization/test_acesso_a_etapa.py`, `acceptance/test_comissao_e_alocacao.py` |
+| FR-6888 | revisão de UX | `tela::test_as_comissoes_ficam_recolhidas_e_abrem_quando_sao_o_unico_conteudo` |
 | SC-2271 | T007, T016 | `coe::*` |
 | SC-2272 | T015 | `esc::test_o_membro_paga_o_mesmo_com_uma_e_com_onze_comissoes` |
 | SC-2273 | T018 | `tela::test_o_gestor_que_preside_ve_os_atos_do_processo_dele`, `tela::test_o_gestor_sem_presidencia_nao_ve_conducao_e_a_derivacao_nao_roda` |

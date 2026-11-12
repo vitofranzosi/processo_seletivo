@@ -94,3 +94,19 @@ aparecia duas vezes no estado vazio, que ocupava cinco linhas a 1280 px.
 Depois das correções: `make lint` e `make check` passam; `tests/interface`, `tests/unit/interface`,
 os testes de desempenho da página, do Centro, da faixa, da Lista e da comissão, e os guardiões de
 citação e do README deram 6288 passados e 1 pulado, contra PostgreSQL.
+
+## A revisão de UX de 12/11 (FR-6885 a FR-6888)
+
+O usuário trouxe dois feedbacks de UX e pediu as melhorias julgadas certas; a sessão que pediu a
+implementação os avaliou. Entraram:
+- a marca de base só quando distingue, e no título quando a base é uma só (D-012);
+- o filtro por Edital, em formulário GET, sem script e sem recusa para valor que não serve (D-011),
+  no lugar de agrupar por Edital, que desfaria o mesmo ato entre Editais;
+- a nota de cobertura numa frase, com "Onde encontro as outras operações?" recolhido;
+- a avaliação sem atribuição numa linha, sem o quadro de estado vazio;
+- as comissões recolhidas, abertas só quando são o único conteúdo, com os caminhos da presidência
+  como links de texto.
+
+Ficaram fora, por decisão da avaliação: priorização ou ordem nova, que não tem prioridade de negócio
+validada; designação; e mudança na derivação.
+

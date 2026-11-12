@@ -12167,11 +12167,18 @@ def minhas_etapas(request):
     # A versão vigente uma vez por Edital presidido, nesta requisição (R-009 da `160`).
     with versao_vigente_da_requisicao():
         leitura = atividades.ler(ator, vinculos=vinculos, atribuicoes=atribuicoes, carga=carga)
+    # O filtro por Edital é só apresentação (FR-6886, D-011): valor inválido mostra tudo.
+    leitura, opcoes_de_edital, edital_escolhido = atividades.filtrar(
+        leitura, request.GET.get("edital")
+    )
     return render(
         request,
         "interface/minhas_etapas.html",
         {
             "atividades": leitura,
+            "opcoes_de_edital": opcoes_de_edital,
+            "edital_escolhido": edital_escolhido,
+            "onde_encontrar": atividades.ONDE_ENCONTRAR,
             "cobertura": atividades.COBERTURA,
             "cobertura_do_gestor": atividades.COBERTURA_DO_GESTOR,
             "nada_para_fazer": atividades.NADA_PARA_FAZER,
