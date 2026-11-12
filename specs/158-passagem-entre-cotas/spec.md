@@ -1,7 +1,8 @@
 # Feature Specification: Passagem da vaga reservada entre cotas antes da ampla concorrência
 
-**Feature Branch**: `claude/158-passagem-entre-cotas`, sobre a `claude/elegant-robinson-e66ed2` (#482, a
-`155`, ainda sem merge) em `666e01d1`
+**Feature Branch**: `claude/158-passagem-entre-cotas`, sobre a `main` em `7441e5c0` (depois do #482, a
+`155`, e do #481). A primeira versão, sobre a branch do #482, foi o PR #490, fechado sem merge quando a
+base dele entrou na `main`.
 
 **Created**: 2026-11-11
 
@@ -30,7 +31,7 @@ perguntas do encaminhamento; as que dependem de norma entram como perguntas nume
 >
 > **Origem.** O [encaminhamento](../../doc/encaminhamento-passagem-entre-cotas.md) que a `155`
 > registrou ao decidir que a passagem entre cotas teria spec própria, e as FR-6304, FR-6305 e FR-6317
-> a FR-6319 da `155`.
+> a FR-6319 da `155`, na redação que entrou na `main` com o #482.
 
 ## Por que esta feature existe
 
@@ -38,7 +39,10 @@ Três Editais do Cefor e um do IFFluminense mandam que a vaga reservada sem ocup
 cotas antes de chegar à ampla**. O GPS só sabe levá-la à linha geral do mesmo Perfil (FR-246 da
 `016`). Desde a `155`, o Perfil pode dizer *"Passa antes por outras cotas, na ordem do Edital"*, e com
 essa resposta nenhum ato move a vaga: a tela diz que o GPS ainda não aplica a ordem (FR-6318 da
-`155`). É honesto, e é o beco que a `155` tirou do Edital silente, agora no Edital que fala.
+`155`). O usuário aprovou essa resposta em 11/11/2026, como proposta pela `155`: *"Ela deve impedir a
+reversão direta à ampla e explicar a limitação atual. Não executa movimentos nem presume a ordem entre
+cotas. Preserve a leitura dos Editais já publicados; alterações posteriores seguem por Retificação."* É
+honesto, e é o beco que a `155` tirou do Edital silente, agora no Edital que fala.
 
 A leitura dos quatro Editais, feita para esta spec, mostra que a resposta única por Perfil da `155`
 **não basta nem para o Edital que a motivou**:
@@ -89,7 +93,8 @@ inferência.
 |---|---|---|
 | E-1 | A reversão tem um destino só: a linha geral do mesmo Perfil. | FR-246 da `016` |
 | E-2 | O gatilho é do Perfil, uma espécie para todas as reservadas dele: por esgotamento ou por saldo. | FR-249 da `016`; o campo da espécie no Perfil |
-| E-3 | Desde a `155`, a terceira resposta, *"Passa antes por outras cotas, na ordem do Edital"*, sem gatilho e sem aplicação. | FR-6317 a FR-6319 da `155` |
+| E-3 | Desde a `155`, a terceira resposta, *"Passa antes por outras cotas, na ordem do Edital"*, sem gatilho e sem aplicação, aprovada pelo usuário em 11/11/2026. | FR-6317 a FR-6319 da `155` |
+| E-3a | A condição da reversão por saldo está em aberto na `155`: o usuário devolveu a leitura pela faixa (*"Não transforme a faixa em critério normativo universal apenas porque ela existe no sistema"*), e a escolha entre as opções está com ele. | FR-6305 da `155` e a decisão dela sobre o saldo reversível |
 | E-4 | A destinação à ampla é ato próprio, com "Confira antes", fundamento e registro, e o desfazimento por ato contrário. | FR-6308 a FR-6316 e FR-6334 a FR-6336 da `155` |
 | E-5 | O movimento de vaga tem origem, destino e quantidade, e o destino pode ser uma lista reservada; o banco recusa origem igual ao destino. A reversão sempre gravou a linha geral. | o movimento de vaga da `016` |
 | E-6 | A inscrição concorre por **uma** Modalidade, além da ampla. | a inscrição da `010` |
@@ -356,14 +361,17 @@ mostram origem, degraus, destino, quantidade e fundamento, sem nome de candidato
   leitura das versões anteriores e presença no documento, como a espécie (FR-250 da `016`).
 - **FR-6605**: Duplicar um Perfil (`043`) ou reaproveitar um Edital (`023`) MUST levar a declaração
   junto, com as Modalidades de destino trocadas pelas correspondentes do novo Perfil.
-- **FR-6606**: A terceira resposta da `155`, *"Passa antes por outras cotas, na ordem do Edital"*, MUST
-  deixar de ser oferecida em composição nova; o Perfil publicado com ela MUST continuar legível e sem
-  aplicação, e a tela MUST dizer que o caminho é retificar a declaração na forma da FR-6600.
+- **FR-6606** *(depende da P-1; revê uma resposta que o usuário aprovou na `155`)*: A terceira
+  resposta da `155`, *"Passa antes por outras cotas, na ordem do Edital"*, MUST deixar de ser oferecida
+  em composição nova; o Perfil publicado com ela MUST continuar lido pela declaração que publicou, sem
+  aplicação, como o usuário mandou preservar, e a tela MUST dizer que o caminho é retificar a declaração
+  na forma da FR-6600.
 
 **O gatilho em cada degrau** *(P-2)*
 
 - **FR-6607**: A vaga MUST sair da origem pela condição do gatilho do Perfil — a da FR-6304 da `155`
-  por esgotamento, a da FR-6305 por saldo — e sob os impedimentos da FR-6306 da `155`.
+  por esgotamento; por saldo, a que a `155` fixar na FR-6305, hoje em aberto — e sob os impedimentos
+  da FR-6306 da `155`. Esta spec MUST NOT fixar a condição do saldo por conta própria.
 - **FR-6608**: Um destino MUST ser saltado só quando não houver nele ninguém que ainda possa ocupar
   **além das vagas próprias dele ainda a ocupar**, pelos critérios da FR-6304 da `155` aplicados à
   ordem do destino: com posição, sem desfecho excludente, sem ocupar a ampla com aceite registrado e
@@ -374,9 +382,9 @@ mostram origem, degraus, destino, quantidade e fundamento, sem nome de candidato
   sem aceite registrado, ou apuração vigente obsoleta.
 - **FR-6610**: A condição de salto MUST ser a mesma em todo degrau, qualquer que seja o gatilho do
   Perfil: o gatilho governa a vaga própria de cada lista, e não a vaga que ela recebe.
-- **FR-6611**: Alcançável, no destino, MUST significar o que a FR-6304 da `155` diz — dentro da faixa
-  vigente, ou fora dela quando o Edital admite continuação —, salvo decisão diferente do usuário na
-  P-2.
+- **FR-6611** *(depende da P-2)*: Alcançável, no destino, MUST ser o que a P-2 decidir, com
+  fundamento nas cláusulas do Edital; a faixa vigente MUST NOT ser critério só porque existe no
+  sistema.
 
 **O ato de passagem** *(P-3)*
 
@@ -552,7 +560,8 @@ perguntas forem respondidas, e vigoram com a implementação desta.
 | FR-246 da `016` (o destino é a linha geral) | **a rever**: o destino pode ser outra Modalidade do mesmo Perfil, na ordem declarada; nunca outro Perfil |
 | FR-249 da `016` (as espécies e a terceira resposta) | **a rever**: o gatilho fica no Perfil, e a passagem vai para a declaração por Modalidade (FR-6600, FR-6603) |
 | FR-252 e FR-253 da `016` | continuam, e valem em cada degrau (FR-6626) |
-| FR-6317 da `155` (a terceira resposta) | **a rever**: deixa de ser oferecida; o Perfil publicado com ela continua legível (FR-6606) |
+| FR-6317 da `155` (a terceira resposta, aprovada pelo usuário) | **a rever, se a P-1 for respondida como recomendado**: deixa de ser oferecida em composição nova; o Perfil publicado com ela continua lido como publicou (FR-6606) |
+| FR-6305 da `155` (a condição por saldo, em aberto) | **continua com a `155`**: a saída da origem por saldo segue o que ela fixar (FR-6607) |
 | FR-6318 e FR-6319 da `155` (a limitação) | **a rever**: valem só para o Perfil publicado com a terceira resposta |
 | FR-6309 e FR-6312 da `155` | **a rever**: o lembrete e a recusa passam a ler a declaração da Modalidade |
 | FR-6327 da `155` | **a rever**: a declaração de não preenchida cabe à vaga que chegou ao fim de uma ordem sem a ampla |
@@ -576,7 +585,10 @@ Perfil; o 33/2026 dá uma sequência própria a cada uma das oito cotas.
 | B | Uma ordem única por Perfil, que toda reservada percorre sem a própria origem | Mais barato; não reproduz o 33/2026 nem a PcD do 173/2025 |
 | C | A ordem única, com exceções por Modalidade | Cobre os casos, com duas formas de dizer a mesma coisa |
 
-Inclui: a terceira resposta da `155` deixa de ser oferecida (FR-6606)?
+Inclui: a terceira resposta da `155`, que o usuário aprovou em 11/11/2026 como limitação provisória,
+deixa de ser oferecida em composição nova quando esta spec for implementada (FR-6606)? *Recomendação:
+sim*, porque ela não traz gatilho e não representa a PcD do 173/2025; os Perfis publicados com ela
+continuam lidos como publicaram, e mudam por Retificação, como ele mandou.
 
 ### P-2 — O gatilho em cada degrau, e o excedente fora da faixa
 
@@ -589,9 +601,11 @@ quando ninguém mais pode ocupar além das vagas próprias (FR-6608), a mesma co
   tem quem ocupar.
 - **(b)** O excedente do destino costuma estar fora da faixa dele. Pela FR-6304 da `155`, só é
   alcançável se o Edital admite continuação, e sem ela o degrau seria sempre saltado — o que esvazia a
-  cascata. As opções: **(i)** manter a FR-6304 como está; **(ii)** *(recomendada)* a vaga recebida
+  cascata. Na `155`, o usuário já recusou tomar a faixa como critério normativo só porque ela existe no
+  sistema. As opções: **(i)** manter a FR-6304 como está; **(ii)** *(recomendada)* a vaga recebida
   amplia a faixa do destino na quantidade recebida, porque o Edital que manda passar a vaga manda
-  chamar quem a ocupe; **(iii)** exigir que o Edital publique continuação para declarar a ordem.
+  chamar quem a ocupe — "persistindo a ausência" no 173/2025, "restando vagas" no 33/2026; **(iii)**
+  exigir que o Edital publique continuação para declarar a ordem.
 
 ### P-3 — O destino que também não tem quem ocupar, e a vaga recebida que fica sem ocupante
 
@@ -691,4 +705,5 @@ uma cota já percorrida, e a passagem circula.
   não é representada no GPS, e define de qual lista sai cada pessoa chamada.
 - **A inscrição em mais de uma cota**, com prioridade entre elas (33/2026), não é representada.
 - **A terceira resposta da `155` não tem gatilho.** Um Perfil publicado com ela não diz quando a vaga
-  sai da origem; esta spec propõe que ela deixe de ser oferecida (FR-6606).
+  sai da origem; esta spec propõe, na P-1, que ela deixe de ser oferecida em composição nova (FR-6606),
+o que revê uma resposta aprovada pelo usuário.
