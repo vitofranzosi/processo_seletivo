@@ -4,8 +4,9 @@
 
 **Created**: 2026-11-12
 
-**Status**: Especificada; sem plano. A implementação espera duas coisas do usuário: a autorização para
-implementar, e as três decisões do estudo que seguem abertas (ver *Clarifications*).
+**Status**: Especificada, com plano e tarefas. As três decisões do estudo que estavam abertas foram
+tomadas pelo usuário em 12/11/2026 (ver *Clarifications*). Falta só a autorização para implementar,
+que é do usuário, depois de ler o [plano](plan.md).
 
 **Input**: estudo [`doc/estudo-minhas-atividades-2026-11-12/`](../../doc/estudo-minhas-atividades-2026-11-12/README.md),
 rodadas 1 a 4 e o §6a, com a validação nos cenários de treinamento. Em 12/11/2026 o usuário aprovou a
@@ -60,13 +61,13 @@ abertura; aqui paga só quem abre a própria página, e quem não preside não p
 - a leitura da versão vigente uma vez por Edital na requisição, que pode ser um segundo incremento.
 
 **Fica fora:**
-- a formalização (7ª decisão do estudo, aberta; a sugestão é deixá-la fora e dizê-lo na cobertura);
+- a formalização (7ª decisão do estudo: fica fora, dito na página);
 - o que é da pessoa só por papel na unidade: publicar o resultado e julgar recursos, inclusive nos
   Editais que ela preside (D-004);
 - "Quem faz o quê" no Centro: é a segunda entrega, com spec própria;
 - a responsabilidade por frente: é a terceira entrega, só com evidência da comissão real;
 - prazo, tarefa persistida, contador na barra lateral e página nova (4ª decisão do estudo);
-- o pouso do login institucional (6ª decisão do estudo, aberta);
+- o pouso do login institucional, que continua na Lista (6ª decisão do estudo);
 - os atos que hoje são só acesso, e não providência: a publicação das inscrições (`148`) e das
   convocações (`149`), os avisos (`066`), o Requerimento de Matrícula e o encerramento.
 
@@ -90,28 +91,19 @@ abertura; aqui paga só quem abre a própria página, e quem não preside não p
 - Q: A visão vale como norte? → A: **Sim**: gestão operacional orientada do processo seletivo, em três
   entregas (9ª decisão do estudo).
 
-### Decisões abertas (do usuário)
-
-Estas três decisões estão no estudo e **não foram tomadas**. A spec registra a sugestão do estudo e o
-que muda em cada alternativa. Os requisitos abaixo estão escritos de modo a não fechar nenhuma delas;
-onde dependem de uma, dizem.
-
-- **6ª decisão do estudo — o pouso do login institucional.** Hoje, quem entra pelo login institucional
-  vai para a Lista. (a) Manter, e confiar na nota da faixa apontando para a página; (b) quem tem vínculo
-  de comissão pousa em "Minhas atividades". **O estudo sugere (a)** nesta entrega, e (b) depois de
-  medir com a comissão real: a decisão de entrada da `104` lembra que mudar a entrada custa um clique
-  por dia a quem só consulta. Com (a), esta spec não toca o pouso. Com (b), entra um requisito de
-  pouso, e a demonstração já pousa na página.
-- **7ª decisão do estudo — a formalização nesta entrega.** (a) Fica fora, nomeada na nota de
-  cobertura, porque o setor já tem lista própria ("Formalização", na barra); (b) entra pela designação
-  vigente, e a pessoa designada sem integrar a comissão passa a ter linhas aqui. **O estudo sugere
-  (a)**, e a FR-6872 está escrita assim. Com (b), a família da formalização entra inteira, inclusive o
-  que é da presidência (definir os documentos, designar), com a marca "Designação" para o setor.
-- **8ª decisão do estudo — o teto de Editais presididos.** (a) Medir quantos Editais uma presidência
-  real conduz ao mesmo tempo antes de fixar o teto; (b) carregar cada Edital como bloco próprio desde
-  o início. **O estudo sugere (a)**: com a equipe inicial de 2–3 pessoas, a página carrega tudo numa
-  requisição, e o teste fixa o custo **por Edital presidido** (FR-6878). Com (b), a página ganha
-  carregamento por Edital depois da primeira tela, sem regra nova.
+- Q: Para onde vai quem entra pelo login institucional (6ª decisão do estudo)? → A: **"Lista, como
+  hoje".** O pouso não muda; a nota da faixa da Lista aponta para a página (FR-6881). Era a sugestão do
+  estudo: mudar a entrada custa um clique por dia a quem só consulta (a decisão de entrada da `104`), e
+  pousar quem tem vínculo em "Minhas atividades" fica para depois de medir com a comissão real.
+- Q: A formalização entra nesta entrega (7ª decisão do estudo)? → A: **"Fica fora, dito na página".**
+  A família inteira, inclusive o que é da presidência (definir os documentos, designar), fica fora, e
+  a nota de cobertura a nomeia, com o lugar dela ("Formalização", na barra) (FR-6872). A pessoa
+  designada para o setor sem integrar a comissão não tem linha aqui.
+- Q: Como a página trata quem preside muitos Editais (8ª decisão do estudo)? → A: **"Uma requisição,
+  teto por Edital".** A página carrega tudo numa requisição, sem carregamento por Edital depois da
+  primeira tela, e o teste fixa o custo **por Edital presidido** (FR-6878). Se a comissão real
+  presidir dezenas de Editais ao mesmo tempo, o carregamento por bloco volta como decisão nova.
+- Q: Até onde vai esta rodada? → A: **"Até tasks e analyze, sem implementar".**
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -273,8 +265,11 @@ consultas da Lista continua o mesmo.
 - **Espera sem data.** É dita sem data, pela frase da derivação, e não com data inventada.
 - **Todos os Editais presididos falham na leitura.** A página diz quantos e quais, e não diz "nada
   para fazer".
-- **O mesmo ato com contagens diferentes** ("Convocar 3 titulares" e "Convocar 2 titulares"). São
-  linhas diferentes: o agrupamento é pelo mesmo ato, com o mesmo texto.
+- **O mesmo ato com contagem** ("Convocar 3 titulares" e "Convocar 2 titulares", ou "Convocar 3
+  titulares" em dois Editais). São linhas diferentes: só se junta o ato sem número, como no Centro.
+- **Avaliação numa Etapa com inscrição sem avaliador suficiente.** O Centro pode dizer "Avaliar 3"
+  onde a Mesa da pessoa tem 5, porque desconta o que ainda depende da distribuição. A linha diz 5, o
+  número da Mesa a que ela leva (D-010).
 - **A fase Conclusão.** O encerramento nunca é linha: a derivação não diz "pode encerrar", de
   propósito.
 - **Membro que só integra comissões, sem alocação nem presidência.** A página diz que nada depende
@@ -328,30 +323,37 @@ consultas da Lista continua o mesmo.
   dizê-lo (D-004).
 - **FR-6863**: "Para fazer agora" MUST ter só o que a pessoa pode praticar agora (*Pendente* e
   *Obsoleto*). Nenhuma linha que ela não possa executar MUST entrar nessa seção.
-- **FR-6864**: A avaliação MUST aparecer uma vez por Etapa, com o texto da célula de avaliação do
+- **FR-6864**: A avaliação MUST aparecer uma vez por Etapa, com a frase da célula de avaliação do
   Centro ("Avaliar N inscrições"), a marca "Alocação" e o link da Mesa, pelo caminho que for (com
-  ou sem a derivação).
+  ou sem a derivação). O N MUST ser o da Mesa, o mesmo do cartão da Etapa e da faixa da `104`
+  (D-010).
 
 #### D. Ordem e agrupamento
 
-- **FR-6865**: O mesmo ato, com o mesmo texto, em vários Editais MUST ser **uma linha**, que diz
-  quantos Editais e abre a lista deles, cada um com o seu link (D-006).
-- **FR-6866**: A ordem MUST ser: primeiro o *Obsoleto*, depois o *Pendente*, na ordem da jornada que o
-  nível 1 da `127` já usa; entre Editais, o Edital mais antigo primeiro. A data da derivação MUST NOT
-  ordenar a lista.
+- **FR-6865**: O mesmo ato, com o mesmo texto **sem contagem**, em vários Editais MUST ser **uma
+  linha**, que diz quantos Editais e abre a lista deles, cada um com o seu link (D-006). O ato cujo
+  texto tem número ("Convocar 3 titulares") MUST NOT se juntar, nem com o mesmo número: é a regra com
+  que o Centro já agrupa dentro de um Edital.
+- **FR-6866**: A ordem MUST ser: primeiro o *Obsoleto*, depois o *Pendente*; dentro de cada um, o
+  Edital mais antigo primeiro e, no mesmo Edital, a ordem em que a derivação emite as células (a do
+  Perfil e a da jornada). A data da derivação MUST NOT ordenar a lista, embora o nível 1 do Centro
+  ponha à frente, entre as suas, as que têm data (D-007).
 - **FR-6867**: Toda linha MUST levar o nome da fase do Centro a que o ato pertence, pela mesma
   classificação de fases do Centro, sem taxonomia nova.
 
 #### E. As esperas
 
 - **FR-6868**: "Em espera nos seus Editais" MUST ter as células *Aguarda* e *Impedido* dos Editais que
-  a pessoa preside, com a frase e a razão da derivação. Nos Editais lidos só pela alocação à
+  a pessoa preside, qualquer que seja o papel de quem age depois da espera (o resultado definitivo que
+  espera o prazo de recurso entra), com a frase e a razão da derivação. Nos Editais lidos só pela alocação à
   conferência, a seção MUST NOT mostrar espera.
 - **FR-6869**: A data de uma espera MUST ser dita pelo que ela é, com a origem: "o prazo de recurso
   aberto pela publicação corre até …", "o prazo do candidato corre até …", "a extração da loteria é
   em …". Uma data MUST NOT ser chamada de prazo da pessoa, e nenhuma linha da página MUST dizer
   "atrasado" (D-007).
-- **FR-6870**: As esperas iguais entre Editais MUST se agrupar pela mesma regra da FR-6865.
+- **FR-6870**: As esperas com o mesmo ato e a mesma razão, **inclusive a mesma data**, MUST se agrupar
+  entre Editais numa linha, como na FR-6865. A data não impede a junção; a contagem no ato impede.
+  Esperas com datas diferentes são linhas diferentes.
 
 #### F. Cobertura e falha
 
@@ -359,7 +361,7 @@ consultas da Lista continua o mesmo.
   nos Editais que a pessoa preside, a avaliação e a conferência pelas alocações) e o que fica fora, com
   onde está cada coisa.
 - **FR-6872**: A nota MUST nomear como fora, enquanto não entrarem: a formalização, que tem lista
-  própria (conforme a 7ª decisão do estudo, aberta); publicar o resultado e julgar recursos; os atos de
+  própria (7ª decisão do estudo); publicar o resultado e julgar recursos; os atos de
   Edital e de Retificação, que estão na Lista; a publicação das inscrições e das convocações; os avisos
   aos candidatos; o Requerimento de Matrícula; e o encerramento. Ao Gestor, ela MUST dizer que o que
   ele pode fazer por permissão de gestão fica no Centro de cada Edital.
@@ -385,8 +387,8 @@ consultas da Lista continua o mesmo.
   MUST NOT crescer com o número de comissões ou de Editais da pessoa.
 - **FR-6878**: Para quem preside, o número de consultas MUST crescer, no máximo, linearmente com o
   número de Editais presididos lidos, com um teto **por Edital** fixado no plano a partir da medição
-  (no molde de `test_andamento_em_escala.py`). O teto do número de Editais presididos depende da 8ª
-  decisão do estudo, aberta.
+  (no molde de `test_andamento_em_escala.py`). A página carrega numa requisição só, sem teto de
+  Editais presididos e sem carregamento por Edital (8ª decisão do estudo).
 - **FR-6879**: A versão vigente de um Edital MUST ser lida **uma vez por requisição**, e reaproveitada
   pelas leituras da derivação daquele Edital, sem estado entre requisições (D-009). Este requisito pode
   sair num segundo incremento; quando sair, MUST valer também para o Centro de Controle, sem mudar
@@ -441,8 +443,8 @@ Nenhuma entidade nova, nenhuma tabela, nenhuma migration. A página lê:
 - **SC-2271**: **Coerência com o Centro**, que estende o SC-1230 da `127`: nos cenários de
   treinamento, para a presidência, o avaliador, o Gestor que preside, o Gestor que não preside e um
   membro alocado à conferência, 100% das linhas de "Para fazer agora" são células SUA do Centro
-  daquele Edital, com o mesmo texto e o mesmo link; e 100% das células SUA de base presidência ou
-  alocação estão na página, sozinhas ou num grupo.
+  daquele Edital, com o mesmo texto e o mesmo link (a avaliação, pela D-010); e 100% das células SUA
+  de base presidência ou alocação estão na página, sozinhas ou num grupo.
 - **SC-2272**: **Quem só é membro não dispara a derivação**: para um membro sem presidência nem
   alocação à conferência, a página não chama a derivação do andamento, e o número de consultas é o
   mesmo com 1 e com 11 comissões.
@@ -477,7 +479,7 @@ Nenhuma entidade nova, nenhuma tabela, nenhuma migration. A página lê:
   é reescrita. Se a coerência falhar, o defeito é da página.
 - **As bases de vínculo hoje são três**: presidência, alocação à Etapa e alocação à conferência. O
   membro que não preside só pratica avaliar e conferir. A designação para a formalização é a quarta,
-  e depende da 7ª decisão do estudo.
+  e fica fora desta entrega (7ª decisão do estudo).
 - **Equipe inicial de 2–3 pessoas, acumulando papéis.** O ganho está quase todo na presidência.
 - **O custo medido é a referência do plano**: cerca de 80 consultas por Edital presidido sem a
   FR-6879 e cerca de 65 com ela, nos cenários de treinamento; para o membro, de ~1700 para ~56.
@@ -542,3 +544,12 @@ de a visão morar fora dela.
 A versão vigente é relida cerca de 25 vezes por Edital, por funções de outras features. Lê-la uma vez
 por requisição não cria estado, e por isso não é a segunda fonte de verdade que um cache entre
 requisições seria. Rende cerca de 19% para a presidência, e vale também para o Centro.
+
+### D-010 — A avaliação conta pela Mesa
+
+Na célula de avaliação, o Centro limita o número às inscrições que não dependem mais da distribuição.
+Numa Etapa com inscrição sem avaliador suficiente, isso pode dar menos do que a Mesa da pessoa
+mostra. Reproduzir o limite fora da derivação exigiria ler o resumo de cada Etapa alocada, e desfaria
+a D-003. A linha leva à Mesa e diz o número dela, o mesmo do cartão e da faixa da `104`. O teste de
+coerência compara a Etapa e o link sempre, e o número onde a Etapa não tem inscrição sem avaliador
+suficiente.
