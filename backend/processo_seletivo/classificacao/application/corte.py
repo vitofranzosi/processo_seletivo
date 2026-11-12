@@ -44,6 +44,15 @@ def geracao_vigente(*, edital, perfil_id, marco_id, lista_id=None):
     return [raiz, *Corte.objects.filter(raiz=raiz).order_by("emitido_em")]
 
 
+def admite_continuacao(regra):
+    """Se a regra de corte publicada admite faixa além da primeira (D-011, FR-226).
+
+    **Porta para quem lê a classificação de fora** — a ocupação só a lê por aqui
+    (`tests/test_dependencia_da_ocupacao.py`); a regra mora no domínio da faixa.
+    """
+    return faixa.admite_continuacao(regra)
+
+
 def regra_do_marco(conteudo, *, perfil_id, marco_id):
     """A regra de corte publicada naquela versão, ou `None` quando o marco não corta."""
     nomes = nomes_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)

@@ -583,9 +583,19 @@ def leitura_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         }
         for convocacao in vigentes_do_recorte
     ]
-    # **Na ordem em que foram chamadas, e o protocolo desempata** (050). As do mesmo gesto nascem
-    # com o mesmo instante, e o desempate pelo identificador embaralhava a lista a cada gesto.
-    linhas.sort(key=lambda linha: (linha["convocacao"].criado_em, linha["inscricao"]["protocolo"]))
+    # **Na ordem em que foram chamadas** (050). As do mesmo gesto nascem com o mesmo instante, e o
+    # desempate pelo identificador embaralhava a lista a cada gesto. **Desempata a posição na
+    # ordem**, e só depois o protocolo: com o protocolo primeiro, a 1ª colocada aparecia em último
+    # e era a "Pessoa 3 de 3" na conferência (achado 14 do estudo de 11/11/2026). Quem não está
+    # entre os alcançados — a chamada para regularizar — vem depois deles, pelo protocolo.
+    posicao = {str(inscricao): n for n, inscricao in enumerate(contexto["alcancados"])}
+    linhas.sort(
+        key=lambda linha: (
+            linha["convocacao"].criado_em,
+            posicao.get(str(linha["convocacao"].inscricao_id), len(posicao)),
+            linha["inscricao"]["protocolo"],
+        )
+    )
     # **Quem conduz o certame não reconhece ninguém por UUID.** O percurso conduzido encontrou a
     # fila, os dois seletores e o histórico inteiro escritos em identificador — tecnicamente exato e
     # operacionalmente inútil: a pessoa que vai convocar precisa conferir contra a lista publicada,

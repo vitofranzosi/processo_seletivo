@@ -478,3 +478,56 @@ def test_pendencia_e_aviso_contam_o_mesmo_conjunto():
     assert perguntas["pendencia"].quantas == 1
     assert perguntas["pendencia"].detalhe == "1 pode ser avisada agora"
     assert perguntas["a_conferir"].quantas == 1
+
+
+# --- A vaga reaberta (achado 03 do estudo de 11/11/2026) -----------------------------------------
+#
+# Depois de uma desistência, a apuração seguinte dá a vaga como faltando e o Centro do Edital manda
+# chamar a próxima da fila; o índice não tinha a pergunta, e dizia "Nenhum ato a praticar".
+
+ESTELA = {"id": "i5", "protocolo": "INS-2026-TE59VKDM", "nome": "Estela Treinamento C09-05"}
+
+
+def _desfechada(n, especie=nomes.VAGA_INICIAL):
+    linha = _linha(nomes.DESFECHADO, desfecho_=desfecho("DESISTENCIA_EXPRESSA"), n=n)
+    linha["convocacao"] = SimpleNamespace(id=f"c{n}", vencimento=None, especie=especie)
+    return linha
+
+
+def test_a_vaga_reaberta_com_alguem_na_fila_e_ato_e_leva_a_fila():
+    leitura = _leitura([_desfechada(1)], ocupacao={"faltando": 1}, fila=[ESTELA])
+    perguntas = c.indice(leitura=leitura, **_opcoes())
+    vaga = next(p for p in perguntas if p.chave == "vaga_sem_chamada")
+
+    assert vaga.quantas == 1
+    assert vaga.texto == "vaga a ocupar sem chamada em aberto"
+    assert vaga.ancora == "fila" and vaga.trabalho and vaga.ato
+    assert "INS-2026-TE59VKDM — Estela Treinamento C09-05" in vaga.detalhe
+    assert not c.sem_providencia(perguntas)
+
+
+def test_a_chamada_para_a_vaga_que_vagou_em_aberto_cobre_a_vaga():
+    aberta = _linha(nomes.CONVOCADO_PRAZO_EM_CURSO, n=2)
+    aberta["convocacao"] = SimpleNamespace(id="c2", vencimento=None, especie=nomes.SUPLENCIA)
+    leitura = _leitura([_desfechada(1), aberta], ocupacao={"faltando": 1}, fila=[ESTELA])
+
+    chaves = [p.chave for p in c.indice(leitura=leitura, **_opcoes())]
+
+    assert "vaga_sem_chamada" not in chaves
+
+
+def test_a_vaga_reaberta_sem_ninguem_na_fila_e_contada_e_nao_e_ato():
+    leitura = _leitura([_desfechada(1)], ocupacao={"faltando": 1}, fila=[])
+    perguntas = c.indice(leitura=leitura, **_opcoes())
+    vaga = next(p for p in perguntas if p.chave == "vaga_sem_chamada")
+
+    assert not vaga.ato and vaga.detalhe == "não há mais quem chamar na fila"
+
+
+def test_quem_nao_convoca_le_a_vaga_reaberta_como_trabalho_de_outro_papel():
+    leitura = _leitura([_desfechada(1)], ocupacao={"faltando": 1}, fila=[ESTELA])
+    perguntas = c.indice(leitura=leitura, **_opcoes(pode_convocar=False, pode_emitir=False))
+    vaga = next(p for p in perguntas if p.chave == "vaga_sem_chamada")
+
+    assert vaga.ato and not vaga.trabalho
+    assert vaga.detalhe.endswith(", por quem conduz a convocação")

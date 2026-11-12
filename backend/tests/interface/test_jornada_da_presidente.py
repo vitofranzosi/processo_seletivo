@@ -59,6 +59,17 @@ def test_minhas_etapas_leva_a_presidente_ate_a_comissao_dela(presidente, process
     assert reverse("interface:alocacoes", args=[processo_a.id]) in corpo
 
 
+def test_minhas_etapas_leva_a_presidente_ao_processo_e_aos_editais(presidente, processo_a):
+    """O trabalho da presidência está nos Editais — classificar, cortar, convocar, conferir —, e a
+    entrada recomendada só levava à comissão e à alocação (achado 24 do estudo de 11/11/2026).
+    O link precisa abrir, e não só existir: a presidência lê a página do Processo."""
+    corpo = presidente.get(reverse("interface:minhas-etapas")).content.decode()
+    destino = reverse("interface:processo-detalhe", args=[processo_a.id])
+
+    assert f'href="{destino}">Abrir o Processo e os Editais</a>' in corpo
+    assert presidente.get(destino).status_code == 200
+
+
 def test_quem_nao_tem_nada_continua_recebendo_a_orientacao_em_minhas_etapas(client, seletor_ligado):
     identificar(client, "servidor.novo", [])
 

@@ -174,15 +174,36 @@ def test_a_pagina_nao_tem_tabela_horizontal_a_375px(client, seletor_ligado, cena
     assert '<ul class="resumo"' in pagina
 
 
+@pytest.fixture
+def com_continuacao(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    """O cenário da ocupação com um Edital que **admite** continuação além da faixa (014, D-011).
+
+    O cenário base é o do 14/2026, que não a admite: ali o comando recusa a faixa seguinte, e a tela
+    deixou de oferecê-la (achado 02 do estudo de 11/11/2026). Quem quer ver o botão precisa do 77.
+    """
+    from tests.fixtures.corte import regra
+    from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
+
+    return montar_cenario_da_ocupacao(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="tela-016-continua",
+        geral=3,
+        cut=regra(continuation="ALLOWED"),
+    )
+
+
 def test_a_acao_da_faixa_seguinte_aparece_so_onde_ha_deficit(
-    client, seletor_ligado, cenario, gestor
+    client, seletor_ligado, com_continuacao, gestor
 ):
     """Sem apuração não há déficit, e sem déficit a ação não é oferecida (`FR-256`).
 
     Oferecer o botão e recusar no clique seria descobrir a recusa com o cronograma correndo — a
     tela mostra o que ela consegue conferir enquanto a pessoa lê.
     """
-    edital, _, _ = cenario
+    edital, _, _ = com_continuacao
     identificar(client, "carlos", ["gestor"])
 
     antes = abrir(client, edital).content.decode()
@@ -526,15 +547,34 @@ def test_no_lugar_da_faixa_a_tela_diz_por_que_a_acao_nao_existe_ali(
     assert "não há faixa" in pagina
 
 
-def test_com_regra_de_corte_a_faixa_continua_sendo_oferecida(
-    client, seletor_ligado, cenario, gestor
+def test_com_regra_de_corte_e_continuacao_a_faixa_continua_sendo_oferecida(
+    client, seletor_ligado, com_continuacao, gestor
 ):
     """A contraprova. Uma condição escrita larga demais apagaria o botão do caso normal."""
-    edital, _, _ = cenario
+    edital, _, _ = com_continuacao
     apurar(edital, gestor, chave="ocupacao-032-com-corte")
     identificar(client, "carlos", ["gestor"])
 
     assert "Pedir a faixa seguinte" in abrir(client, edital).content.decode()
+
+
+def test_sem_continuacao_publicada_a_faixa_seguinte_da_lugar_a_razao(
+    client, seletor_ligado, cenario, gestor
+):
+    """O Edital com regra de corte e sem continuação (o 14/2026): o comando recusaria a faixa
+    seguinte (`continuacao_nao_publicada`), e a tela a oferecia — até na vaga da cota sem
+    concorrente, onde ela era a única providência sugerida (achado 02 do estudo de 11/11/2026).
+    A razão ocupa o lugar do botão, como na `FR-463`.
+    """
+    edital, _, _ = cenario
+    apurar(edital, gestor, chave="ocupacao-sem-continuacao")
+    identificar(client, "carlos", ["gestor"])
+
+    pagina = abrir(client, edital).content.decode()
+
+    assert "A ocupar" in pagina, "a premissa: o recorte foi apurado e tem déficit"
+    assert "Pedir a faixa seguinte" not in pagina
+    assert "não publicou que admite chamar além da faixa" in pagina
 
 
 # --- A apuração volta a ser oferecida no recorte reservado (034, FR-502, SC-170) ---------------

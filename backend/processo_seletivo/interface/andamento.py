@@ -1198,6 +1198,10 @@ def situacoes_da_convocacao(f):
                 natureza=CONVOCACAO,
                 ato="Registrar o não atendimento de "
                 + _n(vencidos, "convocação vencida", "convocações vencidas"),
+                # **O que este ato faz**, e não o que a fase faz: sem a nota, o cartão dizia só
+                # "Chama, com prazo, quem a apuração indicou" (achado 25 do estudo de 11/11/2026).
+                nota="o prazo passou sem desfecho; registrar o não atendimento encerra a chamada, "
+                "e a vaga volta à fila",
                 responsavel=CONDUZ,
                 url=com_ancora(url, "vencidos"),
                 contagem=vencidos,
@@ -1262,7 +1266,12 @@ def situacoes_da_convocacao(f):
                     contagem=sem_chamada,
                 )
             )
-        elif f.get("esgotou") and f.get("corte_vigente") and f.get("com_quadro"):
+        elif (
+            f.get("esgotou")
+            and f.get("corte_vigente")
+            and f.get("com_quadro")
+            and f.get("continuacao_admitida", True)
+        ):
             providencias.append(
                 _c(
                     PENDENTE,
@@ -1306,6 +1315,13 @@ def situacoes_da_convocacao(f):
                 razao=(
                     _n(sem_chamada, "vaga a ocupar", "vagas a ocupar")
                     + ", e não há mais quem chamar nesta lista"
+                    + (
+                        "; o Edital não publicou continuação além da faixa"
+                        if f.get("esgotou")
+                        and f.get("corte_vigente")
+                        and not f.get("continuacao_admitida", True)
+                        else ""
+                    )
                 ),
                 url=url,
             )
@@ -2287,9 +2303,11 @@ class _Leitor:
 
     def _convocacao(self, perfil, marco, lista, apuracao, corte=None, governada=None, nome=""):
         from processo_seletivo.classificacao.application.corte import linha_do_quadro
+        from processo_seletivo.classificacao.domain import faixa
         from processo_seletivo.convocacao.application import fluxo
         from processo_seletivo.convocacao.application import selectors as convocacao
         from processo_seletivo.convocacao.domain import nomes
+        from processo_seletivo.interface import conducao_da_convocacao
         from processo_seletivo.shared.api.problems import DomainError
 
         marco_id = str(marco.get("id"))
@@ -2349,18 +2367,17 @@ class _Leitor:
             ),
             # **Só a chamada que ainda não ocupa** (133, FR-4547, CV-03): o titular conta como
             # ocupado desde a apuração, e descontá-lo de novo de `faltando` escondia a próxima da
-            # fila depois de uma desistência. A chamada para a vaga que vagou, ou para regularizar,
-            # ainda não ocupa — ela responde pela vaga, e chamar outra pessoa a dobraria.
-            "em_aberto": sum(
-                1
-                for lin in linhas
-                if lin["desfecho"] is None
-                and getattr(lin.get("convocacao"), "especie", None) != nomes.VAGA_INICIAL
-            ),
+            # fila depois de uma desistência. A conta é a do índice da convocação, e mora lá.
+            "em_aberto": conducao_da_convocacao.chamadas_que_nao_ocupam(linhas),
             "faltando": (leitura.get("ocupacao") or {}).get("faltando") or 0,
             "fila": len(leitura.get("fila") or []),
             "esgotou": leitura.get("esgotou"),
             "corte_vigente": corte is not None and corte.situacao == FEITO,
+            # **O Edital que não admite continuação não tem faixa seguinte** (D-011 e FR-226 da
+            # `014`): sugerir "Pedir a faixa seguinte" ali era mandar a um ato que o comando recusa
+            # — e a vaga da cota sem concorrente ficava com essa sugestão para sempre (achado 02 do
+            # estudo de 11/11/2026).
+            "continuacao_admitida": faixa.admite_continuacao(marco.get("cutRule")),
             "com_quadro": linha_do_quadro(self.conteudo, perfil_id=perfil.get("id"), lista_id=lista)
             is not None,
             "conferir": documentos["conferir"],
