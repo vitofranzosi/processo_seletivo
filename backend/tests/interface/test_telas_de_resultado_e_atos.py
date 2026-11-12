@@ -153,15 +153,17 @@ BOTOES = {
             "Conferir antes de convocar "
             '{{ titulares.pessoas|length|plural:"a,as" }} {{ titulares.pessoas|length }}',
         ),
+        # **Convocar e publicar num gesto só** (159, FR-6801, FR-6803): o registro da publicação
+        # externa e o reenvio também publicam, e o rótulo o diz.
         (
             "botao",
             'Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} '
-            "{{ pendentes.linhas|length }}",
+            "{{ pendentes.linhas|length }} e divulgar no GPS",
         ),
         (
             "botao",
             "Emitir {{ pendentes.linhas|length }} "
-            '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }}',
+            '{{ pendentes.linhas|length|plural:"comunicação,comunicações" }} e publicar a relação',
         ),
         (
             "botao",
@@ -178,8 +180,14 @@ BOTOES = {
         # A palavra do canal (125, FR-4000): *"Registrar a publicação"* na publicação.
         ("acao", "{{ linha.canal.emitir_de_novo }}"),
         ("botao", "{{ linha.canal.emitir }}"),
-        ("botao", "Convocar"),
-        ("botao", "Convocar para regularizar"),
+        # A chamada individual e a regularização (159, FR-6816): por publicação, um botão por
+        # veículo, e nenhum presumido (D-006); por mensagem, o que a confirmação faz.
+        ("botao", "Convocar e publicar no GPS"),
+        ("botao", "Convocar (a publicação será registrada depois)"),
+        ("botao", "Convocar, enviar a mensagem e publicar"),
+        ("botao", "Convocar para regularizar e publicar no GPS"),
+        ("botao", "Convocar para regularizar (a publicação será registrada depois)"),
+        ("botao", "Convocar para regularizar, enviar a mensagem e publicar"),
     ],
     "convocacao_historico.html": [],
     "matriculas.html": [("botao", "Ver o que sairá vazio"), ("botao", "Baixar o arquivo")],
@@ -193,7 +201,11 @@ def test_nenhum_botao_muda_de_rotulo_desenho_ou_lugar(tela):
     achados = [
         (classe, " ".join(rotulo.split()))
         for classe, rotulo in re.findall(
-            r'<button type="submit" class="([^"]+)">(.*?)</button>', fonte, re.S
+            # Atributos depois da classe — o `name`/`value` que leva o veículo no botão (159) — não
+            # tiram o botão da conferência.
+            r'<button type="submit" class="([^"]+)"[^>]*>(.*?)</button>',
+            fonte,
+            re.S,
         )
     ]
 
@@ -219,8 +231,11 @@ def test_nenhuma_acao_que_nao_se_desfaz_ganhou_peso():
     # prazo, a lista e o desfecho ficam como estão —, e o despacho manda no máximo um por dia.
     # Os desenhos de observar a semente e de sortear, na `142`: o mesmo `botao`, que passa a
     # secundário enquanto fixar é a tarefa de agora — perdem peso, e não ganham.
+    # Os 25º a 28º são da `159`: na forma por publicação, a chamada individual e a regularização
+    # têm um botão por veículo — o mesmo desenho do "Convocar" de antes, que eles desdobram, e não
+    # um peso novo: o ato continua o mesmo, e o veículo deixou de ser presumido.
     assert desenhos == {
-        "botao": 22,
+        "botao": 26,
         "botao{% if fixar_por_fazer %} secundario{% endif %}": 1,
         "botao{% if fixar_e_a_vez %} secundario{% endif %}": 1,
         "botao perigoso": 2,

@@ -75,6 +75,73 @@ GESTO_VENCIDOS = "convocacao:nao_atendimento_dos_vencidos"
 #: A frase que a trilha e a tela usam quando o vencimento foi digitado no ato.
 ORIGEM_INFORMADA = "informado neste ato"
 
+# --- O veículo da publicação, no gesto de convocar (159) --------------------------------------
+#: Na forma por publicação, onde a convocação é publicada. **Nunca presumido** (159, D-006): sem
+#: veículo informado, o gesto se comporta como antes, fora do GPS, aguardando o registro.
+VEICULO_GPS = "GPS"
+VEICULO_EXTERNO = "EXTERNO"
+
+
+def _no_gps(forma, veiculo):
+    return forma == FORMA_POR_PUBLICACAO and veiculo == VEICULO_GPS
+
+
+def _conferir_autoridade(edital, autoridade, agora):
+    """A autoridade que vai assinar, conferida **antes** de convocar (159, D-004, D-005).
+
+    Uma autoridade fora de vigência descoberta só na publicação deixaria convocações e mensagens
+    sem a relação que a confirmação prometeu.
+    """
+    if autoridade:
+        from django.db import transaction
+
+        from processo_seletivo.publicacoes.application.contexto_do_ato import contexto_do_ato
+
+        # A conferência da `060` trava a autoridade: fora de um comando, a trava pede transação
+        # própria, curta, que só confere e não grava nada.
+        with transaction.atomic():
+            contexto_do_ato(edital, autoridade, agora)
+
+
+def _publicar_depois(*, actor, processo_id, edital_id, convocacoes, autoridade, chave, correlacao):
+    """A relação informativa das convocações do gesto, depois dos envios ou registros (D-005).
+
+    **A recusa não desfaz nada** (FR-6812): volta como frase, para a tela dizer que a relação não
+    foi publicada e por quê. Sem autoridade, o gesto não publica (D-010).
+    """
+    from processo_seletivo.convocacao.application.publicar import publicar_do_gesto
+
+    if not autoridade:
+        return {}
+    try:
+        publicada = publicar_do_gesto(
+            actor=actor,
+            processo_id=processo_id,
+            edital_id=edital_id,
+            convocacoes=convocacoes,
+            autoridade=autoridade,
+            idempotency_key=f"{chave}:publicar",
+            correlation_id=correlacao,
+        )
+    except DomainError as recusa:
+        return {"publicacao": None, "publicacaoRecusa": recusa.detail}
+    return {"publicacao": publicada, "publicacaoRecusa": ""}
+
+
+def _publicada_no_gps(declarado, quantas):
+    """O resultado de um gesto que convocou e publicou no GPS: nada foi enviado, e nada aguarda."""
+    publicacao = declarado.get("publicacao") or {}
+    return {
+        "enviadas": quantas,
+        "falhas": 0,
+        "aguardandoPublicacao": 0,
+        "recusas": {},
+        "porPublicacao": True,
+        "noGps": True,
+        "referencia": publicacao.get("titulo", ""),
+        "publicacao": publicacao,
+    }
+
 
 # --- O que é derivado --------------------------------------------------------------------------
 
@@ -393,6 +460,26 @@ def conferencia_dos_titulares(
         "prazo": _prazo_da_conferencia(instante, origem, canal, agora),
         "fora": _fora_do_gesto(previa, leitura),
         "versao": previa["versao"],
+        # A vaga e a lista como a relação pública as nomeia (159, FR-6802): o que a conferência
+        # mostra como público é o que a publicação imprime, e não o rótulo da gestão.
+        "publico": _nomes_publicos(previa["versao"], perfil, lista),
+    }
+
+
+def _nomes_publicos(versao, perfil_id, lista_id):
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+    from processo_seletivo.convocacao.application.publicar import LISTA_AMPLA
+
+    conteudo = versao.content or {}
+    perfil = por_identidade(conteudo.get("profiles"), perfil_id) or {}
+    modalidades = {
+        str(m.get("id")): m.get("name") or ""
+        for m in perfil.get("competitionModalities") or []
+        if isinstance(m, dict)
+    }
+    return {
+        "vaga": perfil.get("name") or "",
+        "lista": (modalidades.get(str(lista_id)) if lista_id else LISTA_AMPLA) or LISTA_AMPLA,
     }
 
 
@@ -493,8 +580,16 @@ def convocar_titulares(
     evento_id="",
     complemento="",
     endereco_do_portal="",
+    veiculo="",
+    autoridade=None,
+    declaracao_do_veiculo="",
 ):
-    """Convoca os titulares da prévia confirmada, e depois comunica cada um (`FR-860`, `FR-871`)."""
+    """Convoca os titulares da prévia confirmada, comunica cada um e publica (`FR-860`; 159).
+
+    **Uma confirmação, as três consequências** (159, FR-6801). Por publicação no GPS, a publicação
+    oficial nasce na transação das convocações (D-004); por mensagem, a relação informativa das
+    comunicadas com sucesso sai depois dos envios (D-005); por publicação externa, como antes.
+    """
     payload = {
         "edital": str(edital_id),
         "perfil": str(perfil_id),
@@ -504,6 +599,9 @@ def convocar_titulares(
         "vencimento": vencimento.isoformat() if vencimento else "",
         "evento": str(evento_id or ""),
         "complemento": (complemento or "").strip(),
+        "veiculo": veiculo or "",
+        "autoridade": str(autoridade or ""),
+        "declaracao": (declaracao_do_veiculo or "").strip(),
     }
     correlacao = correlacao_do_gesto(idempotency_key)
     with comando_de_comissao(
@@ -529,6 +627,8 @@ def convocar_titulares(
                 evento_id=evento_id,
                 agora=ctx.now,
             )
+            no_gps = _no_gps(previa["forma"], veiculo)
+            _conferir_autoridade(edital, autoridade, ctx.now)
             praticadas = convocar_em_sequencia(
                 ctx,
                 actor=actor,
@@ -546,20 +646,52 @@ def convocar_titulares(
                 "convocadas": [declarado_da_convocacao(c) for c in praticadas],
                 "forma": previa["forma"],
             }
+            if no_gps:
+                from processo_seletivo.convocacao.application.publicar import (
+                    publicar_na_transacao,
+                )
+
+                declarado["publicacao"] = publicar_na_transacao(
+                    ctx,
+                    actor=actor,
+                    edital=edital,
+                    convocacoes=[c.id for c in praticadas],
+                    autoridade=autoridade,
+                    declaracao=declaracao_do_veiculo,
+                    correlation_id=correlacao,
+                    idempotency_key=idempotency_key,
+                )
+                declarado["noGps"] = True
             ctx.concluir_sem_resultado(201, declarado)
     # **Depois do `commit`, e nunca dentro dele** (`D-006`): o SMTP lento não trava o certame, e um
     # `rollback` não desfaz o registro deixando a mensagem enviada.
-    return {
+    ids = [c["id"] for c in declarado["convocadas"]]
+    if declarado.get("noGps"):
+        return {**declarado, **_publicada_no_gps(declarado, len(ids))}
+    resultado = {
         **declarado,
         **comunicar_cada(
             actor=actor,
             processo_id=processo_id,
-            convocacoes=[c["id"] for c in declarado["convocadas"]],
+            convocacoes=ids,
             forma=declarado["forma"],
             chave=idempotency_key,
             endereco_do_portal=endereco_do_portal,
         ),
     }
+    if declarado["forma"] != FORMA_POR_PUBLICACAO:
+        resultado.update(
+            _publicar_depois(
+                actor=actor,
+                processo_id=processo_id,
+                edital_id=edital_id,
+                convocacoes=ids,
+                autoridade=autoridade,
+                chave=idempotency_key,
+                correlacao=correlacao,
+            )
+        )
+    return resultado
 
 
 def comunicar_cada(
@@ -766,8 +898,15 @@ def convocar_e_comunicar(
     justifica_precedencia=False,
     endereco_do_portal="",
     correcao=None,
+    veiculo="",
+    autoridade=None,
+    declaracao_do_veiculo="",
 ):
     """A chamada individual da `050`: espécie e fundamento derivados, e a comunicação no mesmo ato.
+
+    **E a publicação na mesma confirmação** (159, FR-6816): a chamada da fila, a regularização e a
+    correção seguem a regra dos titulares — no GPS, na transação da convocação; por mensagem, depois
+    do envio, só se ele saiu.
 
     **O fundamento é derivado dentro do comando**, depois de a espécie ser conhecida e sob a trava:
     derivá-lo antes, fora dela, gravaria o texto de uma apuração que outra pessoa pode ter sucedido
@@ -791,6 +930,9 @@ def convocar_e_comunicar(
             campo="vencimento",
         )
     _recusar_vencimento_passado(instante, timezone.now())
+    forma = forma_vigente(versao, identificador(perfil_id))
+    no_gps = _no_gps(forma, veiculo)
+    _conferir_autoridade(edital, autoridade, timezone.now())
     texto_do_edital, texto_do_recorte = rotulos(
         edital, versao, perfil_id=identificador(perfil_id), lista_id=lista_id
     )
@@ -824,9 +966,17 @@ def convocar_e_comunicar(
         correlation_id=correlation_id,
         razao_adicional=_razao_do_vencimento(instante, origem),
         correcao=correcao,
+        ao_gravar=(
+            _publicar_com_a_convocacao(
+                actor, edital, autoridade, declaracao_do_veiculo, correlation_id, idempotency_key
+            )
+            if no_gps
+            else None
+        ),
     )
-    forma = forma_vigente(versao, identificador(perfil_id))
-    return {
+    if declarado.get("publicacao") is not None:
+        return {"convocacao": declarado, **_publicada_no_gps(declarado, 1)}
+    resultado = {
         "convocacao": declarado,
         **comunicar_cada(
             actor=actor,
@@ -838,6 +988,38 @@ def convocar_e_comunicar(
             correlacao=correlation_id,
         ),
     }
+    if forma != FORMA_POR_PUBLICACAO:
+        resultado.update(
+            _publicar_depois(
+                actor=actor,
+                processo_id=processo_id,
+                edital_id=edital_id,
+                convocacoes=[declarado["id"]],
+                autoridade=autoridade,
+                chave=idempotency_key,
+                correlacao=correlation_id,
+            )
+        )
+    return resultado
+
+
+def _publicar_com_a_convocacao(actor, edital, autoridade, declaracao, correlacao, chave):
+    """O gancho que publica no GPS dentro da transação da chamada individual (159, D-004)."""
+    from processo_seletivo.convocacao.application.publicar import publicar_na_transacao
+
+    def publicar(ctx, convocacao):
+        return publicar_na_transacao(
+            ctx,
+            actor=actor,
+            edital=edital,
+            convocacoes=[convocacao.id],
+            autoridade=autoridade,
+            declaracao=declaracao,
+            correlation_id=correlacao,
+            idempotency_key=chave,
+        )
+
+    return publicar
 
 
 # --- O não atendimento dos vencidos (`DP-16`, opção B) -------------------------------------------
@@ -1021,8 +1203,13 @@ def emitir_pendentes(
     lista_id=None,
     referencia_da_publicacao="",
     endereco_do_portal="",
+    autoridade=None,
 ):
     """Emite, pessoa a pessoa, as comunicações pendentes do recorte (`FR-874`, `FR-876`, `D-012`).
+
+    **E publica as que saírem, na mesma confirmação** (159, FR-6807, FR-6811): a publicação externa
+    registrada e a mensagem reenviada entram na página pública como relação informativa, sem mudar
+    o instante de onde o prazo corre.
 
     **Autorizar antes de trabalhar** (Princípio III), como o `comunicar` faz. O gesto não abre
     transação própria: cada emissão tem a sua, com a chave reservada antes do envio — é isso que
@@ -1055,15 +1242,29 @@ def emitir_pendentes(
             422,
             campo="referencia_da_publicacao",
         )
-    return comunicar_cada(
+    _conferir_autoridade(edital, autoridade, timezone.now())
+    ids = [str(linha["convocacao"].id) for linha in previa["linhas"]]
+    resultado = comunicar_cada(
         actor=actor,
         processo_id=processo_id,
-        convocacoes=[str(linha["convocacao"].id) for linha in previa["linhas"]],
+        convocacoes=ids,
         forma=previa["forma"] or FORMA_POR_MENSAGEM_INDIVIDUAL,
         chave=idempotency_key,
         endereco_do_portal=endereco_do_portal,
         referencia=referencia,
     )
+    resultado.update(
+        _publicar_depois(
+            actor=actor,
+            processo_id=processo_id,
+            edital_id=edital_id,
+            convocacoes=ids,
+            autoridade=autoridade,
+            chave=idempotency_key,
+            correlacao=correlacao_do_gesto(idempotency_key),
+        )
+    )
+    return resultado
 
 
 __all__ = [

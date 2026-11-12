@@ -76,7 +76,9 @@ O que este parcial decide, e por quê:
       <textarea id="complemento-da-correcao-{{ n }}" name="complemento" rows="2" aria-describedby="ajuda-complemento-da-correcao-{{ n }}">{% if recusa and not recusa.cartaoMudou %}{{ recusa.campos.complemento }}{% endif %}</textarea>
       <span class="ajuda" id="ajuda-complemento-da-correcao-{{ n }}"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado. Escrito um complemento, você verá o texto como o candidato antes de corrigir.</span>
     </p>
-    <p class="acoes"><button type="submit" class="botao">Corrigir a convocação de {{ linha.inscricao.protocolo }}</button></p>
+    {% with sufixo="correcao-"|add:n %}{% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=canal_declarado.publicacao %}{% endwith %}
+    {% if canal_declarado.publicacao %}<p class="acoes"><button type="submit" class="botao" name="veiculo" value="GPS">Corrigir a convocação de {{ linha.inscricao.protocolo }} e publicar no GPS</button> <button type="submit" class="botao" name="veiculo" value="EXTERNO" formnovalidate>Corrigir (a publicação será registrada depois)</button></p>
+    {% else %}<p class="acoes"><button type="submit" class="botao">Corrigir a convocação de {{ linha.inscricao.protocolo }}, reenviar a mensagem e publicar</button></p>{% endif %}
   </form>
   {% endif %}
 </details>

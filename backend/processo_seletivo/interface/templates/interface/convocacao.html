@@ -262,9 +262,11 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
       <input type="text" id="publicacao-pendentes" name="referencia_da_publicacao" required aria-describedby="ajuda-publicacao-pendentes">
       <span class="ajuda" id="ajuda-publicacao-pendentes">O sistema não publica no site do certame. Publique a lista acima e diga onde e quando — por exemplo, “site do Cefor, 13/09/2026”. O prazo de todas corre a partir dela.</span>
     </p>
-    <p class="acoes"><button type="submit" class="botao">Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} {{ pendentes.linhas|length }}</button></p>
+    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=False sufixo="pendentes" %}
+    <p class="acoes"><button type="submit" class="botao">Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} {{ pendentes.linhas|length }} e divulgar no GPS</button></p>
     {% else %}
-    <p class="acoes"><button type="submit" class="botao">Emitir {{ pendentes.linhas|length }} {{ pendentes.linhas|length|plural:"comunicação,comunicações" }}</button></p>
+    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=False sufixo="reenvio" %}
+    <p class="acoes"><button type="submit" class="botao">Emitir {{ pendentes.linhas|length }} {{ pendentes.linhas|length|plural:"comunicação,comunicações" }} e publicar a relação</button></p>
     {% endif %}
   </form>
 </section>
@@ -764,7 +766,9 @@ praticadas". {% endcomment %}
       <label><input type="checkbox" name="justifica_precedencia" value="1" aria-describedby="ajuda-precedencia"> Convocar à frente de quem ainda não foi chamado</label>
     </p>
     <span class="ajuda" id="ajuda-precedencia">Marque apenas se esta pessoa não é a próxima da fila e há fundamento para passá-la à frente. A exceção fica registrada na trilha.</span>
-    <p class="acoes"><button type="submit" class="botao">Convocar</button></p>
+    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=canal_declarado.publicacao sufixo="individual" %}
+    {% if canal_declarado.publicacao %}<p class="acoes"><button type="submit" class="botao" name="veiculo" value="GPS">Convocar e publicar no GPS</button> <button type="submit" class="botao" name="veiculo" value="EXTERNO" formnovalidate>Convocar (a publicação será registrada depois)</button></p>
+    {% else %}<p class="acoes"><button type="submit" class="botao">Convocar, enviar a mensagem e publicar</button></p>{% endif %}
   </form>
   </details>
   {% endif %}
@@ -819,7 +823,9 @@ classificado antes do primeiro.
       <textarea id="complemento-regularizar" name="complemento" rows="2" aria-describedby="ajuda-complemento-regularizar"></textarea>
       <span class="ajuda" id="ajuda-complemento-regularizar"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado.</span>
     </p>
-    <p class="acoes"><button type="submit" class="botao">Convocar para regularizar</button></p>
+    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=canal_declarado.publicacao sufixo="regularizar" %}
+    {% if canal_declarado.publicacao %}<p class="acoes"><button type="submit" class="botao" name="veiculo" value="GPS">Convocar para regularizar e publicar no GPS</button> <button type="submit" class="botao" name="veiculo" value="EXTERNO" formnovalidate>Convocar para regularizar (a publicação será registrada depois)</button></p>
+    {% else %}<p class="acoes"><button type="submit" class="botao">Convocar para regularizar, enviar a mensagem e publicar</button></p>{% endif %}
   </form>
   </details>
   {% endif %}

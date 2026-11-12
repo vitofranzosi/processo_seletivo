@@ -44,3 +44,6 @@
   border-top:4px solid var(--vermelho);border-radius:6px;padding:1rem 1.25rem 0;margin:0 0 2rem}
 .confirmacao-da-convocacao>p:first-child{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem}
 .confirmacao-da-convocacao .salvar{border-top:0;padding:.75rem 0 1rem}
+/* A publicação na mesma conferência (159, FR-6802): o que fica público, a natureza, a autoridade e a
+   declaração, antes dos botões que dizem as consequências. */
+.publicacao-na-conferencia .campo{max-width:var(--leitura)}

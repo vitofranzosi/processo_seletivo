@@ -9054,6 +9054,10 @@ def convocacao(request, edital_id, marco_id):
         "leitura": leitura,
     }
     previas = _previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}
+    if pode_emitir:
+        # Quem assina a publicação que a confirmação pratica (159, FR-6802): nos formulários de
+        # convocar, de corrigir e das pendentes, e não num segundo percurso.
+        previas["escolha_da_autoridade"] = _escolha_da_autoridade(edital)
     publicadas_no_gps = _publicadas_no_gps(leitura)
     # O aviso de pendência documental (134, FR-4603, FR-4605): para quem confere este Perfil, com
     # quantas pessoas o gesto alcançaria agora e quantas ficam de fora — e, desde a `143`, o motivo
@@ -10143,6 +10147,7 @@ def convocar_view(request, edital_id, marco_id):
                 complemento=request.POST.get("complemento") or "",
                 motivo=(request.POST.get("motivo") or "").strip(),
                 justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
+                **_publicacao_do_formulario(request),
                 idempotency_key=request.POST.get("chave") or uuid4().hex,
                 correlation_id=f"interface-convocacao-{edital_id}",
                 endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
@@ -10440,7 +10445,15 @@ def convocar_titulares_view(request, edital_id, marco_id):
     vencimento = _instante_ou_none(request.POST.get("vencimento"))
     evento_id = (request.POST.get("evento") or "").strip()
     complemento = request.POST.get("complemento") or ""
-    confirmar = request.POST.get("etapa") == "confirmar"
+    # **O veículo vem no botão de confirmar** (159, D-006): "confirmar-gps" convoca e publica no
+    # GPS; "confirmar-externo", fora dele; "confirmar", na mensagem, convoca, envia e publica.
+    etapa = request.POST.get("etapa") or ""
+    confirmar = etapa in ("confirmar", "confirmar-gps", "confirmar-externo")
+    veiculo = {"confirmar-gps": fluxo.VEICULO_GPS, "confirmar-externo": fluxo.VEICULO_EXTERNO}.get(
+        etapa, ""
+    )
+    autoridade = request.POST.get("autoridade") or None
+    declaracao = request.POST.get("declaracao_do_veiculo") or ""
 
     def praticar(**comum):
         return fluxo.convocar_titulares(
@@ -10449,6 +10462,9 @@ def convocar_titulares_view(request, edital_id, marco_id):
             evento_id=evento_id,
             complemento=complemento,
             endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            veiculo=veiculo,
+            autoridade=autoridade,
+            declaracao_do_veiculo=declaracao,
         )
 
     def gesto():
@@ -10495,6 +10511,8 @@ def convocar_titulares_view(request, edital_id, marco_id):
         complemento=complemento,
         # A confirmação que chegou e não conferiu: o texto de agora não é o que foi visto (FR-4809).
         erro=conferencia_do_texto.TEXTO_MUDOU if confirmar else "",
+        autoridade=autoridade or "",
+        declaracao=declaracao,
     )
 
 
@@ -10512,7 +10530,18 @@ def _texto_conferido_dos_titulares(conferencia):
 
 
 def _pagina_da_conferencia_dos_titulares(
-    request, edital, marco_id, lista_id, *, conferencia, resumo, campos, complemento, erro
+    request,
+    edital,
+    marco_id,
+    lista_id,
+    *,
+    conferencia,
+    resumo,
+    campos,
+    complemento,
+    erro,
+    autoridade="",
+    declaracao="",
 ):
     from processo_seletivo.convocacao.application.fluxo import rotulos
 
@@ -10522,9 +10551,12 @@ def _pagina_da_conferencia_dos_titulares(
     )
     pessoas = len(conferencia.get("pessoas") or ())
     artigo = "a" if pessoas == 1 else "as"
+    # **O botão diz as consequências** (159, FR-6803): por mensagem, convocar, enviar e publicar;
+    # por publicação, os dois botões do template, um por veículo.
     botao = f"Convocar {artigo} {pessoas}"
     if conferencia.get("recusa") is None and not conferencia["publicacao"]:
-        botao += f" e enviar {pessoas} {'mensagem' if pessoas == 1 else 'mensagens'}"
+        mensagens = "mensagem" if pessoas == 1 else "mensagens"
+        botao += f", enviar {pessoas} {mensagens} e publicar a relação"
     return marcar_como_privada(
         render(
             request,
@@ -10542,6 +10574,10 @@ def _pagina_da_conferencia_dos_titulares(
                 "complemento": complemento,
                 "rotulo_do_botao": botao,
                 "erro": erro,
+                "escolha_da_autoridade": _escolha_da_autoridade(edital),
+                "autoridade_escolhida": autoridade,
+                "declaracao": declaracao,
+                "artigo": artigo,
             },
         )
     )
@@ -10698,9 +10734,25 @@ def emitir_pendentes_view(request, edital_id, marco_id):
             **comum,
             referencia_da_publicacao=request.POST.get("referencia_da_publicacao") or "",
             endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
+            autoridade=request.POST.get("autoridade") or None,
         )
 
     return _gesto_da_convocacao(request, edital_id, marco_id, acao="pendentes", praticar=praticar)
+
+
+def _publicacao_do_formulario(request):
+    """O veículo, a autoridade e a declaração que o formulário de convocar enviou (159, FR-6816).
+
+    O veículo vem do botão apertado — nunca de um valor marcado por padrão (D-006).
+    """
+    from processo_seletivo.convocacao.application.fluxo import VEICULO_EXTERNO, VEICULO_GPS
+
+    veiculo = request.POST.get("veiculo") or ""
+    return {
+        "veiculo": veiculo if veiculo in (VEICULO_GPS, VEICULO_EXTERNO) else "",
+        "autoridade": request.POST.get("autoridade") or None,
+        "declaracao_do_veiculo": request.POST.get("declaracao_do_veiculo") or "",
+    }
 
 
 @require_http_methods(["POST"])

@@ -102,3 +102,7 @@
 }
 /* A publicação externa como alternativa nomeada, abaixo de "Publicar no GPS" (149, FR-5731). */
 .rotulo-da-alternativa{margin:1rem 0 .25rem;padding-top:.75rem;border-top:1px solid var(--borda)}
+/* A publicação no gesto de convocar (159, FR-6816): a frase do que fica público, a autoridade e a
+   declaração, logo antes dos botões. */
+.publicacao-no-gesto{margin:.75rem 0 .25rem;padding-top:.5rem;border-top:1px solid var(--borda)}
+.publicacao-no-gesto .nota{max-width:var(--leitura)}
