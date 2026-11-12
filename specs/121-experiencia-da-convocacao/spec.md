@@ -100,6 +100,9 @@ arquivos das specs revistas neste mesmo PR (D-001).
 
 - Q: O título da página? → A: **"Você foi convocado!"**, sem afirmar matrícula, contratação, bolsa
   concedida ou vaga garantida, e com o resto da interface coerente com ele (1ª decisão do estudo).
+  *Revista pela `154` em 2026-11-11, por decisão do usuário, que vigora com a implementação dela:*
+  a resposta vale com providência pendente do candidato; sem ela, o título é **"Acompanhe sua
+  convocação"** (FR-6202 da `154`). A resposta acima, de 05/11, fica preservada como estava.
 - Q: Para onde aponta o link da mensagem (FR-1104 da `059`)? → A: Para a convocação específica
   (2ª decisão do estudo).
 - Q: O acesso? → A: E-mail e código, com o destino preservado, inclusive no primeiro acesso e na
@@ -286,7 +289,9 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   convocação, sem data, sem dia da semana e sem contagem; a consequência não aparece (FR-1177 da
   `063`). Na mensagem, o e-mail não existe ainda: ele é o que inicia o prazo. Na publicação, o cenário
   só existe na correção de convocação já comunicada: antes do registro da primeira publicação, a
-  convocação não aparece no portal (FR-3981 da `125`).
+  convocação não aparece no portal (FR-3981 da `125`). *Acréscimo da `154`, em 2026-11-11, que
+  vigora com a implementação dela:* o título é *"Você foi convocado!"* com providência pendente do
+  candidato, e *"Acompanhe sua convocação"* sem ela (FR-6202 da `154`).
 
   > **Redação anterior à `125`, preservada:** O título é *"Você foi convocado!"*; o cartão do prazo diz
   > só a frase da FR-3749 da `118`, sem data, sem dia da semana e sem contagem; a consequência não
@@ -341,12 +346,14 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 #### A. A chamada
 
-- **FR-3858**: Com convocação vigente, o título de primeiro nível da tela da convocação MUST depender
+- **FR-3858** *(tabela revista pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com convocação vigente, o título de primeiro nível da tela da convocação MUST depender
   do estado, com ou sem documento pedido na chamada:
 
   | Estado | Título |
   |---|---|
-  | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada | *"Você foi convocado!"* |
+  | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **com** providência pendente do candidato (FR-6200 e FR-6201 da `154`) | *"Você foi convocado!"* |
+  | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **sem** providência pendente do candidato | *"Acompanhe sua convocação"* |
   | chamada *encerrada pelo prazo* | *"O prazo desta convocação terminou"* |
   | chamada *encerrada pelo Processo* | *"O envio pelo portal está encerrado"* |
   | desfecho vigente | *"Resultado da sua convocação"* |
@@ -354,6 +361,11 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   Nenhum título MUST afirmar matrícula, contratação, bolsa concedida ou vaga garantida (FR-3751 da
   `118`; UX-155 a UX-158 da `063`). O título por estado **absorve** o título do bloco 1 da FR-3741 e
   da FR-3742 da `118`, que não se repete abaixo dele (D-005).
+
+  > **Redação anterior à `154`, preservada:** a primeira linha da tabela era uma só — *chamada
+  > aberta, prazo correndo, sem vencimento ou com a comunicação não enviada* → *"Você foi
+  > convocado!"*. *Por que mudou:* o título de chamada continuava para quem já tinha enviado tudo
+  > (achado 20 do estudo da jornada final, decisão do usuário de 11/11/2026).
 - **FR-3859**: Com documento pedido na chamada e a chamada *aberta*, a primeira parte da tela — a
   **chamada** — MUST dizer, nesta ordem: o contexto curto (o Perfil e o Edital, *"‹Perfil› · Edital
   ‹NN/AAAA›"*); o título da FR-3858; a etapa (FR-3860); o cartão do prazo (FR-3861); o resumo do que
@@ -387,7 +399,8 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   ato. O rótulo MUST NOT começar por "Enviar", porque o link só navega (FR-3730 da `118`). Sem tarefa,
   não há ação principal; com opcional a enviar, vale a linha da `118` com âncora para o bloco *O que
   falta*.
-- **FR-3864**: Depois da ação, em texto corrido e sem moldura, a tela MUST mostrar a frase de
+- **FR-3864** *(acrescida pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Depois da ação, em texto corrido e sem moldura, a tela MUST mostrar a frase de
   consequência da FR-1177 da `063`, na condição dela e sem acréscimo, e a **ressalva**:
   - com o Requerimento de Matrícula pedido: *"Esta convocação ainda não é a matrícula: a comissão
     confere o que você enviar e registra o resultado."*;
@@ -395,6 +408,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
     registra o resultado."* (D-003).
 
   Nenhuma outra frase de consequência MUST existir na tela (FR-1177 da `063`).
+
+  **Acréscimo da `154`.** A condição da FR-1177 da `063`, revista pela `154`, exige providência
+  pendente do candidato: sem ela, a frase de consequência não aparece, e a ressalva continua (FR-6209
+  e FR-6210 da `154`).
+
+  > **Redação anterior à `154`:** a mesma, sem este acréscimo.
 - **FR-3865**: Com documento pedido e a chamada *aberta*, depois da chamada, a tela MUST mostrar o
   **andamento**, com título de segundo nível *"Andamento"*: as contagens da FR-3727 da `118` em palavra
   e número — *a corrigir* (só quando houver), *a enviar*, *aguardando conferência* e *conferidos* —,

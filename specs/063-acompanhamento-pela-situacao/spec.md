@@ -446,13 +446,14 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   > registrado, sem afirmar perda (FR-274).
   >
   > *Por que mudou:* o mesmo instante era dito em três formatos e em três redações do vencido (F4).
-- **FR-1177** *(acrescida pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+- **FR-1177** *(acrescida pela `118` em 2026-11-04; revista pela `154` em 2026-11-11, que vigora com a implementação dela — as redações anteriores estão ao fim desta alínea)*:
   A consequência DEVE vir do Edital ou do ato quando ele a declarar; enquanto nenhum
   dos dois a declarar em forma estruturada (L-4), a tela DEVE usar só as duas frases neutras:
   "Novas chamadas, se houver, serão publicadas conforme o Edital." (aguardando) e "Se você não
   atender no prazo, a comissão poderá registrar o não atendimento desta convocação." (convocado,
-  **somente** com a comunicação enviada, vencimento registrado e prazo não encerrado). Sem
-  comunicação enviada, sem vencimento ou com o prazo encerrado, nenhuma frase de consequência. A
+  **somente** com a comunicação enviada, vencimento registrado, prazo não encerrado **e
+  providência pendente do candidato** — FR-6200 e FR-6201 da `154`). Sem comunicação enviada, sem
+  vencimento, com o prazo encerrado ou sem providência pendente, nenhuma frase de consequência. A
   tela NÃO DEVE afirmar perda automática da convocação ou da vaga. Nenhuma outra frase de
   consequência DEVE existir na tela.
 
@@ -462,12 +463,23 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   preveem. A segunda frase neutra pode aparecer também na tela da convocação, na mesma condição
   (FR-3737 da `118`). As duas continuam sendo as únicas que falam de consequência.
 
+  > **Redação anterior à `154`, preservada:** a mesma, com a condição da segunda frase "(convocado,
+  > **somente** com a comunicação enviada, vencimento registrado e prazo não encerrado)" e "Sem
+  > comunicação enviada, sem vencimento ou com o prazo encerrado, nenhuma frase de consequência."
+  >
+  > *Por que mudou:* a advertência assustava quem já tinha enviado tudo (achado 20 do estudo da
+  > jornada final, decisão do usuário de 11/11/2026).
+  >
   > **Redação anterior à `118`:** a mesma, sem este acréscimo.
-- **FR-1178** *(revisada pela `118` em 2026-11-04 — a redação anterior está ao fim desta alínea)*:
+- **FR-1178** *(revisada pela `118` em 2026-11-04; revista pela `154` em 2026-11-11, que vigora com a implementação dela — as redações anteriores estão ao fim desta alínea)*:
   "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa. Na convocação com
   documento pedido e nada a fazer, ela DEVE vir seguida da frase de conclusão da FR-3728 da `118`,
-  que diz que a comissão ainda vai concluir a análise.
+  que diz que a comissão ainda vai concluir a análise, ou, com a conferência já feita e sem
+  desfecho, da frase do próximo passo (FR-6205 da `154`).
 
+  > **Redação anterior à `154`, preservada:** a mesma, terminando em "seguida da frase de conclusão
+  > da FR-3728 da `118`, que diz que a comissão ainda vai concluir a análise."
+  >
   > **Redação anterior à `118`, preservada:**
   > "Nada por enquanto" DEVE ser a ação quando nenhum ato pede algo da pessoa.
 - **FR-1179**: O canal citado DEVE ser o que o Perfil declara na forma de convocação ("por
