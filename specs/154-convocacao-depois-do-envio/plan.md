@@ -6,8 +6,9 @@
 `main` em `d1ec1e0a`, **depois** do PR #477, que já tinha mexido em `interface/conducao_da_convocacao.py`,
 `interface/andamento.py`, `interface/views.py` e `interface/templates/interface/convocacao.html`.
 
-**Decisões**: todas do usuário (as oito dos achados 20 e 23 e as D-001 a D-006), e nenhuma se
-reabre. Os `R-` de [research.md](research.md) dizem onde e como cada requisito se cumpre no código, e
+**Decisões**: todas do usuário (as oito dos achados 20 e 23 e as D-001 a D-007), e nenhuma se
+reabre. A D-007 veio do `/speckit-analyze`: a página da convocação sem documento fica sem a
+advertência, como hoje. Os `R-` de [research.md](research.md) dizem onde e como cada requisito se cumpre no código, e
 o que o plano escolheu dentro da latitude da spec (R-009 e R-012 registram as duas escolhas de
 texto que um revisor pode querer ver).
 
@@ -89,7 +90,8 @@ Sem violação. Pós-desenho: igual — o desenho não acrescentou estado, rota 
   o `prazo` como hoje (R-004).
 - `situacao.py`, `_acao_da_convocacao`: a `consequencia` só com
   `providencia_pendente_sem_documento(politica)` (R-005).
-- `views.py`, `_chamada_da_tela`, ramo sem projeção: o título sem providência (R-005).
+- `views.py`, `_chamada_da_tela`, ramo sem projeção: o título sem providência (R-005). A página sem
+  documento continua sem a advertência (D-007).
 - `_chamada_da_convocacao.html`: `{% if o.prazo %}` da consequência vira `{% if o.cabe_a_consequencia %}`;
   o comentário do template diz por quê (achado 20 do estudo, FR-6209).
 - `acompanhamento.html` não muda: ele já só mostra `acao.consequencia` quando vem preenchida.
@@ -124,6 +126,8 @@ que nenhum leitor compara o motivo gravado com a constante.
   cenários das SC-2000 a SC-2003, contando ocorrências da advertência (zero ou exatamente uma).
 - **Falsas conclusões** (novo, `tests/interface/test_convocacao_depois_do_envio.py`): FR-6207 sobre o
   HTML renderizado de cada cenário sem desfecho (R-013).
+- **O nome na gestão** (novo, `tests/interface/test_nome_do_reenviado.py`): o rótulo, a contagem e o
+  HTML sem *complementad* na página de documentos (SC-2004, R-013).
 - **Varredura** (`tests/test_vocabulario_dos_documentos_da_convocacao.py`): os nomes antigos da
   FR-6214 (R-013).
 - **Gravado não muda** (`tests/integration/avisos/test_aviso_de_pendencia.py`): um gesto registrado
@@ -184,6 +188,7 @@ backend/processo_seletivo/
 backend/tests/
 ├── unit/convocacao/test_vocabulario_dos_documentos.py # novo
 ├── interface/test_convocacao_depois_do_envio.py       # novo: FR-6207 renderizado
+├── interface/test_nome_do_reenviado.py                # novo: o nome na página de documentos da gestão
 └── (os da R-014, alterados)
 ```
 

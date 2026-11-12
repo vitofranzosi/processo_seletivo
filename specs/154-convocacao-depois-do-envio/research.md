@@ -100,6 +100,10 @@ tela já leu, sem consulta nova:
   providência, o título é `TITULO_SEM_PROVIDENCIA`;
 - `portal/situacao.py`, `_acao_da_convocacao`: a `consequencia` só com providência.
 
+**A página da convocação sem documento não ganha a advertência** (D-007, decisão do usuário depois
+da análise): ela nunca a mostrou, porque o parcial da chamada só a põe com a projeção. A condição
+nova da advertência, nesse ramo, vale só para o acompanhamento (`_acao_da_convocacao`).
+
 O bloco *"O que fazer — Siga as instruções do Edital…"* da tela sem documento e o link *"Conferir o
 Requerimento de Matrícula enviado"* não mudam (FR-6201: "a ação e o link de hoje… não mudam"). A
 frase da conferência terminada não existe nesse ramo, porque ele não tem projeção (FR-6205).
