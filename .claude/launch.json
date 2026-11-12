@@ -615,6 +615,16 @@
       "url": "http://localhost:8144"
     },
     {
+      "name": "destinacao-155",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_155_min DB_ROLE=runtime DB_RUNTIME_USER=ps155_runtime DB_RUNTIME_PASSWORD=ps155-runtime INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-155min uv run python manage.py runserver 8155"
+      ],
+      "port": 8155,
+      "url": "http://localhost:8155"
+    },
+    {
       "name": "conferencia-157",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

@@ -8,6 +8,10 @@ apuração antiga alimentando a função com o que o ato congelou.
 gravadas; `faltando` é `efetivas - ocupadas`, calculado na leitura. Guardar a quarta seria
 armazenar o derivável — e `efetivas`, ao contrário, **precisa** ser gravada, porque depende de
 somar movimentos e `CHECK` não agrega (016, R-006).
+
+**A vaga não preenchida entra no "a ocupar", e não nas efetivas** (155, R-002): `faltando` passa a
+`efetivas - ocupadas - nao_preenchidas`, e a soma das declarações é gravada ao lado das três, pela
+mesma razão de `efetivas`.
 """
 
 from processo_seletivo.ocupacao.domain import nomes
@@ -31,6 +35,24 @@ def mesma_lista(a, b):
     `UUID` de um lado e `str` do outro — normalizar num lugar só evita a divergência silenciosa.
     """
     return (str(a) if a else None) == (str(b) if b else None)
+
+
+def saldo_das_nao_preenchidas(lidas):
+    """Declarações menos desfazimentos, sobre `(especie, quantidade)` na ordem congelada (155).
+
+    A forma de `acrescimo.saldo`, e pela mesma razão: a quantidade é sempre positiva, e o sinal vem
+    da espécie. **Sem piso em zero**: o desfazimento que passasse da declaração é defeito do ato,
+    que o recusa sob a trava, e um zero aqui o esconderia — negativo, a coluna o recusa no banco.
+    """
+    total = 0
+    for especie, quantidade in lidas:
+        if especie == nomes.NAO_PREENCHIDA_DECLARACAO:
+            total += int(quantidade)
+        elif especie == nomes.NAO_PREENCHIDA_DESFAZIMENTO:
+            total -= int(quantidade)
+        else:
+            raise ValueError(f"espécie de vaga não preenchida desconhecida: {especie!r}")
+    return total
 
 
 class EmpateNaFronteiraDoAlvo(Exception):
@@ -330,14 +352,17 @@ def apurar(
     return int(publicadas), efetivas, ocupadas
 
 
-def faltando(*, efetivas, ocupadas):
-    """`efetivas - ocupadas`, nunca abaixo de zero.
+def faltando(*, efetivas, ocupadas, nao_preenchidas=0):
+    """`efetivas - ocupadas - nao_preenchidas`, nunca abaixo de zero.
 
     Não é coluna: é aritmética da mesma linha, sem junção e sem agregado. O piso em zero existe
     porque a fronteira do empate pode fazer a faixa alcançar mais gente que o alvo — e nesse caso
     não faltam vagas negativas, faltam zero.
+
+    `nao_preenchidas` tem padrão zero porque é o que toda conta anterior à `155` leu, e a prévia da
+    classificação não tem declaração nenhuma a ler (155, FR-6326).
     """
-    return max(int(efetivas) - int(ocupadas), 0)
+    return max(int(efetivas) - int(ocupadas) - int(nao_preenchidas), 0)
 
 
 def estado(*, tem_quadro, tem_apuracao, causas_de_obsolescencia):

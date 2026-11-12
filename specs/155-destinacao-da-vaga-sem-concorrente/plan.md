@@ -21,6 +21,26 @@ Uma derivação só alimenta a ocupação, o Centro e a convocação (R-008).
 bloqueado. Até ela fechar, a emissão continua a mover vaga **só** sob a declaração por saldo, como
 hoje (R-010). O resto não depende dela.
 
+## Esta entrega
+
+*(12/11/2026.)* A implementação dos incrementos A a E foi feita e está preservada na branch
+`claude/155-destinacao-completa` e na tag `155-destinacao-completa`. O usuário aprovou entregar
+antes um recorte mínimo, e o resto fica para a **próxima entrega**, marcado assim nas seções abaixo,
+que continuam descrevendo o desenho completo:
+
+- **Entra (grupos a e b da spec):** a leitura da situação da vaga — domínio, composição na interface,
+  ocupação, Centro e convocação —, os impedimentos, a declaração de vaga não preenchida no Edital
+  silente e na linha geral, o desfazimento dela, a tabela append-only e a coluna da apuração, numa
+  migration só (`ocupacao/0005_vaga_nao_preenchida.py`).
+- **Fica:** o ato de destinação e o desfazimento dele; o desacoplamento da emissão; a passagem entre
+  cotas, com a `editais/0028`; a lista vazia e a publicação conjunta; o sorteio sem relação; a página
+  pública, o relatório e o fundamento na chamada; e as prévias.
+- **A emissão volta ao comportamento de antes da `155`** nas duas espécies: ela cede a vaga sob
+  `ON_EXHAUSTION` e `ON_BALANCE` como a `016` a escreveu. A única mudança nela é a da não
+  preenchida: lê as declarações do recorte, não cede a vaga declarada e recusa pelo nome a conta que
+  passaria das vagas. Onde a reversão declarada não cede (a V-1), a tela diz a regra e o próximo
+  passo, sem botão.
+
 ## Technical Context
 
 **Language/Version**: Python 3.12, Django 5 (monólito)
@@ -70,11 +90,11 @@ Cada incremento é testável sozinho, e a ordem é a das dependências.
 
 | Inc. | O quê | Requisitos | Depende de |
 |---|---|---|---|
-| **A** | A terceira resposta da reversão (passagem entre cotas): declaração, validação, coluna, frase, Retificação, revisão, dúvidas, prévias, contrato | FR-6317, FR-6318, FR-6319, UX-603 | — |
-| **B** | A leitura da situação e o ato de destinação por esgotamento: domínio, comando, prévia e conferência, desacoplamento por esgotamento, Centro, convocação, prévias e equivalências | FR-6300 a FR-6304, FR-6306 a FR-6316, FR-6343, FR-6344, UX-600 a UX-602 | A (a recusa da passagem) |
-| **C** | A vaga não preenchida, o Edital silente e a linha geral, e os desfazimentos | FR-6320 a FR-6327, FR-6334 a FR-6336 | B (a situação e os impedimentos) |
-| **D** | A lista vazia: o gesto, a publicação conjunta e o sorteio sem relação | FR-6328 a FR-6333 | B (a destinação sem apuração de origem) |
-| **E** | A página pública, o relatório e o fundamento na chamada | FR-6337 a FR-6340 | B, C |
+| **A** *(próxima entrega)* | A terceira resposta da reversão (passagem entre cotas): declaração, validação, coluna, frase, Retificação, revisão, dúvidas, prévias, contrato | FR-6317, FR-6318, FR-6319, UX-603 | — |
+| **B** *(nesta entrega, a leitura da situação e os impedimentos; o ato, o desacoplamento e as prévias na próxima)* | A leitura da situação e o ato de destinação por esgotamento: domínio, comando, prévia e conferência, desacoplamento por esgotamento, Centro, convocação, prévias e equivalências | FR-6300 a FR-6304, FR-6306 a FR-6316, FR-6343, FR-6344, UX-600 a UX-602 | A (a recusa da passagem) |
+| **C** *(nesta entrega, menos o desfazimento da destinação)* | A vaga não preenchida, o Edital silente e a linha geral, e os desfazimentos | FR-6320 a FR-6327, FR-6334 a FR-6336 | B (a situação e os impedimentos) |
+| **D** *(próxima entrega)* | A lista vazia: o gesto, a publicação conjunta e o sorteio sem relação | FR-6328 a FR-6333 | B (a destinação sem apuração de origem) |
+| **E** *(próxima entrega)* | A página pública, o relatório e o fundamento na chamada | FR-6337 a FR-6340 | B, C |
 | **F** | **Bloqueado pela D-015**: a condição do saldo, o fim do movimento na emissão, S-1 a S-4 | FR-6305, SC-2104 (parte de S) | a decisão do usuário |
 
 ## O desenho, por módulo

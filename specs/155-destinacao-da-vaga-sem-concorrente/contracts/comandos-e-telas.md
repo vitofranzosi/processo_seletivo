@@ -1,5 +1,13 @@
 # Contrato: comandos e telas da 155
 
+> **Nesta entrega (12/11/2026, entrega mínima)** valem a declaração de vaga não preenchida e o
+> desfazimento dela, e as telas da ocupação, do Centro e da convocação que dizem a situação da vaga.
+> O resto deste contrato — a destinação e o desfazimento dela, a lista sem concorrente, a publicação
+> conjunta, a passagem entre cotas, a página pública e o relatório — é da **próxima entrega**,
+> preservada em `claude/155-destinacao-completa`, e está marcado *(próxima entrega)*. Onde o Edital
+> declara a reversão, a apuração a aplica pela regra de antes da `155`, e a tela diz por que a vaga
+> não sai, sem ato.
+
 Todos os comandos passam por `comando_de_comissao` (permissão `pode_gerir_comissao`, trava do
 Processo, idempotência por chave) e gravam evento de trilha com correlação (FR-6341). Toda escrita
 vem de dois passos — prévia com assinatura e confirmação —, e a confirmação com leitura divergente é
@@ -7,7 +15,7 @@ recusada com `leitura_do_recorte_mudou`, como no acréscimo.
 
 ## Comandos
 
-### `ocupacao.application.destinacao.destinar_vaga`
+### `ocupacao.application.destinacao.destinar_vaga` *(próxima entrega)*
 
 ```text
 destinar_vaga(*, actor, processo_id, edital_id, perfil_id, marco_id, lista_id, assinatura,
@@ -31,7 +39,7 @@ destinar_vaga(*, actor, processo_id, edital_id, perfil_id, marco_id, lista_id, a
 | `sem_saldo_a_destinar` | não há saldo, inclusive porque um movimento antigo já cedeu |
 | `leitura_do_recorte_mudou` | a assinatura da prévia não confere |
 
-### `desfazer_destinacao`
+### `desfazer_destinacao` *(próxima entrega)*
 
 - **Aceita**: um movimento de reversão sem desfazimento.
 - **Grava**: o movimento contrário, com motivo, e o evento.
@@ -44,23 +52,26 @@ destinar_vaga(*, actor, processo_id, edital_id, perfil_id, marco_id, lista_id, a
   - reserva sem reversão declarada, ou linha geral, com ninguém que ainda possa ocupar e nenhum
     impedimento;
   - fundamento não vazio.
+- **Desfazimento com chamada dependente**: grava `OCUPACAO_DESFAZIMENTO_IMPEDIDO`, com as chamadas, e
+  devolve 409 `destinacao_com_chamada_dependente` (R-005); a tela mostra o impedimento no lugar do
+  botão (FR-6335).
 - **Recusa**:
 
 | Código | Quando |
 |---|---|
 | `fundamento_obrigatorio` (422) | o fundamento está vazio |
-| `o_edital_manda_destinar` | a reversão declarada é aplicável |
-| `passagem_entre_cotas` | o Perfil declara a terceira resposta |
+| `o_edital_manda_destinar` | a reversão declarada é aplicável; nesta entrega, na reserva de todo Perfil que declara reversão, nas duas espécies |
+| `passagem_entre_cotas` | o Perfil declara a terceira resposta *(próxima entrega)* |
 | `ainda_ha_quem_ocupar` | há quem ainda possa ocupar |
 | `destinacao_impedida` | algum impedimento da FR-6306 |
 | `sem_saldo_a_destinar` | não há vaga a ocupar |
 
-### Lista sem concorrente (classificação)
+### Lista sem concorrente (classificação) *(próxima entrega)*
 
 `registrar_lista_sem_concorrente`, na interface, compõe `emitir_ordem` e `emitir_corte` numa
 transação. Recusa o que eles recusam, e mais `lista_com_concorrente`.
 
-### `divulgacao.application.publicar.publicar_resultado` (existente)
+### `divulgacao.application.publicar.publicar_resultado` (existente) *(próxima entrega)*
 
 Inclui, na mesma transação, as ordens vigentes das listas sem concorrente do marco, da mesma
 natureza e ainda não publicadas. A prévia as lista, e a assinatura as cobre.
@@ -69,15 +80,15 @@ natureza e ainda não publicadas. A prévia as lista, e a assinatura as cobre.
 
 | Tela | Rota | Muda |
 |---|---|---|
-| Ocupação | `interface:ocupacao` | a situação de cada recorte (R-008); os botões "Destinar à ampla concorrência", "Declarar vaga não preenchida" e os desfazimentos, cada um com "Confira antes" |
-| Confira antes | `interface:destinar-vaga`, `interface:declarar-nao-preenchida`, `interface:desfazer-destinacao`, `interface:desfazer-nao-preenchida` | página de conferência no molde de `ocupacao_acrescimo.html` |
-| Ordenação | `interface:registrar-lista-sem-concorrente` | o gesto da lista vazia, com a conferência que diz o que se registra |
-| Publicação do resultado | `interface:publicar-resultado` | a prévia lista as listas sem concorrente que entram junto |
+| Ocupação | `interface:ocupacao` | a situação de cada recorte (R-008); o botão "Declarar a vaga não preenchida" e o desfazimento dela, com "Confira antes"; "Destinar à ampla concorrência" e o desfazimento dele *(próxima entrega)* |
+| Confira antes | `interface:declarar-nao-preenchida`, `interface:desfazer-nao-preenchida`; `interface:destinar-vaga` e `interface:desfazer-destinacao` *(próxima entrega)* | página de conferência no molde de `ocupacao_acrescimo.html` (`ocupacao_nao_preenchida.html`, nesta entrega) |
+| Ordenação *(próxima entrega)* | `interface:registrar-lista-sem-concorrente` | o gesto da lista vazia, com a conferência que diz o que se registra |
+| Publicação do resultado *(próxima entrega)* | `interface:publicar-resultado` | a prévia lista as listas sem concorrente que entram junto |
 | Centro do Edital | detalhe do Edital | o ramo "Ocupar a vaga — impedida" passa à situação de R-008 |
 | Convocação | `interface:convocacao` | com a fila vazia, o índice cita a situação da vaga |
-| Passo Perfis | composição e Retificação | a terceira resposta |
-| Página pública da seleção | `portal:selecao` | a seção "Destinação das vagas" (`portal/_destinacao_das_vagas.html`) |
-| Relatório do Edital | `interface:relatorio-do-edital` | a seção "Destinação das vagas" |
+| Passo Perfis *(próxima entrega)* | composição e Retificação | a terceira resposta |
+| Página pública da seleção *(próxima entrega)* | `portal:selecao` | a seção "Destinação das vagas" (`portal/_destinacao_das_vagas.html`) |
+| Relatório do Edital *(próxima entrega)* | `interface:relatorio-do-edital` | a seção "Destinação das vagas" |
 
 Vocabulário: nada de "convoca*", "aceite", "matrícul*", "desistênci*" nem "chamada de suplente" nos
 arquivos da ocupação (`tests/test_vocabulario_da_ocupacao.py`). A chamada dependente é dita como

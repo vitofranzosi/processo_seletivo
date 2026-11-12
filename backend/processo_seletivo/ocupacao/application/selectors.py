@@ -6,6 +6,8 @@ mesmo desenho de `classificacao/application/corte.py`, e as causas vêm **nomead
 "divergências": a `018` já pagou esse preço.
 """
 
+from django.db.models import CharField, Value
+
 from processo_seletivo.classificacao.application.corte import (
     admite_continuacao,
     geracao_vigente,
@@ -26,7 +28,12 @@ from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupaca
 from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
 from processo_seletivo.ocupacao.domain import apuracao as calculo
 from processo_seletivo.ocupacao.domain import nomes
-from processo_seletivo.ocupacao.models import AcrescimoDeVagas, ApuracaoDeOcupacao, MovimentoDeVaga
+from processo_seletivo.ocupacao.models import (
+    AcrescimoDeVagas,
+    ApuracaoDeOcupacao,
+    MovimentoDeVaga,
+    VagaNaoPreenchida,
+)
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.models import ResultadoEtapa
 
@@ -101,6 +108,19 @@ def acrescimos_lidos_por(apuracao):
     ]
 
 
+def nao_preenchidas_do_recorte(*, edital, perfil_id, marco_id, lista_id=None):
+    """As declarações de vaga não preenchida e os desfazimentos do recorte **exato** (155, R-002).
+
+    O recorte é o exato, como o do acréscimo, e a linha geral é a lista nula (D-014). A ordem
+    `(registrado_em, id)` é a que a apuração congela em `naoPreenchidasLidas`.
+    """
+    return list(
+        VagaNaoPreenchida.objects.filter(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        ).order_by("registrado_em", "id")
+    )
+
+
 def com_o_restante(acrescimos):
     """Os registros do recorte, cada acréscimo com o que ainda tem para desfazer (`FR-2462`).
 
@@ -127,7 +147,8 @@ def com_o_restante(acrescimos):
 
 
 def causas_de_obsolescencia(apuracao, *, at=None):
-    """As **seis** causas, nomeadas (`FR-263`; a quinta veio com a `019`, a sexta com a `097`).
+    """As **sete** causas, nomeadas (`FR-263`; a quinta veio com a `019`, a sexta com a `097`, a
+    sétima com a `155`).
 
     A quarta — movimento posterior que alcança o recorte — é o que dispensa orquestração: a reversão
     não precisa disparar, em cascata, a emissão do destino. O destino aparece obsoleto, com a causa
@@ -209,7 +230,12 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 "descricao": "Um movimento de vaga alcançou este recorte depois desta apuração.",
             }
         )
-    if _efeito_posterior(apuracao):
+    # **Uma consulta para as três portas** (155, FR-6326): o efeito, o acréscimo e a declaração de
+    # vaga não preenchida eram três `EXISTS` por recorte, e a terceira, que a `155` acrescentou,
+    # fazia o relatório do Edital e a confirmação do encerramento pagarem uma consulta a mais por
+    # lista. A pergunta continua respondida no banco, e não em Python.
+    posteriores = _registros_posteriores(apuracao)
+    if EFEITO in posteriores:
         causas.append(
             {
                 "causa": nomes.CAUSA_EFEITO_POSTERIOR,
@@ -223,13 +249,23 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 ),
             }
         )
-    if _acrescimo_posterior(apuracao):
+    if ACRESCIMO in posteriores:
         causas.append(
             {
                 "causa": nomes.CAUSA_ACRESCIMO_POSTERIOR,
                 "descricao": (
                     "Uma vaga acrescida ou desfeita depois desta apuração mudou as vagas deste "
                     "recorte."
+                ),
+            }
+        )
+    if DECLARACAO in posteriores:
+        causas.append(
+            {
+                "causa": nomes.CAUSA_DECLARACAO_POSTERIOR,
+                "descricao": (
+                    "Uma vaga declarada não preenchida, ou o desfazimento dessa declaração, mudou "
+                    "o que este recorte tem a ocupar depois desta apuração."
                 ),
             }
         )
@@ -630,55 +666,58 @@ def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
     )
 
 
-def _acrescimo_posterior(apuracao):
-    """Vaga acrescida ou desfeita no recorte, e que a apuração não leu (097, `FR-2453`).
+EFEITO = "efeito"
+ACRESCIMO = "acrescimo"
+DECLARACAO = "declaracao"
 
-    **Por id congelado, e não por instante**, pela razão de `_efeito_posterior`: o ato do acréscimo
-    grava o registro e emite a apuração no mesmo `now`. E respondida no banco, pela mesma razão
-    também — esta função corre uma vez por recorte na tela da ocupação.
+
+def _registros_posteriores(apuracao):
+    """Quais das três portas têm registro no recorte que a apuração não leu: `{EFEITO, ...}`.
+
+    **Por id congelado, e não por instante** — a disciplina de `_movimento_posterior`, e pela mesma
+    razão: o ato grava o registro e emite a apuração no mesmo `now`, e o próprio registro pareceria
+    posterior a ela. Apuração anterior à chave (`efeitosLidos` antes da `019`, `acrescimosLidos`
+    antes da `097`, `naoPreenchidasLidas` antes da `155`) leu nenhum, e qualquer registro do recorte
+    a torna obsoleta: ele é mesmo posterior a ela.
+
+    **Uma consulta, e no banco** (155, FR-6326). A versão de antes fazia três `EXISTS`, e esta
+    função corre uma vez por lista de concorrência em `recortes_do_marco`, na tela que tem teto de
+    3 s com 1.000 participantes (`SC-090`). Trazer as linhas para descartar tudo menos um booleano
+    faria o custo crescer com o número de desfechos. O `UNION` sem `ALL` devolve no máximo três
+    linhas, uma por porta, por mais registros que o recorte acumule — e não precisa de `LIMIT` nas
+    partes, que o SQLite recusaria num `UNION`.
     """
-    lidos = [str(i) for i in (apuracao.universo or {}).get("acrescimosLidos") or []]
-    return (
-        AcrescimoDeVagas.objects.filter(
-            edital=apuracao.edital_id,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
+    from processo_seletivo.ocupacao.models import EfeitoDeOcupacao
+
+    universo = apuracao.universo or {}
+    recorte = {
+        "edital": apuracao.edital_id,
+        "perfil_id": apuracao.perfil_id,
+        "marco_id": apuracao.marco_id,
+        "lista_id": apuracao.lista_id,
+    }
+
+    def porta(modelo, chave, nome):
+        lidos = [str(i) for i in universo.get(chave) or []]
+        return (
+            modelo.objects.filter(**recorte)
+            .exclude(id__in=lidos)
+            .order_by()
+            .annotate(porta=Value(nome, output_field=CharField()))
+            .values_list("porta", flat=True)
         )
-        .exclude(id__in=lidos)
-        .exists()
+
+    return set(
+        porta(EfeitoDeOcupacao, "efeitosLidos", EFEITO).union(
+            porta(AcrescimoDeVagas, "acrescimosLidos", ACRESCIMO),
+            porta(VagaNaoPreenchida, "naoPreenchidasLidas", DECLARACAO),
+        )
     )
 
 
 def _efeito_posterior(apuracao):
-    """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu.
-
-    **A comparação é por id congelado, e não por instante** — a mesma disciplina de
-    `_movimento_posterior`, e pela mesma razão: um efeito gravado na mesma transação da apuração
-    pareceria posterior a ela mesma se o critério fosse o relógio.
-
-    Apuração emitida antes desta feature não tem `efeitosLidos` no universo, e qualquer efeito do
-    recorte a torna obsoleta. Está certo: aquele efeito é mesmo posterior a ela.
-
-    **A pergunta é respondida no banco, e não em Python.** A versão anterior trazia todas as linhas
-    de efeito do recorte para descartar tudo menos um booleano — e esta função corre uma vez por
-    lista de concorrência em `recortes_do_marco`, na tela que tem teto de 3 s com 1.000
-    participantes (`SC-090`). Num certame longo o recorte acumula um efeito por desfecho, e o custo
-    de abrir a tela cresceria com o número de desistências.
-    """
-    from processo_seletivo.ocupacao.models import EfeitoDeOcupacao
-
-    lidos = [str(i) for i in (apuracao.universo or {}).get("efeitosLidos") or []]
-    return (
-        EfeitoDeOcupacao.objects.filter(
-            edital=apuracao.edital_id,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
-        )
-        .exclude(id__in=lidos)
-        .exists()
-    )
+    """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu (019)."""
+    return EFEITO in _registros_posteriores(apuracao)
 
 
 __all__ = [
@@ -694,6 +733,7 @@ __all__ = [
     "habilitadas_pelo_corte",
     "historico_do_recorte",
     "movimentos_lidos_por",
+    "nao_preenchidas_do_recorte",
     "ocupacao_do_recorte",
     "ocupantes_da_ampla",
 ]

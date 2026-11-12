@@ -22,7 +22,7 @@ from processo_seletivo.ocupacao.application import movimento as movimento_de_vag
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
 from processo_seletivo.ocupacao.domain import apuracao as calculo
-from processo_seletivo.ocupacao.domain import reversao
+from processo_seletivo.ocupacao.domain import nomes, reversao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -190,6 +190,15 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     acrescimos = selectors.acrescimos_do_recorte(
         edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
     )
+    # **As vagas declaradas não preenchidas, congeladas como os acréscimos** (155, R-002). Saem do
+    # "a ocupar" e não das efetivas; os ids vão ao universo, para que reproduzir seja reler estas
+    # (FR-6342).
+    nao_preenchidas_lidas = selectors.nao_preenchidas_do_recorte(
+        edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
+    )
+    nao_preenchidas = calculo.saldo_das_nao_preenchidas(
+        (n.especie, n.quantidade) for n in nao_preenchidas_lidas
+    )
     lidos = [
         (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
         for m in movimentos
@@ -230,12 +239,18 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     # **A cessão é calculada antes de a apuração existir, e o id do movimento nasce aqui.**
     # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
     # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
+    #
+    # **A vaga declarada não preenchida não é cedida** (155, R-002). A declaração só existe na
+    # reserva do Edital silente, mas uma Retificação posterior pode declarar a reversão: a vaga que
+    # a comissão declarou não preenchida, com fundamento, continua declarada até o ato contrário, e
+    # a reversão alcança só o que sobra. Cedê-la seria desfazer a declaração sem ato — o que a
+    # `155` exclui (D-001) —, e deixá-la na conta faria a apuração passar das vagas.
     especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
     cede = (
         movimento_de_vaga.quantidade_que_a_cota_cede(
             especie=especie_da_reversao,
             efetivas=efetivas,
-            ocupadas=ocupadas,
+            ocupadas=ocupadas + nao_preenchidas,
             ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
                 edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
             ),
@@ -250,6 +265,11 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     identidade_do_movimento = uuid4() if cede else None
     if cede:
         efetivas -= cede
+    # **A conta que passaria das vagas é recusada pelo nome** (155, R-002), e não pela constraint:
+    # uma inclusão posterior à declaração de não preenchida faria a sucessora estourar
+    # `ck_apuracao_ocupadas_no_limite` com `IntegrityError` — que nenhum *savepoint* de quem chama
+    # trata como recusa. Nada é rebaixado em silêncio.
+    conferir_limite(efetivas=efetivas, ocupadas=ocupadas, nao_preenchidas=nao_preenchidas)
 
     apuracao = ApuracaoDeOcupacao(
         edital=edital,
@@ -264,6 +284,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         publicadas=publicadas,
         efetivas=efetivas,
         ocupadas=ocupadas,
+        nao_preenchidas=nao_preenchidas,
         linha_do_quadro_id=linha.get("id"),
         universo={
             "rowId": str(linha.get("id")) if linha.get("id") else None,
@@ -279,6 +300,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
             + ([str(identidade_do_movimento)] if identidade_do_movimento else []),
             "efeitosLidos": [str(e.id) for e in efeitos],
             "acrescimosLidos": [str(a.id) for a in acrescimos],
+            "naoPreenchidasLidas": [str(n.id) for n in nao_preenchidas_lidas],
         },
         emitida_por=str(getattr(actor, "subject", actor)),
         emitida_em=now,
@@ -299,6 +321,25 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         else None
     )
     return apuracao, movimento
+
+
+def conferir_limite(*, efetivas, ocupadas, nao_preenchidas):
+    """Recusa, pelo nome, a conta que o banco recusaria com `IntegrityError` (155, R-002).
+
+    `ck_apuracao_ocupadas_no_limite` exige `ocupadas + nao_preenchidas <= efetivas`. A declaração
+    não passa do saldo, mas o mundo muda depois dela: uma inclusão registrada pela condução pode
+    fazer a apuração seguinte contar mais ocupadas do que cabem ao lado das não preenchidas. **Nada
+    é ajustado em silêncio** — rebaixar a declaração na conta seria desfazê-la sem ato —, e a recusa
+    diz o caminho: desfazer a declaração, com motivo, antes de apurar de novo.
+    """
+    if int(ocupadas) + int(nao_preenchidas) > int(efetivas):
+        raise DomainError(
+            nomes.NAO_PREENCHIDAS_ALEM_DAS_VAGAS,
+            f"Este recorte tem {efetivas} vaga(s) efetiva(s), {ocupadas} ocupada(s) e "
+            f"{nao_preenchidas} declarada(s) não preenchida(s): a conta passa das vagas. Desfaça "
+            "a declaração de vaga não preenchida, com motivo, antes de apurar de novo.",
+            409,
+        )
 
 
 def _declaracao(conteudo, *, perfil_id):
@@ -385,4 +426,4 @@ def _edital_do_processo(processo, edital_id):
         raise DomainError("edital_nao_encontrado", "Edital não encontrado.", 404) from erro
 
 
-__all__ = ["emitir_apuracao", "emitir_sucessora_por_efeito"]
+__all__ = ["conferir_limite", "emitir_apuracao", "emitir_sucessora_por_efeito"]

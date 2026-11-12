@@ -415,6 +415,104 @@ def test_nova_chamada_e_faixa_seguinte_sao_condicionais():
     assert sem_corte[0].situacao == a.IMPEDIDO
 
 
+def test_a_vaga_sem_quem_a_ocupe_da_lugar_ao_caminho_disponivel():
+    """155, UX-602: no lugar de "Ocupar a vaga — impedida", a declaração, de quem conduz."""
+    vaga = {
+        "disponivel": True,
+        "ato": "Declarar a vaga não preenchida",
+        "quantidade": 1,
+        "frase": "1 vaga da PPI sem quem a ocupe.",
+        "impedimentos": [],
+    }
+    _, providencias = convocacao(
+        faltando=1,
+        fila=0,
+        esgotou=True,
+        corte_vigente=True,
+        com_quadro=True,
+        vaga=vaga,
+        url_da_ocupacao="/ocupacao",
+    )
+
+    assert [(c.situacao, c.ato) for c in providencias] == [
+        (a.PENDENTE, "Declarar a vaga não preenchida")
+    ], "e não a faixa seguinte, que não alcançaria ninguém"
+    assert providencias[0].url == "/ocupacao"
+    assert providencias[0].razao == "1 vaga da PPI sem quem a ocupe"
+
+
+def test_a_vaga_impedida_nomeia_o_impedimento_e_a_data():
+    ate = AGORA + timedelta(days=3)
+    vaga = {
+        "disponivel": False,
+        "ato": "Declarar a vaga não preenchida",
+        "impedimentos": [{"frase": "o prazo de recurso ainda corre", "ate": ate}],
+    }
+    _, providencias = convocacao(faltando=1, fila=0, esgotou=True, corte_vigente=False, vaga=vaga)
+
+    assert [(c.situacao, c.ato) for c in providencias] == [
+        (a.IMPEDIDO, "Declarar a vaga não preenchida")
+    ]
+    assert providencias[0].razao == "o prazo de recurso ainda corre"
+    assert providencias[0].ate == ate
+
+
+def test_o_edital_silente_tem_um_ato_por_caminho():
+    """155, FR-6321, UX-602: a declaração de não preenchida e, se a fase admite, a Retificação."""
+    vaga = {
+        "disponivel": True,
+        "silente": True,
+        "ato": "Declarar a vaga não preenchida",
+        "quantidade": 1,
+        "frase": "1 vaga da PPP sem quem a ocupe.",
+        "impedimentos": [],
+    }
+    fatos = {
+        "faltando": 1,
+        "fila": 0,
+        "esgotou": True,
+        "corte_vigente": True,
+        "com_quadro": True,
+        "continuacao_admitida": False,
+        "vaga": vaga,
+        "url_da_ocupacao": "/ocupacao",
+        "url_da_retificacao": "/retificar",
+    }
+
+    _, providencias = convocacao(**fatos, retificacao_admitida=True)
+    _, encerrado = convocacao(**fatos, retificacao_admitida=False)
+
+    assert [(c.situacao, c.ato, c.responsavel) for c in providencias] == [
+        (a.PENDENTE, "Declarar a vaga não preenchida", a.CONDUZ),
+        (a.PENDENTE, "Retificar o Edital para declarar a reversão", a.RETIFICA),
+    ]
+    assert providencias[1].url == "/retificar"
+    assert [c.ato for c in encerrado] == ["Declarar a vaga não preenchida"]
+
+
+def test_a_reversao_que_a_apuracao_nao_aplica_diz_a_regra_e_nenhum_ato():
+    """155, FR-6303, FR-6327: onde o Edital declara a reversão e a vaga não sai, a frase diz por
+    quê e o próximo passo, no lugar do "não há mais quem chamar" — sem ato a oferecer, e sem a faixa
+    seguinte, que não alcançaria ninguém."""
+    ate = AGORA + timedelta(days=3)
+    vaga = {
+        "disponivel": False,
+        "reversao": True,
+        "ato": "",
+        "impedimentos": [{"frase": "o prazo de recurso ainda corre", "ate": ate}],
+        "frase": "A reversão declarada é aplicada pela apuração desta lista.",
+    }
+
+    _, providencias = convocacao(
+        faltando=1, fila=0, esgotou=True, corte_vigente=True, com_quadro=True, vaga=vaga
+    )
+
+    assert [(c.situacao, c.ato, c.razao) for c in providencias] == [
+        (a.IMPEDIDO, "Ocupar a vaga", "A reversão declarada é aplicada pela apuração desta lista")
+    ]
+    assert providencias[0].ate == ate
+
+
 def test_a_convocacao_espera_a_etapa_governada_mesmo_com_a_apuracao_feita():
     """FR-4070: a fila é de quem habilitou na governada; com ela aberta, nada a chamar."""
     resumo, providencias = convocacao(
