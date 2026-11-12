@@ -383,9 +383,15 @@ Estes casos são requisitos. Cada um tem linha na matriz de rastreabilidade.
   sabe estar para trás é recusado.
 - **FR-884**: Obsolescência por qualquer outra causa — ordem sucedida, corte obsoleto, quadro
   retificado, movimento de vaga — MUST continuar exigindo o ato de hoje, com a causa nomeada.
-- **FR-885**: Quando a conta seguinte moveria vaga entre recortes pela reversão que o Edital declarou, o
-  desfecho MUST NOT produzir a apuração seguinte, e a tela do ato MUST dizer que ela, com o movimento,
-  é emitida na ocupação (`FR-270`).
+- **FR-885** *(revista pela `155` em 2026-11-11, que vigora com a implementação dela — a redação
+  anterior está ao fim desta alínea)*: O desfecho MUST NOT mover vaga entre recortes (`FR-270`). Quando,
+  depois dele, a reserva cumprir a condição da reversão que o Edital declarou, a tela do ato MUST dizer
+  que a destinação é ato próprio, praticado na ocupação (FR-6308 da `155`). Como a apuração deixa de
+  mover vaga (FR-6315 da `155`), a apuração seguinte do desfecho deixa de ser recusada por esse motivo.
+
+  > **Redação anterior à `155`, preservada:** "Quando a conta seguinte moveria vaga entre recortes pela
+  > reversão que o Edital declarou, o desfecho MUST NOT produzir a apuração seguinte, e a tela do ato
+  > MUST dizer que ela, com o movimento, é emitida na ocupação (`FR-270`)."
 
 ### O que vale para todos
 

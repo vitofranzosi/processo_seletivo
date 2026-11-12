@@ -36,6 +36,8 @@ Facultativo reenviado: o mesmo texto, com o selo *Opcional* além do da categori
 
 Só muda o `<h1>`: *Acompanhe sua convocação* quando o Requerimento é o único pedido da chamada e já
 foi enviado (D-006). O bloco *O que fazer*, a linha do Requerimento enviado e os dados do ato ficam.
+A página continua **sem** `.consequencia` em todos os casos, como hoje: a advertência dessa chamada
+mora só no acompanhamento (D-007).
 
 ## Portal — o acompanhamento (`portal:acompanhamento`), seção da convocação
 
