@@ -23,10 +23,10 @@ pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.performance]
 TETO_DO_SORTEIO = 55
 TETO_DA_PONTUACAO = 70
 #: A convocação lê, por lista apurada, a leitura do recorte e as três prévias da tela, e cada uma
-#: relê a versão vigente (item 9 da revisão do B1): 199 consultas num Perfil de três listas. É o
-#: que a tela da convocação já paga para **uma** lista; passar a versão adiante é a otimização que
-#: fica registrada em `verificacao.md`.
-TETO_DA_CONVOCACAO = 240
+#: relia a versão vigente (item 9 da revisão do B1): 199 consultas num Perfil de três listas. Desde
+#: a `160` (R-009) a versão é lida uma vez por requisição, e o detalhe mede 152 — o teto baixou de
+#: 240 para o medido com ~20% de folga. O sorteio e a pontuação mediram 44 e 56, dentro dos tetos.
+TETO_DA_CONVOCACAO = 185
 
 
 def consultas_do_detalhe(client, edital):

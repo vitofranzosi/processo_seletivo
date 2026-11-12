@@ -1739,12 +1739,17 @@ def do_edital(edital, ator, *, agora=None, em_curso=None, perfis=None):
     `em_curso` são as Retificações em curso, que o detalhe já leu (103). Elas **não** viram
     providência (D-017): continuam ditas pelas frases da `104`, e servem aqui só à `104`.
     """
-    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.publicacoes.application.selectors import (
+        agora_da_requisicao,
+        effective_version,
+    )
     from processo_seletivo.shared.api.problems import DomainError
 
     if edital.status not in ESTADOS_COM_ANDAMENTO:
         return None
-    agora = agora or timezone.now()
+    # O instante da requisição, quando a view abriu o contexto da versão vigente (160, R-009): as
+    # funções de outras features recebem este `at`, e com ele encontram a versão já lida.
+    agora = agora or agora_da_requisicao() or timezone.now()
     try:
         conteudo = effective_version(edital_id=edital.id, at=agora).content
     except DomainError:

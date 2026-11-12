@@ -20,12 +20,13 @@ from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.performance]
 
-#: Medidos em 12/11/2026 (T034): 23, 29 e 163 consultas por Edital presidido; ver
+#: Medidos em 12/11/2026 (T034, T033): 23, 29 e 163 consultas por Edital presidido antes da versão
+#: vigente por requisição (R-009), e 19, 27 e 117 com ela; ver
 #: `specs/160-minhas-atividades/verificacao.md`. A folga é de ~20%, como os tetos de
 #: `test_andamento_em_escala.py`.
-TETO_POR_EDITAL_NO_SORTEIO = 28
-TETO_POR_EDITAL_NA_PONTUACAO = 35
-TETO_POR_EDITAL_NA_CONVOCACAO = 196
+TETO_POR_EDITAL_NO_SORTEIO = 23
+TETO_POR_EDITAL_NA_PONTUACAO = 33
+TETO_POR_EDITAL_NA_CONVOCACAO = 141
 
 
 def consultas_da_pagina(client):
@@ -115,3 +116,23 @@ def test_a_presidencia_paga_um_teto_por_edital_na_convocacao(client, base):
     custo = por_edital(client, "maria")
     print(f"\nconvocação: {custo} consultas por Edital presidido")
     assert custo <= TETO_POR_EDITAL_NA_CONVOCACAO, custo
+
+
+def test_a_versao_por_requisicao_nao_muda_o_que_a_derivacao_diz(client, base):
+    """SC-2280: com e sem o contexto da versão vigente, as mesmas providências, na mesma ordem."""
+    from processo_seletivo.publicacoes.application.selectors import versao_vigente_da_requisicao
+    from processo_seletivo.seguranca.domain import Actor
+    from tests.fixtures.convocacao import montar_cenario_da_convocacao
+
+    edital, _, _ = montar_cenario_da_convocacao(*base, prefixo="160-escala-iguais")
+    maria = Actor("maria", edital.processo.institution_scope, frozenset())
+
+    def itens():
+        andamento = a.do_edital(edital, maria)
+        return [(i.natureza, i.ato, i.situacao, i.url, i.razao) for i in andamento.nivel_1.itens]
+
+    sem = itens()
+    with versao_vigente_da_requisicao():
+        com = itens()
+    assert sem == com
+    assert sem

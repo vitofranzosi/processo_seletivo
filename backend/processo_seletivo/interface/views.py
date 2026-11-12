@@ -233,6 +233,7 @@ from processo_seletivo.publicacoes.application.selectors import (
     homologar_fecharia_a_publicacao,
     impede_por_segregacao,
     participantes_do_edital,
+    versao_vigente_da_requisicao,
 )
 from processo_seletivo.publicacoes.domain.changes import apply_changes
 from processo_seletivo.publicacoes.domain.elevacao import elevar
@@ -4155,10 +4156,13 @@ def detalhe(request, edital_id):
     edital = obter_edital(actor=ator, edital_id=edital_id)
     if edital is None:
         raise Http404
-    leitura = _leitura_do_edital(request, ator, edital)
-    if leitura.andamento is not None:
-        return centro_do_edital.desenhar(request, leitura)
-    return _desenhar_o_detalhe(request, leitura)
+    # A versão vigente lida uma vez por Edital nesta requisição (160, R-009): a derivação a relia
+    # a cada função de outra feature. Só leitura, e só aqui dentro (D-009 da `160`).
+    with versao_vigente_da_requisicao():
+        leitura = _leitura_do_edital(request, ator, edital)
+        if leitura.andamento is not None:
+            return centro_do_edital.desenhar(request, leitura)
+        return _desenhar_o_detalhe(request, leitura)
 
 
 @require_http_methods(["GET"])
@@ -12160,7 +12164,9 @@ def minhas_etapas(request):
     vinculos = comissao_selectors.comissoes_da_pessoa(ator)
     # O que é da pessoa entre Editais (160): a leitura recebe os vínculos, as alocações e a carga
     # que a página já leu, para que quem não preside pague o mesmo de antes (FR-6877).
-    leitura = atividades.ler(ator, vinculos=vinculos, atribuicoes=atribuicoes, carga=carga)
+    # A versão vigente uma vez por Edital presidido, nesta requisição (R-009 da `160`).
+    with versao_vigente_da_requisicao():
+        leitura = atividades.ler(ator, vinculos=vinculos, atribuicoes=atribuicoes, carga=carga)
     return render(
         request,
         "interface/minhas_etapas.html",
