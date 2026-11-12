@@ -9054,6 +9054,7 @@ def convocacao(request, edital_id, marco_id):
         "leitura": leitura,
     }
     previas = _previas_da_convocacao(fluxo, recorte, leitura) if pode_emitir else {}
+    publicadas_no_gps = _publicadas_no_gps(leitura)
     # O aviso de pendência documental (134, FR-4603, FR-4605): para quem confere este Perfil, com
     # quantas pessoas o gesto alcançaria agora e quantas ficam de fora — e, desde a `143`, o motivo
     # de cada chamada, que o cartão dela diz (FR-5017).
@@ -9132,7 +9133,16 @@ def convocacao(request, edital_id, marco_id):
                         }
                     )
                 ),
-                "publicadas_no_gps": _publicadas_no_gps(leitura),
+                "publicadas_no_gps": publicadas_no_gps,
+                # **As comunicadas que ainda não estão na página pública**, em qualquer forma
+                # (149, FR-5737). Sem isto, o Perfil que convoca por mensagem não tinha caminho
+                # nenhum até a publicação: o "Publicar no GPS" mora nas pendentes por publicação,
+                # e a mensagem enviada não deixa pendência. Contadas da mesma leitura, sem consulta.
+                "a_divulgar_no_gps": sum(
+                    1
+                    for linha in leitura["linhas"]
+                    if linha["enviadaEm"] and linha["convocacao"].id not in publicadas_no_gps
+                ),
                 # O lugar do recorte, no alto (143, FR-5000), e o índice (FR-5001 a FR-5004).
                 "contexto_do_recorte": contexto_do_recorte,
                 "continuacao_admitida": contexto_do_recorte["continuacao_admitida"],

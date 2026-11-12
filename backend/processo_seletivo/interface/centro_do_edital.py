@@ -18,6 +18,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.interface import acoes, andamento, centro
+from processo_seletivo.interface import conceitos as c
 from processo_seletivo.interface import providencias as prov
 
 
@@ -64,6 +65,13 @@ def desenhar(request, leitura):
             # O retorno do ato que acabou de acontecer (138, FR-4865): publicar e encerrar chegam
             # aqui.
             "conferencia_do_ato": leitura.conferencia_do_ato,
+            # **A publicação das convocações, ao lado dos documentos publicados** (149, FR-5737).
+            # Só com a fase Convocação começada, e lida da composição que a página já fez: nenhuma
+            # consulta nova. Antes dela, o único caminho era a seção das pendentes por publicação.
+            "publicacao_das_convocacoes": any(
+                fase.chave == c.CONVOCACAO and fase.andamento in (c.EM_CURSO, c.CONCLUIDA)
+                for fase in composto.fases
+            ),
         },
     )
 
