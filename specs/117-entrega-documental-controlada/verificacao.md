@@ -203,3 +203,7 @@ demonstração, presidido por `paulo.presidente`):
 `dev`, `assistente` e `navegador`, banco próprio, 4 workers: ruff e formato limpos, `check` sem
 problema, nenhuma migration pendente, **19111 passando e 12 pulados, sem falha**, em 1142 s
 (12/11/2026). Os 12 pulados são os de quem tem os dois grupos, como no CI.
+
+**Depois da revisão do #501** (a trava do Processo e a base relida sob ela; a presidência inativa e
+a rebaixada; a presidente recusada no arquivo, na verificação e na exportação): `make lint check
+test-pg`, mesma configuração, **19115 passando e 12 pulados, sem falha**, em 1452 s (12/11/2026).
