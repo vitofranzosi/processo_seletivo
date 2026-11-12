@@ -31,26 +31,21 @@
 
 ## Notes
 
-- **Sem marcador inline, com três questões abertas.** As decisões que são do usuário estão em
-  "Questões para o usuário" (Questões 1 a 3); a 4 foi respondida em 11/11, cada uma com a proposta da spec em primeiro lugar; as
-  decisões D-005, D-006 e D-007 seguem a proposta até a resposta. O `/speckit-plan` pode partir das
-  propostas, mas a FR-6527 e a extensão da FR-6533 mudam com a resposta às Questões 2 e 3.
+- **As quatro questões respondidas pelo usuário em 11/11** (D-002, D-005 a D-008): Questão 1, A; Questão
+  2, B; Questão 3, B; Questão 4, A com ajustes. Sem marcador inline, e sem questão aberta.
+- **O plano define o acesso bem-sucedido** (FR-6544). É a única definição que a spec deixa ao plano de
+  propósito, por decisão do usuário: o que a caracteriza — pedido atendido, bytes entregues — é
+  técnica, e a spec só fixa o que ela não pode ser (o clique, a criação do painel, a entrega recusada)
+  e o que não pode prometer (exibição, leitura). Hoje a consulta é gravada antes de os bytes saírem.
 - **Detalhe de implementação, deliberado.** A spec diz que a rota do arquivo não se deixa emoldurar
-  hoje e que a da Mesa sim (FR-6504). É o fato que separa "reaproveitar a Mesa" de "funcionar": sem
-  ele, o painel não carrega. A técnica — decorador, cabeçalho, fragmento, biblioteca — fica para o
-  plano.
+  hoje e que a da Mesa sim (FR-6504), e que a consulta é gravada antes dos bytes. São os fatos que
+  separam "reaproveitar a Mesa" de "funcionar". A técnica fica para o plano.
 - **"Tela larga"** é a fronteira da Mesa; o número é do plano e da folha comum, e não desta spec.
-- **Verificação humana.** SC-2149 (teclado e leitor de tela), SC-2150 (celulares reais) e SC-2151
-  (antes e depois, com quem conduz) não se automatizam; o comportamento do PDF dentro da moldura em
-  iOS e Android muda entre versões, e só o aparelho responde.
-- **Citações.** Só requisitos definidos na `main` (a `154` entrou pelo #479 durante a escrita e é
-  citada pela FR-6211); os achados do estudo, como "achado NN".
-- **Achado 09, acrescentado em 11/11** a pedido da sessão coordenadora (User Story 7, FR-6534 a
-  FR-6538, UX-647, UX-648, SC-2152, SC-2153, D-008, Questão 4). A decisão do usuário de 08/11 na `134`
-  — aviso por gesto, nunca por evento — fica intacta nas três opções; a B revê só a letra da FR-4604
-  da `134`, e por isso é opção, e não proposta.
-- **Questão 4 respondida em 11/11** (D-008): opção A com ajustes do usuário — *"Pedir aviso para
-  ‹nome›"*, todas as pendências elegíveis, sem exceção ao limite diário nem agendamento, situação em
-  solicitado, enviado e não enviado. A `134` foi revista na FR-4603, na FR-4605 e na FR-4620, com a
-  redação anterior preservada; a FR-4604 não muda. Faixa usada: FR-6500 a FR-6543, SC-2140 a SC-2154,
-  UX-640 a UX-650.
+- **Verificação humana.** SC-2149 (teclado e leitor de tela), SC-2150 (celulares reais), SC-2151 (antes
+  e depois, com quem conduz) e SC-2159 (teclado na volta do visualizador) não se automatizam.
+- **Revisões de outras specs**, com a redação anterior preservada: FR-4603, FR-4605 e FR-4620 da `134`
+  (Questão 4; a FR-4604 não muda) e FR-112 da `012` (Questão 3; sem exigência de abertura para
+  avaliar).
+- **Citações.** Só requisitos definidos na `main`; os achados do estudo, como "achado NN". Faixa usada:
+  FR-6500 a FR-6549, SC-2140 a SC-2159, UX-640 a UX-654 — os requisitos funcionais e os critérios
+  esgotaram a reserva.

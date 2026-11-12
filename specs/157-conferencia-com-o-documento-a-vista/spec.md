@@ -4,15 +4,16 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — a Questão 4 respondida pelo usuário em 11/11/2026 (D-008); as Questões 1 a 3
-abertas (ao fim, em "Questões para o usuário")
+**Status**: Draft — as quatro questões respondidas pelo usuário em 11/11/2026 (D-002, D-005 a D-008)
 
 **Nenhuma regra nova.** Quem confere, o que o "conforme" exige, a recusa, a idempotência, os estados
 e a trilha continuam os da `115`, da `131` e da `143`. Muda **onde** o arquivo aparece e **o que a
 página faz** depois do registro: o arquivo ao lado do formulário, a conferência registrada sem
 recarregar a página inteira, e o caminho ao próximo documento. Não há tabela, permissão, estado nem
-evento de trilha novos. A única regra que muda é a do aviso de pendência, por decisão do usuário
-na Questão 4: o gesto da `134` passa a admitir o recorte de uma pessoa, oferecido quando a
+evento de trilha novos. Na Mesa do avaliador, por decisão do usuário na Questão 3, a recusa legível,
+a alternativa sem prévia e a volta do documento aberto fora da página, com a FR-112 da `012` revista
+e sem exigência de abertura para avaliar (D-007). A única regra que muda é a do aviso de pendência,
+por decisão do usuário na Questão 4: o gesto da `134` passa a admitir o recorte de uma pessoa, oferecido quando a
 conferência dela termina, e a `134` é revista para isso, com a redação anterior preservada (D-008).
 
 **Acréscimo de 11/11.** A sessão que coordena as specs do estudo pediu, depois da primeira versão,
@@ -72,8 +73,8 @@ que autoriza o juízo. Isso pesa em tudo o que segue.
 avaliador, em tela larga, o documento abre num painel à esquerda, ao lado do formulário, com o nome do
 documento, *"Abrir em aba própria"* e *"Fechar"* na barra. Três coisas que ela aprendeu valem aqui:
 
-- **a abertura continua sendo um ato** — nada carrega sozinho ao entrar na página; é o clique sobre o
-  documento que a trilha registra;
+- **a abertura continua sendo um ato** — nada carrega sozinho ao entrar na página; é o gesto sobre o
+  documento que leva ao registro;
 - **a entrega é a mesma** — a moldura carrega exatamente a resposta do link, com a conferência do
   resumo antes de sair um byte;
 - **a aba própria fica à mão**, porque o visualizador do navegador encolhe a própria barra dentro da
@@ -81,18 +82,20 @@ documento, *"Abrir em aba própria"* e *"Fechar"* na barra. Três coisas que ela
 
 E duas coisas ela não resolve, e esta página precisa:
 
-- **abaixo da tela larga, e sem script, a Mesa volta à aba própria.** Aqui o usuário pediu o uso em
-  tela pequena sem perder os controles;
+- **abaixo da tela larga, e sem script, a Mesa volta à aba própria, e a volta não tem caminho.** Aqui
+  o usuário pediu o uso em tela pequena sem perder os controles; a resposta à Questão 2 mantém a aba
+  própria, e acrescenta a volta com o formulário preservado e o retorno ao ponto de conferência;
 - **na Mesa, a abertura só informa; aqui ela autoriza.** Se a moldura pedir o arquivo a um navegador
-  que não o desenha, o servidor registra a entrega, e a pessoa nada viu. Na Mesa isso é uma marca
-  "aberto" imprecisa; aqui seria um "conforme" autorizado sobre um arquivo não visto.
+  que não o desenha, o servidor registra o acesso, e a pessoa nada viu. Por isso o registro diz
+  acesso, e não leitura, e o que conta como acesso bem-sucedido fica definido no plano (D-002).
 
 **O que o código diz hoje**, lido em 11/11 na `main`:
 
 - a rota do arquivo da convocação entrega sempre como PDF, `inline`, sem cache; confere o resumo
   antes de entregar; grava a consulta sob a apresentação quando confere, a recusa por integridade
   quando diverge, e o arquivo indisponível quando não lê (FR-3605 e FR-3606 da `115`, FR-3695 da
-  `117`);
+  `117`). A consulta é gravada **antes** de os bytes saírem: um pedido interrompido no meio fica
+  registrado como abertura;
 - **a rota não se deixa emoldurar**: a da Mesa declara a exceção da própria origem, e esta não;
 - o envio aceita o arquivo pela assinatura de PDF, pelo tamanho — até 10 MB — e por não estar vazio.
   Um PDF truncado ou danificado passa, e só falha quando o navegador tenta desenhá-lo; o servidor não
@@ -168,63 +171,72 @@ situação com o que a página mostra recarregada; são iguais, e o painel não 
 ### User Story 3 — Quando o arquivo não aparece na página (Priority: P1)
 
 Bernardo enviou um PDF danificado; Cecília enviou um de 9 MB; o conferente usa um navegador que não
-mostra PDF dentro da página. Em todos os casos, a página diz o que aconteceu, oferece o que resta, e o
-registro de abertura continua dizendo a verdade: o arquivo foi entregue a quem o abriu.
+mostra PDF dentro da página; o arquivo de Davi não confere com o resumo guardado. Em todos os casos, a
+página diz o que aconteceu, oferece o que resta, e o registro de abertura diz só o que sabe: que o
+arquivo foi acessado com sucesso por quem o abriu — e não que foi exibido, nem lido.
 
-**Why this priority**: sem a alternativa, o painel transforma o registro de abertura em afirmação
-falsa — e é esse registro que autoriza o "conforme".
+**Why this priority**: sem a alternativa, o painel vazio ou a página de bloqueio do navegador deixam
+a pessoa sem saber o que fazer, e sem caminho para o arquivo de que o "conforme" depende.
 
-**Independent Test**: com o navegador declarando que não mostra PDF embutido, o gesto de abrir não
-pede o arquivo para a moldura; a página oferece a aba própria e o download; aberto por um deles, a
-marca do cartão é relida ao voltar.
+**Independent Test**: em tela larga, com o navegador declarando que não mostra PDF embutido, a página
+mostra a alternativa no painel; aberto pela aba própria, a marca do cartão é relida ao voltar. Com a
+entrega recusada, o painel mostra a frase da recusa, e nenhuma abertura é registrada.
 
 **Acceptance Scenarios**:
 
-1. **Given** um navegador que não declara mostrar PDF dentro da página, **When** o conferente clica em
-   *"Abrir"*, **Then** nenhuma moldura pede o arquivo, e o painel — ou o cartão, em tela pequena — diz
-   que este navegador não mostra o documento dentro da página e oferece *"Abrir em aba própria"* e
-   *"Baixar"*.
+1. **Given** um navegador que declara não mostrar PDF dentro da página, em tela larga, **When** o
+   conferente clica em *"Abrir"*, **Then** o painel diz que este navegador não mostra o documento
+   dentro da página e oferece *"Abrir em aba própria"* e *"Baixar"*; a escolha decide só o que se
+   mostra, e não o que se registra nem o que se autoriza.
 2. **Given** o documento aberto em aba própria pela alternativa, **When** o conferente volta à página,
-   **Then** o cartão mostra *"aberto por você"*, relido da trilha, sem recarregar.
+   **Then** o cartão mostra *"aberto por você"*, relido da trilha, sem recarregar, e o que estava
+   marcado e digitado continua.
 3. **Given** um arquivo cujo resumo diverge do guardado, **When** o conferente o abre no painel,
-   **Then** o painel mostra, em texto, a frase da recusa por integridade de hoje, nenhuma consulta é
-   registrada, o evento de integridade é registrado como hoje, e o aviso de abertura do cartão
-   continua.
+   **Then** o painel mostra, em texto, a frase da recusa por integridade de hoje — e não a página de
+   bloqueio do navegador —, nenhuma abertura é registrada, o evento de integridade é registrado como
+   hoje, e o aviso de abertura do cartão continua.
 4. **Given** um arquivo indisponível, **When** o conferente o abre, **Then** o painel mostra a frase
    da FR-3695 da `117`, e o evento de arquivo indisponível é registrado, como hoje.
 5. **Given** um arquivo de 9 MB, **When** o conferente o abre, **Then** o link já dizia o tamanho, e
    o painel diz que o documento está carregando até a moldura terminar.
 6. **Given** um PDF danificado que o navegador não consegue desenhar, **When** o conferente o abre,
-   **Then** a entrega é registrada — o servidor não distingue —, a barra continua oferecendo a aba
-   própria e o download, e a ajuda do formulário diz que arquivo que não abre é motivo de pendência.
+   **Then** o acesso é registrado se foi bem-sucedido — o servidor não distingue o que o navegador
+   desenhou —, a barra continua oferecendo a aba própria e o download, e a ajuda do formulário diz
+   que arquivo que não abre é motivo de pendência.
+7. **Given** um pedido do arquivo interrompido antes de o acesso se completar, pela definição do
+   plano, **When** a trilha é lida, **Then** não há abertura registrada, e o aviso de abertura do
+   cartão continua.
 
 ---
 
 ### User Story 4 — Conferir numa tela pequena (Priority: P2)
 
-O conferente usa o celular, a 390 px. Abre o diploma de Alice, lê, e encontra o formulário do diploma
-logo ali, com os dados de Alice e do documento à vista, sem perder o lugar.
+O conferente usa o celular, a 390 px. Toca em *"Abrir"* no diploma de Alice; o arquivo abre fora da
+página, no visualizador do aparelho ou numa aba própria. Ao voltar, a página está como ele a deixou:
+o formulário do diploma com o que ele marcou, *"aberto por você"* no cartão, e o caminho de volta ao
+ponto da conferência.
 
 **Why this priority**: o usuário pediu. A conferência é trabalho de mesa na maior parte das vezes, e
 por isso não é P1.
 
 **Independent Test**: a 390 px, no C09, conferir o diploma de Alice do começo ao fim sem rolagem
-horizontal, sem que o arquivo cubra o formulário, e com a abertura registrada.
+horizontal, com o arquivo aberto fora da página, o formulário preservado na volta e a abertura
+registrada.
 
-**Acceptance Scenarios** (o arranjo depende da Questão 2; os cenários abaixo valem para a proposta):
+**Acceptance Scenarios**:
 
-1. **Given** a 390 px e um navegador que mostra PDF dentro da página, **When** o conferente clica em
-   *"Abrir"*, **Then** o arquivo aparece dentro do cartão do diploma, acima do formulário, com altura
-   limitada, e o resultado e o botão de registrar continuam alcançáveis sem rolar o arquivo até o fim.
-2. **Given** a 390 px e um navegador que não mostra PDF dentro da página, **When** o conferente clica
-   em *"Abrir"*, **Then** o arquivo abre no visualizador do aparelho, e, ao voltar, o cartão do diploma
-   está onde estava, com *"aberto por você"* e o foco no formulário dele.
-3. **Given** a 390 px, **When** o conferente rola o cartão aberto, **Then** o nome do documento, a
-   versão e o nome de Alice continuam identificáveis junto do arquivo, e nenhum controle fica atrás
-   dele.
-4. **Given** a janela que passa de larga a estreita com o painel aberto, **When** a largura cruza a
-   fronteira, **Then** o arquivo passa ao arranjo estreito sem perder o que foi marcado e digitado, e
-   sem pedir o arquivo de novo ao servidor.
+1. **Given** a 390 px, **When** o conferente toca em *"Abrir"*, **Then** o arquivo abre fora da
+   página — nenhum painel nem moldura é criado —, qualquer que seja o navegador.
+2. **Given** o arquivo aberto fora da página, **When** o conferente volta, **Then** o cartão do
+   diploma mostra *"aberto por você"*, relido da trilha, o que ele tinha marcado e digitado continua,
+   e a página oferece voltar ao ponto da conferência — o formulário do diploma —, com o foco nele.
+3. **Given** um navegador que, ao voltar, recarrega a página, **When** ela se abre de novo, **Then**
+   o que estava marcado e digitado no formulário do diploma é restaurado, e a página diz que o foi.
+4. **Given** a 390 px, **When** o conferente lê o cartão do diploma, **Then** o nome do documento, a
+   versão e o nome de Alice estão à vista junto do formulário, e nenhum controle fica fora da página.
+5. **Given** a janela que passa de larga a estreita com o painel aberto, **When** a largura cruza a
+   fronteira, **Then** o painel se fecha, o que foi marcado e digitado continua, e o arquivo não é
+   pedido de novo ao servidor; o gesto de abrir passa a abrir fora da página.
 
 ---
 
@@ -322,6 +334,38 @@ aviso na página é a mesma do cartão da convocação.
 8. **Given** o gesto em lote da tela da convocação, **When** usado depois do pedido individual no
    mesmo dia, **Then** Bernardo fica de fora por já ter sido avisado hoje, como a `134` já faz.
 
+### User Story 8 — A Mesa do avaliador com a mesma alternativa (Priority: P2)
+
+O avaliador abre, na Mesa, um documento cujo resumo não confere. Hoje o painel mostraria a página de
+bloqueio do navegador; passa a mostrar a frase da recusa. No celular, o documento abre fora da página,
+e na volta a nota e o parecer digitados continuam, com o caminho de volta à linha do documento. Nada
+disso passa a exigir que ele abra documento para avaliar.
+
+**Why this priority**: decisão do usuário (Questão 3): os mesmos defeitos existem na Mesa, que tem o
+mesmo visualizador. A Mesa já funciona; o ganho é de legibilidade e de retorno.
+
+**Independent Test**: na Mesa, a recusa por integridade e a de arquivo indisponível aparecem no
+painel como texto; a 390 px, a volta do visualizador preserva o formulário e oferece o retorno; a
+avaliação se conclui sem abertura, como hoje.
+
+**Acceptance Scenarios**:
+
+1. **Given** um documento da Mesa cujo resumo diverge, **When** o avaliador o abre no painel, **Then**
+   o painel mostra a frase da recusa de hoje, e não a página de bloqueio do navegador.
+2. **Given** um documento indisponível na Mesa, **When** o avaliador o abre, **Then** o painel mostra
+   a frase da FR-3695 da `117`.
+3. **Given** um navegador que declara não mostrar PDF dentro da página, em tela larga, **When** o
+   avaliador abre um documento, **Then** o painel mostra a alternativa, com *"Abrir em aba própria"* e
+   *"Baixar"*.
+4. **Given** a 390 px, **When** o avaliador abre um documento e volta, **Then** a nota, o parecer ou a
+   ficha do barema continuam como ele os deixou, a marca *"aberto"* é relida, e a página oferece voltar
+   à linha do documento, com o foco nela.
+5. **Given** uma inscrição da Mesa, **When** o avaliador a conclui sem abrir documento, **Then** a
+   avaliação é aceita como hoje: esta spec não cria exigência de abertura na Mesa.
+6. **Given** o navegador sem script, **When** o avaliador usa a Mesa, **Then** ela funciona como hoje.
+
+---
+
 ### Edge Cases
 
 - **Abrir um documento não autoriza outro.** A abertura do diploma não conta para o comprovante, nem a
@@ -345,7 +389,12 @@ aviso na página é a mesma do cartão da convocação.
   abertura, como hoje.
 - **Arquivo protegido por senha.** O navegador pede a senha ou não desenha; é o caso do arquivo que
   não abre, e o juízo é do conferente.
-- **Navegador que não diz se mostra PDF embutido.** Na dúvida, a alternativa (FR-6502).
+- **Navegador que não diz se mostra PDF embutido, em tela larga.** A prévia no painel, com a aba
+  própria e o download na barra (FR-6502). O registro e o "conforme" não dependem dessa leitura.
+- **Sem script.** Nas duas telas, o arquivo abre em aba própria e o registro recarrega a página, como
+  hoje; a marca *"aberto por você"* vem com a recarga.
+- **O "aberto por você" não comprova leitura.** Diz que o arquivo foi acessado com sucesso pela
+  pessoa, nesta chamada; quem conferiu sem ler responde pelo juízo, como hoje.
 - **Janela redimensionada com texto digitado no motivo.** O texto fica.
 - **Dois conferentes no mesmo item.** O segundo registro é recusado ou aceito como hoje; o cartão do
   primeiro, sem recarga, só sabe disso no próximo registro ou ao recarregar — o que já é verdade hoje
@@ -360,17 +409,28 @@ aviso na página é a mesma do cartão da convocação.
 - **FR-6500**: Abrir o arquivo no painel MUST ser a mesma entrega de hoje — conferência do resumo
   antes de sair um byte, sem cache, e o mesmo registro de consulta sob a apresentação (FR-3605 e
   FR-3606 da `115`). Essa abertura MUST valer para a FR-3611 da `115` e para a FR-4460 da `131`
-  exatamente como a abertura em aba própria. Nenhum evento de trilha novo é criado (D-002).
+  exatamente como a abertura em aba própria, e nas mesmas condições de registro (FR-6544). Nenhum
+  evento de trilha novo é criado (D-002).
+- **FR-6544**: A abertura MUST ser registrada só quando o acesso ao arquivo foi bem-sucedido — e
+  MUST NOT ser registrada só porque a pessoa clicou, nem porque o painel ou a moldura foram criados.
+  O plano MUST definir o que caracteriza o acesso bem-sucedido, sem prometer comprovar exibição nem
+  leitura. Hoje a consulta é gravada antes de os bytes saírem, e o plano MUST dizer se isso continua
+  ou muda. A entrega recusada, por integridade ou por arquivo indisponível, nunca é acesso
+  bem-sucedido (D-002).
 - **FR-6501**: Nenhum arquivo MUST ser pedido ao servidor sem um gesto da pessoa sobre aquela
   apresentação: entrar na página, registrar uma conferência, receber a confirmação, passar ao
   próximo item, redimensionar a janela e voltar à aba MUST NOT abrir arquivo (D-001).
-- **FR-6502**: A página MUST NOT carregar o arquivo numa moldura quando o navegador declara que não
-  mostra PDF dentro da página, nem quando não declara nada. Nesses casos o gesto de abrir leva à
-  alternativa (FR-6510). Na dúvida, a alternativa (D-002).
+- **FR-6502**: Em tela larga, quando o navegador declara que não mostra PDF dentro da página, o painel
+  MUST mostrar a alternativa (FR-6510) em vez da moldura; quando não declara nada, a prévia. Essa
+  leitura do navegador decide só o que se mostra: ela MUST NOT entrar no registro da abertura nem na
+  autorização do "conforme", que dependem só do acesso registrado pelo servidor (FR-6544, D-002).
 - **FR-6503**: A marca *"aberto por você"* e o aviso de abertura do cartão MUST refletir a trilha.
   Depois de uma abertura pela página — no painel, em aba própria ou por download —, a página MUST
   relê-los do servidor e atualizar o cartão daquele item sem recarregar. A entrega recusada, por
   integridade ou por arquivo indisponível, MUST deixar o aviso como estava.
+- **FR-6549**: A marca *"aberto por você"* MUST dizer acesso ao arquivo, e não exibição nem leitura:
+  nenhum texto da página MUST dizer que a pessoa *viu*, *leu* ou *conferiu* o arquivo por tê-lo
+  aberto, e a ajuda recolhida do formulário MUST dizer o que a marca significa (UX-652).
 - **FR-6504**: O arquivo da convocação MUST ser emoldurável pela própria origem, e por nenhuma outra,
   como o da Mesa (FR-112 da `012`). A proteção contra emolduramento por outra origem continua.
 
@@ -391,17 +451,17 @@ aviso na página é a mesma do cartão da convocação.
 
 #### Quando o arquivo não aparece na página
 
-- **FR-6510**: Quando o arquivo não pode ser mostrado na página — navegador sem visualizador
-  embutido, entrega recusada por integridade (FR-3605 da `115`) ou por arquivo indisponível (FR-3695
+- **FR-6510**: Quando o arquivo não pode ser mostrado no painel — navegador que declara não ter
+  visualizador embutido, entrega recusada por integridade (FR-3605 da `115`) ou por arquivo indisponível (FR-3695
   da `117`) —, a página MUST dizer em texto o que aconteceu, com a frase da recusa de hoje quando
   houver recusa, e oferecer o que resta: *"Abrir em aba própria"* e *"Baixar"* quando a entrega é
   possível; nenhuma das duas quando ela foi recusada.
-- **FR-6511**: A abertura pela alternativa MUST registrar o que se registra hoje, e, quando a pessoa
-  voltar à página, a marca e o aviso do item MUST ser relidos (FR-6503).
+- **FR-6511**: A abertura pela alternativa MUST ser registrada pela mesma regra da FR-6544, e, quando
+  a pessoa voltar à página, a marca e o aviso do item MUST ser relidos (FR-6503).
 - **FR-6512**: O gesto de abrir MUST dizer o tamanho do arquivo, como na Mesa. Enquanto o arquivo
   carrega no painel, o painel MUST dizer que ele está carregando.
 - **FR-6513**: A barra MUST oferecer a aba própria e o download em todo arquivo aberto, inclusive
-  quando ele parece ter sido mostrado: o PDF danificado é entregue e registrado, e só o navegador
+  quando ele parece ter sido mostrado: o PDF danificado é acessado e registrado, e só o navegador
   sabe que não o desenhou. A ajuda recolhida do formulário MUST dizer que arquivo que não abre, ou
   abre em branco, é motivo de pendência, com o motivo dito à pessoa convocada.
 
@@ -418,9 +478,11 @@ aviso na página é a mesma do cartão da convocação.
 - **FR-6516**: A recusa MUST aparecer no cartão do item, com a frase de hoje e com o que foi marcado
   e digitado preservado — exceto o resultado, na versão superada (FR-3587 da `115`). A recusa sem
   cartão onde morar — desfecho registrado, Processo encerrado — MUST aparecer no alto, e os
-  formulários que deixaram de valer MUST sumir.
+  formulários que deixaram de valer MUST sumir. Toda recusa MUST dizer como prosseguir: a recusa por
+  falta de abertura oferece abrir a versão vigente e registrar de novo, com o preenchimento mantido
+  (UX-651).
 - **FR-6517**: Sem script, a página MUST funcionar como hoje: abrir em aba própria, registrar com
-  recarga, voltar ao cartão.
+  recarga, voltar ao cartão. A marca *"aberto por você"* vem com a recarga.
 - **FR-6518**: Se o registro não chegar ao comando — sessão expirada, identidade ausente, falha de
   rede —, a página MUST dizer que nada foi registrado e manter à vista o que foi marcado e digitado.
 
@@ -430,8 +492,8 @@ aviso na página é a mesma do cartão da convocação.
   conferência, nomeado: o próximo documento desta pessoa com versão a conferir, na ordem da página;
   sem nenhum, a próxima pessoa com documento a conferir, pelo critério da FR-5024 da `143`; sem
   nenhuma, a frase de que não há outro documento a conferir neste recorte, com o caminho à convocação.
-- **FR-6520**: O gesto do próximo documento MUST abri-lo — no painel, ou pela alternativa — e levar o
-  foco ao painel com o formulário dele à vista. A abertura acontece porque a pessoa usou o gesto,
+- **FR-6520**: O gesto do próximo documento MUST abri-lo — no painel, em tela larga; fora da página,
+  em tela estreita — e levar o foco ao painel, ou, na tela estreita, ao formulário dele. A abertura acontece porque a pessoa usou o gesto,
   nunca porque o registro anterior terminou (D-003).
 - **FR-6521**: O gesto da próxima pessoa MUST carregar a página dela, com o painel fechado; nenhum
   arquivo dela é aberto por chegar.
@@ -442,7 +504,8 @@ aviso na página é a mesma do cartão da convocação.
 
 - **FR-6523**: Tudo MUST ser operável só por teclado, e a ordem de tabulação MUST seguir a ordem
   visual. Ao abrir, o foco MUST ir ao título do painel; ao fechar, ao formulário do item que estava
-  aberto.
+  aberto; ao voltar de um arquivo aberto fora da página, ao ponto de conferência daquele item
+  (FR-6528).
 - **FR-6524**: O painel MUST ser uma região nomeada, não modal: ele não prende o foco. A moldura MUST
   ter nome acessível com o documento, a versão e a pessoa.
 - **FR-6525**: Cada mudança sem recarga — a abertura registrada, o carregamento, a confirmação — MUST
@@ -452,16 +515,19 @@ aviso na página é a mesma do cartão da convocação.
 
 #### Telas pequenas
 
-- **FR-6527**: Abaixo da tela larga, o arquivo mostrado na página MUST aparecer dentro do cartão do
-  item, acima do formulário, com altura limitada, de modo que o resultado, o motivo e o botão de
-  registrar fiquem alcançáveis sem rolar o arquivo até o fim (proposta, pendente da Questão 2).
-- **FR-6528**: Onde o arquivo não se mostra na página (FR-6502), o gesto MUST abri-lo no visualizador
-  do próprio aparelho; ao voltar, o cartão do item MUST estar onde estava, com a marca relida e o foco
-  no formulário dele.
-- **FR-6529**: A 390 px, nenhum controle da conferência — resultado, motivo, registrar — nem a
-  identificação da pessoa e do documento MUST ficar atrás do arquivo ou fora da página.
-- **FR-6530**: Cruzar a fronteira da tela larga com um arquivo aberto MUST levá-lo ao outro arranjo
-  sem perder o que foi marcado e digitado e sem pedir o arquivo de novo.
+- **FR-6527**: Abaixo da tela larga, o gesto de abrir MUST abrir o arquivo fora da página — no
+  visualizador do aparelho ou em aba própria —, como na Mesa, qualquer que seja o navegador. Nenhum
+  painel nem moldura MUST ser criado abaixo da tela larga (D-006).
+- **FR-6528**: Na volta de um arquivo aberto fora da página, o formulário MUST estar como a pessoa o
+  deixou, a marca e o aviso de abertura do item MUST ser relidos (FR-6503), e a página MUST oferecer
+  o retorno ao ponto de conferência — o formulário daquele item —, com o foco nele (UX-653).
+- **FR-6529**: Se o navegador recarregar a página na volta, o que estava marcado e digitado no
+  formulário MUST ser restaurado neste navegador, e a página MUST dizer que o restaurou. Nada
+  restaurado MUST ser registrado sem o gesto de registrar.
+- **FR-6530**: A 390 px, nenhum controle da conferência — resultado, motivo, registrar — nem a
+  identificação da pessoa e do documento MUST ficar fora da página. Cruzar a fronteira da tela larga
+  com o painel aberto MUST fechá-lo sem perder o que foi marcado e digitado e sem pedir o arquivo de
+  novo.
 
 #### A pendência e o aviso
 
@@ -509,10 +575,28 @@ aviso na página é a mesma do cartão da convocação.
 - **FR-6532**: Nada desta spec MUST mudar quem pode conferir, o comando da conferência, a FR-3611 da
   `115`, a FR-4460 da `131`, os estados e os rótulos deles, a trilha, nem o portal do candidato. A
   única exceção é o gesto individual do aviso (FR-6537 a FR-6543), pela revisão da `134` decidida na
-  Questão 4.
+  Questão 4. Na Mesa, só o que a FR-6545 à FR-6548 dizem.
 - **FR-6533**: O painel da conferência MUST ter o mesmo desenho e os mesmos rótulos comuns do painel
-  da Mesa — a barra, *"Abrir em aba própria"*, *"Fechar"*, o foco ao abrir. O que a Mesa ganha desta
-  spec depende da Questão 3.
+  da Mesa — a barra, *"Abrir em aba própria"*, *"Fechar"*, o foco ao abrir.
+
+#### A Mesa do avaliador
+
+Por decisão do usuário na Questão 3 (D-007), revendo a FR-112 da `012`.
+
+- **FR-6545**: Na Mesa, a recusa por integridade e a de arquivo indisponível MUST aparecer no painel
+  em texto, com a frase de hoje, e não como página de bloqueio do navegador; o evento de cada uma
+  continua o de hoje.
+- **FR-6546**: Na Mesa, em tela larga, quando o navegador declara que não mostra PDF dentro da página,
+  o painel MUST mostrar a alternativa — o fato, *"Abrir em aba própria"* e *"Baixar"* —, pela mesma
+  regra da FR-6502. A barra MUST oferecer o download, além da aba própria e do fechar.
+- **FR-6547**: Na Mesa, abaixo da tela larga, o documento continua abrindo fora da página, e, na
+  volta, a nota, o parecer e a ficha do barema MUST estar como o avaliador os deixou, a marca
+  *"aberto"* MUST ser relida, e a página MUST oferecer o retorno à linha do documento, com o foco
+  nela; com a página recarregada pelo navegador, o preenchimento é restaurado como na FR-6529.
+- **FR-6548**: Nada desta spec MUST criar, na Mesa, exigência de abertura para avaliar ou concluir:
+  a Avaliação continua aceita como hoje, abra ou não o avaliador os documentos. O registro da
+  abertura na Mesa continua o da `012`; se o plano adotar para ela a definição de acesso bem-sucedido
+  da FR-6544, MUST dizê-lo. Sem script, a Mesa funciona como hoje.
 
 ### Requisitos de experiência
 
@@ -545,6 +629,19 @@ aviso na página é a mesma do cartão da convocação.
   correio."* e *"Aviso não enviado: ‹estado da `066`›."*
 - **UX-650**: A recusa antecipada da FR-6541 MUST dizer o motivo e, quando houver, a data: *"Bernardo
   já foi avisado hoje nesta chamada. Um novo pedido poderá ser feito a partir de 12/11/2026."*
+- **UX-651**: A recusa por falta de abertura MUST dizer como prosseguir, com o preenchimento mantido:
+  *"A conferência não foi registrada: você ainda não abriu a versão 2. Abra a versão 2 e registre de
+  novo; o que você marcou continua aqui."*, com o gesto *"Abrir a versão 2"*.
+- **UX-652**: A ajuda recolhida do formulário MUST dizer o que a marca significa: *"«Aberto por você»
+  quer dizer que o arquivo desta versão foi acessado por você nesta chamada. Não comprova que ele foi
+  exibido nem lido."*
+- **UX-653**: Na volta de um arquivo aberto fora da página, o retorno MUST nomear o item: *"Voltar à
+  conferência do Diploma de graduação"* — na Mesa, *"Voltar ao documento ‹nome›"*. Com o
+  preenchimento restaurado: *"Restauramos o que você tinha marcado e digitado neste navegador. Nada
+  foi registrado ainda."*
+- **UX-654**: Na Mesa, a recusa no painel MUST usar a frase da recusa de hoje, sob o nome do
+  documento, com *"Fechar"* ao lado; nenhuma aba própria nem download é oferecido para arquivo
+  recusado.
 
 ### Key Entities
 
@@ -563,23 +660,26 @@ Nenhuma entidade nova. A **apresentação** (a versão do documento que a pessoa
   código de recusa.
 - **SC-2142**: Em 100% das entradas na página, dos registros, das confirmações e dos redimensionamentos
   do teste, nenhuma consulta a apresentação é registrada sem um gesto sobre ela.
-- **SC-2143**: Com o navegador declarando que não mostra PDF embutido, ou sem declarar, nenhuma
-  moldura pede arquivo; a alternativa aparece em 100% dos gestos de abrir.
+- **SC-2143**: Em tela larga, com o navegador declarando que não mostra PDF embutido, a alternativa
+  aparece em 100% dos gestos de abrir; e em 100% dos casos do teste, o registro da abertura e o
+  "conforme" são os mesmos com e sem essa declaração.
 - **SC-2144**: Na divergência de resumo e no arquivo indisponível, a página mostra a frase de hoje em
   texto, nenhuma consulta é registrada e o evento de hoje é.
 - **SC-2145**: O envio duplicado do mesmo formulário produz exatamente uma conferência.
 - **SC-2146**: Depois de cada registro do teste, o cartão, o resumo e a situação mostrados sem recarga
   são iguais, em texto, aos da página recarregada.
 - **SC-2147**: A 1440 px, 1280 px, 390 px e 320 px, a página não tem rolagem horizontal nem violação
-  da política de conteúdo, e a 390 px o resultado, o motivo e o botão de registrar do item aberto são
-  alcançáveis com a identificação da pessoa e do documento à vista.
+  da política de conteúdo; abaixo da tela larga nenhum painel nem moldura é criado, e o resultado, o
+  motivo e o botão de registrar estão alcançáveis com a identificação da pessoa e do documento à
+  vista.
 - **SC-2148**: Sem script, a conferência dos dois documentos de Alice se completa como hoje.
 - **SC-2149** *(verificação humana)*: Só com teclado, e com um leitor de tela, uma pessoa confere os
   dois documentos de Alice e chega aos de Bernardo; o roteiro registra o anúncio de cada passo, e o
   foco nunca cai no início da página.
 - **SC-2150** *(verificação humana)*: Num celular com iOS e noutro com Android, a 390 px, uma pessoa
-  confere o diploma de Alice do começo ao fim, com a abertura registrada e a marca *"aberto por você"*
-  visível ao final.
+  confere o diploma de Alice do começo ao fim: abre o arquivo fora da página, volta, encontra o
+  formulário como o deixou e a marca *"aberto por você"*, usa o retorno ao ponto de conferência e
+  registra.
 - **SC-2151** *(verificação humana)*: Uma pessoa que conduz convocações confere os documentos do C09
   antes e depois desta feature; o roteiro registra o tempo e os gestos dos dois percursos, e nenhum
   arquivo conferido é de uma pessoa diferente da do formulário.
@@ -587,10 +687,24 @@ Nenhuma entidade nova. A **apresentação** (a versão do documento que a pessoa
   gravado pelo registro; o gesto da FR-6537 grava, para a pessoa, exatamente o aviso — com o mesmo
   texto — que o gesto em lote da `134` gravaria para ela no mesmo instante, e nenhum no dia em que ela
   já foi avisada, por qualquer dos dois gestos.
-- **SC-2154**: Em 100% das exclusões do teste, a confirmação diz o motivo, e só o *"já avisada hoje"*
-  traz data para novo pedido; nenhum pedido é gravado ou agendado para o dia seguinte.
 - **SC-2153**: Depois de cada registro do teste, a situação do aviso mostrada sem recarga é, em
   texto, a do cartão da pessoa na tela da convocação.
+- **SC-2154**: Em 100% das exclusões do teste, a confirmação diz o motivo, e só o *"já avisada hoje"*
+  traz data para novo pedido; nenhum pedido é gravado ou agendado para o dia seguinte.
+- **SC-2155**: Em 100% dos casos do teste, nenhuma abertura é registrada sem acesso bem-sucedido ao
+  arquivo, pela definição do plano: nem pelo clique, nem pela criação do painel, nem pela entrega
+  recusada; e a recusa do "conforme" sem abertura continua a de hoje.
+- **SC-2156**: Na volta de um arquivo aberto fora da página, em 100% dos casos do teste — com e sem
+  recarga da página pelo navegador —, o formulário está como foi deixado, a marca é a da trilha, o
+  retorno ao ponto de conferência leva o foco ao formulário do item, e nada é registrado sem o gesto
+  de registrar. Vale nas duas telas.
+- **SC-2157**: Na Mesa, a recusa por integridade e a de arquivo indisponível aparecem no painel como
+  texto em 100% dos casos do teste, e nunca como página de bloqueio do navegador.
+- **SC-2158**: Na Mesa, a avaliação se conclui sem abertura de documento em 100% dos casos em que se
+  concluía antes; sem script, a Mesa funciona como hoje.
+- **SC-2159** *(verificação humana)*: Só com teclado, uma pessoa abre um documento fora da página a
+  390 px, volta e chega ao formulário do item pelo retorno oferecido, na conferência e na Mesa; o
+  roteiro registra onde o foco estava em cada passo.
 
 ## Revisões de requisitos anteriores
 
@@ -601,7 +715,11 @@ Nenhuma entidade nova. A **apresentação** (a versão do documento que a pessoa
 - **FR-4620 da `134`** — acrescida pela `157` em 2026-11-11: o gesto individual é distinguível na
   trilha.
 
-A redação anterior de cada uma fica ao fim da alínea, na `134`. A FR-4604 da `134` não muda.
+- **FR-112 da `012`** — acrescida pela `157` em 2026-11-11: a recusa legível no painel, a alternativa
+  sem prévia e a volta do documento aberto fora da página, na Mesa (D-007). Não cria exigência de
+  abertura para avaliar.
+
+A redação anterior de cada uma fica ao fim da alínea, na spec revista. A FR-4604 da `134` não muda.
 
 ## Decisões
 
@@ -616,17 +734,20 @@ arranjo estreito — é acréscimo ao padrão, e não um segundo padrão.
 visualizador que some na moldura, o `hidden` vencido pelo `display` —, e dois visualizadores na mesma
 gestão se desencontrariam no primeiro ajuste.
 
-### D-002 — A abertura continua sendo a entrega; nenhum "vi" declarado pela página
+### D-002 — A abertura registra o acesso ao arquivo, e não a exibição nem a leitura
 
-*Proposta.* O registro que autoriza o "conforme" continua sendo a entrega do arquivo verificado a
-quem o pediu. A página não ganha um sinal de "o documento apareceu", e por isso não carrega a moldura
-onde sabe — ou não sabe — se o navegador o desenha (FR-6502). O PDF danificado continua sendo juízo
-do conferente (FR-6513).
+**Decisão do usuário (11/11/2026), nas Questões 1 e 2.** A abertura que o "conforme" exige é o acesso
+bem-sucedido ao arquivo verificado, registrado pelo servidor. Ela não é registrada pelo clique nem
+pela criação do painel (FR-6544), e o que caracteriza o acesso bem-sucedido é decisão do plano, que
+não pode prometer comprovar exibição nem leitura. *"Aberto por você"* diz acesso, e não leitura
+(FR-6549). A leitura que a página faz do navegador — mostra ou não PDF embutido — decide só o que se
+mostra, e nunca o registro nem a autorização (FR-6502).
 
 **Por quê**: o servidor só sabe o que entregou. Um sinal de "apareceu" mandado pela página seria
 autodeclaração, falsificável por qualquer um que a altere, e a regra da FR-3611 da `115` passaria a
-depender dele. O custo é o caso raro do arquivo que passou pela assinatura e não se desenha: a
-entrega fica registrada, e o conferente vê que não abriu.
+depender dele; a inferência de suporte do navegador tem o mesmo defeito. O custo é o caso raro do
+arquivo que passou pela assinatura e não se desenha: o acesso fica registrado, e o conferente vê que
+não abriu — por isso a ajuda diz que arquivo que não abre é motivo de pendência (FR-6513).
 
 ### D-003 — O próximo documento abre por gesto, nunca sozinho
 
@@ -648,9 +769,11 @@ consulta à página (FR-3604 da `115`) mentirem sobre quem está sendo conferido
 
 ### D-005 — O "conforme" continua oferecido antes da abertura, com o aviso ligado a ele
 
-*Proposta, pendente da Questão 1.* As opções do resultado continuam disponíveis antes da abertura,
-com o aviso *"Você ainda não abriu a versão N"* ligado a elas, como desde o #473; ao abrir, o aviso dá
-lugar a *"aberto por você"* sem recarga (FR-6503).
+**Decisão do usuário (11/11/2026), Questão 1, opção A.** As opções do resultado continuam disponíveis
+antes da abertura, com o aviso *"Você ainda não abriu a versão N"* ligado a elas, como desde o #473; ao
+abrir, o aviso dá lugar a *"aberto por você"* sem recarga (FR-6503). O comando continua conferindo a
+abertura da versão vigente. A recusa preserva o preenchimento e diz como prosseguir (FR-6516,
+UX-651). *"Aberto por você"* informa acesso ao arquivo, e não comprova leitura (FR-6549).
 
 **Por quê**: o estudo propôs habilitar o *Conforme* só depois da abertura. Desabilitar uma opção a
 tira da ordem de tabulação, e quem usa leitor de tela deixa de encontrá-la e de ouvir a razão; e a
@@ -658,25 +781,33 @@ regra continua no comando, que recusa de qualquer jeito. Com o painel, o aviso t
 hora da abertura, e o erro que o estudo viu — marcar e só descobrir na recusa — deixa de custar uma
 recarga.
 
-### D-006 — Telas pequenas pela capacidade do navegador, e não só pela largura
+### D-006 — Em tela estreita, o arquivo abre fora da página, como na Mesa
 
-*Proposta, pendente da Questão 2.* Abaixo da tela larga, o arquivo aparece dentro do cartão, acima
-do formulário, quando o navegador mostra PDF embutido; quando não mostra — a maioria dos celulares —,
-abre no visualizador do aparelho, e a volta relê o cartão (FR-6527, FR-6528).
+**Decisão do usuário (11/11/2026), Questão 2, opção B.** Abaixo da tela larga, o gesto de abrir leva
+o arquivo para fora da página — visualizador do aparelho ou aba própria —, qualquer que seja o
+navegador (FR-6527). Na volta, o formulário está como foi deixado, inclusive se o navegador recarregou
+a página, a situação da abertura é relida, e a página oferece o retorno ao ponto de conferência
+(FR-6528, FR-6529). Em tela larga, a prévia no painel e a alternativa *"Abrir em aba própria"*
+continuam (FR-6505, FR-6507). Nada disso depende de inferir o suporte do navegador para autorizar o
+"conforme" (D-002).
 
-**Por quê**: a Mesa, abaixo da tela larga, simplesmente abre em aba própria. Aqui o usuário pediu o
-uso em tela pequena sem perder os controles, e um tablet ou uma janela estreita num computador
-mostram o PDF muito bem. Decidir só pela largura poria a moldura num celular que não desenha o PDF —
-e registraria uma abertura sem nada visto (D-002).
+**Por quê**: previsível. O PDF dentro da página de um celular desenha só a primeira página, ou nada,
+conforme o aparelho e a versão; um arranjo que dependesse disso mudaria de aparelho para aparelho. A
+proposta anterior — o arquivo no cartão quando o navegador declarasse mostrá-lo — foi descartada por
+isso. O custo é que um tablet ou uma janela estreita não mostram o arquivo na página.
 
-### D-007 — A Mesa fica como está nesta entrega
+### D-007 — A Mesa ganha a recusa legível, a alternativa e a volta, sem exigência de abertura
 
-*Proposta, pendente da Questão 3.* A Mesa não ganha a alternativa, o arranjo estreito nem a
-identificação da versão; só compartilha o desenho comum (FR-6533). O que se viu nela vai para os
-achados registrados.
+**Decisão do usuário (11/11/2026), Questão 3, opção B.** A Mesa do avaliador recebe o mesmo
+tratamento da alternativa sem prévia, da recusa legível no painel e do arranjo estreito com a volta
+(FR-6545 a FR-6548). A FR-112 da `012` é revista expressamente, com a redação anterior preservada.
+Isso não cria exigência de abertura para emitir juízo na Mesa (FR-6548).
 
-**Por quê**: o usuário pediu a conferência da convocação. Na Mesa a abertura só informa, e o risco
-da D-002 é menor; mudá-la aqui alargaria o escopo de uma feature de outra tela.
+**Por quê**: é o mesmo visualizador, com os mesmos defeitos: a recusa por integridade que,
+emoldurada, provavelmente aparece como página de bloqueio do navegador, e a volta de um documento
+aberto fora da página sem caminho de retorno. Corrigir só a conferência deixaria as duas telas
+diferentes no primeiro ajuste. Na Mesa a abertura só informa, e por isso a regra de registro dela
+continua a da `012`.
 
 ### D-008 — O aviso continua gesto, oferecido quando a conferência da pessoa termina
 
@@ -699,38 +830,24 @@ do dia, e a segunda, registrada minutos depois, só seria avisada no dia seguint
 tivesse saído. O custo é acrescentar à `134` o recorte de uma pessoa a um gesto que ela desenhou em
 lote; o texto, as exclusões e o despacho são os dela.
 
-## Questões para o usuário
-
-Cada questão traz a proposta da spec em primeiro lugar. As decisões D-005 a D-007 seguem a
-proposta até a resposta. A Questão 4 foi respondida, e está em "Questões respondidas".
-
-### Questão 1 — O *Conforme* fica disponível antes de abrir o arquivo?
-
-- **A (proposta)**: sim, como desde o #473, com o aviso ligado às opções; ao abrir, o aviso vira
-  *"aberto por você"* na hora, sem recarga, e o comando continua recusando o "conforme" sem abertura.
-  Preserva a ordem de tabulação e o anúncio do aviso ao leitor de tela.
-- **B**: não; *Conforme* e *Não se aplica* ficam desabilitados até a abertura, como o estudo propôs.
-  Elimina a recusa da tela, mas as opções desabilitadas somem da tabulação, e a razão precisa ser dita
-  fora delas. Sem script, a opção desabilitada não pode ser habilitada, e a página teria de mantê-las
-  disponíveis nesse caso.
-
-### Questão 2 — Como fica a conferência a 390 px?
-
-- **A (proposta)**: pela capacidade do navegador. Com PDF embutido, o arquivo aparece dentro do
-  cartão, acima do formulário, com altura limitada; sem ele, abre no visualizador do aparelho e a
-  volta relê o cartão e devolve o foco ao formulário (D-006).
-- **B**: como a Mesa, sempre pelo visualizador do aparelho abaixo da tela larga, com a volta relida e
-  o foco devolvido. Mais simples e previsível; um tablet ou uma janela estreita perdem o arquivo na
-  página.
-
-### Questão 3 — A Mesa do avaliador ganha o mesmo nesta spec?
-
-- **A (proposta)**: não. A Mesa só compartilha o desenho comum, e os achados dela ficam registrados
-  para spec própria (D-007).
-- **B**: sim. A Mesa ganha a alternativa sem prévia, a mensagem de recusa dentro do painel e o
-  arranjo estreito, com requisitos acrescentados aqui e o escopo alargado à `012`.
-
 ## Questões respondidas
+
+As quatro questões foram respondidas pelo usuário em 11/11/2026, e as respostas estão nas decisões.
+
+- **Questão 1 — O *Conforme* fica disponível antes de abrir o arquivo?** Sim, opção A (D-005): as
+  opções ficam disponíveis, com o aviso de abertura junto delas e atualização sem recarga; o comando
+  continua conferindo a abertura da versão vigente; a recusa preserva o preenchimento e diz como
+  prosseguir; *"aberto por você"* informa acesso, e não leitura. Descartado: desabilitar as opções até
+  a abertura.
+- **Questão 2 — Como fica a conferência a 390 px?** Opção B (D-006): abaixo da tela larga, o arquivo
+  abre fora da página, como na Mesa; na volta, o formulário preservado, a situação da abertura
+  atualizada e o retorno ao ponto de conferência; em tela larga, a prévia e a aba própria. Nenhuma
+  inferência de suporte do navegador autoriza o "conforme", e a abertura se registra pelo acesso
+  bem-sucedido, que o plano define (D-002). Descartado: o arquivo no cartão quando o navegador
+  declarasse mostrá-lo.
+- **Questão 3 — A Mesa do avaliador ganha o mesmo nesta spec?** Sim, opção B (D-007): a alternativa
+  sem prévia, a recusa legível no painel e o arranjo estreito, com a FR-112 da `012` revista e sem
+  exigência nova de abertura para avaliar. Descartado: deixar a Mesa como está.
 
 - **Questão 4 — O aviso de pendência aparece junto da conferência?** Respondida pelo usuário em
   11/11/2026: opção A, com ajustes (D-008). O gesto *"Pedir aviso para ‹nome›"*, só daquela pessoa,
@@ -745,14 +862,10 @@ proposta até a resposta. A Questão 4 foi respondida, e está em "Questões res
 
 Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuário.
 
-- **A recusa dentro da moldura da Mesa provavelmente aparece como página bloqueada.** A exceção de
-  emolduramento da rota da Mesa vale para a resposta de sucesso da view; a recusa por integridade e a
-  de arquivo indisponível saem como exceção, e a resposta montada depois dela recebe a proibição de
-  emolduramento do resto do sistema. Pela leitura do código, o painel mostraria o aviso de bloqueio do
-  navegador, e não a frase da recusa. Não reproduzido.
-- **A Mesa registra a abertura em navegador que não desenha o PDF.** Em tela larga, com o visualizador
-  de PDF desligado, a moldura da Mesa pede o arquivo, o servidor registra a consulta, e nada aparece.
-  Na Mesa a abertura só informa, e o efeito é uma marca *"aberto"* imprecisa. Não reproduzido.
+- **Na Mesa, a recusa dentro da moldura provavelmente aparece como página bloqueada, e a abertura
+  se registra em navegador que não desenha o PDF.** Os dois foram achados ao escrever esta spec, pela
+  leitura do código, sem reprodução. Pela decisão da Questão 3, o primeiro passou ao escopo
+  (FR-6545); o segundo fica como está na Mesa, onde a abertura só informa (FR-6548).
 - **O envio aceita PDF danificado.** A aceitação confere a assinatura, o tamanho e o arquivo vazio;
   um PDF truncado passa e só falha na conferência, onde custa uma rodada de pendência. Validar a
   estrutura do PDF no envio é mudança do portal e da `117`, e não desta spec.
@@ -761,8 +874,10 @@ Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuár
 
 - Todo arquivo da convocação é PDF de até 10 MB: o envio só aceita a assinatura de PDF, e a entrega
   responde sempre como PDF.
-- Os navegadores em uso declaram se mostram PDF dentro da página. O que não declarar recebe a
-  alternativa (FR-6502).
+- Os navegadores em uso podem declarar se mostram PDF dentro da página; em tela larga, o que não
+  declarar recebe a prévia (FR-6502). Nada do registro depende dessa declaração.
+- A restauração do preenchimento na volta usa o armazenamento do próprio navegador, como a composição
+  do Edital já faz; nada restaurado é registrado sem o gesto de registrar.
 - A página continua emitindo uma chave de idempotência por formulário, e a recusa continua sendo
   devolvida com o código do comando.
 - O C09 da `134` serve de caso de verificação; o resultado do estudo nele é o "antes".
@@ -779,5 +894,6 @@ Encontrados ao escrever esta spec, fora do escopo dela. Governança é do usuár
 - O texto do aviso de pendência, as exclusões, o limite por dia e o despacho, que são da `134` e da
   `066`; o envio do aviso dentro do clique.
 - Os nomes dos estados de documento, que são da `154`.
-- A Mesa do avaliador além do desenho comum, salvo resposta B à Questão 3.
+- Na Mesa, qualquer exigência de abertura para avaliar, e mudança na regra de registro da abertura
+  dela (FR-6548).
 - O portal do candidato.
