@@ -421,6 +421,9 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 - **FR-6315**: A emissão da apuração MUST NOT gravar movimento de vaga; a apuração da reserva MUST
   informar a ocupação e, cumprida a condição, que a destinação está disponível.
+  *Até o incremento F, que espera a D-015, a emissão continua a mover vaga sob a declaração por saldo,
+  como antes da `155`: é a parada da parte que a decisão governa, e não regra adotada (R-010 da
+  pesquisa).*
 - **FR-6316**: Os movimentos já gravados pela emissão da apuração MUST continuar legíveis e válidos,
   com a mesma causa, e MUST contar como destinação feita: o saldo MUST sair das efetivas líquidas
   deles, e nenhum ato MUST destinar outra vez a vaga que eles já cederam.
