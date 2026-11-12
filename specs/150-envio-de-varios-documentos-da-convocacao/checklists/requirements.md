@@ -36,3 +36,7 @@
 - Os caminhos de arquivo e o limite do proxy estão no `research.md`, que é onde o diagnóstico mora,
   e não na spec.
 - O escopo da inscrição é decisão do usuário (D-004); a spec não depende dela.
+- Revista em 2026-11-11 com o achado 11 do estudo da jornada final (FR-5615 a FR-5619, UX-504,
+  SC-1806, SC-1807, D-006). A spec diz "resumo SHA-256" porque é o resumo que a `115` já guarda em
+  cada apresentação e o que torna a comparação objetiva; não diz como o navegador o calcula. As três
+  perguntas abertas têm resposta adotada por padrão e não bloqueiam o plano.
