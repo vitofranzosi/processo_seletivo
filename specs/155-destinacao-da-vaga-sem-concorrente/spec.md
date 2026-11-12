@@ -41,6 +41,36 @@ código."*
 > se escrevem "achado 02" e "achado 16", para que a varredura de citações não os leia como requisitos
 > desta spec. O #477 já tirou da tela a sugestão do ato recusado; a regra, ele deixou para cá.
 
+## Esta entrega
+
+*(Acrescentada em 12/11/2026, na redução da implementação à entrega mínima aprovada pelo usuário.)*
+A implementação completa — todos os requisitos abaixo, menos o incremento F, bloqueado pela D-015 —
+está preservada na branch `claude/155-destinacao-completa` e na tag `155-destinacao-completa`, ambas
+no repositório remoto. Esta entrega leva só o recorte abaixo; o resto é a **próxima entrega**, e os
+requisitos dela estão marcados *(próxima entrega)* ao lado do identificador, sem redação apagada.
+
+**Entra:**
+- **a)** a situação da vaga sem quem a ocupe, dita igual na ocupação, no Centro e na convocação
+  (FR-6300 a FR-6304, UX-600, UX-602), e a declaração de vaga não preenchida, no Edital silente e na
+  linha geral, com a coluna `nao_preenchidas` da apuração e a causa de obsolescência dela (FR-6320 a
+  FR-6327);
+- **b)** os impedimentos (FR-6306, FR-6307); a tabela nova append-only, por gatilho e por privilégio;
+  a conferência assinada, o fundamento obrigatório, a trilha e a permissão da comissão (FR-6341,
+  FR-6342, FR-6344); e o desfazimento da declaração, com o impedimento dito no lugar do botão quando
+  há chamada dependente (FR-6334 a FR-6336).
+
+**Fica para a próxima:** o ato "Destinar à ampla concorrência" e o desfazimento dele (FR-6308 a
+FR-6314); a emissão que deixa de mover vaga (FR-6315, FR-6316); a passagem entre cotas (FR-6317 a
+FR-6319, UX-603); a lista vazia e o sorteio sem relação (FR-6328 a FR-6333); a página pública, o
+relatório e o fundamento na chamada (FR-6337 a FR-6340); as prévias (FR-6343); e, bloqueada pela
+D-015, a condição do saldo (FR-6305).
+
+**Onde o Edital declara a reversão, a regra é a de antes da `155`.** A apuração da lista reservada
+continua cedendo a vaga à ampla, nas duas espécies, como a `016` a escreveu. Onde ela não cede — a
+V-1 da [verificação](verificacao-do-levantamento.md), por esgotamento, em que a ordem ainda conta
+quem desistiu —, a tela diz a situação, a regra e o próximo passo, sem botão, e a declaração de não
+preenchida continua recusada (FR-6327).
+
 ## Por que esta feature existe
 
 No C09, o Perfil "Professor de Informática" publica quatro vagas: três na ampla concorrência e uma
