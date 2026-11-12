@@ -117,6 +117,11 @@ TITULOS = {
     ENCERRADA_PELO_PROCESSO: TITULO_ENCERRADA_PELO_PROCESSO,
     DECIDIDA: TITULO_DECIDIDA,
 }
+# **A chamada aberta sem providência pendente** (154, FR-6202): a linha da chamada aberta da FR-3858
+# se dividiu em duas. Com tudo enviado, *"Você foi convocado!"* repetia um convite que a pessoa já
+# tinha atendido (achado 20 do estudo da jornada final). Não é momento novo — a etapa, o prazo, a
+# ressalva e o andamento continuam os da chamada aberta —, e por isso não entra em `TITULOS`.
+TITULO_SEM_PROVIDENCIA = "Acompanhe sua convocação"
 # **A etapa descreve as obrigações da chamada, e não o estado** (FR-3860): sai da lista gravada no
 # ato de convocar e da política do Requerimento, e vale igual antes e depois de qualquer envio. Sem
 # imperativo — *"envie o Requerimento"* o pediria a quem já o enviou (cenário F).
@@ -315,6 +320,18 @@ def momento_sem_documento(*, estado_do_prazo, desfecho, fechado_pelo_processo):
     if estado_do_prazo == convocacao_nomes.CONVOCADO_VENCIMENTO_DECORRIDO:
         return ENCERRADA_PELO_PRAZO
     return ABERTA
+
+
+def providencia_pendente_sem_documento(disponibilidade):
+    """A providência pendente da chamada que não pede documento (154, FR-6201, D-006).
+
+    **Só o Requerimento pedido nesta chamada, e já enviado, a desfaz.** O chamado `"conferir"` da
+    tela não serve para isto: ele vale para todo Requerimento enviado, inclusive o pedido na
+    inscrição — e aí a chamada não pede nada pelo portal, e a D-006 manda manter a tela de hoje,
+    porque o sistema não verifica o cumprimento externo. Lê a mesma `Disponibilidade` que a tela já
+    leu, sem consulta.
+    """
+    return not (requerimento_na_chamada(disponibilidade) and disponibilidade.enviado)
 
 
 # Os selos dos cartões (FR-3744): o estado em texto, nunca só em cor ou símbolo. Fechada a chamada,
@@ -697,8 +714,51 @@ class Obrigacoes:
 
     @property
     def titulo(self):
-        """O título de primeiro nível, pelo estado (FR-3858)."""
+        """O título de primeiro nível, pelo estado (FR-3858) e, aberta, pela providência (154,
+        FR-6202, FR-6203). É lido a cada projeção: o envio que tira a última tarefa e a pendência
+        nova mudam o título sem que nada o guarde."""
+        if self.aberta and not self.providencia_pendente:
+            return TITULO_SEM_PROVIDENCIA
         return TITULOS[self.momento]
+
+    # --- A providência pendente (154, FR-6200, FR-6205, FR-6209) --------------------------------
+
+    @property
+    def providencia_pendente(self):
+        """Há tarefa da FR-3726 com a chamada aberta (D-001 da `154`).
+
+        **As mesmas `tarefas` do resumo e da ação**: obrigatório a corrigir, obrigatório a enviar e
+        o Requerimento a preencher. O opcional, o facultativo pendente, o que está com a comissão e
+        o conferido ficam fora. Ler daqui, e não de uma segunda regra, é o que impede a página de
+        dizer *"Acompanhe sua convocação"* e, logo abaixo, uma tarefa.
+        """
+        return self.aberta and bool(self.tarefas)
+
+    @property
+    def conferencia_terminada(self):
+        """Todo obrigatório conferido — conforme ou *não se aplica* —, sem tarefa (D-002 da `154`).
+
+        **Ao menos um obrigatório**: a chamada só com facultativo não tem conferência que termine.
+        O estado dos opcionais não entra, e é por isso que a frase da US2 fala só dos obrigatórios.
+        """
+        obrigatorios = [item for item in self.itens if not item.opcional]
+        return (
+            self.aberta
+            and not self.tarefas
+            and bool(obrigatorios)
+            and all(item.categoria == CONFERIDO for item in obrigatorios)
+        )
+
+    @property
+    def cabe_a_consequencia(self):
+        """A advertência da FR-1177 da `063`, revista pela FR-6209 da `154`.
+
+        `prazo` já é vazio com o prazo não iniciado (comunicação não enviada) e sem vencimento
+        registrado; `aberta` já exclui o vencido, o Processo encerrado e o desfecho. A condição nova
+        é a última: **só com providência pendente** — quem já fez tudo não tem o que deixar de
+        atender (achado 20 do estudo). O cartão do prazo não depende disto (FR-6208).
+        """
+        return self.aberta and bool(self.prazo) and self.providencia_pendente
 
     @property
     def pede_documento_obrigatorio(self):
@@ -1059,6 +1119,7 @@ __all__ = [
     "PRAZO",
     "PROCESSO",
     "TITULOS",
+    "TITULO_SEM_PROVIDENCIA",
     "CartaoDoPrazo",
     "Obrigacoes",
     "apresentado",
@@ -1071,6 +1132,7 @@ __all__ = [
     "linha_informativa_do_requerimento",
     "momento_sem_documento",
     "obrigacoes_da_convocacao",
+    "providencia_pendente_sem_documento",
     "ressalva",
     "texto_do_item",
 ]

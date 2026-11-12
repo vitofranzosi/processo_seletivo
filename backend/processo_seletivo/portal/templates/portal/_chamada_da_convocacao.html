@@ -48,8 +48,8 @@ Toda frase vem de `portal/obrigacoes.py`; o template só a coloca no lugar.
   {% if o.frase_do_opcional %}<p>{{ o.frase_do_opcional }}</p>{% endif %}
   {% if o.acao %}<p class="acao-da-chamada"><a class="principal" href="#{{ o.acao.ancora }}">{{ o.acao.rotulo }}</a></p>{% endif %}
   {% if o.convite_ao_opcional %}<p><a href="#documentos-opcionais">{{ o.convite_ao_opcional }}</a></p>{% endif %}
-  {% comment %}A consequência da 063, só com o prazo correndo, uma vez só (FR-3864; FR-1177 da 063).{% endcomment %}
-  {% if o.prazo %}<p class="consequencia">{{ consequencia }}</p>{% endif %}
+  {% comment %}A consequência da 063, uma vez só (FR-3864; FR-1177 da 063): com o prazo correndo e, desde a 154, só com providência pendente (FR-6209). O cartão do prazo, acima, não depende disso (FR-6208).{% endcomment %}
+  {% if o.cabe_a_consequencia %}<p class="consequencia">{{ consequencia }}</p>{% endif %}
   <p class="ressalva">{{ o.ressalva }}</p>
 
   {% elif o.encerrada %}
