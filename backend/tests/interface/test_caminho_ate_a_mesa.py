@@ -133,7 +133,7 @@ def test_entrar_por_uma_identidade_sugerida_leva_ao_trabalho(client, seletor_lig
     )
 
     corpo = resposta.content.decode()
-    assert "Minhas Etapas" in corpo
+    assert "Minhas atividades" in corpo
     assert cenario["edital"].title in corpo or "Análise documental" in corpo
 
 

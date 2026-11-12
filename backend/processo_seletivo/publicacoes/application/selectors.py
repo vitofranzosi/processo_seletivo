@@ -2,6 +2,9 @@
 
 import base64
 import binascii
+import contextvars
+import copy
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -26,8 +29,58 @@ def _not_found():
     return DomainError("not_found", "Recurso não encontrado.", 404)
 
 
+#: A versão vigente lida uma vez por Edital, dentro de uma requisição de leitura (160, R-009).
+#: `None` fora do contexto: aí cada chamada vai ao banco, como sempre foi.
+_VERSOES_DA_REQUISICAO = contextvars.ContextVar("versoes_da_requisicao", default=None)
+
+
+@contextmanager
+def versao_vigente_da_requisicao(agora=None):
+    """Memoriza `effective_version` por Edital, só enquanto dura o bloco, e só para o vigente.
+
+    **Reler dentro da requisição não é cache** (D-009 da `160`): não há estado que sobreviva à
+    resposta, e por isso nada a invalidar. As funções de outras features que a derivação do
+    andamento chama releem a versão cada uma por si — cerca de 25 vezes por Edital, medidas no
+    estudo —, e é isso que este contexto poupa.
+
+    **Só o vigente** (R-009): uma chamada com outro `at` é a leitura de um ato pela norma que ele
+    citou, e passa direto ao banco. **Só leitura**: as views de GET o abrem; nenhum comando o abre,
+    porque um comando que publicasse no meio leria a versão de antes.
+
+    Cada chamada recebe uma cópia do conteúdo: quem o altera em memória não contamina o seguinte.
+    """
+    token = _VERSOES_DA_REQUISICAO.set({"agora": agora or timezone.now(), "versoes": {}})
+    try:
+        yield
+    finally:
+        _VERSOES_DA_REQUISICAO.reset(token)
+
+
 def effective_version(*, edital_id, at=None):
     """Versão vigente no instante informado, sem aplicar vigências ainda não iniciadas."""
+    memoria = _VERSOES_DA_REQUISICAO.get()
+    if memoria is None or (at is not None and at != memoria["agora"]):
+        return _versao_vigente(edital_id=edital_id, at=at)
+    chave = str(edital_id)
+    if chave not in memoria["versoes"]:
+        memoria["versoes"][chave] = _versao_vigente(edital_id=edital_id, at=memoria["agora"])
+    guardada = memoria["versoes"][chave]
+    copia = copy.copy(guardada)
+    copia.content = copy.deepcopy(guardada.content)
+    return copia
+
+
+def agora_da_requisicao():
+    """O instante com que o contexto da versão vigente foi aberto, ou `None` fora dele.
+
+    A derivação do andamento lê com ele, e não com um `now()` próprio: com o mesmo instante, as
+    leituras de outras features que recebem o `at` dela encontram a versão já lida.
+    """
+    memoria = _VERSOES_DA_REQUISICAO.get()
+    return memoria["agora"] if memoria is not None else None
+
+
+def _versao_vigente(*, edital_id, at=None):
     moment = at or timezone.now()
     version = (
         VersaoConsolidada.objects.filter(edital_id=edital_id, valid_from__lte=moment)

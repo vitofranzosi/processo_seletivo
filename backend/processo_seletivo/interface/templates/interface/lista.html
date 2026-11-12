@@ -21,7 +21,7 @@ vez que a pessoa abria a lista de Processos. É orientação, e o que ela carreg
 {% if vinculos %}
 <p class="ajuda">Você integra a comissão de
   {{ vinculos|length }} Processo{{ vinculos|length|pluralize:"s" }}.
-  <a href="{% url 'interface:minhas-etapas' %}">Ver minhas atribuições</a>.</p>
+  <a href="{% url 'interface:minhas-etapas' %}">Ver minhas atividades</a>.</p>
 {% endif %}
 
 {% if sem_papel %}

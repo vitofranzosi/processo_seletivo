@@ -1,0 +1,27 @@
+{% comment %} Uma linha de "Minhas atividades" (160, contrato das telas): um ato num Edital, ou o
+   mesmo ato em vários (D-006). O ato é o texto da derivação, e o link é o da célula do Centro
+   (D-005); a situação é palavra, e não só sinal (UX-715); a base diz por que a linha é da pessoa
+   (FR-6861). Na espera não há link de ato: ninguém age até a data. {% endcomment %}
+{% comment %} Em "Para fazer agora" tudo é *Pendente* ou *Obsoleto*, e repetir "Pendente" em cada linha
+   era ruído: a situação só aparece quando não é a de todas — o *Obsoleto* precisa ser visto. Na
+   espera ela aparece sempre, porque *Aguarda* e *Impedido* são diferentes (revisão visual de
+   12/11). A base só onde o ato é da pessoa — a espera não tem — e só quando distingue: com uma
+   base só na página, ela é dita uma vez, no título da seção (FR-6885). {% endcomment %}
+<li class="atividade">
+  {% if espera or grupo.situacao != "pendente" %}<span class="situacao-do-andamento s-{{ grupo.situacao }}"><span aria-hidden="true">{{ grupo.sinal }}</span> {{ grupo.rotulo }}</span>{% endif %}
+  {% if not espera and grupo.unico and grupo.providencia.url %}<a class="ato-da-atividade" href="{{ grupo.providencia.url }}">{{ grupo.ato }}</a>{% else %}<strong class="ato-da-atividade">{{ grupo.ato }}</strong>{% endif %}
+  {% if grupo.base and not atividades.base_unica %}<span class="base-da-atividade">{{ grupo.base }}</span>{% endif %}
+  <span class="onde-da-atividade">{% if grupo.unico %}Edital {{ grupo.primeira.edital.number }}/{{ grupo.primeira.edital.year }}{% else %}{{ grupo.quantos_editais }} Editais{% endif %}{% if grupo.lugar %} · {{ grupo.lugar }}{% endif %} · {{ grupo.fase }}</span>
+  {% if espera %}
+  {% if grupo.providencia.razao %}<span class="razao">{{ grupo.providencia.razao }}.</span>{% endif %}
+  {% if grupo.situacao == "impedido" and grupo.providencia.texto_de_quem_resolve %}<span class="razao">Quem resolve: {{ grupo.providencia.texto_de_quem_resolve|lower }}.</span>{% endif %}
+  {% if not grupo.unico %}<span class="razao">{% for edital in grupo.editais %}Edital {{ edital.number }}/{{ edital.year }}{% if not forloop.last %}, {% endif %}{% endfor %}.</span>{% endif %}
+  {% elif not grupo.unico %}
+  <details class="editais-do-grupo">
+    <summary>Ver os {{ grupo.quantos_editais }}</summary>
+    <ul>{% for linha in grupo.linhas %}
+      <li><a href="{{ linha.providencia.url }}">Edital {{ linha.edital.number }}/{{ linha.edital.year }}</a>{% if not grupo.lugar %} · {{ linha.providencia.onde_por_extenso }}{% endif %}</li>{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</li>

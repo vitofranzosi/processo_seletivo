@@ -441,7 +441,7 @@ def situacoes_da_etapa(f):
             _c(
                 PENDENTE,
                 natureza=AVALIAR,
-                ato=f"Avaliar {_n(minhas, 'inscrição', 'inscrições')}",
+                ato=ato_de_avaliar(minhas),
                 responsavel=AVALIA,
                 url=f.get("url_da_mesa") or "",
                 contagem=minhas,
@@ -492,6 +492,15 @@ def situacoes_da_etapa(f):
     return celula, [celula]
 
 
+def ato_de_avaliar(quantas):
+    """A frase da avaliação, a mesma no Centro e em "Minhas atividades" (160, FR-6864).
+
+    A página pessoal monta a linha da avaliação pela carga, sem a derivação (D-003 da `160`); com a
+    frase escrita lá, as duas divergiriam na primeira mudança de texto.
+    """
+    return f"Avaliar {_n(quantas, 'inscrição', 'inscrições')}"
+
+
 def _avaliar_minhas(f):
     minhas = f.get("minhas") or 0
     if not minhas or not f.get("url_da_mesa"):
@@ -500,7 +509,7 @@ def _avaliar_minhas(f):
         _c(
             PENDENTE,
             natureza=AVALIAR,
-            ato=f"Avaliar {_n(minhas, 'inscrição', 'inscrições')}",
+            ato=ato_de_avaliar(minhas),
             responsavel=AVALIA,
             url=f["url_da_mesa"],
             contagem=minhas,
@@ -1308,16 +1317,18 @@ def situacoes_da_convocacao(f):
                 ato=f"Resposta de {_n(em_curso, 'convocação', 'convocações')}",
                 # Com a hora, como a convocação a mostra, e com a concordância: "1 aguardam" e um
                 # prazo de horas sem a hora eram o que o Centro dizia (problema novo N-02 da
-                # reavaliação de 12/11/2026).
+                # reavaliação de 12/11/2026). **E de quem é o prazo** (160, FR-6869): "o prazo
+                # corre até" lia-se como prazo da comissão, que não existe — a data é a do fim da
+                # resposta do candidato, e é ela que a espera explica.
                 razao=(
-                    f"o prazo corre até {_data_e_hora(f.get('ate'))}"
+                    f"o prazo do candidato corre até {_data_e_hora(f.get('ate'))}"
                     + (
                         f"; {_n(aguardando, 'aguarda', 'aguardam')} documentos"
                         if aguardando
                         else ""
                     )
                     if f.get("ate")
-                    else "o prazo está correndo"
+                    else "o prazo do candidato está correndo"
                 ),
                 url=com_ancora(url, "chamadas"),
                 ate=f.get("ate"),
@@ -1730,12 +1741,17 @@ def do_edital(edital, ator, *, agora=None, em_curso=None, perfis=None):
     `em_curso` são as Retificações em curso, que o detalhe já leu (103). Elas **não** viram
     providência (D-017): continuam ditas pelas frases da `104`, e servem aqui só à `104`.
     """
-    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.publicacoes.application.selectors import (
+        agora_da_requisicao,
+        effective_version,
+    )
     from processo_seletivo.shared.api.problems import DomainError
 
     if edital.status not in ESTADOS_COM_ANDAMENTO:
         return None
-    agora = agora or timezone.now()
+    # O instante da requisição, quando a view abriu o contexto da versão vigente (160, R-009): as
+    # funções de outras features recebem este `at`, e com ele encontram a versão já lida.
+    agora = agora or agora_da_requisicao() or timezone.now()
     try:
         conteudo = effective_version(edital_id=edital.id, at=agora).content
     except DomainError:

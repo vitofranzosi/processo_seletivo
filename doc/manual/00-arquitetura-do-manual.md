@@ -351,7 +351,7 @@ A sequência do briefing está quase certa. Quatro correções que o código imp
 │  ⟲ Registrar impedimento    ⟲ Retirar as selecionadas
 │
 ├─ FASE 8 · AVALIAR ─────────────────────────────── Avaliadores
-│  Minhas Etapas → Minha Mesa → inscrição a inscrição
+│  Minhas atividades → Minha Mesa → inscrição a inscrição
 │  forma DECISÓRIA (rótulos do Edital + parecer)  ou  PONTUADA (nota)
 │  Salvar sem concluir → Concluir avaliação   ■ concluída vira leitura
 │  ⟲ Reabertura é ato da presidência (Conclusões preservadas)
@@ -649,7 +649,7 @@ alertas · o que NÃO entra.**
   antes de ser enviada.
 - **Telas:** vitrine pública; lista de Processos Seletivos.
 - **Screenshots:** SS-002, SS-003.
-- **(R5) Acrescentar:** o cabeçalho da gestão tem "Minhas Etapas" para qualquer pessoa
+- **(R5) Acrescentar:** o cabeçalho da gestão tem "Minhas atividades" (até a 160, "Minhas Etapas") para qualquer pessoa
   identificada; a lista traz "Novo Processo Seletivo" e, para o Gestor, "Visão Geral". A vitrine
   ganhou busca, filtros e ordenação, e a consulta fica no endereço — pode ser compartilhada.
 - **Alertas:** 💡 quem digita o endereço raiz cai na vitrine pública, não na gestão. **(R5)** 💡 a
@@ -948,7 +948,8 @@ alertas · o que NÃO entra.**
 - **Objetivo:** cada inscrição com um avaliador responsável, em cada Etapa.
 - **Pré-requisitos:** inscrições recebidas e alocação feita.
 - **Assuntos:** onde a presidência encontra a Etapa (**(R5)** Alocação por Etapa → "Distribuir";
-  "Minhas Etapas" de quem preside e não avalia aponta esse caminho, e a Supervisão leva direto à
+  "Minhas atividades" de quem preside mostra, desde a 160, as providências dela em todos os Editais
+  que preside, e a Supervisão leva direto à
   distribuição — a remissão antiga a §H.13 estava errada, era §H.8, e H.8 está fechada);
   **(R5)** os números-filtro da Etapa e a seção "Distribuir o que falta"; "Distribuir as
   selecionadas"; o filtro "fora do corte" e as inscrições "aguardando a Etapa anterior";
@@ -966,13 +967,13 @@ alertas · o que NÃO entra.**
 - **Público:** membro da comissão. **Deve funcionar isolado.**
 - **Objetivo:** o avaliador conclui suas avaliações corretamente na primeira vez.
 - **Pré-requisitos:** ter recebido atribuições.
-- **Assuntos:** Minhas Etapas; a Mesa; ler os documentos apresentados; **avaliação decisória** (os
+- **Assuntos:** Minhas atividades; a Mesa; ler os documentos apresentados; **avaliação decisória** (os
   rótulos que o Edital escolheu + parecer obrigatório no sentido desfavorável); **avaliação
   pontuada** (nota dentro da faixa); salvar sem concluir; concluir; por que a conclusão vira
   leitura; o que fazer se errou. **(R5)** Quem já tem Resultado na Etapa não pode ser concluído, e a
   Mesa diz por quê antes do clique (a exceção é a reavaliação determinada por recurso); inscrição
   fora do corte não aparece na Mesa; "Próxima pendente".
-- **Telas:** Minhas Etapas; Minha Mesa; Inscrição na Mesa (decisória e pontuada).
+- **Telas:** Minhas atividades; Minha Mesa; Inscrição na Mesa (decisória e pontuada).
 - **Screenshots:** SS-050, SS-051, SS-052, SS-053.
 - **Alertas:** ⛔ **concluir não se desfaz por você** — reabrir é ato da presidência.
   ⚠ você só vê o que lhe foi atribuído; isso é proposital. ⚠ **(R5)** a Mesa não avisa quando a
@@ -1546,7 +1547,7 @@ as auditorias E2E fizeram. Ver §I.
 | SS-047 | Presidente | Distribuição — proposta por rodízio | Proposta na tela, ainda não gravada | A carga por avaliador | A carga | C-14 |
 | SS-048 | Presidente | Distribuição confirmada | Gravada | Atribuições por avaliador | — | C-14 |
 | SS-049 | Presidente | Impedimentos | 1 impedimento a registrar | Campo de motivo e "Registrar mesmo assim" | O motivo | C-14 / X-05 |
-| SS-050 | Avaliadora | Minhas Etapas | 2 Etapas atribuídas | As Etapas e a contagem | — | C-15 |
+| SS-050 | Avaliadora | Minhas atividades | 2 Etapas atribuídas | O que avaliar e as Etapas, com a contagem | — | C-15 |
 | SS-051 | Avaliadora | Minha Mesa | 3 inscrições, 1 concluída | Situação por inscrição | A que está concluída | C-15 |
 | SS-052 | Avaliadora | Inscrição na Mesa — decisória | Documentos disponíveis | Os dois rótulos do Edital + parecer | Os rótulos | C-15 |
 | SS-053 | Avaliadora | Inscrição na Mesa — pontuada | idem | Campo de nota com a faixa | A faixa | C-15 |

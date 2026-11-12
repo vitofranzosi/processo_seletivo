@@ -14,3 +14,166 @@
 .largura-80{width:80%;} .largura-81{width:81%;} .largura-82{width:82%;} .largura-83{width:83%;} .largura-84{width:84%;} .largura-85{width:85%;} .largura-86{width:86%;} .largura-87{width:87%;} .largura-88{width:88%;} .largura-89{width:89%;}
 .largura-90{width:90%;} .largura-91{width:91%;} .largura-92{width:92%;} .largura-93{width:93%;} .largura-94{width:94%;} .largura-95{width:95%;} .largura-96{width:96%;} .largura-97{width:97%;} .largura-98{width:98%;} .largura-99{width:99%;}
 .largura-100{width:100%;}
+
+/* "Minhas atividades" (160). As linhas reaproveitam o nível 1 do Centro (`andamento.css`): a mesma
+   lista, o mesmo sinal com palavra e a mesma razão, para que a página se leia como o "O que fazer
+   agora" de cada Edital, junto. O que é só daqui: a base, o lugar em linha própria, o grupo entre
+   Editais e a nota de cobertura. */
+.secao-de-atividades {
+  margin: 0 0 1.25rem;
+}
+
+.contagem-da-secao {
+  font-weight: 400;
+  color: var(--texto-fraco);
+}
+
+.atividade .ato-da-atividade {
+  font-weight: 600;
+}
+
+/* A base é texto, e não cor (FR-6861): contornada, para não se confundir com a marca "Sua". */
+.base-da-atividade {
+  display: inline-block;
+  margin-left: .35rem;
+  padding: 0 .4rem;
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  font-size: .75rem;
+  color: var(--texto);
+}
+
+/* O lugar quebra para a linha de baixo: no celular, Edital, Perfil e fase não cabem ao lado do ato,
+   e uma linha só com `nowrap` alargaria o cartão (UX-714). */
+.onde-da-atividade {
+  display: block;
+  color: var(--texto-fraco);
+  font-size: .875rem;
+  overflow-wrap: anywhere;
+}
+
+.atividade .razao {
+  display: block;
+  font-size: .875rem;
+}
+
+.editais-do-grupo summary {
+  cursor: pointer;
+  color: var(--verde-texto);
+}
+
+.editais-do-grupo ul {
+  margin: .25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.cobertura-da-pagina,
+.explicacao-da-espera {
+  color: var(--texto-fraco);
+  font-size: .875rem;
+}
+
+.em-espera-da-pagina {
+  margin: 0 0 1.25rem;
+}
+
+.em-espera-da-pagina summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nao-lidos a {
+  overflow-wrap: anywhere;
+}
+
+/* As Etapas concluídas ou sem inscrição distribuída, recolhidas (revisão visual de 12/11): abrem
+   pelo próprio `details`, e o resumo diz quantas são. */
+.etapas-recolhidas {
+  margin: .75rem 0 0;
+}
+
+.etapas-recolhidas summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--verde-texto);
+}
+
+/* A revisão de UX de 12/11 (160): o filtro por Edital, a nota com o "onde encontro", a avaliação
+   vazia numa linha e as comissões recolhidas, com os caminhos da presidência como links de texto. */
+.filtro-de-edital {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: 0 0 .75rem;
+}
+
+.filtro-de-edital label {
+  margin: 0;
+  font-weight: 600;
+}
+
+.filtro-de-edital select {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* A partir de 48rem (~768 px), uma linha só: rótulo, `select` de até 22rem e o botão ao lado. A
+   regra geral dá ao `select` a largura inteira, e a 1280 px eram três linhas pesadas acima da
+   primeira atividade (revisão das capturas de 12/11). Abaixo disso, quebra como antes. */
+@media (min-width: 48rem) {
+  .filtro-de-edital {
+    flex-wrap: nowrap;
+  }
+
+  .filtro-de-edital select {
+    width: auto;
+    flex: 0 1 22rem;
+    max-width: 22rem;
+  }
+}
+
+.onde-encontrar {
+  margin: 0 0 .5rem;
+  font-size: .875rem;
+}
+
+.onde-encontrar summary {
+  cursor: pointer;
+  color: var(--verde-texto);
+}
+
+.onde-encontrar ul {
+  margin: .25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.nota-da-secao {
+  margin: 0 0 .75rem;
+  color: var(--texto-fraco);
+  font-size: .875rem;
+}
+
+.comissoes-da-pessoa {
+  margin: 0 0 1.25rem;
+}
+
+.comissoes-da-pessoa summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lista-de-comissoes {
+  margin: .5rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.lista-de-comissoes li {
+  margin: 0 0 .35rem;
+  overflow-wrap: anywhere;
+}
+
+.links-da-comissao {
+  display: inline-block;
+  font-size: .875rem;
+}

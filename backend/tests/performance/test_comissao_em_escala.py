@@ -83,7 +83,9 @@ def test_minhas_etapas_nao_custa_pelo_tamanho_da_comissao(
     """A área pessoal é de uma pessoa: o tamanho da banca não pode aparecer nela."""
     identificar(client, "servidor001", [])
 
-    with django_assert_max_num_queries(10):
+    # 11 desde a `160`: "Minhas atividades" lê as alocações à conferência da pessoa, numa consulta
+    # de número fixo (R-002 da `160`). O que este teste prende continua: nada cresce com a banca.
+    with django_assert_max_num_queries(11):
         resposta = client.get(reverse("interface:minhas-etapas"))
 
     assert resposta.status_code == 200

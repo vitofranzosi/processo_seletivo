@@ -68,7 +68,7 @@ def test_privilegio_administrativo_nao_injeta_etapa_em_minhas_etapas(
 
     corpo = client.get(reverse("interface:minhas-etapas")).content.decode()
 
-    assert "Você não possui Etapas atribuídas" in corpo
+    assert 'Suas Etapas de avaliação <span class="contagem-da-secao">· nenhuma</span>' in corpo
 
 
 def test_remover_a_alocacao_revoga_o_acesso_na_hora(
@@ -90,4 +90,4 @@ def test_remover_a_alocacao_revoga_o_acesso_na_hora(
 
     assert client.get(url(edital_a, etapa_a1)).status_code == 404
     corpo = client.get(reverse("interface:minhas-etapas")).content.decode()
-    assert "Você não possui Etapas atribuídas" in corpo
+    assert 'Suas Etapas de avaliação <span class="contagem-da-secao">· nenhuma</span>' in corpo

@@ -20,7 +20,7 @@ e não à confirmação (D-003, D-011).
   {% comment %} O que a faixa cobre e o que não cobre, **antes** do primeiro item e em tamanho de texto
      (129, FR-4324). No fim e em cinza, ela não era lida: a faixa se apresentava como fila completa
      e deixava de fora onze famílias de trabalho. {% endcomment %}
-  <p class="cobertura-da-faixa">{{ faixa.cobertura }}</p>
+  <p class="cobertura-da-faixa">{{ faixa.cobertura }} <a class="para-minhas-atividades" href="{% url 'interface:minhas-etapas' %}">Minhas atividades</a>.</p>
   <ul class="itens-de-trabalho">
     {% for objeto in faixa.mostrados %}{% include "interface/_item_de_trabalho.html" with prefixo="contexto-mostrado" %}{% endfor %}
   </ul>
@@ -40,5 +40,5 @@ e não à confirmação (D-003, D-011).
    havia nada — a faixa não cobre a divulgação, e a frase precisa dizer isso também quando está vazia.
    As famílias vêm da mesma constante da nota (129, FR-4325). {% endcomment %}
 <p class="sem-acoes">Nenhum ato de Edital ou de Retificação, recurso ou avaliação aguarda você agora.
-  {{ faixa.fora_da_faixa }}</p>
+  {{ faixa.fora_da_faixa }} <a class="para-minhas-atividades" href="{% url 'interface:minhas-etapas' %}">Minhas atividades</a>.</p>
 {% endif %}

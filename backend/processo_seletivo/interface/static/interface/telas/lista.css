@@ -37,6 +37,9 @@
    ela não era lida, e é ela que impede a faixa de se passar por fila completa. */
 .cobertura-da-faixa{margin:0 0 .6rem;font-size:.9rem;color:var(--texto);max-width:var(--leitura)}
 .sem-acoes{margin:.8rem 0;font-size:.9rem;color:var(--texto-fraco)}
+/* O caminho para a página pessoal (160, FR-6881): a nota diz o que fica de fora, e o link leva até
+   onde está o que é da presidência e da alocação. */
+.para-minhas-atividades{white-space:normal;overflow-wrap:anywhere}
 @media (max-width:40rem){
   .item-de-trabalho{grid-template-columns:minmax(0,1fr)}
   .ato-do-item{grid-column:1;grid-row:auto;text-align:left}

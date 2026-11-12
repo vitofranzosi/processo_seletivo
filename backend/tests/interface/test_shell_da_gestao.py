@@ -205,8 +205,8 @@ def test_o_portal_nao_recebe_barra(settings):
         ("/gestao/", "Processos Seletivos"),
         ("/gestao/editais/2c4491c3-68f1-4d17-aa05-5c1cf6a1567b/", "Processos Seletivos"),
         ("/gestao/processos/6bb9dc91-75bd-48c1-9994-344cabc538d0/comissao", "Processos Seletivos"),
-        ("/gestao/minhas-etapas", "Minhas Etapas"),
-        ("/gestao/minhas-etapas/a/b/inscricoes/c", "Minhas Etapas"),
+        ("/gestao/minhas-etapas", "Minhas atividades"),
+        ("/gestao/minhas-etapas/a/b/inscricoes/c", "Minhas atividades"),
         ("/gestao/visao-geral", "Visão Geral"),
         ("/gestao/autoridades", "Autoridades da unidade"),
         ("/gestao/modelos-de-aviso/novo", "Modelos de aviso"),
@@ -239,7 +239,7 @@ def test_a_view_pode_declarar_a_secao_que_o_endereco_nao_diz(settings):
         "Processos Seletivos"
     )
     assert navegacao.contexto_da_navegacao(sem_declarar)["navegacao"]["secao_atual"] == (
-        "Minhas Etapas"
+        "Minhas atividades"
     )
 
 

@@ -85,7 +85,7 @@ def test_sem_acao_a_lista_nao_tem_faixa(client, seletor_ligado):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     ("rota", "rotulo"),
-    [("interface:lista", "Processos Seletivos"), ("interface:minhas-etapas", "Minhas Etapas")],
+    [("interface:lista", "Processos Seletivos"), ("interface:minhas-etapas", "Minhas atividades")],
 )
 def test_na_raiz_da_secao_a_trilha_tem_um_nivel(client, seletor_ligado, rota, rotulo):
     """`FR-1746`: a lista e Minhas Etapas são a própria seção, como página atual."""
@@ -107,7 +107,7 @@ def test_na_etapa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado, cenario):
     ).content.decode()
 
     trilha = trilha_unica_no_cabecalho(corpo)
-    assert f'<a href="{reverse("interface:minhas-etapas")}">Minhas Etapas</a> ›' in trilha
+    assert f'<a href="{reverse("interface:minhas-etapas")}">Minhas atividades</a> ›' in trilha
     # O conteúdo começa pelo título: a trilha que o abria subiu.
     assert conteudo(corpo).split(">", 1)[1].lstrip().startswith("<h1>")
     # Por quem está alocado, a seção continua a do endereço (`FR-1752`).
@@ -134,7 +134,7 @@ def test_pela_gestao_a_trilha_continua_pela_alocacao(client, seletor_ligado, cen
     ]
     posicoes = [trilha.index(nivel) for nivel in niveis]
     assert posicoes == sorted(posicoes)
-    assert "Minhas Etapas" not in trilha
+    assert "Minhas atividades" not in trilha
     assert f'<a href="{reverse("interface:lista")}" aria-current="true">' in barra(corpo)
     assert barra(corpo).count("aria-current") == 1
 
@@ -150,7 +150,7 @@ def test_na_inscricao_da_mesa_a_trilha_sobe_ao_cabecalho(client, seletor_ligado,
     ).content.decode()
 
     trilha = trilha_unica_no_cabecalho(corpo)
-    assert f'<a href="{reverse("interface:minhas-etapas")}">Minhas Etapas</a> ›' in trilha
+    assert f'<a href="{reverse("interface:minhas-etapas")}">Minhas atividades</a> ›' in trilha
     mesa = reverse("interface:minha-etapa", args=[edital.id, etapa])
     assert f'<a href="{mesa}">Minha Mesa</a> ›' in trilha
     assert f'<span aria-current="page">Inscrição {inscricao.protocolo}</span>' in trilha
