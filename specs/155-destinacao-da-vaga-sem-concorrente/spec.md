@@ -415,7 +415,7 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   reserva, ninguém que ainda possa ocupar a vaga por ela. Ainda pode ocupar quem tem posição, não saiu
   por desfecho excludente, não ocupa pela ampla com aceite registrado e é alcançável — dentro da faixa
   vigente, ou fora dela quando o Edital admite continuação.
-- **FR-6305** *(depende da D-015)*: Na reversão **por saldo**, a condição MUST ser a que a D-015
+- **FR-6305** *(próxima entrega)* *(depende da D-015)*: Na reversão **por saldo**, a condição MUST ser a que a D-015
   fixar, fundamentada nas cláusulas do Edital, e MUST NOT ser a faixa vigente só porque ela existe no
   sistema. Em qualquer opção, a vaga MUST ser de quem ainda pode ocupá-la pela reserva enquanto a
   chamada de suplentes daquela lista estiver aberta, como mandam os itens 8.8 e 8.11 a 8.13 do
@@ -430,45 +430,45 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 **O ato de destinação à ampla**
 
-- **FR-6308**: A reversão declarada pelo Perfil MUST ser aplicada por ato próprio, "Destinar à ampla
+- **FR-6308** *(próxima entrega)*: A reversão declarada pelo Perfil MUST ser aplicada por ato próprio, "Destinar à ampla
   concorrência", praticado por quem pode emitir a apuração do recorte, e MUST NOT ser efeito de nenhum
   outro ato.
-- **FR-6309**: Antes da confirmação, o sistema MUST mostrar origem, destino, quantidade, o gatilho, a
+- **FR-6309** *(próxima entrega)*: Antes da confirmação, o sistema MUST mostrar origem, destino, quantidade, o gatilho, a
   frase da reversão publicada, a versão do Edital e o efeito na ampla, e MUST lembrar que, se o Edital
   manda passar antes por outras cotas, o caminho é retificar a declaração.
-- **FR-6310**: O ato MUST registrar ator, instante, origem, destino, quantidade, gatilho, a declaração
+- **FR-6310** *(próxima entrega)*: O ato MUST registrar ator, instante, origem, destino, quantidade, gatilho, a declaração
   do Edital lida e a versão dela, a apuração vigente lida e a correlação.
-- **FR-6311**: A quantidade destinada MUST NOT exceder o saldo; a soma das vagas efetivas por recorte
+- **FR-6311** *(próxima entrega)*: A quantidade destinada MUST NOT exceder o saldo; a soma das vagas efetivas por recorte
   do Perfil MUST ser a mesma antes e depois (como a FR-247 da `016`); e a quantidade publicada MUST NOT
   mudar.
-- **FR-6312**: O ato MUST ser recusado, com a razão dita, sem reversão declarada, com a passagem entre
+- **FR-6312** *(próxima entrega)*: O ato MUST ser recusado, com a razão dita, sem reversão declarada, com a passagem entre
   cotas declarada, com a condição do gatilho não cumprida, com impedimento ou sem saldo.
-- **FR-6313**: Destinada a vaga, a apuração vigente da ampla MUST aparecer obsoleta pela causa do
+- **FR-6313** *(próxima entrega)*: Destinada a vaga, a apuração vigente da ampla MUST aparecer obsoleta pela causa do
   movimento posterior (FR-263 da `016`), e o Centro MUST levar à emissão seguinte da ampla.
-- **FR-6314**: Duas confirmações do mesmo ato, simultâneas ou repetidas, MUST produzir um registro só.
+- **FR-6314** *(próxima entrega)*: Duas confirmações do mesmo ato, simultâneas ou repetidas, MUST produzir um registro só.
 
 **A apuração deixa de mover vaga**
 
-- **FR-6315**: A emissão da apuração MUST NOT gravar movimento de vaga; a apuração da reserva MUST
+- **FR-6315** *(próxima entrega)*: A emissão da apuração MUST NOT gravar movimento de vaga; a apuração da reserva MUST
   informar a ocupação e, cumprida a condição, que a destinação está disponível.
   *Até o incremento F, que espera a D-015, a emissão continua a mover vaga sob a declaração por saldo,
   como antes da `155`: é a parada da parte que a decisão governa, e não regra adotada (R-010 da
   pesquisa).*
-- **FR-6316**: Os movimentos já gravados pela emissão da apuração MUST continuar legíveis e válidos,
+- **FR-6316** *(próxima entrega)*: Os movimentos já gravados pela emissão da apuração MUST continuar legíveis e válidos,
   com a mesma causa, e MUST contar como destinação feita: o saldo MUST sair das efetivas líquidas
   deles, e nenhum ato MUST destinar outra vez a vaga que eles já cederam.
 
 **A passagem entre cotas: a limitação**
 
-- **FR-6317**: O passo Perfis MUST admitir uma terceira resposta à pergunta da reversão: *"Passa antes
+- **FR-6317** *(próxima entrega)*: O passo Perfis MUST admitir uma terceira resposta à pergunta da reversão: *"Passa antes
   por outras cotas, na ordem do Edital"*, conteúdo publicado e retificável como as outras duas (FR-249
   e FR-250 da `016`), com frase própria no documento do Edital. Os Editais já publicados MUST
   continuar lidos pela declaração que publicaram; a troca para a terceira resposta MUST ser por
   Retificação.
-- **FR-6318**: Com essa resposta, nenhum ato desta spec MUST mover a vaga, declará-la não preenchida
+- **FR-6318** *(próxima entrega)*: Com essa resposta, nenhum ato desta spec MUST mover a vaga, declará-la não preenchida
   ou presumir a ordem entre cotas; a tela MUST dizer que o Edital manda passar por outras cotas antes da ampla e que o GPS
   ainda não aplica essa ordem.
-- **FR-6319**: A passagem entre cotas MUST continuar sem aplicação até a spec própria
+- **FR-6319** *(próxima entrega)*: A passagem entre cotas MUST continuar sem aplicação até a spec própria
   ([encaminhamento](../../doc/encaminhamento-passagem-entre-cotas.md)).
 
 **O Edital silente**
@@ -478,7 +478,7 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 - **FR-6321**: Sem reversão declarada, a tela MUST dizer *"Este Edital não declara o que acontece com
   a vaga reservada não preenchida"* e oferecer dois caminhos: a Retificação que declara a reversão,
   quando a fase do Edital a admite, e a declaração de vaga não preenchida.
-- **FR-6322**: Retificado o Edital para declarar a reversão, a vaga MUST passar ao caso da destinação
+- **FR-6322** *(nesta entrega, a vaga passa à reversão aplicada pela apuração, pela regra de antes da `155`; o ato próprio, na próxima)*: Retificado o Edital para declarar a reversão, a vaga MUST passar ao caso da destinação
   à ampla, lida a versão retificada.
 
 **A vaga não preenchida**
@@ -490,7 +490,7 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   geral sem ninguém que ainda possa ocupá-la, inclusive a que recebeu vaga destinada.
 - **FR-6325**: A declaração MUST registrar ator, instante, recorte, quantidade, fundamento e a versão
   do Edital, e MUST NOT exceder o saldo do recorte.
-- **FR-6326**: Declarada, a vaga MUST deixar de contar como "a ocupar" e MUST aparecer como "não
+- **FR-6326** *(nesta entrega, na ocupação e no histórico do recorte; o relatório e a página pública, na próxima)*: Declarada, a vaga MUST deixar de contar como "a ocupar" e MUST aparecer como "não
   preenchida" na ocupação, no histórico do recorte, no relatório e na página pública; a quantidade
   publicada MUST continuar a mesma.
 - **FR-6327**: Onde a reversão declarada é aplicável, ou onde o Edital manda a passagem entre cotas, a
@@ -498,26 +498,26 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 **A lista vazia**
 
-- **FR-6328**: No marco por pontuação, a lista em que ninguém concorre MUST poder ser levada, num gesto
+- **FR-6328** *(próxima entrega)*: No marco por pontuação, a lista em que ninguém concorre MUST poder ser levada, num gesto
   com uma conferência, à ordem vazia e ao corte vazio — os dois registros de hoje, sem perder nenhum.
-- **FR-6329**: Nenhum registro do gesto MUST conter linha de classificação ou de resultado de
+- **FR-6329** *(próxima entrega)*: Nenhum registro do gesto MUST conter linha de classificação ou de resultado de
   candidato: a ordem e o corte registram que ninguém concorreu, e nada além.
-- **FR-6330**: A lista vazia MUST entrar na publicação do resultado do marco junto das outras listas,
+- **FR-6330** *(próxima entrega)*: A lista vazia MUST entrar na publicação do resultado do marco junto das outras listas,
   dita como "ninguém concorreu", e MUST NOT exigir publicação própria.
-- **FR-6331**: A conferência do gesto MUST continuar a dizer que a ordem vazia declara que ninguém
+- **FR-6331** *(próxima entrega)*: A conferência do gesto MUST continuar a dizer que a ordem vazia declara que ninguém
   concorreu (FR-4672 da `135`).
-- **FR-6332**: No sorteio, a lista reservada sem relação por falta de autodeclarado MUST dispensar a
+- **FR-6332** *(próxima entrega)*: No sorteio, a lista reservada sem relação por falta de autodeclarado MUST dispensar a
   apuração, desde que a ausência esteja comprovada na relação definitiva pertinente — a relação da
   ampla congelada no marco, sem nenhuma inscrição daquela Modalidade.
-- **FR-6333**: A ausência de registro MUST NOT ser lida como lista vazia: relação não congelada,
+- **FR-6333** *(próxima entrega)*: A ausência de registro MUST NOT ser lida como lista vazia: relação não congelada,
   inscrições ainda não encerradas ou dado que falta MUST aparecer como o que são, e o ato MUST NOT ser
   oferecido.
 
 **A correção**
 
-- **FR-6334**: A destinação e a declaração de não preenchida MUST poder ser desfeitas por ato contrário,
+- **FR-6334** *(nesta entrega, só a declaração de não preenchida; a destinação, na próxima)*: A destinação e a declaração de não preenchida MUST poder ser desfeitas por ato contrário,
   com motivo, que cita o ato que desfaz, enquanto nenhuma chamada depender delas.
-- **FR-6335** *(redação de 12/11/2026, pelo pedido do usuário na revisão do #495)*: Com chamada
+- **FR-6335** *(nesta entrega, para a declaração de não preenchida)* *(redação de 12/11/2026, pelo pedido do usuário na revisão do #495)*: Com chamada
   dependente, a tela MUST mostrar o impedimento no lugar da ação de desfazer — nomeando cada chamada
   e o que ela precisa antes (o desfecho dela) — e MUST NOT oferecer a ação. O comando MUST recusar o
   desfazimento pedido mesmo assim, por qualquer caminho, e a trilha MUST registrar o pedido, a
@@ -528,18 +528,18 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   > registrar o pedido, a recusa e as chamadas nomeadas." A primeira implementação a lia como
   > obrigando a tela a deixar a ação disponível, para que a recusa fosse registrada; o usuário
   > recusou essa leitura: ação oferecida só para ser negada contraria a FR-6302.
-- **FR-6336**: O ato e o desfazimento MUST continuar ambos legíveis; nada MUST ser apagado ou
+- **FR-6336** *(nesta entrega, para a declaração de não preenchida)*: O ato e o desfazimento MUST continuar ambos legíveis; nada MUST ser apagado ou
   reescrito.
 
 **A publicidade**
 
-- **FR-6337**: A página pública da seleção MUST mostrar cada destinação e cada declaração de não
+- **FR-6337** *(próxima entrega)*: A página pública da seleção MUST mostrar cada destinação e cada declaração de não
   preenchida, com origem, destino (ou "não preenchida"), quantidade e fundamento, e MUST NOT mostrar
   nome nem protocolo de candidato.
-- **FR-6338**: O relatório do Edital MUST mostrar os mesmos dados, e os desfazimentos citando o que
+- **FR-6338** *(próxima entrega)*: O relatório do Edital MUST mostrar os mesmos dados, e os desfazimentos citando o que
   desfazem.
-- **FR-6339**: Esta entrega MUST NOT exigir documento PDF novo.
-- **FR-6340**: A chamada de quem ocupa uma vaga destinada à ampla MUST citar a destinação no
+- **FR-6339** *(próxima entrega)*: Esta entrega MUST NOT exigir documento PDF novo.
+- **FR-6340** *(próxima entrega)*: A chamada de quem ocupa uma vaga destinada à ampla MUST citar a destinação no
   fundamento.
 
 **Registro, permissão e equivalência**
@@ -548,7 +548,7 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   apuração, MUST ser negado por padrão a quem não os tem, e MUST entrar na trilha com correlação.
 - **FR-6342**: Todo ato desta spec MUST ser reproduzível: relido depois, MUST devolver a quantidade, a
   condição e a declaração que leu, e não as de hoje.
-- **FR-6343**: A prévia da classificação e a do sorteio (`095`, `098`) MUST fazer a conta das FR-6304 e
+- **FR-6343** *(próxima entrega)*: A prévia da classificação e a do sorteio (`095`, `098`) MUST fazer a conta das FR-6304 e
   FR-6305 e mostrar o que a destinação faria, e a equivalência delas com o caminho oficial MUST
   continuar verificada.
 - **FR-6344**: As telas e os registros desta spec MUST NOT dizer que alguém foi convocado, aceitou ou
@@ -558,11 +558,11 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 
 - **UX-600**: A frase da situação MUST nomear a lista, a quantidade e o que o Edital declara, em
   palavras, sem código de espécie nem identificador.
-- **UX-601**: O "Confira antes" da destinação, da declaração de não preenchida e do gesto da lista
+- **UX-601** *(nesta entrega, a conferência da declaração de não preenchida e do desfazimento dela)*: O "Confira antes" da destinação, da declaração de não preenchida e do gesto da lista
   vazia MUST seguir o da emissão (#467), com o efeito dito por extenso.
 - **UX-602**: No Centro, a providência da vaga sem quem a ocupe MUST ter um ato por caminho, e a
   "impedida" do #477 MUST dar lugar ao impedimento nomeado ou ao caminho disponível.
-- **UX-603**: A limitação da passagem entre cotas MUST ser dita como limite do GPS, e não do Edital
+- **UX-603** *(próxima entrega)*: A limitação da passagem entre cotas MUST ser dita como limite do GPS, e não do Edital
   nem da comissão.
 
 ### Key Entities
@@ -588,15 +588,15 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
   instante e versão do Edital no registro: 100%, conferido por teste.
 - **SC-2103**: Nenhum movimento de vaga nem declaração de não preenchida nasce sem confirmação própria:
   zero, conferido varrendo os caminhos de gravação.
-- **SC-2104**: Os cenários V-1 a V-4 da [verificação](verificacao-do-levantamento.md) passam a dar o
+- **SC-2104** *(próxima entrega)*: Os cenários V-1 a V-4 da [verificação](verificacao-do-levantamento.md) passam a dar o
   resultado da US3: destinação oferecida em V-1, V-2 (sem recurso) e V-4 (com aceite); e os cenários
   S-1 a S-4 dão o resultado da opção da D-015 escolhida.
-- **SC-2105**: Num Edital com cota sem inscrito no marco por pontuação, as confirmações dedicadas à
+- **SC-2105** *(próxima entrega)*: Num Edital com cota sem inscrito no marco por pontuação, as confirmações dedicadas à
   lista vazia caem de três para uma, e nenhuma linha de candidato é registrada para ela.
-- **SC-2106**: A soma das vagas efetivas por recorte de um Perfil é a mesma antes e depois de toda
+- **SC-2106** *(próxima entrega)*: A soma das vagas efetivas por recorte de um Perfil é a mesma antes e depois de toda
   destinação e todo desfazimento.
-- **SC-2107**: Num Perfil com a passagem entre cotas declarada, zero atos de destinação aceitos.
-- **SC-2108**: Num roteiro com a presidência de treinamento, a pessoa responde corretamente, sem
+- **SC-2107** *(próxima entrega)*: Num Perfil com a passagem entre cotas declarada, zero atos de destinação aceitos.
+- **SC-2108** *(a página pública, na próxima entrega)*: Num roteiro com a presidência de treinamento, a pessoa responde corretamente, sem
   ajuda, o que aconteceu com a vaga PPP do C09 e por quê, lendo só a ocupação; e um leitor sem login
   diz, pela página pública, para onde a vaga foi.
 
@@ -615,21 +615,23 @@ da seleção e o relatório mostram as duas, com os quatro dados, sem documento 
 ## Compatibilidade com regras anteriores
 
 As revisões abaixo foram feitas nas próprias specs, com a redação anterior preservada, e vigoram com a
-implementação desta.
+implementação desta. **Nesta entrega vigoram só as que não dependem do adiado**; as marcadas
+*(próxima entrega)* vigoram com a entrega que as implementa, e até lá a regra anterior continua (ver
+[Esta entrega](#esta-entrega)).
 
 | Regra | O que acontece |
 |---|---|
 | FR-245, FR-246 e FR-251 da `016` | continuam |
-| FR-248 da `016` (o registro da reversão) | **revista**: a reversão é ato próprio, com fundamento (FR-6308, FR-6310) |
-| FR-249 da `016` (as espécies) | **revista**: a terceira resposta, a passagem entre cotas, sem aplicação (FR-6317) |
-| A emissão da apuração que move vaga | deixa de mover (FR-6315); os movimentos gravados ficam (FR-6316) |
-| FR-885 da `050` (o desfecho não move vaga) | **revista**: a tela leva à destinação, e não à emissão na ocupação |
+| FR-248 da `016` (o registro da reversão) | *(próxima entrega)* **revista**: a reversão é ato próprio, com fundamento (FR-6308, FR-6310) |
+| FR-249 da `016` (as espécies) | *(próxima entrega)* **revista**: a terceira resposta, a passagem entre cotas, sem aplicação (FR-6317) |
+| A emissão da apuração que move vaga | *(próxima entrega)* deixa de mover (FR-6315); os movimentos gravados ficam (FR-6316) |
+| FR-885 da `050` (o desfecho não move vaga) | *(próxima entrega)* **revista**: a tela leva à destinação, e não à emissão na ocupação |
 | FR-270 da `019` | continua |
-| FR-2327 e FR-2328 da `095`, e a pendência sobre "há quem ocupar" | **revistas** e **respondida**: a prévia mostra o que a destinação faria, com as condições das FR-6304 e FR-6305 |
-| FR-2507 da `098` e o achado da reservada vazia | **revista** e **respondido** (FR-6332, FR-6333) |
-| FR-4671 e FR-4672 da `135` | **revistas**: a providência da lista vazia leva ao gesto (FR-6328) |
-| FR-4678 da `135` | **revisão proposta** em 12/11, na implementação, **pendente da revisão do usuário**: a célula do resultado da lista vazia diz que ela sai na publicação do marco (FR-6330). Alteração normativa explícita, e não aprovada por implicação |
-| FR-4205 da `128` | continua: a ordem vazia é registrada, agora no gesto |
+| FR-2327 e FR-2328 da `095`, e a pendência sobre "há quem ocupar" | *(próxima entrega)* **revistas** e **respondida**: a prévia mostra o que a destinação faria, com as condições das FR-6304 e FR-6305 |
+| FR-2507 da `098` e o achado da reservada vazia | *(próxima entrega)* **revista** e **respondido** (FR-6332, FR-6333) |
+| FR-4671 e FR-4672 da `135` | *(próxima entrega)* **revistas**: a providência da lista vazia leva ao gesto (FR-6328) |
+| FR-4678 da `135` | *(só na branch preservada)* a revisão proposta em 12/11, na implementação, ficou com a publicação conjunta em `claude/155-destinacao-completa`, pendente da revisão do usuário; a redação da `135` continua a da `main` |
+| FR-4205 da `128` | continua: a ordem vazia é registrada — no gesto, na próxima entrega |
 | A recusa da relação vazia no sorteio | continua |
 | A pendência da `095` sobre a faixa da reservada | continua aberta (fora) |
 

@@ -291,14 +291,8 @@ providências dos marcos. Nenhum dos dois números muda.
 
 - **FR-4677**: A célula do resultado MUST informar, como dado próprio, a natureza do que o público lê
   hoje naquela lista: nada, o preliminar ou o definitivo.
-- **FR-4678** *(revisão proposta pela `155` em 2026-11-12, **pendente da revisão do usuário** e sem
-  vigor até ela — a redação anterior está ao fim desta alínea)*: A situação da célula do resultado MUST continuar a de hoje em
-  todos os casos, salvo a da lista em que ninguém concorre: ela sai na publicação do resultado do marco,
-  junto das outras listas (FR-6330 da `155`), e a célula dela MUST dizer isso, sem ser providência
-  própria do Publicador. O preliminar publicado MUST NOT virar *Feito* (D-002).
-
-  > **Redação anterior à `155`, preservada:** "A situação da célula do resultado MUST continuar a de
-  > hoje em todos os casos. O preliminar publicado MUST NOT virar *Feito* (D-002)."
+- **FR-4678**: A situação da célula do resultado MUST continuar a de hoje em todos os casos. O
+  preliminar publicado MUST NOT virar *Feito* (D-002).
 - **FR-4679**: A situação do resultado e o resumo do Perfil MUST ser decididos pelo dado da FR-4677, e
   não pelo texto da nota.
 - **FR-4680**: A nota da célula MUST continuar dizendo o que diz hoje.
