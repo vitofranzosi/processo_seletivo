@@ -30,7 +30,9 @@ O estudo tinha medido, nos cenários de treinamento, cerca de 98 consultas por E
 Os cenários da suíte são menores; a diferença é de formato, e não de regra.
 
 **O membro** paga o mesmo com 1 e com 11 comissões, e a derivação não é chamada nenhuma vez
-(SC-2272).
+(SC-2272). A página ganhou **uma** consulta fixa, a das alocações à conferência da pessoa (R-002):
+o teto de `test_minhas_etapas_nao_custa_pelo_tamanho_da_comissao`, que prende que a página não
+cresce com o tamanho da banca, foi de 10 para 11.
 
 ## Desvios das tarefas
 

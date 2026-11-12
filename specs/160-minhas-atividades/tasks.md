@@ -7,7 +7,7 @@
 Os caminhos são relativos à raiz do repositório. "M" é `backend/processo_seletivo/`, e "T" é
 `backend/tests/`.
 
-**Implementação não autorizada.** Estas tarefas esperam a autorização do usuário.
+**Implementação autorizada pelo usuário em 12/11/2026.** T002, T036 e T037 ficam com a sessão que pediu a implementação e com a validação humana.
 
 **Os testes são pedidos pela spec**, do SC-2271 ao SC-2280. Em cada história, o teste vem antes da
 implementação e deve falhar primeiro.
@@ -162,7 +162,7 @@ implementação e deve falhar primeiro.
 - [X] T035 [P] `specs/160-minhas-atividades/rastreabilidade.md`, com uma linha por identificador em negrito da spec, FR-6851 a FR-6884, SC-2271 a SC-2281 e UX-711 a UX-715, cada um com o teste ou a tarefa que o cobre (`test_a_matriz_de_rastreabilidade_cobre_todo_requisito_da_feature`)
 - [ ] T036 [P] *(feitas pela sessão que pediu a implementação)* Capturas "depois", nas mesmas identidades e larguras do T002, em `specs/160-minhas-atividades/capturas/depois/`. Medir a 375 px que não há rolagem horizontal (UX-714).
 - [ ] T037 *(pendente: o quickstart nos cenários de treinamento e o SC-2281, humano)* O quickstart inteiro num banco com os cenários de treinamento: a presidência lê os seus atos em menos linhas do que atos (SC-2275). Os achados vão para `specs/160-minhas-atividades/verificacao.md`. O SC-2281 fica pendente, como humano.
-- [ ] T038 `cd backend && make lint check test-pg`. Os dois passos do lint, a suíte inteira contra PostgreSQL e uma suíte de cada vez no cluster. A linha da `160` no `README.md` diz o estado.
+- [X] T038 `cd backend && make lint check test-pg`. Os dois passos do lint, a suíte inteira contra PostgreSQL e uma suíte de cada vez no cluster. A linha da `160` no `README.md` diz o estado.
 
 ## Dependencies & Execution Order
 

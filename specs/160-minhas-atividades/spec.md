@@ -4,9 +4,10 @@
 
 **Created**: 2026-11-12
 
-**Status**: Especificada, com plano e tarefas. As três decisões do estudo que estavam abertas foram
-tomadas pelo usuário em 12/11/2026 (ver *Clarifications*). Falta só a autorização para implementar,
-que é do usuário, depois de ler o [plano](plan.md).
+**Status**: Implementada em 12/11/2026, nos incrementos A e B, depois da autorização do usuário
+("pode seguir para implementação"). As três decisões do estudo que estavam abertas foram tomadas
+por ele no mesmo dia (ver *Clarifications*). Pendentes: o SC-2281, humano, e o quickstart nos
+cenários de treinamento ([verificação](verificacao.md)).
 
 **Input**: estudo [`doc/estudo-minhas-atividades-2026-11-12/`](../../doc/estudo-minhas-atividades-2026-11-12/README.md),
 rodadas 1 a 4 e o §6a, com a validação nos cenários de treinamento. Em 12/11/2026 o usuário aprovou a
