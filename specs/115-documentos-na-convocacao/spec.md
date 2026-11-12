@@ -684,7 +684,8 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 - **FR-3589**: "Conforme" MUST significar *conforme ao exigido pelo Edital*, nunca *autêntico* ou
   *original*. O arquivo é cópia simples enviada pelo interessado, e nenhuma tela desta feature MUST
   dizer o contrário.
-- **FR-3590**: O estado de cada item MUST ser **derivado** das apresentações e conferências, e não
+- **FR-3590** *(linha do quarto estado revista pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O estado de cada item MUST ser **derivado** das apresentações e conferências, e não
   gravado em coluna. Os estados são:
 
   | Estado | Quando |
@@ -692,24 +693,33 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
   | *a apresentar* | nenhuma apresentação |
   | *recebido, aguardando conferência* | apresentação vigente sem conferência |
   | *pendente* | conferência vigente pendente sobre a apresentação vigente |
-  | *complementado, aguardando conferência* | conferência pendente sobre apresentação anterior, e apresentação nova |
+  | *reenviado — aguardando nova conferência* | conferência pendente sobre apresentação anterior, e apresentação nova |
   | *conforme* | conferência vigente conforme sobre a apresentação vigente |
   | *não se aplica* | conferência vigente não se aplica |
 
-  Não há máquina de estados nem transição gravada (D-004).
-- **FR-3591**: O estado documental da convocação MUST ser derivado dos itens:
+  Não há máquina de estados nem transição gravada (D-004). O nome do quarto estado é o mesmo na
+  gestão e no portal (FR-6211 da `154`); o identificador interno não é texto de tela.
+
+  > **Redação anterior à `154`, preservada:** o quarto estado se chamava *complementado, aguardando
+  > conferência*, com a mesma condição. *Por que mudou:* o mesmo fato tinha três nomes entre a
+  > gestão e o portal (achado 23 do estudo da jornada final, decisão do usuário de 11/11/2026).
+- **FR-3591** *(linha *para conferir* revista pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O estado documental da convocação MUST ser derivado dos itens:
 
   | Estado | Quando |
   |---|---|
   | *sem exigência* | nenhum item obrigatório ou facultativo |
   | *aguardando documentação* | algum obrigatório *a apresentar* |
-  | *para conferir* | algum item *recebido* ou *complementado* |
+  | *para conferir* | algum item *recebido* ou *reenviado* |
   | *com pendência* | algum *pendente* |
   | *pronta para decidir* | todo obrigatório *conforme* ou *não se aplica* |
   | *decidida* | há desfecho vigente |
 
   Os estados se aferem nesta ordem, e vale o primeiro que se aplicar: *decidida*, *sem exigência*,
   *para conferir*, *com pendência*, *aguardando documentação*, *pronta para decidir*.
+
+  > **Redação anterior à `154`, preservada:** *para conferir* — algum item *recebido* ou
+  > *complementado*.
 
 #### E. O desfecho
 
@@ -821,12 +831,14 @@ Cada caso-limite aponta o requisito que o rege, e entra na rastreabilidade como 
 #### H. A condução na gestão
 
 - **FR-3607**: A tela de condução da convocação MUST mostrar, por linha, o estado documental (FR-3591),
-  as contagens (recebidos, pendentes, complementados, conformes e obrigatórios) e o caminho para os
+  as contagens (recebidos, pendentes, reenviados, conformes e obrigatórios) e o caminho para os
   documentos daquela convocação. Ela MUST oferecer a ordem *vencimento mais próximo, depois estado*:
-  *para conferir*, *complementado*, *com pendência*, *aguardando*, *pronta para decidir*, *decidida*.
+  *para conferir*, *reenviado*, *com pendência*, *aguardando*, *pronta para decidir*, *decidida*.
   Linha sem exigência MUST aparecer como hoje. *Revista pela `131` em 07/11/2026:* os conformes e os
   *não se aplica após análise* são contados à parte, e o segundo não soma no primeiro (FR-4466 da
-  `131`).
+  `131`). *Revista pela `154` em 11/11/2026, que vigora com a implementação dela:* a contagem e a
+  ordem dizem *reenviados* e *reenviado* (FR-6212 da `154`); a redação anterior dizia
+  *complementados* e *complementado*.
 - **FR-3608**: A página **Documentos da convocação**, filha da condução, MUST listar:
   - os itens, com o estado;
   - por item, as apresentações, com versão e instante;
