@@ -4,8 +4,8 @@
 treinamento C10) e a lista não apareceu na página pública da seleção. A publicação de convocados da
 `149` funciona?
 
-**Resposta curta.** Funciona, mas **não é automática** e, no caso do C10, **a tela não leva até
-ela**. Convocar grava as convocações e envia as mensagens; a lista só vai para a página pública
+**Resposta curta.** Funciona, mas **não é automática** e, no caso do C10, **a tela não levava até
+ela** — corrigido no mesmo dia (ver *Depois da correção*, no fim). Convocar grava as convocações e envia as mensagens; a lista só vai para a página pública
 quando alguém publica, na página *Publicação das convocações* do Edital. Para um Perfil que convoca
 por **mensagem individual** — o caso do C10 —, nenhuma tela tem o caminho para essa página: só o
 endereço direto. Três achados no fim.
@@ -93,6 +93,25 @@ SHA-256:
 3. **Publicar não é automático, e isso é de propósito** (FR-5708): a publicação é ato com
    autoridade, prévia e confirmação, e não efeito colateral de convocar. Se a expectativa da equipe
    é que convocar já publique, isso é decisão de produto, e não defeito.
+
+## Depois da correção
+
+Os achados 1 e 2 foram corrigidos (FR-5737 e FR-5714 da `149`), e o percurso foi refeito num banco
+novo com o C10, também por cliques.
+
+**O Centro de Controle** leva à *Publicação das convocações*, em *Documentos publicados*, quando a
+fase Convocação começou:
+
+![](09-correcao-centro.jpg)
+
+**A tela de convocação**, logo depois de convocar por mensagem, diz quantas convocações comunicadas
+ainda não estão na página pública e oferece *Publicar no GPS*:
+
+![](10-correcao-tela-do-recorte.jpg)
+
+**A relação** sai na ordem da classificação — Alice, Bernardo, Cecília:
+
+![](11-correcao-relacao-na-ordem.jpg)
 
 ## Para reproduzir
 
