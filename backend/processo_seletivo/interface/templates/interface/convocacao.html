@@ -262,7 +262,7 @@ próxima da fila é suplente — mora agora na fila, que é onde a pessoa vai pr
       <input type="text" id="publicacao-pendentes" name="referencia_da_publicacao" required aria-describedby="ajuda-publicacao-pendentes">
       <span class="ajuda" id="ajuda-publicacao-pendentes">O sistema não publica no site do certame. Publique a lista acima e diga onde e quando — por exemplo, “site do Cefor, 13/09/2026”. O prazo de todas corre a partir dela.</span>
     </p>
-    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=False sufixo="pendentes" %}
+    {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=False registro=True sufixo="pendentes" %}
     <p class="acoes"><button type="submit" class="botao">Registrar a publicação {{ pendentes.linhas|length|plural:"da,das" }} {{ pendentes.linhas|length }} e divulgar no GPS</button></p>
     {% else %}
     {% include "interface/_publicacao_no_gesto.html" with escolha=escolha_da_autoridade publicacao=False sufixo="reenvio" %}

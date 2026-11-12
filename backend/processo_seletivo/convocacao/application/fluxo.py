@@ -107,12 +107,17 @@ def _publicar_depois(*, actor, processo_id, edital_id, convocacoes, autoridade, 
     """A relação informativa das convocações do gesto, depois dos envios ou registros (D-005).
 
     **A recusa não desfaz nada** (FR-6812): volta como frase, para a tela dizer que a relação não
-    foi publicada e por quê. Sem autoridade, o gesto não publica (D-010).
+    foi publicada e por quê. Sem autoridade, o gesto não publica (D-010) — **e diz que não
+    publicou**: sem autoridade vigente na unidade a tela não tem o que pedir, e o botão que prometia
+    publicar não pode terminar em silêncio.
     """
     from processo_seletivo.convocacao.application.publicar import publicar_do_gesto
 
     if not autoridade:
-        return {}
+        return {
+            "publicacao": None,
+            "publicacaoRecusa": "nenhuma autoridade signatária foi escolhida para assiná-la.",
+        }
     try:
         publicada = publicar_do_gesto(
             actor=actor,
@@ -462,25 +467,18 @@ def conferencia_dos_titulares(
         "versao": previa["versao"],
         # A vaga e a lista como a relação pública as nomeia (159, FR-6802): o que a conferência
         # mostra como público é o que a publicação imprime, e não o rótulo da gestão.
-        "publico": _nomes_publicos(previa["versao"], perfil, lista),
+        "publico": _nomes_publicos(previa["versao"], perfil, marco_id, lista),
     }
 
 
-def _nomes_publicos(versao, perfil_id, lista_id):
-    from processo_seletivo.classificacao.domain.universo import por_identidade
-    from processo_seletivo.convocacao.application.publicar import LISTA_AMPLA
+def _nomes_publicos(versao, perfil_id, marco_id, lista_id):
+    """A vaga e a lista pelos nomes que a publicação imprime — a mesma função, e não uma cópia."""
+    from processo_seletivo.convocacao.application.publicar import nomes_publicos
 
-    conteudo = versao.content or {}
-    perfil = por_identidade(conteudo.get("profiles"), perfil_id) or {}
-    modalidades = {
-        str(m.get("id")): m.get("name") or ""
-        for m in perfil.get("competitionModalities") or []
-        if isinstance(m, dict)
-    }
-    return {
-        "vaga": perfil.get("name") or "",
-        "lista": (modalidades.get(str(lista_id)) if lista_id else LISTA_AMPLA) or LISTA_AMPLA,
-    }
+    nomes = nomes_publicos(
+        versao.content or {}, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+    )
+    return {"vaga": nomes["perfil"], "lista": nomes["lista"]}
 
 
 def _prazo_da_conferencia(instante, origem, canal, agora):

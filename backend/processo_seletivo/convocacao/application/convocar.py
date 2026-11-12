@@ -78,6 +78,10 @@ def convocar(
         "inscricao": str(inscricao_id),
         "especie": (especie or "").strip(),
     }
+    if ao_gravar is not None:
+        # **Publicar no GPS é outro pedido** (159, D-006): a mesma chave com o outro veículo recebe
+        # `idempotency_conflict`, e não a resposta do gesto que não publicou.
+        payload["publicaNoGps"] = True
     if correcao is not None:
         # **O que se assinou entra na reserva**: a mesma chave com outra prévia é outro pedido, e
         # recebe `idempotency_conflict`, como em todo comando.

@@ -145,3 +145,16 @@ def test_por_publicacao_dois_botoes_e_o_gps_publica_como_ato_oficial(
     assert ato.declaracao_do_veiculo == "item 7.2 do Edital"
     assert ConvocacaoPublicada.objects.filter(publicacao=ato, efeito="CONVOCA").count() == 2
     assert "publicadas no GPS" in texto(client.get(confirmada["Location"]))
+
+
+def test_o_registro_externo_explica_a_divulgacao_e_nao_a_mensagem():
+    """A frase das pendentes por publicação é a do registro, e não a do envio (revisão do #504)."""
+    from django.template.loader import render_to_string
+
+    html = render_to_string(
+        "interface/_publicacao_no_gesto.html",
+        {"escolha": {"opcoes": [], "unidade": "Cefor"}, "registro": True, "sufixo": "x"},
+    )
+
+    assert "citando onde foi publicada" in html and "O prazo corre do registro" in html
+    assert "Se a mensagem sair" not in html

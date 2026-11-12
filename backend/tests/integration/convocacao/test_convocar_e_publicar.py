@@ -347,3 +347,77 @@ def test_a_correcao_publicada_no_gps_sai_marcada(fixtures, gestor):
     assert grupo["efeito"] == "CONVOCA" and grupo["pessoas"][0]["corrige"] == 1
     sucessora = Convocacao.objects.get(convocacao_anterior=raiz)
     assert ComunicacaoEmitida.objects.get(convocacao=sucessora).enviado_em == segunda.publicado_em
+
+
+# --- O que a revisão do #504 achou ---------------------------------------------------------------
+
+
+def test_por_mensagem_sem_autoridade_o_resultado_diz_que_nao_publicou(fixtures, gestor):
+    """D-010: sem autoridade não há publicação — mas o botão prometeu publicar, e a tela diz."""
+    edital = dois_titulares(fixtures, forma=FORMA_POR_MENSAGEM_INDIVIDUAL, prefixo="g159-sem-aut")
+
+    resultado = titulares(edital, gestor, chave="g159-sem-aut")
+
+    assert resultado["publicacao"] is None
+    assert "nenhuma autoridade" in resultado["publicacaoRecusa"]
+    assert contagem() == (2, 2, 0)
+
+
+def test_a_mesma_chave_com_o_outro_veiculo_e_outro_pedido(fixtures, gestor):
+    """D-006: a mesma chave, agora no GPS, não devolve o gesto que não publicou."""
+    from processo_seletivo.convocacao.application import selectors
+
+    gestor_, api_client, manager_headers, process_payload = fixtures
+    edital, _, _ = montar_cenario_da_convocacao(
+        gestor_,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo="g159-chave",
+        forma=FORMA_POR_PUBLICACAO,
+    )
+    fila = selectors.contexto_do_recorte(
+        edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+    )["fila"]
+    comum = {
+        "actor": gestor,
+        "processo_id": edital.processo_id,
+        "edital_id": edital.id,
+        "perfil_id": PROFILE_ID,
+        "marco_id": MARCO,
+        "inscricao_id": fila[0],
+        "correlation_id": "teste-159",
+        "idempotency_key": "g159-chave",
+        "vencimento": VENCIMENTO,
+        "autoridade": AUTORIDADE,
+        "declaracao_do_veiculo": VEICULO,
+    }
+    fluxo.convocar_e_comunicar(**comum, veiculo=fluxo.VEICULO_EXTERNO)
+
+    with pytest.raises(DomainError) as erro:
+        fluxo.convocar_e_comunicar(**comum, veiculo=fluxo.VEICULO_GPS)
+
+    assert erro.value.code == "idempotency_conflict"
+    assert PublicacaoDeConvocados.objects.count() == 0
+
+
+def test_a_repeticao_da_publicacao_nao_depende_da_lista_relida(fixtures, gestor):
+    """A segunda tentativa do mesmo clique nas pendentes relê outra lista, e recebe o que já foi."""
+    from processo_seletivo.convocacao.application import publicar
+
+    edital = dois_titulares(fixtures, forma=FORMA_POR_MENSAGEM_INDIVIDUAL, prefixo="g159-relida")
+    titulares(edital, gestor, chave="g159-relida")
+    ids = list(Convocacao.objects.filter(edital=edital).values_list("id", flat=True))
+    comum = {
+        "actor": gestor,
+        "processo_id": edital.processo_id,
+        "edital_id": edital.id,
+        "autoridade": AUTORIDADE,
+        "idempotency_key": "g159-relida:publicar",
+        "correlation_id": "teste-159",
+    }
+
+    primeira = publicar.publicar_do_gesto(**comum, convocacoes=ids)
+    segunda = publicar.publicar_do_gesto(**comum, convocacoes=ids[:1])
+
+    assert segunda == primeira and PublicacaoDeConvocados.objects.count() == 1

@@ -5,11 +5,11 @@ convoca, e não num segundo percurso. O veículo vai no botão que a pessoa aper
 dois é presumido.
 
 Recebe: `escolha` (as autoridades de `_escolha_da_autoridade`), `publicacao` (a forma é a
-publicação), `sufixo` (para os identificadores não se repetirem entre os formulários da tela) e
+publicação), `registro` (o registro de uma publicação feita fora do GPS), `sufixo` (para os identificadores não se repetirem entre os formulários da tela) e
 `autoridade_escolhida`.
 {% endcomment %}
 <div class="publicacao-no-gesto">
-  <p class="nota">{% if publicacao %}<strong>Na página pública da seleção.</strong> «Publicar no GPS» faz desta confirmação o ato oficial: a convocação é publicada com nome, protocolo, vaga, lista e prazo, e o prazo corre do instante da publicação. «A publicação será registrada depois» convoca e aguarda o registro da publicação feita fora do GPS — e esse registro a divulga no GPS.{% else %}<strong>Na página pública da seleção.</strong> Se a mensagem sair, a convocação entra na relação informativa, com nome, protocolo, vaga, lista e prazo. O prazo corre do envio, e não da publicação; se a mensagem falhar, ela fica fora da relação.{% endif %}</p>
+  <p class="nota">{% if publicacao %}<strong>Na página pública da seleção.</strong> «Publicar no GPS» faz desta confirmação o ato oficial: a convocação é publicada com nome, protocolo, vaga, lista e prazo, e o prazo corre do instante da publicação. «A publicação será registrada depois» convoca e aguarda o registro da publicação feita fora do GPS — e esse registro a divulga no GPS.{% elif registro %}<strong>Na página pública da seleção.</strong> Registrada a publicação feita fora do GPS, a relação das registradas é divulgada no GPS, com nome, protocolo, vaga, lista e prazo, citando onde foi publicada. O prazo corre do registro, e não da divulgação.{% else %}<strong>Na página pública da seleção.</strong> Se a mensagem sair, a convocação entra na relação informativa, com nome, protocolo, vaga, lista e prazo. O prazo corre do envio, e não da publicação; se a mensagem falhar, ela fica fora da relação.{% endif %}</p>
   {% if escolha.opcoes %}
   <p class="campo">
     <label for="autoridade-{{ sufixo }}">Autoridade signatária da publicação <span class="obrigatorio" aria-hidden="true">*</span></label>

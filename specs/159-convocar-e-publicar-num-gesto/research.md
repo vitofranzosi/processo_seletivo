@@ -78,3 +78,8 @@ público, e o botão que diz as consequências. A conferência antes de chamar u
 O comando de convocar continua aceitando a chamada sem autoridade — é o que mantém os demais caminhos
 e a suíte —, e então não publica. A interface sempre a pede: é ela que garante a FR-6801 a quem
 confirma pela conferência.
+
+Sem autoridade vigente na unidade, porém, a tela não tem o que pedir, e o botão que prometia publicar
+terminaria em silêncio. Por isso o resultado diz que a relação não foi publicada e por quê — "nenhuma
+autoridade signatária foi escolhida" —, e aponta a seção «Na página pública da seleção» (revisão do
+PR #504).

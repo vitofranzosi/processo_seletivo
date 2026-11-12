@@ -230,33 +230,52 @@ def _posicoes_na_classificacao(convocacoes):
     }
 
 
-def _recorte(chave, convocacao, conteudo):
-    """O recorte com os nomes da versão que a convocação citou, e a posição dele no Edital."""
+def nomes_publicos(conteudo, *, perfil_id, marco_id, lista_id):
+    """A vaga, a lista e o marco pelos nomes que a relação pública imprime (FR-5726).
+
+    Uma função só para a publicação e para a conferência de convocar (159, FR-6802): o que se
+    confere como público é, letra a letra, o que se publica.
+    """
     from processo_seletivo.classificacao.domain.nomes import nomes_do_marco
 
-    nomes = nomes_do_marco(conteudo, perfil_id=convocacao.perfil_id, marco_id=convocacao.marco_id)
-    perfis = [str(p.get("id")) for p in conteudo.get("profiles") or [] if isinstance(p, dict)]
-    listas = recortes_do_perfil(conteudo, perfil_id=convocacao.perfil_id)
-    alvo = str(convocacao.lista_id) if convocacao.lista_id else None
-    posicao_da_lista = next((i for i, (lista, _) in enumerate(listas) if lista == alvo), 0)
+    nomes = nomes_do_marco(conteudo, perfil_id=perfil_id, marco_id=marco_id)
+    listas = recortes_do_perfil(conteudo, perfil_id=perfil_id)
+    alvo = str(lista_id) if lista_id else None
     # **O nome da lista é o que a divulgação do resultado publica** (FR-5726, D-008): a ampla por
     # extenso, e a reserva pelo nome da Modalidade. O rótulo da gestão — "linha geral do quadro",
     # o código entre parênteses — é vocabulário de quem conduz, e não de quem consulta.
     rotulo_da_lista = ((nomes["modalidades"].get(alvo) or "") if alvo else LISTA_AMPLA) or next(
         (r for lista, r in listas if lista == alvo), ""
     )
+    return {
+        "perfil": nomes["perfil"].get("name") or "",
+        "lista": rotulo_da_lista,
+        "marco": nomes["marco"].get("name") or "",
+        "posicao_da_lista": next((i for i, (lista, _) in enumerate(listas) if lista == alvo), 0),
+    }
+
+
+def _recorte(chave, convocacao, conteudo):
+    """O recorte com os nomes da versão que a convocação citou, e a posição dele no Edital."""
+    nomes = nomes_publicos(
+        conteudo,
+        perfil_id=convocacao.perfil_id,
+        marco_id=convocacao.marco_id,
+        lista_id=convocacao.lista_id,
+    )
+    perfis = [str(p.get("id")) for p in conteudo.get("profiles") or [] if isinstance(p, dict)]
     perfil = str(convocacao.perfil_id)
     return {
         "chave": chave,
         "perfil_id": convocacao.perfil_id,
         "marco_id": convocacao.marco_id,
         "lista_id": convocacao.lista_id,
-        "perfil": nomes["perfil"].get("name") or "",
-        "lista": rotulo_da_lista,
-        "marco": nomes["marco"].get("name") or "",
+        "perfil": nomes["perfil"],
+        "lista": nomes["lista"],
+        "marco": nomes["marco"],
         "ordem": (
             perfis.index(perfil) if perfil in perfis else len(perfis),
-            posicao_da_lista,
+            nomes["posicao_da_lista"],
             str(convocacao.marco_id),
         ),
         "linhas": [],
@@ -418,7 +437,10 @@ def publicar_do_gesto(
     fica fora (FR-6806). Sem nenhuma, nada é publicado, e devolve `None`.
     """
     ids = sorted(str(c) for c in convocacoes)
-    payload = {"edital": str(edital_id), "convocacoes": ids, "autoridade": str(autoridade or "")}
+    # **As convocações não entram na reserva**: a chave já é derivada do gesto, e nas pendentes a
+    # lista é lida no momento do pedido — a segunda tentativa do mesmo clique veria outra, e
+    # receberia `idempotency_conflict` em vez do que a primeira publicou.
+    payload = {"edital": str(edital_id), "autoridade": str(autoridade or "")}
     with comando_de_comissao(
         actor=actor,
         processo_id=processo_id,
