@@ -108,9 +108,29 @@
   margin: 0 0 .75rem;
 }
 
+.filtro-de-edital label {
+  margin: 0;
+  font-weight: 600;
+}
+
 .filtro-de-edital select {
   max-width: 100%;
   min-width: 0;
+}
+
+/* A partir de 48rem (~768 px), uma linha só: rótulo, `select` de até 22rem e o botão ao lado. A
+   regra geral dá ao `select` a largura inteira, e a 1280 px eram três linhas pesadas acima da
+   primeira atividade (revisão das capturas de 12/11). Abaixo disso, quebra como antes. */
+@media (min-width: 48rem) {
+  .filtro-de-edital {
+    flex-wrap: nowrap;
+  }
+
+  .filtro-de-edital select {
+    width: auto;
+    flex: 0 1 22rem;
+    max-width: 22rem;
+  }
 }
 
 .onde-encontrar {
