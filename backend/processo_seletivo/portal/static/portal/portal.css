@@ -1131,3 +1131,51 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
   .corpo-da-publicacao .orientacao-dos-convocados{grid-column:2;grid-row:1;position:sticky;top:1rem}
   .corpo-da-publicacao .relacao-de-convocados{grid-column:1;grid-row:1;min-width:0}
 }
+
+/* --- A porta de entrada do candidato: e-mail, código e participação anterior ------------------ */
+/* Um cartão centrado, com a largura de um formulário de um campo só. O formulário encostado no canto
+   esquerdo de uma tela de 1280 deixava três quartos dela vazios e não dizia de quem era a porta. O
+   espaço em volta fica vazio de propósito: nada decorativo disputa com o único campo da página. */
+.porta-de-acesso{display:flex;flex-direction:column;align-items:center;
+  padding:clamp(.25rem,5vh,3.5rem) 0 2.5rem;}
+.cartao-de-acesso{width:100%;max-width:30rem;background:var(--branco);border:1px solid var(--borda);
+  border-top:4px solid var(--verde);border-radius:8px;padding:1.5rem 1.25rem 1.25rem;
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -16px rgba(11,90,42,.22);}
+.cartao-de-acesso .sobretitulo{margin:0 0 .3rem;font-size:.8125rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--verde-texto);}
+.cartao-de-acesso h1{margin:0 0 .5rem;font-size:1.5rem;line-height:1.25;}
+.cartao-de-acesso .sub{margin:0 0 1.25rem;}
+.cartao-de-acesso .vaga-do-destino{margin:0 0 1.25rem;background:var(--verde-claro);
+  border-radius:0 6px 6px 0;font-size:.9375rem;line-height:1.5;}
+.cartao-de-acesso h1+.vaga-do-destino{margin-top:1rem;}
+/* O campo ocupa o cartão, e a borda do campo contrasta com o branco: o cinza de borda da página,
+   1,5:1, deixava a caixa do e-mail quase invisível — o contorno de um controle pede 3:1. */
+.cartao-de-acesso .campo{max-width:none;margin:0 0 1.25rem;}
+.cartao-de-acesso .campo input{height:3rem;padding:0 .85rem;font-size:1.0625rem;
+  border-color:#8a8a8a;border-radius:6px;}
+.cartao-de-acesso .campo input[aria-invalid=true]{border-color:var(--vermelho);}
+.cartao-de-acesso .principal{display:block;width:100%;max-width:none;min-height:3rem;
+  border-radius:6px;}
+/* O código em destaque: grande, espaçado e centrado, para conferir dígito a dígito com o e-mail. */
+.cartao-de-acesso .campo-do-codigo input{height:3.5rem;font-size:1.625rem;font-weight:600;
+  letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums;}
+.cartao-de-acesso .destinatario{margin:0 0 1.25rem;padding:.6rem .8rem;border-radius:6px;
+  background:var(--fundo);font-size:.9375rem;overflow-wrap:anywhere;}
+.cartao-de-acesso .destinatario strong{display:block;}
+/* O que aconteceu com o último pedido: às vezes boa notícia, às vezes recusa — tom neutro. */
+.cartao-de-acesso .aviso-do-envio{padding:.6rem .8rem;border-left:4px solid var(--texto-fraco);
+  border-radius:0 6px 6px 0;background:var(--fundo);color:var(--texto);}
+.cartao-de-acesso .nota-do-acesso{margin:1rem 0 0;font-size:.875rem;color:var(--texto-fraco);
+  line-height:1.5;}
+.cartao-de-acesso form.convite{margin:0;}
+.cartao-de-acesso .secundario{border-radius:6px;}
+/* O reenvio separado por um filete: é o caminho de quem não recebeu, e não uma segunda ação
+   principal. O botão e a contagem empilham, para a frase da espera não se partir ao lado dele. */
+.reenvio-do-codigo{margin:1.5rem 0 0;padding:1.25rem 0 0;border-top:1px solid var(--borda);}
+.reenvio-do-codigo .sub{margin:0 0 .75rem;font-size:.9375rem;}
+.reenvio-do-codigo form.convite{display:grid;gap:.5rem;justify-items:start;}
+.reenvio-do-codigo #espera-do-reenvio{margin:0;font-size:.875rem;}
+@media (min-width:36rem){
+  .cartao-de-acesso{padding:2rem 2.25rem 1.75rem;}
+  .cartao-de-acesso h1{font-size:1.75rem;}
+}

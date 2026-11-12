@@ -68,7 +68,7 @@ As nove questões da [priorização da auditoria](../../doc/auditoria-ux-convers
 | Q4 — Curso, cargo e bolsa | Estudar separadamente; nenhum campo novo agora. |
 | Q5 — Campanhas | Página da seleção; âncora da vaga quando a campanha for específica de uma vaga. |
 | Q6 — "Vaga" | Manter o termo, distinguindo na apresentação a denominação da quantidade. |
-| Q7 — "Entrar" | Manter; acrescentar contexto nas telas de acesso. |
+| Q7 — "Entrar" | Manter; acrescentar contexto nas telas de acesso. **Revista em 12/11/2026** (responsável pelo produto): o título diz para que se entra — ver a nota da FR-1619. |
 | Q8 — Quantidade por modalidade | Fora deste incremento. |
 | Q9 — Próxima spec | Sim, com foco em encontrar, começar e acompanhar. |
 
@@ -345,6 +345,11 @@ faixas que terminam antes de 1.530 e de 570; o intervalo deixa folga para elas.
   reconciliação e "Seus dados" MUST nomear o Perfil e o Edital (número e título) a que a pessoa está se
   candidatando, e a tela de acesso MUST ter como título que ela está confirmando o e-mail para se
   inscrever. Sem destino de vaga, as telas MUST continuar como estão.
+  *Revista em 12/11/2026, por decisão do responsável pelo produto, no polimento da entrada do
+  candidato:* a caminho de uma vaga, o título da tela de acesso passa a ser "Continue para sua
+  inscrição", e a confirmação do e-mail para se inscrever vai na frase logo abaixo dele; sem destino,
+  o título é "Acesse sua área do candidato", sem supor inscrição anterior. O contexto da vaga e a
+  FR-1620 não mudam.
 - **FR-1620**: O contexto da FR-1619 MUST derivar só do destino da identificação, e MUST ser idêntico
   exista ou não identidade para o e-mail informado — a equivalência de resposta da `010` (FR-020,
   FR-021) continua inteira.
