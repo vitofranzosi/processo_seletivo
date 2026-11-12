@@ -353,6 +353,8 @@ Centro, e quem está no Centro volta ao detalhe.
   natureza dela (Etapa governada → Vagas; demais Etapas, distribuir, avaliar, consolidar, reavaliar →
   Avaliação; conferir → Convocação; recurso → Resultado e recursos; os atos de marco pela regra da
   FR-4709). A soma das providências das fases MUST ser o total do nível 1.
+  *Revista pela `153` em 11/11/2026:* a passagem ao setor da formalização (definir, designar,
+  exportar) → Conclusão (FR-6115 da `153`).
 - **FR-4717**: A marca "sua" de uma fase MUST existir se, e só se, há providência da pessoa nela.
 
 **Onde estamos (camada A)**

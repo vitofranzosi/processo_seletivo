@@ -31,7 +31,9 @@ def consultas_da_confirmacao(escala):
 
 
 # Medido em 01/11/2026: 23 consultas com 38 e com 362 inscrições, no Edital com o período correndo.
-ORCAMENTO = 23
+# 25 desde a `153` (FR-6124): a passagem ao setor procura a definição e as convocações com desfecho;
+# sem pessoa apta, para aí.
+ORCAMENTO = 25
 
 
 @pytest.mark.parametrize("escala", [1, 10])

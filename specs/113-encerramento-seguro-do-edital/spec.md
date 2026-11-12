@@ -236,6 +236,9 @@ a frase e a ausência de responsável e de ato.
   resultado publicado sem prazo de recurso declarado, dizendo que recursos continuam podendo ser
   interpostos; e período de inscrições aberto sem término declarado, dizendo que o encerramento põe
   fim ao recebimento.
+  *Revista pela `153` em 11/11/2026:* também as inscrições aptas para formalização ainda sem
+  documentos disponibilizados ao setor, com a causa e o caminho (FR-6124 a FR-6126 da `153`), pela
+  regra do relatório (FR-3535).
 - **FR-3535**: As advertências de convocação, resultado e apuração MUST vir da mesma regra que produz as
   providências do relatório da `099` (FR-2524 da `099`), e não de uma segunda definição: toda providência
   que o relatório listar logo depois do ato MUST ter sido exibida na confirmação.

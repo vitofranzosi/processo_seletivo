@@ -435,6 +435,7 @@ ROTULOS_DAS_PENDENCIAS = {
     rel.CONVOCACAO_AGUARDANDO: "convocação aguardando resposta",
     rel.CONVOCACAO_VENCIDA: "convocação com prazo encerrado sem registro de resposta",
     rel.RECURSO_AGUARDANDO: "recurso aguardando decisão",
+    rel.APTAS_SEM_DISPONIBILIZACAO: "inscrição apta sem documentos disponibilizados ao setor",
 }
 ORDEM_DAS_PENDENCIAS = tuple(ROTULOS_DAS_PENDENCIAS)
 ROTULOS_NO_PLURAL = {
@@ -447,6 +448,7 @@ ROTULOS_NO_PLURAL = {
     rel.CONVOCACAO_AGUARDANDO: "convocações aguardando resposta",
     rel.CONVOCACAO_VENCIDA: "convocações com prazo encerrado sem registro de resposta",
     rel.RECURSO_AGUARDANDO: "recursos aguardando decisão",
+    rel.APTAS_SEM_DISPONIBILIZACAO: "inscrições aptas sem documentos disponibilizados ao setor",
 }
 
 

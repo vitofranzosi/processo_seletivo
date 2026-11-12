@@ -32,6 +32,10 @@ CONVOCACAO_VENCIDA = "CONVOCACAO_VENCIDA"
 # emitir a comunicação, e é de quem conduz.
 CONVOCACAO_SEM_COMUNICACAO = "CONVOCACAO_SEM_COMUNICACAO"
 RECURSO_AGUARDANDO = "RECURSO_AGUARDANDO"
+# As pessoas aptas para formalização cujos documentos ainda não foram disponibilizados ao setor
+# (153, FR-6124, FR-6127). Do Edital inteiro, como o recurso aguardando: a contagem por Perfil
+# identificaria a pessoa no Perfil pequeno. A regra é a da `formalizacao` (`passagem.py`).
+APTAS_SEM_DISPONIBILIZACAO = "APTAS_SEM_DISPONIBILIZACAO"
 
 # Os que a `113` acrescenta.
 PERIODO_EM_CURSO = "PERIODO_EM_CURSO"

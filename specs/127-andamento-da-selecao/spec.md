@@ -473,6 +473,8 @@ Cada caso é requisito, e tem teste (rastreabilidade).
   prazo pelo prazo mais próximo e depois pela espera mais antiga; depois as de outros papéis,
   agrupadas por papel; depois as que aguardam ou estão impedidas, com a razão. *Não se aplica* MUST
   NOT aparecer no nível 1.
+  *Revista pela `153` em 11/11/2026:* dois papéis novos, quem administra os acessos da unidade e o
+  setor da formalização, ficam depois dos de hoje, nessa ordem (FR-6114 da `153`).
 - **FR-4083**: O nível 1 MUST mostrar até cinco providências e "mais N", que mostra as demais na
   própria página.
 - **FR-4084**: A providência da pessoa MUST ser link com o verbo da tela do ato; a de outro papel MUST

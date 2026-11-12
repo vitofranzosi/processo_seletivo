@@ -38,8 +38,11 @@ def consultas(processo):
 # com 362 inscrições. Por Edital a mais, 142: a busca dos Editais é uma só, e o resto é a leitura do
 # relatório da `099` e da regra da `113`, inteiras, por Edital. É caro, e foi aceito (D-007 da
 # `130`): a tela é rara, e o Processo tem poucos Editais. A leitura em lote é da Frente B.
-ORCAMENTO_DE_UM = 145
-POR_EDITAL = 142
+#
+# 153 e 150 desde a `153` (FR-6128): as oito consultas da passagem ao setor, por Edital, que vêm do
+# relatório da `099` como as demais.
+ORCAMENTO_DE_UM = 153
+POR_EDITAL = 150
 
 
 @pytest.mark.parametrize("escala", [1, 10])
