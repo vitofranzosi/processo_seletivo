@@ -324,8 +324,9 @@ def test_f_cada_botao_diz_o_nome_do_documento(fx, client):
     assert all(":" in rotulo or " para " in rotulo for rotulo in escolher)
     for campo in re.findall(r'<input type="file"[^>]*>', pagina):
         descrito = re.search(r'aria-describedby="([^"]*)"', campo).group(1).split()
-        # A situação e o limite; na substituição, também a frase do efeito (FR-3739, revista).
-        assert len(descrito) in (2, 3)
+        # A situação, o limite e o aviso do arquivo repetido (150, UX-504); na substituição, também
+        # a frase do efeito (FR-3739, revista).
+        assert len(descrito) in (3, 4)
         for alvo in descrito:
             assert f'id="{alvo}"' in pagina
 

@@ -47,7 +47,10 @@ function botaoQueEscuta(extra = {}) {
   };
 }
 
-function cartao(nome, { limite = 1000, substituicao = false, tarefa = !substituicao } = {}) {
+function cartao(
+  nome,
+  { limite = 1000, substituicao = false, tarefa = !substituicao, recebido = null } = {}
+) {
   const ouvintes = {};
   /* Como no navegador: zerar o `value` de um campo de arquivo esvazia a lista de arquivos. */
   const campo = {
@@ -75,6 +78,7 @@ function cartao(nome, { limite = 1000, substituicao = false, tarefa = !substitui
   const escolher = elemento({ hidden: false });
   const trocar = elemento();
   const limiteDoCartao = elemento({ hidden: false });
+  const repetido = elemento();
   const ficha = { value: "ficha-csrf" };
   const filhos = [];
   /* A recusa que a volta anterior pôs no cartão, como o servidor a desenha. */
@@ -88,7 +92,8 @@ function cartao(nome, { limite = 1000, substituicao = false, tarefa = !substitui
   const situacao = { classList: classes() };
   const li = {
     classList: classes(),
-    getAttribute: (chave) => (chave === "data-documento" ? nome : null),
+    getAttribute: (chave) =>
+      ({ "data-documento": nome, "data-resumo-recebido": recebido })[chave] ?? null,
     hasAttribute: (chave) => chave === "data-tarefa" && tarefa,
     querySelector: (s) => {
       if (s === "[data-some-com-a-escolha]") return substituicao ? null : situacao;
@@ -113,6 +118,7 @@ function cartao(nome, { limite = 1000, substituicao = false, tarefa = !substitui
         "[data-rotulo-escolher]": escolher,
         "[data-rotulo-trocar]": trocar,
         "[data-limite-do-cartao]": limiteDoCartao,
+        "[data-arquivo-repetido]": repetido,
         "[name=csrfmiddlewaretoken]": ficha,
       })[s] || null,
     closest: (s) => {
@@ -134,6 +140,7 @@ function cartao(nome, { limite = 1000, substituicao = false, tarefa = !substitui
     escolher: escolher,
     trocar,
     limiteDoCartao,
+    repetido,
     li,
     situacao,
     recusaAntiga,
@@ -202,7 +209,7 @@ function areaDoEnvio({ soComEscolha = false } = {}) {
 
 /* Cada chamada do `fetch` fica pendente até o teste respondê-la: assim se vê que o lote espera a
    resposta de um documento antes de mandar o seguinte. */
-function carregar(cartoes, { comArea = true, soComEscolha = false } = {}) {
+function carregar(cartoes, { comArea = true, soComEscolha = false, sutil = null, recebidos = [] } = {}) {
   const chamadas = [];
   const janela = {};
   const anuncio = { textContent: "" };
@@ -211,6 +218,7 @@ function carregar(cartoes, { comArea = true, soComEscolha = false } = {}) {
   global.window = {
     location: { assign: (destino) => (janela.destino = destino) },
     addEventListener: (tipo, ouvinte) => (janela[tipo] = ouvinte),
+    ...(sutil ? { crypto: { subtle: sutil } } : {}),
   };
   const confirmacaoAnterior = { hidden: false };
   global.document = {
@@ -218,6 +226,11 @@ function carregar(cartoes, { comArea = true, soComEscolha = false } = {}) {
       ({
         "form[data-envio]": cartoes.map((c) => c.form),
         "[data-instrucao-com-script]": [instrucao],
+        /* Os cartões com apresentação vigente, inclusive os sem formulário (conferidos). */
+        "[data-resumo-recebido]": [
+          ...cartoes.filter((c) => c.li.getAttribute("data-resumo-recebido")).map((c) => c.li),
+          ...recebidos,
+        ],
       })[s] || [],
     querySelector: (s) =>
       ({
@@ -705,4 +718,144 @@ test("a orientação sem escolha é a que o servidor escreveu", () => {
   a.remover.clicar();
   assert.equal(tela.area.orientacao.textContent, "Escolha o arquivo PDF de cada documento acima.",
     "lida ao carregar, e não depois");
+});
+
+// --- O mesmo arquivo em dois documentos (FR-5615 a FR-5619, D-006) -----------------------------
+
+const { createHash, webcrypto } = require("node:crypto");
+
+/* Um arquivo do seletor: o nome é o que a pessoa vê; o que decide é o conteúdo. */
+function pdf(nome, conteudo) {
+  const bytes = Buffer.from(conteudo);
+  return {
+    name: nome,
+    size: bytes.length,
+    arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length),
+  };
+}
+
+/* O resumo que `shared.arquivos.resumo` grava: SHA-256, hexadecimal minúsculo. */
+function sha256(conteudo) {
+  return createHash("sha256").update(Buffer.from(conteudo)).digest("hex");
+}
+
+const ESCOLHIDO = "Atenção: este arquivo é o mesmo que você escolheu para ";
+const ENVIADO = "Atenção: este arquivo é o mesmo que você já enviou para ";
+
+test("dois escolhidos idênticos, de nomes diferentes, avisam nos dois, cada um nomeando o outro", async () => {
+  const [a, b, c] = tres();
+  const tela = carregar([a, b, c], { sutil: webcrypto.subtle });
+
+  a.escolherArquivo(pdf("diploma.pdf", "o mesmo"));
+  b.escolherArquivo(pdf("comprovante.pdf", "o mesmo"));
+  c.escolherArquivo(pdf("diploma.pdf", "outro conteúdo"));
+  await esperar();
+
+  assert.equal(a.repetido.textContent, ESCOLHIDO + "Histórico.");
+  assert.equal(b.repetido.textContent, ESCOLHIDO + "Certidão.");
+  assert.equal(a.repetido.hidden, false);
+  assert.equal(c.repetido.hidden, true, "mesmo nome, conteúdo diferente: nenhum aviso (SC-1807)");
+  assert.equal(c.repetido.textContent, "");
+  assert.equal(tela.anuncio.textContent, ESCOLHIDO + "Certidão.", "anunciado sem mover o foco");
+  // O aviso não bloqueia nem muda o envio (FR-5616).
+  assert.equal(tela.area.botao.textContent, "Enviar 3 documentos");
+  assert.equal(tela.area.botao.disabled, false);
+  tela.area.botao.clicar();
+  assert.equal(tela.chamadas.length, 1, "o lote começa com o avisado dentro");
+});
+
+test("igual ao já enviado para outro documento avisa; igual ao do próprio cartão, não", async () => {
+  const recebido = sha256("diploma");
+  const a = cartao("Comprovante de residência");
+  const b = cartao("Diploma", { substituicao: true, recebido });
+  /* Um conferido, sem formulário: o cartão dele também diz o resumo. */
+  const conferido = { getAttribute: (k) => ({ "data-documento": "Certidão", "data-resumo-recebido": sha256("certidão") })[k] ?? null };
+  carregar([a, b], { sutil: webcrypto.subtle, recebidos: [conferido] });
+
+  a.escolherArquivo(pdf("qualquer.pdf", "diploma"));
+  b.escolherArquivo(pdf("de-novo.pdf", "diploma"));
+  await esperar();
+
+  assert.equal(a.repetido.textContent, ESCOLHIDO + "Diploma. " + ENVIADO + "Diploma.");
+  assert.equal(b.repetido.textContent, ESCOLHIDO + "Comprovante de residência.", "o próprio recebido não conta");
+
+  a.escolherArquivo(pdf("certidao.pdf", "certidão"));
+  await esperar();
+  assert.equal(a.repetido.textContent, ENVIADO + "Certidão.");
+  assert.equal(b.repetido.hidden, true, "trocar num cartão tira o aviso do outro (FR-5617)");
+});
+
+test("com mais de um coincidente, os nomes vão por vírgula e \"e\"", async () => {
+  const cartoes = ["A", "B", "C", "D"].map((nome) => cartao(nome));
+  carregar(cartoes, { sutil: webcrypto.subtle });
+
+  for (const c of cartoes) c.escolherArquivo(pdf(`${c.form.nome}.pdf`, "igual"));
+  await esperar();
+
+  assert.equal(cartoes[0].repetido.textContent, ESCOLHIDO + "B, C e D.");
+  assert.equal(cartoes[3].repetido.textContent, ESCOLHIDO + "A, B e C.");
+});
+
+test("remover a escolha tira o aviso dos dois cartões", async () => {
+  const [a, b] = tres();
+  carregar([a, b], { sutil: webcrypto.subtle });
+  a.escolherArquivo(pdf("x.pdf", "igual"));
+  b.escolherArquivo(pdf("y.pdf", "igual"));
+  await esperar();
+  assert.equal(a.repetido.hidden, false);
+
+  a.remover.clicar();
+
+  assert.equal(a.repetido.hidden, true);
+  assert.equal(b.repetido.hidden, true);
+  assert.equal(b.repetido.textContent, "");
+});
+
+test("sem crypto.subtle, ou com a leitura recusada, não há aviso nem frase de comparação", async () => {
+  const [a, b] = tres();
+  carregar([a, b]);
+  a.escolherArquivo(pdf("x.pdf", "igual"));
+  b.escolherArquivo(pdf("y.pdf", "igual"));
+  await esperar();
+  assert.equal(a.repetido.textContent + b.repetido.textContent, "");
+
+  const [c, d] = tres();
+  carregar([c, d], { sutil: webcrypto.subtle });
+  const recusado = { name: "x.pdf", size: 5, arrayBuffer: () => Promise.reject(new Error("leitura")) };
+  c.escolherArquivo(recusado);
+  d.escolherArquivo({ ...recusado, name: "y.pdf" });
+  await esperar();
+  assert.equal(c.repetido.hidden, true);
+  assert.equal(d.repetido.hidden, true);
+});
+
+test("a escolha trocada durante o cálculo descarta o resultado velho", async () => {
+  const [a, b] = tres();
+  let liberar;
+  const lento = { name: "lento.pdf", size: 5, arrayBuffer: () => new Promise((r) => (liberar = r)) };
+  carregar([a, b], { sutil: webcrypto.subtle });
+  b.escolherArquivo(pdf("b.pdf", "igual"));
+
+  a.escolherArquivo(lento);
+  a.escolherArquivo(pdf("a.pdf", "diferente"));
+  await esperar();
+  liberar(Buffer.from("igual").buffer);
+  await esperar();
+
+  assert.equal(a.repetido.hidden, true, "o arquivo lento já saiu do campo");
+  assert.equal(b.repetido.hidden, true);
+});
+
+test("o envio não espera o cálculo, e a escolha sozinha não faz requisição", async () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  const nunca = { name: "x.pdf", size: 5, arrayBuffer: () => new Promise(() => {}) };
+
+  a.escolherArquivo(nunca);
+  b.escolherArquivo(pdf("y.pdf", "y"));
+  await esperar();
+  assert.equal(tela.chamadas.length, 0, "escolher não envia nada (FR-5618)");
+
+  tela.area.botao.clicar();
+  assert.equal(tela.chamadas.length, 1, "o lote sai com o cálculo ainda correndo (FR-5619)");
 });

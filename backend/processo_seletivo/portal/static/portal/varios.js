@@ -28,7 +28,13 @@
    Sem script, nada disto existe: a área do envio nasce escondida, e cada cartão envia o seu, como
    antes (FR-5612).
 
-   **Nada é guardado no navegador** (FR-5611): nem nome de arquivo, nem progresso. */
+   **O mesmo arquivo em dois documentos** (FR-5615 a FR-5619, D-006; achado 11 do estudo da jornada
+   final): escolhido o arquivo, o script calcula o resumo SHA-256 dele aqui mesmo e o compara com o
+   dos outros escolhidos e com o `data-resumo-recebido` dos outros cartões. Coincidindo, o cartão
+   avisa, e o envio continua possível: um documento pode servir a dois itens. Sem `crypto.subtle`, ou
+   com a leitura recusada, não há aviso, e nada diz que se comparou. O envio nunca espera o cálculo.
+
+   **Nada é guardado no navegador** (FR-5611): nem nome de arquivo, nem progresso, nem resumo. */
 (function () {
   var ACESSO_EXPIRADO =
     "Não foi possível enviar: o seu acesso expirou. Recarregue a página e entre de novo — o que " +
@@ -64,6 +70,10 @@
   var soComEscolha = Boolean(area.hasAttribute && area.hasAttribute("data-so-com-escolha"));
   var emCurso = false;
   var ultimaContagem = 0;
+  /* O resumo de cada campo, preso ao arquivo de que veio: escolhido outro, o velho não vale. */
+  var resumos = formularios.map(function () {
+    return null;
+  });
 
   function no(formulario, seletor) {
     return formulario.querySelector(seletor);
@@ -109,6 +119,96 @@
 
   function documentos(quantos) {
     return quantos === 1 ? "1 documento" : quantos + " documentos";
+  }
+
+  function emLista(nomesDosDocumentos) {
+    if (nomesDosDocumentos.length < 2) return nomesDosDocumentos.join("");
+    return (
+      nomesDosDocumentos.slice(0, -1).join(", ") +
+      " e " +
+      nomesDosDocumentos[nomesDosDocumentos.length - 1]
+    );
+  }
+
+  function resumoDe(formulario) {
+    var calculado = resumos[formularios.indexOf(formulario)];
+    var arquivo = arquivoDe(formulario);
+    return calculado && arquivo && calculado.arquivo === arquivo ? calculado.resumo : "";
+  }
+
+  /* O aviso de cada cartão, refeito inteiro a cada mudança: a troca ou a remoção num cartão tira o
+     aviso do outro também (FR-5617). O próprio cartão não conta — o mesmo arquivo de novo no mesmo
+     documento o servidor já reconhece (FR-3581 da `115`). */
+  function avisarRepetidos() {
+    var recebidos = Array.prototype.slice.call(
+      document.querySelectorAll("[data-resumo-recebido]")
+    );
+    formularios.forEach(function (formulario) {
+      var aviso = no(formulario, "[data-arquivo-repetido]");
+      if (!aviso) return;
+      var resumo = resumoDe(formulario);
+      var cartao = cartaoDe(formulario);
+      var escolhidoPara = [];
+      var enviadoPara = [];
+      if (resumo) {
+        formularios.forEach(function (outro) {
+          if (outro !== formulario && resumoDe(outro) === resumo) escolhidoPara.push(nomeDe(outro));
+        });
+        recebidos.forEach(function (outro) {
+          if (outro !== cartao && outro.getAttribute("data-resumo-recebido") === resumo) {
+            enviadoPara.push(outro.getAttribute("data-documento") || "");
+          }
+        });
+      }
+      var frases = [];
+      if (escolhidoPara.length) {
+        frases.push(
+          "Atenção: este arquivo é o mesmo que você escolheu para " + emLista(escolhidoPara) + "."
+        );
+      }
+      if (enviadoPara.length) {
+        frases.push(
+          "Atenção: este arquivo é o mesmo que você já enviou para " + emLista(enviadoPara) + "."
+        );
+      }
+      var texto = frases.join(" ");
+      /* Anunciado quando aparece ou muda, pela região viva, sem mover o foco (UX-504). */
+      if (texto && texto !== aviso.textContent) anunciar(texto);
+      aviso.textContent = texto;
+      aviso.hidden = !texto;
+    });
+  }
+
+  function hexadecimal(digest) {
+    return Array.prototype.map
+      .call(new Uint8Array(digest), function (byte) {
+        return ("0" + byte.toString(16)).slice(-2);
+      })
+      .join("");
+  }
+
+  /* No navegador, sem enviar nada (FR-5618): o arquivo, o resumo e o nome não saem daqui. */
+  function calcularResumo(formulario) {
+    var arquivo = arquivoDe(formulario);
+    var sutil = window.crypto && window.crypto.subtle;
+    if (!arquivo || !sutil || !arquivo.arrayBuffer) return;
+    var indice = formularios.indexOf(formulario);
+    arquivo
+      .arrayBuffer()
+      .then(function (bytes) {
+        return sutil.digest("SHA-256", bytes);
+      })
+      .then(
+        function (digest) {
+          /* A escolha mudou enquanto o cálculo corria: o resultado é de um arquivo que já saiu. */
+          if (arquivoDe(formulario) !== arquivo) return;
+          resumos[indice] = { arquivo: arquivo, resumo: hexadecimal(digest) };
+          avisarRepetidos();
+        },
+        function () {
+          /* Sem resumo, sem aviso (FR-5619). */
+        }
+      );
   }
 
   /* O que a área e cada cartão dizem, a cada escolha (FR-5601, FR-5602, FR-5603, UX-501). */
@@ -166,6 +266,7 @@
             : quantos + " documentos escolhidos para enviar."
       );
     }
+    avisarRepetidos();
     return quantos;
   }
 
@@ -367,7 +468,12 @@
     if (limite && limite.classList) limite.classList.add("oculto");
 
     var campo = campoDe(formulario);
-    if (campo) campo.addEventListener("change", rotular);
+    if (campo) {
+      campo.addEventListener("change", function () {
+        rotular();
+        calcularResumo(formulario);
+      });
+    }
 
     var remover = no(formulario, "[data-remover-escolha]");
     if (remover) {

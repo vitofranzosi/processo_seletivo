@@ -5,6 +5,7 @@ e o resultado, e quem não é titular recebe a recusa de inexistente (FR-3577, F
 FR-3600, FR-3612, FR-3613).
 """
 
+import re
 from datetime import timedelta
 from unittest import mock
 
@@ -256,7 +257,14 @@ def test_o_certificado_da_inscricao_aparece_atendido(
     assert "Você já enviou este documento na inscrição, em " in corpo
     assert "Não precisa enviar de novo. A comissão vai conferir." in corpo
     assert "tendid" not in corpo.lower()
-    assert item(convocacao, CERTIFICADO_NA_CONVOCACAO).apresentacoes.count() == 1
+    aproveitado = item(convocacao, CERTIFICADO_NA_CONVOCACAO)
+    assert aproveitado.apresentacoes.count() == 1
+    # O aproveitado também entra na comparação do arquivo repetido (150, FR-5615).
+    resumo = aproveitado.apresentacoes.get().content_hash
+    assert (
+        f'data-resumo-recebido="{resumo}"'
+        in corpo.split(f'id="item-{aproveitado.id}"')[1].split(">")[0]
+    )
 
 
 def test_o_bolsista_baixa_o_modelo_anexo_e_nada_diz_bolsa_concedida(
@@ -793,6 +801,35 @@ class TestAMarcacaoDoLote:
         assert '<p class="oculto" role="status" aria-live="polite" data-anuncio-de-varios></p>' in (
             corpo
         )
+
+    def test_o_cartao_diz_o_resumo_recebido_e_traz_o_aviso_escondido(self, aluno, gestor, client):
+        """US5, contrato §3: o resumo vigente em todo item com apresentação — inclusive o conferido,
+        que não tem formulário —, e o aviso do arquivo repetido, escondido, na descrição do campo
+        (FR-5615, UX-504)."""
+        pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+        entrar_como(client, pessoa)
+        apresentar(pessoa, convocacao, CERTIDAO, corpo=b"certidao")
+        apresentar(pessoa, convocacao, HISTORICO, corpo=b"historico")
+        conferir(gestor, convocacao, HISTORICO, "CONFORME", chave="us5")
+
+        corpo = tela(client, pessoa)
+
+        for requisito in (CERTIDAO, HISTORICO):
+            alvo = item(convocacao, requisito)
+            resumo = alvo.apresentacoes.get().content_hash
+            assert f'id="item-{alvo.id}"' in corpo
+            abertura = corpo.split(f'id="item-{alvo.id}"')[1].split(">")[0]
+            assert f'data-resumo-recebido="{resumo}"' in abertura, requisito
+        sem_envio = item(convocacao, RESIDENCIA)
+        assert (
+            "data-resumo-recebido" not in corpo.split(f'id="item-{sem_envio.id}"')[1].split(">")[0]
+        )
+        cartao = corpo.split(f'id="item-{sem_envio.id}"')[1].split("</li>")[0]
+        assert (
+            f'<span class="arquivo-repetido" id="repetido-{sem_envio.id}" data-arquivo-repetido '
+            "hidden></span>" in cartao
+        )
+        assert re.search(rf'aria-describedby="[^"]* repetido-{sem_envio.id}"', cartao)
 
 
 class TestAVoltaDoLote:

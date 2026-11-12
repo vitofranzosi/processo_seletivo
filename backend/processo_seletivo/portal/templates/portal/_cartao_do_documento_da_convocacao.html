@@ -16,7 +16,7 @@ aponta a situacao do item e o limite do arquivo.
 
 O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584 da 115).
 {% endcomment %}
-<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1" data-documento="{{ item.nome }}"{% if item.tarefa %} data-tarefa{% endif %}>
+<li class="requisito cartao-do-documento{% if item.destaque %} destaque{% endif %}" id="{{ item.ancora }}" tabindex="-1" data-documento="{{ item.nome }}"{% if item.tarefa %} data-tarefa{% endif %}{% if item.lido.vigente %} data-resumo-recebido="{{ item.lido.vigente.content_hash }}"{% endif %}>
   {% comment %}
   O nome e o selo na mesma linha, quando cabem: o estado se lê junto do documento, e o cartão perde
   a linha que o selo sozinho ocupava.
@@ -81,11 +81,13 @@ O motivo da pendencia e o de quem conferiu, sem o nome de quem conferiu (FR-3584
       {% endcomment %}
       <div class="escolher">
         <input type="file" id="arquivo-{{ item.id }}" name="arquivo" accept="application/pdf"
-               aria-describedby="situacao-{{ item.id }}{% if item.envio_recolhido %} efeito-{{ item.id }}{% endif %} ajuda-envio-{{ item.id }}" data-arquivo>
+               aria-describedby="situacao-{{ item.id }}{% if item.envio_recolhido %} efeito-{{ item.id }}{% endif %} ajuda-envio-{{ item.id }} repetido-{{ item.id }}" data-arquivo>
         <label class="botao-arquivo" for="arquivo-{{ item.id }}"><span data-rotulo-escolher>Escolher arquivo PDF</span><span data-rotulo-trocar hidden>Trocar arquivo</span><span class="oculto"> para {{ item.nome }}</span></label>
         <span class="escolha">
           <span class="nome-do-arquivo" data-nome-do-arquivo>Nenhum arquivo escolhido</span>
           <span class="estado-da-escolha" data-estado-da-escolha hidden>Selecionado — ainda não enviado.{% if link_ao_envio %} <a class="ir-ao-envio" href="#envio-dos-documentos">Ir ao botão de envio</a>{% endif %}</span>
+          {% comment %}O mesmo arquivo em outro documento (150, FR-5615, UX-504): `varios.js` compara pelo resumo e escreve aqui; não bloqueia (D-006).{% endcomment %}
+          <span class="arquivo-repetido" id="repetido-{{ item.id }}" data-arquivo-repetido hidden></span>
         </span>
         <button type="button" class="remover-a-escolha" data-remover-escolha hidden>Remover a escolha<span class="oculto">: {{ item.nome }}</span></button>
         <button type="submit" class="acao" data-envio-do-cartao>{% if item.envio_recolhido %}Enviar novo arquivo{% else %}Enviar{% endif %}<span class="oculto">: {{ item.nome }}</span></button>

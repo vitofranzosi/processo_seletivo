@@ -102,3 +102,16 @@ def test_a_conferencia_diz_conforme_ao_exigido():
         "conforme ao exigido pelo edital"
         in visivel(TEMPLATES / "_documento_da_convocacao.html").lower()
     )
+
+
+def test_o_aviso_do_arquivo_repetido_nao_afirma_conferencia():
+    """150, FR-5615, contrato §4: as duas frases do aviso estão no script, e nenhuma diz aceito,
+    aprovado nem conferido — o aviso é de coincidência, e não de juízo sobre o arquivo."""
+    script = (RAIZ / "portal/static/portal/varios.js").read_text(encoding="utf-8")
+    frases = re.findall(r'"(Atenção: este arquivo é o mesmo que você [^"]+)"', script)
+
+    assert frases == [
+        "Atenção: este arquivo é o mesmo que você escolheu para ",
+        "Atenção: este arquivo é o mesmo que você já enviou para ",
+    ]
+    assert not [f for f in frases if re.search(r"aceit|aprovad|conferid", f.lower())]
