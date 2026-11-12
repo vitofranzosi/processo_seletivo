@@ -367,7 +367,7 @@ def test_quem_gere_ve_comissao_e_alocacao_e_quem_nao_gere_nao_ve():
 # ---------------------------------------------------------------------------------------------
 
 FAMILIAS = (
-    "classificação",
+    "Classificação",
     "sorteio",
     "resultado",
     "convocação",
@@ -414,5 +414,7 @@ def test_a_nota_diz_onde_esta_cada_familia_e_nao_conta_atividades():
     # As famílias continuam no detalhe; a página reúne só o que é da comissão da pessoa, e por isso
     # a frase não promete nela o resultado, que é papel da unidade.
     assert trabalho.FORA_DA_FAIXA.endswith("o que é da sua comissão está reunido em")
-    # Uma frase, e não seis linhas (revisão visual de 12/11): nenhum ponto final no meio.
-    assert "." not in trabalho.COBERTURA
+    # Só o que fica fora, numa frase (revisão de 12/11): o que a faixa reúne é dito antes, e a
+    # enumeração não se repete na frase vazia.
+    assert "." not in trabalho.FORA_DA_FAIXA
+    assert "Edital e de Retificação" not in trabalho.FORA_DA_FAIXA

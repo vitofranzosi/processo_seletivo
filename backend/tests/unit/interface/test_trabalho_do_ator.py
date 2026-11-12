@@ -47,7 +47,7 @@ def test_a_faixa_mostra_cinco_e_guarda_o_resto():
 
 
 def test_a_faixa_diz_o_que_nao_cobre():
-    assert "classificação" in trabalho.Faixa([]).cobertura
+    assert "Classificação" in trabalho.Faixa([]).cobertura
     assert "detalhe de cada Edital" in trabalho.Faixa([]).cobertura
 
 

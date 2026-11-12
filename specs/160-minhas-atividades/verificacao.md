@@ -83,9 +83,13 @@ O usuário pediu quatro correções no PR ("Sim, corrigir no #511"):
    "Concluída 100%", a página do avaliador passava de 4500 px. As com avaliação pendente ficam
    abertas; as demais, em `details`, com a contagem. Sem script.
 4. **Menos ruído.** Em "Para fazer agora", a situação só aparece quando não é *Pendente*, e a lista
-   perdeu o fundo de destaque. Na Lista, a nota da faixa virou uma frase só, que nomeia as oito
-   famílias da FR-4324 da `129`, diz que ficam no detalhe de cada Edital e termina no link
-   "Minhas atividades".
+   perdeu o fundo de destaque. Na Lista, a nota da faixa ficou mais curta: `FORA_DA_FAIXA` é uma
+   frase só, que nomeia as oito famílias da FR-4324 da `129`, diz que ficam no detalhe de cada
+   Edital e termina no link "Minhas atividades".
+
+Na segunda passada ("Sim, enxugar"), a constante deixou de repetir o que a faixa reúne: a frase
+vazia já o diz, e a nota com itens volta a dizê-lo na frase dela, como antes da `160`. A enumeração
+aparecia duas vezes no estado vazio, que ocupava cinco linhas a 1280 px.
 
 Depois das correções: `make lint` e `make check` passam; `tests/interface`, `tests/unit/interface`,
 os testes de desempenho da página, do Centro, da faixa, da Lista e da comissão, e os guardiões de

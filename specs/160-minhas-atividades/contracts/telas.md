@@ -89,10 +89,12 @@ O bloco de hoje, sem mudança, depois das três seções (FR-6875).
 
 - Os itens e a contagem da faixa ficam como hoje. Nenhuma contagem de "Minhas atividades" (FR-6880).
 - A nota (`p.cobertura-da-faixa`) e a frase vazia continuam contendo `trabalho.FORA_DA_FAIXA` por
-  inteiro. A constante é **uma frase**: o que a faixa reúne, as oito famílias fora (a FR-4324 da
-  `129`), que ficam no detalhe de cada Edital, e "o que é da sua comissão está reunido em", seguida
-  do link `a.para-minhas-atividades` "Minhas atividades", para `interface:minhas-etapas` (R-010;
-  revisão visual de 12/11).
+  inteiro. A constante é **uma frase, só com o que fica fora**: as oito famílias da FR-4324 da
+  `129`, que ficam no detalhe de cada Edital, e "o que é da sua comissão está reunido em", seguida
+  do link `a.para-minhas-atividades` "Minhas atividades", para `interface:minhas-etapas` (R-010). O
+  que a faixa reúne é dito antes: na nota com itens, "Esta faixa reúne atos de Edital e de
+  Retificação, recursos e avaliações."; na vazia, a frase própria dela. Assim a enumeração não se
+  repete (revisões de 12/11).
 - A Lista não chama a derivação do andamento (FR-6882).
 
 ## A 375 px (UX-714)

@@ -130,7 +130,7 @@ def test_quem_elabora_tem_o_botao_e_o_edital_dele_nao_se_repete(client, seletor_
     assert reverse("interface:compor", args=[segundo.id]) in cartao
     assert "Continuar a elaboração" in cartao
     # A cobertura da faixa, a mesma da Lista (129).
-    assert "não entram aqui" in texto(cartao)
+    assert "no detalhe de cada Edital" in texto(cartao)
 
 
 def test_aguardando_quem_elabora_so_para_quem_gere(client, seletor_ligado, edital):

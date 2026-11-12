@@ -45,21 +45,24 @@ MOSTRADOS = 5
 #: lia a faixa como fila completa e concluía que não havia nada a fazer. A frase vazia lê a mesma
 #: constante (FR-4325), para que as duas nunca nomeiem famílias diferentes.
 #:
-#: **Desde a `160` ela diz onde está cada coisa, numa frase** (FR-6881): as famílias continuam no
+#: **Desde a `160` ela diz onde está cada coisa, numa frase** (FR-6881): as famílias ficam no
 #: detalhe de cada Edital, e o que é da comissão da pessoa está também reunido em "Minhas
 #: atividades". A frase termina em "reunido em" porque o link é do modelo — "Minhas atividades" é o
-#: texto do link —, e a constante continua texto puro, lido inteiro pelas duas frases. O resultado
-#: não é prometido na página: publicar é papel da unidade (D-004 da `160`). Eram seis linhas na
-#: largura de leitura; a revisão visual de 12/11 pediu uma frase.
+#: texto do link, e o ponto final vem depois dele —, e a constante continua texto puro, lido inteiro
+#: pelas duas frases. O resultado não é prometido na página: publicar é papel da unidade (D-004 da
+#: `160`). **Só o que fica fora**: o que a faixa reúne é dito antes, pela nota ou pela frase vazia,
+#: e repeti-lo aqui fazia o leitor receber a mesma enumeração duas vezes (revisão de 12/11).
 FORA_DA_FAIXA = (
-    "Aqui ficam atos de Edital e de Retificação, recursos e avaliações; classificação, sorteio, "
-    "resultado, convocação, documentos e formalização, Requerimento de Matrícula, avisos aos "
-    "candidatos e encerramento não entram aqui: ficam em “O que fazer agora”, no detalhe de cada "
-    "Edital, e o que é da sua comissão está reunido em"
+    "Classificação, sorteio, resultado, convocação, documentos e formalização, Requerimento de "
+    "Matrícula, avisos aos candidatos e encerramento ficam em “O que fazer agora”, no detalhe de "
+    "cada Edital; o que é da sua comissão está reunido em"
 )
 
-#: A nota da faixa com itens (FR-4324): a mesma frase, que diz o que ela reúne e o que fica fora.
-COBERTURA = FORA_DA_FAIXA
+#: A nota da faixa com itens: o que ela reúne, e depois o que fica de fora (FR-4324), como antes da
+#: `160`. A frase vazia já começa dizendo o que a faixa olhou, e acrescenta só `FORA_DA_FAIXA`.
+COBERTURA = (
+    "Esta faixa reúne atos de Edital e de Retificação, recursos e avaliações. " + FORA_DA_FAIXA
+)
 
 
 @dataclass(frozen=True)
