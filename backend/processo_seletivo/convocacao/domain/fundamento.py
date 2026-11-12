@@ -48,45 +48,10 @@ def do_nao_atendimento(*, edital, recorte):
     return NAO_ATENDIMENTO.format(edital=edital, recorte=recorte)
 
 
-def da_destinacao(destinacoes):
-    """A citação da destinação que a apuração considerou, ou vazio (155, FR-6340).
-
-    `destinacoes` é `[(quantidade, lista, data)]`, com a lista por extenso e a data já formatada. A
-    frase diz o que a apuração registra — a vaga que saiu da reserva e passou à ampla —, e não que
-    esta pessoa ocupa aquela vaga e não outra: a apuração não distingue uma vaga da outra.
-    """
-    if not destinacoes:
-        return ""
-    itens = "; ".join(
-        f"{quantidade} {'vaga' if quantidade == 1 else 'vagas'} da lista «{lista}» "
-        f"{'destinada' if quantidade == 1 else 'destinadas'} à ampla concorrência em {data}"
-        for quantidade, lista, data in destinacoes
-    )
-    return f"As vagas que a apuração registra neste recorte incluem a destinação de {itens}."
-
-
-def com_destinacao(texto, citacao):
-    """O texto e a citação da destinação, uma vez só (155, FR-6340).
-
-    **Idempotente**: o gesto dos titulares grava o fundamento que a prévia já compôs com a citação,
-    e o comando a acrescenta de novo para o caminho que chega com o fundamento digitado.
-    """
-    if not citacao or citacao in (texto or ""):
-        return texto
-    return f"{texto} {citacao}" if texto else citacao
-
-
 def com_complemento(texto, complemento):
     """O texto derivado, e o complemento depois dele — nunca no lugar dele."""
     extra = (complemento or "").strip()
     return f"{texto} Complemento: {extra}" if extra else texto
 
 
-__all__ = [
-    "NAO_ATENDIMENTO",
-    "com_complemento",
-    "com_destinacao",
-    "da_convocacao",
-    "da_destinacao",
-    "do_nao_atendimento",
-]
+__all__ = ["NAO_ATENDIMENTO", "com_complemento", "da_convocacao", "do_nao_atendimento"]

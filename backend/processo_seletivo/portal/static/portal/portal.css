@@ -1104,18 +1104,6 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
 .publicacao-de-convocados .meta{flex-basis:100%;margin:0;color:var(--texto-fraco);font-size:.875rem}
 .vagas-da-publicacao{flex:1 1 12rem;font-size:.9375rem;overflow-wrap:anywhere}
 .documento-da-publicacao{font-size:.9375rem;white-space:nowrap}
-/* A destinação das vagas (155, FR-6337). Um cartão por ato, a frase primeiro e os quatro dados
-   abaixo, em pares que quebram no celular: o fundamento é texto corrido e pode ser longo, e por isso
-   o par não é tabela. */
-.destinacao-das-vagas{margin:0 0 1.5rem}
-.atos-de-destinacao{list-style:none;margin:0;padding:0;display:grid;gap:.6rem;max-width:var(--leitura)}
-.ato-de-destinacao{padding:.6rem .8rem;background:var(--branco);border:1px solid var(--borda);
-  border-radius:6px}
-.frase-da-destinacao{margin:0 0 .35rem;font-weight:600}
-.dados-da-destinacao{display:grid;grid-template-columns:max-content 1fr;gap:.1rem .75rem;margin:0;
-  font-size:.9375rem}
-.dados-da-destinacao dt{color:var(--texto-fraco)}
-.dados-da-destinacao dd{margin:0;overflow-wrap:anywhere}
 .acoes-da-publicacao{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:baseline;margin:.5rem 0 1rem}
 .acoes-da-publicacao .documento{margin-top:0}
 .orientacao-dos-convocados{max-width:var(--leitura);margin:0 0 1.5rem;padding:.75rem 1rem;

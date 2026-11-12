@@ -44,8 +44,8 @@ def consultas(processo):
 #
 # 151 e 148 desde a `155` (FR-6326): a declaração de vaga não preenchida acrescentou uma terceira
 # porta à obsolescência da apuração, e as três — efeito, acréscimo e declaração — passaram a ser
-# perguntadas numa consulta só por recorte, em vez de três. Os dois recortes apurados do cenário
-# custavam seis e passaram a custar dois.
+# perguntadas numa consulta só por recorte, em vez de uma por porta. Os dois recortes apurados do
+# cenário custavam quatro e passaram a custar dois.
 ORCAMENTO_DE_UM = 151
 POR_EDITAL = 148
 

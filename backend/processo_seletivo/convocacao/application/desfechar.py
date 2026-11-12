@@ -273,9 +273,7 @@ def apuracao_seguinte(ctx, convocacao, *, actor, quantos, correlation_id):
       retificado ou movimento de vaga é um fato que alguém precisa ver na ocupação, e não algo que o
       desfecho deva varrer para baixo do tapete (`FR-884`);
     - **sem mover vaga**: se a conta cederia vaga pela reversão, nada é gravado, e a emissão com o
-      movimento continua sendo ato de quem está na tela da ocupação (`FR-885`, `FR-270`). Desde a
-      `155`, isso só acontece sob a reversão por saldo: por esgotamento a emissão não move vaga, e
-      a destinação é ato próprio na ocupação (155, FR-6315);
+      movimento continua sendo ato de quem está na tela da ocupação (`FR-885`, `FR-270`);
     - **num *savepoint***: a recusa da emissão não desfaz o desfecho. O desfecho é decisão sobre uma
       pessoa, e uma conta que não fecha não pode impedi-lo — ela fica obsoleta, como antes.
 
@@ -320,8 +318,6 @@ def apuracao_seguinte(ctx, convocacao, *, actor, quantos, correlation_id):
     except DomainError as recusa:
         return _pendente(recusa.code, recusa.detail)
     if declarado is None:
-        # Só sob a reversão por saldo (155, R-010): por esgotamento a sucessora nunca move vaga, e
-        # a vaga sem quem a ocupe aparece na ocupação como destinação a praticar.
         return _pendente(
             nomes.MOVERIA_VAGA,
             "A apuração seguinte moveria vaga deste recorte para a ampla concorrência, pela "

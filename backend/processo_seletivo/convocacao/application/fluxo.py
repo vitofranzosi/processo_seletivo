@@ -245,16 +245,11 @@ def previa_dos_titulares(*, edital, perfil_id, marco_id, lista_id=None, at=None,
             else None
         ),
         "fundamento": (
-            # A citação da vaga destinada entra na prévia (155, FR-6340): o texto gravado é o que
-            # a prévia mostrou, e o comando não a repete.
-            fundamento.com_destinacao(
-                fundamento.da_convocacao(
-                    especie=nomes.VAGA_INICIAL,
-                    edital=texto_do_edital,
-                    recorte=texto_do_recorte,
-                    data_da_apuracao=_data(apuracao.emitida_em),
-                ),
-                selectors.destinacao_citada(apuracao, versao, perfil_id=perfil_id),
+            fundamento.da_convocacao(
+                especie=nomes.VAGA_INICIAL,
+                edital=texto_do_edital,
+                recorte=texto_do_recorte,
+                data_da_apuracao=_data(apuracao.emitida_em),
             )
             if apuracao is not None
             else ""
@@ -741,16 +736,12 @@ def fundamentos_por_especie(*, edital, perfil_id, lista_id, apuracao, at=None):
     texto_do_edital, texto_do_recorte = rotulos(
         edital, versao, perfil_id=perfil_id, lista_id=lista_id
     )
-    destinacao = selectors.destinacao_citada(apuracao, versao, perfil_id=perfil_id)
     return {
-        especie: fundamento.com_destinacao(
-            fundamento.da_convocacao(
-                especie=especie,
-                edital=texto_do_edital,
-                recorte=texto_do_recorte,
-                data_da_apuracao=_data(apuracao.emitida_em),
-            ),
-            destinacao,
+        especie: fundamento.da_convocacao(
+            especie=especie,
+            edital=texto_do_edital,
+            recorte=texto_do_recorte,
+            data_da_apuracao=_data(apuracao.emitida_em),
         )
         for especie in nomes.ESPECIES_DE_CONVOCACAO
     }
@@ -805,16 +796,12 @@ def convocar_e_comunicar(
     )
 
     def derivar(especie_derivada, apuracao):
-        # A citação antes do complemento, como a tela a mostra (155, FR-6340).
         return fundamento.com_complemento(
-            fundamento.com_destinacao(
-                fundamento.da_convocacao(
-                    especie=especie_derivada,
-                    edital=texto_do_edital,
-                    recorte=texto_do_recorte,
-                    data_da_apuracao=_data(apuracao.emitida_em),
-                ),
-                selectors.destinacao_citada(apuracao, versao, perfil_id=identificador(perfil_id)),
+            fundamento.da_convocacao(
+                especie=especie_derivada,
+                edital=texto_do_edital,
+                recorte=texto_do_recorte,
+                data_da_apuracao=_data(apuracao.emitida_em),
             ),
             complemento,
         )
