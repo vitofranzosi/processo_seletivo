@@ -41,8 +41,13 @@ def consultas(processo):
 #
 # 153 e 150 desde a `153` (FR-6128): as oito consultas da passagem ao setor, por Edital, que vêm do
 # relatório da `099` como as demais.
-ORCAMENTO_DE_UM = 153
-POR_EDITAL = 150
+#
+# 151 e 148 desde a `155` (FR-6326): a declaração de vaga não preenchida acrescentou uma terceira
+# porta à obsolescência da apuração, e as três — efeito, acréscimo e declaração — passaram a ser
+# perguntadas numa consulta só por recorte, em vez de três. Os dois recortes apurados do cenário
+# custavam seis e passaram a custar dois.
+ORCAMENTO_DE_UM = 151
+POR_EDITAL = 148
 
 
 @pytest.mark.parametrize("escala", [1, 10])

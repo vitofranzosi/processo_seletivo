@@ -529,6 +529,19 @@ def _destino_seguro(request, padrao):
     return padrao
 
 
+def _destinacao_das_vagas(edital):
+    """As três mais recentes à vista e as anteriores recolhidas — a forma das convocações (149).
+
+    `None` sem ato nenhum, e a seção não aparece.
+    """
+    from processo_seletivo.ocupacao.application.selectors import destinacoes_publicas
+
+    itens = list(reversed(destinacoes_publicas(edital)))
+    if not itens:
+        return None
+    return {"recentes": itens[:3], "anteriores": itens[3:]}
+
+
 def selecao(request, edital_id, *, assistente=True):
     """O detalhe de uma seleção, orientado à decisão de participar.
 
@@ -600,6 +613,10 @@ def selecao(request, edital_id, *, assistente=True):
     from processo_seletivo.convocacao.application.publicacoes import publicacoes_da_selecao
 
     contexto["convocacoes_publicadas"] = publicacoes_da_selecao(versao.edital_id)
+    # **Para onde foi a vaga reservada sem quem a ocupe** (155, FR-6337, D-013): logo depois das
+    # convocações, porque é a pergunta de quem procura a vaga que não foi chamada. Sem ato, a
+    # seção não aparece. Custo fixo, e nenhum nome nem protocolo.
+    contexto["destinacao_das_vagas"] = _destinacao_das_vagas(versao.edital)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
     # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
     # está carregada (RC-121) — e é a mesma função que a vitrine chama (072, FR-1635).

@@ -29,6 +29,12 @@ pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 # 128 desde a `153` (FR-6127): a passagem ao setor lê a definição, as pessoas aptas pelo seletor da
 # `117`, as exportações, os vínculos do papel e as designações — oito consultas, que não crescem com
 # as inscrições nem com as pessoas aptas.
+#
+# 128 continua desde a `155`, por duas mudanças que se compensam: a obsolescência da apuração
+# pergunta pelas três portas — efeito, acréscimo e a declaração de vaga não preenchida, que a `155`
+# acrescentou — numa consulta só por recorte (−4 nos dois recortes do cenário), e a seção
+# "Destinação das vagas" (FR-6338) lê os movimentos e as declarações do Edital (+2, e uma terceira
+# para as versões só quando há ato).
 ORCAMENTO = 128
 
 

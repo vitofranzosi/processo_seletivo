@@ -6,7 +6,7 @@ mesmo desenho de `classificacao/application/corte.py`, e as causas vêm **nomead
 "divergências": a `018` já pagou esse preço.
 """
 
-from django.db.models import Q
+from django.db.models import CharField, Q, Value
 
 from processo_seletivo.classificacao.application.corte import (
     admite_continuacao,
@@ -230,7 +230,12 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 "descricao": "Um movimento de vaga alcançou este recorte depois desta apuração.",
             }
         )
-    if _efeito_posterior(apuracao):
+    # **Uma consulta para as três portas** (155, FR-6326): o efeito, o acréscimo e a declaração de
+    # vaga não preenchida eram três `EXISTS` por recorte, e a terceira, que a `155` acrescentou,
+    # fazia o relatório do Edital e a confirmação do encerramento pagarem uma consulta a mais por
+    # lista. A pergunta continua respondida no banco, e não em Python.
+    posteriores = _registros_posteriores(apuracao)
+    if EFEITO in posteriores:
         causas.append(
             {
                 "causa": nomes.CAUSA_EFEITO_POSTERIOR,
@@ -244,7 +249,7 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 ),
             }
         )
-    if _acrescimo_posterior(apuracao):
+    if ACRESCIMO in posteriores:
         causas.append(
             {
                 "causa": nomes.CAUSA_ACRESCIMO_POSTERIOR,
@@ -254,7 +259,7 @@ def causas_de_obsolescencia(apuracao, *, at=None):
                 ),
             }
         )
-    if _declaracao_posterior(apuracao):
+    if DECLARACAO in posteriores:
         causas.append(
             {
                 "causa": nomes.CAUSA_DECLARACAO_POSTERIOR,
@@ -364,6 +369,25 @@ def _movimentos_lidos_por_apuracao(apuracao):
         return []
     encontrados = {str(m.id): m for m in MovimentoDeVaga.objects.filter(id__in=ids)}
     return [encontrados[str(i)] for i in ids if str(i) in encontrados]
+
+
+def destinacoes_lidas_por(apuracao):
+    """As destinações que **aquela** apuração congelou como recebidas, sem as que ela leu desfeitas.
+
+    É o que a chamada de quem ocupa a vaga destinada cita no fundamento (155, FR-6340): a vaga que a
+    apuração da ampla registra inclui a que saiu da reserva, e só a apuração sabe disso. Lidas pelos
+    ids de `movimentosLidos`, como `movimentos_lidos_por` — a de hoje relida amanhã cita o mesmo. O
+    movimento anterior à `155` conta igual (FR-6316). Nenhuma consulta sem movimento lido.
+    """
+    lidos = _movimentos_lidos_por_apuracao(apuracao)
+    desfeitos = {m.desfaz_id for m in lidos if m.especie == nomes.MOVIMENTO_DESFAZIMENTO}
+    return [
+        m
+        for m in lidos
+        if m.especie == nomes.MOVIMENTO_REVERSAO
+        and calculo.mesma_lista(m.destino_lista_id, apuracao.lista_id)
+        and m.id not in desfeitos
+    ]
 
 
 def historico_do_recorte(*, edital, marco_id, lista_id=None, perfil_id=None):
@@ -549,8 +573,11 @@ def _quantidade(linha):
     return quantidade if isinstance(quantidade, int) and not isinstance(quantidade, bool) else 0
 
 
-def do_recorte(*, edital, perfil, marco):
+def do_recorte(*, edital, perfil=None, marco=None):
     """O filtro dos movimentos de um Perfil e marco, pelos **dois** caminhos (155, R-001).
+
+    Sem Perfil e marco, o do Edital inteiro — a leitura pública da destinação (155, FR-6337), que
+    pergunta pelos mesmos dois caminhos e não podia ter um filtro só dela.
 
     O movimento anterior à `155` só tem o recorte pela apuração que o gravou; o novo tem o recorte
     próprio, e pode não ter apuração — a lista de sorteio sem relação (R-007). Perguntar só por
@@ -558,8 +585,10 @@ def do_recorte(*, edital, perfil, marco):
     ampla. Um lugar só, e a varredura de `test_leitura_do_movimento_sem_apuracao.py` prende que
     nenhuma leitura por `apuracao__edital` fica sem a outra metade.
     """
-    return Q(apuracao__edital=edital, apuracao__perfil_id=perfil, apuracao__marco_id=marco) | Q(
-        edital=edital, perfil_id=perfil, marco_id=marco
+    pela = {"apuracao__edital": edital, "apuracao__perfil_id": perfil, "apuracao__marco_id": marco}
+    propria = {"edital": edital, "perfil_id": perfil, "marco_id": marco}
+    return Q(**{k: v for k, v in pela.items() if v is not None}) | Q(
+        **{k: v for k, v in propria.items() if v is not None}
     )
 
 
@@ -677,76 +706,256 @@ def ocupantes_da_ampla(*, edital, perfil_id, marco_id, versao):
     )
 
 
-def _acrescimo_posterior(apuracao):
-    """Vaga acrescida ou desfeita no recorte, e que a apuração não leu (097, `FR-2453`).
+EFEITO = "efeito"
+ACRESCIMO = "acrescimo"
+DECLARACAO = "declaracao"
 
-    **Por id congelado, e não por instante**, pela razão de `_efeito_posterior`: o ato do acréscimo
-    grava o registro e emite a apuração no mesmo `now`. E respondida no banco, pela mesma razão
-    também — esta função corre uma vez por recorte na tela da ocupação.
+
+def _registros_posteriores(apuracao):
+    """Quais das três portas têm registro no recorte que a apuração não leu: `{EFEITO, ...}`.
+
+    **Por id congelado, e não por instante** — a disciplina de `_movimento_posterior`, e pela mesma
+    razão: o ato grava o registro e emite a apuração no mesmo `now`, e o próprio registro pareceria
+    posterior a ela. Apuração anterior à chave (`efeitosLidos` antes da `019`, `acrescimosLidos`
+    antes da `097`, `naoPreenchidasLidas` antes da `155`) leu nenhum, e qualquer registro do recorte
+    a torna obsoleta: ele é mesmo posterior a ela.
+
+    **Uma consulta, e no banco** (155, FR-6326). A versão de antes fazia três `EXISTS`, e esta
+    função corre uma vez por lista de concorrência em `recortes_do_marco`, na tela que tem teto de
+    3 s com 1.000 participantes (`SC-090`). Trazer as linhas para descartar tudo menos um booleano
+    faria o custo crescer com o número de desfechos. O `UNION` sem `ALL` devolve no máximo três
+    linhas, uma por porta, por mais registros que o recorte acumule — e não precisa de `LIMIT` nas
+    partes, que o SQLite recusaria num `UNION`.
     """
-    lidos = [str(i) for i in (apuracao.universo or {}).get("acrescimosLidos") or []]
-    return (
-        AcrescimoDeVagas.objects.filter(
-            edital=apuracao.edital_id,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
+    from processo_seletivo.ocupacao.models import EfeitoDeOcupacao
+
+    universo = apuracao.universo or {}
+    recorte = {
+        "edital": apuracao.edital_id,
+        "perfil_id": apuracao.perfil_id,
+        "marco_id": apuracao.marco_id,
+        "lista_id": apuracao.lista_id,
+    }
+
+    def porta(modelo, chave, nome):
+        lidos = [str(i) for i in universo.get(chave) or []]
+        return (
+            modelo.objects.filter(**recorte)
+            .exclude(id__in=lidos)
+            .order_by()
+            .annotate(porta=Value(nome, output_field=CharField()))
+            .values_list("porta", flat=True)
         )
-        .exclude(id__in=lidos)
-        .exists()
-    )
 
-
-def _declaracao_posterior(apuracao):
-    """Vaga declarada não preenchida, ou desfeita, no recorte, e que a apuração não leu (155).
-
-    **Por id congelado, e não por instante**, e respondida no banco — a disciplina de
-    `_acrescimo_posterior`, pela mesma razão. Apuração anterior à `155` não tem
-    `naoPreenchidasLidas`, e só a declaração no recorte a torna obsoleta: antes dela não havia
-    nenhuma.
-    """
-    lidos = [str(i) for i in (apuracao.universo or {}).get("naoPreenchidasLidas") or []]
-    return (
-        VagaNaoPreenchida.objects.filter(
-            edital=apuracao.edital_id,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
+    return set(
+        porta(EfeitoDeOcupacao, "efeitosLidos", EFEITO).union(
+            porta(AcrescimoDeVagas, "acrescimosLidos", ACRESCIMO),
+            porta(VagaNaoPreenchida, "naoPreenchidasLidas", DECLARACAO),
         )
-        .exclude(id__in=lidos)
-        .exists()
     )
 
 
 def _efeito_posterior(apuracao):
-    """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu.
+    """Efeito de ocupação que alcança o recorte e não estava entre os que a apuração leu (019)."""
+    return EFEITO in _registros_posteriores(apuracao)
 
-    **A comparação é por id congelado, e não por instante** — a mesma disciplina de
-    `_movimento_posterior`, e pela mesma razão: um efeito gravado na mesma transação da apuração
-    pareceria posterior a ela mesma se o critério fosse o relógio.
 
-    Apuração emitida antes desta feature não tem `efeitosLidos` no universo, e qualquer efeito do
-    recorte a torna obsoleta. Está certo: aquele efeito é mesmo posterior a ela.
+def _acrescimo_posterior(apuracao):
+    """Vaga acrescida ou desfeita no recorte, e que a apuração não leu (097, `FR-2453`)."""
+    return ACRESCIMO in _registros_posteriores(apuracao)
 
-    **A pergunta é respondida no banco, e não em Python.** A versão anterior trazia todas as linhas
-    de efeito do recorte para descartar tudo menos um booleano — e esta função corre uma vez por
-    lista de concorrência em `recortes_do_marco`, na tela que tem teto de 3 s com 1.000
-    participantes (`SC-090`). Num certame longo o recorte acumula um efeito por desfecho, e o custo
-    de abrir a tela cresceria com o número de desistências.
+
+def _declaracao_posterior(apuracao):
+    """Vaga declarada não preenchida, ou desfeita, no recorte, e que a apuração não leu (155)."""
+    return DECLARACAO in _registros_posteriores(apuracao)
+
+
+# --- A destinação, como o público a lê (155, US7) ---------------------------------------------
+
+DESTINACAO = "destinacao"
+DESFAZIMENTO_DA_DESTINACAO = "desfazimento_da_destinacao"
+NAO_PREENCHIDA = "nao_preenchida"
+DESFAZIMENTO_DA_NAO_PREENCHIDA = "desfazimento_da_nao_preenchida"
+DESTINO_AMPLA = "ampla concorrência"
+DESTINO_NAO_PREENCHIDA = "não preenchida"
+
+
+def destinacoes_publicas(edital):
+    """Cada destinação e cada declaração de vaga não preenchida do Edital, e os desfazimentos.
+
+    Na ordem do registro, e cada uma como dicionário: `especie`, `perfil`, `origem`, `destino`,
+    `quantidade`, `fundamento`, `data`, `frase` e `desfaz` — o item que o desfazimento desfaz, que
+    vem antes dele na mesma lista (155, FR-6337, FR-6338).
+
+    **Nenhum nome nem protocolo** (FR-6337): nada aqui lê inscrição, e o que se devolve é o recorte,
+    a quantidade e o ato. **Os nomes são os da versão que o ato leu**, e não os de hoje: uma
+    Retificação que renomeasse a lista não reescreve o que o ato disse ter destinado.
+
+    **O movimento anterior à `155` entra também** (FR-6316): ele conta como destinação feita, e
+    quem lê a página quer saber para onde a vaga foi, e não por qual caminho do sistema. O recorte
+    dele mora na apuração, e a frase do fundamento sai da versão que ela leu.
+
+    **Custo fixo** (FR-6337): duas consultas, e uma terceira para as versões só quando há o que
+    dizer — a página pública e o relatório não crescem com o número de atos.
     """
-    from processo_seletivo.ocupacao.models import EfeitoDeOcupacao
+    from processo_seletivo.publicacoes.models import VersaoConsolidada
 
-    lidos = [str(i) for i in (apuracao.universo or {}).get("efeitosLidos") or []]
-    return (
-        EfeitoDeOcupacao.objects.filter(
-            edital=apuracao.edital_id,
-            perfil_id=apuracao.perfil_id,
-            marco_id=apuracao.marco_id,
-            lista_id=apuracao.lista_id,
-        )
-        .exclude(id__in=lidos)
-        .exists()
+    # A apuração vem junto, sem o universo: é dela o recorte e a versão do movimento antigo.
+    movimentos = list(
+        MovimentoDeVaga.objects.filter(do_recorte(edital=edital))
+        .select_related("apuracao")
+        .defer("apuracao__universo")
+        .order_by("registrado_em", "id")
     )
+    for movimento in movimentos:
+        lida = movimento.apuracao
+        movimento.perfil_lido = movimento.perfil_id or getattr(lida, "perfil_id", None)
+        movimento.versao_lida = movimento.versao_id or getattr(lida, "versao_id", None)
+    declaracoes = list(
+        VagaNaoPreenchida.objects.filter(edital=edital).order_by("registrado_em", "id")
+    )
+    if not movimentos and not declaracoes:
+        return []
+    versoes = {
+        v.id: v
+        for v in VersaoConsolidada.objects.filter(
+            id__in={m.versao_lida for m in movimentos} | {d.versao_id for d in declaracoes}
+        ).select_related("source_publication")
+    }
+    itens = {}
+    for movimento in movimentos:
+        itens[("m", movimento.id)] = _destinacao_publica(
+            movimento, versoes.get(movimento.versao_lida), itens
+        )
+    for declaracao in declaracoes:
+        itens[("d", declaracao.id)] = _nao_preenchida_publica(
+            declaracao, versoes.get(declaracao.versao_id), itens
+        )
+    return sorted(itens.values(), key=lambda item: (item["data"], item["id"]))
+
+
+def _destinacao_publica(movimento, versao, anteriores):
+    from processo_seletivo.ocupacao.application.destinacao import frase_publicada
+    from processo_seletivo.ocupacao.domain import reversao
+
+    conteudo = getattr(versao, "content", None) or {}
+    perfil = _perfil_publicado(conteudo, movimento.perfil_lido)
+    origem = _lista_publicada(perfil, movimento.origem_lista_id)
+    destino = _lista_publicada(perfil, movimento.destino_lista_id)
+    quantidade = movimento.quantidade
+    item = {
+        "id": str(movimento.id),
+        "perfil": perfil.get("name") or perfil.get("code") or "",
+        "origem": origem,
+        "destino": destino,
+        "quantidade": quantidade,
+        "data": movimento.registrado_em,
+        "desfaz": None,
+    }
+    if movimento.especie == nomes.MOVIMENTO_DESFAZIMENTO:
+        desfeito = anteriores.get(("m", movimento.desfaz_id))
+        # O motivo escrito de quem desfez (FR-6338): é o fundamento do ato contrário.
+        return {
+            **item,
+            "especie": DESFAZIMENTO_DA_DESTINACAO,
+            "fundamento": movimento.fundamento or movimento.causa,
+            "desfaz": desfeito,
+            "frase": (
+                f"A destinação de {_dia(desfeito['data'] if desfeito else None)} foi desfeita em "
+                f"{_dia(movimento.registrado_em)}: {_vagas(quantidade)} "
+                f"{'voltou' if quantidade == 1 else 'voltaram'} da {origem} à lista "
+                f"«{destino}» do Perfil «{item['perfil']}»."
+            ),
+        }
+    # **A frase que o Edital publicou** (FR-6309): o gatilho que o ato gravou, ou, no movimento
+    # anterior à `155`, a declaração da versão que a apuração leu.
+    gatilho = movimento.gatilho or reversao.declarada(perfil)
+    return {
+        **item,
+        "especie": DESTINACAO,
+        "fundamento": frase_publicada(versao, gatilho) or movimento.fundamento or movimento.causa,
+        "frase": (
+            f"{_vagas(quantidade)} {'reservada' if quantidade == 1 else 'reservadas'} à lista "
+            f"«{origem}» do Perfil «{item['perfil']}» "
+            f"{'foi destinada' if quantidade == 1 else 'foram destinadas'} à {destino} em "
+            f"{_dia(movimento.registrado_em)}."
+        ),
+    }
+
+
+def _nao_preenchida_publica(declaracao, versao, anteriores):
+    conteudo = getattr(versao, "content", None) or {}
+    perfil = _perfil_publicado(conteudo, declaracao.perfil_id)
+    lista = _lista_publicada(perfil, declaracao.lista_id)
+    da_lista = f"da {lista}" if declaracao.lista_id is None else f"da lista «{lista}»"
+    nome_do_perfil = perfil.get("name") or perfil.get("code") or ""
+    quantidade = declaracao.quantidade
+    item = {
+        "id": str(declaracao.id),
+        "perfil": nome_do_perfil,
+        "origem": lista,
+        "destino": DESTINO_NAO_PREENCHIDA,
+        "quantidade": quantidade,
+        # Escrito e obrigatório (FR-6323): o porquê da declaração, ou o motivo do desfazimento.
+        "fundamento": declaracao.fundamento,
+        "data": declaracao.registrado_em,
+        "desfaz": None,
+    }
+    if declaracao.especie == nomes.NAO_PREENCHIDA_DESFAZIMENTO:
+        desfeita = anteriores.get(("d", declaracao.desfaz_id))
+        return {
+            **item,
+            "especie": DESFAZIMENTO_DA_NAO_PREENCHIDA,
+            "desfaz": desfeita,
+            "frase": (
+                "A declaração de vaga não preenchida de "
+                f"{_dia(desfeita['data'] if desfeita else None)} foi desfeita em "
+                f"{_dia(declaracao.registrado_em)}: {_vagas(quantidade)} {da_lista} do Perfil "
+                f"«{nome_do_perfil}» "
+                f"{'volta' if quantidade == 1 else 'voltam'} a estar entre as vagas a ocupar."
+            ),
+        }
+    return {
+        **item,
+        "especie": NAO_PREENCHIDA,
+        "frase": (
+            f"{_vagas(quantidade)} {da_lista} do Perfil «{nome_do_perfil}» "
+            f"{'foi declarada' if quantidade == 1 else 'foram declaradas'} "
+            f"{'não preenchida' if quantidade == 1 else 'não preenchidas'} em "
+            f"{_dia(declaracao.registrado_em)}."
+        ),
+    }
+
+
+def _perfil_publicado(conteudo, perfil_id):
+    alvo = str(perfil_id)
+    return next(
+        (p for p in conteudo.get("profiles") or [] if str(p.get("id")) == alvo),
+        {},
+    )
+
+
+def _lista_publicada(perfil, lista_id):
+    """O nome da lista como o Edital a publicou, com o código; a linha geral é a ampla."""
+    if lista_id is None:
+        return DESTINO_AMPLA
+    alvo = str(lista_id)
+    for modalidade in perfil.get("competitionModalities") or []:
+        if str(modalidade.get("id")) == alvo:
+            nome = modalidade.get("name") or "lista reservada"
+            codigo = modalidade.get("code")
+            return f"{nome} ({codigo})" if codigo else nome
+    return "lista reservada"
+
+
+def _vagas(quantidade):
+    return f"{quantidade} vaga" if quantidade == 1 else f"{quantidade} vagas"
+
+
+def _dia(instante):
+    from processo_seletivo.shared.tempo import ZONA
+
+    return instante.astimezone(ZONA).strftime("%d/%m/%Y") if instante else "data não registrada"
 
 
 __all__ = [
@@ -757,6 +966,8 @@ __all__ = [
     "recortes_do_marco",
     "causas_de_obsolescencia",
     "dentro_da_faixa",
+    "destinacoes_lidas_por",
+    "destinacoes_publicas",
     "progrediram_em_ordem",
     "habilitadas_na_etapa",
     "habilitadas_pelo_corte",

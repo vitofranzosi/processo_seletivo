@@ -469,6 +469,32 @@ def comunicacao_da_linha(convocacao, forma_do_recorte):
     }
 
 
+def destinacao_citada(apuracao, versao, *, perfil_id):
+    """A frase que cita a destinação que a apuração considerou, ou vazio (155, FR-6340).
+
+    A lista sai pelo nome da versão vigente — a que a chamada cita —, e a data é a do ato que moveu
+    a vaga. Uma consulta, e só quando a apuração leu movimento.
+    """
+    from processo_seletivo.convocacao.domain import fundamento
+    from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
+
+    if apuracao is None:
+        return ""
+    conteudo = getattr(versao, "content", None) or {}
+    return fundamento.da_destinacao(
+        [
+            (
+                movimento.quantidade,
+                rotulo_do_recorte(
+                    conteudo, perfil_id=perfil_id, lista_id=movimento.origem_lista_id
+                ),
+                timezone.localtime(movimento.registrado_em).strftime("%d/%m/%Y"),
+            )
+            for movimento in ocupacao_selectors.destinacoes_lidas_por(apuracao)
+        ]
+    )
+
+
 def identidades_de(inscricoes):
     """`{id: {"id", "protocolo", "nome"}}` — o que a tela mostra no lugar do identificador.
 

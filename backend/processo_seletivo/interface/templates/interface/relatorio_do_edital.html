@@ -102,6 +102,44 @@ dita como traço e motivo, e nunca como zero.
 {% if perfis|length > 1 %}<p class="nota">Os totais contam inscrições: quem se inscreve em mais de um perfil conta uma vez em cada um.</p>{% endif %}
 </section>
 
+{% comment %}
+**A destinação das vagas** (155, FR-6338): os mesmos dados da página pública da seleção — origem,
+destino, quantidade e fundamento —, e o desfazimento citando o que desfaz. Só na página: o PDF do
+relatório não muda (FR-6339).
+{% endcomment %}
+{% if relatorio.destinacoes %}
+<section class="secao-do-relatorio" aria-labelledby="titulo-destinacao">
+<h2 id="titulo-destinacao">Destinação das vagas</h2>
+<div class="tabela-rolavel">
+<table class="tabela">
+  <caption class="oculto">Destinações à ampla concorrência, declarações de vaga não preenchida e os desfazimentos, na ordem do registro</caption>
+  <thead>
+    <tr>
+      <th scope="col">Data</th>
+      <th scope="col">Perfil de vaga</th>
+      <th scope="col">De</th>
+      <th scope="col">Para</th>
+      <th scope="col" class="numero">Quantidade</th>
+      <th scope="col">Fundamento</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in relatorio.destinacoes %}
+    <tr>
+      <td>{{ item.data|date:"d/m/Y" }}</td>
+      <td>{{ item.perfil }}</td>
+      <td>{{ item.origem }}</td>
+      <td>{{ item.destino }}{% if item.desfaz %}<span class="detalhe">desfaz o registro de {{ item.desfaz.data|date:"d/m/Y" }}</span>{% endif %}</td>
+      <td class="numero">{{ item.quantidade }}</td>
+      <td>{{ item.fundamento }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+</section>
+{% endif %}
+
 {% if semanas %}
 <section class="secao-do-relatorio" aria-labelledby="titulo-procura">
 <h2 id="titulo-procura">Procura</h2>

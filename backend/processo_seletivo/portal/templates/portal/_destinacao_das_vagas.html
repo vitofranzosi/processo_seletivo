@@ -1,0 +1,22 @@
+{% comment %}
+**Para onde foi a vaga** (155, FR-6337, D-013). Cada destinação à ampla concorrência e cada
+declaração de vaga não preenchida, com a origem, o destino, a quantidade e o fundamento; o
+desfazimento aparece como ato próprio, citando o que desfaz, e o ato desfeito continua à vista — nada
+se apaga. As três mais recentes à vista e as anteriores recolhidas, como as convocações. Nenhum nome
+nem protocolo: o que se diz é a vaga, e não quem concorria a ela.
+{% endcomment %}
+<section class="destinacao-das-vagas" aria-labelledby="destinacao-titulo">
+  <h2 id="destinacao-titulo">Destinação das vagas</h2>
+  <p class="orientacao-da-secao">Quando uma lista reservada fica sem quem possa ocupar as vagas dela, a comissão registra, conforme o Edital, se elas passam à ampla concorrência ou ficam não preenchidas.</p>
+  <ul class="atos-de-destinacao">
+    {% for item in destinacao_das_vagas.recentes %}{% include "portal/_ato_de_destinacao.html" %}{% endfor %}
+  </ul>
+  {% if destinacao_das_vagas.anteriores %}
+  <details class="publicacoes-anteriores">
+    <summary>Registros anteriores ({{ destinacao_das_vagas.anteriores|length }})</summary>
+    <ul class="atos-de-destinacao">
+      {% for item in destinacao_das_vagas.anteriores %}{% include "portal/_ato_de_destinacao.html" %}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>

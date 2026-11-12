@@ -53,7 +53,7 @@ from processo_seletivo.interface.visao_geral import (
     Ausencia,
     Numero,
 )
-from processo_seletivo.ocupacao.application.selectors import recortes_do_marco
+from processo_seletivo.ocupacao.application.selectors import destinacoes_publicas, recortes_do_marco
 from processo_seletivo.ocupacao.domain import nomes as nomes_da_ocupacao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.portal.situacao import DESFECHOS
@@ -260,6 +260,9 @@ class Relatorio:
     cadastros_distintos: int
     desfecho_em: datetime | None
     pontos_de_atencao: list = field(default_factory=list)
+    #: As destinações e as declarações de vaga não preenchida (155, FR-6338). Só a página as lê: o
+    #: PDF não muda (FR-6339), e por isso o campo tem padrão e `relatorio_pdf` não o conhece.
+    destinacoes: list = field(default_factory=list)
     #: Edital com menos inscrições que o limiar: os totais não públicos dele não são ditos (100).
     total_omitido: bool = False
 
@@ -1087,6 +1090,10 @@ def montar(edital, *, agora, enderecos):
         convocacoes=fatos.convocacoes,
     )
     relatorio.pontos_de_atencao = _pontos_de_atencao(relatorio, fatos.convocacoes)
+    # **Em `montar`, e não em `fatos_do_edital`** (155, FR-6338): o relatório consolidado e a
+    # advertência do encerramento leem os fatos e não mostram a destinação — pagariam duas consultas
+    # por Edital para nada.
+    relatorio.destinacoes = destinacoes_publicas(edital)
     return relatorio
 
 

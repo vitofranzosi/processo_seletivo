@@ -166,14 +166,16 @@ ausência comprovada.
 
 ## Phase 9: US7 — O candidato vê para onde a vaga foi (incremento E, P3)
 
-- [ ] T043 [P] [US7] Testes em `tests/portal/test_destinacao_na_selecao.py` e `tests/interface/test_relatorio_do_edital.py`:
+- [X] T043 [P] [US7] Testes em `tests/portal/test_destinacao_na_selecao.py` e `tests/interface/test_relatorio_do_edital.py`:
   - origem, destino, quantidade e fundamento;
   - o desfazimento citando;
   - nenhum nome nem protocolo;
   - sem PDF novo.
-- [ ] T044 [US7] O seletor `destinacoes_publicas` em `processo_seletivo/ocupacao/application/selectors.py`, o parcial `processo_seletivo/portal/templates/portal/_destinacao_das_vagas.html`, a inclusão em `portal/selecao.html` e o contexto em `processo_seletivo/portal/views.py::selecao`; regras na folha do portal
-- [ ] T045 [US7] A seção "Destinação das vagas" em `processo_seletivo/interface/relatorio_do_edital.py` e no template do relatório
-- [ ] T046 [US7] O fundamento da chamada para vaga destinada (FR-6340), lido do `movimentosLidos` da apuração da chamada, em `processo_seletivo/convocacao/application/` (o ponto exato no T046; anotar conflito com o #489)
+- [X] T044 [US7] O seletor `destinacoes_publicas` em `processo_seletivo/ocupacao/application/selectors.py`, o parcial `processo_seletivo/portal/templates/portal/_destinacao_das_vagas.html`, a inclusão em `portal/selecao.html` e o contexto em `processo_seletivo/portal/views.py::selecao`; regras na folha do portal
+- [X] T045 [US7] A seção "Destinação das vagas" em `processo_seletivo/interface/relatorio_do_edital.py` e no template do relatório
+- [X] T046 [US7] O fundamento da chamada para vaga destinada (FR-6340), lido do `movimentosLidos` da apuração da chamada, em `processo_seletivo/convocacao/application/` (o ponto exato no T046; anotar conflito com o #489)
+  - o ponto: `convocar.py`, nos dois lugares que gravam `Convocacao` (`convocar` e `convocar_em_sequencia`), e as prévias em `fluxo.py`; a citação vem de `ocupacao.application.selectors.destinacoes_lidas_por` e se escreve em `convocacao/domain/fundamento.py`;
+  - sem conflito com o #489: nenhum dos três arquivos dele (`interface/conducao_da_convocacao.py`, `interface/templates/interface/convocacao.html`, `interface/views.py`) foi tocado.
 
 ---
 

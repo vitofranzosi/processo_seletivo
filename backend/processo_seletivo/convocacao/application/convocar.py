@@ -24,6 +24,7 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
 from processo_seletivo.convocacao.domain import especie as especie_da_posicao
 from processo_seletivo.convocacao.domain import fila, nomes
+from processo_seletivo.convocacao.domain import fundamento as fundamento_dominio
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.ocupacao.domain.apuracao import chave_da_inscricao
 from processo_seletivo.processos.models import Edital
@@ -245,6 +246,12 @@ def convocar(
 
         if fundamento_por_especie is not None:
             texto_do_fundamento = fundamento_por_especie(especie, apuracao)
+        # **A vaga destinada à ampla é citada no fundamento** (155, FR-6340), também no texto
+        # digitado: a chamada de quem a ocupa diz de onde a vaga veio. O derivado já a traz, e a
+        # citação não se repete.
+        texto_do_fundamento = fundamento_dominio.com_destinacao(
+            texto_do_fundamento, selectors.destinacao_citada(apuracao, versao, perfil_id=perfil)
+        )
         # **A sucessora copia o número da raiz que corrige**; a chamada nova recebe o seguinte. É
         # a diferença entre corrigir um ato e praticar outro, dita por dado.
         chamada = (
@@ -776,6 +783,10 @@ def convocar_em_sequencia(
             409,
         )
     versao = effective_version(edital_id=edital.id, at=ctx.now)
+    # A mesma citação da chamada individual (155, FR-6340), uma vez para o gesto: a apuração é uma.
+    fundamento = fundamento_dominio.com_destinacao(
+        fundamento, selectors.destinacao_citada(apuracao, versao, perfil_id=perfil_id)
+    )
     praticadas = []
     for inscricao in inscricoes:
         if _em_aberto_da_pessoa(contexto, inscricao) is not None:
