@@ -69,3 +69,21 @@ O console do navegador não registrou violação de CSP nem erro em nenhuma das 
 | O impedimento, em `<li class="erro">`, desenhava a barra do alerta dentro do marcador | **Corrigido**: um parágrafo de erro por impedimento |
 | "Minhas inscrições" continua dizendo "Inscrição enviada" depois do ato | Registrado como trabalho futuro: a situação mora no acompanhamento, a um clique |
 | O cartão "Resultado das etapas" diz "Eliminada" para a análise, enquanto o topo diz "não aceita" | Registrado como trabalho futuro: o vocabulário do cartão é o da `063` para toda Etapa |
+
+## Revisão de 12/11/2026 — a relação por lista (D-011)
+
+O cenário foi montado pelo caminho normal, pelas fixtures da 148 com `com_cotas=True`, e servido por
+um `live_server` temporário. O Edital tem um Perfil com PcD, PPI e a Modalidade apontada como a
+ampla. São seis inscrições: 702 e 704 declararam PPI, 703 declarou PcD, 705 declarou a apontada, e
+701 e 706 não declararam nenhuma. A 704 foi indeferida na análise. As telas foram percorridas com o
+publicador do seletor de demonstração.
+
+| Captura | O que se vê |
+|---|---|
+| [12](capturas/12-portal-preliminar-por-lista-375px.jpg) | Portal, preliminar a 375 px: "Ampla concorrência (5)", "Pessoas com deficiência (1)" e "Pretos, pardos e indígenas (1)". A indeferida é contada na ampla e na PPI, e não é nomeada. A 705 está só na ampla. Não há rolagem horizontal (largura do documento 375 = viewport). |
+| [13](capturas/13-gestao-previa-da-homologacao-por-lista.jpg) | Gestão, prévia da homologação: contagem por Perfil e lista, conferência dos nomes por lista e "6 inscrições contempladas… O total conta cada inscrição uma vez." |
+| [14](capturas/14-documento-preliminar-por-lista.jpg) | O PDF do preliminar: um título por lista com a quantidade, e a frase das listas junto da explicação do ato. |
+
+O console não registrou erro nem violação de CSP. O ato no formato anterior à revisão está coberto
+por `test_o_ato_no_formato_anterior_a_revisao_continua_como_foi_publicado`: mesmos bytes, mesmo
+resumo, página sem título de lista e PDF servido dos bytes gravados.

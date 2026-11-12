@@ -189,11 +189,14 @@ def test_o_preliminar_nomeia_deferidas_conta_indeferidas_e_congela_o_prazo(cenar
     assert ato.recurso_ate.astimezone(ZONA).date().isoformat() == "2099-12-31"
     conteudo = _conteudo(ato)
     (grupo,) = conteudo["perfis"]
-    assert {linha["protocolo"] for linha in grupo["constam"]} == {
+    # O Perfil sem Modalidade reservada tem uma lista só, a ampla, nomeada (FR-5440).
+    (lista,) = grupo["listas"]
+    assert lista["lista"] == "Ampla concorrência"
+    assert {linha["protocolo"] for linha in lista["constam"]} == {
         inscricoes[0].protocolo,
         inscricoes[2].protocolo,
     }
-    assert grupo["nao_constam"] == 1
+    assert lista["nao_constam"] == 1
     texto = bytes(ato.conteudo_publico).decode()
     # A indeferida não é nomeada, nem o motivo atravessa (D-010).
     assert inscricoes[1].nome not in texto

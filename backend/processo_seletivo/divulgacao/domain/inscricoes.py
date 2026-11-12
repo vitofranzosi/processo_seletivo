@@ -11,8 +11,13 @@ consolidação, com motivo, sob recurso. A homologação sem análise (D-007) é
 resultado: ela contempla todas as recebidas, e só é permitida onde não há Etapa que decida.
 
 **A fronteira pública é de construção, e não de filtro** (D-010). O conteúdo público é montado só
-com protocolo e nome de quem consta, e a contagem de quem não consta. Motivo, modalidade, CPF e
-identificador interno não entram na função que o monta — não há o que esquecer de filtrar.
+com protocolo e nome de quem consta, e a contagem de quem não consta. Motivo, CPF e identificador
+interno não entram na função que o monta — não há o que esquecer de filtrar.
+
+**A Modalidade entra, mas só como lista** (revisão de 12/11, D-011). O Perfil se reparte nas listas
+de concorrência que a versão declara — a ampla com todos, cada reservada com quem a declarou —, e a
+linha continua com duas chaves. Quem lê o ato sabe a Modalidade de alguém pela lista em que o nome
+está, como nas listas que o Ifes publica; nenhuma coluna a repete.
 """
 
 import unicodedata
@@ -43,6 +48,17 @@ NAO_CONSTAM = {
     PRELIMINAR: "inscrições indeferidas",
     HOMOLOGACAO: "inscrições não homologadas",
 }
+
+# O nome público da ampla — o da divulgação do resultado (`conteudo.nome_da_lista`), e não o rótulo
+# de gestão dos recortes, que fala em "linha geral do quadro" para quem opera (FR-5440).
+AMPLA_CONCORRENCIA = "Ampla concorrência"
+
+# A frase que explica por que o mesmo nome aparece duas vezes (FR-5446). Sem ela, o cotista que se
+# encontra na ampla e na PPI lê duplicidade onde há concorrência concomitante.
+FRASE_DAS_LISTAS = (
+    "Quem se inscreveu para vaga reservada consta também na ampla concorrência, porque concorre "
+    "nas duas."
+)
 
 
 @dataclass(frozen=True)
@@ -84,17 +100,24 @@ def chave_de_ordem(nome, protocolo):
     return (sem_acento.casefold().strip(), protocolo or "")
 
 
-def projetar(*, natureza, inscricoes, resultados, perfis):
+def projetar(*, natureza, inscricoes, resultados, perfis, listas=None):
     """A projeção de uma natureza sobre as inscrições enviadas.
 
-    - `inscricoes`: dicionários `{id, perfil_id, nome, protocolo}` das **enviadas** do Edital;
+    - `inscricoes`: dicionários `{id, perfil_id, nome, protocolo}` das **enviadas** do Edital, com
+      `modalidade_id` quando a inscrição declarou uma;
     - `resultados`: `{inscricao_id: {"id", "habilitada"}}` dos vigentes da Etapa de análise, ou
       `None` quando a natureza não lê Etapa (recebidas; homologação sem análise);
-    - `perfis`: `[(perfil_id, nome)]` na ordem da versão citada.
+    - `perfis`: `[(perfil_id, nome)]` na ordem da versão citada;
+    - `listas`: `{perfil_id: [(modalidade_id, nome)]}` — as listas **reservadas** de cada Perfil,
+      na ordem dos recortes. A ampla não vem aqui porque todo Perfil a tem (FR-5439, FR-5440).
 
     A inscrição sem resultado na Etapa conta como **pendente** e fica fora dos itens: a prévia diz
     quantas faltam, e o comando recusa enquanto houver alguma (FR-5411).
+
+    **O item é por inscrição, e a lista é só do grupo** (FR-5444). O cotista entra uma vez em
+    `itens` — que é o que vira linha gravada, assinatura e divergência — e duas vezes nos grupos.
     """
+    listas = listas or {}
     itens, pendentes = [], 0
     por_perfil = {}
     for inscricao in inscricoes:
@@ -111,39 +134,94 @@ def projetar(*, natureza, inscricoes, resultados, perfis):
             situacao = DEFERIDA if resultado["habilitada"] else INDEFERIDA
             origem = str(resultado["id"])
         itens.append(Item(identificador, situacao, origem))
-        grupo = por_perfil.setdefault(str(inscricao["perfil_id"]), {"constam": [], "nao": 0})
-        if situacao == INDEFERIDA:
-            grupo["nao"] += 1
-        else:
-            grupo["constam"].append(
-                {"protocolo": inscricao["protocolo"] or "", "candidato": inscricao["nome"] or ""}
-            )
+        perfil_id = str(inscricao["perfil_id"])
+        grupo = por_perfil.setdefault(perfil_id, {})
+        # A ampla recebe todos; a reservada, quem a declarou — se ela for lista **nesta** versão.
+        # A Modalidade apontada como a ampla, ou uma que a versão não declara, não está em
+        # `listas`, e a inscrição fica só na ampla (FR-5441).
+        reservadas = {str(lista_id) for lista_id, _nome in listas.get(perfil_id, [])}
+        modalidade = str(inscricao.get("modalidade_id") or "")
+        destinos = [None, *([modalidade] if modalidade in reservadas else [])]
+        for destino in destinos:
+            lista = grupo.setdefault(destino, {"constam": [], "nao": 0})
+            if situacao == INDEFERIDA:
+                lista["nao"] += 1
+            else:
+                lista["constam"].append(
+                    {
+                        "protocolo": inscricao["protocolo"] or "",
+                        "candidato": inscricao["nome"] or "",
+                    }
+                )
 
     ordem = [str(perfil_id) for perfil_id, _nome in perfis]
     nomes = {str(perfil_id): nome for perfil_id, nome in perfis}
     # **Todo Perfil da versão aparece, inclusive sem inscrição**: "ninguém se inscreveu" é resposta,
     # e não ausência dela — o precedente da tela de Inscrições (009). Visto na validação, num Edital
-    # de dois Perfis em que o segundo sumia do ato.
+    # de dois Perfis em que o segundo sumia do ato. A mesma regra vale para a lista (FR-5440).
     for chave in ordem:
-        por_perfil.setdefault(chave, {"constam": [], "nao": 0})
+        por_perfil.setdefault(chave, {})
     # Perfil que a versão não nomeia vai para o fim, sem nome inventado — não deve acontecer, porque
     # a inscrição nasce num Perfil publicado; se acontecer, a inscrição não desaparece do ato.
     chaves = sorted(por_perfil, key=lambda chave: (ordem.index(chave) if chave in ordem else 10**6))
     grupos = []
     for chave in chaves:
         grupo = por_perfil[chave]
+        declaradas = [(None, AMPLA_CONCORRENCIA)] + [
+            (str(lista_id), nome) for lista_id, nome in listas.get(chave, [])
+        ]
         grupos.append(
             {
                 "perfil": nomes.get(chave, ""),
-                "constam": sorted(
-                    grupo["constam"],
-                    key=lambda linha: chave_de_ordem(linha["candidato"], linha["protocolo"]),
-                ),
-                "nao_constam": grupo["nao"],
+                "listas": [
+                    _lista(nome, grupo.get(lista_id) or {"constam": [], "nao": 0})
+                    for lista_id, nome in declaradas
+                ],
             }
         )
     itens.sort(key=lambda item: item.inscricao_id)
     return Projecao(itens=itens, perfis=grupos, pendentes=pendentes)
+
+
+def _lista(nome, acumulado):
+    return {
+        "lista": nome,
+        "constam": sorted(
+            acumulado["constam"],
+            key=lambda linha: chave_de_ordem(linha["candidato"], linha["protocolo"]),
+        ),
+        "nao_constam": acumulado["nao"],
+    }
+
+
+def grupos_publicados(conteudo):
+    """Os Perfis do ato com as listas, nos dois formatos que os bytes gravados podem ter.
+
+    **O ato publicado antes da revisão de 12/11 não tem lista**, e continua como foi publicado
+    (FR-5447): o Perfil leva `constam` e `nao_constam` direto. A leitura o apresenta como uma lista
+    sem nome, e a página e o documento omitem o título que não existe — não inventam "Ampla
+    concorrência" num ato que não a declarou. Reescrever os bytes para o formato novo é o que a
+    imutabilidade proíbe, e regenerar o PDF mudaria o resumo que a comissão conferiu.
+    """
+    grupos = []
+    for grupo in conteudo.get("perfis") or []:
+        if "listas" in grupo:
+            listas = grupo["listas"]
+        else:
+            listas = [
+                {
+                    "lista": "",
+                    "constam": grupo.get("constam") or [],
+                    "nao_constam": grupo.get("nao_constam") or 0,
+                }
+            ]
+        grupos.append({"perfil": grupo.get("perfil") or "", "listas": listas})
+    return grupos
+
+
+def tem_lista_reservada(grupos):
+    """Algum Perfil tem lista além da ampla? É quando a frase das listas tem o que explicar."""
+    return any(len(grupo["listas"]) > 1 for grupo in grupos)
 
 
 def conteudo_publico(
@@ -267,8 +345,10 @@ def eventos_de_recurso(conteudo, agora):
 
 
 __all__ = [
+    "AMPLA_CONCORRENCIA",
     "CONSTAM",
     "DEFERIDA",
+    "FRASE_DAS_LISTAS",
     "HOMOLOGACAO",
     "INDEFERIDA",
     "Item",
@@ -283,6 +363,8 @@ __all__ = [
     "divergencia",
     "etapas_de_analise",
     "eventos_de_recurso",
+    "grupos_publicados",
     "projetar",
     "regride",
+    "tem_lista_reservada",
 ]

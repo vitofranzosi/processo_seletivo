@@ -79,7 +79,8 @@ def test_o_sucedido_diz_que_foi_sucedido_e_leva_ao_vigente(client, cenario, gest
     )
     corpo = vigente.content.decode()
     assert "Prazo de recurso aberto" in corpo
-    assert "Inscrições indeferidas neste Perfil: 1." in corpo
+    # Desde a revisão de 12/11, a indeferida é contada em cada lista do Perfil (FR-5443).
+    assert "Inscrições indeferidas nesta lista: 1." in corpo
     assert cenario["inscricoes"][1].nome not in corpo
     assert "Publicações anteriores sobre as inscrições (1)" in corpo
 

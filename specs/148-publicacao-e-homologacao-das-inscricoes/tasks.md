@@ -36,3 +36,13 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 - [X] T019 Validação no navegador com telas reais nos sete cenários do pedido; capturas e roteiro em `verificacao.md` (SC-1700)
 - [X] T020 [P] `quickstart.md` (operação mínima), `rastreabilidade.md`, linha no README, Visão do Sistema se aplicável
 - [ ] T021 `make lint check test-pg`; PR
+
+## Fase E — Revisão de 12/11/2026: a relação por lista de concorrência (D-011)
+
+- [X] T022 Revisar a spec: D-009, FR-5419 a FR-5421, SC-1702 e o caso-limite do cotista, com a redação anterior preservada; D-011 com a evidência dos Editais do Ifes; P-2 respondida; FR-5439 a FR-5447, UX-466, UX-467, SC-1709 a SC-1711
+- [X] T023 Projeção por lista em `divulgacao/domain/inscricoes.py` (`projetar` com `listas`, `grupos_publicados`, `tem_lista_reservada`, `FRASE_DAS_LISTAS`) e as listas pelos recortes em `application/inscricoes.py` (FR-5439 a FR-5444)
+- [X] T024 [P] Documento, página pública e prévia da gestão por lista, lendo os dois formatos dos bytes (FR-5445 a FR-5447, UX-466)
+- [X] T025 [P] Testes de unidade (listas, ordem, apontada, indeferida por lista, formato anterior, PDF) e de integração com Edital de PcD, PPI e a Modalidade apontada como a ampla (SC-1709 a SC-1711)
+- [X] T026 Verificação no navegador e no PDF (`verificacao.md`, capturas 12 a 14); `rastreabilidade.md`, `research.md`, `data-model.md`
+- [X] T026a A assinatura da prévia cita a versão: as listas saem dela (FR-5430)
+- [ ] T027 `make lint check test-pg`; PR — suíte verde em 12/11 (19155 passed, 24 skipped); PR pendente

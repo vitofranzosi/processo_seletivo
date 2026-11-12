@@ -9,6 +9,11 @@ Perfil.
 documento é gerado uma vez, na publicação, a partir dos bytes que a página também lê (FR-5424).
 """
 
+from processo_seletivo.divulgacao.domain.inscricoes import (
+    FRASE_DAS_LISTAS,
+    grupos_publicados,
+    tem_lista_reservada,
+)
 from processo_seletivo.divulgacao.infrastructure.documento import (
     ENTRE_SECOES,
     _autoridade,
@@ -31,13 +36,18 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
 
 
 def render_inscricoes_pdf(conteudo: dict) -> bytes:
-    """O documento do ato, a partir dos bytes canônicos."""
+    """O documento do ato, a partir dos bytes canônicos.
+
+    Lê os dois formatos dos bytes (FR-5447): o documento de um ato gravado não é regerado, mas a
+    composição que o gerou precisa continuar reproduzível a partir daqueles bytes.
+    """
     cabecalho = conteudo["cabecalho"]
+    grupos = grupos_publicados(conteudo)
     composicao = Composicao()
     _timbre(composicao, cabecalho)
     _moldura(composicao, cabecalho)
-    _explicacao(composicao, cabecalho)
-    for grupo in conteudo["perfis"]:
+    _explicacao(composicao, cabecalho, grupos)
+    for grupo in grupos:
         _perfil(composicao, grupo, conteudo)
     _autoridade(composicao, cabecalho)
     _integridade(composicao, conteudo)
@@ -63,13 +73,11 @@ def _moldura(composicao, cabecalho):
         composicao.espaco(4.0)
 
 
-def _explicacao(composicao, cabecalho):
-    composicao.escrever(
-        frase_da_natureza(cabecalho["natureza"]),
-        tamanho=CORPO_NOTA,
-        antes=ENTRE_SECOES,
-        justificar=True,
-    )
+def _explicacao(composicao, cabecalho, grupos):
+    frase = frase_da_natureza(cabecalho["natureza"])
+    if tem_lista_reservada(grupos):
+        frase = f"{frase} {FRASE_DAS_LISTAS}"
+    composicao.escrever(frase, tamanho=CORPO_NOTA, antes=ENTRE_SECOES, justificar=True)
 
 
 def _perfil(composicao, grupo, conteudo):
@@ -80,24 +88,44 @@ def _perfil(composicao, grupo, conteudo):
         antes=ENTRE_SECOES,
         junto=True,
     )
-    if grupo["constam"]:
+    for lista in grupo["listas"]:
+        _lista(composicao, lista, conteudo)
+
+
+def _lista(composicao, lista, conteudo):
+    """Uma lista de concorrência do Perfil — ou o Perfil inteiro, no ato anterior à revisão.
+
+    **O título da lista só existe quando a lista tem nome** (FR-5447): o ato gravado antes de 12/11
+    não declarou lista nenhuma, e o documento dele não ganha uma.
+    """
+    natureza = conteudo["cabecalho"]["natureza"]
+    if lista["lista"]:
+        composicao.escrever(
+            f"{lista['lista']} ({len(lista['constam'])})",
+            tamanho=CORPO_TEXTO,
+            fonte=NEGRITO,
+            antes=ANTES_DE_LINHA + 5,
+            junto=True,
+        )
+    if lista["constam"]:
         _tabela(
             composicao,
             ["Candidato", "Protocolo"],
-            [[linha["candidato"], linha["protocolo"]] for linha in grupo["constam"]],
+            [[linha["candidato"], linha["protocolo"]] for linha in lista["constam"]],
             recuo=0.0,
             alinhamentos=[ESQUERDA, ESQUERDA],
         )
     else:
         composicao.escrever(
-            frase_do_perfil_vazio(conteudo["cabecalho"]["natureza"]),
+            frase_da_lista_vazia(natureza) if lista["lista"] else frase_do_perfil_vazio(natureza),
             tamanho=CORPO_TEXTO,
             antes=ANTES_DE_LINHA + 3,
         )
-    if conteudo.get("rotulo_nao_constam") and grupo["nao_constam"]:
+    if conteudo.get("rotulo_nao_constam") and lista["nao_constam"]:
+        onde = "nesta lista" if lista["lista"] else "neste Perfil"
         composicao.escrever(
-            f"{conteudo['rotulo_nao_constam'].capitalize()} neste Perfil: "
-            f"{grupo['nao_constam']} — não nomeadas; cada candidato consulta a própria situação "
+            f"{conteudo['rotulo_nao_constam'].capitalize()} {onde}: "
+            f"{lista['nao_constam']} — não nomeadas; cada candidato consulta a própria situação "
             "e o motivo na área do candidato.",
             tamanho=CORPO_NOTA,
             antes=ANTES_DE_LINHA,
@@ -129,6 +157,14 @@ def frase_do_perfil_vazio(natureza):
     }[natureza]
 
 
+def frase_da_lista_vazia(natureza):
+    return {
+        "RECEBIDAS": "Nenhuma inscrição recebida nesta lista.",
+        "PRELIMINAR": "Nenhuma inscrição deferida nesta lista.",
+        "HOMOLOGACAO": "Nenhuma inscrição homologada nesta lista.",
+    }[natureza]
+
+
 def frase_do_prazo(prazo):
     if not prazo:
         return ""
@@ -147,6 +183,7 @@ def frase_da_sucessao(sucede):
 
 
 __all__ = [
+    "frase_da_lista_vazia",
     "frase_da_natureza",
     "frase_da_sucessao",
     "frase_do_perfil_vazio",
