@@ -106,7 +106,9 @@ def abrir_e_conferir(gestao, item_id, resultado, motivo=""):
         assert resposta.ok and resposta.body().startswith(b"%PDF")
         gestao.reload()
         cartao = gestao.locator(f"#item-{item_id}")
-        expect(cartao.get_by_text("aberto por você").last).to_be_visible()
+        # Exato: desde a 157, a ajuda recolhida do formulário explica a marca com as mesmas
+        # palavras (UX-652), e a busca por trecho a acharia escondida.
+        expect(cartao.get_by_text("aberto por você", exact=True).last).to_be_visible()
     fechado = cartao.locator("details.como-preencher:not([open]) > summary").filter(
         has_text=re.compile("Conferir a versão|Registrar outra conferência|Conferir este documento")
     )
@@ -116,7 +118,9 @@ def abrir_e_conferir(gestao, item_id, resultado, motivo=""):
     if motivo:
         cartao.locator("textarea[name=motivo]").fill(motivo)
     cartao.get_by_role("button", name="Registrar conferência").click()
-    expect(gestao.get_by_text("Conferência registrada.")).to_be_visible()
+    # Sem recarga desde a 157 (FR-6514): a confirmação vem no próprio cartão e nomeia o que foi
+    # registrado (UX-642).
+    expect(cartao.get_by_text(re.compile(r"Conferência registrada: .+"))).to_be_visible()
 
 
 def registrar_aceite(gestao, servidor, edital):
@@ -381,8 +385,9 @@ def test_a_chamada_nova_aproveita_e_confere_de_novo(
     expect(cartao.get_by_text("Recebido, aguardando conferência")).to_be_visible()
     cartao.locator("input[name=resultado][value=CONFORME]").check()
     cartao.get_by_role("button", name="Registrar conferência").click()
+    # A recusa diz o que falta e como prosseguir, no cartão (157, UX-651).
     expect(
-        comissao.get_by_text("Abra o documento antes de conferi-lo como conforme.")
+        cartao.get_by_text(re.compile(r"Você ainda não abriu a versão \d+\. Abra a versão \d+"))
     ).to_be_visible()
     abrir_e_conferir(comissao, _item(segunda, CERTIDAO), "CONFORME")
     tela.capturar(comissao, "comissao-chamada-nova")
