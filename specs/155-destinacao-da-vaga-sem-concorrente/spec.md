@@ -590,6 +590,7 @@ implementação desta.
 | FR-2327 e FR-2328 da `095`, e a pendência sobre "há quem ocupar" | **revistas** e **respondida**: a prévia mostra o que a destinação faria, com as condições das FR-6304 e FR-6305 |
 | FR-2507 da `098` e o achado da reservada vazia | **revista** e **respondido** (FR-6332, FR-6333) |
 | FR-4671 e FR-4672 da `135` | **revistas**: a providência da lista vazia leva ao gesto (FR-6328) |
+| FR-4678 da `135` | **revista** em 12/11, na implementação: a célula do resultado da lista vazia diz que ela sai na publicação do marco (FR-6330) |
 | FR-4205 da `128` | continua: a ordem vazia é registrada, agora no gesto |
 | A recusa da relação vazia no sorteio | continua |
 | A pendência da `095` sobre a faixa da reservada | continua aberta (fora) |
