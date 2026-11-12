@@ -232,6 +232,25 @@ def definir_documentos(edital, gestor, requisitos=DEFINICAO_DO_CENARIO_A, motivo
     return definir(actor=gestor, edital_id=edital.id, requisitos=requisitos, motivo=motivo)
 
 
+def dispensar_a_formalizacao(edital, *, por="fixture"):
+    """A definição gravada **sem documento**: nenhum documento do Edital vai ao setor (153, D-003).
+
+    Para os cenários anteriores à `153`, que têm aceite e não tratam da formalização. Sem ela, cada
+    pessoa apta seria uma pendência do Edital (FR-6127), e o relatório de encerramento desses
+    cenários passaria a ser de acompanhamento — que não é o que eles testam.
+    """
+    from processo_seletivo.formalizacao.models import DefinicaoDosDocumentosDaFormalizacao
+
+    return DefinicaoDosDocumentosDaFormalizacao.objects.create(
+        edital=edital,
+        requisitos=[],
+        motivo="O setor não recebe documentos deste Edital pelo GPS.",
+        definido_por=por,
+        unidade_de_atuacao=edital.institution_scope,
+        definido_em=timezone.now(),
+    )
+
+
 def designar_direto(edital, pessoa, *, perfis=(), por="gil"):
     """A designação gravada direto, para os testes que não exercitam a gestão de acessos."""
     return DesignacaoParaFormalizacao.objects.create(

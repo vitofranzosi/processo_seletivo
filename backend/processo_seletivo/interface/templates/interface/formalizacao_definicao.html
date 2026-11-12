@@ -25,7 +25,7 @@ não impedem a gravação. O auditor lê a tela e o histórico; o setor não a a
 {% if not requisitos %}
 <p class="nenhuma">Este Edital ainda não tem documento exigido publicado.</p>
 {% elif pode_gravar %}
-<form method="post" action="{% url 'interface:formalizacao-definicao' edital.id %}" class="definicao-da-formalizacao">
+<form id="documentos-definidos" method="post" action="{% url 'interface:formalizacao-definicao' edital.id %}" class="definicao-da-formalizacao">
   {% csrf_token %}
   <fieldset class="opcoes">
     <legend>Documentos do Edital</legend>

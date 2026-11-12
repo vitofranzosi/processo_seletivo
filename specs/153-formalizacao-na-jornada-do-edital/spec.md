@@ -4,9 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: **Rascunho, só a spec.** Não há plano, tarefas nem código. As decisões D-001 a D-008,
-abaixo, são **propostas de desenho**, e nenhuma foi aprovada. As **perguntas P-1 a P-7** são do usuário.
-A spec adota provisoriamente a recomendação de cada uma, e diz onde ela muda se a resposta for outra.
+**Status**: **Em implementação, no mesmo PR da spec.** As **perguntas P-1 a P-5** foram respondidas pelo
+usuário em 11/11/2026, todas na alternativa recomendada (ver Clarifications). A P-6 e a P-7 ficaram fora,
+como a spec recomenda. As decisões D-001 a D-008, abaixo, são **propostas de desenho**.
 
 **Input**: o pedido de 11/11/2026, vindo da sessão do estudo da jornada final: *"levar a formalização
 para a jornada guiada do Edital"*. Ele trata o achado de experiência número 05 do
@@ -94,8 +94,22 @@ Esta spec não cria estado novo nem registro novo.
 
 ## Clarifications
 
-Nenhuma sessão de esclarecimento ainda. As perguntas estão em
-[Perguntas para o usuário](#perguntas-para-o-usuário).
+### Session 2026-11-11
+
+O usuário respondeu as perguntas P-1 a P-5, todas na alternativa recomendada. A P-6 e a P-7 ficaram
+como a spec recomenda, fora do escopo.
+
+- Q: O nome é "Encaminhar ao setor" ou "Disponibilizar ao setor"? → A: **"Disponibilizar ao setor"**
+  (P-1). A decisão de terminologia da `117` não se reabre.
+- Q: O que conta como pessoa disponibilizada? → A: **Estar incluída em algum pacote gerado do
+  Edital**, em qualquer versão da definição e em qualquer chamada (P-2, FR-6102).
+- Q: No Edital encerrado, as providências continuam? → A: **Sim** (P-3, FR-6117).
+- Q: A advertência entra no relatório do Edital da `099`? → A: **Sim** (P-4, FR-6127).
+- Q: O "Encerrar Processo" da `130` também adverte? → A: **Sim, pela mesma regra** (P-5, FR-6128).
+- Q: Pela regra da `099`, um Edital encerrado com pendência ganha o relatório de acompanhamento, e o
+  consolidado da unidade o conta entre os que têm providência em curso. A pendência da passagem ao setor
+  conta também? → A: **Sim, conta como pendência** (D-009). Perguntada durante a implementação, quando a
+  suíte mostrou o efeito.
 
 ---
 
@@ -304,9 +318,11 @@ sem designação e tudo disponibilizado) e conferir o bloco.
 - **FR-6103**: **Definição gravada** MUST significar que existe ao menos uma versão da definição do
   Edital (FR-3655 da `117`), **inclusive uma versão sem nenhum documento**. Gravar sem documento, com
   motivo, é a decisão da condução de que o setor não precisa de documento deste Edital (D-003).
-- **FR-6104**: **Pessoa sem documento a disponibilizar** MUST ser a pessoa apta para quem, com a
-  definição gravada, nenhum requisito da definição vigente é aplicável. A aplicabilidade é a da
-  FR-3670 da `117`, lida dos registros.
+- **FR-6104**: **Pessoa sem documento a disponibilizar** MUST ser a pessoa apta cujo conjunto, com a
+  definição gravada, não tem nenhum documento *incluído*, pelo seletor único da `117` (FR-3672 e
+  FR-3674 da `117`). *Ajustada na implementação:* a primeira redação dizia "nenhum requisito
+  aplicável", mas a pessoa com documento só *não apresentado* também não pode ser exportada, porque
+  o pacote exige arquivo. Contá-la como "a exportar" daria ao setor uma providência impossível.
 - **FR-6105**: A derivação MUST NOT ler arquivo do armazenamento, nem montar ou verificar o conjunto
   documental. Ela lê só registros: desfecho, definição, designação, papel, suspensão e exportação.
   Quem confere o arquivo é a verificação da `117`.
@@ -332,7 +348,7 @@ sem designação e tudo disponibilizado) e conferir o bloco.
   | sem quem receba | **"Designar quem recebe os documentos"** | quem administra os acessos da unidade (`acesso:gerir`, FR-3663 da `117`) |
   | a exportar | **"Exportar os documentos das pessoas aptas"** | o setor da formalização (designação efetiva) |
 
-  O rótulo comum das três segue a P-1. A recomendação adotada é "Disponibilizar ao setor".
+  O rótulo comum das três é **"Disponibilizar ao setor"** (P-1).
 - **FR-6109**: Cada providência MUST ter a situação *Pendente*. Ela MUST NOT ter prazo: a `117` não
   fixa prazo para a passagem ao setor.
 - **FR-6110**: A razão de cada providência MUST dizer a contagem da causa:
@@ -395,11 +411,14 @@ sem designação e tudo disponibilizado) e conferir o bloco.
 #### A confirmação de encerrar
 
 - **FR-6124**: Com ao menos uma pessoa pendente, a confirmação de encerrar o Edital MUST exibir, sob
-  "Continuam depois do encerramento", a advertência *"N pessoas aptas para formalização ainda não
-  tiveram os documentos disponibilizados ao setor. A exportação continua possível depois do
-  encerramento."* A advertência MUST NOT impedir o encerramento.
+  "Continuam depois do encerramento", a advertência *"N inscrições aptas para formalização ainda sem
+  documentos disponibilizados ao setor (…)."* A advertência MUST NOT impedir o encerramento. *Ajustada
+  na implementação:* a frase é **a do relatório, sem acréscimo**, porque a `130` exige a mesma frase
+  (FR-4351 da `130`). Que a exportação continua já é o que o título do bloco diz. Diz "inscrições", e
+  não "pessoas", porque a camada executiva do relatório não fala de pessoas (FR-2546 da `099`).
 - **FR-6125**: A advertência MUST dizer a causa de cada parte, pelas contagens da FR-6106: "falta
-  definir os documentos", "falta designar quem recebe" ou "falta o setor exportar".
+  definir os documentos", "falta designar quem recebe" ou "falta o setor exportar". Com uma causa só,
+  entre parênteses; com mais de uma, a contagem de cada uma.
 - **FR-6126**: O caminho de cada causa MUST seguir a FR-3538 da `113`: o link vai só a quem a tela de
   destino aceita; para os demais, a frase diz a quem pedir, na forma canônica da `033`.
 - **FR-6127**: A advertência MUST constar também do relatório do Edital da `099`, pela mesma regra.
@@ -499,7 +518,7 @@ origem na primeira tarefa da implementação, e só depois de aprovada.
 | FR-4082 | `127` | acrescenta os dois papéis novos ao fim da ordem dos grupos (FR-6114) |
 | FR-3534 | `113` | acrescenta a advertência de pessoas aptas pendentes (FR-6124) |
 | FR-4351 | `130` | acrescenta a mesma advertência ao "Encerrar Processo" (FR-6128, se a P-5 for sim) |
-| as providências do relatório | `099` | acrescentam a mesma pendência (FR-6127, se a P-4 for sim) |
+| as providências do relatório | `099` | acrescentam a mesma pendência (FR-6127), que conta para a espécie e para o consolidado da `100` (D-009) |
 
 A FR-4714 da `136` não muda (D-005). A FR-3665 e a FR-3701 da `117` não mudam.
 
@@ -580,11 +599,21 @@ com os Perfis (FR-3668 da `117`).
 cada arquivo. A derivação conta pela existência de registro, e não pela integridade do arquivo. O
 arquivo indisponível aparece onde já aparece: na verificação, a quem exporta.
 
----
+### D-009 — A passagem ao setor conta como pendência do relatório
+
+**Decidida pelo usuário em 11/11/2026**, durante a implementação. Pela regra da `099`, o Edital
+encerrado com pendência ganha o relatório *de acompanhamento*, e não o *de encerramento*. O
+consolidado da unidade (`100`) também o conta entre os que têm providência em curso. A alternativa,
+listar a passagem à parte sem mudar a espécie, foi recusada.
+
+**Consequência nos testes anteriores.** Os cenários do relatório têm aceite e não tratam da
+formalização. Eles passam a gravar a definição sem documento (`dispensar_a_formalizacao`), que é a
+decisão de que nada vai ao setor, e continuam provando o que provavam.
 
 ## Perguntas para o usuário
 
-Nenhuma bloqueia o plano. A spec adota a recomendação de cada uma.
+**Respondidas pelo usuário em 11/11/2026**, todas na recomendação (ver Clarifications). Ficam aqui
+como foram perguntadas, para a leitura do porquê.
 
 - **P-1 — O nome: "Encaminhar ao setor" ou "Disponibilizar ao setor"?** O estudo e o pedido usam
   "Encaminhar ao setor". **A decisão de terminologia da `117`, aprovada em 04/11, recusou

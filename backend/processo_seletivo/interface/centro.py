@@ -50,6 +50,8 @@ _DA_NATUREZA = {
     **dict.fromkeys(_DA_ETAPA, c.AVALIACAO),
     a.CONFERIR: c.CONVOCACAO,
     a.RECURSO: c.RESULTADO,
+    # A passagem ao setor vem depois do desfecho, e é a pergunta da Conclusão (153, D-002).
+    a.FORMALIZACAO: c.CONCLUSAO,
 }
 #: Toda natureza que a `127` emite tem fase. O teste prende que nenhuma cai no padrão.
 NATUREZAS_CONHECIDAS = frozenset(_DA_NATUREZA)
@@ -380,6 +382,8 @@ class Centro:
     sem_destaque: str = ""
     #: As Retificações em curso em que o próximo ato é da pessoa (104, FR-2819).
     retificacoes_suas: list = field(default_factory=list)
+    #: O bloco "Disponibilizar ao setor" da fase Conclusão (153); `None` sem pessoa apta.
+    passagem: object = None
 
     @property
     def grupos(self):
@@ -652,6 +656,7 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
         destaque=destacado,
         sem_destaque=sem_destaque,
         retificacoes_suas=retificacoes_suas,
+        passagem=bloco_da_passagem(getattr(andamento, "formalizacao", None), itens),
     )
 
 
@@ -661,6 +666,115 @@ def _item(providencia, governadas, por_chave):
     titulo = c.ato_simples(providencia.natureza, providencia.ato)
     no_gps = providencia.ato if titulo != providencia.ato else ""
     return ItemDeProvidencia(providencia, chave, dados, titulo, no_gps, por_chave[chave].paralela)
+
+
+# ---------------------------------------------------------------------------------------------
+# O bloco "Disponibilizar ao setor" da fase Conclusão (153, FR-6118 a FR-6121)
+# ---------------------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class LinhaDaPassagem:
+    rotulo: str
+    texto: str
+    feito: bool
+    #: A providência da linha, quando ela está em aberto: o link é dela, e só de quem a pratica.
+    item: ItemDeProvidencia | None = None
+
+
+@dataclass(frozen=True)
+class BlocoDaPassagem:
+    aptas: int
+    linhas: tuple
+    #: A frase de quando nada falta (FR-6121); vazia enquanto há pessoa pendente.
+    conclusao: str = ""
+
+    @property
+    def frase_das_aptas(self):
+        return f"{_n(self.aptas, 'pessoa apta', 'pessoas aptas')} para formalização"
+
+    @property
+    def limite(self):
+        return c.LIMITE_DA_PASSAGEM
+
+
+def _data(instante):
+    return a._data(instante)[:10] if instante else ""
+
+
+def bloco_da_passagem(passagem, itens):
+    """As linhas do bloco, a partir da `Passagem` e das providências que já viraram itens.
+
+    **As linhas não decidem nada.** O link de cada uma é o da providência da mesma causa, que o
+    andamento já deu só a quem pratica o ato (FR-6119). O bloco só diz o estado de cada passo.
+    """
+    from processo_seletivo.formalizacao.application import passagem as pa
+
+    if passagem is None:
+        return None
+    da_causa = {
+        i.p.chave[1]: i for i in itens if i.p.natureza == a.FORMALIZACAO and len(i.p.chave) > 1
+    }
+    if passagem.definicao_vazia:
+        return BlocoDaPassagem(
+            aptas=passagem.aptas,
+            linhas=(),
+            conclusao=(
+                "Nenhum documento vai ao setor neste Edital, por decisão de "
+                f"{_data(passagem.definida_em)}."
+            ),
+        )
+    if not passagem.definida:
+        documentos = LinhaDaPassagem(
+            "Documentos que o setor recebe", "não definidos", False, da_causa.get(pa.SEM_DEFINICAO)
+        )
+        quem = LinhaDaPassagem("Quem recebe", "ainda depende da definição", False)
+    else:
+        documentos = LinhaDaPassagem(
+            "Documentos que o setor recebe", f"definidos em {_data(passagem.definida_em)}", True
+        )
+        sem_quem = passagem.pendentes[pa.SEM_QUEM_RECEBA]
+        designadas = _n(passagem.designadas, "pessoa designada", "pessoas designadas")
+        if not passagem.designadas:
+            texto = "ninguém designado"
+        elif sem_quem:
+            texto = (
+                f"{designadas}; {_n(sem_quem, 'pessoa apta', 'pessoas aptas')} de "
+                f"{'Perfil' if sem_quem == 1 else 'Perfis'} sem designação"
+            )
+        else:
+            texto = designadas
+        quem = LinhaDaPassagem("Quem recebe", texto, not sem_quem, da_causa.get(pa.SEM_QUEM_RECEBA))
+    com_documento = passagem.aptas - passagem.sem_documento
+    texto = f"{passagem.disponibilizadas} de {com_documento}"
+    if passagem.ultimo_pacote_em:
+        texto += f"; o último pacote em {_data(passagem.ultimo_pacote_em)}"
+    disponibilizadas = LinhaDaPassagem(
+        "Pessoas disponibilizadas",
+        texto,
+        passagem.completa,
+        da_causa.get(pa.A_EXPORTAR),
+    )
+    conclusao = ""
+    if passagem.completa and not com_documento:
+        conclusao = "Nenhuma pessoa apta tem documento a disponibilizar ao setor."
+    elif passagem.completa:
+        conclusao = (
+            f"Documentos de todas as {com_documento} pessoas aptas disponibilizados ao setor"
+            if com_documento > 1
+            else "Documentos da pessoa apta disponibilizados ao setor"
+        )
+        if passagem.ultimo_pacote_em:
+            conclusao += f"; o último pacote em {_data(passagem.ultimo_pacote_em)}"
+        conclusao += "."
+        if passagem.sem_documento:
+            conclusao += (
+                f" {_n(passagem.sem_documento, 'pessoa apta não tem', 'pessoas aptas não têm')} "
+                "documento a disponibilizar."
+            )
+    return BlocoDaPassagem(
+        aptas=passagem.aptas, linhas=(documentos, quem, disponibilizadas), conclusao=conclusao
+    )
 
 
 # ---------------------------------------------------------------------------------------------

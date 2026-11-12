@@ -25,7 +25,11 @@ pytestmark = [pytest.mark.django_db, pytest.mark.performance]
 #
 # 120 desde a `126` (FR-4027): as convocações são classificadas pelo estado do domínio, que depende
 # do envio da comunicação — lidas num `prefetch` só, que não cresce com as convocações.
-ORCAMENTO = 120
+#
+# 128 desde a `153` (FR-6127): a passagem ao setor lê a definição, as pessoas aptas pelo seletor da
+# `117`, as exportações, os vínculos do papel e as designações — oito consultas, que não crescem com
+# as inscrições nem com as pessoas aptas.
+ORCAMENTO = 128
 
 
 @pytest.mark.parametrize("escala", [1, 10])

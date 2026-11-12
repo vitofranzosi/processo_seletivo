@@ -840,6 +840,11 @@ def montar_cenario(
     )
     cenario.apurar()
     cenario.convocar()
+    # Os aceites dão pessoas aptas para formalização; sem a definição, cada uma seria pendência do
+    # Edital (153, FR-6127). Este cenário é anterior à `153` e não trata da formalização.
+    from tests.fixtures.formalizacao import dispensar_a_formalizacao
+
+    dispensar_a_formalizacao(cenario.edital)
     if final == "sem-pendencia":
         cenario.aceitar(None, dia(16, 10, 11))
         cenario.aceitar(cenario.PPP, dia(17, 10, 11))
