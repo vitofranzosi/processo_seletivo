@@ -188,21 +188,6 @@ def test_a_reversao_do_perfil_sem_vaga_diz_que_nao_sai_no_documento():
     assert "só quando a lista reservada esgota" in linha, "o que foi escolhido continua dito"
 
 
-def test_a_passagem_entre_cotas_e_dita_em_palavras_na_revisao():
-    """A terceira resposta (155, FR-6317): sem o rótulo, a Revisão diria o código cru."""
-    conteudo = rascunho_completo()
-    conteudo["profiles"][0]["vacancyReversion"] = {"kind": "THROUGH_OTHER_QUOTAS"}
-    codigo = conteudo["profiles"][0]["code"]
-    linha = next(
-        linha
-        for linha in _linhas_do_perfil(conteudo, codigo)
-        if linha.startswith("Reverter vaga reservada")
-    )
-
-    assert "passa antes por outras cotas, na ordem do Edital" in linha
-    assert "THROUGH_OTHER_QUOTAS" not in linha
-
-
 def test_a_reversao_do_perfil_com_vaga_nao_tem_a_nota():
     conteudo = rascunho_completo()
     codigo = conteudo["profiles"][0]["code"]

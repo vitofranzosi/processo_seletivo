@@ -144,7 +144,6 @@
             <option value="">{% if comuns.vacancyReversion_varia %}Varia entre os Perfis{% else %}Não reverte{% endif %}</option>
             <option value="ON_EXHAUSTION" {% if comuns.vacancyReversion == "ON_EXHAUSTION" %}selected{% endif %}>Só quando a lista reservada esgota</option>
             <option value="ON_BALANCE" {% if comuns.vacancyReversion == "ON_BALANCE" %}selected{% endif %}>A quantidade que ficou sem preencher</option>
-            <option value="THROUGH_OTHER_QUOTAS" {% if comuns.vacancyReversion == "THROUGH_OTHER_QUOTAS" %}selected{% endif %}>Passa antes por outras cotas, na ordem do Edital</option>
           </select>
           <button type="submit" class="acao" name="aplicar" value="edital:vacancyReversion"
                   formnovalidate>Conferir aplicação a todos os Perfis</button>

@@ -1124,27 +1124,3 @@ def test_o_que_foi_declarado_sobrevive_a_remocao_da_ultima_modalidade(
     assert "Reverter vaga reservada não preenchida" not in corpo
     assert 'name="perfil-0-vacancyReversion" value="ON_EXHAUSTION"' in corpo
     assert PerfilVaga.objects.get(pk=PERFIL).especie_de_reversao == "ON_EXHAUSTION"
-
-
-def test_a_terceira_resposta_da_reversao_e_oferecida_e_gravada(client, seletor_ligado, composto):
-    """A passagem entre cotas (155, FR-6317): a opção está no passo Perfis, e a escolha volta.
-
-    Voltar é o que importa: o formulário que não a reapresentasse selecionada a apagaria na
-    gravação seguinte, porque `replace_draft` apaga o que não é reenviado.
-    """
-    identificar(client, "ana.elaboradora", ["elaborador"])
-    corpo = tela(client, composto)
-    assert 'value="THROUGH_OTHER_QUOTAS"' in corpo
-    assert "Passa antes por outras cotas, na ordem do Edital" in corpo
-
-    assert (
-        compor(
-            client, composto, perfil(**{"perfil-0-vacancyReversion": "THROUGH_OTHER_QUOTAS"})
-        ).status_code
-        == 302
-    )
-
-    assert PerfilVaga.objects.get(pk=PERFIL).especie_de_reversao == "THROUGH_OTHER_QUOTAS"
-    assert re.search(r'<option value="THROUGH_OTHER_QUOTAS"\s+selected', tela(client, composto)), (
-        "a escolha volta selecionada"
-    )

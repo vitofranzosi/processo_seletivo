@@ -815,27 +815,6 @@ def test_v1_e_v2_reversao():
     assert pdf.frase_da_reversao("OUTRA") == ""
 
 
-def test_a_passagem_entre_cotas_tem_frase_nas_duas_redacoes():
-    """A terceira resposta (155, FR-6317) sai no documento, e com "de um código" na redação 2.
-
-    O trecho não é estilo: a seção consolidada acrescenta o alcance logo depois dele quando nem
-    todo Perfil tem vaga imediata, e a frase que não o tivesse sairia sem dizer a que Perfis vale.
-    """
-    frase = pdf.frase_da_reversao("THROUGH_OTHER_QUOTAS")
-
-    assert frase == (
-        "As vagas reservadas de um código que não forem preenchidas passam antes para as outras "
-        "cotas, na ordem que este Edital estabelece, e só depois para a ampla concorrência do "
-        "mesmo código."
-    )
-    assert "de um código" in frase
-    assert pdf.frase_da_reversao("THROUGH_OTHER_QUOTAS", redacao=REDACAO_1) == (
-        "Na hipótese do não preenchimento das vagas reservadas, o quantitativo não preenchido "
-        "será destinado antes às demais reservas de vagas, na ordem estabelecida neste Edital, e "
-        "só depois à respectiva ampla concorrência."
-    )
-
-
 def test_v4_e_v5_convocacao():
     """V4 — o lugar da publicação é texto do Elaborador; V5 — o canal se preserva."""
     assert (

@@ -2152,16 +2152,6 @@ FRASE_DA_REVERSAO_2 = {
         "As vagas reservadas de um código que não forem preenchidas passam para a ampla "
         "concorrência do mesmo código."
     ),
-    # A terceira resposta (155, FR-6317). **Diz "de um código"**, como as duas acima: a seção
-    # consolidada (`apresentacao._reversao`) acrescenta o alcance logo depois desse trecho quando
-    # nem todo Perfil tem vaga imediata, e uma frase sem ele sairia sem dizer a que Perfis vale.
-    # **Não nomeia as cotas nem a ordem**: quem as escreve é o Edital, em outro item dele, e o GPS
-    # ainda não as tem como dado (FR-6319). A frase afirma só o que a declaração afirma.
-    "THROUGH_OTHER_QUOTAS": (
-        "As vagas reservadas de um código que não forem preenchidas passam antes para as outras "
-        "cotas, na ordem que este Edital estabelece, e só depois para a ampla concorrência do "
-        "mesmo código."
-    ),
 }
 
 
@@ -3321,12 +3311,6 @@ FRASE_DA_REVERSAO = {
     "ON_BALANCE": (
         "Na hipótese do não preenchimento total das vagas reservadas, o quantitativo não "
         "preenchido será destinado à respectiva ampla concorrência."
-    ),
-    # A terceira resposta na redação 1 (155, FR-6317), na forma normativa das duas acima.
-    "THROUGH_OTHER_QUOTAS": (
-        "Na hipótese do não preenchimento das vagas reservadas, o quantitativo não preenchido "
-        "será destinado antes às demais reservas de vagas, na ordem estabelecida neste Edital, e "
-        "só depois à respectiva ampla concorrência."
     ),
 }
 

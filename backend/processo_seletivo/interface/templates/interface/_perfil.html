@@ -225,9 +225,6 @@ campos já é o digitado.
     isso ele e **declarado** e nao inferido. Vazio significa que este Edital nao reverte, e o
     57/2026 prova por que isso precisa ser respeitado: o item 4.5 dele proibe por escrito o
     remanejamento entre cursos.
-
-    A terceira resposta (155, FR-6317) e do Edital que manda a vaga passar antes por outras cotas,
-    na ordem que ele estabelece. Ela e publicada e nao move vaga: o GPS ainda nao aplica essa ordem.
     {% endcomment %}
     <p class="campo">
       <label for="perfil-{{ indice }}-vacancyReversion">Reverter vaga reservada não preenchida para a ampla concorrência</label>
@@ -237,7 +234,6 @@ campos já é o digitado.
         <option value="">Não — este Edital não reverte vaga reservada</option>
         <option value="ON_EXHAUSTION" {% if perfil.vacancyReversion == "ON_EXHAUSTION" %}selected{% endif %}>Só quando a lista reservada esgota</option>
         <option value="ON_BALANCE" {% if perfil.vacancyReversion == "ON_BALANCE" %}selected{% endif %}>A quantidade que ficou sem preencher</option>
-        <option value="THROUGH_OTHER_QUOTAS" {% if perfil.vacancyReversion == "THROUGH_OTHER_QUOTAS" %}selected{% endif %}>Passa antes por outras cotas, na ordem do Edital</option>
       </select>
       <span class="oculto" id="ajuda-reversao-{{ indice }}">Declarar a reversão exige quadro de
         vagas publicado: sem quantidade por recorte não há o que reverter.</span>

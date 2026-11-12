@@ -61,13 +61,8 @@ class PerfilVaga(models.Model):
     # segundo degrau canônico (016, R-005).
     #
     # **Vazio, e não nulo**: é a grafia que este repositório usa para texto ausente — `null` em
-    # `CharField` daria duas formas de dizer a mesma coisa, e o `DJ001` cobra isso. Os valores
+    # `CharField` daria duas formas de dizer a mesma coisa, e o `DJ001` cobra isso. Os dois valores
     # declaráveis são não vazios, então vazio é inequivocamente "não declarou".
-    #
-    # **Três desde a `155`** (FR-6317): a terceira diz que a vaga passa antes por outras cotas, na
-    # ordem do Edital, e não move nada até a spec própria (FR-6319). É resposta à mesma pergunta, e
-    # por isso mora na mesma coluna — um campo à parte permitiria declarar a passagem **e** uma das
-    # duas que movem, e o Edital não diz as duas coisas.
     especie_de_reversao = models.CharField(
         max_length=32,
         blank=True,
@@ -75,7 +70,6 @@ class PerfilVaga(models.Model):
         choices=[
             ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
             ("ON_BALANCE", "A quantidade que ficou sem preencher"),
-            ("THROUGH_OTHER_QUOTAS", "Passa antes por outras cotas, na ordem do Edital"),
         ],
     )
     # Como este Perfil comunica a convocação (019, D-009, R-007). **Vazio significa "este Edital

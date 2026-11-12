@@ -53,11 +53,9 @@ def campos_do_perfil(api_client, manager_headers, process_payload, *, reversao):
     return next(g for g in grupos if g["tipo"] == "Perfil")
 
 
-def test_a_declaracao_e_retificavel_por_referencia_com_as_tres_respostas(
+def test_a_declaracao_e_retificavel_por_referencia_com_as_duas_especies(
     api_client, manager_headers, process_payload
 ):
-    """A terceira resposta (155, FR-6317) entra por aqui: num Edital publicado, a troca para a
-    passagem entre cotas é por Retificação, e o seletor precisa oferecê-la."""
     do_perfil = campos_do_perfil(
         api_client, manager_headers, process_payload, reversao=nomes.REVERSAO_POR_SALDO
     )
@@ -67,15 +65,10 @@ def test_a_declaracao_e_retificavel_por_referencia_com_as_tres_respostas(
     assert [identificador for identificador, _ in campo["opcoes"]] == [
         nomes.REVERSAO_POR_ESGOTAMENTO,
         nomes.REVERSAO_POR_SALDO,
-        nomes.PASSAGEM_ENTRE_COTAS,
     ]
     # As opções levam as **mesmas palavras da tela de composição**: quem retifica escolhe entre o
-    # que já leu ao declarar, e não entre códigos.
+    # que já leu ao declarar, e não entre dois códigos.
     assert dict(campo["opcoes"])[nomes.REVERSAO_POR_SALDO] == "A quantidade que ficou sem preencher"
-    assert (
-        dict(campo["opcoes"])[nomes.PASSAGEM_ENTRE_COTAS]
-        == "Passa antes por outras cotas, na ordem do Edital"
-    )
 
 
 def test_o_rotulo_do_vazio_diz_o_que_o_vazio_provoca(api_client, manager_headers, process_payload):

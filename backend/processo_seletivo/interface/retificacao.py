@@ -346,13 +346,11 @@ CAMPOS_DO_CORTE = [
 ]
 # Os dois desfechos, com as mesmas palavras da tela de composição: quem retifica escolhe entre o
 # que já leu ao declarar, e não entre dois códigos.
-# As três respostas da reversão, com as mesmas palavras da tela de composição: quem retifica
-# escolhe entre o que já leu ao declarar, e não entre códigos. **A terceira chegou com a `155`**
-# (FR-6317): a troca para ela num Edital publicado é por Retificação, e é por aqui que ela passa.
+# As duas espécies de gatilho, com as mesmas palavras da tela de composição: quem retifica escolhe
+# entre o que já leu ao declarar, e não entre dois códigos.
 ESPECIES_DE_REVERSAO = (
     ("ON_EXHAUSTION", "Só quando a lista reservada esgota"),
     ("ON_BALANCE", "A quantidade que ficou sem preencher"),
-    ("THROUGH_OTHER_QUOTAS", "Passa antes por outras cotas, na ordem do Edital"),
 )
 # As duas formas de comunicar a convocação, com as mesmas palavras da tela de composição (019).
 # **As duas são normais**, e a amostra tem as duas: o 69/2026 (7.2) convoca por publicação; o 77, o

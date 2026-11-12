@@ -311,14 +311,6 @@ def test_cadastro_de_reserva_limite_e_reversao_vem_em_palavras():
     assert "não forma cadastro de reserva" in inf_bjn.explicacao.conteudo
 
 
-def test_a_passagem_entre_cotas_vem_em_palavras():
-    """A terceira resposta (155, FR-6317): o valor que a tabela não conhecesse sairia entre aspas,
-    como código — e a resposta diria ao candidato um identificador em vez da regra."""
-    assert rotulos.em_palavras(rotulos.REVERSAO, "THROUGH_OTHER_QUOTAS") == (
-        "passa antes por outras cotas, na ordem do Edital"
-    )
-
-
 # ---- a validação de correção e referências de 12/10 (verificacao.md §6) ----------------------
 
 
