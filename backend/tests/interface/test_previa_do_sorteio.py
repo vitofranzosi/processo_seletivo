@@ -334,22 +334,11 @@ def test_por_saldo_o_resumo_diz_as_cedidas(client, com_saldo):
     assert "seriam cedidas à ampla" in rodadas or "seria cedida à ampla" in rodadas
 
 
-def test_por_esgotamento_o_resumo_diz_a_destinacao(client, com_esgotamento):
-    """155, FR-6343: por esgotamento, o verbo é o da destinação por ato próprio, e não a cessão."""
+def test_por_esgotamento_nada_e_cedido_e_e_comportamento_atual(client, com_esgotamento):
     rodadas = bloco(previa(client, com_esgotamento), "rodadas-do-sorteio")
 
-    assert "seria destinada à ampla" in rodadas or "seriam destinadas à ampla" in rodadas
-    assert "cedida" not in rodadas
-    assert "pendente de decisão na spec 095)" not in rodadas
-
-
-def test_a_passagem_entre_cotas_nao_e_cedida_e_o_limite_e_do_gps(client, seletor_ligado, edital):
-    """A terceira resposta (155, UX-603), com a mesma frase da prévia da classificação."""
-    com_passagem = montar(client, edital, "THROUGH_OTHER_QUOTAS")
-    rodadas = bloco(previa(client, com_passagem), "rodadas-do-sorteio")
-
-    assert "O GPS ainda não aplica essa ordem" in rodadas
-    assert "nenhuma vaga seria cedida à ampla em rodada nenhuma" not in rodadas
+    assert "nenhuma vaga seria cedida à ampla em rodada nenhuma" in rodadas
+    assert "comportamento atual, pendente de decisão na spec 095" in rodadas
 
 
 def test_resultado_igual_em_todas_as_rodadas_nao_vira_porcentagem(client, com_reservas):

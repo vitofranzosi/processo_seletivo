@@ -1,36 +1,19 @@
 {% load interface_extras %}{% comment %}
 A vaga sem quem a ocupe (155, R-008, UX-600). A frase vem pronta de
 `interface/destinacao_da_vaga.py`, a mesma que o Centro e a convocacao dizem: nomeia a lista, a
-quantidade e o que o Edital declara, em palavras. Quatro casos a tem: a reversao por esgotamento, o
-Edital silente, a linha geral sem quem a ocupe e a passagem entre cotas, que diz a limitacao do GPS
-e nenhum ato (UX-603). Sob a reversao por saldo a tela continua como estava, e `recorte.vaga` vem
-vazia.
+quantidade e o que o Edital declara, em palavras. Tres casos a tem: o Edital silente, a linha geral
+sem quem a ocupe e a reserva cuja reversao o Edital declara e a apuracao ainda nao aplicou - esta,
+sem ato nenhum: a frase diz a regra e o proximo passo.
 
 O ato aparece so onde o comando o aceitaria (FR-6302), e so para quem apura; quem le e nao apura
 recebe a frase de quem pratica o ato, e nao um botao que terminaria numa recusa.
 {% endcomment %}{% if recorte.vaga %}
 <p class="aviso" role="status">{{ recorte.vaga.frase }}</p>
-{% if recorte.vaga.movimentos %}
-<ul class="consequencias">
-  {% for item in recorte.vaga.movimentos %}{% with movimento=item.registro %}
-  <li>{{ movimento.registrado_em|date:"d/m/Y" }} — {% if movimento.especie == "DESFAZIMENTO_DA_REVERSAO" %}{{ movimento.quantidade|contagem:"vaga devolvida,vagas devolvidas" }} a esta lista, desfazendo a destinação de {{ movimento.desfaz.registrado_em|date:"d/m/Y" }}. Motivo: {{ movimento.fundamento }}{% else %}{{ movimento.quantidade|contagem:"vaga destinada,vagas destinadas" }} à ampla concorrência{% if movimento.fundamento %}, por ato próprio. Fundamento: {{ movimento.fundamento }}{% else %}, pela apuração desta lista — {{ movimento.causa }}{% endif %}{% endif %} Registrado por {% nome_de_pessoa movimento.registrado_por %}.
-    {% if item.desfazivel and item.dependentes %}
-    <p class="nota">Esta destinação não se desfaz agora: {% for chamada in item.dependentes %}{{ chamada.rotulo|default:"uma pessoa" }} {% if chamada.ocupa %}ocupa a vaga{% else %}foi chamada para ela{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}. O desfazimento só cabe depois do desfecho que libere a vaga.</p>
-    {% elif item.desfazivel and pode_emitir %}
-    <form method="post" action="{% url 'interface:desfazer-destinacao' edital.id marco_id %}" class="acoes">
-      {% csrf_token %}
-      <input type="hidden" name="ato" value="{{ movimento.id }}">
-      <button type="submit" class="acao">Desfazer esta destinação</button>
-    </form>
-    {% endif %}
-  </li>
-  {% endwith %}{% endfor %}
-</ul>
-{% endif %}
 {% if recorte.vaga.naoPreenchidas %}
 {% comment %}
 A vaga declarada nao preenchida aparece como tal (155, FR-6326), com o fundamento, e o
-desfazimento ao lado de cada declaracao que ainda tem o que desfazer (FR-6334).
+desfazimento ao lado de cada declaracao que ainda tem o que desfazer (FR-6334). Com pessoa chamada
+para a vaga, o impedimento no lugar do botao (FR-6335).
 {% endcomment %}
 <ul class="consequencias">
   {% for item in recorte.vaga.naoPreenchidas %}{% with declaracao=item.registro %}
@@ -52,17 +35,9 @@ desfazimento ao lado de cada declaracao que ainda tem o que desfazer (FR-6334).
 {% if pode_emitir %}
 {% comment %}
 Um ato por caminho (UX-602). No Edital silente sao dois, e explicitos (FR-6321): a Retificacao que
-declara a reversao, so quando a fase a admite - o mesmo predicado da acao "Retificar" do Edital -,
-e a declaracao de vaga nao preenchida, com fundamento escrito.
+declara a reversao, so quando a fase a admite - nomeada para quem nao pode pratica-la -, e a
+declaracao de vaga nao preenchida, com fundamento escrito.
 {% endcomment %}
-{% if recorte.vaga.destinacao %}
-<form method="post" action="{% url 'interface:destinar-vaga' edital.id marco_id %}" class="acoes">
-  {% csrf_token %}
-  <input type="hidden" name="lista" value="{{ recorte.listaId }}">
-  <input type="hidden" name="chave" value="{{ chave_idempotencia }}-destinar-{{ forloop.counter }}">
-  <button type="submit" class="botao">Destinar à ampla concorrência</button>
-</form>
-{% else %}
 {% if recorte.vaga.silente and retificacao_admitida %}
 <p class="nota">Para que a vaga vá à ampla concorrência, o Edital precisa declarar a reversão, por Retificação{% if pode_retificar %}: <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% else %}, que é ato de quem elabora o Edital{% endif %}. Ou declare a vaga não preenchida, com o fundamento escrito.</p>
 {% endif %}
@@ -72,9 +47,8 @@ e a declaracao de vaga nao preenchida, com fundamento escrito.
   <input type="hidden" name="chave" value="{{ chave_idempotencia }}-nao-preenchida-{{ forloop.counter }}">
   <button type="submit" class="botao">Declarar a vaga não preenchida</button>
 </form>
-{% endif %}
 {% else %}
-<p class="nota">{% if recorte.vaga.destinacao %}Destinar a vaga à ampla concorrência{% else %}Declarar a vaga não preenchida{% endif %} é ato de quem apura a ocupação deste marco, com a conferência antes.</p>
+<p class="nota">Declarar a vaga não preenchida é ato de quem apura a ocupação deste marco, com a conferência antes.</p>
 {% endif %}
 {% endif %}
 {% endif %}

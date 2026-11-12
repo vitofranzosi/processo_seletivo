@@ -3,9 +3,15 @@
 (155, T022.) A verificação do levantamento
 (`specs/155-destinacao-da-vaga-sem-concorrente/verificacao-do-levantamento.md`) mediu o que o
 código fazia antes da `155`: a reserva sem mais ninguém nunca esgotava, porque quem saiu por
-desfecho, o inabilitado e quem ocupa pela ampla contavam como "quem ocupar". Estes casos
-são os mesmos cenários, com o resultado que a FR-6304 manda — e com os fatos externos lidos de
-verdade, pela composição da interface, sobre o resultado definitivo publicado.
+desfecho, o inabilitado e quem ocupa pela ampla contavam como "quem ocupar". Estes casos são os
+mesmos cenários, com a condição que a FR-6304 manda — e com os fatos externos lidos de verdade,
+pela composição da interface, sobre o resultado definitivo publicado.
+
+**Nesta entrega a condição serve à declaração de vaga não preenchida**, no Edital silente: é nele
+que os cenários correm. Onde o Edital declara a reversão por esgotamento, a apuração continua
+aplicando a regra de antes da `155`, e a V-1 prova que a vaga não sai — a tela diz por quê, sem ato
+(`TestV1Desistencia::test_com_reversao_declarada_a_apuracao_nao_cede_e_a_vaga_nao_sai`). A
+destinação por ato próprio ficou para a próxima entrega (`claude/155-destinacao-completa`).
 
 **V-5** — todos eliminados antes da ordem — não tem caminho oficial no sorteio, que não elimina: o
 caso puro está em `tests/unit/ocupacao/test_destinacao_dominio.py::test_posicao_vazia_nao_conta`.
@@ -31,7 +37,10 @@ from tests.integration.ocupacao.test_concomitancia import apurar, emitir_cortes,
 pytestmark = pytest.mark.django_db(transaction=True)
 
 
-def montar(gestor, api_client, manager_headers, process_payload, prefixo, **quadro):
+def montar(
+    gestor, api_client, manager_headers, process_payload, prefixo, *, reversao=None, **quadro
+):
+    """O certame sorteado, por padrão **sem reversão declarada** — o C09 (155, FR-6321)."""
     return certame_sorteado_com_quadro(
         gestor,
         api_client,
@@ -39,13 +48,50 @@ def montar(gestor, api_client, manager_headers, process_payload, prefixo, **quad
         process_payload,
         prefixo=prefixo,
         com_corte=True,
-        reversao=nomes.REVERSAO_POR_ESGOTAMENTO,
+        reversao=reversao,
         **quadro,
     )
 
 
+def definitivo(**fatos):
+    """Os fatos externos de um marco com o resultado definitivo e nada pendente."""
+
+    def fatos_externos(**_):
+        return {"natureza_do_resultado": "DEFINITIVA", **fatos}
+
+    return fatos_externos
+
+
+DEFINITIVO = definitivo()
+
+
+def esgotado(gestor, api_client, manager_headers, process_payload, prefixo, *, reversao):
+    """A V-1: o único cotista desiste, e a apuração seguinte dá 1 a ocupar e ninguém mais."""
+    certame = certame_sorteado_com_quadro(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        prefixo=prefixo,
+        com_corte=True,
+        quantos=8,
+        geral=1,
+        reversao=reversao,
+    )
+    cotista = certame["cotista_ppi"]
+    emitir_cortes(certame, gestor)
+    habilitar(certame, [cotista])
+    apurar(certame, gestor, chave=f"{prefixo}-ampla")
+    sem_concomitancia(certame, cotista)
+    apurar(certame, gestor, chave=f"{prefixo}-ampla-2", motivo="Saída da ampla registrada")
+    apurar(certame, gestor, lista_id=LISTA_PPI, chave=f"{prefixo}-ppi")
+    efeito(certame, cotista, nomes.EFEITO_EXCLUSAO)
+    apurar(certame, gestor, lista_id=LISTA_PPI, chave=f"{prefixo}-ppi-2", motivo="Desistência")
+    return certame
+
+
 def publicar_definitivo(certame, lista_id=LISTA_PPI, chave="definitivo"):
-    """O resultado definitivo da lista, pelo comando — sem ele, a destinação não cabe (FR-6306)."""
+    """O resultado definitivo da lista, pelo comando — sem ele, a declaração não cabe (FR-6306)."""
     from processo_seletivo.classificacao.application.selectors import ato_vigente
     from processo_seletivo.divulgacao.application.publicar import (
         assinatura_da_previa,
@@ -155,7 +201,7 @@ def fora_da_ampla(certame, inscricao):
 def test_o_prazo_do_definitivo_impede_enquanto_corre(
     db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
 ):
-    """US3.5: com o prazo recursal aberto, a destinação não é oferecida, e diz até quando."""
+    """US3.5: com o prazo recursal aberto, a declaração não é oferecida, e diz até quando."""
     certame = montar(
         gestor, api_client, manager_headers, process_payload, "prazo-155", quantos=8, geral=1
     )
@@ -177,8 +223,9 @@ class TestV1Desistencia:
             gestor, api_client, manager_headers, process_payload, "v1-155", quantos=8, geral=1
         )
 
-    def test_o_unico_cotista_desiste_e_a_destinacao_e_oferecida(self, certame, gestor):
-        """V-1: antes, 0 ocupadas e 1 a ocupar para sempre; agora, a reserva está esgotada."""
+    def test_o_unico_cotista_desiste_e_a_declaracao_e_oferecida(self, certame, gestor):
+        """V-1 no Edital silente: antes, 0 ocupadas e 1 a ocupar para sempre; agora, a reserva
+        está esgotada, e a declaração de vaga não preenchida é o caminho (FR-6321)."""
         cotista = certame["cotista_ppi"]
         emitir_cortes(certame, gestor)
         habilitar(certame, [cotista])
@@ -194,12 +241,37 @@ class TestV1Desistencia:
         publicar_definitivo(certame)
 
         assert (depois["ocupadas"], depois["faltando"], depois["reverteu"]) == (0, 1, 0)
-        assert MovimentoDeVaga.objects.count() == 0, "a emissão não move vaga (FR-6315)"
+        assert MovimentoDeVaga.objects.count() == 0, "sem reversão declarada, nada move (FR-6320)"
         situacao = ler(certame)["situacao"]
-        assert situacao["estado"] == destinacao.DESTINACAO_DISPONIVEL, situacao
+        assert situacao["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL, situacao
         assert situacao["quantidade"] == 1
 
-    def test_sem_o_definitivo_a_destinacao_esta_impedida(self, certame, gestor):
+    def test_com_reversao_declarada_a_apuracao_nao_cede_e_a_vaga_nao_sai(
+        self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+    ):
+        """V-1 com a reversão por esgotamento: a regra de antes da `155` conta a posição de quem
+        desistiu, e a apuração não cede. A vaga fica, sem ato a oferecer — a declaração é recusada
+        onde o Edital declara a reversão (FR-6327) —, e a situação o diz."""
+        certame = esgotado(
+            gestor,
+            api_client,
+            manager_headers,
+            process_payload,
+            "v1r-155",
+            reversao=nomes.REVERSAO_POR_ESGOTAMENTO,
+        )
+        publicar_definitivo(certame)
+
+        vigente = selectors.apuracao_vigente(
+            edital=certame["edital"], perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=LISTA_PPI
+        )
+        assert (vigente.ocupadas, vigente.faltando) == (0, 1)
+        assert MovimentoDeVaga.objects.count() == 0, "a reversão da apuração não se aplica"
+        situacao = ler(certame)["situacao"]
+        assert situacao["estado"] == destinacao.REVERSAO_PELA_APURACAO, situacao
+        assert situacao["quantidade"] == 1
+
+    def test_sem_o_definitivo_a_declaracao_esta_impedida(self, certame, gestor):
         """US3.6: com o resultado do marco não definitivo, em nenhum dos gatilhos."""
         cotista = certame["cotista_ppi"]
         emitir_cortes(certame, gestor)
@@ -234,10 +306,10 @@ class TestV2Inabilitacao:
 
         assert (apurado["ocupadas"], apurado["faltando"]) == (0, 1)
         situacao = ler(certame)["situacao"]
-        assert situacao["estado"] == destinacao.DESTINACAO_DISPONIVEL, situacao
+        assert situacao["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL, situacao
 
-    def test_com_o_prazo_da_eliminacao_aberto_a_destinacao_espera(self, certame, gestor):
-        """US3.5: enquanto o recurso pode devolver o eliminado à lista, a vaga não é destinada.
+    def test_com_o_prazo_da_eliminacao_aberto_a_declaracao_espera(self, certame, gestor):
+        """US3.5: enquanto o recurso pode devolver o eliminado à lista, a vaga não é declarada.
 
         O prazo chega pelos fatos externos, como a composição o entrega; o que se prova aqui é o
         lado da ocupação: quem ela pergunta, e o que faz com a resposta.
@@ -302,7 +374,7 @@ class TestV4Concomitancia:
         apurar(certame, gestor, chave=f"{prefixo}-ampla")
         assert not fora_da_ampla(certame, certame["cotista_ppi"])
 
-    def test_com_a_ocupacao_pela_ampla_confirmada_a_destinacao_e_oferecida(self, certame, gestor):
+    def test_com_a_ocupacao_pela_ampla_confirmada_a_declaracao_e_oferecida(self, certame, gestor):
         """US3.1 e V-4: antes, nunca esgotava; agora, quem confirmou a ampla não ocupa a reserva."""
         self._preparar(certame, gestor, "v4")
         efeito(certame, certame["cotista_ppi"], nomes.EFEITO_INCLUSAO, lista_id=None)
@@ -311,9 +383,9 @@ class TestV4Concomitancia:
 
         assert (cota["ocupadas"], cota["faltando"]) == (0, 1)
         situacao = ler(certame)["situacao"]
-        assert situacao["estado"] == destinacao.DESTINACAO_DISPONIVEL, situacao
+        assert situacao["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL, situacao
 
-    def test_sem_a_confirmacao_a_destinacao_esta_impedida(self, certame, gestor):
+    def test_sem_a_confirmacao_a_declaracao_esta_impedida(self, certame, gestor):
         """US3.2: a ocupação pela ampla ainda pode mudar, e a tela diz isso."""
         self._preparar(certame, gestor, "v4b")
         apurar(certame, gestor, lista_id=LISTA_PPI, chave="v4b-ppi")
@@ -355,7 +427,9 @@ class TestChamadaEmCurso:
         cota = apurar(certame, gestor, lista_id=LISTA_PPI, chave="chamada-ppi")
         assert (cota["ocupadas"], cota["faltando"]) == (1, 1)
         publicar_definitivo(certame)
-        chamar(certame, gestor, cotista.id, lista_id=LISTA_PPI, chave="chamada-chamar")
+        chamar(
+            certame, gestor, cotista.id, lista_id=LISTA_PPI, chave="chamada-chamar", especie=None
+        )
 
         situacao = ler(certame)["situacao"]
 

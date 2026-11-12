@@ -1,18 +1,19 @@
-"""A vaga reservada sem quem a ocupe: a condição, os impedimentos e a situação, puros (155, R-004).
+"""A vaga sem quem a ocupe: a condição, os impedimentos e a situação, puros (155, R-004).
 
 **Uma conta só, para as três telas e para o comando** (155, D-004, FR-6301). A ocupação, o Centro e
-a convocação dizem a mesma situação, e o ato a reavalia sob a trava: duas contas divergiriam na
-primeira regra nova, e a tela ofereceria o ato que o comando recusa (FR-6302).
+a convocação dizem a mesma situação, e a declaração de vaga não preenchida a reavalia sob a trava:
+duas contas divergiriam na primeira regra nova, e a tela ofereceria o ato que o comando recusa
+(FR-6302).
 
 **Nada aqui toca banco**, pela razão de `apuracao.py`: os fatos chegam prontos — as posições da
 ordem, os efeitos da `019`, quem a faixa alcança e o que a divulgação, os recursos e a condução
-disseram —, e é isso que permite à prévia da classificação fazer a mesma conta sobre a ordem
-fictícia (FR-6343).
+disseram.
 
-**Cada gatilho com a sua condição** (155, D-009, FR-6307). Só o esgotamento tem condição escrita
-aqui: a do saldo espera a decisão do usuário (FR-6305), e `situacao` a devolve como estado próprio,
-sem conta nenhuma. A alternativa recusada era fazer o saldo cair na condição do esgotamento até a
-decisão chegar — seria escolher, no código, a opção A1 que a spec deixou em aberto.
+**Esta entrega lê a condição e não move vaga** (155, "Esta entrega"). Onde o Edital declara a
+reversão, quem a aplica continua sendo a apuração da lista, pela regra de antes da `155`
+(`reversao.quantidade_a_reverter`); a conta daqui só diz por que a vaga ainda não saiu. O ato que a
+destina por conta própria, com a condição de cada gatilho (FR-6305, FR-6308), ficou para a próxima
+entrega, preservada na branch `claude/155-destinacao-completa`.
 """
 
 from collections import namedtuple
@@ -24,14 +25,13 @@ from processo_seletivo.ocupacao.domain import nomes
 # **Derivados, e não gravados**: a situação muda com o mundo em volta (um desfecho, um recurso, a
 # publicação do definitivo), e guardá-la exigiria `UPDATE` numa tabela append-only.
 SEM_VAGA_A_DESTINAR = "sem_vaga_a_destinar"
-DESTINACAO_DISPONIVEL = "destinacao_disponivel"
 NAO_PREENCHIDA_DISPONIVEL = "nao_preenchida_disponivel"
 IMPEDIDA = "impedida"
-PASSAGEM_ENTRE_COTAS = "passagem_entre_cotas"
-# **O estado da espera, e não uma regra** (155, R-010): sob a reversão por saldo a emissão continua
-# a mover vaga como antes, e nenhum ato novo é oferecido. O nome diz o porquê a quem lê o código; a
-# tela não o diz a ninguém.
-AGUARDA_D015 = "aguarda_d015"
+# **A vaga da reserva que o Edital manda reverter e que a apuração ainda não cedeu.** Nenhum ato
+# é oferecido: a reversão é da apuração, e a declaração de não preenchida é recusada onde o Edital
+# declara para onde a vaga vai (FR-6327). O estado existe para que a tela diga por que a vaga não
+# sai e qual é o próximo passo, em vez de calar ou de oferecer o que o comando recusaria (FR-6302).
+REVERSAO_PELA_APURACAO = "reversao_pela_apuracao"
 
 # --- Os impedimentos da FR-6306 -----------------------------------------------------------------
 # A ordem é a do caminho, e não a da gravidade — a de `publicabilidade._impedimento_da_definitiva`:
@@ -235,24 +235,6 @@ def impedimentos(fatos):
     return achados
 
 
-def quantidade_destinavel(*, gatilho, saldo, ainda_podem_ocupar, impedimentos=()):
-    """Quantas vagas a destinação levaria à ampla agora, ou zero (FR-6311).
-
-    **O saldo é o das efetivas líquidas**, e é isso que faz o movimento antigo contar como
-    destinação feita (FR-6316): a vaga que a apuração cedeu antes da `155` já saiu das efetivas, e
-    nenhum ato a cede outra vez.
-
-    **Só o esgotamento tem conta aqui** (FR-6307). Por saldo, zero até a decisão do usuário —
-    devolver o saldo inteiro seria adotar, em silêncio, a leitura da `016` que a D-015 da `155`
-    está decidindo.
-    """
-    if gatilho != nomes.REVERSAO_POR_ESGOTAMENTO:
-        return 0
-    if ainda_podem_ocupar or impedimentos:
-        return 0
-    return max(int(saldo), 0)
-
-
 def situacao(
     *,
     declaracao,
@@ -261,24 +243,23 @@ def situacao(
     restantes=(),
     pendentes=(),
     impedimentos=(),
-    destinadas=0,
 ):
     """O estado da vaga sem quem a ocupe, com o que a tela precisa para dizê-lo (155, R-008).
 
-    - `declaracao`: o que o Perfil declara (`reversao.declarada`), `None` quando nada;
+    - `declaracao`: a espécie de reversão que o Perfil declara (`reversao.declarada`), `None`
+      quando nada;
     - `lista_id`: o recorte, `None` na linha geral;
     - `saldo`: as vagas a ocupar da apuração vigente, `None` sem apuração;
     - `restantes`: quem ainda pode ocupar (`quem_ainda_pode_ocupar`);
-    - `pendentes`: os dos `restantes` cuja ocupação está em suspenso — chamados com prazo em curso
-      e os que ocupam a ampla sem confirmação. Eles contam como quem ainda pode ocupar (FR-6304), e
-      a razão de a vaga não ir é o impedimento deles, e não "chame o próximo";
-    - `destinadas`: quantas a reserva já cedeu — pelo movimento antigo ou pelo ato —, para a tela
-      dizer que a vaga já foi (US1.5).
+    - `pendentes`: os dos `restantes` cuja ocupação está em suspenso — chamados com prazo em curso,
+      os que ocupam a ampla sem confirmação e os eliminados com recurso possível. Eles contam como
+      quem ainda pode ocupar (FR-6304), e a razão de a vaga não sair é o impedimento deles, e não
+      "chame o próximo".
 
     **A ordem das perguntas** é a que impede a tela de oferecer o que o comando recusa: sem vaga a
-    ocupar não há nada a destinar; a passagem entre cotas e o saldo não têm ato nesta entrega; com
-    alguém livre na ordem, o caminho é chamá-lo, e não destinar; e só então o impedimento, que é o
-    que separa a vaga sem quem a ocupe da vaga que ainda pode ser ocupada.
+    ocupar não há nada a dizer; com alguém livre na ordem, o caminho é chamá-lo; com reversão
+    declarada na reserva, a vaga é da apuração, e nenhum ato é oferecido; e só então o impedimento,
+    que separa a vaga sem quem a ocupe da que ainda pode ser ocupada.
     """
     restantes = list(restantes)
     pendentes = {chave(i) for i in pendentes}
@@ -290,25 +271,20 @@ def situacao(
         "aindaPodemOcupar": len(restantes),
         "livres": len(livres),
         "impedimentos": list(impedimentos),
-        "destinadas": int(destinadas or 0),
     }
     if saldo is None or int(saldo) <= 0:
         return {**base, "estado": SEM_VAGA_A_DESTINAR}
-    if declaracao == nomes.PASSAGEM_ENTRE_COTAS:
-        return {**base, "estado": PASSAGEM_ENTRE_COTAS}
-    if declaracao == nomes.REVERSAO_POR_SALDO:
-        return {**base, "estado": AGUARDA_D015}
     if livres:
         return {**base, "estado": SEM_VAGA_A_DESTINAR}
+    if declaracao in nomes.ESPECIES_DE_REVERSAO and lista_id is not None:
+        return {**base, "estado": REVERSAO_PELA_APURACAO, "quantidade": int(saldo)}
     if impedimentos or restantes:
         # `restantes` sem livres e sem impedimento não acontece com os fatos completos — os
         # pendentes nascem dos mesmos fatos que os impedimentos —, mas a guarda fica: oferecer a
-        # destinação com alguém ainda na reserva é o defeito que esta feature corrige (V-1).
+        # declaração com alguém ainda na reserva é o defeito que esta feature corrige (V-1).
         return {**base, "estado": IMPEDIDA}
-    if declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and lista_id is not None:
-        return {**base, "estado": DESTINACAO_DISPONIVEL, "quantidade": int(saldo)}
     # Sem reversão declarada, ou na linha geral: a declaração de vaga não preenchida (155, D-006,
-    # D-014). O ato é do incremento seguinte; a conta já sabe dizê-lo.
+    # D-014).
     return {**base, "estado": NAO_PREENCHIDA_DISPONIVEL, "quantidade": int(saldo)}
 
 
@@ -317,18 +293,15 @@ def _contagem(quantidade, singular, plural):
 
 
 __all__ = [
-    "AGUARDA_D015",
-    "DESTINACAO_DISPONIVEL",
     "IMPEDIDA",
     "Impedimento",
     "NAO_PREENCHIDA_DISPONIVEL",
-    "PASSAGEM_ENTRE_COTAS",
+    "REVERSAO_PELA_APURACAO",
     "SEM_VAGA_A_DESTINAR",
     "ainda_podem_ocupar",
     "excluidos_por_efeito",
     "impedimentos",
     "incluidos_por_efeito",
-    "quantidade_destinavel",
     "quem_ainda_pode_ocupar",
     "situacao",
 ]

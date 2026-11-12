@@ -37,31 +37,6 @@ def mesma_lista(a, b):
     return (str(a) if a else None) == (str(b) if b else None)
 
 
-def recebidas_e_cedidas(movimentos_lidos):
-    """`(recebidas, cedidas)` dos `(especie, recebida, quantidade)` que a apuração leu.
-
-    **O desfazimento da reversão é lido como movimento** (155, R-005), e não como estorno de
-    sinal: ele grava a mesma quantidade com origem e destino trocados, e o `recebida` de cada
-    tupla — que vem do destino — já diz o sentido. A reserva que cedeu 2 e teve a destinação
-    desfeita recebe 2 de volta, e a ampla cede as 2 que tinha recebido; a soma das efetivas do
-    Perfil continua a mesma (FR-6311).
-
-    **Espécie desconhecida é recusada, e não ignorada.** As duas são as de `ESPECIES_DE_MOVIMENTO`,
-    que a constraint do banco também exige; uma terceira que chegasse aqui por um caminho de teste
-    ou de prévia seria contada em silêncio, ou descartada em silêncio — os dois dão um número
-    plausível e errado.
-    """
-    recebidas = cedidas = 0
-    for especie, recebida, quantidade in movimentos_lidos:
-        if especie not in nomes.ESPECIES_DE_MOVIMENTO:
-            raise ValueError(f"espécie de movimento desconhecida: {especie!r}")
-        if recebida:
-            recebidas += int(quantidade)
-        else:
-            cedidas += int(quantidade)
-    return recebidas, cedidas
-
-
 def saldo_das_nao_preenchidas(lidas):
     """Declarações menos desfazimentos, sobre `(especie, quantidade)` na ordem congelada (155).
 
@@ -287,7 +262,8 @@ def ocupantes_pela_ampla(
     **As efetivas são somadas aqui e em `apurar`, cada uma por si**, de propósito: unificar as duas
     seria mudança no caminho oficial sem efeito na prévia (R-003 da `095`).
     """
-    recebidas, cedidas = recebidas_e_cedidas(movimentos_lidos)
+    recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
+    cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
     efetivas = int(publicadas) + recebidas - cedidas
     return ocupantes(
         titulares=titulares_iniciais(
@@ -351,7 +327,8 @@ def apurar(
     já líquido dos desfazimentos. **Entra antes da janela de titulares**, como os movimentos: é por
     isso que, no recorte de 0 vagas publicadas, a vaga acrescida faz do 1º da ordem um titular.
     """
-    recebidas, cedidas = recebidas_e_cedidas(movimentos_lidos)
+    recebidas = sum(q for _, recebida, q in movimentos_lidos if recebida)
+    cedidas = sum(q for _, recebida, q in movimentos_lidos if not recebida)
     efetivas = int(publicadas) + recebidas - cedidas + int(acrescidas)
     # **Suplente não ocupa vaga, e o teto diz isso.** A faixa pode ser maior que o quadro: no
     # 77/2026 são 40 vagas com 30 suplentes alcançados na mesma faixa (`D-011` da `014`), e se

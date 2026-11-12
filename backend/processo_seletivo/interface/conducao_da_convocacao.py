@@ -648,11 +648,11 @@ def _vaga_sem_chamada(leitura, quantas, *, pode_convocar):
 
 
 def _situacao_da_vaga(leitura):
-    """Com a fila vazia, a situação da vaga da reserva, na frase do Centro e da ocupação (155).
+    """Com a fila vazia, a situação da vaga, na frase do Centro e da ocupação (155, R-008).
 
-    **A mesma conta das três telas** (155, D-004, R-008): o índice só a cita, e o ato mora na
-    ocupação. Vazia onde a situação não diz nada novo — sob a reversão por saldo, por exemplo, a
-    tela continua como estava.
+    **A mesma conta das três telas** (155, D-004): o índice só a cita, e o ato mora na ocupação.
+    Vazia onde a situação não diz nada novo. Onde o Edital declara a reversão, a frase diz por que
+    a vaga ainda não saiu, sem ato: a reversão é da apuração.
     """
     from processo_seletivo.interface import destinacao_da_vaga
 
@@ -670,21 +670,13 @@ def _situacao_da_vaga(leitura):
     )
     if vaga is None:
         return ""
-    # O ato pelo nome que a ocupação lhe dá: a destinação, ou a declaração de vaga não preenchida
-    # no Edital silente e na linha geral (155, FR-6321, D-014).
-    ato = (
-        "a destinação à ampla concorrência"
-        if vaga.get("destinacao") or vaga.get("ato") == destinacao_da_vaga.DESTINAR
-        else "a declaração de vaga não preenchida"
-    )
     if vaga["disponivel"]:
-        return f"; {vaga['frase']} {ato[0].upper()}{ato[1:]} é ato da ocupação"
+        return f"; {vaga['frase']} A declaração de vaga não preenchida é ato da ocupação"
+    if vaga.get("reversao"):
+        return f"; {vaga['frase']}"
     if vaga["impedimentos"]:
         motivos = "; ".join(i["frase"] for i in vaga["impedimentos"])
-        return f"; {ato} ainda não cabe: {motivos}"
-    if vaga.get("limitacao"):
-        # A passagem entre cotas: a limitação do GPS, e nenhum ato (UX-603).
-        return f"; {vaga['frase']}"
+        return f"; a declaração de vaga não preenchida ainda não cabe: {motivos}"
     return ""
 
 

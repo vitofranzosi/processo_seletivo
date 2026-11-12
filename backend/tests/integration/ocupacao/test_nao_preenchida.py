@@ -2,7 +2,8 @@
 
 O cenário é a V-1 da verificação, com o Perfil **sem reversão declarada** — o C09: o único cotista
 PPI desiste, e a reserva fica sem quem a ocupe e sem para onde ir. Os fatos externos chegam por um
-*callable* fixo, como no teste da destinação: a composição deles pela interface tem os casos dela.
+*callable* fixo, que é o que o ato recebe: a composição deles pela interface tem os seus casos em
+`test_condicao_do_esgotamento.py`, sobre a publicação de verdade.
 """
 
 import pytest
@@ -21,11 +22,10 @@ from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.ocupacao_sorteada import LISTA_PPI
 from tests.fixtures.sorteio import MARCO
 from tests.integration.ocupacao.test_concomitancia import apurar
-from tests.integration.ocupacao.test_condicao_do_esgotamento import efeito
-from tests.integration.ocupacao.test_destinacao import (
+from tests.integration.ocupacao.test_condicao_do_esgotamento import (
     DEFINITIVO,
     definitivo,
-    destinar,
+    efeito,
     esgotado,
 )
 
@@ -173,19 +173,21 @@ class TestNaLinhaGeral:
         assert declarado["quantidade"] == 1
         assert vigente(silente, None).faltando == 0
 
-    def test_a_ampla_que_recebeu_a_vaga_destinada(
+    def test_a_ampla_que_recebeu_a_vaga_revertida(
         self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
     ):
-        """D-014: inclusive a que recebeu vaga destinada — a vaga recebida também é declarável."""
+        """D-014, FR-6324: inclusive a que recebeu vaga da reserva — a vaga recebida também é
+        declarável. Nesta entrega quem a leva é a apuração da reserva, pela reversão por saldo e
+        pela regra de antes da `155`: a desistência deixa o saldo, e a emissão o cede."""
         certame = esgotado(
             gestor,
             api_client,
             manager_headers,
             process_payload,
             "np-recebida",
-            reversao=nomes.REVERSAO_POR_ESGOTAMENTO,
+            reversao=nomes.REVERSAO_POR_SALDO,
         )
-        destinar(certame, gestor, chave="np-recebida-destinar")
+        assert MovimentoDeVaga.objects.count() == 1, "a apuração da reserva cedeu a vaga"
         sem_ninguem_na_ampla(certame, gestor, "np-recebida")
         assert vigente(certame, None).efetivas == 2
 
@@ -207,33 +209,23 @@ class TestRecusas:
             assert (erro.code, erro.status) == (nomes.FUNDAMENTO_OBRIGATORIO, 422)
         assert VagaNaoPreenchida.objects.count() == 0
 
+    @pytest.mark.parametrize("especie", nomes.ESPECIES_DE_REVERSAO)
     def test_o_edital_manda_destinar(
-        self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
+        self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos, especie
     ):
-        """FR-6327: onde a reversão declarada se aplica, a vaga é destinada, e não declarada."""
+        """FR-6327: onde o Edital declara a reversão, a vaga da reserva não é declarada não
+        preenchida — nas duas espécies, cuja reversão nesta entrega é a da apuração."""
         certame = esgotado(
             gestor,
             api_client,
             manager_headers,
             process_payload,
-            "np-destina",
-            reversao=nomes.REVERSAO_POR_ESGOTAMENTO,
+            f"np-destina-{especie[:4].lower()}",
+            reversao=especie,
         )
-        assert recusa(certame, gestor).code == nomes.O_EDITAL_MANDA_DESTINAR
-        assert VagaNaoPreenchida.objects.count() == 0
-
-    def test_passagem_entre_cotas(
-        self, db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
-    ):
-        certame = esgotado(
-            gestor,
-            api_client,
-            manager_headers,
-            process_payload,
-            "np-passagem",
-            reversao=nomes.PASSAGEM_ENTRE_COTAS,
-        )
-        assert recusa(certame, gestor).code == nomes.RECUSA_PASSAGEM_ENTRE_COTAS
+        erro = recusa(certame, gestor)
+        assert erro.code == nomes.O_EDITAL_MANDA_DESTINAR
+        assert "aplicada pela apuração" in erro.detail
         assert VagaNaoPreenchida.objects.count() == 0
 
     def test_ainda_ha_quem_ocupar(
@@ -264,7 +256,7 @@ class TestRecusas:
         assert "1 pessoa" in erro.detail
 
     def test_impedida(self, silente, gestor):
-        """As condições e os impedimentos da destinação (FR-6323)."""
+        """As condições e os impedimentos da FR-6300 (FR-6323)."""
         erro = recusa(silente, gestor, fatos=definitivo(natureza_do_resultado="PRELIMINAR"))
         assert erro.code == nomes.DESTINACAO_IMPEDIDA
         assert "não é definitivo" in erro.detail
@@ -303,6 +295,34 @@ class TestOLimiteDasVagas:
         assert erro.value.code == nomes.NAO_PREENCHIDAS_ALEM_DAS_VAGAS
         assert "Desfaça a declaração" in erro.value.detail
         assert ApuracaoDeOcupacao.objects.count() == apuracoes
+
+    def test_a_reversao_retificada_nao_cede_a_vaga_declarada(self, silente, gestor, api_client):
+        """R-002: retificado o Edital para declarar a reversão por saldo, a apuração seguinte não
+        cede a vaga declarada não preenchida — cedê-la seria desfazer a declaração sem ato, e
+        contá-la ainda passaria das vagas. A reversão alcança só o que sobra; aqui, nada."""
+        from tests.fixtures.publicacao import retify
+
+        declarar(silente, gestor)
+        retify(
+            api_client,
+            silente["edital"],
+            [
+                {
+                    "targetPath": f"/profiles/id={PROFILE_ID}/vacancyReversion",
+                    "operation": "REPLACE",
+                    "newValue": {"kind": nomes.REVERSAO_POR_SALDO},
+                }
+            ],
+            suffix="np155saldo",
+        )
+
+        apurado = apurar(
+            silente, gestor, lista_id=LISTA_PPI, chave="np-saldo", motivo="Reversão retificada"
+        )
+
+        assert apurado["reverteu"] == 0
+        assert MovimentoDeVaga.objects.count() == 0
+        assert (vigente(silente).nao_preenchidas, vigente(silente).faltando) == (1, 0)
 
 
 class TestReproducao:

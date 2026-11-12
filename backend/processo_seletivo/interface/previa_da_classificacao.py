@@ -24,8 +24,7 @@ from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
 from processo_seletivo.classificacao.domain import jornada as jornada_do_perfil
 from processo_seletivo.classificacao.domain.desempate import _valor_do_criterio
-from processo_seletivo.classificacao.domain.faixa import admite_continuacao
-from processo_seletivo.ocupacao.domain import apuracao, nomes, rodada_da_previa
+from processo_seletivo.ocupacao.domain import apuracao, rodada_da_previa
 
 C = calculo
 
@@ -57,17 +56,7 @@ DESFECHO = {"ADMITS_SURPLUS": "“Todos os empatados progridem”", "STRICT": "�
 REVERSAO = {
     "ON_EXHAUSTION": "“Só quando a lista reservada esgota”",
     "ON_BALANCE": "“A quantidade que ficou sem preencher”",
-    nomes.PASSAGEM_ENTRE_COTAS: "“Passa antes por outras cotas, na ordem do Edital”",
 }
-#: A terceira resposta, numa frase só para as duas prévias (155, FR-6318, UX-603). **O limite é
-#: do GPS, e não do Edital nem da comissão**: o Edital manda, e o sistema ainda não sabe aplicar a
-#: ordem entre as cotas. Dizer "nenhuma vaga seria cedida", como diz das outras duas, faria a
-#: prévia parecer um resultado da regra, quando é a regra que não roda.
-FRASE_DA_PASSAGEM_ENTRE_COTAS = (
-    "Este Perfil declara que a vaga reservada sem ocupante passa antes por outras cotas, na ordem "
-    "do Edital, e só depois à ampla concorrência. O GPS ainda não aplica essa ordem: nesta prévia, "
-    "nenhuma vaga é cedida."
-)
 
 
 def apurar_vagas(progrediram, vagas, empates):
@@ -81,17 +70,11 @@ def apurar_vagas(progrediram, vagas, empates):
     return None
 
 
-def apurar_recortes_com(especie, continuacao_admitida=False):
-    """A rodada de ocupação da `ocupacao`, com a reversão declarada no Perfil gravado (095).
-
-    `continuacao_admitida` é o alcance da condição do esgotamento (155, FR-6304): lido da regra de
-    corte publicada do marco, como o caminho oficial o lê.
-    """
+def apurar_recortes_com(especie):
+    """A rodada de ocupação da `ocupacao`, com a reversão declarada no Perfil gravado (095)."""
 
     def apurar(entradas):
-        return rodada_da_previa.rodada(
-            entradas, especie=especie, continuacao_admitida=continuacao_admitida
-        )
+        return rodada_da_previa.rodada(entradas, especie=especie)
 
     return apurar
 
@@ -1007,11 +990,7 @@ def _frase_da_reversao(apurado, rotulo, especie):
         return "Não há o que reverter: nenhuma vaga ficaria sem ocupante." if especie else ""
     if not especie:
         return "Este Perfil não declara reversão: a vaga reservada sem ocupante continua reservada."
-    if especie == nomes.PASSAGEM_ENTRE_COTAS:
-        return FRASE_DA_PASSAGEM_ENTRE_COTAS
     nome = REVERSAO.get(especie, especie)
-    if especie == nomes.REVERSAO_POR_ESGOTAMENTO:
-        return _frase_da_destinacao(apurado, rotulo, nome)
     if apurado["cederia"]:
         cede = apurado["cederia"]
         verbo = "seria cedida" if cede == 1 else "seriam cedidas"
@@ -1032,30 +1011,6 @@ def _frase_da_reversao(apurado, rotulo, especie):
         f"{contagem(apurado['ocupadas'], 'vaga ocupada', 'vagas ocupadas')} —, e a conta inclui "
         "quem ocupa pela ampla. "
         "É o comportamento atual do sistema, registrado como pendente de decisão na spec 095."
-    )
-
-
-def _frase_da_destinacao(apurado, rotulo, nome):
-    """Por esgotamento, o que a destinação faria — e não o que a apuração cederia (155, FR-6343).
-
-    Desde a `155` a apuração não move vaga por esse gatilho: a vaga vai à ampla por ato próprio da
-    presidência, quando ninguém mais da reserva pode ocupá-la (FR-6304). A frase diz isso, e diz o
-    que a prévia não simula — o resultado definitivo, os recursos e as chamadas, que impedem o ato
-    no caminho oficial (FR-6306).
-    """
-    destinaria = apurado["cederia"]
-    if destinaria:
-        return (
-            f"Pela reversão declarada, {nome}, ninguém mais de {rotulo} poderia ocupar "
-            f"{contagem(destinaria, 'vaga', 'vagas')}: a destinação à ampla concorrência deste "
-            "Perfil seria oferecida por ato próprio, com o resultado definitivo e sem recurso nem "
-            "chamada pendente. A apuração não a move sozinha."
-        )
-    restantes = apurado.get("ainda_podem_ocupar") or 0
-    return (
-        f"Pela reversão declarada, {nome}, nenhuma vaga seria destinada à ampla: {rotulo} ainda "
-        f"tem quem possa ocupá-la — {contagem(restantes, 'pessoa', 'pessoas')} na ordem —, e quem "
-        "ocupa pela ampla conta até a ocupação por ela ser confirmada, o que a prévia não simula."
     )
 
 
@@ -1389,7 +1344,7 @@ def contexto(
             populacao=populacao_digitada(dados) if modo == C.ESTAVEL else None,
             apurar_vagas=apurar_vagas,
             recortes=recortes,
-            apurar_recortes=apurar_recortes_com(especie, admite_continuacao(marco.get("cutRule"))),
+            apurar_recortes=apurar_recortes_com(especie),
         )
     except calculo.ForaDaFatia:
         # Desde a `098`, o marco por sorteio é despachado antes de chegar aqui, e a forma em branco

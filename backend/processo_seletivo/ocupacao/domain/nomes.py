@@ -16,19 +16,7 @@ antes da `019`. Os nomes abaixo são o que sobra depois dessa proibição.
 # divergência de norma.
 REVERSAO_POR_ESGOTAMENTO = "ON_EXHAUSTION"
 REVERSAO_POR_SALDO = "ON_BALANCE"
-# **As que movem vaga, e só elas.** `reversao.quantidade_a_reverter` cede o saldo de tudo o que
-# estiver nesta tupla; uma resposta nova que entrasse aqui reverteria como a por saldo, sem que
-# ninguém a tivesse escrito assim.
 ESPECIES_DE_REVERSAO = (REVERSAO_POR_ESGOTAMENTO, REVERSAO_POR_SALDO)
-# **A terceira resposta, que não move nada** (155, FR-6317, FR-6318). Há Edital que manda a vaga da
-# cota passar antes por outras cotas, numa ordem que ele estabelece, e só depois à ampla. O GPS
-# ainda não aplica essa ordem (FR-6319): a declaração é publicada e retificável como as outras, e a
-# tela diz o que o Edital manda. Por isso ela mora numa tupla própria — o que se **declara** — ao
-# lado da que **reverte**. A alternativa recusada era acrescentá-la a `ESPECIES_DE_REVERSAO` e
-# tratar a exceção em cada chamador: bastava um esquecer para a cota ceder o saldo à ampla contra a
-# ordem que o Edital escreveu.
-PASSAGEM_ENTRE_COTAS = "THROUGH_OTHER_QUOTAS"
-DECLARACOES_DE_REVERSAO = (*ESPECIES_DE_REVERSAO, PASSAGEM_ENTRE_COTAS)
 
 # --- Espécie de movimento de vaga ---------------------------------------------------------------
 # **Uma só, e a ausência da segunda é o achado.** A reversão move quantidade da cota para a linha
@@ -39,11 +27,7 @@ DECLARACOES_DE_REVERSAO = (*ESPECIES_DE_REVERSAO, PASSAGEM_ENTRE_COTAS)
 #
 # A exclusão mora no cálculo, em `apuracao.apurar`, e não aqui (016, FR-252).
 MOVIMENTO_REVERSAO = "REVERSAO_DE_COTA"
-# **A segunda espécie é o ato contrário, e não um sentido novo** (155, R-005). Desfazer a destinação
-# grava outro movimento, com a mesma quantidade e o sentido invertido, citando o que desfaz: nada se
-# apaga, e a apuração o lê como lê qualquer movimento — recebida ou cedida, pelo destino.
-MOVIMENTO_DESFAZIMENTO = "DESFAZIMENTO_DA_REVERSAO"
-ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO, MOVIMENTO_DESFAZIMENTO)
+ESPECIES_DE_MOVIMENTO = (MOVIMENTO_REVERSAO,)
 
 # --- A vaga não preenchida (155, R-002) ---------------------------------------------------------
 # **Não é acréscimo negativo.** Reduzir as efetivas diria que a vaga deixou de existir; ela existe,
@@ -142,22 +126,20 @@ DESFAZIMENTO_ALEM_DO_ACRESCIMO = "desfazimento_alem_do_acrescimo"
 DESFAZIMENTO_COM_PESSOAS_CHAMADAS = "desfazimento_com_pessoas_chamadas"
 OUTRA_CAUSA_DE_OBSOLESCENCIA = "outra_causa_de_obsolescencia"
 
-# --- Recusas da destinação e da vaga não preenchida (155, contrato `comandos-e-telas.md`) -------
-# Os códigos ficam aqui pela razão do topo deste módulo: a aplicação, a tela e o teste os leem.
-SEM_REVERSAO_DECLARADA = "sem_reversao_declarada"
-RECUSA_PASSAGEM_ENTRE_COTAS = "passagem_entre_cotas"
-REVERSAO_POR_SALDO_AGUARDA_DECISAO = "reversao_por_saldo_aguarda_decisao"
+# --- Recusas da vaga não preenchida (155, contrato `comandos-e-telas.md`) ----------------------
+# Os códigos ficam aqui pela razão do topo deste módulo: a aplicação, a tela e o teste os leem. As
+# grafias são as do contrato, que as escreveu para a destinação e a não preenchida juntas; a
+# destinação por ato próprio ficou para a próxima entrega, e os códigos dela com ela.
 AINDA_HA_QUEM_OCUPAR = "ainda_ha_quem_ocupar"
 DESTINACAO_IMPEDIDA = "destinacao_impedida"
 SEM_SALDO_A_DESTINAR = "sem_saldo_a_destinar"
 DESTINACAO_COM_CHAMADA_DEPENDENTE = "destinacao_com_chamada_dependente"
+# Onde o Edital declara a reversão, a vaga não é declarada não preenchida (FR-6327): o que ele manda
+# é a reversão, aplicada pela apuração da lista.
 O_EDITAL_MANDA_DESTINAR = "o_edital_manda_destinar"
-# Os desfazimentos (155, R-005): o ato que já foi desfeito, o que não existe neste Edital, e a vaga
-# destinada que a ampla declarou não preenchida depois de recebê-la — desfazer a destinação ali
-# faria a apuração seguinte passar das vagas.
+# Os desfazimentos (155, R-005): o ato que já foi desfeito e o que não existe neste Edital.
 ATO_JA_DESFEITO = "ato_ja_desfeito"
 ATO_INEXISTENTE = "ato_inexistente"
-DESTINACAO_COM_DECLARACAO_DEPENDENTE = "destinacao_com_declaracao_dependente"
 # **A conta que o banco recusaria, dita pelo nome** (155, R-002): `ocupadas + nao_preenchidas`
 # acima das efetivas. A emissão e a declaração a recusam antes de chegar à constraint.
 NAO_PREENCHIDAS_ALEM_DAS_VAGAS = "nao_preenchidas_alem_das_vagas"

@@ -87,31 +87,12 @@ class TestReversao:
         assert ppi["sem_ocupante_antes"] == 2
         assert resultado["efetivas_da_proxima_ampla"] == 13
 
-    def test_por_esgotamento_nao_destina_enquanto_quem_ocupa_pela_ampla_nao_confirmou(self):
-        """155, FR-6304: a03 e a08 ocupam pela ampla, sem a confirmação que a prévia não simula, e
-        ainda podem ocupar a PPI; a16 está além da faixa, e o Perfil não publicou continuação."""
+    def test_por_esgotamento_nao_cede_porque_a_conta_inclui_quem_ocupa_pela_ampla(self):
+        """DP-2, como o motor faz hoje."""
         ppi = referencia(nomes.REVERSAO_POR_ESGOTAMENTO)["recortes"]["PPI"]
 
         assert ppi["ha_quem_ocupar"] is True
-        assert ppi["ainda_podem_ocupar"] == 2
         assert (ppi["pessoas_com_posicao"], ppi["ocupadas"], ppi["cederia"]) == (4, 1, 0)
-        # A apuração não cede por esgotamento (FR-6315): as efetivas são as publicadas.
-        assert quantidades(ppi) == (3, 3, 1, 2)
-
-    def test_por_esgotamento_quem_esta_alem_da_faixa_conta_com_continuacao(self):
-        """US3.7: a12 ocupa, a13 está além da faixa. Sem continuação, a PcD esgota; com ela, não."""
-        entradas = [
-            entrada(None, AMPLA, vagas=10, faixa=10),
-            entrada("PCD", ["a12", "a13"], vagas=2, faixa=1),
-        ]
-
-        sem = rodada(entradas, especie=nomes.REVERSAO_POR_ESGOTAMENTO)["recortes"]["PCD"]
-        com = rodada(entradas, especie=nomes.REVERSAO_POR_ESGOTAMENTO, continuacao_admitida=True)[
-            "recortes"
-        ]["PCD"]
-
-        assert (sem["ocupadas"], sem["cederia"]) == (1, 1)
-        assert (com["ainda_podem_ocupar"], com["cederia"]) == (1, 0)
 
     def test_reservada_toda_ocupando_pela_ampla_nunca_esgota(self):
         resultado = rodada(

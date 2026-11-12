@@ -26,7 +26,6 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
     emitir_corte,
 )
 from processo_seletivo.classificacao.application.selectors import ato_vigente
-from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.classificacao.models import ItemDoCorte, PosicaoNaOrdem
 from processo_seletivo.ocupacao.application import selectors as ocupacao
 from processo_seletivo.ocupacao.application.emissao import emitir_apuracao
@@ -214,7 +213,11 @@ def _lado_oficial(edital, gestor, inscricoes, prefixo):
             # A recusa, nos termos da prévia: a apuração não sai, e nada é cedido.
             assert recusa.code == "ordem_nao_vigente"
             quantidades = ("nao-avaliada", rodada_da_previa.CORTE_NAO_EMITIDO)
-        cedidas = _cedidas_ou_destinaveis(edital, lista)
+        cedidas = sum(
+            m.quantidade
+            for m in MovimentoDeVaga.objects.filter(apuracao__edital=edital)
+            if (str(m.origem_lista_id) if m.origem_lista_id else None) == lista
+        )
         saida[lista] = {
             "ordem": ordem,
             "faixa": dentro,
@@ -229,29 +232,6 @@ def _lado_oficial(edital, gestor, inscricoes, prefixo):
         )
     )
     return saida
-
-
-def _cedidas_ou_destinaveis(edital, lista):
-    """Por esgotamento, o que a destinação faria; por saldo, os movimentos (155, R-011).
-
-    A mesma leitura da equivalência da classificação: desde a `155` a emissão não move vaga por
-    esgotamento, e o lado oficial é a conta pura da destinação sobre o mesmo estado.
-    """
-    from processo_seletivo.ocupacao.application.destinacao import leitura_da_vaga
-    from processo_seletivo.ocupacao.domain import reversao
-
-    conteudo = effective_version(edital_id=edital.id).content
-    if lista is not None and reversao.especie_que_move(conteudo["profiles"][0]) == (
-        nomes.REVERSAO_POR_ESGOTAMENTO
-    ):
-        return leitura_da_vaga(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=lista)[
-            "quantidadePelaCondicao"
-        ]
-    return sum(
-        m.quantidade
-        for m in MovimentoDeVaga.objects.filter(apuracao__edital=edital)
-        if (str(m.origem_lista_id) if m.origem_lista_id else None) == lista
-    )
 
 
 def _lado_da_previa(
@@ -286,9 +266,7 @@ def _lado_da_previa(
         recortes=[
             {"lista_id": lista, "rotulo": str(lista), "vagas": VAGAS[lista]} for lista in RECORTES
         ],
-        apurar_recortes=lambda e: rodada_da_previa.rodada(
-            e, especie=especie, continuacao_admitida=faixa.admite_continuacao(marco.get("cutRule"))
-        ),
+        apurar_recortes=lambda e: rodada_da_previa.rodada(e, especie=especie),
         resumos_oficiais=resumos,
     )
     indice = {str(i.id): n for n, i in enumerate(inscricoes)}

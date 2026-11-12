@@ -1,4 +1,4 @@
-"""A vaga reservada sem quem a ocupe, lida pelas três telas e pelo ato (155, R-004, R-008).
+"""A vaga sem quem a ocupe, lida pelas três telas e pela declaração de não preenchida (155, R-008).
 
 **Por que mora na interface.** A condição é da ocupação (`ocupacao/domain/destinacao.py`), mas três
 dos fatos que a impedem não são: o resultado do marco e o prazo de recurso são da divulgação, os
@@ -15,6 +15,11 @@ lista — é lido por recorte, e o número de recortes é o do quadro, e não o 
 a situação com as mesmas palavras, e a frase nomeia a lista, a quantidade e o que o Edital declara.
 Nenhuma delas diz que alguém foi convocado, aceitou ou se matriculou (FR-6344): a chamada é "pessoa
 chamada para esta vaga".
+
+**Onde a vaga não sai, a frase diz por que e qual é o próximo passo, sem botão.** Nesta entrega a
+reversão declarada continua aplicada pela apuração da lista, pela regra de antes da `155`, e a
+destinação por ato próprio ficou para a próxima (branch `claude/155-destinacao-completa`). A tela
+não oferece ato que não existe nem o que o comando recusaria (FR-6302): diz a regra que vale.
 """
 
 from processo_seletivo.ocupacao.domain import destinacao as conta
@@ -32,7 +37,6 @@ class Composicao:
         self.at = at
         self._do_marco = {}
         self._da_lista = {}
-        self._do_sorteio = {}
 
     def __call__(
         self,
@@ -118,96 +122,6 @@ class Composicao:
                 "chamados": chamados,
             }
         return self._da_lista[chave]
-
-    # --- a lista de sorteio sem relação (155, R-007) ------------------------------------------
-
-    def ausencia_de_concorrente(self, *, edital, perfil_id, marco_id, lista_id, at=None):
-        """A ausência de concorrente na lista reservada de sorteio, lida na relação definitiva
-        pertinente — `None` quando a pergunta não se coloca (155, D-011, FR-6332, FR-6333).
-
-        `{"comprovada", "frase", "relacao"}`. **Comprovada são três fatos juntos** (R-007): a
-        lista não tem inscrito (as inscrições encerradas e ninguém a declarou —
-        `sorteios.previa.recortes_sem_inscrito`), a relação vigente da **ampla** do marco existe, e
-        nenhum participante dela declarou a lista. Sem a relação da ampla, a lista é "relação não
-        congelada", e não lista vazia: ausência de registro não é ausência de concorrente.
-
-        `None` também para a lista que tem relação ou ordem, e para a que alguém declarou: essas
-        têm o caminho de sempre, e a tela já diz o que falta nelas.
-        """
-        if lista_id is None:
-            return None
-        sorteio = self._sorteio_do_marco(edital, perfil_id, marco_id, at or self.at)
-        if sorteio is None or str(lista_id) not in sorteio["semInscrito"]:
-            return None
-        if sorteio["relacaoDaAmpla"] is None:
-            return {
-                "comprovada": False,
-                "relacao": None,
-                "frase": (
-                    "Relação não congelada: a relação de habilitados da ampla concorrência deste "
-                    "marco ainda não foi congelada, e só ela comprova que ninguém concorre por "
-                    "esta lista. Nenhum ato é oferecido antes dela."
-                ),
-            }
-        if str(lista_id) in sorteio["declaradasNaAmpla"]:
-            return {
-                "comprovada": False,
-                "relacao": sorteio["relacaoDaAmpla"],
-                "frase": (
-                    "A relação da ampla concorrência deste marco tem participante que declarou "
-                    "esta lista: a ausência de concorrente não está comprovada, e nenhum ato é "
-                    "oferecido."
-                ),
-            }
-        return {"comprovada": True, "relacao": sorteio["relacaoDaAmpla"], "frase": ""}
-
-    def _sorteio_do_marco(self, edital, perfil_id, marco_id, at):
-        """Os fatos do sorteio do marco, lidos uma vez: `None` quando o marco não sorteia."""
-        chave = (str(perfil_id), str(marco_id))
-        if chave not in self._do_sorteio:
-            from processo_seletivo.editais.domain import marcos
-            from processo_seletivo.sorteios.application.previa import recortes_sem_inscrito
-            from processo_seletivo.sorteios.application.selectors import relacao_vigente
-            from processo_seletivo.sorteios.models import ParticipanteHabilitado
-
-            conteudo = _conteudo(edital, at)
-            if not marcos.marco_ordena_por_sorteio(
-                conteudo, perfil_id=perfil_id, marco_id=marco_id
-            ):
-                self._do_sorteio[chave] = None
-                return None
-            sem_inscrito = {
-                str(lista)
-                for lista in recortes_sem_inscrito(
-                    edital=edital,
-                    conteudo=conteudo,
-                    perfil_id=perfil_id,
-                    marco_id=marco_id,
-                    agora=at,
-                )
-                if lista
-            }
-            ampla = (
-                relacao_vigente(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
-                if sem_inscrito
-                else None
-            )
-            self._do_sorteio[chave] = {
-                "semInscrito": sem_inscrito,
-                "relacaoDaAmpla": str(ampla.id) if ampla is not None else None,
-                # **A terceira prova, pela relação congelada, e não pelas inscrições de hoje**: é a
-                # relação que fixou o universo do sorteio, e é ela a relação definitiva pertinente.
-                "declaradasNaAmpla": {
-                    str(modalidade)
-                    for modalidade in ParticipanteHabilitado.objects.filter(relacao=ampla)
-                    .values_list("inscricao__modality_id", flat=True)
-                    .distinct()
-                    if modalidade
-                }
-                if ampla is not None
-                else set(),
-            }
-        return self._do_sorteio[chave]
 
     # --- o que é da eliminação na Etapa que o corte governa ------------------------------------
 
@@ -324,11 +238,9 @@ def situacao_do_recorte(
 ):
     """A leitura da vaga do recorte e a frase de UX-600, ou `None` onde a tela não diz nada novo.
 
-    **Quatro casos ganham frase** (155, FR-6301): a reversão por esgotamento (a destinação), o
-    Edital silente (FR-6321), a linha geral sem quem a ocupe (D-014) e a passagem entre cotas, que
-    diz a limitação do GPS sem ato nenhum (UX-603). **Sob a reversão por saldo, nada muda** (R-010):
-    nem na reserva, nem na linha geral do Perfil que a declara — a espera é da decisão do usuário,
-    e a tela continua como estava.
+    **Três casos ganham frase** (155, FR-6301): o Edital silente (FR-6321), a linha geral sem quem a
+    ocupe (D-014) e a reserva cuja reversão o Edital declara e a apuração ainda não aplicou — esta,
+    sem ato nenhum: a frase diz a regra e o próximo passo.
     """
     from processo_seletivo.ocupacao.application.destinacao import leitura_da_vaga
 
@@ -340,37 +252,12 @@ def situacao_do_recorte(
         fatos_externos=composicao if composicao is not None else Composicao(at=at),
         at=at,
     )
-    declaracao = leitura["declaracao"]
-    if declaracao == nomes.REVERSAO_POR_SALDO:
-        return None
-    ausencia = leitura.get("ausencia")
-    if ausencia and not ausencia["comprovada"]:
-        # **O que falta, dito como o que é** (155, FR-6333): a relação não congelada não é lista
-        # vazia, e nenhum ato é oferecido.
-        return {
-            **leitura["situacao"],
-            "frase": ausencia["frase"],
-            "impedimentos": [],
-            "declarada": leitura["frase"],
-            "ato": "",
-            "disponivel": False,
-            "destinacao": False,
-            "naoPreenchida": False,
-            "silente": False,
-            "limitacao": False,
-            "movimentos": [],
-            "naoPreenchidas": [],
-        }
-    if lista_id is None and declaracao == nomes.PASSAGEM_ENTRE_COTAS:
-        # A passagem entre cotas é da vaga reservada: a linha geral do Perfil que a declara não
-        # ganha ato nem frase nesta entrega (FR-6318).
-        return None
     situacao = leitura["situacao"]
     frase = frase_da_situacao(leitura, rotulo)
     if not frase:
         return None
     estado = situacao["estado"]
-    destina = declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and lista_id is not None
+    reversao = estado == conta.REVERSAO_PELA_APURACAO
     return {
         **situacao,
         "frase": frase,
@@ -379,117 +266,78 @@ def situacao_do_recorte(
             for i in situacao["impedimentos"]
         ],
         "declarada": leitura["frase"],
-        # **O ato que a vaga pede, pelo nome da tela** (UX-602): um ato por caminho.
-        "ato": DESTINAR if destina else (DECLARAR if estado != conta.PASSAGEM_ENTRE_COTAS else ""),
-        "disponivel": estado in (conta.DESTINACAO_DISPONIVEL, conta.NAO_PREENCHIDA_DISPONIVEL),
-        "destinacao": estado == conta.DESTINACAO_DISPONIVEL,
+        # **O ato que a vaga pede, pelo nome da tela** (UX-602): um ato por caminho, e nenhum onde
+        # a reversão é da apuração.
+        "ato": "" if reversao else DECLARAR,
+        "disponivel": estado == conta.NAO_PREENCHIDA_DISPONIVEL,
         "naoPreenchida": estado == conta.NAO_PREENCHIDA_DISPONIVEL,
         # O Edital silente, na reserva (FR-6321): a frase e os dois caminhos.
-        "silente": declaracao is None and lista_id is not None,
-        "limitacao": estado == conta.PASSAGEM_ENTRE_COTAS,
-        "movimentos": _com_as_dependentes(
-            _movimentos_da_reserva(leitura["movimentos"], lista_id),
-            chave="desfazivel",
-            dependentes=lambda registro: chamadas_dependentes(
-                edital=edital,
-                perfil_id=perfil_id,
-                marco_id=marco_id,
-                lista_id=None,
-                movimento_id=registro.id,
-                at=at,
-            ),
-        ),
-        "naoPreenchidas": _com_as_dependentes(
-            leitura["naoPreenchidas"],
-            chave="restante",
-            dependentes=lambda registro: chamadas_dependentes(
-                edital=edital,
-                perfil_id=perfil_id,
-                marco_id=marco_id,
-                lista_id=lista_id,
-                nao_preenchida_id=registro.id,
-                at=at,
-            ),
-        ),
+        "silente": leitura["declaracao"] is None and lista_id is not None,
+        "reversao": reversao,
+        "naoPreenchidas": [
+            {
+                **item,
+                "dependentes": chamadas_dependentes(
+                    edital=edital,
+                    perfil_id=perfil_id,
+                    marco_id=marco_id,
+                    lista_id=lista_id,
+                    nao_preenchida_id=item["registro"].id,
+                    at=at,
+                )
+                # **A tela mostra o impedimento, e não a ação que terminaria numa recusa** (155,
+                # FR-6335). A primeira versão deixava o botão "Desfazer" visível com chamada
+                # dependente, para que a recusa ficasse registrada; o usuário recusou esse desenho
+                # em 12/11/2026: ação disponível só para provocar recusa é ação que a tela oferece e
+                # o comando nega (FR-6302). O comando continua recusando e registrando o pedido
+                # enviado direto. Só se pergunta pela declaração que ainda se desfaz: uma leitura
+                # por ato desfazível, e não por ato do recorte.
+                if item.get("restante")
+                else [],
+            }
+            for item in leitura["naoPreenchidas"]
+        ],
     }
 
 
-def _com_as_dependentes(itens, *, chave, dependentes):
-    """Cada ato ainda desfazível com as chamadas que dependem dele (155, FR-6335).
-
-    **A tela mostra o impedimento, e não a ação que terminaria numa recusa.** A primeira versão
-    deixava o botão "Desfazer" visível com chamada dependente, para que a recusa ficasse registrada;
-    o usuário recusou esse desenho em 12/11/2026: ação disponível só para provocar recusa é ação
-    que a tela oferece e o comando nega (FR-6302). O comando continua recusando e registrando o
-    pedido enviado direto — a garantia é dele, e não da tela.
-
-    Só se pergunta pelo ato que ainda se desfaz: o custo é de uma leitura por ato desfazível, e não
-    por ato do recorte.
-    """
-    return [
-        {**item, "dependentes": dependentes(item["registro"]) if item.get(chave) else []}
-        for item in itens
-    ]
-
-
-def _movimentos_da_reserva(movimentos, lista_id):
-    """As destinações da reserva e os desfazimentos delas, cada uma dizendo se ainda se desfaz.
-
-    **Só a destinação por ato próprio se desfaz aqui** (R-005): o movimento que a apuração gravava
-    antes da `155` conta como feita (FR-6316), e o desfazimento é a linha que cita a destinação.
-    """
-    if lista_id is None:
-        return []
-    desfeitos = {m.desfaz_id for m in movimentos if m.desfaz_id}
-    lista = str(lista_id)
-    return [
-        {
-            "registro": m,
-            "desfazivel": m.especie == nomes.MOVIMENTO_REVERSAO
-            and m.edital_id is not None
-            and m.id not in desfeitos,
-        }
-        for m in movimentos
-        if (m.especie == nomes.MOVIMENTO_REVERSAO and str(m.origem_lista_id or "") == lista)
-        or (m.especie == nomes.MOVIMENTO_DESFAZIMENTO and str(m.destino_lista_id or "") == lista)
-    ]
-
-
-#: Os atos da vaga sem quem a ocupe, com as palavras que o Centro e a ocupação dizem.
-DESTINAR = "Destinar à ampla concorrência"
+#: O ato da vaga sem quem a ocupe, com as palavras que o Centro e a ocupação dizem.
 DECLARAR = "Declarar a vaga não preenchida"
 #: A frase da FR-6321, literal: o Edital que não diz o que acontece com a vaga da reserva.
 EDITAL_SILENTE = "Este Edital não declara o que acontece com a vaga reservada não preenchida."
-#: A limitação da passagem entre cotas, dita como limite do GPS (UX-603), e não do Edital.
-LIMITACAO_DA_PASSAGEM = (
-    "Este Edital manda a vaga passar antes por outras cotas, na ordem que ele estabelece, e o GPS "
-    "ainda não aplica essa ordem: nenhum ato desta tela leva a vaga à ampla concorrência nem a "
-    "declara não preenchida."
+#: Por que a vaga da reserva que o Edital manda reverter ainda não saiu, e o que vem depois. **A
+#: regra é a da apuração, como antes da `155`** (`reversao.quantidade_a_reverter`): por esgotamento,
+#: a lista só cede quando a ordem dela não tem mais posições do que vagas ocupadas — e a ordem conta
+#: quem desistiu, foi eliminado ou ocupa vaga da ampla concorrência. Dizer isso é o que impede a
+#: pessoa de procurar um ato que não existe.
+REVERSAO_POR_ESGOTAMENTO = (
+    "A reversão declarada é aplicada pela apuração desta lista quando a ordem dela não tem mais "
+    "pessoas com posição do que vagas ocupadas; quem desistiu, foi eliminado ou ocupa vaga da "
+    "ampla concorrência continua contando na ordem, e por isso ela ainda não se aplica. Nenhum ato "
+    "desta tela leva a vaga à ampla concorrência: o ato que a destina por conta própria fica para "
+    "uma próxima entrega."
+)
+#: Por saldo, a apuração cede a quantidade não preenchida sempre que é emitida: a vaga a ocupar que
+#: sobra é a de uma apuração que ainda não foi sucedida, e o próximo passo é emiti-la.
+REVERSAO_POR_SALDO = (
+    "A reversão declarada é aplicada pela apuração desta lista, que cede à ampla concorrência a "
+    "quantidade não preenchida: o próximo passo é emitir a apuração seguinte desta lista."
 )
 
 
-def chamadas_dependentes(
-    *, edital, perfil_id, marco_id, lista_id, movimento_id=None, nao_preenchida_id=None, at=None
-):
-    """As chamadas que dependem do ato a desfazer — `[{id, rotulo, ocupa}]` (155, R-005).
+def chamadas_dependentes(*, edital, perfil_id, marco_id, lista_id, nao_preenchida_id, at=None):
+    """As chamadas que dependem da declaração a desfazer — `[{id, rotulo, ocupa}]` (155, R-005).
 
-    **Dependente é a chamada vigente do recorte cuja apuração leu o ato**: o movimento em
-    `movimentosLidos`, ou a declaração em `naoPreenchidasLidas`. Ela foi feita sobre a conta que o
-    ato mudou, e desfazê-lo tiraria a vaga de quem foi chamado para ela. Continua dependente
-    enquanto não tem desfecho, ou quando o desfecho a pôs na vaga (efeito de inclusão); o desfecho
-    que a tirou da vaga a libera.
+    **Dependente é a chamada vigente do recorte cuja apuração leu a declaração** em
+    `naoPreenchidasLidas`. Ela foi feita sobre a conta que a declaração mudou, e desfazê-la tiraria
+    a vaga de quem foi chamado para ela. Continua dependente enquanto não tem desfecho, ou quando o
+    desfecho a pôs na vaga (efeito de inclusão); o desfecho que a tirou da vaga a libera.
 
     **Mora aqui, e não na ocupação** (155, R-004): a ocupação não importa a condução, e esta função
     é o *callable* que o ato recebe, como `pessoas_chamadas` no acréscimo.
     """
     from processo_seletivo.convocacao.application import selectors as conducao
 
-    chave, alvo = (
-        ("movimentosLidos", movimento_id)
-        if movimento_id is not None
-        else ("naoPreenchidasLidas", nao_preenchida_id)
-    )
-    alvo = str(alvo)
+    alvo = str(nao_preenchida_id)
     lidas = [
         c
         for c in conducao.vigentes(
@@ -497,7 +345,7 @@ def chamadas_dependentes(
                 edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
             )
         )
-        if alvo in {str(i) for i in ((c.apuracao.universo or {}).get(chave) or [])}
+        if alvo in {str(i) for i in ((c.apuracao.universo or {}).get("naoPreenchidasLidas") or [])}
     ]
     dependentes = []
     for chamada in lidas:
@@ -545,16 +393,6 @@ def anotar_recortes(*, edital, perfil_id, marco_id, recortes, at=None):
                 composicao=composicao,
             )
             if recorte.get("apuracao") is not None
-            # **A lista de sorteio sem relação pergunta também** (155, R-007): sem apuração, a
-            # vaga dela é lida pela relação da ampla — ou dita "relação não congelada".
-            or composicao.ausencia_de_concorrente(
-                edital=edital,
-                perfil_id=perfil_id,
-                marco_id=marco_id,
-                lista_id=recorte.get("listaId"),
-                at=at,
-            )
-            is not None
             else None
         )
     return recortes
@@ -587,66 +425,46 @@ def frase_da_situacao(leitura, rotulo):
     lista = f"lista «{rotulo}»" if rotulo else "lista"
     reservada = leitura.get("listaId") is not None
     declaracao = leitura["declaracao"]
-    destina = declaracao == nomes.REVERSAO_POR_ESGOTAMENTO and reservada
-    silente = declaracao is None and reservada
-    if destina:
-        declara = f" O Edital declara: «{leitura['frase']}»" if leitura["frase"] else ""
-    elif silente:
-        declara = f" {EDITAL_SILENTE}"
-    else:
-        declara = ""
+    silente = f" {EDITAL_SILENTE}" if declaracao is None and reservada else ""
     estado = situacao["estado"]
-    sem_relacao = bool((leitura.get("ausencia") or {}).get("comprovada"))
-    if estado in (conta.DESTINACAO_DISPONIVEL, conta.NAO_PREENCHIDA_DISPONIVEL):
+    saldo = leitura.get("saldo") or 0
+    motivos = "; ".join(_com_data(i) for i in situacao["impedimentos"])
+    if estado == conta.NAO_PREENCHIDA_DISPONIVEL:
         quantidade = situacao["quantidade"]
-        porque = (
-            # A lista de sorteio sem relação não tem ordem (155, R-007): a prova é a relação.
-            "ninguém concorreu por esta lista, como a relação da ampla concorrência congelada "
-            "comprova."
-            if sem_relacao
-            else f"ninguém mais na ordem desta lista pode ocupá-la{'s' if quantidade != 1 else ''}."
-        )
+        plural = "s" if quantidade != 1 else ""
         return (
-            f"{_vagas(quantidade)} da {lista} sem quem a{'s' if quantidade != 1 else ''} ocupe: "
-            + porque
-            + declara
+            f"{_vagas(quantidade)} da {lista} sem quem a{plural} ocupe: ninguém mais na ordem "
+            f"desta lista pode ocupá-la{plural}." + silente
         )
-    if estado == conta.PASSAGEM_ENTRE_COTAS:
-        if situacao["livres"]:
-            # Com alguém livre na ordem, o caminho é chamá-lo, e a limitação ainda não pesa.
-            return ""
-        return f"{_vagas(leitura.get('saldo') or 0)} da {lista} a ocupar. {LIMITACAO_DA_PASSAGEM}"
+    if estado == conta.REVERSAO_PELA_APURACAO:
+        # **A vaga não sai, e a frase diz por quê** (155, FR-6303): o impedimento, quando há, e a
+        # regra da reversão que o Edital declara, com o próximo passo — sem botão.
+        situacao_da_vaga = (
+            f"{_vagas(saldo)} da {lista} a ocupar, e ainda não se sabe se "
+            + ("ela fica" if saldo == 1 else "elas ficam")
+            + f" sem quem a{'s' if saldo != 1 else ''} ocupe: {motivos}."
+            if motivos
+            else f"{_vagas(saldo)} da {lista} a ocupar, e ninguém mais na ordem desta lista pode "
+            + ("ocupá-la." if saldo == 1 else "ocupá-las.")
+        )
+        declara = f" O Edital declara: «{leitura['frase']}»." if leitura["frase"] else ""
+        regra = (
+            REVERSAO_POR_SALDO
+            if declaracao == nomes.REVERSAO_POR_SALDO
+            else REVERSAO_POR_ESGOTAMENTO
+        )
+        return f"{situacao_da_vaga}{declara} {regra}"
     if estado == conta.IMPEDIDA:
-        motivos = "; ".join(_com_data(i) for i in situacao["impedimentos"])
-        ato = (
-            "a destinação à ampla concorrência"
-            if destina
-            else "a declaração de vaga não preenchida"
-        )
         return (
-            f"{_vagas(leitura.get('saldo') or 0)} da {lista} a ocupar, e {ato} ainda não cabe: "
-            f"{motivos}." + declara
+            f"{_vagas(saldo)} da {lista} a ocupar, e a declaração de vaga não preenchida ainda não "
+            f"cabe: {motivos}." + silente
         )
-    if estado == conta.SEM_VAGA_A_DESTINAR and not leitura.get("saldo"):
-        partes = []
-        if situacao["destinadas"]:
-            # **O movimento antigo conta como destinação feita** (US1.5, FR-6316): a tela o cita,
-            # e nenhum ato a destina de novo.
-            partes.append(
-                f"{_vagas(situacao['destinadas'])} da {lista} já "
-                + ("foi destinada" if situacao["destinadas"] == 1 else "foram destinadas")
-                + " à ampla concorrência."
-            )
-        if leitura.get("declaradas"):
-            # **Declarada, a vaga aparece como "não preenchida"** (FR-6326), e não como zero.
-            partes.append(
-                f"{_vagas(leitura['declaradas'])} da {lista} "
-                + ("declarada" if leitura["declaradas"] == 1 else "declaradas")
-                + " não preenchida"
-                + ("" if leitura["declaradas"] == 1 else "s")
-                + "."
-            )
-        return " ".join(partes)
+    if estado == conta.SEM_VAGA_A_DESTINAR and not saldo and leitura.get("declaradas"):
+        # **Declarada, a vaga aparece como "não preenchida"** (FR-6326), e não como zero.
+        declaradas = leitura["declaradas"]
+        return f"{_vagas(declaradas)} da {lista} " + (
+            "declarada não preenchida." if declaradas == 1 else "declaradas não preenchidas."
+        )
     return ""
 
 
@@ -666,9 +484,9 @@ def _com_data(impedimento):
 
 __all__ = [
     "DECLARAR",
-    "DESTINAR",
     "EDITAL_SILENTE",
-    "LIMITACAO_DA_PASSAGEM",
+    "REVERSAO_POR_ESGOTAMENTO",
+    "REVERSAO_POR_SALDO",
     "Composicao",
     "anotar_recortes",
     "chamadas_dependentes",

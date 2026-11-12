@@ -143,86 +143,29 @@ class TestImpedimentos:
         ]
 
 
-class TestQuantidadeDestinavel:
-    def test_esgotada_e_sem_impedimento_destina_o_saldo(self):
-        assert (
-            destinacao.quantidade_destinavel(
-                gatilho=nomes.REVERSAO_POR_ESGOTAMENTO, saldo=2, ainda_podem_ocupar=0
-            )
-            == 2
-        )
-
-    def test_com_quem_ocupar_nao_destina(self):
-        assert (
-            destinacao.quantidade_destinavel(
-                gatilho=nomes.REVERSAO_POR_ESGOTAMENTO, saldo=2, ainda_podem_ocupar=1
-            )
-            == 0
-        )
-
-    def test_com_impedimento_nao_destina(self):
-        impedimento = destinacao.Impedimento(destinacao.RECURSO_PENDENTE, "", None)
-        assert (
-            destinacao.quantidade_destinavel(
-                gatilho=nomes.REVERSAO_POR_ESGOTAMENTO,
-                saldo=1,
-                ainda_podem_ocupar=0,
-                impedimentos=[impedimento],
-            )
-            == 0
-        )
-
-    def test_por_saldo_nao_ha_conta_nesta_entrega(self):
-        """FR-6305 espera a decisão do usuário: zero, e não o saldo inteiro."""
-        assert (
-            destinacao.quantidade_destinavel(
-                gatilho=nomes.REVERSAO_POR_SALDO, saldo=2, ainda_podem_ocupar=0
-            )
-            == 0
-        )
-
-    def test_sem_declaracao_e_passagem_nao_destinam(self):
-        for gatilho in (None, nomes.PASSAGEM_ENTRE_COTAS):
-            assert (
-                destinacao.quantidade_destinavel(gatilho=gatilho, saldo=1, ainda_podem_ocupar=0)
-                == 0
-            )
-
-    def test_o_saldo_ja_cedido_pelo_movimento_antigo_e_zero(self):
-        """FR-6316: o saldo vem das efetivas líquidas; cedidas antes, nada a destinar."""
-        assert (
-            destinacao.quantidade_destinavel(
-                gatilho=nomes.REVERSAO_POR_ESGOTAMENTO, saldo=0, ainda_podem_ocupar=0
-            )
-            == 0
-        )
-
-
 class TestSituacao:
     def situacao(self, **fatos):
         return destinacao.situacao(
             **{
-                "declaracao": nomes.REVERSAO_POR_ESGOTAMENTO,
+                "declaracao": None,
                 "lista_id": "PPI",
                 "saldo": 1,
                 **fatos,
             }
         )
 
-    def test_esgotada_e_livre_de_impedimento(self):
+    def test_silente_esgotada_e_livre_de_impedimento_e_a_nao_preenchida(self):
         estado = self.situacao()
-        assert (estado["estado"], estado["quantidade"]) == (destinacao.DESTINACAO_DISPONIVEL, 1)
+        assert (estado["estado"], estado["quantidade"]) == (
+            destinacao.NAO_PREENCHIDA_DISPONIVEL,
+            1,
+        )
 
     def test_sem_saldo(self):
         assert self.situacao(saldo=0)["estado"] == destinacao.SEM_VAGA_A_DESTINAR
 
     def test_sem_apuracao(self):
         assert self.situacao(saldo=None)["estado"] == destinacao.SEM_VAGA_A_DESTINAR
-
-    def test_movimento_antigo_conta_como_destinada(self):
-        """US1.5: a vaga já cedida aparece como destinada, e nada a destina de novo."""
-        estado = self.situacao(saldo=0, destinadas=1)
-        assert (estado["estado"], estado["destinadas"]) == (destinacao.SEM_VAGA_A_DESTINAR, 1)
 
     def test_com_alguem_livre_o_caminho_e_chamar(self):
         estado = self.situacao(restantes=["p2"])
@@ -239,20 +182,34 @@ class TestSituacao:
         impedimento = destinacao.Impedimento(destinacao.RESULTADO_NAO_DEFINITIVO, "x", None)
         assert self.situacao(impedimentos=[impedimento])["estado"] == destinacao.IMPEDIDA
 
-    def test_por_saldo_aguarda(self):
-        assert self.situacao(declaracao=nomes.REVERSAO_POR_SALDO)["estado"] == (
-            destinacao.AGUARDA_D015
+    def test_reversao_declarada_na_reserva_e_da_apuracao_nas_duas_especies(self):
+        """FR-6327: onde o Edital declara a reversão, nenhum ato é oferecido — ela é da apuração,
+        pela regra de antes da `155`, e a destinação por ato próprio fica para a próxima entrega."""
+        for especie in nomes.ESPECIES_DE_REVERSAO:
+            estado = self.situacao(declaracao=especie)
+            assert (estado["estado"], estado["quantidade"]) == (
+                destinacao.REVERSAO_PELA_APURACAO,
+                1,
+            )
+
+    def test_reversao_declarada_com_impedimento_continua_da_apuracao(self):
+        """O impedimento vai junto, para a frase dizê-lo; o estado continua sem ato."""
+        impedimento = destinacao.Impedimento(destinacao.CHAMADA_EM_CURSO, "x", None)
+        estado = self.situacao(
+            declaracao=nomes.REVERSAO_POR_ESGOTAMENTO,
+            restantes=["p2"],
+            pendentes=["p2"],
+            impedimentos=[impedimento],
         )
+        assert estado["estado"] == destinacao.REVERSAO_PELA_APURACAO
+        assert estado["impedimentos"] == [impedimento]
 
-    def test_passagem_entre_cotas(self):
-        assert self.situacao(declaracao=nomes.PASSAGEM_ENTRE_COTAS)["estado"] == (
-            destinacao.PASSAGEM_ENTRE_COTAS
-        )
+    def test_reversao_declarada_com_alguem_livre_o_caminho_e_chamar(self):
+        estado = self.situacao(declaracao=nomes.REVERSAO_POR_ESGOTAMENTO, restantes=["p2"])
+        assert estado["estado"] == destinacao.SEM_VAGA_A_DESTINAR
 
-    def test_sem_declaracao_e_a_nao_preenchida(self):
-        estado = self.situacao(declaracao=None)
-        assert estado["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL
-
-    def test_linha_geral_nunca_e_destinada(self):
-        estado = self.situacao(lista_id=None)
-        assert estado["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL
+    def test_linha_geral_e_a_nao_preenchida_mesmo_com_reversao_declarada(self):
+        """D-014: a reversão é da reserva; a linha geral sem quem a ocupe admite a declaração."""
+        for especie in (None, *nomes.ESPECIES_DE_REVERSAO):
+            estado = self.situacao(declaracao=especie, lista_id=None)
+            assert estado["estado"] == destinacao.NAO_PREENCHIDA_DISPONIVEL

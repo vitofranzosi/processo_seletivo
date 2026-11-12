@@ -31,15 +31,12 @@ comissão.</p>
 {% endif %}
 
 
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>{% if acao_do_erro == "acrescimo" %}Não foi possível acrescentar a vaga:{% elif acao_do_erro == "desfazimento" %}Não foi possível desfazer a vaga acrescida:{% elif acao_do_erro == "destinacao" %}Não foi possível destinar a vaga:{% elif acao_do_erro == "nao_preenchida" %}Não foi possível declarar a vaga não preenchida:{% elif acao_do_erro == "desfazer_destinacao" %}Não foi possível desfazer a destinação:{% elif acao_do_erro == "desfazer_nao_preenchida" %}Não foi possível desfazer a declaração de vaga não preenchida:{% else %}Não foi possível apurar:{% endif %}</strong> {{ erro }}</p>{% endif %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>{% if acao_do_erro == "acrescimo" %}Não foi possível acrescentar a vaga:{% elif acao_do_erro == "desfazimento" %}Não foi possível desfazer a vaga acrescida:{% elif acao_do_erro == "nao_preenchida" %}Não foi possível declarar a vaga não preenchida:{% elif acao_do_erro == "desfazer_nao_preenchida" %}Não foi possível desfazer a declaração de vaga não preenchida:{% else %}Não foi possível apurar:{% endif %}</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}
 {% if acao == "faixa" %}<p class="sucesso" role="status" tabindex="-1">Faixa seguinte emitida com o déficit apurado como causa. A faixa anterior não foi revogada, e quem já progrediu continua nela.</p>
-{% elif acao == "destinacao" %}<p class="sucesso" role="status" tabindex="-1">Vaga destinada à ampla concorrência: {{ resultado.quantidade|contagem:"vaga,vagas" }}.
+{% elif acao == "nao_preenchida" or acao == "desfazer_nao_preenchida" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "nao_preenchida" %}Vaga declarada não preenchida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% else %}Declaração de vaga não preenchida desfeita: {{ resultado.quantidade|contagem:"vaga volta,vagas voltam" }} a contar como a ocupar.{% endif %}
   {% if resultado.apuracaoSeguinte %}A apuração seguinte desta lista foi emitida por este ato, em seu nome.{% else %}A apuração seguinte desta lista não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
-  A ampla concorrência conta a vaga recebida na próxima apuração dela: emita-a para chamar a próxima da fila. O ato é imutável; corrigir é praticar outro, com motivo.</p>
-{% elif acao == "nao_preenchida" or acao == "desfazer_destinacao" or acao == "desfazer_nao_preenchida" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "nao_preenchida" %}Vaga declarada não preenchida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% elif acao == "desfazer_destinacao" %}Destinação desfeita: {{ resultado.quantidade|contagem:"vaga volta,vagas voltam" }} à lista de origem.{% else %}Declaração de vaga não preenchida desfeita: {{ resultado.quantidade|contagem:"vaga volta,vagas voltam" }} a contar como a ocupar.{% endif %}
-  {% if resultado.apuracaoSeguinte %}A apuração seguinte desta lista foi emitida por este ato, em seu nome.{% else %}A apuração seguinte desta lista não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
-  {% if acao == "desfazer_destinacao" %}A apuração da ampla concorrência ficou obsoleta pelo movimento: emita a seguinte.{% endif %} O ato é imutável; corrigir é praticar outro, com motivo.</p>
+  O ato é imutável; corrigir é praticar outro, com motivo.</p>
 {% elif acao == "acrescimo" or acao == "desfazimento" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "acrescimo" %}Vaga acrescida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% else %}Vaga acrescida desfeita: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% endif %}
   {% if resultado.apuracaoSeguinte %}A apuração seguinte foi emitida por este ato, em seu nome.{% else %}A apuração seguinte não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
   O ato é imutável; corrigir é praticar outro, com motivo.</p>
@@ -128,8 +125,9 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   </ul>
   {% endif %}
   {% comment %}
-  A vaga reservada sem quem a ocupe e o ato que a destina (155, UX-600, FR-6308). Depois dos numeros
-  e dos movimentos, porque a frase os cita, e antes do historico e da faixa seguinte.
+  A vaga sem quem a ocupe (155, UX-600): a declaracao de vaga nao preenchida, ou, onde o Edital
+  declara a reversao, por que a vaga ainda nao saiu. Depois dos numeros e dos movimentos, e antes
+  do historico e da faixa seguinte.
   {% endcomment %}
   {% include "interface/_situacao_da_vaga.html" %}
   {% endif %}
@@ -172,11 +170,6 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   {% endcomment %}
   {% if recorte.semInscrito %}
   <p class="nota"><strong>Não se aplica.</strong> Nenhuma inscrição enviada declarou esta lista: não há ordem a emitir nem ocupação a apurar neste recorte.</p>
-  {% comment %}
-  A lista de sorteio sem relação (155, R-007, FR-6332): a vaga dela, lida pela relação da ampla, sem
-  apuração; ou o que falta para a prova, dito como o que é (FR-6333).
-  {% endcomment %}
-  {% include "interface/_situacao_da_vaga.html" %}
   {% elif pode_emitir and recorte.estado != "NO_VACANCY_TABLE" and not recorte.temOrdem %}
   {% comment %}
   **A razao no lugar do botao, e o caminho junto** (034, FR-498, SC-170). Apurar exige ordem vigente
@@ -243,11 +236,11 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   que.
   {% endcomment %}
   {% comment %}
-  Com a situacao da vaga dita - a destinacao disponivel, ou impedida pelo fato que ela nomeia -, a
-  faixa seguinte nao alcanca ninguem: a ordem inteira ja foi lida e ninguem livre pode ocupar (155,
-  FR-6304, UX-602). Um ato por caminho, e o da destinacao esta logo acima.
+  Com a situacao da vaga dita - a declaracao disponivel, impedida pelo fato que ela nomeia, ou a
+  reversao que a apuracao aplica -, a faixa seguinte nao alcanca ninguem: a ordem inteira ja foi
+  lida e ninguem livre pode ocupar (155, FR-6304, UX-602). Um ato por caminho, dito logo acima.
   {% endcomment %}
-  {% if recorte.vaga.disponivel or recorte.vaga.impedimentos %}
+  {% if recorte.vaga.disponivel or recorte.vaga.impedimentos or recorte.vaga.reversao %}
   {% elif recorte.faixaDisponivel and recorte.continuacaoAdmitida %}
   <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
     {% csrf_token %}

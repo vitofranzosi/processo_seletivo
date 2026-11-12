@@ -84,8 +84,7 @@ def emitir_sucessora_por_efeito(
     ato que a pediu e com o motivo que ele declarou. O que muda é que ela não abre transação nem
     trava o Processo: quem chama já os tem, e a idempotência é a do ato que a pediu.
 
-    **Devolve `None` quando a conta moveria vaga** pela reversão declarada — desde a `155`, só a por
-    saldo (FR-6315) —, e nada é gravado. As
+    **Devolve `None` quando a conta moveria vaga** pela reversão declarada, e nada é gravado. As
     recusas da emissão (`ordem_nao_vigente`, `sem_quadro_publicado`, empate na fronteira) sobem como
     sobem na tela, e quem chama decide o que fazer com elas.
 
@@ -197,6 +196,9 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     nao_preenchidas_lidas = selectors.nao_preenchidas_do_recorte(
         edital=edital, perfil_id=perfil, marco_id=marco, lista_id=lista
     )
+    nao_preenchidas = calculo.saldo_das_nao_preenchidas(
+        (n.especie, n.quantidade) for n in nao_preenchidas_lidas
+    )
     lidos = [
         (m.especie, calculo.mesma_lista(m.destino_lista_id, lista), m.quantidade)
         for m in movimentos
@@ -238,25 +240,22 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     # É o que permite a apuração citar o próprio movimento em `movimentosLidos` e nascer com a
     # `efetivas` líquida — sem isso ela nascia obsoleta pelo movimento que ela mesma causou.
     #
-    # **A espécie que move, e não a declaração** (155, FR-6318): a passagem entre cotas é declarada
-    # e não cede nada. `quantidade_a_reverter` já devolveria zero para ela; ler `especie_que_move`
-    # aqui é o que impede que isso dependa de a tupla das que revertem nunca crescer.
-    #
-    # **Só o saldo ainda cede aqui** (155, FR-6315, R-010). Por esgotamento a apuração informa a
-    # ocupação, e a vaga sem quem a ocupe vai à ampla pelo ato próprio da destinação
-    # (`application/destinacao.py`), com conferência e fundamento — a cessão no meio da emissão era
-    # a reversão automática que a `155` exclui (D-001). O ramo do saldo fica como estava até a
-    # decisão do usuário sobre a condição dele: tirá-lo agora seria escolher por ela. Sem o ramo do
-    # esgotamento, a pergunta "há quem ocupar?" deixou de ser feita aqui — o saldo não a lê.
-    especie_da_reversao = _especie_que_move(versao.content, perfil_id=perfil)
+    # **A vaga declarada não preenchida não é cedida** (155, R-002). A declaração só existe na
+    # reserva do Edital silente, mas uma Retificação posterior pode declarar a reversão: a vaga que
+    # a comissão declarou não preenchida, com fundamento, continua declarada até o ato contrário, e
+    # a reversão alcança só o que sobra. Cedê-la seria desfazer a declaração sem ato — o que a
+    # `155` exclui (D-001) —, e deixá-la na conta faria a apuração passar das vagas.
+    especie_da_reversao = _declaracao(versao.content, perfil_id=perfil)
     cede = (
         movimento_de_vaga.quantidade_que_a_cota_cede(
             especie=especie_da_reversao,
             efetivas=efetivas,
-            ocupadas=ocupadas,
-            ha_quem_ocupar=False,
+            ocupadas=ocupadas + nao_preenchidas,
+            ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
+                edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
+            ),
         )
-        if lista is not None and especie_da_reversao == nomes.REVERSAO_POR_SALDO
+        if lista is not None
         else 0
     )
     if cede and not movimento_admitido:
@@ -266,9 +265,6 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     identidade_do_movimento = uuid4() if cede else None
     if cede:
         efetivas -= cede
-    nao_preenchidas = calculo.saldo_das_nao_preenchidas(
-        (n.especie, n.quantidade) for n in nao_preenchidas_lidas
-    )
     # **A conta que passaria das vagas é recusada pelo nome** (155, R-002), e não pela constraint:
     # uma inclusão posterior à declaração de não preenchida faria a sucessora estourar
     # `ck_apuracao_ocupadas_no_limite` com `IntegrityError` — que nenhum *savepoint* de quem chama
@@ -293,8 +289,6 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
         universo={
             "rowId": str(linha.get("id")) if linha.get("id") else None,
             "immediateVacancies": publicadas,
-            # **A declaração, das três** (155, FR-6317): a passagem entre cotas é congelada como
-            # as outras, e quem relê a apuração sabe o que o Edital mandava naquele dia.
             "vacancyReversion": _declaracao(versao.content, perfil_id=perfil),
             "governedStage": str(etapa) if etapa else None,
             "orderId": str(ato.id),
@@ -333,11 +327,10 @@ def conferir_limite(*, efetivas, ocupadas, nao_preenchidas):
     """Recusa, pelo nome, a conta que o banco recusaria com `IntegrityError` (155, R-002).
 
     `ck_apuracao_ocupadas_no_limite` exige `ocupadas + nao_preenchidas <= efetivas`. A declaração
-    não passa do saldo, mas o mundo muda depois dela: uma inclusão registrada pela condução, ou o
-    desfazimento de uma destinação que a ampla recebeu, pode fazer a apuração seguinte contar mais
-    ocupadas do que cabem ao lado das não preenchidas. **Nada é ajustado em silêncio** — rebaixar a
-    declaração na conta seria desfazê-la sem ato —, e a recusa diz o caminho: desfazer a
-    declaração, com motivo, antes de apurar de novo.
+    não passa do saldo, mas o mundo muda depois dela: uma inclusão registrada pela condução pode
+    fazer a apuração seguinte contar mais ocupadas do que cabem ao lado das não preenchidas. **Nada
+    é ajustado em silêncio** — rebaixar a declaração na conta seria desfazê-la sem ato —, e a recusa
+    diz o caminho: desfazer a declaração, com motivo, antes de apurar de novo.
     """
     if int(ocupadas) + int(nao_preenchidas) > int(efetivas):
         raise DomainError(
@@ -349,18 +342,11 @@ def conferir_limite(*, efetivas, ocupadas, nao_preenchidas):
         )
 
 
-def _perfil(conteudo, perfil_id):
+def _declaracao(conteudo, *, perfil_id):
     from processo_seletivo.classificacao.domain.universo import por_identidade
 
-    return por_identidade((conteudo or {}).get("profiles"), perfil_id) or {}
-
-
-def _declaracao(conteudo, *, perfil_id):
-    return reversao.declarada(_perfil(conteudo, perfil_id))
-
-
-def _especie_que_move(conteudo, *, perfil_id):
-    return reversao.especie_que_move(_perfil(conteudo, perfil_id))
+    perfil = por_identidade((conteudo or {}).get("profiles"), perfil_id) or {}
+    return reversao.declarada(perfil)
 
 
 def _quantidade(linha):
