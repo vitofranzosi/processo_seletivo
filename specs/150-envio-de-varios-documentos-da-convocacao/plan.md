@@ -16,7 +16,8 @@ domínio nova, com quatro mudanças:
 1. **Um script novo, `portal/static/portal/varios.js`**, que conta os cartões com arquivo escolhido,
    reescreve o rótulo do botão ("Enviar os N documentos escolhidos"), oferece "Remover a escolha" e,
    no `submit` de qualquer cartão com N ≥ 2, envia os N arquivos **um por requisição**, em sequência,
-   pelo mesmo endereço do envio individual (D-002, R-001).
+   pelo mesmo endereço do envio individual (D-002, R-001). O arquivo acima do limite não viaja: o
+   servidor o recusa pelo tamanho declarado, com a frase de hoje, e o lote segue (R-009).
 2. **A view do envio responde ao lote em JSON.** Com o cabeçalho `X-Envio-De-Varios: k/n`, a
    `apresentar_documento_da_convocacao` devolve o resultado daquele documento em JSON, em vez do
    redirecionamento, e acumula na sessão o recebido e o recusado. O comando `apresentar` da `115`
@@ -105,7 +106,7 @@ Os guardiões que a 150 aciona e que as outras também podem acionar: o de scrip
 ```text
 specs/150-envio-de-varios-documentos-da-convocacao/
 ├── spec.md              # revista neste PR (achado 11)
-├── research.md          # D-001 a D-006 (spec) e R-001 a R-008 (plano)
+├── research.md          # D-001 a D-006 (spec) e R-001 a R-010 (plano)
 ├── plan.md              # este arquivo
 ├── data-model.md        # nenhuma entidade; o estado do lote na sessão e no DOM
 ├── quickstart.md        # roteiro de verificação
@@ -146,7 +147,7 @@ backend/tests/
 
 ## Fases
 
-- **Fase 0** — [research.md](research.md), seção *Fase 0 do plano*: R-001 a R-008.
+- **Fase 0** — [research.md](research.md), seção *Fase 0 do plano*: R-001 a R-010. R-009 e R-010 entraram pela análise cruzada de 11/11.
 - **Fase 1** — [data-model.md](data-model.md), [contracts/envio-de-varios.md](contracts/envio-de-varios.md),
   [quickstart.md](quickstart.md).
 - **Fase 2** — [tasks.md](tasks.md), pelo `$speckit-tasks`.

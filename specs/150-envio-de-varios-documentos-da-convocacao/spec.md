@@ -8,7 +8,8 @@
 diagnóstico do código. As decisões estão em [research.md](research.md), para revisão no PR.
 Revista em 11/11/2026 para incluir o achado 11 do estudo da jornada final — o mesmo arquivo em dois
 documentos (User Story 5, FR-5615 a FR-5619, UX-504, SC-1806, SC-1807, D-006) —, com o plano e as
-tarefas.
+tarefas. Depois da análise cruzada, a FR-5610 foi revista (o documento em voo na queda de
+conexão), entraram dois casos-limite e a seção *Achados registrados*.
 
 **Input**: *"Na área do candidato, na convocação que pede documentos, o candidato escolhe arquivos em
 vários cartões e clica em Enviar num deles: só o arquivo daquele cartão é enviado, a página recarrega
@@ -221,6 +222,12 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
   opcional. Contam como qualquer outro: com arquivo escolhido, entram no envio de vários.
 - **Um cartão só tem envio possível.** Nada muda em relação a hoje.
 - **Escolher de novo um arquivo no mesmo cartão.** Troca a escolha; a contagem não muda.
+- **Um arquivo acima do limite no meio do lote** *(acrescentado em 2026-11-11, pela análise cruzada do
+  plano)*. É recusado como hoje, com a frase de tamanho de hoje no cartão dele, e os seguintes são
+  enviados (FR-5606). O arquivo grande não precisa viajar para ser recusado (R-009 do research).
+- **Dois lotes ao mesmo tempo, em duas abas da mesma pessoa.** Cada documento continua recebido ou
+  recusado pela regra de hoje; a confirmação da volta pode mostrar só o lote que começou por último.
+  Limite aceito: o caso é raro, e o "Andamento" conta tudo.
 
 ## Requirements *(mandatory)*
 
@@ -264,10 +271,19 @@ possível. Enviar o diploma; depois, escolher o mesmo PDF no cartão do comprova
 - **FR-5609**: Terminado o envio de vários sem nenhum documento recebido, a tela MUST voltar ao cartão
   do primeiro recusado, com o foco na recusa, e a recusa de cada um dos outros MUST estar no cartão
   dele.
-- **FR-5610**: Se a conexão falhar ou o acesso expirar no meio do envio de vários, a tela MUST NOT
-  sair da página. Ela MUST dizer quais documentos foram recebidos até ali e quais não foram, com a
-  frase de falha de hoje; os não enviados MUST continuar escolhidos, e o botão MUST voltar a oferecer
-  o envio deles.
+- **FR-5610** *(revista em 2026-11-11, pela análise cruzada do plano — a redação anterior está ao fim
+  desta alínea)*: Se a conexão falhar ou o acesso expirar no meio do envio de vários, a tela MUST NOT
+  sair da página. Ela MUST dizer quais documentos foram recebidos até ali e quais não foram enviados,
+  com a frase de falha de hoje. O documento que estava sendo enviado quando a conexão caiu pode ter
+  chegado sem que a resposta voltasse: dele, a tela MUST NOT afirmar nem que chegou nem que não
+  chegou; MUST dizer que não é possível saber, e que recarregar a página mostra o que foi recebido.
+  Os não enviados e esse documento MUST continuar escolhidos, e o botão MUST voltar a oferecer o
+  envio deles — reenviar o que já tinha chegado não duplica nada (`FR-3581` da `115`).
+
+  > **Redação anterior, preservada:** Se a conexão falhar ou o acesso expirar no meio do envio de
+  > vários, a tela MUST NOT sair da página. Ela MUST dizer quais documentos foram recebidos até ali e
+  > quais não foram, com a frase de falha de hoje; os não enviados MUST continuar escolhidos, e o
+  > botão MUST voltar a oferecer o envio deles.
 - **FR-5611**: O envio de vários MUST NOT guardar nada no navegador — nem nome de arquivo, nem
   arquivo, nem progresso —, como o envio de um já não guarda: a tela carrega documentos pessoais, e
   num computador compartilhado o que fica guardado é o que vaza.
@@ -398,6 +414,16 @@ indicada em cada uma; a implementação não depende de outra resposta para come
 
 O bloqueio total foi considerado e não é proposto: o usuário decidiu que o aviso não bloqueia
 (D-006).
+
+## Achados registrados
+
+Encontrados ao planejar esta spec, fora do escopo dela. Governança é do usuário.
+
+- **A tela da convocação não é marcada como não armazenável.** `portal.views.convocacao` responde
+  sem `Cache-Control: no-store`, ao contrário de outras telas do portal com dado pessoal, que usam
+  `resposta_privada` ou `marcar_como_privada` (`shared/http.py`). A tela já traz nome, documentos
+  pedidos e o link do arquivo de cada um; esta spec acrescenta o resumo SHA-256 do arquivo vigente
+  (FR-5615), que não revela o conteúdo. Constatado em 11/11/2026, na `main` em `ef568113`.
 
 ## Assumptions
 
