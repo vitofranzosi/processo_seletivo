@@ -654,6 +654,7 @@ def formalizacao(request):
     autores = acessos.nomes_dos_autores(
         {d.pessoa for d in vigentes} | {d.designado_por for d in vigentes}
     )
+    pessoas = list(designar.pessoas_com_o_papel(ator, alvo=escolhido))
     perfis_por_edital = {}
     for designacao in vigentes:
         if designacao.edital_id not in perfis_por_edital:
@@ -676,8 +677,9 @@ def formalizacao(request):
                     "nome": acessos.nome_legivel(v.pessoa),
                     "email": v.pessoa.email,
                 }
-                for v in designar.pessoas_com_o_papel(ator, alvo=escolhido)
+                for v in pessoas
             ],
+            "todas_designadas": not pessoas and designar.todas_ja_designadas(ator, alvo=escolhido),
             "vigentes": [
                 {
                     "designacao": d,

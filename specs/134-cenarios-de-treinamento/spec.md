@@ -228,6 +228,19 @@ comandos da aplicação que a tela usa.
   > a decisão da `107` sobre o identificador no formulário): a pessoa enviada se resolvia entre as
   > pessoas institucionais ativas, de identificador `pessoa-`, e a recusa de pessoa inexistente ou
   > inativa era a mesma.
+- **FR-6740**: **Sem quem já está designado** (revisão de 12/11/2026, V-N01 da reavaliação da
+  jornada final). A lista das duas telas de designar da FR-6731 MUST deixar de fora quem já tem
+  designação vigente no Edital escolhido, e a pessoa enviada continua resolvida por essa mesma lista.
+  A tela aberta antes da designação de alguém e enviada depois cai fora da lista e recebe a resposta
+  de fora dela: a pessoa institucional segue ao comando, que a recusa por designação vigente, como
+  antes; a de treino recebe a recusa única de pessoa indisponível. Quando todas as pessoas com o
+  papel já estão designadas, a tela MUST dizer isso, e não que ninguém tem o papel; na tela de
+  Acessos da unidade, a escolha de outro Edital continua oferecida. Sem Edital escolhido, ninguém sai
+  da lista. Nada muda no comando de designar nem na revogação.
+
+  > **Redação anterior, preservada** (a FR-6731, sem esta alínea): a lista era a de quem tem o papel
+  > vigente na unidade, ativo, com a FR-6730, e oferecia também quem já estava designado para o
+  > Edital — escolhê-lo só levava à recusa de designação vigente.
   >
   > *Por que mudou:* a pessoa de treino não é institucional, de propósito (FR-6721), e a tela a
   > oferecia no Edital de treinamento para recusá-la ao gravar. O usuário escolheu, entre essa saída
@@ -262,6 +275,9 @@ comandos da aplicação que a tela usa.
 - **SC-2214**: Pelas duas telas de designar, a pessoa institucional com o papel continua designável;
   `treino.formalizacao` é designável no Edital de treinamento e recusada num Edital real; o
   identificador fora da lista e o adulterado são recusados sem gravar nada.
+- **SC-2220**: Pelas duas telas de designar, quem já tem designação vigente no Edital não aparece
+  na lista; enviado assim mesmo, nada se grava. Com todas designadas, a tela diz que já estão
+  designadas (FR-6740).
 - **SC-2212**: A carga do C16 e do C17 juntos cria uma pessoa e um vínculo; a segunda carga, e a
   restauração, não criam pessoa nem vínculo. Nenhum vínculo além do Formalização da identidade
   `treino.formalizacao` nasce de carga ou restauração.

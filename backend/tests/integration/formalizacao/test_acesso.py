@@ -823,3 +823,45 @@ def test_as_telas_de_designar_aceitam_so_quem_ofereceram(
     assert DesignacaoParaFormalizacao.objects.filter(
         edital=cenario.edital, pessoa=com_papel.username
     ).exists()
+
+
+# --- Quem já está designado não é oferecido (134, FR-6740, SC-2220) ----------------------------
+
+
+@pytest.mark.parametrize("tela", ["presidencia", "acessos"])
+def test_as_telas_nao_oferecem_quem_ja_esta_designado(
+    cenario, client, seletor, provedor, com_papel, tela
+):
+    """FR-6740: fora da lista, e enviado assim mesmo, nada se grava; com todas designadas, a tela
+    diz isso, e não que ninguém tem o papel."""
+    postar = tela_de_designar(client, cenario.edital, tela)
+    designar_direto(cenario.edital, com_papel.username)
+    if tela == "presidencia":
+        pagina = client.get(_definicao(cenario.edital)).content.decode()
+    else:
+        url = reverse("interface:acessos-formalizacao")
+        pagina = client.get(f"{url}?edital={cenario.edital.id}").content.decode()
+        assert "Escolher este Edital" in pagina, "a escolha de outro Edital continua"
+
+    assert f'value="{com_papel.username}"' not in pagina
+    assert "já estão designadas" in pagina
+    assert "Ninguém nesta unidade tem o papel" not in pagina
+
+    resposta = postar(com_papel.username)
+
+    assert "já está designada para este Edital" in resposta
+    assert DesignacaoParaFormalizacao.objects.filter(pessoa=com_papel.username).count() == 1
+
+
+def test_designado_num_edital_continua_oferecido_nos_outros(cenario, com_papel):
+    """FR-6740: a regra é do Edital escolhido; sem Edital escolhido, ninguém sai."""
+    designar_direto(cenario.edital, com_papel.username)
+    outro = Edital(institution_scope="cefor")
+
+    def oferecidas(alvo):
+        return [v.pessoa.username for v in designar.pessoas_com_o_papel(GIL, alvo=alvo)]
+
+    assert oferecidas(cenario.edital) == []
+    assert oferecidas(None) == oferecidas(outro) == [com_papel.username]
+    assert not designar.todas_ja_designadas(GIL, alvo=outro)
+    assert designar.todas_ja_designadas(GIL, alvo=cenario.edital)

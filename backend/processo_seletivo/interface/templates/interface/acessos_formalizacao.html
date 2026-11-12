@@ -55,7 +55,7 @@ Perfis é revogar e designar de novo.
   <h2 id="designar">Designar</h2>
   {% if not editais %}
   <p class="nenhuma">Esta unidade não tem Edital publicado.</p>
-  {% elif not pessoas %}
+  {% elif not pessoas and not todas_designadas %}
   <p class="nenhuma">Ninguém nesta unidade tem o papel {{ papel }}. Conceda o papel em
     <a href="{% url 'interface:acessos-conceder' %}">Conceder acesso</a> e volte aqui.</p>
   {% else %}
@@ -66,7 +66,9 @@ Perfis é revogar e designar de novo.
       </select></p>
     <p class="acoes"><button type="submit" class="botao secundario">Escolher este Edital</button></p>
   </form>
-  {% if escolhido %}
+  {% if todas_designadas %}
+  <p class="nenhuma">Todas as pessoas desta unidade com o papel {{ papel }} já estão designadas para o {{ escolhido }}.</p>
+  {% elif escolhido %}
   <form method="post" action="{% url 'interface:acessos-formalizacao' %}">
     {% csrf_token %}
     <input type="hidden" name="edital" value="{{ escolhido.id }}">

@@ -109,13 +109,45 @@ def _vinculos_oferecidos(actor, *, edital=None, alvo=None):
     return vinculos
 
 
+def _sem_quem_ja_esta_designado(vinculos, edital):
+    """Sem quem tem designação vigente no Edital escolhido (FR-6740 da `134`).
+
+    Oferecê-la só levava à recusa de designação vigente (V-N01 da reavaliação de 12/11/2026). Sem
+    Edital escolhido — a tela de acessos antes da escolha — não se sabe, e ninguém sai.
+    """
+    if edital is None:
+        return vinculos
+    return vinculos.exclude(
+        pessoa__username__in=designacoes_vigentes(edital=edital).values("pessoa")
+    )
+
+
 def pessoas_com_o_papel(actor, *, edital=None, alvo=None):
     """Quem tem o papel Formalização vigente na unidade do ator, para a tela escolher (FR-6701).
 
-    O próprio ator não é oferecido: a autodesignação é recusada de qualquer modo.
+    O próprio ator não é oferecido: a autodesignação é recusada de qualquer modo. Quem já está
+    designado para o Edital também não (FR-6740 da `134`).
     """
-    return _vinculos_oferecidos(actor, edital=edital, alvo=alvo).exclude(
+    vinculos = _vinculos_oferecidos(actor, edital=edital, alvo=alvo)
+    return _sem_quem_ja_esta_designado(vinculos, alvo or edital).exclude(
         pessoa__username=actor.subject
+    )
+
+
+def todas_ja_designadas(actor, *, edital=None, alvo=None):
+    """Há quem tenha o papel, e todos já estão designados para o Edital escolhido (FR-6740).
+
+    A tela diz isso no lugar de *"Ninguém nesta unidade tem o papel"*, que seria falso. As telas
+    só a chamam com a lista vazia, para não custar consulta à tela de sempre.
+    """
+    if (alvo or edital) is None:
+        return False
+    com_o_papel = _vinculos_oferecidos(actor, edital=edital, alvo=alvo).exclude(
+        pessoa__username=actor.subject
+    )
+    return (
+        com_o_papel.exists()
+        and not _sem_quem_ja_esta_designado(com_o_papel, alvo or edital).exists()
     )
 
 
@@ -125,8 +157,10 @@ def pessoa_da_lista(actor, identificador, *, edital=None, alvo=None):
     134, FR-6731 (escolha do usuário de 12/11/2026, "Escolher da lista"). Antes, as duas telas a
     resolviam entre as pessoas institucionais (`acessos.pessoa_institucional`), e a pessoa de treino
     — que não é institucional de propósito — era recusada depois de oferecida. A lista é a mesma de
-    `pessoas_com_o_papel`, com a FR-6730, e mais o próprio ator, para que a autodesignação continue
-    recusada pelo comando com o código dela.
+    `pessoas_com_o_papel`, com a FR-6730 e a FR-6740, e mais o próprio ator, para que a
+    autodesignação continue recusada pelo comando com o código dela. Quem já está designado sai da
+    lista, e a tela aberta antes da designação dele chega aqui fora dela: a pessoa institucional
+    segue ao comando, que a recusa por designação vigente, como antes.
 
     **Fora da lista, a resposta é a de antes**, e ninguém de fora é designado: a pessoa
     institucional ativa sem o papel segue para o comando, que a recusa com o código da FR-3663
@@ -134,7 +168,9 @@ def pessoa_da_lista(actor, identificador, *, edital=None, alvo=None):
     treinamento, adulterado — recebe a recusa única de pessoa indisponível, que não serve de sonda.
     """
     vinculo = (
-        _vinculos_oferecidos(actor, edital=edital, alvo=alvo)
+        _sem_quem_ja_esta_designado(
+            _vinculos_oferecidos(actor, edital=edital, alvo=alvo), alvo or edital
+        )
         .filter(pessoa__username=identificador or "")
         .first()
     )

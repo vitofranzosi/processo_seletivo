@@ -494,14 +494,16 @@ def _quem_designa(ator, edital):
 
     if pode_designar(ator, edital) is None:
         return None
+    pessoas = [
+        {"identificador": v.pessoa.username, "nome": nome_legivel(v.pessoa)}
+        for v in designar.pessoas_com_o_papel(ator, edital=edital)
+    ]
     return {
         "designavel": edital.status in ESTADOS_DESIGNAVEIS,
         "papel": nomes.NOME_DO_PAPEL,
         "perfis": definir.perfis_do_edital(edital),
-        "pessoas": [
-            {"identificador": v.pessoa.username, "nome": nome_legivel(v.pessoa)}
-            for v in designar.pessoas_com_o_papel(ator, edital=edital)
-        ],
+        "pessoas": pessoas,
+        "todas_designadas": not pessoas and designar.todas_ja_designadas(ator, edital=edital),
     }
 
 
