@@ -635,44 +635,8 @@ ul.documentos .entrega.ausente{font-style:italic}
   color:var(--texto-fraco);margin:0 0 .25rem;font-weight:600}
 .parecer-registrado p{margin:0 0 1rem;max-width:var(--leitura)}
 
-/* A Mesa de trabalho: o documento à esquerda, o formulário à direita — e uma coluna só enquanto
-   nada está aberto, que é como a tela sempre foi. O painel só existe em tela larga; abaixo disso
-   o link continua abrindo o documento em aba própria. */
-.mesa-trabalho{display:grid;gap:1.5rem}
-/* `:not([hidden])` **não é enfeite**: `display` de autor vence o `display:none` que o atributo
-   `hidden` traz do navegador, e sem esta guarda o painel aparecia vazio no alto de toda inscrição,
-   com o botão de fechar, antes de qualquer documento ser aberto. */
-.painel-documento:not([hidden]){display:flex;flex-direction:column;gap:.75rem;min-width:0}
-/* Mesmo desenho da ficha do candidato, do outro lado: as duas colunas passam a começar na mesma
-   altura por construção, e não por ajuste de margem. */
-.barra-do-painel{display:flex;align-items:center;justify-content:space-between;gap:1rem;
-  padding:.85rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px}
-/* A margem à direita é o que leva as duas ações para a ponta: com três filhos, o
-   `space-between` sozinho punha "Abrir em aba própria" no meio da barra, longe do "Fechar". */
-.barra-do-painel h2{margin:0 auto 0 0;font-size:1rem;overflow-wrap:anywhere}
-/* `line-height` herdado porque a barra tem um link e um botão lado a lado: o link herda o 1,5 do
-   corpo, e o botão fica com o `normal` do navegador — 30 px e 25 px na mesma linha. */
-.barra-do-painel .acao{flex:0 0 auto;line-height:inherit}
-.painel-documento iframe{width:100%;flex:1 1 auto;min-height:24rem;border:1px solid var(--borda);
-  border-radius:4px;background:var(--branco)}
-
-/* Sem documento aberto, a coluna é uma só — e o formulário de uma avaliação não tem o que fazer
-   com 1.480 px: a ficha esticava, a lista de documentos punha a ação a um palmo do nome, e a caixa
-   do parecer virava uma faixa. A página larga serve ao painel; o formulário tem a sua medida.
-
-   O limite é da **página**, e não só do formulário: posto apenas no formulário, o cabeçalho
-   atravessava a tela inteira e o conteúdo parava antes, deixando uma borda direita irregular que
-   parece defeito. Com o painel aberto, o limite sai — quem manda ali é o documento. */
-.pagina-da-inscricao{max-width:64rem}
-.pagina-da-inscricao.com-documento{max-width:none}
-.painel-avaliacao{min-width:0}
-.documentos a[aria-current]{font-weight:600;text-decoration:underline}
-@media (min-width:64rem){
-  .mesa-trabalho.com-documento{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
-    align-items:start}
-  .mesa-trabalho.com-documento .painel-documento{position:sticky;top:1rem;
-    height:calc(100vh - 5rem)}
-}
+/* O painel do documento da Mesa mora em `grupos/visualizador.css` desde a 157: a conferência dos
+   documentos da convocação usa o mesmo, e as duas telas a carregam pelo estilo da página. */
 .codigo-de-verificacao{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:600;
   letter-spacing:.03em}
 /* A coincidência de CPF na listagem do que chegou (010). Por texto **e** por símbolo: quem

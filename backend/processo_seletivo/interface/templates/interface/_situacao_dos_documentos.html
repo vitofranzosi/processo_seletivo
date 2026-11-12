@@ -1,0 +1,25 @@
+{% comment %} A situação desta convocação (143, FR-5021 a FR-5023). Parcial desde a 157: o registro sem recarga a troca no lugar (FR-6514). {% endcomment %}<section class="situacao-da-convocacao tom-{{ linha.passo.tom }}" id="situacao-da-convocacao" aria-labelledby="titulo-da-situacao"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <h2 id="titulo-da-situacao">Situação desta convocação</h2>
+  <p class="passo-da-chamada"><span class="rotulo-do-passo">{% if linha.passo.tom == "feito" %}Situação{% else %}Próximo passo{% endif %}</span> {{ linha.passo.frase }}
+    {% if linha.passo.acao == "conferir" and pode_conferir and primeiro_a_conferir %}<a class="acao acao-do-passo" href="#item-{{ primeiro_a_conferir.item.id }}">Ir ao primeiro documento a conferir</a>
+    {% elif linha.passo.acao == "desfecho" and pode_emitir %}<a class="acao acao-do-passo" href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">Registrar o desfecho desta convocação</a>
+    {% elif linha.passo.acao == "desfecho" or linha.passo.acao == "emitir" %}<span class="ajuda">É ato de quem conduz a convocação{% if pode_emitir %}: <a href="{{ url_da_convocacao }}#convocacao-{{ convocacao.id }}">abrir esta pessoa na convocação</a>{% endif %}.</span>{% endif %}</p>
+  {% if linha.aviso %}<p class="aviso-da-pendencia">{{ linha.aviso.frase_da_pendencia }} {{ linha.aviso.frase_do_aviso }}{% if linha.aviso.oferece_o_aviso %} <a href="{{ url_da_convocacao }}#avisar-pendencias">Ir ao aviso das pessoas com documento pendente</a> <span class="ajuda">— o gesto alcança todas as pessoas com pendência deste recorte, no máximo um aviso por pessoa por dia.</span>{% endif %}</p>{% endif %}
+  {% with c=leitura.contagens %}
+  <ul class="resumo" aria-label="Documentos pedidos nesta convocação">
+    <li><strong>{{ c.conformes }}</strong>Conforme{{ c.conformes|pluralize }}</li>
+    <li><strong>{{ c.recebidos }}</strong>Recebido{{ c.recebidos|pluralize }}, a conferir</li>
+    {% if c.complementados %}<li><strong>{{ c.complementados }}</strong>Reenviado{{ c.complementados|pluralize }}, a conferir de novo</li>{% endif %}
+    <li><strong>{{ c.pendentes }}</strong>Pendente{{ c.pendentes|pluralize }}</li>
+    <li><strong>{{ c.a_apresentar }}</strong>A apresentar</li>
+    {% if c.nao_se_aplica %}<li><strong>{{ c.nao_se_aplica }}</strong>Não se aplica após análise</li>{% endif %}
+  </ul>
+  {% endwith %}
+<p class="aviso" role="status"><strong>{{ rotulo_documental }}</strong>{% if desfecho %} — {{ desfecho.get_especie_display }}, registrado em {{ desfecho.registrado_em|date:"d/m/Y H:i" }}{% endif %}</p>
+{% if leitura.pendencias_para_incluir and not desfecho %}
+<p class="nota">Aceite e regularização ainda não podem ser registrados: falta conferir como conforme, ou como não se aplica quando o Edital publicou a condição — {% for lido in leitura.pendencias_para_incluir %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+{% endif %}
+{% if leitura.facultativos_sem_conferencia and not desfecho %}
+<p class="nota">Documento facultativo recebido e ainda não conferido: {% for lido in leitura.facultativos_sem_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. Isso não impede o desfecho.</p>
+{% endif %}
+</section>

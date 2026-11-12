@@ -1,0 +1,56 @@
+{% load interface_extras %}{% comment %}
+**O que foi registrado, e o passo seguinte** (157, FR-6519 a FR-6522, UX-642, UX-647). Vem dentro do
+cartão que acabou de ser registrado, sem recarga: é onde a pessoa está olhando. **Oferece, e não abre
+nem registra**: o próximo documento é um link de abrir como os do cartão, e abre por gesto (D-003 da
+157). Terminada a pessoa com pendência, o pedido de aviso dela (D-008 da 157).
+{% endcomment %}
+<div class="confirmacao-da-conferencia" role="status" data-confirmacao>
+  {% if resultado_do_pedido %}
+  {% comment %} O resultado do pedido de aviso, no lugar da confirmação (UX-648, UX-650). {% endcomment %}
+  <p>{{ resultado_do_pedido }}</p>
+  {% else %}
+  <p><strong>Conferência registrada: {{ confirmacao.nome }}, {{ confirmacao.resultado }}.</strong>{% if confirmacao.pendente %} Nenhum aviso foi pedido; {{ confirmacao.pessoa }} vê a pendência no portal.{% endif %}</p>
+  {% with proximo=confirmacao.proximo %}
+  {% if proximo %}
+  <p>Próximo a conferir: {{ proximo.nome }}
+    {% with url=urls_dos_documentos|dicionario_simples:proximo.vigente.id %}
+    <a class="acao" href="{{ url }}" target="_blank" rel="noopener"
+       data-abrir-documento data-documento="{{ proximo.nome }}"
+       data-rotulo="{{ proximo.nome }} — versão {{ proximo.vigente.numero }}{% if proximo.vigente.apresentado_em %}, apresentada em {{ proximo.vigente.apresentado_em|date:'d/m/Y H:i' }}{% endif %}"
+       data-tamanho="{{ tamanhos|dicionario_simples:proximo.vigente.id }}"
+       data-baixar="{{ url }}?baixar=1"
+       data-cartao="{% url 'interface:cartao-do-documento-da-convocacao' edital.id marco_id raiz.id proximo.item.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}"
+       data-alvo="item-{{ proximo.item.id }}"
+       aria-label="Abrir {{ proximo.nome }}, versão {{ proximo.vigente.numero }}">Abrir</a>
+    {% endwith %}</p>
+  {% else %}
+  <p>Não há outro documento de {{ confirmacao.pessoa }} a conferir.</p>
+  {% if confirmacao.pedido_de_aviso %}
+  {% with pedido=confirmacao.pedido_de_aviso %}
+  {% if pedido.alcancavel %}
+  <form method="post" action="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" class="pedido-de-aviso">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-aviso">
+    <p class="ajuda">O aviso não muda o prazo e não é a convocação.</p>
+    <p class="acoes"><button type="submit" class="botao secundario"
+       hx-post="{% url 'interface:pedir-aviso-de-pendencia' edital.id marco_id convocacao.id %}" hx-target="closest [data-confirmacao]" hx-swap="outerHTML">Pedir aviso para {{ confirmacao.pessoa }}</button></p>
+  </form>
+  {% elif pedido.desabilitado %}
+  <p class="ajuda">O aviso de pendência não pode ser pedido: envio de avisos desabilitado nesta instalação.</p>
+  {% elif pedido.a_partir_de %}
+  <p class="ajuda">{{ confirmacao.pessoa }} já foi avisado hoje nesta chamada. Um novo pedido poderá ser feito a partir de {{ pedido.a_partir_de|date:"d/m/Y" }}.</p>
+  {% elif pedido.motivo %}
+  <p class="ajuda">O aviso não alcança {{ confirmacao.pessoa }} agora: {{ pedido.motivo }}.</p>
+  {% endif %}
+  {% endwith %}
+  {% endif %}
+  {% if confirmacao.proxima_pessoa %}
+  <p>Próxima com documento a conferir: <a class="acao" href="{% url 'interface:documentos-da-convocacao' edital.id marco_id confirmacao.proxima_pessoa.convocacao.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">{{ confirmacao.proxima_pessoa.nome }}</a></p>
+  {% else %}
+  <p>Não há outro documento a conferir neste recorte. <a href="{% url 'interface:convocacao' edital.id marco_id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}">Voltar à convocação</a></p>
+  {% endif %}
+  {% endif %}
+  {% endwith %}
+  {% endif %}
+</div>

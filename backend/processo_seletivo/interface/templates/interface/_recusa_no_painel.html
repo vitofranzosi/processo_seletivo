@@ -1,0 +1,20 @@
+{% load estaticos %}<!DOCTYPE html>
+<html lang="pt-BR" data-recusa-no-painel>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documento não entregue</title>
+{% comment %}
+**A recusa da entrega, dentro do painel do visualizador** (157, FR-6510, FR-6545). Sem a barra da
+gestão: este documento vive dentro de uma moldura, ao lado do formulário, e não é uma página. A raiz
+leva `data-recusa-no-painel`, e o visualizador leva a frase para o texto do painel; sem script, ela
+aparece aqui mesmo, legível.
+{% endcomment %}
+<link rel="stylesheet" href="{% estatico 'shared/tokens.css' %}">
+{% folhas_da_gestao %}
+<link rel="stylesheet" href="{% estatico 'interface/grupos/visualizador.css' %}">
+</head>
+<body>
+<p class="erro" data-frase-da-recusa>{{ detalhe }}</p>
+</body>
+</html>
