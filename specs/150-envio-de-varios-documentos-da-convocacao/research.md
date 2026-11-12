@@ -91,3 +91,192 @@ que os documentos se enviam um de cada vez e que as outras escolhas não são gu
 **Razão.** Um formulário único sem script mandaria todos os arquivos numa requisição só, e esbarraria
 no limite do §2. A frase remove o silêncio, que é o defeito, no caminho em que não há como enviar em
 sequência.
+
+## D-006 — O arquivo repetido entre documentos é avisado no cartão, e não bloqueado
+
+*(Acrescentada em 2026-11-11, pelo achado 11 do estudo da jornada final,
+`doc/estudo-jornada-final-2026-11-11/`, telas `B13-bernardo-enviou` e `C08-diploma-pendente`.)*
+
+**Decisão.** Ao escolher um arquivo, o cartão compara o conteúdo com o escolhido nos outros cartões e
+com o vigente dos outros documentos da convocação; sendo idêntico, diz com qual, antes do envio. O
+envio continua possível, sem confirmação a mais. A regra de não bloquear é do usuário, na aprovação da
+revisão (11/11/2026).
+
+**Razão.** No estudo, o mesmo PDF foi aceito como diploma e como comprovante de residência; o servidor
+conhecia o resumo SHA-256 dos dois e não disse nada, e o engano só apareceu na conferência, ao custo
+de uma pendência, um aviso e um reenvio. O servidor já compara o resumo dentro do mesmo item — é a
+frase *"Este arquivo já tinha sido recebido."* (`FR-3581` da `115`) —, e o que faltava era olhar para
+os outros itens. O envio de vários torna o engano mais provável: quatro escolhas em sequência, na
+mesma tela.
+
+**Descartadas.**
+
+- *Recusar o arquivo idêntico ao de outro documento.* Há documento legítimo que serve a dois itens — o
+  mesmo PDF com diploma e histórico, pedidos em itens separados; a recusa empurraria a pessoa para
+  dividir ou alterar o arquivo só para passar.
+- *Pedir confirmação ("Enviar assim mesmo?").* Um diálogo a mais no caminho de quem enviou certo; o
+  texto no cartão já está onde a pessoa olha, e o botão continua dizendo a verdade.
+- *Avisar só depois do recebimento.* O arquivo já estaria registrado, e nada se exclui nesta base; o
+  aviso antes do envio é o que poupa a rodada. O aviso depois, para o caminho sem script, ficou como
+  pergunta ao usuário na spec.
+
+## Fase 0 do plano
+
+As decisões técnicas do plano, de 11/11/2026, sobre a `main` em `ef568113`. São do plano, e não da
+spec: nenhuma muda requisito; mudam o como. Por isso se numeram `R-`, e não `D-`.
+
+### R-001 — Um script novo, `varios.js`, e os de hoje sem mudança de comportamento
+
+**Decisão.** Contagem, rótulo, "Remover a escolha", o envio em sequência e o aviso do arquivo repetido
+moram num script novo, `portal/static/portal/varios.js`, carregado só pela convocação, **antes** de
+`envio.js`. Ele escuta o `submit` **no próprio formulário** (que dispara antes do ouvinte de
+`document.body` de `envio.js`) e:
+
+- com N ≥ 2, cancela o envio nativo (`preventDefault` e `stopPropagation`) e conduz o lote;
+- num cartão sem arquivo, cancela e escreve a frase de hoje no cartão (FR-5604);
+- com N = 1, no cartão escolhido, não faz nada: o envio de hoje segue, com o progresso de `envio.js`.
+
+`arquivo.js` continua o mesmo: já dá a classe `pronta` a cada botão com arquivo escolhido, que é o
+destaque que a UX-500 pede para o "Enviar os N documentos escolhidos". `envio.js` continua o mesmo:
+o `pageshow` dele já reabilita botões restaurados pelo "voltar", e o `varios.js` repete o cuidado
+para o que ele mesmo mudou (rótulos, progresso).
+
+**Razão.** `arquivo.js` e `envio.js` servem também à inscrição, que fica fora (D-004); mexer neles
+arrastaria a inscrição para o escopo. A FR-5614 admite script novo.
+
+**Descartadas.** *Estender `envio.js`*: misturaria o ramo do htmx da inscrição com o lote, e os
+testes da inscrição passariam a depender dele. *Um formulário único na página*: esbarra no limite do
+proxy (D-002, D-005).
+
+### R-002 — O lote fala com a rota de hoje, por um cabeçalho, e recebe JSON
+
+**Decisão.** Cada documento do lote é um `fetch` `POST` ao `action` do próprio formulário, com o
+`FormData` dele (o `csrfmiddlewaretoken` incluso) e o cabeçalho `X-Envio-De-Varios: k/n` (posição e
+total). Com o cabeçalho, `apresentar_documento_da_convocacao` responde **200 com JSON** — recebido,
+já recebido ou recusado — em vez do redirecionamento; sem ele, responde como hoje. O 404 do comando
+continua 404. O contrato está em [contracts/envio-de-varios.md](contracts/envio-de-varios.md).
+
+**Razão.** O `fetch` segue o redirecionamento sozinho e entrega a URL **sem a âncora**: não haveria
+como saber se a volta era `#confirmacao` ou `#item-…`. `redirect: "manual"` devolve resposta opaca,
+sem `Location`. O JSON é o mesmo resultado que a sessão já guarda, dito ao script. Uma rota nova
+duplicaria titularidade, CSRF e recusas.
+
+**O acesso expirado.** Sem identidade na sessão, a rota redireciona ao acesso, e o `fetch` recebe a
+página de acesso com 200 e `text/html`. O script trata **toda resposta que não seja JSON** como
+falha do lote: a 404, o acesso expirado; as demais, a frase genérica de hoje (FR-5610).
+
+**O 413 do proxy não é caminho normal** *(revisto em 11/11, pela análise cruzada)*. Na primeira
+redação, o 413 parava o lote, contra a FR-5606: um arquivo acima de 12 MB impediria os seguintes. O
+arquivo acima do limite da aplicação não viaja mais (R-009), e o limite da aplicação (10 MiB) fica
+abaixo do do proxy (12 MB); um 413 só aparece com o proxy mal dimensionado, e aí é falha de
+configuração, tratada como as demais respostas que não são JSON.
+
+### R-003 — A sessão acumula o lote, e a volta o lê de uma vez
+
+**Decisão.** As duas chaves de hoje (`confirmacao_da_convocacao` e `recusa_da_convocacao`) passam a
+guardar **listas**: os envios recebidos (`item_id`, `apresentacao_id`, `ja_recebido`) com o total
+tentado, e as recusas (`ancora`, `frase`). A posição `1/n` zera as duas; cada resposta acrescenta a
+sua. O envio individual grava a mesma forma, com um elemento e total 1. A leitura aceita também a
+forma antiga, de um elemento só, para a sessão aberta durante a implantação.
+
+**Razão.** A confirmação depende da projeção **depois** do último envio — a próxima tarefa, a
+conclusão —, e a projeção é do servidor. Montar a confirmação no navegador repetiria regra da `121`
+em JavaScript. A sessão já é o canal da volta (`_da_inscricao`), com a guarda de inscrição.
+
+**A queda no meio.** O que chegou fica na sessão, e a próxima abertura da convocação mostra a
+confirmação parcial — verdadeira: aqueles documentos foram recebidos. O script, enquanto isso, não
+sai da página (FR-5610).
+
+### R-004 — A volta do lote é uma navegação, com as listas
+
+**Decisão.** Terminado o lote, o script navega para a URL `volta` que a última resposta JSON trouxe:
+`…/convocacao/?lote=n#confirmacao` com algum recebido, ou `…?lote=n#item-‹primeiro recusado›` sem
+nenhum (FR-5608, FR-5609). O parâmetro só força a navegação — sem ele, ir da página para a mesma
+página com outra âncora só rolaria a tela, sem recarregar — e a view o ignora. A confirmação lista os
+recebidos e conta os recusados, com link para o cartão de cada um; cada cartão recusado traz a sua
+recusa; `recusa.js` foca a primeira da página, que é a do primeiro recusado.
+
+**Razão.** Recarregar é o que atualiza "Andamento", blocos e cartões sem reescrever a tela no
+navegador, e mantém a âncora e o foco que a `121` já resolveu para o envio de um.
+
+**Descartadas.** *`location.reload()` com a âncora trocada*: o navegador restaura a rolagem anterior
+em vez de ir à âncora. *Atualizar a tela no lugar*: a D-001 já a descartou.
+
+### R-005 — O resumo vigente vem do *prefetch* de hoje
+
+**Decisão.** O cartão de todo item com apresentação vigente — com ou sem envio possível — ganha
+`data-resumo-recebido="‹content_hash da vigente›"` e `data-documento="‹nome›"`. O valor vem de
+`item.lido.vigente.content_hash`, que a projeção já carrega. A apresentação aproveitada da inscrição
+tem o mesmo resumo da origem — o gatilho da `0005` da convocação o exige —, e entra sem caso próprio.
+
+**Razão.** Nenhuma consulta nova; o teste de contagem de consultas da convocação prova.
+
+### R-006 — O resumo no HTML não é dado novo
+
+**Decisão.** Expor o resumo SHA-256 do arquivo vigente na página do próprio titular.
+
+**Razão.** A página já oferece o próprio arquivo ("Ver o arquivo recebido"); o resumo não revela o
+conteúdo e só confirma a coincidência a quem já tem o mesmo arquivo. Nada é gravado no navegador
+pelo script (FR-5611).
+
+**O cabeçalho de cache, conferido em 11/11** (na análise cruzada, `main` em `ef568113`):
+`portal.views.convocacao` responde **sem** `Cache-Control: no-store`, ao contrário de outras telas do
+portal. É anterior a esta spec e vale para todo o conteúdo pessoal da tela, não só para o resumo; está
+em *Achados registrados* da spec, para decisão do usuário, e esta spec não o corrige.
+
+**Descartada.** *Perguntar ao servidor a cada escolha* — enviaria o resumo ao escolher, contra a
+D-003 e a FR-5618, e custaria uma requisição por escolha.
+
+### R-007 — Sem script, `<noscript>`; o que só funciona com script nasce oculto
+
+**Decisão.** A frase da FR-5612 fica num `<noscript>` antes do primeiro cartão com envio. O botão
+"Remover a escolha" e a região do aviso do arquivo repetido vêm no HTML com `hidden`, e o script os
+revela. O rótulo "Enviar os N documentos escolhidos" é escrito pelo script; o HTML continua com
+"Enviar".
+
+**Razão.** `<noscript>` não é script e passa pela CSP; a frase não pisca nem depende de script para
+sumir. Um botão que sem script não faz nada não pode estar à vista.
+
+### R-008 — O resumo no navegador, por `crypto.subtle`
+
+**Decisão.** Ao escolher, o script lê o arquivo (`file.arrayBuffer()`) e calcula
+`crypto.subtle.digest("SHA-256", …)`, em hexadecimal minúsculo, como `shared.arquivos.resumo`. O
+resultado fica em memória, preso ao campo, e é descartado se a escolha mudou enquanto o cálculo
+corria. Sem `crypto.subtle` — contexto não seguro, navegador antigo — ou com erro de leitura, não há
+aviso (FR-5619). O envio nunca espera o cálculo.
+
+**Razão.** Sem biblioteca nova (FR-5614); disponível em todo navegador atual sob HTTPS e em
+`localhost`. Dez megabytes cabem na memória de um celular, e o cálculo é da ordem de dezenas de
+milissegundos.
+
+### R-009 — O arquivo acima do limite não viaja: o servidor recusa pelo tamanho declarado
+
+*(Acrescentada em 2026-11-11, pela análise cruzada do plano.)*
+
+**Decisão.** No lote, antes de enviar cada documento, o script compara `file.size` com o limite que
+o cartão publica (`data-limite-em-bytes`, de `ARQUIVOS_CANDIDATOS_LIMITE_BYTES`). Acima dele, o
+`POST` vai **sem o arquivo**, com o campo `tamanho_declarado`; o ramo do lote recusa com a frase de
+hoje de `shared.arquivos.aceitar` (*"O arquivo tem X e o limite é Y. Reduza o tamanho e envie
+novamente."*), grava a recusa na sessão como as outras, e o lote segue para o próximo (FR-5606).
+
+**Razão.** A recusa precisa chegar à sessão para sobreviver à navegação da volta (R-004); sem isso,
+ela se perderia em silêncio, contra a FR-5600. A frase continua uma só, a do servidor. O tamanho
+declarado só **produz** recusa, nunca aceitação: quem mentir sobre ele recebe uma recusa no próprio
+cartão. Sem script e com N = 1 nada muda.
+
+**Descartadas.** *Deixar o arquivo viajar e tratar o 413*: o proxy recusa sem frase do sistema, e
+acima de 12 MB a recusa não chega à sessão. *Recusar só no navegador*: a recusa sumiria na navegação
+de volta, e a frase seria cópia em JavaScript.
+
+### R-010 — O documento em voo, na queda de conexão
+
+*(Acrescentada em 2026-11-11, pela análise cruzada do plano.)*
+
+**Decisão.** Quando o `fetch` rejeita por falha de rede, o documento daquela requisição é dito
+*"não é possível saber se chegou"*, e não *"não recebido"* (FR-5610 revista). Ele continua escolhido,
+como os não enviados. Os anteriores, com resposta JSON, são ditos recebidos ou recusados pelo que a
+resposta disse.
+
+**Razão.** A requisição pode ter chegado ao servidor e criado a apresentação, perdendo-se só a
+resposta. Afirmar "não recebido" seria falso nesse caso. Reenviar é seguro: o mesmo arquivo no mesmo
+item volta como *"Este arquivo já tinha sido recebido."* (`FR-3581` da `115`).
