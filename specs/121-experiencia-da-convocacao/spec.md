@@ -539,20 +539,42 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 - **FR-3882**: A mensagem individual de convocação MUST sair em HTML **e** em texto puro, os dois
   renderizados de modelos, e o texto puro MUST conter tudo o que o HTML diz, com o endereço completo.
-- **FR-3883**: A mensagem inicial MUST ter, de cima para baixo:
+- **FR-3883** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  A mensagem inicial MUST ter, de cima para baixo:
   - a identificação institucional por extenso, em texto (FR-3887);
   - o título *"Você foi convocado no Edital ‹NN/AAAA›"* e o Processo;
   - a frase das obrigações (FR-3884) e *"Você envia tudo pela sua área do candidato."*;
-  - o prazo em destaque, com o dia da semana, *"contado do envio desta mensagem"* (FR-3875);
+  - o prazo em destaque, com o dia da semana, como *"Prazo para atender: até ‹data por extenso›."*,
+    sem *"contado do envio desta mensagem"* (FR-3875; FR-6432 da `156`);
   - o link *"Acessar minha convocação"* para a convocação da inscrição, com o endereço por extenso
     abaixo;
   - como entrar: o e-mail na tela de acesso e o código de seis dígitos *"numa mensagem separada"*;
   - a ressalva da FR-3864, na variante do Requerimento, sem afirmar direito à vaga (FR-292c da `019`);
-  - o canal de atendimento da unidade;
+  - o canal de atendimento da unidade, ou o da instalação, e nenhuma frase de atendimento sem canal
+    nenhum (FR-6417 da `156`);
   - o quadro *"Para a sua segurança"*: o Ifes não pede senha, pagamento nem documentos por e-mail; os
     documentos vão só pela área do candidato; o código só chega quando a pessoa o pede, e não se
     repassa;
   - o rodapé: mensagem automática, não responda, e por que a pessoa a recebe.
+
+  > **Redação anterior à `156`, preservada:**
+  > A mensagem inicial MUST ter, de cima para baixo:
+  > - a identificação institucional por extenso, em texto (FR-3887);
+  > - o título *"Você foi convocado no Edital ‹NN/AAAA›"* e o Processo;
+  > - a frase das obrigações (FR-3884) e *"Você envia tudo pela sua área do candidato."*;
+  > - o prazo em destaque, com o dia da semana, *"contado do envio desta mensagem"* (FR-3875);
+  > - o link *"Acessar minha convocação"* para a convocação da inscrição, com o endereço por extenso
+  >   abaixo;
+  > - como entrar: o e-mail na tela de acesso e o código de seis dígitos *"numa mensagem separada"*;
+  > - a ressalva da FR-3864, na variante do Requerimento, sem afirmar direito à vaga (FR-292c da `019`);
+  > - o canal de atendimento da unidade;
+  > - o quadro *"Para a sua segurança"*: o Ifes não pede senha, pagamento nem documentos por e-mail; os
+  >   documentos vão só pela área do candidato; o código só chega quando a pessoa o pede, e não se
+  >   repassa;
+  > - o rodapé: mensagem automática, não responda, e por que a pessoa a recebe.
+  >
+  > *Por que mudou:* o prazo é a data informada no ato, e o envio só o põe em curso; lida numa segunda mensagem, a cláusula sugeria prazo novo (achado 18 do estudo da jornada final de 11/11/2026; `doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`). O resto da lista não muda, e o quadro da correção (FR-3885) segue o *"resto como a inicial"*.
+
 - **FR-3884**: O assunto e a frase das obrigações MUST seguir o que a chamada pede de fato, lido da
   lista gravada no ato de convocar e da política do Requerimento (4ª decisão do estudo). *Documento*
   aqui é **documento obrigatório** (D-007):

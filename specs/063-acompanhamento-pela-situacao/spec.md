@@ -381,10 +381,13 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   mudar.
 - **FR-1171**: O resultado individual do corte (`014`) NÃO DEVE aparecer na tela — nem na
   situação, nem no porquê, nem nos cartões —, porque o corte não é ato divulgado ao candidato (L-2).
-- **FR-1172**: Quando a situação vier de desfecho da convocação vigente, o rótulo DEVE ser o desta
-  tabela, e o porquê DEVE trazer o fundamento e a data do registro. A tela NÃO DEVE dizer
-  "matriculado", "contratado", "matrícula confirmada" nem "contratação confirmada", porque nenhum ato
-  o registra (L-3).
+- **FR-1172** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Quando a situação vier de desfecho da convocação vigente, o rótulo DEVE ser o desta
+  tabela, e o porquê DEVE vir em duas camadas: primeiro a frase simples da espécie, da FR-6406 da
+  `156`, com a data do registro; depois, recolhido sob *"Fundamento do registro"*, o fundamento
+  gravado no ato, sem edição (FR-6400 e FR-6401 da `156`). A tela NÃO DEVE dizer "matriculado",
+  "contratado", "matrícula confirmada" nem "contratação confirmada", porque nenhum ato o registra
+  (L-3).
 
   | Desfecho registrado | Situação |
   |---|---|
@@ -398,6 +401,27 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
 
   O sexto rótulo diz "matrícula" porque é o nome que o domínio dá ao desfecho (`019`, decisão 011
   da `019`), e não escolha da tela por tipo de certame.
+
+  > **Redação anterior à `156`, preservada:**
+  > Quando a situação vier de desfecho da convocação vigente, o rótulo DEVE ser o desta
+  > tabela, e o porquê DEVE trazer o fundamento e a data do registro. A tela NÃO DEVE dizer
+  > "matriculado", "contratado", "matrícula confirmada" nem "contratação confirmada", porque nenhum ato
+  > o registra (L-3).
+  >
+  > | Desfecho registrado | Situação |
+  > |---|---|
+  > | Aceite | Vaga aceita |
+  > | Regularização | Regularização registrada |
+  > | Indeferimento | Indeferido na convocação |
+  > | Desistência expressa | Desistência registrada |
+  > | Não atendimento à convocação | Convocação não atendida |
+  > | Cancelamento de matrícula por inércia | Matrícula cancelada por inércia |
+  > | Reclassificação | Reclassificado |
+  >
+  > O sexto rótulo diz "matrícula" porque é o nome que o domínio dá ao desfecho (`019`, decisão 011
+  > da `019`), e não escolha da tela por tipo de certame.
+  >
+  > *Por que mudou:* o fundamento do ato é texto normativo, e era a única explicação do resultado — *"o vencimento… decorreu sem desfecho registrado"* (achado 18 do estudo da jornada final de 11/11/2026). Os rótulos não mudam.
 
 **Por quê**
 
@@ -446,7 +470,7 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   > registrado, sem afirmar perda (FR-274).
   >
   > *Por que mudou:* o mesmo instante era dito em três formatos e em três redações do vencido (F4).
-- **FR-1177** *(acrescida pela `118` em 2026-11-04; revista pela `154` em 2026-11-11, que vigora com a implementação dela — as redações anteriores estão ao fim desta alínea)*:
+- **FR-1177** *(acrescida pela `118` em 2026-11-04; revista pela `154` em 2026-11-11 e acrescida pela `156` em 2026-11-11, as duas com vigência na implementação de cada uma — as redações anteriores estão ao fim desta alínea)*:
   A consequência DEVE vir do Edital ou do ato quando ele a declarar; enquanto nenhum
   dos dois a declarar em forma estruturada (L-4), a tela DEVE usar só as duas frases neutras:
   "Novas chamadas, se houver, serão publicadas conforme o Edital." (aguardando) e "Se você não
@@ -463,6 +487,18 @@ todas as listas, e recém-enviada —, cada uma com o seu topo.
   preveem. A segunda frase neutra pode aparecer também na tela da convocação, na mesma condição
   (FR-3737 da `118`). As duas continuam sendo as únicas que falam de consequência.
 
+  **Acréscimo da `156`.** Com desfecho **registrado**, a frase simples da espécie (FR-6406 da `156`)
+  — *"Esta convocação está encerrada para você"*, por exemplo — descreve o efeito do ato já praticado
+  sobre a chamada, e não é frase de consequência: ela não prevê nada. As duas frases neutras continuam
+  sendo as únicas que falam de consequência **antes** do desfecho, e nenhuma frase, antes ou depois
+  dele, DEVE afirmar perda definitiva de vaga, nova chamada ou posição que nenhum ato declarou
+  (FR-6409 da `156`).
+
+  > **Redação anterior à `156`, preservada:** a mesma, sem o acréscimo da `156`.
+  >
+  > *Por que mudou:* o portal passou a explicar cada desfecho registrado numa frase simples (achado 18
+  > do estudo da jornada final de 11/11/2026), e a regra precisava dizer que essa frase descreve o ato.
+  >
   > **Redação anterior à `154`, preservada:** a mesma, com a condição da segunda frase "(convocado,
   > **somente** com a comunicação enviada, vencimento registrado e prazo não encerrado)" e "Sem
   > comunicação enviada, sem vencimento ou com o prazo encerrado, nenhuma frase de consequência."

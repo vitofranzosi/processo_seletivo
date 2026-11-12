@@ -361,9 +361,20 @@ Estes casos são requisitos. Cada um tem linha na matriz de rastreabilidade.
   atendimento à convocação** de todas as convocações vigentes do recorte com o vencimento decorrido e
   sem desfecho, gravando **um desfecho por convocação**, cada um com autor, instante, fundamento e o
   seu efeito na ocupação (`DP-16`, B).
-- **FR-878**: O alcance do gesto MUST ser exatamente o conjunto das convocações no estado *vencimento
-  decorrido*; convocação com prazo em curso, com prazo não iniciado, ou sem vencimento MUST ficar de
-  fora, e a prévia MUST dizer quantas ficaram e por quê.
+- **FR-878** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O alcance do gesto MUST ser exatamente o conjunto das convocações no estado *vencimento
+  decorrido* **sem pedido de desistência pendente** (FR-6429 da `156`); convocação com prazo em curso,
+  com prazo não iniciado, sem vencimento ou com pedido de desistência pendente MUST ficar de fora, e a
+  prévia MUST dizer quantas ficaram e por quê, com *"pedido de desistência pendente"* como razão
+  própria.
+
+  > **Redação anterior à `156`, preservada:**
+  > O alcance do gesto MUST ser exatamente o conjunto das convocações no estado *vencimento
+  > decorrido*; convocação com prazo em curso, com prazo não iniciado, ou sem vencimento MUST ficar de
+  > fora, e a prévia MUST dizer quantas ficaram e por quê.
+  >
+  > *Por que mudou:* registrar em lote o não atendimento de quem pediu para desistir registraria um fato diferente do que aconteceu; a pessoa fica para o atalho da desistência pedida (a decisão do lote do não atendimento, na `156`).
+
 - **FR-879**: Antes da confirmação, a tela MUST declarar cada convocação alcançada — pessoa, envio,
   vencimento — e o fundamento derivado; a confirmação MUST carregar a identidade do alcance, e a
   divergência MUST recusar o gesto sem gravar nada (`FR-863`).
