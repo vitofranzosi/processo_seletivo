@@ -1279,6 +1279,11 @@ def situacoes_da_convocacao(f):
             and f.get("corte_vigente")
             and f.get("com_quadro")
             and f.get("continuacao_admitida", True)
+            # **Com a ordem inteira lida e ninguém livre que ainda possa ocupar, a faixa seguinte
+            # não alcança ninguém** (155, FR-6304, UX-602): o caminho é a destinação — disponível,
+            # ou impedida pelo fato que a tela nomeia —, e um ato por caminho. Oferecer a faixa ali
+            # mandaria pedir uma faixa vazia.
+            and not f.get("vaga")
         ):
             providencias.append(
                 _c(
@@ -1309,6 +1314,36 @@ def situacoes_da_convocacao(f):
                 url=com_ancora(url, "chamadas"),
                 ate=f.get("ate"),
                 contagem=em_curso,
+            )
+        )
+    vaga = f.get("vaga") or {}
+    if not providencias and sem_chamada and not titulares and vaga.get("disponivel"):
+        # **O caminho disponível, e não "impedida"** (155, UX-602): a reserva está esgotada, o
+        # Edital declara a reversão por esgotamento, e nada impede — a vaga vai à ampla por ato
+        # próprio, na ocupação, com a conferência antes.
+        providencias.append(
+            _c(
+                PENDENTE,
+                natureza=APURACAO,
+                ato="Destinar à ampla concorrência",
+                responsavel=CONDUZ,
+                razao=_frase(vaga["frase"]),
+                url=f.get("url_da_ocupacao") or "",
+                contagem=vaga.get("quantidade") or sem_chamada,
+            )
+        )
+    elif not providencias and sem_chamada and not titulares and vaga.get("impedimentos"):
+        # **O impedimento nomeado** (155, UX-602, FR-6303): qual fato impede a destinação, e até
+        # quando, quando há data — e não "não há mais quem chamar", que só dizia o sintoma.
+        providencias.append(
+            _c(
+                IMPEDIDO,
+                natureza=CONVOCACAO,
+                ato="Destinar à ampla concorrência",
+                responsavel=CONDUZ,
+                razao="; ".join(i["frase"] for i in vaga["impedimentos"]),
+                url=f.get("url_da_ocupacao") or url,
+                ate=next((i.get("ate") for i in vaga["impedimentos"] if i.get("ate")), None),
             )
         )
     if not providencias and sem_chamada and not titulares:
@@ -2407,7 +2442,33 @@ class _Leitor:
             if self.alcance.consulta
             else "",
         }
+        fatos["vaga"] = self._vaga_sem_quem_a_ocupe(perfil, marco_id, lista, fatos)
         return situacoes_da_convocacao(fatos)
+
+    def _vaga_sem_quem_a_ocupe(self, perfil, marco_id, lista, fatos):
+        """A situação da vaga da reserva, **só onde a providência a lê** (155, R-008, UX-602).
+
+        Perguntada quando há vaga a ocupar sem chamada, sem titular a chamar e sem ninguém na fila
+        — o único ramo que a diz. Os fatos externos de cada marco ficam na composição do pedido,
+        para o Centro manter o custo fixo por Edital (FR-4686 da `135`).
+        """
+        from processo_seletivo.interface import destinacao_da_vaga
+
+        sem_chamada = max((fatos.get("faltando") or 0) - (fatos.get("em_aberto") or 0), 0)
+        if lista is None or not sem_chamada or fatos.get("titulares") or fatos.get("fila"):
+            return None
+        if getattr(self, "_composicao_da_destinacao", None) is None:
+            self._composicao_da_destinacao = destinacao_da_vaga.Composicao(at=self.agora)
+        vaga = destinacao_da_vaga.situacao_do_recorte(
+            edital=self.edital,
+            perfil_id=perfil.get("id"),
+            marco_id=marco_id,
+            lista_id=lista,
+            rotulo=destinacao_da_vaga.rotulo_do_recorte(self.conteudo, perfil.get("id"), lista),
+            at=self.agora,
+            composicao=self._composicao_da_destinacao,
+        )
+        return vaga
 
     def _documentos(self, linhas):
         """Quantas chamadas têm documento a conferir, quantas estão prontas, e quantas aguardam.

@@ -1,0 +1,30 @@
+{% load interface_extras %}{% comment %}
+A vaga reservada sem quem a ocupe (155, R-008, UX-600). A frase vem pronta de
+`interface/destinacao_da_vaga.py`, a mesma que o Centro e a convocacao dizem: nomeia a lista, a
+quantidade e o que o Edital declara, em palavras. So a reversao por esgotamento a tem nesta entrega;
+sob a reversao por saldo a tela continua como estava, e `recorte.vaga` vem vazia.
+
+O ato aparece so onde o comando o aceitaria (FR-6302), e so para quem apura; quem le e nao apura
+recebe a frase de quem pratica o ato, e nao um botao que terminaria numa recusa.
+{% endcomment %}{% if recorte.vaga %}
+<p class="aviso" role="status">{{ recorte.vaga.frase }}</p>
+{% if recorte.vaga.movimentos %}
+<ul class="consequencias">
+  {% for movimento in recorte.vaga.movimentos %}
+  <li>{{ movimento.registrado_em|date:"d/m/Y" }} — {{ movimento.quantidade|contagem:"vaga destinada,vagas destinadas" }} à ampla concorrência{% if movimento.fundamento %}, por ato próprio. Fundamento: {{ movimento.fundamento }}{% else %}, pela apuração desta lista — {{ movimento.causa }}{% endif %} Registrado por {% nome_de_pessoa movimento.registrado_por %}.</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if recorte.vaga.disponivel %}
+{% if pode_emitir %}
+<form method="post" action="{% url 'interface:destinar-vaga' edital.id marco_id %}" class="acoes">
+  {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ recorte.listaId }}">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}-destinar-{{ forloop.counter }}">
+  <button type="submit" class="botao">Destinar à ampla concorrência</button>
+</form>
+{% else %}
+<p class="nota">Destinar a vaga à ampla concorrência é ato de quem apura a ocupação deste marco, com a conferência antes.</p>
+{% endif %}
+{% endif %}
+{% endif %}

@@ -5598,6 +5598,8 @@ OPERACOES = {
     # A vaga acrescida depois da publicação e o ato que a desfaz (097).
     "OCUPACAO_ACRESCENTAR_VAGAS": "Acréscimo de vagas depois da publicação",
     "OCUPACAO_DESFAZER_ACRESCIMO": "Desfazimento de vaga acrescida",
+    # A destinação da vaga reservada sem quem a ocupe (155, FR-6341).
+    "OCUPACAO_DESTINAR_VAGA": "Destinação de vaga à ampla concorrência",
     # **As quatro frases dizem o ato praticado, e não o nome da função** (`FR-296`). "Convocação
     # praticada" é o que aconteceu; `CONVOCACAO_CONVOCAR` é como o sistema o chama internamente, e
     # quem audita não tem por que aprender esse vocabulário.
@@ -8470,6 +8472,7 @@ def ocupacao(request, edital_id, marco_id):
     **Quantidade que nenhum ato produziu chega nula, e o template não a desenha.** Zero é afirmação
     — quer dizer "não há vaga a ocupar" —, e sem apuração emitida ninguém a fez (UX-032a).
     """
+    from processo_seletivo.interface import destinacao_da_vaga
     from processo_seletivo.ocupacao.application.selectors import recortes_do_marco
 
     ator, edital, pode_emitir = _edital_para_classificar(request, edital_id)
@@ -8478,6 +8481,10 @@ def ocupacao(request, edital_id, marco_id):
     perfil_id = _perfil_do_marco(edital, marco_id)
     recortes = recortes_do_marco(edital=edital, perfil_id=perfil_id, marco_id=marco_id)
     _com_o_acrescimo(edital, perfil_id, recortes)
+    # A vaga reservada sem quem a ocupe, com a mesma conta do Centro e da convocação (155, R-008).
+    destinacao_da_vaga.anotar_recortes(
+        edital=edital, perfil_id=perfil_id, marco_id=marco_id, recortes=recortes
+    )
     # **O marco intermediário não apura** (133, FR-4538): nenhum formulário, e o aviso leva à
     # ocupação do marco que apura. O que já existe continua legível.
     intermediario = _marco_intermediario(edital, marco_id, "interface:ocupacao")

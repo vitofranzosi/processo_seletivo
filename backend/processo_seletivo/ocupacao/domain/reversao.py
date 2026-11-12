@@ -51,8 +51,11 @@ def ha_quem_ocupar(*, posicoes, ja_ocupadas):
 
     **Conta toda posição da ordem** — inclusive a de quem já ocupa pela ampla e a de quem ficou fora
     da faixa —, como a função de origem contava. Por isso uma reservada cujos autodeclarados todos
-    ocupam pela ampla nunca esgota sob esta regra (DP-2 da `095`); a leitura da norma é do usuário,
-    e a extração não a muda.
+    ocupam pela ampla nunca esgota sob esta regra (DP-2 da `095`).
+
+    **Desde a `155` ela não decide o esgotamento**: a emissão não cede vaga por esse gatilho
+    (FR-6315), e a condição da destinação é `destinacao.quem_ainda_pode_ocupar` (FR-6304), que
+    responde à DP-2 com a decisão do usuário (155, D-007). Fica para quem a mede.
     """
     return sum(1 for posicao in posicoes if posicao is not None) > ja_ocupadas
 

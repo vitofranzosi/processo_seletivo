@@ -68,7 +68,7 @@ destinação e a não preenchida são recusadas com `passagem_entre_cotas`.
 pelo comando. **O saldo fica fora** (incremento F).
 **Independent Test**: os cenários 1 a 6 da US3 e o 7 por esgotamento, no caminho oficial.
 
-- [ ] T019 [P] [US3] Testes puros de `ainda_podem_ocupar`, `impedimentos` e `situacao` em `tests/unit/ocupacao/test_destinacao_dominio.py`:
+- [X] T019 [P] [US3] Testes puros de `ainda_podem_ocupar`, `impedimentos` e `situacao` em `tests/unit/ocupacao/test_destinacao_dominio.py`:
   - posição vazia;
   - excluído por desfecho;
   - ocupante da ampla com e sem aceite;
@@ -77,9 +77,9 @@ pelo comando. **O saldo fica fora** (incremento F).
   - prazo recursal e recurso pendente;
   - chamada em curso;
   - apuração obsoleta.
-- [ ] T020 [US3] Escrever `processo_seletivo/ocupacao/domain/destinacao.py` (R-004), com `situacao` devolvendo os estados do data-model; por saldo, `aguarda_d015`
-- [ ] T021 [US3] Escrever `processo_seletivo/interface/destinacao_da_vaga.py`: os fatos externos de `divulgacao` (`vigente_do_marco`, `janela_aberta_ate`), `recursos` (`recursos_pendentes_do_marco`) e `convocacao` (em aberto), uma vez por marco, e a situação de cada recorte (R-008)
-- [ ] T022 [US3] Testes de integração V-1, V-2, V-4 e V-5 com o resultado novo (destinação oferecida; sem aceite na ampla, impedida) em `tests/integration/ocupacao/test_condicao_do_esgotamento.py`, sobre `tests/fixtures/ocupacao_sorteada.py`
+- [X] T020 [US3] Escrever `processo_seletivo/ocupacao/domain/destinacao.py` (R-004), com `situacao` devolvendo os estados do data-model; por saldo, `aguarda_d015`
+- [X] T021 [US3] Escrever `processo_seletivo/interface/destinacao_da_vaga.py`: os fatos externos de `divulgacao` (`vigente_do_marco`, `janela_aberta_ate`), `recursos` (`recursos_pendentes_do_marco`) e `convocacao` (em aberto), uma vez por marco, e a situação de cada recorte (R-008)
+- [X] T022 [US3] Testes de integração V-1, V-2, V-4 e V-5 com o resultado novo (destinação oferecida; sem aceite na ampla, impedida) em `tests/integration/ocupacao/test_condicao_do_esgotamento.py`, sobre `tests/fixtures/ocupacao_sorteada.py`
 
 ---
 
@@ -89,7 +89,7 @@ pelo comando. **O saldo fica fora** (incremento F).
 **Independent Test**: a US1 com reversão por esgotamento: o registro, a soma, a idempotência, a
 sucessora da origem e a ampla obsoleta.
 
-- [ ] T023 [P] [US1] Testes do comando em `tests/integration/ocupacao/test_destinacao.py`:
+- [X] T023 [P] [US1] Testes do comando em `tests/integration/ocupacao/test_destinacao.py`:
   - grava o movimento com as colunas novas;
   - a sucessora da origem lê o movimento;
   - a ampla fica obsoleta;
@@ -98,13 +98,13 @@ sucessora da origem e a ampla obsoleta.
   - as recusas do contrato;
   - o movimento antigo conta como destinação feita (FR-6316);
   - relido depois de uma Retificação, o ato devolve a declaração e a quantidade que leu (FR-6342).
-- [ ] T024 [US1] Escrever `previa_da_destinacao` e `destinar_vaga` em `processo_seletivo/ocupacao/application/destinacao.py`, no molde de `acrescimo.py` (assinatura, `comando_de_comissao`, `auditar` com `OCUPACAO_DESTINAR_VAGA`, sucessora no *savepoint*)
-- [ ] T025 [US1] Tirar o ramo de cessão de `_apurar` para a declaração por esgotamento — só a por saldo ainda move (R-010) — em `processo_seletivo/ocupacao/application/emissao.py`; ajustar `convocacao/application/desfechar.py::apuracao_seguinte`, que deixa de devolver `MOVERIA_VAGA` por esgotamento
-- [ ] T026 [US1] Rotas e views `interface:destinar-vaga` (prévia e confirmação) e a conferência `processo_seletivo/interface/templates/interface/ocupacao_destinacao.html`, no molde de `ocupacao_acrescimo.html`, com o lembrete da passagem entre cotas (FR-6309); regras de folha para toda classe nova em `processo_seletivo/interface/static/interface/gestao/` ou `interface/telas/`
-- [ ] T027 [US1] A situação de cada recorte e os botões em `processo_seletivo/interface/templates/interface/ocupacao.html` (parcial `_situacao_da_vaga.html`), com a frase de UX-600
-- [ ] T028 [US1] O Centro: o ramo `IMPEDIDO` de `situacoes_da_convocacao` lê a situação, em `processo_seletivo/interface/andamento.py`; a convocação: `_vaga_sem_chamada` cita a situação com a fila vazia, em `processo_seletivo/interface/conducao_da_convocacao.py` (anotar o conflito com o #489)
-- [ ] T029 [US1] As prévias e as equivalências (R-011): `processo_seletivo/ocupacao/domain/rodada_da_previa.py` usa a condição nova por esgotamento; `tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py` e `tests/integration/sorteios/test_previa_do_sorteio_equivale_ao_oficial.py` leem o lado oficial pela destinação; `tests/unit/ocupacao/test_ha_quem_ocupar.py` e `test_rodada_da_previa.py`
-- [ ] T030 [US1] Testes de tela em `tests/interface/test_destinacao_na_ocupacao.py`:
+- [X] T024 [US1] Escrever `previa_da_destinacao` e `destinar_vaga` em `processo_seletivo/ocupacao/application/destinacao.py`, no molde de `acrescimo.py` (assinatura, `comando_de_comissao`, `auditar` com `OCUPACAO_DESTINAR_VAGA`, sucessora no *savepoint*)
+- [X] T025 [US1] Tirar o ramo de cessão de `_apurar` para a declaração por esgotamento — só a por saldo ainda move (R-010) — em `processo_seletivo/ocupacao/application/emissao.py`; ajustar `convocacao/application/desfechar.py::apuracao_seguinte`, que deixa de devolver `MOVERIA_VAGA` por esgotamento
+- [X] T026 [US1] Rotas e views `interface:destinar-vaga` (prévia e confirmação) e a conferência `processo_seletivo/interface/templates/interface/ocupacao_destinacao.html`, no molde de `ocupacao_acrescimo.html`, com o lembrete da passagem entre cotas (FR-6309); regras de folha para toda classe nova em `processo_seletivo/interface/static/interface/gestao/` ou `interface/telas/`
+- [X] T027 [US1] A situação de cada recorte e os botões em `processo_seletivo/interface/templates/interface/ocupacao.html` (parcial `_situacao_da_vaga.html`), com a frase de UX-600
+- [X] T028 [US1] O Centro: o ramo `IMPEDIDO` de `situacoes_da_convocacao` lê a situação, em `processo_seletivo/interface/andamento.py`; a convocação: `_vaga_sem_chamada` cita a situação com a fila vazia, em `processo_seletivo/interface/conducao_da_convocacao.py` (anotar o conflito com o #489)
+- [X] T029 [US1] As prévias e as equivalências (R-011): `processo_seletivo/ocupacao/domain/rodada_da_previa.py` usa a condição nova por esgotamento; `tests/integration/classificacao/test_previa_por_recorte_equivale_ao_oficial.py` e `tests/integration/sorteios/test_previa_do_sorteio_equivale_ao_oficial.py` leem o lado oficial pela destinação; `tests/unit/ocupacao/test_ha_quem_ocupar.py` e `test_rodada_da_previa.py`
+- [X] T030 [US1] Testes de tela em `tests/interface/test_destinacao_na_ocupacao.py`:
   - a situação nas três telas;
   - a conferência;
   - a recusa a quem não pode;

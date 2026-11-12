@@ -31,9 +31,12 @@ comissão.</p>
 {% endif %}
 
 
-{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>{% if acao_do_erro == "acrescimo" %}Não foi possível acrescentar a vaga:{% elif acao_do_erro == "desfazimento" %}Não foi possível desfazer a vaga acrescida:{% else %}Não foi possível apurar:{% endif %}</strong> {{ erro }}</p>{% endif %}
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>{% if acao_do_erro == "acrescimo" %}Não foi possível acrescentar a vaga:{% elif acao_do_erro == "desfazimento" %}Não foi possível desfazer a vaga acrescida:{% elif acao_do_erro == "destinacao" %}Não foi possível destinar a vaga:{% else %}Não foi possível apurar:{% endif %}</strong> {{ erro }}</p>{% endif %}
 {% if resultado %}
 {% if acao == "faixa" %}<p class="sucesso" role="status" tabindex="-1">Faixa seguinte emitida com o déficit apurado como causa. A faixa anterior não foi revogada, e quem já progrediu continua nela.</p>
+{% elif acao == "destinacao" %}<p class="sucesso" role="status" tabindex="-1">Vaga destinada à ampla concorrência: {{ resultado.quantidade|contagem:"vaga,vagas" }}.
+  {% if resultado.apuracaoSeguinte %}A apuração seguinte desta lista foi emitida por este ato, em seu nome.{% else %}A apuração seguinte desta lista não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
+  A apuração da ampla concorrência ficou obsoleta pelo movimento: emita a seguinte para chamar a próxima da fila. O ato é imutável; corrigir é praticar outro, com motivo.</p>
 {% elif acao == "acrescimo" or acao == "desfazimento" %}<p class="sucesso" role="status" tabindex="-1">{% if acao == "acrescimo" %}Vaga acrescida: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% else %}Vaga acrescida desfeita: {{ resultado.quantidade|contagem:"vaga,vagas" }}.{% endif %}
   {% if resultado.apuracaoSeguinte %}A apuração seguinte foi emitida por este ato, em seu nome.{% else %}A apuração seguinte não foi emitida: {{ resultado.apuracaoPendente.detalhe }}{% endif %}
   O ato é imutável; corrigir é praticar outro, com motivo.</p>
@@ -121,6 +124,11 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
     {% endfor %}
   </ul>
   {% endif %}
+  {% comment %}
+  A vaga reservada sem quem a ocupe e o ato que a destina (155, UX-600, FR-6308). Depois dos numeros
+  e dos movimentos, porque a frase os cita, e antes do historico e da faixa seguinte.
+  {% endcomment %}
+  {% include "interface/_situacao_da_vaga.html" %}
   {% endif %}
 
   {% if recorte.estado != "NO_VACANCY_TABLE" and recorte.estado != "NOT_APPRAISED" %}
@@ -226,7 +234,13 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   padrao do PR #120 e o bloqueio anunciado antes da tentativa, e botao desabilitado nao diz por
   que.
   {% endcomment %}
-  {% if recorte.faixaDisponivel and recorte.continuacaoAdmitida %}
+  {% comment %}
+  Com a situacao da vaga dita - a destinacao disponivel, ou impedida pelo fato que ela nomeia -, a
+  faixa seguinte nao alcanca ninguem: a ordem inteira ja foi lida e ninguem livre pode ocupar (155,
+  FR-6304, UX-602). Um ato por caminho, e o da destinacao esta logo acima.
+  {% endcomment %}
+  {% if recorte.vaga.disponivel or recorte.vaga.impedimentos %}
+  {% elif recorte.faixaDisponivel and recorte.continuacaoAdmitida %}
   <form method="post" action="{% url 'interface:causar-faixa' edital.id marco_id %}" class="acoes">
     {% csrf_token %}
     <input type="hidden" name="lista" value="{{ recorte.listaId|default_if_none:'' }}">

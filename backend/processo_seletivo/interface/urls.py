@@ -14,6 +14,7 @@ from processo_seletivo.interface import (
     trilha_da_unidade,
     unidades,
     views,
+    views_da_destinacao,
     views_formalizacao,
 )
 
@@ -609,6 +610,13 @@ urlpatterns = [
         "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-acrescimo",
         views.desfazer_acrescimo_view,
         name="desfazer-acrescimo",
+    ),
+    # A destinação da vaga reservada sem quem a ocupe à ampla concorrência (155, FR-6308). Pende da
+    # ocupação, onde a situação é dita, e tem os dois passos na mesma rota, como o acréscimo.
+    path(
+        "editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/destinar-vaga",
+        views_da_destinacao.destinar_vaga,
+        name="destinar-vaga",
     ),
     # O histórico de um recorte (016, FR-259). O caminho **carrega** o marco, como a leitura, e o
     # recorte vem em `?lista=`: o que se lista é a **série** de um recorte, e é ela que o recorte

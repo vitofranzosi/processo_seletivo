@@ -1,0 +1,52 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferir a destinação de vaga à ampla concorrência{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> › <span aria-current="page">Destinar à ampla concorrência</span></nav>{% endblock %}
+{% block conteudo %}
+<h1>Conferir a destinação de {{ previa.quantidade|contagem:"vaga,vagas" }} à ampla concorrência</h1>
+<p class="sub">O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado ainda.</p>
+
+{% if aviso %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ aviso }}</p>{% endif %}
+
+{% comment %}
+O "Confira antes" da destinacao (155, FR-6309, UX-601): origem, destino, quantidade, o gatilho, a
+frase da reversao publicada, a versao do Edital e o efeito na ampla, por extenso. O molde e o da
+conferencia do acrescimo (097).
+{% endcomment %}
+<h2>A vaga</h2>
+<dl class="meta">
+  <dt>De</dt><dd>{{ rotulo }}</dd>
+  <dt>Para</dt><dd>a ampla concorrência deste Perfil</dd>
+  <dt>Quantidade</dt><dd>{{ previa.quantidade|contagem:"vaga,vagas" }}</dd>
+  <dt>Gatilho declarado</dt><dd>por esgotamento: ninguém mais na ordem de {{ rotulo }} pode ocupar a vaga</dd>
+  <dt>O que o Edital declara</dt><dd>«{{ previa.frase }}»</dd>
+  <dt>Versão do Edital lida</dt><dd>a vigente desde {{ previa.versao.valid_from|date:"d/m/Y H:i" }}</dd>
+</dl>
+
+<h2>O efeito</h2>
+<ul class="resumo" aria-label="Vagas efetivas antes e depois deste ato">
+  <li><strong>{{ previa.apuracao.efetivas }}</strong>Efetivas em {{ rotulo }} hoje</li>
+  <li><strong>{{ previa.origemDepois }}</strong>Efetivas em {{ rotulo }} depois</li>
+  {% if previa.ampla %}<li><strong>{{ previa.amplaDepois }}</strong>Efetivas na ampla concorrência depois</li>{% endif %}
+</ul>
+<p class="nota">A quantidade publicada não muda: o que o Edital publicou é intocável, e a soma das vagas efetivas do Perfil continua a mesma. A apuração seguinte de {{ rotulo }} será emitida por este ato, em seu nome, com o motivo “Destinação de {{ previa.quantidade }} vaga(s) à ampla concorrência.”. A apuração da ampla concorrência ficará obsoleta pelo movimento, e a seguinte é emitida na ocupação, por quem conduz — é ela que muda quem é chamado a seguir.</p>
+
+{% comment %}
+O lembrete da FR-6309: se o Edital manda passar antes por outras cotas, a destinacao direta a ampla
+nao e o caminho, e o que se corrige e a declaracao, por Retificacao.
+{% endcomment %}
+<p class="nota">Se o Edital manda a vaga passar antes por outras cotas, o caminho não é este: é retificar a declaração da reversão{% if pode_retificar %} — <a href="{% url 'interface:retificar' edital.id %}">abrir a Retificação deste Edital</a>{% else %}, por quem elabora Retificações{% endif %}.</p>
+
+<p class="imutavel">A destinação não se apaga. Se estiver errada, desfaça-a por outro ato, com motivo.</p>
+
+<form method="post" action="{% url 'interface:destinar-vaga' edital.id marco_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="lista" value="{{ lista_id|default_if_none:'' }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="leitura" value="{{ previa.assinatura }}">
+  <p class="salvar">
+    <button type="submit" class="botao">Destinar {{ previa.quantidade|contagem:"vaga,vagas" }} à ampla concorrência</button>
+    <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
+  </p>
+</form>
+{% endblock %}

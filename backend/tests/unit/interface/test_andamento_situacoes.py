@@ -415,6 +415,46 @@ def test_nova_chamada_e_faixa_seguinte_sao_condicionais():
     assert sem_corte[0].situacao == a.IMPEDIDO
 
 
+def test_a_vaga_sem_quem_a_ocupe_da_lugar_ao_caminho_disponivel():
+    """155, UX-602: no lugar de "Ocupar a vaga — impedida", a destinação, de quem conduz."""
+    vaga = {
+        "disponivel": True,
+        "quantidade": 1,
+        "frase": "1 vaga da PPI sem quem a ocupe.",
+        "impedimentos": [],
+    }
+    _, providencias = convocacao(
+        faltando=1,
+        fila=0,
+        esgotou=True,
+        corte_vigente=True,
+        com_quadro=True,
+        vaga=vaga,
+        url_da_ocupacao="/ocupacao",
+    )
+
+    assert [(c.situacao, c.ato) for c in providencias] == [
+        (a.PENDENTE, "Destinar à ampla concorrência")
+    ], "e não a faixa seguinte, que não alcançaria ninguém"
+    assert providencias[0].url == "/ocupacao"
+    assert providencias[0].razao == "1 vaga da PPI sem quem a ocupe"
+
+
+def test_a_vaga_impedida_nomeia_o_impedimento_e_a_data():
+    ate = AGORA + timedelta(days=3)
+    vaga = {
+        "disponivel": False,
+        "impedimentos": [{"frase": "o prazo de recurso ainda corre", "ate": ate}],
+    }
+    _, providencias = convocacao(faltando=1, fila=0, esgotou=True, corte_vigente=False, vaga=vaga)
+
+    assert [(c.situacao, c.ato) for c in providencias] == [
+        (a.IMPEDIDO, "Destinar à ampla concorrência")
+    ]
+    assert providencias[0].razao == "o prazo de recurso ainda corre"
+    assert providencias[0].ate == ate
+
+
 def test_a_convocacao_espera_a_etapa_governada_mesmo_com_a_apuracao_feita():
     """FR-4070: a fila é de quem habilitou na governada; com ela aberta, nada a chamar."""
     resumo, providencias = convocacao(

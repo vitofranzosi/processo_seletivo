@@ -22,7 +22,7 @@ from processo_seletivo.ocupacao.application import movimento as movimento_de_vag
 from processo_seletivo.ocupacao.application import selectors
 from processo_seletivo.ocupacao.domain import acrescimo as conta_do_acrescimo
 from processo_seletivo.ocupacao.domain import apuracao as calculo
-from processo_seletivo.ocupacao.domain import reversao
+from processo_seletivo.ocupacao.domain import nomes, reversao
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -84,7 +84,8 @@ def emitir_sucessora_por_efeito(
     ato que a pediu e com o motivo que ele declarou. O que muda é que ela não abre transação nem
     trava o Processo: quem chama já os tem, e a idempotência é a do ato que a pediu.
 
-    **Devolve `None` quando a conta moveria vaga** pela reversão declarada, e nada é gravado. As
+    **Devolve `None` quando a conta moveria vaga** pela reversão declarada — desde a `155`, só a por
+    saldo (FR-6315) —, e nada é gravado. As
     recusas da emissão (`ordem_nao_vigente`, `sem_quadro_publicado`, empate na fronteira) sobem como
     sobem na tela, e quem chama decide o que fazer com elas.
 
@@ -240,17 +241,22 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     # **A espécie que move, e não a declaração** (155, FR-6318): a passagem entre cotas é declarada
     # e não cede nada. `quantidade_a_reverter` já devolveria zero para ela; ler `especie_que_move`
     # aqui é o que impede que isso dependa de a tupla das que revertem nunca crescer.
+    #
+    # **Só o saldo ainda cede aqui** (155, FR-6315, R-010). Por esgotamento a apuração informa a
+    # ocupação, e a vaga sem quem a ocupe vai à ampla pelo ato próprio da destinação
+    # (`application/destinacao.py`), com conferência e fundamento — a cessão no meio da emissão era
+    # a reversão automática que a `155` exclui (D-001). O ramo do saldo fica como estava até a
+    # decisão do usuário sobre a condição dele: tirá-lo agora seria escolher por ela. Sem o ramo do
+    # esgotamento, a pergunta "há quem ocupar?" deixou de ser feita aqui — o saldo não a lê.
     especie_da_reversao = _especie_que_move(versao.content, perfil_id=perfil)
     cede = (
         movimento_de_vaga.quantidade_que_a_cota_cede(
             especie=especie_da_reversao,
             efetivas=efetivas,
             ocupadas=ocupadas,
-            ha_quem_ocupar=movimento_de_vaga.ha_quem_ocupar(
-                edital=edital, marco_id=marco, lista_id=lista, ja_ocupadas=ocupadas
-            ),
+            ha_quem_ocupar=False,
         )
-        if lista is not None
+        if lista is not None and especie_da_reversao == nomes.REVERSAO_POR_SALDO
         else 0
     )
     if cede and not movimento_admitido:

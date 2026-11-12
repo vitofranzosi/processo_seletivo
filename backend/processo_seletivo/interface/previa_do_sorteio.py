@@ -25,6 +25,7 @@ from django.urls import reverse
 
 from processo_seletivo.classificacao.application import previa as calculo
 from processo_seletivo.classificacao.domain import cenarios_da_previa as cenarios
+from processo_seletivo.classificacao.domain.faixa import admite_continuacao
 from processo_seletivo.editais.domain.recortes import FRASE_DA_MODALIDADE_APONTADA
 from processo_seletivo.interface import previa_da_classificacao as pontuacao
 from processo_seletivo.ocupacao.domain import nomes
@@ -184,7 +185,7 @@ def contexto(*, perfil, marco, sub, snapshot, edital, indice, recortes, especie,
         return {**base, "estado": ACIMA_DO_LIMITE, "limite": limite, "anuncio": limite}
     candidatos = simulacao.populacao(so_ampla, por_reservada, nomear=cenarios.nome_ficticio)
     metodo = marco.get("drawMethod") or (snapshot or {}).get("drawMethod") or {}
-    apurar = pontuacao.apurar_recortes_com(especie)
+    apurar = pontuacao.apurar_recortes_com(especie, admite_continuacao(marco.get("cutRule")))
     try:
         p = aplicacao.simular_sorteio(
             marco,
@@ -425,22 +426,29 @@ def _rodadas(resumo, p, recortes):
             frases.append(pontuacao.FRASE_DA_PASSAGEM_ENTRE_COTAS)
         elif especie:
             cedidas = dados["cedidas"]
+            # **Por esgotamento, a vaga é destinada por ato próprio** (155, FR-6343): a rodada diz o
+            # que a destinação faria, e o verbo é o dela, e não o da cessão pela apuração.
+            destina = especie == nomes.REVERSAO_POR_ESGOTAMENTO
             if cedidas["constante"] and not cedidas["valor"]:
                 frases.append(
-                    "nenhuma vaga seria cedida à ampla em rodada nenhuma"
+                    ("nenhuma vaga seria destinada" if destina else "nenhuma vaga seria cedida")
+                    + " à ampla em rodada nenhuma"
                     + (
-                        " — pela regra de hoje, a lista sempre tem “quem ocupar”, porque a conta "
-                        "inclui quem ocupa pela ampla (comportamento atual, pendente de decisão "
-                        "na spec 095)"
-                        if sem["media"] and especie == nomes.REVERSAO_POR_ESGOTAMENTO
+                        " — a lista sempre tem quem possa ocupar, e quem ocupa pela ampla conta "
+                        "até a ocupação por ela ser confirmada, o que a prévia não simula"
+                        if sem["media"] and destina
                         else ""
                     )
                 )
             else:
                 media = cedidas["media"]
+                verbo = (
+                    ("vaga seria destinada" if media == 1 else "vagas seriam destinadas")
+                    if destina
+                    else ("vaga seria cedida" if media == 1 else "vagas seriam cedidas")
+                )
                 frases.append(
-                    f"em média, {_media(media)} "
-                    + ("vaga seria cedida" if media == 1 else "vagas seriam cedidas")
+                    f"em média, {_media(media)} {verbo}"
                     + f" à ampla, em {round(dados['com_cessao']['porcentagem'])}% das rodadas"
                 )
         else:

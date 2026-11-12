@@ -60,6 +60,10 @@ MODULOS_DE_VIEW = (
     # é o da página do Edital, em `views.py`. Fica na varredura para que uma porta futura não
     # escape.
     RAIZ / "processo_seletivo/interface/centro_do_edital.py",
+    # A destinação da vaga à ampla concorrência (155): nenhum 404 próprio — o recorte e o marco
+    # recusam pelas funções de `views.py` que o inventário já classifica. Fica para que um futuro
+    # não escape.
+    RAIZ / "processo_seletivo/interface/views_da_destinacao.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

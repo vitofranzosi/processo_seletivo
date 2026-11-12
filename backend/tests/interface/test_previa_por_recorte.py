@@ -220,12 +220,13 @@ def test_por_saldo_diz_o_que_seria_cedido_e_nao_refaz_a_ampla(client, com_saldo)
     assert "A próxima apuração da ampla leria" in visivel and "a prévia não a refaz" in visivel
 
 
-def test_por_esgotamento_e_o_comportamento_atual(client, com_esgotamento):
+def test_por_esgotamento_diz_o_que_a_destinacao_faria(client, com_esgotamento):
+    """155, FR-6343: a apuração não cede por esgotamento; a prévia diz o que o ato próprio faria."""
     visivel = texto(previa(client, com_esgotamento, **CONCOMITANTE))
     assert "“Só quando a lista reservada esgota”" in visivel
-    assert "nenhuma vaga seria cedida" in visivel
-    assert "a conta inclui quem ocupa pela ampla" in visivel
-    assert "comportamento atual do sistema" in visivel
+    assert "nenhuma vaga seria destinada à ampla" in visivel
+    assert "quem ocupa pela ampla conta até a ocupação por ela ser confirmada" in visivel
+    assert "comportamento atual do sistema" not in visivel
 
 
 def test_a_passagem_entre_cotas_diz_que_o_gps_nao_a_aplica(client, com_passagem):

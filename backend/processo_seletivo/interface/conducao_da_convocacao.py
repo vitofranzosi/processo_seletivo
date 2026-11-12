@@ -615,7 +615,10 @@ def _vaga_sem_chamada(leitura, quantas, *, pode_convocar):
     fila = leitura.get("fila") or []
     if not fila:
         return Pergunta(
-            "vaga_sem_chamada", quantas, texto, detalhe="não há mais quem chamar na fila"
+            "vaga_sem_chamada",
+            quantas,
+            texto,
+            detalhe="não há mais quem chamar na fila" + _situacao_da_vaga(leitura),
         )
     proxima = fila[0]
     detalhe = f"a próxima da fila é {proxima['protocolo']} — {proxima['nome']}"
@@ -630,6 +633,37 @@ def _vaga_sem_chamada(leitura, quantas, *, pode_convocar):
         detalhe=detalhe,
         ato=True,
     )
+
+
+def _situacao_da_vaga(leitura):
+    """Com a fila vazia, a situação da vaga da reserva, na frase do Centro e da ocupação (155).
+
+    **A mesma conta das três telas** (155, D-004, R-008): o índice só a cita, e o ato mora na
+    ocupação. Vazia onde a situação não diz nada novo — sob a reversão por saldo, por exemplo, a
+    tela continua como estava.
+    """
+    from processo_seletivo.interface import destinacao_da_vaga
+
+    apuracao = (leitura.get("ocupacao") or {}).get("apuracao")
+    if apuracao is None or apuracao.lista_id is None:
+        return ""
+    vaga = destinacao_da_vaga.situacao_do_recorte(
+        edital=apuracao.edital,
+        perfil_id=apuracao.perfil_id,
+        marco_id=apuracao.marco_id,
+        lista_id=apuracao.lista_id,
+        rotulo=destinacao_da_vaga.rotulo_do_recorte(
+            apuracao.versao.content, apuracao.perfil_id, apuracao.lista_id
+        ),
+    )
+    if vaga is None:
+        return ""
+    if vaga["disponivel"]:
+        return f"; {vaga['frase']} A destinação à ampla concorrência é ato da ocupação"
+    if vaga["impedimentos"]:
+        motivos = "; ".join(i["frase"] for i in vaga["impedimentos"])
+        return f"; a destinação à ampla concorrência ainda não cabe: {motivos}"
+    return ""
 
 
 def sem_providencia(perguntas):

@@ -148,11 +148,7 @@ def _lado_oficial(edital, gestor, inscricoes, prefixo):
         except apuracao.EmpateNaFronteiraDoAlvo:
             # O achado da R-002 da 095: na reservada, a recusa da fronteira da ampla escapa crua.
             quantidades = ("recusada", "crua")
-        cedidas = sum(
-            m.quantidade
-            for m in MovimentoDeVaga.objects.filter(apuracao__edital=edital)
-            if (str(m.origem_lista_id) if m.origem_lista_id else None) == lista
-        )
+        cedidas = _cedidas_ou_destinaveis(edital, lista)
         saida[lista] = {
             "ordem": ordem,
             "faixa": dentro,
@@ -168,6 +164,31 @@ def _lado_oficial(edital, gestor, inscricoes, prefixo):
     except apuracao.EmpateNaFronteiraDoAlvo:
         saida["pela_ampla"] = "parou"
     return saida
+
+
+def _cedidas_ou_destinaveis(edital, lista):
+    """O que a reservada cede, no caminho oficial — e, por esgotamento, o que a destinação faria.
+
+    **Por esgotamento a emissão não move vaga desde a `155`** (FR-6315): a vaga vai à ampla por ato
+    próprio, quando ninguém mais pode ocupá-la. O lado oficial passa a ser a conta da destinação
+    (R-011), lida pela mesma função pura sobre o mesmo estado, sem os impedimentos — resultado,
+    recurso e chamada —, que a prévia não simula. Por saldo, continua a soma dos movimentos.
+    """
+    from processo_seletivo.ocupacao.application.destinacao import leitura_da_vaga
+    from processo_seletivo.ocupacao.domain import reversao
+
+    conteudo = effective_version(edital_id=edital.id).content
+    if lista is not None and reversao.especie_que_move(conteudo["profiles"][0]) == (
+        nomes.REVERSAO_POR_ESGOTAMENTO
+    ):
+        return leitura_da_vaga(edital=edital, perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=lista)[
+            "quantidadePelaCondicao"
+        ]
+    return sum(
+        m.quantidade
+        for m in MovimentoDeVaga.objects.filter(apuracao__edital=edital)
+        if (str(m.origem_lista_id) if m.origem_lista_id else None) == lista
+    )
 
 
 def _lado_da_previa(edital, pontuada, inscricoes, especie, notas=NOTAS):
@@ -218,7 +239,9 @@ def _lado_da_previa(edital, pontuada, inscricoes, especie, notas=NOTAS):
         inscritos,
         [{"lista_id": lista, "rotulo": str(lista), "vagas": vagas[lista]} for lista in RECORTES],
         ampla=ampla,
-        apurar_recortes=lambda e: rodada_da_previa.rodada(e, especie=especie),
+        apurar_recortes=lambda e: rodada_da_previa.rodada(
+            e, especie=especie, continuacao_admitida=faixa.admite_continuacao(marco["cutRule"])
+        ),
         **comum,
     )
     indice = {str(i.id): n for n, i in enumerate(inscricoes)}
@@ -257,7 +280,8 @@ def _lado_da_previa(edital, pontuada, inscricoes, especie, notas=NOTAS):
         (None, {MODALIDADE_PCD: 0, MODALIDADE_PPI: 0}),
         # DP-1: a faixa de cada reservada tomada por quem ocupa pela ampla, e o saldo cedido.
         (nomes.REVERSAO_POR_SALDO, {MODALIDADE_PCD: 1, MODALIDADE_PPI: 1}),
-        # DP-2: "há quem ocupar" conta quem ocupa pela ampla, e nada é cedido.
+        # Por esgotamento, a destinação (155, FR-6304): quem ocupa pela ampla sem a ocupação
+        # confirmada ainda pode ocupar a reserva, e nada seria destinado.
         (nomes.REVERSAO_POR_ESGOTAMENTO, {MODALIDADE_PCD: 0, MODALIDADE_PPI: 0}),
     ],
     ids=["sem-reversao", "por-saldo", "por-esgotamento"],
@@ -307,13 +331,15 @@ def test_empate_na_ultima_vaga_da_ampla(montar, gestor):
             "ocupantes_pela_ampla",
             lambda **_: set(),
         ),
+        # A condição do esgotamento (155, R-011): o sentinela substituía `reversao.ha_quem_ocupar`,
+        # que a emissão deixou de perguntar; agora substitui a conta da destinação.
         (
-            "processo_seletivo.ocupacao.domain.reversao",
-            "ha_quem_ocupar",
-            lambda **_: False,
+            "processo_seletivo.ocupacao.domain.destinacao",
+            "quem_ainda_pode_ocupar",
+            lambda **_: [],
         ),
     ],
-    ids=["ocupantes-da-ampla", "ha-quem-ocupar"],
+    ids=["ocupantes-da-ampla", "quem-ainda-pode-ocupar"],
 )
 def test_a_comparacao_acusa_o_caminho_oficial_alterado(
     montar, gestor, monkeypatch, modulo, atributo, desvio
