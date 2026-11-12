@@ -1,31 +1,46 @@
 {% extends "portal/base.html" %}
-{% block titulo %}{% if vaga %}Confirme seu e-mail{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Entrar{% endif %}{% endblock %}
+{% block titulo %}{% if vaga %}Continue para sua inscrição{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Acesse sua área do candidato{% endif %}{% endblock %}
 {% block convite_de_entrar %}{% endblock %}
 {% block conteudo %}
 {% comment %}
-"Entrar" continua sendo o nome da porta (Q7); a caminho de uma vaga, a tela diz para que se entra
-(072, FR-1619).
-{% endcomment %}
-{% comment %}
-A caminho da convocação, a tela diz para onde a pessoa vai (121, FR-3880): o link da mensagem trouxe
-quem estava sem sessão, e depois do código ela chega à convocação, sem passar pela lista. Sem dizer
-de quem é a convocação nem de qual Edital: a decisão sai só do nome da rota.
-{% endcomment %}
-<h1>{% if vaga %}Confirme seu e-mail para se inscrever{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Entrar{% endif %}</h1>
-{% include "portal/_vaga_do_destino.html" %}
-<p class="sub">Sem senha: enviamos um código para o seu e-mail.</p>
+O título diz para que se entra, e não só "Entrar" (revisão da Q7 da 072, decisão do responsável pelo
+produto em 12/11/2026). A mesma porta recebe quem volta para acompanhar e quem chega pela primeira
+vez a caminho de uma vaga — e nenhuma das frases supõe inscrição anterior: "o e-mail da sua
+inscrição" mandaria embora justamente quem ainda não tem uma.
 
-<form method="post" action="{% url 'portal:acesso' %}" novalidate>
-  {% csrf_token %}
-  <div class="campo">
-    <label for="email">Seu e-mail</label>
-    {% comment %} `autofocus` porque é o único campo da tela, e `inputmode` para o teclado do celular abrir
-       com o arroba à mão (UX-009). {% endcomment %}
-    <input type="email" id="email" name="email" value="{{ email }}" autocomplete="email"
-           inputmode="email" autofocus required
-           {% if erro %}aria-invalid="true" aria-describedby="erro-email"{% endif %}>
-    {% if erro %}<span class="recusa" id="erro-email">{{ erro }}</span>{% endif %}
-  </div>
-  <button type="submit" class="principal">Receber código</button>
-</form>
+A caminho de uma vaga, a tela diz qual (072, FR-1619), e a frase de confirmar o e-mail para se
+inscrever passou do título para a descrição. A caminho da convocação, diz para onde a pessoa vai
+(121, FR-3880), sem dizer de quem é nem de qual Edital: a decisão sai só do nome da rota.
+{% endcomment %}
+<div class="porta-de-acesso">
+<section class="cartao-de-acesso" aria-labelledby="titulo-do-acesso">
+  {% comment %} O sobretítulo nomeia a área, e por isso sai quando o título já a nomeia. {% endcomment %}
+  {% if vaga or destino_e_convocacao %}<p class="sobretitulo">Área do candidato</p>{% endif %}
+  <h1 id="titulo-do-acesso">{% if vaga %}Continue para sua inscrição{% elif destino_e_convocacao %}Entre para ver a sua convocação{% else %}Acesse sua área do candidato{% endif %}</h1>
+  {% if vaga %}<p class="sub">Confirme seu e-mail para se inscrever e continuar no processo seletivo.</p>
+  {% elif destino_e_convocacao %}<p class="sub">Informe seu e-mail para continuar.</p>
+  {% else %}<p class="sub">Acompanhe suas inscrições, resultados e convocações em um só lugar.</p>{% endif %}
+  {% include "portal/_vaga_do_destino.html" %}
+
+  <form method="post" action="{% url 'portal:acesso' %}" novalidate>
+    {% csrf_token %}
+    <div class="campo">
+      <label for="email">Seu e-mail</label>
+      {% comment %} `autofocus` porque é o único campo da tela, e `inputmode` para o teclado do celular abrir
+         com o arroba à mão (UX-009). {% endcomment %}
+      <input type="email" id="email" name="email" value="{{ email }}" autocomplete="email"
+             inputmode="email" autofocus required
+             {% if erro %}aria-invalid="true" aria-describedby="erro-email"{% endif %}>
+      {% if erro %}<span class="recusa" id="erro-email">{{ erro }}</span>{% endif %}
+    </div>
+    <button type="submit" class="principal">Receber código de acesso</button>
+  </form>
+  {% comment %}
+  Sem senha, e sem cadastro prévio: a identidade nasce quando o código confere (010, FR-052). Dizer
+  isso aqui é o que tira a dúvida de quem nunca se inscreveu — e a frase é a mesma para quem tem e
+  para quem não tem identidade, porque não depende do endereço (FR-020, FR-021).
+  {% endcomment %}
+  <p class="nota-do-acesso">Sem senha: enviamos um código temporário para o seu e-mail. Se é a sua primeira vez, o acesso é criado quando você confirma o código.</p>
+</section>
+</div>
 {% endblock %}

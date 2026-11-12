@@ -48,8 +48,10 @@ def codigo(caixa):
 
 
 def test_a_caminho_de_uma_vaga_o_acesso_e_o_codigo_nomeiam_a_vaga(client, selecao, canal):
-    acesso = texto(client.get(reverse("portal:acesso"), {"destino": a_vaga(selecao)}))
+    resposta = client.get(reverse("portal:acesso"), {"destino": a_vaga(selecao)})
+    acesso = texto(resposta)
 
+    assert titulo(resposta) == "Continue para sua inscrição"
     assert "Confirme seu e-mail para se inscrever" in acesso
     assert CONTEXTO in acesso
     assert "Edital 01/2026" in acesso and "Primeiro Edital" in acesso
@@ -62,11 +64,22 @@ def test_a_caminho_de_uma_vaga_o_acesso_e_o_codigo_nomeiam_a_vaga(client, seleca
     assert "spam" in codigo_, "onde procurar o código que não chegou (FR-1621)"
 
 
-def test_sem_destino_de_vaga_o_acesso_continua_como_esta(client, selecao, canal):
-    """Q7 — "Entrar" é mantido; o contexto só existe quando há vaga a nomear."""
-    acesso = texto(client.get(reverse("portal:acesso")))
+def titulo(resposta):
+    return re.search(r"<h1[^>]*>(.*?)</h1>", resposta.content.decode(), re.S).group(1).strip()
 
-    assert acesso.startswith("Entrar")
+
+def test_sem_destino_de_vaga_o_acesso_e_neutro(client, selecao, canal):
+    """Sem destino, a mesma porta serve a quem volta e a quem chega pela primeira vez.
+
+    "Entrar" era a decisão da Q7 da 072; o responsável pelo produto a reviu em 12/11/2026: o título
+    diz para que se entra, sem supor inscrição anterior. O contexto continua só quando há vaga.
+    """
+    resposta = client.get(reverse("portal:acesso"))
+    acesso = texto(resposta)
+
+    assert titulo(resposta) == "Acesse sua área do candidato"
+    assert "inscrição" not in titulo(resposta)
+    assert "Se é a sua primeira vez" in acesso
     assert CONTEXTO not in acesso
 
 
@@ -172,7 +185,7 @@ def test_o_numero_nao_se_repete_quando_o_titulo_do_edital_ja_o_traz(
 
     assert contexto.group(1).count("01/2026") == 1
     assert "Edital 01/2026 — Docentes" in contexto.group(1)
-    assert "<title>Confirme seu e-mail" in resposta.content.decode()
+    assert "<title>Continue para sua inscrição" in resposta.content.decode()
 
 
 # --- A caminho da convocação (121, FR-3880) -----------------------------------------------------
@@ -183,9 +196,10 @@ def a_convocacao(inscricao_id):
 
 
 def test_a_caminho_da_convocacao_as_duas_telas_dizem_para_onde_se_vai(client, selecao, canal):
-    acesso = texto(client.get(reverse("portal:acesso"), {"destino": a_convocacao(uuid.uuid4())}))
+    resposta = client.get(reverse("portal:acesso"), {"destino": a_convocacao(uuid.uuid4())})
+    acesso = texto(resposta)
 
-    assert acesso.startswith("Entre para ver a sua convocação")
+    assert titulo(resposta) == "Entre para ver a sua convocação"
     assert "Depois do código, você vai direto para a convocação." in acesso
 
     codigo_ = texto(
