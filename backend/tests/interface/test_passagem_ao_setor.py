@@ -111,11 +111,17 @@ def test_a_definicao_gravada_sem_documento_encerra_a_providencia(client, cenario
 
 
 def test_sem_designacao_a_providencia_e_de_quem_administra_os_acessos(client, cenario, gestor):
-    """US2, cenários 1 e 2; FR-6113: sem ninguém com o papel, a frase diz o passo anterior."""
+    """US2, cenários 1 e 2; FR-6113: sem ninguém com o papel, a frase diz o passo anterior.
+
+    Desde a revisão de 12/11 da `117` (FR-6708), o responsável nomeia também a presidência, e
+    `comissao:gerir` sem presidir continua vendo a providência como de outro papel.
+    """
     definir_documentos(cenario.edital, gestor)
     identificar(client, "carlos", ["gestor"])
     agora = sem_marcacao(cartao(pagina(client, cenario.edital)))
-    assert "Quem administra os acessos da unidade: designar quem recebe os documentos" in agora
+    assert (
+        "A presidência ou quem administra os acessos da unidade: designar quem recebe os documentos"
+    ) in agora
     assert "ninguém está designado para receber os documentos deste Edital" in agora
     assert "conceder o papel Formalização a alguém do setor" in agora
 
@@ -124,6 +130,15 @@ def test_sem_designacao_a_providencia_e_de_quem_administra_os_acessos(client, ce
     gil = Actor("gil", cenario.edital.institution_scope, frozenset({GERIR}))
     providencia = _da_passagem(andamento.do_edital(cenario.edital, gil))
     destino = f"{reverse('interface:acessos-formalizacao')}?edital={cenario.edital.id}"
+    assert (providencia.ato, providencia.sua, providencia.url) == (DESIGNAR, True, destino)
+
+
+def test_a_presidencia_ve_a_designacao_como_dela(cenario, gestor):
+    """FR-6708 da `117` (revisão de 12/11), D-006 desta spec: o link é o da seção da definição."""
+    definir_documentos(cenario.edital, gestor)
+    maria = Actor("maria", cenario.edital.institution_scope, frozenset())
+    providencia = _da_passagem(andamento.do_edital(cenario.edital, maria))
+    destino = f"{reverse('interface:formalizacao-definicao', args=[cenario.edital.id])}#quem-acessa"
     assert (providencia.ato, providencia.sua, providencia.url) == (DESIGNAR, True, destino)
 
 
@@ -246,7 +261,20 @@ def test_a_tela_de_encerrar_diz_a_quem_pedir(client, cenario, gestor):
     identificar(client, "carlos", ["gestor"])
     resposta = client.get(reverse("interface:ato", args=[cenario.edital.id, "encerrar"]))
     texto = sem_marcacao(resposta.content.decode())
-    assert "(falta designar quem recebe). Peça a quem administra os acessos da unidade." in texto
+    assert (
+        "(falta designar quem recebe). Peça à presidência ou a quem administra os acessos da "
+        "unidade."
+    ) in texto
+
+
+def test_a_presidencia_recebe_o_caminho_da_designacao_ao_encerrar(cenario):
+    """FR-6708 da `117`: a advertência leva a presidência à seção em que ela designa."""
+    pendencia = rel.Pendencia(
+        p.APTAS_SEM_DISPONIBILIZACAO, None, 2, detalhe=(("sem_quem_receba", 2),)
+    )
+    maria = Actor("maria", cenario.edital.institution_scope, frozenset())
+    item = e._item_da_passagem(pendencia, cenario.edital, maria)
+    assert item.url.endswith("#quem-acessa")
 
 
 def test_a_quem_nao_pode_definir_a_advertencia_diz_a_quem_pedir(cenario):

@@ -52,14 +52,58 @@ não impedem a gravação. O auditor lê a tela e o histórico; o setor não a a
 {% endif %}
 
 <section aria-labelledby="quem-acessa" class="historico-da-formalizacao">
+  {% comment %}
+  Revisão de 12/11/2026 (D-025, UX-700 a UX-702): a presidência do Processo designa e revoga aqui,
+  entre quem a gestão de acessos já fez do setor. Para os demais, a seção continua só de leitura.
+  {% endcomment %}
   <h2 id="quem-acessa">Quem acessa os documentos</h2>
-  <p class="nota">As designações são concedidas pela gestão de acessos da unidade. Aqui elas são só para leitura.</p>
+  {% if designacao_feita %}<p class="sucesso" role="status">{{ designacao_feita }}</p>{% endif %}
+  {% if erro_da_designacao %}<p class="erro" role="alert">{{ erro_da_designacao }}</p>{% endif %}
+  {% if quem_designa %}
+  <p class="nota">Escolha quem do setor acessa os documentos deste Edital, entre as pessoas com o papel {{ quem_designa.papel }} nesta unidade. Designar não dá a você acesso aos documentos.</p>
+  {% else %}
+  <p class="nota">Quem designa é a presidência deste Processo ou quem administra os acessos da unidade. Aqui as designações são só para leitura.</p>
+  {% endif %}
   {% if designacoes %}
-  <ul>
-    {% for linha in designacoes %}<li><strong>{{ linha.pessoa }}</strong> — {% if linha.perfis %}{{ linha.perfis|join:", " }}{% else %}todos os Perfis{% endif %}, desde {{ linha.designacao.designado_em|date:"d/m/Y" }}, por {{ linha.por }}</li>{% endfor %}
+  <ul class="designacoes-vigentes">
+    {% for linha in designacoes %}<li><strong>{{ linha.pessoa }}</strong> — {% if linha.perfis %}{{ linha.perfis|join:", " }}{% else %}todos os Perfis{% endif %}, desde {{ linha.designacao.designado_em|date:"d/m/Y" }}, por {{ linha.por }}
+      {% if linha.revogavel %}
+      <form method="post" action="{% url 'interface:formalizacao-designacao-revogar' edital.id linha.designacao.pk %}" class="revogar-designacao">
+        {% csrf_token %}
+        <p class="campo"><label for="motivo-revogar-{{ forloop.counter }}">Motivo da revogação</label>
+          <input type="text" id="motivo-revogar-{{ forloop.counter }}" name="motivo" required></p>
+        <button type="submit" class="botao secundario">Revogar</button>
+      </form>
+      {% endif %}</li>{% endfor %}
   </ul>
   {% else %}
   <p class="nenhuma">Ninguém está designado para este Edital.</p>
+  {% endif %}
+  {% if quem_designa and quem_designa.designavel %}
+  <h3 id="designar">Designar</h3>
+  {% if not quem_designa.pessoas %}
+  <p class="nenhuma">Ninguém nesta unidade tem o papel {{ quem_designa.papel }}. Peça a quem administra os acessos da unidade que o conceda a alguém do setor.</p>
+  {% else %}
+  <form method="post" action="{% url 'interface:formalizacao-designar' edital.id %}" class="definicao-da-formalizacao">
+    {% csrf_token %}
+    <p class="campo"><label for="pessoa-designada">Pessoa com o papel {{ quem_designa.papel }}</label>
+      <select id="pessoa-designada" name="pessoa" required>
+        {% for pessoa in quem_designa.pessoas %}<option value="{{ pessoa.identificador }}">{{ pessoa.nome }}</option>{% endfor %}
+      </select></p>
+    {% if quem_designa.perfis|length > 1 %}
+    <fieldset class="opcoes">
+      <legend>Perfis atendidos <span class="opcional">(nenhum marcado: todos)</span></legend>
+      {% for perfil in quem_designa.perfis %}
+      <p class="opcao"><input type="checkbox" id="perfil-designado-{{ forloop.counter }}" name="perfil" value="{{ perfil.id }}">
+        <label for="perfil-designado-{{ forloop.counter }}">{{ perfil.nome }}</label></p>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
+    <p class="campo"><label for="motivo-designar">Motivo <span class="opcional">(obrigatório; fica nas trilhas do Edital e da unidade)</span></label>
+      <textarea id="motivo-designar" name="motivo" rows="2" required></textarea></p>
+    <p class="acoes"><button type="submit" class="botao">Designar para o {{ edital }}</button></p>
+  </form>
+  {% endif %}
   {% endif %}
 </section>
 

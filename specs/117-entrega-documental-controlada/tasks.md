@@ -121,3 +121,15 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 - **Fase 1 → Fase 2 → US1 e US2**, que podem andar em paralelo.
 - **US3** depende de US1 e US2. **US4** depende de US3 e da T010. **US5** depende de US4.
 - **Primeiro corte demonstrável**: Fases 1 a 5 (Cenário B). O Cenário A exige a US4.
+
+## Revisão de 12/11/2026 — a presidência também designa (D-025)
+
+- [X] T040 Revisão explícita da D-013, da FR-3663, da FR-3668, da US2 (cenário 4) e da matriz, com a redação anterior preservada; D-025, seção J (FR-6700 a FR-6708, UX-700 a UX-702) e SC-2200 a SC-2204. Na `153`: D-006, US2, FR-6108 e FR-6111
+- [X] T041 `pode_designar` em `formalizacao/domain/autorizacao.py`; `designar`, `revogar` e `pessoas_com_o_papel` passam por ele, com a base na trilha (FR-6700 a FR-6707)
+- [X] T042 [US2] A seção "Quem acessa os documentos" da definição designa e revoga, com dois POST novos em `interface/views_formalizacao.py`; linha nova no inventário da `033` (UX-700 a UX-702)
+- [X] T043 [P] O andamento e a advertência do encerramento seguem o predicado (FR-6708)
+- [X] T044 `test_a_presidencia_nao_designa` vira a prova da regra e dos limites; casos da tela; `test_passagem_ao_setor.py` atualizado (SC-2200 a SC-2204)
+- [X] T045 `rastreabilidade.md` e `verificacao.md`
+- [X] T046 `cd backend && make lint check test-pg`, e verificação no navegador com dados sintéticos
+
+**Dependências da revisão:** T040 → T041 → T042 e T043, em paralelo → T044 → T045 → T046.
