@@ -83,6 +83,30 @@ def test_sem_destino_de_vaga_o_acesso_e_neutro(client, selecao, canal):
     assert CONTEXTO not in acesso
 
 
+def test_quem_entra_depois_de_sair_nao_herda_a_vaga_de_quem_saiu(client, selecao, canal):
+    """Num computador compartilhado, o destino de quem saiu não pode guiar quem entra em seguida.
+
+    O "Sair" encerrava só a identidade: a vaga guardada pelo acesso continuava na sessão, e a
+    pessoa seguinte, entrando por "Minhas inscrições", lia a vaga de outra e caía em "Seus dados" a
+    caminho dela.
+    """
+    client.get(reverse("portal:acesso"), {"destino": a_vaga(selecao)})
+    client.post(reverse("portal:acesso"), {"email": "primeira@exemplo.test"})
+    primeira = client.post(reverse("portal:acesso-codigo"), {"codigo": codigo(canal)})
+    assert primeira.url == reverse("portal:meus-dados")
+
+    client.post(reverse("portal:sair"))
+    resposta = client.get(reverse("portal:acesso"))
+
+    assert titulo(resposta) == "Acesse sua área do candidato"
+    assert CONTEXTO not in texto(resposta)
+
+    client.post(reverse("portal:acesso"), {"email": "segunda@exemplo.test"})
+    segunda = client.post(reverse("portal:acesso-codigo"), {"codigo": codigo(canal)})
+
+    assert segunda.url == reverse("portal:inscricoes")
+
+
 @pytest.mark.parametrize(
     "destino",
     [
