@@ -1,0 +1,164 @@
+{% load interface_extras %}{% comment %}
+**O cartão de um documento da convocação** (115, FR-3608; 157). Parcial desde a 157: a página o
+inclui em laço, e o mesmo cartão volta sozinho quando a conferência é registrada sem recarga
+(FR-6514) e quando o visualizador relê a marca de abertura (FR-6503). Por isso os `id` são do item, e
+não da posição na página: um cartão relido sozinho não sabe onde está na lista.
+
+Lê `lido` (a leitura do item) e o contexto de `_contexto_do_cartao` na vista.
+{% endcomment %}
+<article class="recorte documento-da-convocacao" id="item-{{ lido.item.id }}" aria-labelledby="item-titulo-{{ lido.item.id }}">
+  <h2 id="item-titulo-{{ lido.item.id }}">{{ lido.nome }}{% if not lido.obrigatorio %} <span class="nenhuma">(facultativo)</span>{% endif %}
+    <span class="situacao {% if lido.estado == 'CONFORME' %}s-PUBLICADO{% elif lido.estado == 'NAO_SE_APLICA' %}s-NAO_SE_APLICA{% elif lido.estado == 'PENDENTE' %}s-EM_REVISAO{% elif lido.estado == 'A_APRESENTAR' %}s-CANCELADO{% else %}s-EM_ELABORACAO{% endif %}">{% for chave, rotulo in rotulo_do_item.items %}{% if chave == lido.estado %}{{ rotulo }}{% endif %}{% endfor %}{% if lido.sem_condicao_publicada %} — registrado sem condição publicada{% endif %}</span></h2>
+  {% comment %}
+  A condição de exigência, com o texto que o Edital publicou (131, FR-4454, FR-4459). É o que
+  fundamenta o "não se aplica", junto do motivo; sem ela, o documento é exigido de todos, e a opção
+  nem aparece.
+  {% endcomment %}
+  {% if confirmacao %}{% include "interface/_confirmacao_da_conferencia.html" %}{% endif %}
+  {% if lido.condicao %}<p class="condicao-publicada">Condição publicada: {{ lido.condicao }}.</p>{% endif %}
+  {% if lido.sem_condicao_publicada and not desfecho %}<p class="nota">Este "não se aplica" foi registrado num documento que o Edital exige de todos, e não atende ao aceite. Registre outra conferência: conforme ou pendente.</p>{% endif %}
+  {% if lido.instrucao %}<p class="nota">{{ lido.instrucao }}</p>{% endif %}
+  {% if lido.exigencia_mudou %}<p class="nota">A exigência deste documento mudou desde a apresentação de origem.</p>{% endif %}
+
+  {% comment %}
+  **O caminho de volta ao ponto de conferência** (157, FR-6528, UX-653): vazio ao carregar; o
+  visualizador o preenche quando a pessoa volta de um arquivo aberto fora da página, e lhe dá o foco.
+  {% endcomment %}
+  <p class="retorno-ao-ponto" data-retorno></p>
+
+  {% if lido.apresentacoes %}
+  <ol class="versoes" aria-label="Versões apresentadas">
+    {% for apresentacao in lido.apresentacoes %}
+    {% with url=urls_dos_documentos|dicionario_simples:apresentacao.id %}
+    <li>
+      <span>Versão {{ apresentacao.numero }}{% if forloop.last %} (vigente){% endif %} —
+      {% if apresentacao.documento_da_inscricao_id %}documento enviado na inscrição em {{ apresentacao.documento_da_inscricao.uploaded_at|date:"d/m/Y H:i" }}
+      {% elif apresentacao.apresentacao_de_origem_id %}aproveitado da chamada anterior, apresentado em {{ apresentacao.apresentacao_de_origem.apresentado_em|date:"d/m/Y H:i" }}
+      {% else %}apresentado em {{ apresentacao.apresentado_em|date:"d/m/Y H:i" }}{% endif %}</span>
+      {% comment %}
+      **Em tela larga o arquivo abre no painel; abaixo dela, fora da página** (157, FR-6505,
+      FR-6527). `target` continua como o caminho de quem não tem o painel — tela estreita, ou sem
+      script. O rótulo é o da barra do painel (UX-640), e o nome acessível começa pelo texto
+      visível (UX-641).
+      {% endcomment %}
+      <a class="acao" href="{{ url }}" target="_blank" rel="noopener"
+         data-abrir-documento
+         data-documento="{{ lido.nome }}"
+         data-rotulo="{{ lido.nome }} — versão {{ apresentacao.numero }}, {% if forloop.last %}apresentada em {% if apresentacao.documento_da_inscricao_id %}{{ apresentacao.documento_da_inscricao.uploaded_at|date:'d/m/Y H:i' }}{% elif apresentacao.apresentacao_de_origem_id %}{{ apresentacao.apresentacao_de_origem.apresentado_em|date:'d/m/Y H:i' }}{% else %}{{ apresentacao.apresentado_em|date:'d/m/Y H:i' }}{% endif %}{% else %}substituída pela versão {{ lido.vigente.numero }}{% endif %}"
+         data-tamanho="{{ tamanhos|dicionario_simples:apresentacao.id }}"
+         data-baixar="{{ url }}?baixar=1"
+         data-cartao="{% url 'interface:cartao-do-documento-da-convocacao' edital.id marco_id raiz.id lido.item.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}"
+         data-alvo="item-{{ lido.item.id }}"
+         {% if apresentacao.id in abertas_por_voce %}data-aberto{% endif %}
+         aria-label="Abrir {{ lido.nome }}, versão {{ apresentacao.numero }}">Abrir</a>
+      {% if tamanhos|dicionario_simples:apresentacao.id %}<span class="tamanho">{{ tamanhos|dicionario_simples:apresentacao.id }}</span>{% endif %}
+      <a class="acao secundaria" href="{{ url }}?baixar=1">Baixar</a>
+      {% if apresentacao.id in abertas_por_voce %}<span class="aberto-por-voce">aberto por você</span>{% endif %}
+    </li>
+    {% endwith %}
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="nenhuma">Nada apresentado.</p>
+  {% endif %}
+
+  {% if lido.conferencias %}
+  <details class="como-preencher">
+    <summary>Conferências registradas ({{ lido.conferencias|length }})</summary>
+    <ul class="conferencias">
+      {% for conferencia in lido.conferencias %}
+      <li>{{ conferencia.get_resultado_display }} — {% nome_de_pessoa conferencia.conferido_por %}, unidade {{ conferencia.unidade_de_atuacao }}, em {{ conferencia.conferido_em|date:"d/m/Y H:i" }}{% if conferencia.apresentacao_id %}, versão {{ conferencia.apresentacao.numero }}{% endif %}{% if conferencia.motivo %}: {{ conferencia.motivo }}{% endif %}{% if conferencia.motivo_da_substituicao %} (revisão: {{ conferencia.motivo_da_substituicao }}){% endif %}</li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+
+  {% if pode_conferir %}
+  {% comment %}
+  Aberto só quando há versão esperando conferência: nos itens já julgados, o formulário recolhido
+  é a revisão, e não o trabalho do dia. E aberto quando a última conferência deste item foi
+  recusada: a recusa mora dentro dele.
+  {% endcomment %}
+  <details class="como-preencher" {% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" or recusa.item == lido.item.id %}open{% endif %}>
+    <summary>{% if lido.estado == "RECEBIDO" or lido.estado == "COMPLEMENTADO" %}Conferir a versão {{ lido.vigente.numero }}{% elif lido.conferencias %}Registrar outra conferência{% else %}Conferir este documento{% endif %}</summary>
+  {% comment %}
+  **Registrar sem recarregar a página** (157, FR-6514): com script, o htmx envia o formulário e troca
+  este cartão, a situação e a confirmação no lugar; sem script, o envio de sempre, com a recarga e a
+  volta ao cartão (FR-6517). A rota e o comando são os mesmos nos dois caminhos.
+  {% endcomment %}
+  <form method="post" action="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" class="confirmar"
+        hx-post="{% url 'interface:conferir-documento' edital.id marco_id raiz.id lido.item.id %}" hx-target="#item-{{ lido.item.id }}" hx-swap="outerHTML"
+        data-formulario-do-item="item-{{ lido.item.id }}">
+    {% csrf_token %}
+    <input type="hidden" name="lista" value="{{ lista_id }}">
+    <input type="hidden" name="chave" value="{{ chave_idempotencia }}-{{ lido.item.id }}">
+    {% if lido.vigente %}<input type="hidden" name="apresentacao" value="{{ lido.vigente.id }}">{% endif %}
+    {% comment %}
+    A mensagem da falha que não chegou ao comando — sessão terminada, rede (157, FR-6518, UX-646).
+    O formulário fica, com o que foi digitado.
+    {% endcomment %}
+    <p class="erro" id="mensagem-{{ lido.item.id }}" role="alert" data-mensagem></p>
+    {% comment %}
+    **A recusa no lugar do gesto** (FR-3611). Ficava no topo da página, e o endereço levava a tela
+    ao cartão: a recusa existia e ninguém a via. Recebe o foco ao carregar, e oferece abrir a versão
+    só quando é a abertura que falta — e diz como prosseguir (157, FR-6516, UX-651).
+    {% endcomment %}
+    {% if recusa.item == lido.item.id %}
+    <p class="erro" role="alert" tabindex="-1" autofocus id="recusa-{{ lido.item.id }}"><strong>A conferência não foi registrada{% if recusa.falta_abrir and lido.vigente %}: você ainda não abriu a versão {{ lido.vigente.numero }}.{% else %}.{% endif %}</strong> {% if recusa.falta_abrir and lido.vigente %}Abra a versão {{ lido.vigente.numero }} e registre de novo; o que você marcou continua aqui.{% else %}{{ recusa.detalhe }}{% endif %}{% if recusa.falta_abrir and lido.vigente and lido.vigente.id not in abertas_por_voce %} <a href="{{ urls_dos_documentos|dicionario_simples:lido.vigente.id }}" target="_blank" rel="noopener"
+       data-abrir-documento data-documento="{{ lido.nome }}" data-rotulo="{{ lido.nome }} — versão {{ lido.vigente.numero }}" data-tamanho="{{ tamanhos|dicionario_simples:lido.vigente.id }}" data-baixar="{{ urls_dos_documentos|dicionario_simples:lido.vigente.id }}?baixar=1"
+       data-cartao="{% url 'interface:cartao-do-documento-da-convocacao' edital.id marco_id raiz.id lido.item.id %}{% if lista_id %}?lista={{ lista_id }}{% endif %}" data-alvo="item-{{ lido.item.id }}">Abrir a versão {{ lido.vigente.numero }}</a>{% endif %}</p>
+    {% endif %}
+    <fieldset class="opcoes">
+      <legend>Resultado {% if lido.vigente %}da versão {{ lido.vigente.numero }}{% endif %}</legend>
+      {% comment %}
+      **Antes do clique, e não só na recusa** (FR-3611, FR-4460): o "conforme" — e o "não se
+      aplica", quando há arquivo — só se registra depois que quem confere abre a versão. Desde a
+      157 o visualizador relê este cartão depois da abertura, e o aviso dá lugar à marca sem recarga
+      (FR-6503); a opção continua oferecida antes (D-005 da 157), e o comando decide.
+      {% endcomment %}
+      {% if lido.vigente and lido.vigente.id not in abertas_por_voce %}
+      <p class="ajuda" id="abertura-{{ lido.item.id }}">Você ainda não abriu a versão {{ lido.vigente.numero }}. O «conforme»{% if lido.admite_nao_se_aplica %} e o «não se aplica»{% endif %} só se registra{% if lido.admite_nao_se_aplica %}m{% endif %} depois de abri-la.</p>
+      {% endif %}
+      {% if lido.vigente %}
+      <p class="opcao"><input type="radio" id="conforme-{{ lido.item.id }}" name="resultado" value="CONFORME" required{% if recusa.item == lido.item.id and recusa.resultado == "CONFORME" %} checked{% endif %}{% if lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ lido.item.id }}"{% endif %}>
+        <label for="conforme-{{ lido.item.id }}">Conforme ao exigido pelo Edital</label></p>
+      {% endif %}
+      <p class="opcao"><input type="radio" id="pendente-{{ lido.item.id }}" name="resultado" value="PENDENTE" required{% if recusa.item == lido.item.id and recusa.resultado == "PENDENTE" %} checked{% endif %}>
+        <label for="pendente-{{ lido.item.id }}">Pendente</label></p>
+      {% if lido.admite_nao_se_aplica %}
+      <p class="opcao"><input type="radio" id="nao-se-aplica-{{ lido.item.id }}" name="resultado" value="NAO_SE_APLICA" required{% if recusa.item == lido.item.id and recusa.resultado == "NAO_SE_APLICA" %} checked{% endif %}{% if lido.vigente and lido.vigente.id not in abertas_por_voce %} aria-describedby="abertura-{{ lido.item.id }}"{% endif %}>
+        <label for="nao-se-aplica-{{ lido.item.id }}">Não se aplica: a condição publicada não alcança esta pessoa</label></p>
+      {% endif %}
+    </fieldset>
+    <p class="campo">
+      {% if lido.admite_nao_se_aplica %}
+      <label for="motivo-{{ lido.item.id }}">Motivo <span class="opcional">(obrigatório em pendente e não se aplica. No "não se aplica", que fato da pessoa a põe fora da condição? A pessoa convocada lê este texto.)</span></label>
+      {% else %}
+      <label for="motivo-{{ lido.item.id }}">Motivo <span class="opcional">(obrigatório em pendente; a pessoa convocada o lê)</span></label>
+      {% endif %}
+      <textarea id="motivo-{{ lido.item.id }}" name="motivo" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo }}{% endif %}</textarea>
+    </p>
+    {% comment %}
+    O motivo da revisão: sobre a mesma versão (FR-3586 da `115`), e sempre que o "não se aplica"
+    entra ou sai, haja ou não arquivo (131, FR-4462).
+    {% endcomment %}
+    {% if lido.conferencia and lido.vigente and lido.conferencia.apresentacao_id == lido.vigente.id or lido.conferencia and lido.admite_nao_se_aplica or lido.conferencia and lido.estado == "NAO_SE_APLICA" %}
+    <p class="campo">
+      <label for="revisao-{{ lido.item.id }}">Por que mudar a conferência desta versão</label>
+      <textarea id="revisao-{{ lido.item.id }}" name="motivo_da_substituicao" rows="2">{% if recusa.item == lido.item.id %}{{ recusa.motivo_da_substituicao }}{% endif %}</textarea>
+    </p>
+    {% endif %}
+    {% comment %}
+    **O que a marca quer dizer, e o arquivo que não abre** (157, FR-6513, FR-6549, UX-645, UX-652).
+    Recolhido, porque é para quem tem a dúvida, e não para todo registro.
+    {% endcomment %}
+    <details class="como-preencher ajuda-da-conferencia">
+      <summary>Sobre a abertura do arquivo</summary>
+      <p>«Aberto por você» quer dizer que o arquivo desta versão foi acessado por você nesta chamada. Não comprova que ele foi exibido nem lido.</p>
+      <p>O arquivo não abre, ou abre em branco? Registre como pendente e diga no motivo que o arquivo não pôde ser lido.</p>
+    </details>
+    <p class="acoes"><button type="submit" class="botao">Registrar conferência</button></p>
+  </form>
+  </details>
+  {% endif %}
+</article>

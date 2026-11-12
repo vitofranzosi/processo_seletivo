@@ -22,6 +22,7 @@ from django.db.models import Exists, OuterRef, Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.utils.html import escape
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -193,7 +194,12 @@ from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
 from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
 from processo_seletivo.interface.templatetags import interface_extras
-from processo_seletivo.portal.arquivos import ArquivoIndisponivel, copia_verificada, entregar
+from processo_seletivo.portal.arquivos import (
+    ArquivoIndisponivel,
+    copia_verificada,
+    entregar,
+    entregar_e_registrar_ao_fim,
+)
 from processo_seletivo.processos.application.commands import (
     add_edital,
     create_process_with_first_edital,
@@ -9237,6 +9243,50 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     **Filha da condução**, e não painel novo: chega-se a ela pela linha da convocação. Abrir a
     página deixa rastro (FR-3604), e abrir cada arquivo também — é a abertura que o "conforme"
     exige (FR-3611).
+
+    Desde a 157, o contexto é montado por `_contexto_dos_documentos`, que os fragmentos do registro
+    sem recarga e da releitura do cartão também usam: o que eles trocam no lugar é, por construção,
+    o que a página recarregada mostraria (SC-2146). Só a página grava a consulta.
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+
+    ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    contexto = _contexto_dos_documentos(request, ator, edital, marco_id, convocacao)
+    raiz = contexto["raiz"]
+    with command_context() as agora:
+        record_event(
+            actor=ator,
+            permission=base.permissao,
+            operation=documentos_app.CONSULTAR_DOCUMENTOS,
+            aggregate=raiz,
+            now=agora,
+            correlation_id=getattr(request, "correlation_id", ""),
+            reason=f"Documentos da chamada {raiz.id}.",
+            new_state="",
+            new_revision=None,
+        )
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/convocacao_documentos.html",
+            {
+                **contexto,
+                "recusa": _recusa_da_conferencia(
+                    request, contexto["leitura"], pode_conferir=contexto["pode_conferir"]
+                ),
+                "aviso": request.session.pop("aviso_da_conferencia", None),
+            },
+        )
+    )
+
+
+def _contexto_dos_documentos(request, ator, edital, marco_id, convocacao):
+    """O que a página dos documentos mostra — e os fragmentos dela trocam (157, FR-6514).
+
+    Sem registro de consulta: quem grava é a página (FR-3604 da `115`). Sem a recusa e o aviso da
+    sessão, que são de um carregamento só, e que a página acrescenta.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.application.selectors import (
@@ -9247,9 +9297,6 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     )
     from processo_seletivo.processos.domain.finalizacao import PROCESSO_FINAL
 
-    ator, edital, convocacao, base = _convocacao_para_conferir(request, edital_id, convocacao_id)
-    if ator is None:
-        return identidade.pedir_identificacao(request)
     raiz = documentos_app.raiz_da_chamada(convocacao)
     vigente = documentos_app.vigente_da_chamada(raiz)
     desfecho = desfecho_de(vigente)
@@ -9264,18 +9311,6 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
         vizinhas["identidades"].get(convocacao.inscricao_id)
         or identidades_de({convocacao.inscricao_id})[convocacao.inscricao_id]
     )
-    with command_context() as agora:
-        record_event(
-            actor=ator,
-            permission=base.permissao,
-            operation=documentos_app.CONSULTAR_DOCUMENTOS,
-            aggregate=raiz,
-            now=agora,
-            correlation_id=getattr(request, "correlation_id", ""),
-            reason=f"Documentos da chamada {raiz.id}.",
-            new_state="",
-            new_revision=None,
-        )
     apresentacoes = [a.id for lido in leitura.itens for a in lido.apresentacoes]
     # O lugar (Edital, Perfil, marco e lista), o passo e o aviso da pendência — os mesmos do cartão
     # da chamada. O recorte é o da convocação, e não o do endereço: a página sabe de que lista é.
@@ -9318,51 +9353,71 @@ def documentos_da_convocacao(request, edital_id, marco_id, convocacao_id):
     # E com o Processo aberto: o comando recusa conferir em estado final, e o formulário seria
     # convite a um ato que não existe mais (revisão do #369).
     pode_conferir = desfecho is None and edital.processo.status not in PROCESSO_FINAL
-    return marcar_como_privada(
-        render(
-            request,
-            "interface/convocacao_documentos.html",
-            {
-                "processo": edital.processo,
-                "edital": edital,
-                "marco_id": marco_id,
-                "lista_id": lista_id,
-                "convocacao": vigente,
-                "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
-                    edital, marco_id, vigente.lista_id
-                ),
-                "linha": linha,
-                "enviada_em": envio_de(vigente),
-                "vizinhas": vizinhas,
-                "primeiro_a_conferir": next(
-                    (
-                        lido
-                        for lido in leitura.pedidos
-                        if lido.estado in ("RECEBIDO", "COMPLEMENTADO")
-                        or lido.sem_condicao_publicada
-                    ),
-                    None,
-                ),
-                # O desfecho é da gestão (D-005): o link ao cartão da chamada, só para quem conduz.
-                "pode_emitir": pode_gerir_comissao(ator, edital.processo) is not None,
-                "url_da_convocacao": _volta_para_convocacao(edital.id, marco_id, lista_id),
-                "raiz": raiz,
-                "desfecho": desfecho,
-                "inscricao": inscricao,
-                "leitura": leitura,
-                "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
-                "rotulo_do_item": ROTULO_DO_ITEM,
-                "abertas_por_voce": abertas_por_voce,
-                "pode_conferir": pode_conferir,
-                "chave_idempotencia": uuid4().hex,
-                "recusa": _recusa_da_conferencia(request, leitura, pode_conferir=pode_conferir),
-                "aviso": request.session.pop("aviso_da_conferencia", None),
-                "proximo_nesta_lista": _proximo_nesta_lista(
-                    edital, ator, marco_id, getattr(vigente, "lista_id", None)
-                ),
-            },
-        )
-    )
+    urls, tamanhos = _arquivos_dos_documentos(edital, marco_id, raiz, leitura)
+    return {
+        "processo": edital.processo,
+        "edital": edital,
+        "marco_id": marco_id,
+        "lista_id": lista_id,
+        "convocacao": vigente,
+        "contexto_do_recorte": conducao_da_convocacao.contexto_do_recorte(
+            edital, marco_id, vigente.lista_id
+        ),
+        "linha": linha,
+        "enviada_em": envio_de(vigente),
+        "vizinhas": vizinhas,
+        "primeiro_a_conferir": next(
+            (
+                lido
+                for lido in leitura.pedidos
+                if lido.estado in ("RECEBIDO", "COMPLEMENTADO")
+                or lido.sem_condicao_publicada
+            ),
+            None,
+        ),
+        # O desfecho é da gestão (D-005): o link ao cartão da chamada, só para quem conduz.
+        "pode_emitir": pode_gerir_comissao(ator, edital.processo) is not None,
+        "url_da_convocacao": _volta_para_convocacao(edital.id, marco_id, lista_id),
+        "raiz": raiz,
+        "desfecho": desfecho,
+        "inscricao": inscricao,
+        "leitura": leitura,
+        "rotulo_documental": ROTULO_DOCUMENTAL.get(leitura.estado, ""),
+        "rotulo_do_item": ROTULO_DO_ITEM,
+        "abertas_por_voce": abertas_por_voce,
+        "pode_conferir": pode_conferir,
+        "chave_idempotencia": uuid4().hex,
+        "proximo_nesta_lista": _proximo_nesta_lista(
+            edital, ator, marco_id, getattr(vigente, "lista_id", None)
+        ),
+        "urls_dos_documentos": urls,
+        "tamanhos": tamanhos,
+    }
+
+
+def _arquivos_dos_documentos(edital, marco_id, raiz, leitura):
+    """O endereço e o tamanho legível do arquivo de cada apresentação (157, FR-6512, UX-641).
+
+    O tamanho é o do arquivo guardado, lido do armazenamento e não do banco: o mesmo que o envio
+    conferiu contra o limite. O arquivo que não se lê fica sem tamanho, e quem o abre recebe a recusa
+    de arquivo indisponível (FR-3695 da `117`).
+    """
+    from processo_seletivo.convocacao.application import documentos as documentos_app
+
+    urls, tamanhos = {}, {}
+    for lido in leitura.itens:
+        for apresentacao in lido.apresentacoes:
+            urls[apresentacao.id] = reverse(
+                "interface:documento-da-convocacao",
+                args=[edital.id, marco_id, raiz.id, apresentacao.id],
+            )
+            try:
+                tamanhos[apresentacao.id] = tamanho_legivel(
+                    documentos_app.fonte_do_arquivo(apresentacao).arquivo.size
+                )
+            except (OSError, ValueError, AttributeError):
+                tamanhos[apresentacao.id] = ""
+    return urls, tamanhos
 
 
 def _recusa_da_conferencia(request, leitura, *, pode_conferir):
@@ -9509,6 +9564,7 @@ def _o_proximo(atual, edital, marco_id, lista_id, todas_as_listas):
     }
 
 
+@xframe_options_sameorigin
 @require_http_methods(["GET"])
 def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresentacao_id):
     """O arquivo apresentado na convocação, conferido **antes** de sair um byte (FR-3605, FR-3606).
@@ -9516,6 +9572,18 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
     A mesma entrega do documento da inscrição: cópia verificada, `inline` para ver, `?baixar=1` como
     ação secundária individual. Não há lote. A abertura fica na trilha, sob a apresentação — é ela
     que o "conforme" lê (FR-3611).
+
+    **A abertura é o acesso ao arquivo, gravado ao fim da entrega** (157, FR-6544; decisão do usuário
+    de 11/11/2026: *"abertura como acesso ao arquivo vigente, sem afirmar comprovação de exibição ou
+    leitura"*). Antes, a consulta era gravada aqui, antes da resposta, e o pedido que caía no
+    primeiro byte virava abertura. Agora quem a grava é a própria entrega, depois do último bloco
+    (`entregar_e_registrar_ao_fim`); o clique, o painel e o pedido interrompido não gravam nada.
+
+    **Emoldurável pela própria origem** (157, FR-6504), como o documento da Mesa: a conferência o
+    mostra num painel ao lado do formulário. E o painel pede com `?painel=1`, que muda só a forma da
+    recusa da entrega — integridade e arquivo indisponível — para um documento pequeno, legível
+    dentro da moldura (FR-6510). Sem o parâmetro, a recusa é a página da área, como antes; e a
+    autorização não muda com ele.
     """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.models import ApresentacaoDeDocumento, ItemDaListaDaConvocacao
@@ -9536,67 +9604,93 @@ def documento_da_convocacao(request, edital_id, marco_id, convocacao_id, apresen
     )
     if apresentacao is None:
         raise Http404
-    fonte = documentos_app.fonte_do_arquivo(apresentacao)
-    try:
-        copia, calculado = copia_verificada(fonte)
-    except ArquivoIndisponivel:
-        # Antes da `117` esta linha era o 500 sem evento (§2.9 do diagnóstico, FR-3695).
+    no_painel = bool(request.GET.get("painel"))
+    baixar = bool(request.GET.get("baixar"))
+
+    def registrar(operacao, motivo):
         with command_context() as agora:
             record_event(
                 actor=ator,
                 permission=base.permissao,
-                operation="ARQUIVO_INDISPONIVEL",
-                aggregate=apresentacao,
-                now=agora,
-                correlation_id=getattr(request, "correlation_id", ""),
-                reason=f"requisito {apresentacao.item.requisito_id}",
-                new_state="",
-                new_revision=None,
-            )
-        raise
-    baixar = bool(request.GET.get("baixar"))
-    with command_context() as agora:
-        if calculado != apresentacao.content_hash:
-            copia.close()
-            record_event(
-                actor=ator,
-                permission=base.permissao,
-                operation="INTEGRIDADE",
-                aggregate=apresentacao,
-                now=agora,
-                correlation_id=getattr(request, "correlation_id", ""),
-                reason=f"requisito {apresentacao.item.requisito_id}",
-                new_state="",
-                new_revision=None,
-            )
-        else:
-            record_event(
-                actor=ator,
-                permission=base.permissao,
-                operation=documentos_app.CONSULTAR_APRESENTACAO,
+                operation=operacao,
                 aggregate=apresentacao,
                 now=agora,
                 correlation_id=getattr(request, "correlation_id", ""),
                 # O requisito, e nunca o nome do arquivo (FR-3603). O download fica dito.
-                reason=(
-                    f"requisito {apresentacao.item.requisito_id}" + (", baixado" if baixar else "")
-                ),
+                reason=motivo,
                 new_state="",
                 new_revision=None,
             )
+
+    requisito = f"requisito {apresentacao.item.requisito_id}"
+    fonte = documentos_app.fonte_do_arquivo(apresentacao)
+    try:
+        copia, calculado = copia_verificada(fonte)
+    except ArquivoIndisponivel as recusa:
+        # Antes da `117` esta linha era o 500 sem evento (§2.9 do diagnóstico, FR-3695).
+        registrar("ARQUIVO_INDISPONIVEL", requisito)
+        if no_painel:
+            return _recusa_no_painel(request, recusa)
+        raise
     if calculado != apresentacao.content_hash:
-        raise _documento_nao_integro()
-    return entregar(fonte, anexo=baixar, verificado=copia)
+        copia.close()
+        registrar("INTEGRIDADE", requisito)
+        recusa = _documento_nao_integro()
+        if no_painel:
+            return _recusa_no_painel(request, recusa)
+        raise recusa
+    return entregar_e_registrar_ao_fim(
+        fonte,
+        anexo=baixar,
+        verificado=copia,
+        ao_fim=lambda: registrar(
+            documentos_app.CONSULTAR_APRESENTACAO, requisito + (", baixado" if baixar else "")
+        ),
+    )
+
+
+def _recusa_no_painel(request, recusa):
+    """A recusa da entrega, legível **dentro** do painel do visualizador (157, FR-6510, FR-6545).
+
+    A recusa que sai como exceção vira a página da área, e o `X-Frame-Options: DENY` do resto do
+    sistema a bloqueia na moldura: o painel mostrava a página de bloqueio do navegador, e não a
+    frase. Esta é um documento pequeno, sem a barra da gestão, emoldurável pela própria origem. A
+    raiz leva `data-recusa-no-painel`, e o visualizador leva a frase para o texto do painel.
+    """
+    resposta = render(
+        request,
+        "interface/_recusa_no_painel.html",
+        {"detalhe": recusa.detail, "codigo": recusa.code},
+        status=recusa.status,
+    )
+    # O middleware não sobrescreve o cabeçalho que a resposta já traz.
+    resposta["X-Frame-Options"] = "SAMEORIGIN"
+    return marcar_como_privada(resposta)
 
 
 @require_http_methods(["POST"])
 def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id):
-    """Registra a conferência de um item e volta à página dos documentos (FR-3585)."""
+    """Registra a conferência de um item e volta à página dos documentos (FR-3585).
+
+    **Com `HX-Request`, sem recarga** (157, FR-6514 a FR-6518): o mesmo comando, a mesma chave e a
+    mesma recusa, e a resposta é o cartão do item, com a situação, as pessoas do recorte e a
+    confirmação trocadas no lugar. Sempre 200 — o htmx não troca resposta 4xx (a recusa de fragmento
+    da gestão é assim desde a 086). Sem o cabeçalho, o redirecionamento de sempre.
+    """
     from processo_seletivo.convocacao.application import documentos as documentos_app
     from processo_seletivo.convocacao.domain import nomes as nomes_da_convocacao
 
+    sem_recarga = request.headers.get("HX-Request") == "true"
     ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
     if ator is None:
+        if sem_recarga:
+            # A sessão terminou entre abrir a página e registrar (157, FR-6518, UX-646). O
+            # formulário fica, com o que foi digitado: só a mensagem dele é trocada.
+            return _mensagem_do_formulario(
+                item_id,
+                "A conferência não foi registrada. Sua sessão terminou; entre de novo. "
+                "O que você marcou continua aqui.",
+            )
         return identidade.pedir_identificacao(request)
     # O recorte vem do formulário, e vai codificado: um valor com `#` ou `&` deslocaria a âncora do
     # item, ou da recusa, para dentro da query.
@@ -9612,6 +9706,7 @@ def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id
         "motivo": request.POST.get("motivo") or "",
         "motivo_da_substituicao": request.POST.get("motivo_da_substituicao") or "",
     }
+    recusa = None
     try:
         documentos_app.conferir(
             actor=ator,
@@ -9621,7 +9716,6 @@ def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id
             correlation_id=f"interface-conferencia-{convocacao.id}",
             **preenchido,
         )
-        request.session["aviso_da_conferencia"] = "Conferência registrada."
     except DomainError as erro:
         if erro.status == 404:
             raise Http404 from erro
@@ -9631,7 +9725,7 @@ def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id
         # concluía que o botão não fazia nada. O que foi marcado e digitado volta junto — o motivo
         # do "não se aplica", que a mesma regra recusa, se perdia.
         superada = erro.code == nomes_da_convocacao.VERSAO_SUPERADA
-        request.session["recusa_da_conferencia"] = {
+        recusa = {
             "item": str(item_id),
             "detalhe": erro.detail,
             # O link "abrir a versão" só acompanha a recusa que pede a abertura — a da versão
@@ -9648,8 +9742,148 @@ def conferir_documento_view(request, edital_id, marco_id, convocacao_id, item_id
             # a nova, que a pessoa ainda não viu. O texto digitado fica, para ser relido.
             **({"resultado": ""} if superada else {}),
         }
+    if sem_recarga:
+        return _conferencia_sem_recarga(
+            request, ator, edital, marco_id, convocacao, item_id, recusa, destino
+        )
+    if recusa is not None:
+        request.session["recusa_da_conferencia"] = recusa
         return redirect(f"{destino}#recusa-{item_id}")
+    request.session["aviso_da_conferencia"] = "Conferência registrada."
     return redirect(f"{destino}#item-{item_id}")
+
+
+def _mensagem_do_formulario(item_id, frase):
+    """Só a mensagem do formulário, quando nada mais pode ser lido (157, FR-6518)."""
+    resposta = HttpResponse(escape(frase))
+    resposta["HX-Retarget"] = f"#mensagem-{item_id}"
+    resposta["HX-Reswap"] = "innerHTML"
+    return marcar_como_privada(resposta)
+
+
+def _conferencia_sem_recarga(request, ator, edital, marco_id, convocacao, item_id, recusa, destino):
+    """O cartão, a situação, as pessoas do recorte e a confirmação, no lugar (157, R-006).
+
+    Montados pelo mesmo `_contexto_dos_documentos` da página: o que troca é o que a página
+    recarregada mostraria (SC-2146). A recusa que não tem cartão onde morar — o formulário some
+    quando a chamada ganhou desfecho ou o Processo se encerrou — recarrega a página inteira, com a
+    recusa no alto, como no caminho sem script (FR-6516).
+    """
+    contexto = _contexto_dos_documentos(request, ator, edital, marco_id, convocacao)
+    lido = next((lido for lido in contexto["leitura"].pedidos if lido.item.id == item_id), None)
+    if recusa is not None and (lido is None or not contexto["pode_conferir"]):
+        request.session["recusa_da_conferencia"] = recusa
+        resposta = HttpResponse("")
+        resposta["HX-Refresh"] = "true"
+        return marcar_como_privada(resposta)
+    if lido is None:
+        resposta = HttpResponse("")
+        resposta["HX-Redirect"] = destino
+        return marcar_como_privada(resposta)
+    if recusa is not None:
+        recusa = {**recusa, "item": item_id, "no_topo": False, "ancora": item_id}
+    corpo = render_to_string(
+        "interface/_documento_da_convocacao.html",
+        {
+            **contexto,
+            "lido": lido,
+            "recusa": recusa,
+            "confirmacao": None
+            if recusa is not None
+            else _confirmacao_da_conferencia(contexto, lido),
+        },
+        request=request,
+    )
+    for parcial in ("interface/_situacao_dos_documentos.html", "interface/_pessoas_do_recorte.html"):
+        corpo += render_to_string(parcial, {**contexto, "oob": True}, request=request)
+    return marcar_como_privada(HttpResponse(corpo))
+
+
+def _confirmacao_da_conferencia(contexto, lido):
+    """O que foi registrado e o passo seguinte da conferência (157, FR-6519 a FR-6522, R-007).
+
+    **Oferece, e não abre nem registra.** O próximo documento é um link de abrir como os do cartão —
+    no painel em tela larga, fora da página na estreita, sempre por gesto (D-003 da 157). Sem
+    documento a conferir nesta pessoa, a próxima pessoa com documento a conferir, pelo critério da
+    FR-5024 da `143`; sem nenhuma, o fim do recorte. E, terminada a pessoa com pendência, o pedido
+    de aviso dela (D-008 da 157).
+    """
+    conferencia = lido.conferencia
+    resultado = (
+        conferencia.get_resultado_display().lower()
+        if conferencia is not None
+        else ""
+    )
+    proximo = next(
+        (
+            outro
+            for outro in contexto["leitura"].pedidos
+            if outro.item.id != lido.item.id
+            and outro.vigente is not None
+            and outro.estado in ("RECEBIDO", "COMPLEMENTADO")
+        ),
+        None,
+    )
+    aviso = contexto["linha"].get("aviso")
+    pendente = conferencia is not None and conferencia.resultado == "PENDENTE"
+    pedido = None
+    if proximo is None and aviso is not None and aviso.pendencia_em is not None:
+        pedido = _oferta_do_pedido_de_aviso(aviso)
+    return {
+        "nome": lido.nome,
+        "resultado": resultado,
+        "pendente": pendente,
+        "pessoa": contexto["inscricao"].nome,
+        "proximo": proximo,
+        "proxima_pessoa": contexto["vizinhas"].get("proxima_a_conferir"),
+        "pedido_de_aviso": pedido,
+    }
+
+
+def _oferta_do_pedido_de_aviso(aviso):
+    """O gesto do aviso de uma pessoa, ou por que não cabe agora (157, FR-6537, FR-6541).
+
+    Lido da mesma prévia que a tela da convocação usa (FR-4605 da `134`): a regra é uma só. A data
+    só no "já avisada hoje", porque é o único motivo que o tempo resolve sozinho; nada é agendado.
+    """
+    if aviso.aviso_em is not None:
+        # Já houve aviso desde esta pendência: a situação, acima, diz o que aconteceu com ele.
+        return None
+    if not aviso.habilitado:
+        return {"desabilitado": True}
+    if aviso.alcancavel:
+        return {"alcancavel": True}
+    if aviso.alcancavel is None:
+        return None
+    if aviso.motivo == avisos_pendencias.JA_AVISADA_HOJE:
+        return {
+            "motivo": aviso.motivo,
+            "a_partir_de": avisos_pendencias.proximo_dia_do_pedido(timezone.now()),
+        }
+    return {"motivo": aviso.motivo}
+
+
+@require_http_methods(["GET"])
+def cartao_do_documento_da_convocacao(request, edital_id, marco_id, convocacao_id, item_id):
+    """O cartão de um item, relido depois de uma abertura (157, FR-6503, FR-6511, R-005).
+
+    Pela mesma porta da página, e sem registro de consulta: quem lê o cartão é a própria página, que
+    já registrou a dela (FR-3604 da `115`).
+    """
+    ator, edital, convocacao, _ = _convocacao_para_conferir(request, edital_id, convocacao_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    contexto = _contexto_dos_documentos(request, ator, edital, marco_id, convocacao)
+    lido = next((lido for lido in contexto["leitura"].pedidos if lido.item.id == item_id), None)
+    if lido is None:
+        raise Http404
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/_documento_da_convocacao.html",
+            {**contexto, "lido": lido, "recusa": None},
+        )
+    )
 
 
 @require_http_methods(["POST"])
