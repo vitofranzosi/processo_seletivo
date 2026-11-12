@@ -491,12 +491,23 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   NOT ser usada para o candidato.
 - **FR-3727**: A projeção MUST oferecer os totais por categoria — a corrigir, a enviar, com a
   comissão, conferidos — contando só obrigatórios, e se o Requerimento é tarefa.
-- **FR-3728**: Com a chamada *aberta*, documentos pedidos e nenhuma tarefa, a projeção MUST oferecer
+- **FR-3728** *(acrescida pela `154` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  Com a chamada *aberta*, documentos pedidos e nenhuma tarefa, a projeção MUST oferecer
   a **frase de conclusão**: *"Você não tem mais documentos para enviar agora. A comissão ainda vai
   concluir a análise."* Havendo opcional sem envio, MUST seguir-se *"Se quiser, você ainda pode
   enviar o documento opcional até ‹prazo›."*; com o prazo não iniciado ou sem vencimento, sem
   *"até ‹prazo›"* (FR-3749). Nenhuma frase MUST dizer que a pessoa enviou tudo, que está tudo certo,
   aceito, aprovado ou concluído.
+
+  **Acréscimo da `154`.** Com **todos** os obrigatórios conferidos (*conforme* ou *não se aplica*),
+  sem tarefa e sem desfecho, a projeção MUST oferecer, no lugar da frase de conclusão, a frase da
+  conferência terminada: *"A conferência dos documentos obrigatórios terminou. Aguarde o registro do
+  resultado desta convocação."*, seguida da frase do opcional quando houver (FR-6205 da `154`). Em
+  todo outro caso sem tarefa — algum obrigatório com a comissão, ou chamada sem obrigatório —, vale a
+  frase de conclusão acima (FR-6204 da `154`). A proibição da última frase acima continua, e alcança o
+  título *"Acompanhe sua convocação"* (FR-6207 da `154`).
+
+  > **Redação anterior à `154`:** a mesma, sem este acréscimo.
 - **FR-3729**: A projeção MUST NOT produzir decisão. Ela MUST NOT inferir desfecho, perda de vaga,
   nova chamada, prazo novo nem prazo de complementação; o fim do prazo e o estado final do Processo
   só fecham a escrita (FR-3593 e FR-3618 da `115`).
@@ -613,6 +624,11 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   vencimento, que esta convocação não tem prazo registrado. A frase de consequência da FR-1177 da
   `063` vem logo depois da ação principal, na mesma condição (FR-3864 da `121`).
 
+  **Acréscimo da `154`** *(em 2026-11-11, que vigora com a implementação dela)*. O cartão do prazo
+  continua visível com ou sem tarefa (FR-6208 da `154`); a frase de consequência só aparece com
+  providência pendente do candidato, na condição da FR-1177 da `063`, revista pela `154` (FR-6209 da
+  `154`). Redação anterior à `154`: a mesma, sem este acréscimo.
+
   > **Redação anterior à `121`, preservada:**
   > O bloco **Prazo** MUST dizer o prazo único da FR-3747; com o prazo correndo, a frase de
   > consequência da FR-1177 da `063`, na mesma condição; com o prazo não iniciado, só a frase da
@@ -708,7 +724,7 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   | *recebido* (pelo portal) | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir; você não precisa fazer nada agora."* | *"Recebido em ‹data›, às ‹hora›. A comissão vai conferir."* | *"Recebido em ‹data›, às ‹hora›; não foi conferido antes do encerramento do Processo."* | *"Enviado em ‹data›; não foi conferido antes do resultado."* |
   | aproveitado da inscrição, sem conferência | *"Você já enviou este documento na inscrição, em ‹data›. Não precisa enviar de novo. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›. A comissão vai conferir."* | *"Enviado na inscrição, em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Enviado na inscrição, em ‹data›; não foi conferido antes do resultado."* |
   | aproveitado da chamada anterior, sem conferência | *"Aproveitado da chamada anterior, enviado em ‹data›. Não precisa enviar de novo. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›. A comissão vai conferir de novo."* | *"Aproveitado da chamada anterior, enviado em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Aproveitado da chamada anterior, enviado em ‹data›; não foi conferido antes do resultado."* |
-  | *complementado* | *"Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida. A comissão vai conferir."* | idem à coluna *aberta* | *"Novo arquivo recebido em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Novo arquivo enviado em ‹data›; não foi conferido antes do resultado."* |
+  | *reenviado — aguardando nova conferência* *(revista pela `154`, FR-6213)* | *"Reenviado — aguardando nova conferência. Novo arquivo recebido em ‹data›, às ‹hora›, depois da correção pedida."* | idem à coluna *aberta* | *"Reenviado em ‹data›; não foi conferido antes do encerramento do Processo."* | *"Reenviado em ‹data›; não foi conferido antes do resultado."* |
   | *conforme* | *"Conferido: de acordo com o Edital."* | idem | idem | idem |
   | *conforme*, aproveitado | *"Conferido: de acordo com o Edital. É o arquivo enviado na inscrição, em ‹data›."* (ou *"…na chamada anterior, em ‹data›."*) | idem | idem | idem |
   | *não se aplica* | *"Não se aplica: ‹motivo›."* | idem | idem | idem |
@@ -716,7 +732,14 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
   | facultativo *a apresentar* | *"Opcional: envie se quiser."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* | *"Opcional, não enviado."* |
   | facultativo *pendente* | *"Opcional. A comissão apontou: ‹motivo›. Se quiser, envie um novo arquivo até ‹prazo›."* (sem apresentação: *"…envie o arquivo até ‹prazo›."*) | *"Opcional. A comissão apontou: ‹motivo›."* | idem | idem |
 
-  O facultativo recebido, aproveitado, complementado ou conferido usa a linha do estado dele, com o
+  > **Linha anterior à `154`, preservada** (o estado se chamava *complementado*): *"Novo arquivo
+  > recebido em ‹data›, às ‹hora›, depois da correção pedida. A comissão vai conferir."* | idem à
+  > coluna *aberta* | *"Novo arquivo recebido em ‹data›; não foi conferido antes do encerramento do
+  > Processo."* | *"Novo arquivo enviado em ‹data›; não foi conferido antes do resultado."* A linha
+  > nova vigora com a implementação da `154`, com os textos decididos pelo usuário em 11/11/2026
+  > (FR-6213 da `154`). O vencimento do prazo, sozinho, mantém *"aguardando"*.
+
+  O facultativo recebido, aproveitado, reenviado ou conferido usa a linha do estado dele, com o
   selo *"Opcional"* (FR-3744). **O prazo não iniciado e a convocação sem vencimento prevalecem sobre
   esta tabela**: neles, *"até ‹prazo›"* sai de toda frase da coluna *aberta* (FR-3749). O motivo é o
   de quem conferiu, sem o nome de quem conferiu (FR-3584 da `115`). *"Conferido: de acordo com o
