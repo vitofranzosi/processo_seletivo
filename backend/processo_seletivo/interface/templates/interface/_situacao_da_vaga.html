@@ -14,7 +14,9 @@ recebe a frase de quem pratica o ato, e nao um botao que terminaria numa recusa.
 <ul class="consequencias">
   {% for item in recorte.vaga.movimentos %}{% with movimento=item.registro %}
   <li>{{ movimento.registrado_em|date:"d/m/Y" }} — {% if movimento.especie == "DESFAZIMENTO_DA_REVERSAO" %}{{ movimento.quantidade|contagem:"vaga devolvida,vagas devolvidas" }} a esta lista, desfazendo a destinação de {{ movimento.desfaz.registrado_em|date:"d/m/Y" }}. Motivo: {{ movimento.fundamento }}{% else %}{{ movimento.quantidade|contagem:"vaga destinada,vagas destinadas" }} à ampla concorrência{% if movimento.fundamento %}, por ato próprio. Fundamento: {{ movimento.fundamento }}{% else %}, pela apuração desta lista — {{ movimento.causa }}{% endif %}{% endif %} Registrado por {% nome_de_pessoa movimento.registrado_por %}.
-    {% if item.desfazivel and pode_emitir %}
+    {% if item.desfazivel and item.dependentes %}
+    <p class="nota">Esta destinação não se desfaz agora: {% for chamada in item.dependentes %}{{ chamada.rotulo|default:"uma pessoa" }} {% if chamada.ocupa %}ocupa a vaga{% else %}foi chamada para ela{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}. O desfazimento só cabe depois do desfecho que libere a vaga.</p>
+    {% elif item.desfazivel and pode_emitir %}
     <form method="post" action="{% url 'interface:desfazer-destinacao' edital.id marco_id %}" class="acoes">
       {% csrf_token %}
       <input type="hidden" name="ato" value="{{ movimento.id }}">
@@ -33,7 +35,9 @@ desfazimento ao lado de cada declaracao que ainda tem o que desfazer (FR-6334).
 <ul class="consequencias">
   {% for item in recorte.vaga.naoPreenchidas %}{% with declaracao=item.registro %}
   <li>{{ declaracao.registrado_em|date:"d/m/Y" }} — {% if declaracao.especie == "DESFAZIMENTO" %}declaração desfeita: {{ declaracao.quantidade|contagem:"vaga volta,vagas voltam" }} a contar como a ocupar. Motivo: {{ declaracao.fundamento }}{% else %}{{ declaracao.quantidade|contagem:"vaga declarada não preenchida,vagas declaradas não preenchidas" }}. Fundamento: {{ declaracao.fundamento }}{% endif %} Registrado por {% nome_de_pessoa declaracao.registrado_por %}.
-    {% if item.restante and pode_emitir %}
+    {% if item.restante and item.dependentes %}
+    <p class="nota">Esta declaração não se desfaz agora: {% for chamada in item.dependentes %}{{ chamada.rotulo|default:"uma pessoa" }} {% if chamada.ocupa %}ocupa a vaga{% else %}foi chamada para ela{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}. O desfazimento só cabe depois do desfecho que libere a vaga.</p>
+    {% elif item.restante and pode_emitir %}
     <form method="post" action="{% url 'interface:desfazer-nao-preenchida' edital.id marco_id %}" class="acoes">
       {% csrf_token %}
       <input type="hidden" name="ato" value="{{ declaracao.id }}">

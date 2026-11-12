@@ -428,12 +428,23 @@ def chamar_na_ampla(certame, gestor, prefixo):
     from tests.integration.convocacao.test_suplencia import chamar
     from tests.integration.ocupacao.test_concomitancia import apurar
 
+    from processo_seletivo.convocacao.application import selectors
+
     apurar(certame, gestor, chave=f"{prefixo}-ampla-recebe", motivo="Vaga recebida")
+    # **Titular ou a primeira da fila, com a espécie que a posição determina.** Supor que a ampla
+    # tem titular a chamar tornava o caso dependente da ordem que o sorteio produz: a vaga recebida
+    # pode ser preenchida por quem estava além das vagas iniciais, chamado para a vaga que vagou.
     pessoas = fluxo.previa_dos_titulares(
         edital=certame["edital"], perfil_id=PROFILE_ID, marco_id=MARCO
     )["pessoas"]
-    assert pessoas, "a ampla tem quem chamar para a vaga recebida"
-    return chamar(certame, gestor, pessoas[-1]["id"], lista_id=None, chave=f"{prefixo}-chamar-a")
+    alvo = (
+        pessoas[-1]["id"]
+        if pessoas
+        else selectors.contexto_do_recorte(
+            edital=certame["edital"], perfil_id=PROFILE_ID, marco_id=MARCO, lista_id=None
+        )["fila"][0]
+    )
+    return chamar(certame, gestor, alvo, lista_id=None, chave=f"{prefixo}-chamar-a", especie=None)
 
 
 class TestOsDesfazimentosPelaTela:
@@ -477,22 +488,43 @@ class TestOsDesfazimentosPelaTela:
     def test_com_chamada_dependente_a_tela_nomeia_e_a_trilha_registra(
         self, client, seletor_ligado, disponivel, gestor
     ):
-        """US6.2, FR-6335: a chamada nomeada, o desfecho antes, e o pedido recusado na trilha."""
+        """US6.2, FR-6335: a tela mostra o impedimento, sem a ação; o pedido direto é recusado e
+        fica na trilha.
+
+        A primeira versão deixava o botão visível para que a recusa acontecesse; o usuário recusou
+        esse desenho em 12/11/2026 — ação oferecida só para ser negada contraria a FR-6302.
+        """
         from processo_seletivo.auditoria.models import RegistroAuditoria
+        from processo_seletivo.interface.destinacao_da_vaga import chamadas_dependentes
+        from processo_seletivo.ocupacao.application import destinacao
 
         identificar(client, "carlos", ["gestor"])
         movimento = self.destinar(client, disponivel)
         chamar_na_ampla(disponivel, gestor, "tela-desf-dep")
-        conferencia = self.desfazer(client, disponivel, movimento).content.decode()
-        assert "Há pessoa chamada para esta vaga" in conferencia
-        assert "a chamada precisa do seu desfecho antes" in conferencia
 
+        pagina = ocupacao(client, disponivel)
+        assert "Esta destinação não se desfaz agora" in pagina
+        assert "Desfazer esta destinação" not in pagina, (
+            "FR-6302: sem ação que terminaria em recusa"
+        )
+
+        conferencia = self.desfazer(client, disponivel, movimento).content.decode()
+        assert "O desfazimento não cabe agora" in conferencia
+        assert "a chamada precisa do seu desfecho antes" in conferencia
+        assert 'name="confirmar"' not in conferencia, "a conferência não oferece o ato"
+
+        # **O pedido enviado direto**, sem a tela: o comando recusa e registra (FR-6335).
+        leitura = destinacao.previa_do_desfazimento_da_destinacao(
+            edital=disponivel["edital"],
+            movimento_id=str(movimento.id),
+            chamadas_dependentes=chamadas_dependentes,
+        )["assinatura"]
         resposta = self.desfazer(
             client,
             disponivel,
             movimento,
             confirmar="1",
-            leitura=assinatura_de(conferencia),
+            leitura=leitura,
             motivo="Destinada por engano.",
         )
 

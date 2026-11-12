@@ -387,9 +387,49 @@ def situacao_do_recorte(
         # O Edital silente, na reserva (FR-6321): a frase e os dois caminhos.
         "silente": declaracao is None and lista_id is not None,
         "limitacao": estado == conta.PASSAGEM_ENTRE_COTAS,
-        "movimentos": _movimentos_da_reserva(leitura["movimentos"], lista_id),
-        "naoPreenchidas": leitura["naoPreenchidas"],
+        "movimentos": _com_as_dependentes(
+            _movimentos_da_reserva(leitura["movimentos"], lista_id),
+            chave="desfazivel",
+            dependentes=lambda registro: chamadas_dependentes(
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=None,
+                movimento_id=registro.id,
+                at=at,
+            ),
+        ),
+        "naoPreenchidas": _com_as_dependentes(
+            leitura["naoPreenchidas"],
+            chave="restante",
+            dependentes=lambda registro: chamadas_dependentes(
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=lista_id,
+                nao_preenchida_id=registro.id,
+                at=at,
+            ),
+        ),
     }
+
+
+def _com_as_dependentes(itens, *, chave, dependentes):
+    """Cada ato ainda desfazível com as chamadas que dependem dele (155, FR-6335).
+
+    **A tela mostra o impedimento, e não a ação que terminaria numa recusa.** A primeira versão
+    deixava o botão "Desfazer" visível com chamada dependente, para que a recusa ficasse registrada;
+    o usuário recusou esse desenho em 12/11/2026: ação disponível só para provocar recusa é ação
+    que a tela oferece e o comando nega (FR-6302). O comando continua recusando e registrando o
+    pedido enviado direto — a garantia é dele, e não da tela.
+
+    Só se pergunta pelo ato que ainda se desfaz: o custo é de uma leitura por ato desfazível, e não
+    por ato do recorte.
+    """
+    return [
+        {**item, "dependentes": dependentes(item["registro"]) if item.get(chave) else []}
+        for item in itens
+    ]
 
 
 def _movimentos_da_reserva(movimentos, lista_id):

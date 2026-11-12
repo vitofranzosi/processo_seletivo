@@ -89,7 +89,7 @@ diz isso antes, e nomeia cada uma.
   {% endif %}
 </dl>
 {% if previa.dependentes %}
-<p class="aviso" role="status">Há pessoa chamada para esta vaga, e por isso o desfazimento será recusado — o pedido fica registrado na trilha, com as chamadas:</p>
+<p class="aviso" role="status">O desfazimento não cabe agora: há pessoa chamada para esta vaga.</p>
 <ul class="consequencias">
   {% for chamada in previa.dependentes %}
   <li>{{ chamada.rotulo|default:"pessoa sem identificação" }}: {% if chamada.ocupa %}ocupa a vaga, e só um desfecho que a libere permite desfazer o ato{% else %}a chamada precisa do seu desfecho antes{% endif %}.</li>
@@ -97,6 +97,9 @@ diz isso antes, e nomeia cada uma.
 </ul>
 {% endif %}
 <p class="imutavel">O desfazimento não se apaga, e o ato desfeito continua legível, ao lado dele.</p>
+{% if previa.dependentes %}
+<p class="salvar"><a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a></p>
+{% else %}
 <form method="post" action="{% if modo == 'desfazer_destinacao' %}{% url 'interface:desfazer-destinacao' edital.id marco_id %}{% else %}{% url 'interface:desfazer-nao-preenchida' edital.id marco_id %}{% endif %}" class="confirmar">
   {% csrf_token %}
   <input type="hidden" name="ato" value="{{ registro.id }}">
@@ -113,6 +116,7 @@ diz isso antes, e nomeia cada uma.
     <a href="{% url 'interface:ocupacao' edital.id marco_id %}" class="acao">Voltar à ocupação</a>
   </p>
 </form>
+{% endif %}
 
 {% else %}
 {% comment %}
