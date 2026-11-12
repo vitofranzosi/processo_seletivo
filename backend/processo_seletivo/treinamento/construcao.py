@@ -39,7 +39,20 @@ PUBLICACAO = "treino.publicacao"
 PRESIDENCIA = "treino.presidencia"
 AVALIACAO_1 = "treino.avaliacao1"
 AVALIACAO_2 = "treino.avaliacao2"
-EQUIPE = (GESTAO, ELABORACAO, HOMOLOGACAO, PUBLICACAO, PRESIDENCIA, AVALIACAO_1, AVALIACAO_2)
+# Quem admite o recurso já interposto do C08. **Não é da comissão**, e não pode ser: quem
+# consolidou a prova ou emitiu a ordem atacada está impedido de apreciar o recurso contra ela
+# (018, FR-039).
+JULGAMENTO = "treino.julgamento"
+EQUIPE = (
+    GESTAO,
+    ELABORACAO,
+    HOMOLOGACAO,
+    PUBLICACAO,
+    PRESIDENCIA,
+    AVALIACAO_1,
+    AVALIACAO_2,
+    JULGAMENTO,
+)
 
 # O provisionamento de treinamento da formalização (FR-6720 a FR-6729): quem concede o papel e
 # designa, e a pessoa do setor. **`ACESSOS` só existe em memória** (FR-6724): não recebe vínculo nem
@@ -69,6 +82,9 @@ _PERMISSOES = {
     ),
     HOMOLOGACAO: ("edital:homologar", "retificacao:homologar"),
     PUBLICACAO: ("edital:publicar", "retificacao:publicar", "resultado:publicar"),
+    # O Julgador de recursos do seletor, e só ele: `recurso:julgar` é capacidade própria, que não se
+    # pendura em papel nenhum da comissão (`interface/identidade.py`).
+    JULGAMENTO: ("recurso:julgar",),
     # O Administrador de acessos da unidade do catálogo da `107`, que o seletor não oferece: é a
     # exceção à FR-4642 que a FR-6724 nomeia, e só concede e designa.
     ACESSOS: ("acesso:gerir", "acesso:consultar"),
@@ -655,6 +671,25 @@ class Montagem:
                     correlation_id=self.correlacao,
                 )
 
+    def alocar_a_conferencia(self, subject):
+        """Aloca um membro à conferência dos documentos da convocação, em todos os Perfis (115).
+
+        **Pela porta de quem gere a comissão**, como a alocação à Etapa. O membro alocado só
+        confere: o desfecho continua da presidência (D-010 da `115`).
+        """
+        from processo_seletivo.comissoes.application.alocacao import alocar_a_conferencia
+
+        alocacao, _ = alocar_a_conferencia(
+            actor=self.ator(GESTAO),
+            processo_id=self.processo.id,
+            membro_id=self.membros[subject].id,
+            edital_id=self.edital.id,
+            idempotency_key=self.chave(f"conferencia-{subject[-1]}"),
+            correlation_id=self.correlacao,
+        )
+        self.anotar("alocacao_a_conferencia", alocacao.id)
+        return alocacao
+
     def distribuir(self, etapa, inscricoes, avaliador=AVALIACAO_1):
         from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 
@@ -771,6 +806,7 @@ class Montagem:
             declaracao_de_encerramento=declaracao,
         )
         self.anotar("publicacao_de_resultado", publicacao.id)
+        self.resultado_divulgado = publicacao
         return publicacao
 
     def cortar_e_apurar(self):
@@ -808,6 +844,54 @@ class Montagem:
             correlation_id=self.correlacao,
             motivo="",
         )
+
+    # -- Recursos (018) -----------------------------------------------------------------------
+
+    def recorrer(self, inscricao, fundamentacao, passo):
+        """O candidato recorre do resultado divulgado, pelo comando do portal.
+
+        **Contra a publicação, e não contra o Resultado da Etapa**: é o objeto que o portal oferece
+        a quem lê o preliminar, e o que o exercício do candidato também ataca.
+        """
+        from processo_seletivo.recursos.application.interpor import interpor
+
+        pessoa = next(p for p in self.pessoas if p["subject"] == inscricao.identity_subject)
+        publicacao = self.resultado_divulgado
+        recurso = interpor(
+            identidade=self.identidade(pessoa),
+            inscricao=inscricao,
+            publicacao=publicacao,
+            fundamentacao=f"{fundamentacao} ({MARCA}).",
+            assinatura_do_objeto=str(publicacao.pk),
+            idempotency_key=self.chave(f"recurso-{passo}"),
+            correlation_id=self.correlacao,
+        )
+        self.anotar("recurso", recurso.id)
+        return recurso
+
+    def admitir_recurso(self, recurso, passo):
+        """O juízo de admissibilidade, positivo e motivado, por quem julga recursos.
+
+        **Só admite, e não julga**: o mérito é o exercício do Julgador. A admissão é o que põe a
+        peça na fila de quem decide — sem ela, o julgamento é recusado (`_exigir_admissao`).
+        """
+        from processo_seletivo.recursos.application.admitir import admitir
+        from processo_seletivo.recursos.application.selectors import assinatura_do_estado_da_peca
+
+        juizo = admitir(
+            actor=self.ator(JULGAMENTO),
+            recurso_id=recurso.id,
+            admitido=True,
+            motivo=(
+                "Tempestivo, interposto pelo titular e fundamentado: admitido para julgamento. "
+                f"{MARCA}."
+            ),
+            assinatura_do_estado=assinatura_do_estado_da_peca(recurso),
+            idempotency_key=self.chave(f"admitir-{passo}"),
+            correlation_id=self.correlacao,
+        )
+        self.anotar("juizo_de_admissibilidade", juizo.id)
+        return juizo
 
     def convocar(self, inscricao, ordem):
         from processo_seletivo.convocacao.application.convocar import convocar

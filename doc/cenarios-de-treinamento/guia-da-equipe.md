@@ -32,8 +32,9 @@ Se um cenário já foi restaurado, a versão nova termina em `-R2`, `-R3`… e a
 2. Escolha **Acessar ambiente de demonstração**.
 3. Escolha com quem entrar:
    - para os exercícios da **comissão** (classificar, sortear, convocar, conferir documentos),
-     escolha no grupo **Comissões** a identidade `treino.presidencia` (presidência) ou
-     `treino.avaliacao1` (avaliação);
+     escolha no grupo **Comissões** a identidade `treino.presidencia` (presidência),
+     `treino.avaliacao1` (avaliação) ou `treino.avaliacao2` (membro alocado à conferência dos
+     documentos, no C12);
    - para os demais, escolha em **Responsabilidades da unidade** o papel pedido no exercício
      (Gestor, Elaborador, Homologador, Publicador, Julgador de recursos). Se preferir que a
      auditoria registre o seu nome, use o campo **Nome na auditoria** e marque o papel.
@@ -47,7 +48,9 @@ Se um cenário já foi restaurado, a versão nova termina em `-R2`, `-R3`… e a
 agora** estão os atos que são dela em todos os Editais que preside, cada um com o Edital, o Perfil e o
 link direto para a tela do ato: não é preciso abrir Edital por Edital. A seção **Em espera nos seus
 Editais**, recolhida, diz o que aguarda uma data, e de onde a data vem. Quem avalia encontra ali a
-avaliação pendente e as Etapas; os demais papéis começam em **Processos Seletivos**. Para ver tudo o
+avaliação pendente e as Etapas, e quem foi alocado à conferência encontra **Conferir os documentos**,
+marcado **pela alocação**. Os demais papéis começam em **Processos Seletivos**: o Julgador de recursos
+encontra os recursos a decidir no quadro **Ações disponíveis para você**, no alto da lista. Para ver tudo o
 que está em aberto num Edital, de todos os papéis, abra o Processo e, nele, o Edital (`SIM07/2026`,
 por exemplo): no alto da página, o quadro **O que fazer agora** mostra as providências e marca com
 **SUA** as que cabem a você.
@@ -67,6 +70,25 @@ e-mail (C02). Para agir como um candidato já inscrito (C08, C11):
 2. Abra a caixa de entrada do ambiente, o **mailpit**, na porta 8025 do servidor de homologação. O
    código está na mensagem mais recente para aquele e-mail.
 3. Digite o código no portal: você está agindo como o candidato.
+
+## Quem faz o quê nos cenários
+
+Num certame real, o trabalho de um Edital se reparte entre pessoas diferentes, cada uma por uma
+razão diferente. Os cenários trazem cada uma dessas frentes com alguém nela, para que se possa ver
+quem cobre o quê:
+
+| Frente | Por que a pessoa está nela | Cenário | Identidade |
+|---|---|---|---|
+| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C17 | `treino.presidencia` |
+| Avaliar uma Etapa | membro alocado à Etapa | C05 | `treino.avaliacao1` |
+| Conferir os documentos da convocação | membro **alocado à conferência** — sem presidir | C12 | `treino.avaliacao2` |
+| Receber os documentos para formalizar | **designada** para o Edital, sem integrar a comissão | C16 (designada), C17 (a designar) | `treino.formalizacao` |
+| Decidir recursos | papel Julgador de recursos da unidade | C08 (um recurso admitido) | Julgador de recursos |
+| Publicar resultado, elaborar, homologar | papel da unidade | C01, C04, C13 | Publicador, Elaborador, Homologador |
+
+Quem foi alocado à conferência **só confere**: a decisão de cada convocação (o desfecho) continua
+com a presidência. A pessoa designada para a formalização não vê nada da comissão: só os documentos
+das pessoas aptas do Edital em que foi designada.
 
 ## O que observar em todo exercício
 
@@ -248,17 +270,25 @@ convocação, como no certame real.
 **Objetivo:** recorrer de um resultado e julgar o recurso.
 
 **Você começa com:** o Edital `SIM08`, resultado preliminar divulgado e o prazo de recurso de 5
-dias aberto. O candidato 08 foi eliminado na prova.
+dias aberto. O candidato 08 foi eliminado na prova. E **já há um recurso**: a candidata 03, empatada
+com o 04, pediu a revisão da nota de títulos, e o recurso dela já foi **admitido** — está à espera
+da decisão.
 
-**Quem faz:** candidato (portal) → Julgador de recursos → presidência.
+**Quem faz:** Julgador de recursos; candidato (portal) → Julgador de recursos → presidência.
 
 **Seu desafio:**
 
-1. Como candidato (código no mailpit), recorra do resultado com uma fundamentação.
-2. Como **Julgador de recursos**, decida o recurso.
-3. Como `treino.presidencia`, cumpra a decisão, se for deferido.
+1. Como **Julgador de recursos**, veja no alto da lista de Processos, em **Ações disponíveis para
+   você**, *Recursos do Edital SIM08/2026 — Decidir recursos (1)*. Abra e decida o recurso da 03.
+2. Como candidato 08 (código no mailpit), recorra do resultado com uma fundamentação.
+3. Como **Julgador de recursos**, aprecie a admissibilidade do recurso do 08 e decida-o.
+4. Como `treino.presidencia`, cumpra a decisão, se algum recurso for deferido.
 
-**Resultado esperado:** recurso julgado; se deferido, nova ordem.
+**Resultado esperado:** recursos julgados; se deferido algum, nova ordem.
+
+**Repare:** enquanto houver recurso sem decisão, o resultado definitivo **espera por ele**, e não só
+pelo fim do prazo. Abra o Edital como `treino.presidencia` antes e depois de decidir o recurso da 03
+e compare o que o quadro **O que fazer agora** diz sobre o definitivo.
 
 **Validade:** 5 dias (a janela de recurso).
 
@@ -332,17 +362,25 @@ emitidas, ninguém convocado.
 
 **Você começa com:** o Edital `SIM12`, 3 convocados com diploma e comprovante de residência
 entregues e **nada conferido**. A autodeclaração não aparece: ninguém deste cenário é da cota.
+Além da presidência, `treino.avaliacao2` — membro da comissão que **não preside** — está alocado à
+conferência dos documentos deste Edital.
 
-**Quem faz:** presidência (`treino.presidencia`).
+**Quem faz:** membro alocado à conferência (`treino.avaliacao2`) → presidência (`treino.presidencia`).
 
 **Seu desafio:**
 
-1. Abra os documentos do primeiro convocado e **abra cada arquivo** — o GPS só aceita "conforme"
+1. Entre como `treino.avaliacao2` (grupo **Comissões**). Em **Minhas atividades**, *Para fazer
+   agora* diz **Conferir os documentos de 3 convocações**, Edital SIM12/2026, **pela alocação**.
+   Siga o link.
+2. Abra os documentos do primeiro convocado e **abra cada arquivo** — o GPS só aceita "conforme"
    de quem abriu o documento.
-2. Marque um item como **conforme** e outro como **pendente**, com o motivo.
-3. Faça o mesmo nos outros convocados, e registre o desfecho de quem tiver tudo conforme.
+3. Marque um item como **conforme** e outro como **pendente**, com o motivo. O desfecho da
+   convocação não é seu: quem é alocado só confere, e o GPS recusa o desfecho a quem não preside.
+4. Entre como `treino.presidencia` e faça o mesmo nos outros convocados; registre o desfecho de
+   quem tiver tudo conforme.
 
-**Resultado esperado:** conferências registradas e desfecho das convocações.
+**Resultado esperado:** conferências registradas — umas pela alocação, outras pela presidência — e
+desfecho das convocações.
 
 **Validade:** 30 dias.
 

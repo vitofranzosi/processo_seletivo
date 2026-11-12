@@ -90,3 +90,28 @@ def retomar(manifesto, autoridade=None):
         for ordem in range(1, len(montagem.inscricoes) + 1)
     ]
     return montagem
+
+
+def indeferir_o_recurso_ja_admitido(montagem):
+    """Decide o recurso que o C08 traz admitido, e o cenário volta a esperar só o prazo recursal.
+
+    **Para os casos que leem a janela, e não o recurso** (V-8 do estudo de 12/11): o C08 passou a
+    nascer com um recurso admitido, e um recurso pendente segura o definitivo e o corte por si — a
+    espera deixa de ter data. Indeferido por quem o admitiu, ele não produz ato a jusante: o que
+    resta é o estado de antes, mais uma decisão na trilha.
+    """
+    from processo_seletivo.recursos.application.julgar import julgar
+    from processo_seletivo.recursos.models import DecisaoRecurso, Recurso
+    from processo_seletivo.treinamento.construcao import JULGAMENTO
+
+    [recurso] = Recurso.objects.filter(
+        inscricao__edital=montagem.edital, juizos__admitido=True, decisoes__isnull=True
+    )
+    return julgar(
+        actor=montagem.ator(JULGAMENTO),
+        recurso_id=recurso.id,
+        especie=DecisaoRecurso.Especie.INDEFERIDO,
+        motivacao="O certificado não atende ao item de títulos do Edital (teste).",
+        idempotency_key=montagem.chave("teste-indeferir-recurso-admitido"),
+        correlation_id=montagem.correlacao,
+    )
