@@ -529,3 +529,42 @@ def test_o_aviso_da_chamada_publicada_alcanca_a_publicacao_nativa(fixtures, gest
     assert aviso.referencia_da_publicacao == emitida.referencia_da_publicacao
     assert "1ª publicação de convocados" in aviso.corpo
     assert declarado["destinatarios"] == 1
+
+
+# --- No mesmo gesto, a ordem da fila (FR-5714, revista em 12/11/2026) ----------------------------
+
+
+def test_no_mesmo_gesto_a_relacao_segue_a_classificacao(fixtures, gestor, caixa_de_saida):
+    """O defeito da demonstração do C10: as três do gesto saíam pela ordem do identificador interno.
+
+    As convocadas num gesto nascem no mesmo instante; sem a posição, o desempate era o UUID. Com
+    dois titulares, metade das montagens já sai na ordem certa por acaso — e por isso o caso confere
+    contra a classificação, e não contra uma ordem fixa.
+    """
+    from processo_seletivo.classificacao.models import PosicaoNaOrdem
+    from tests.fixtures.corte import regra
+    from tests.integration.convocacao.test_lista_da_chamada_no_gesto import convocar_titulares
+
+    edital, _, _ = certame(
+        fixtures,
+        forma=FORMA_POR_MENSAGEM_INDIVIDUAL,
+        prefixo="p149-ordem",
+        geral=2,
+        cut=regra(surplusCount=1),
+    )
+    praticadas = [
+        Convocacao.objects.get(id=c["id"])
+        for c in convocar_titulares(edital, gestor, chave="p149-ordem-gesto")["convocadas"]
+    ]
+    assert len({c.criado_em for c in praticadas}) == 1, "a premissa: o mesmo instante"
+    posicao = {
+        p.inscricao_id: p.posicao
+        for p in PosicaoNaOrdem.objects.filter(ato_id=praticadas[0].ato_de_ordenacao_id)
+    }
+    esperada = [
+        c.inscricao.protocolo for c in sorted(praticadas, key=lambda c: posicao[c.inscricao_id])
+    ]
+
+    [grupo] = previa(edital)["grupos"]
+
+    assert [p["protocolo"] for p in grupo["pessoas"]] == esperada

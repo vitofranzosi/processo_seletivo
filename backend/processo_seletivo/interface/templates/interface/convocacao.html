@@ -348,6 +348,19 @@ A situação vai ao lado do nome, em cor e em palavra (a cor sozinha não é inf
 atestado abrem quando alguém os pede; e reenviar uma mensagem já enviada deixa de ser o botão mais
 chamativo do cartão, porque é o que produz a segunda mensagem na caixa da pessoa.
 {% endcomment %}
+{% if a_divulgar_no_gps %}
+{% comment %}
+**O caminho até a página pública, em qualquer forma** (149, FR-5737). A convocação por mensagem
+enviada não deixa pendência, e o "Publicar no GPS" das pendentes não aparecia: a comissão convocava e
+não achava onde pôr a lista na área pública. Aqui a publicação só divulga — o prazo já correu do
+envio, ou do registro externo —, e a página de publicação diz isso antes do botão.
+{% endcomment %}
+<section aria-labelledby="pagina-publica">
+  <h2 id="pagina-publica">Na página pública da seleção</h2>
+  <p><strong>{{ a_divulgar_no_gps }} {{ a_divulgar_no_gps|plural:"convocação comunicada ainda não está,convocações comunicadas ainda não estão" }} na página pública.</strong> Publicar a relação não muda prazo nenhum nem envia mensagem: a convocação oficial já foi feita.</p>
+  <p class="acoes"><a class="acao" href="{{ publicar_no_gps }}">Publicar no GPS</a></p>
+</section>
+{% endif %}
 {% if chamadas_publicadas.itens %}
 <section aria-labelledby="avisos-das-chamadas">
   <h2 id="avisos-das-chamadas">Avisar os convocados de uma chamada publicada</h2>
