@@ -46,4 +46,4 @@ Formato: `[ID] [P?] [História] Descrição`. `[P]` = arquivos distintos, sem de
 - [X] T026 Verificação no navegador e no PDF (`verificacao.md`, capturas 12 a 14); `rastreabilidade.md`, `research.md`, `data-model.md`
 - [X] T026a A assinatura da prévia cita a versão: as listas saem dela (FR-5430)
 - [X] T026b Desenho da revisão no `plan.md` (Fase E); `/speckit-analyze` com as correções I1 a I4 e B1 — FR-5430 revista, FR-5432 e US1/AC1 remetidas à FR-5445, UX-466, Status, `quickstart.md` e README —; `/speckit-converge` sem lacuna
-- [ ] T027 `make lint check test-pg`; PR — suíte verde em 12/11 (19155 passed, 24 skipped); PR pendente
+- [X] T027 `make lint check test-pg`; PR — suíte verde em 12/11 (19155 passed, 24 skipped); PR #507
