@@ -144,3 +144,44 @@ def test_o_edital_cancelado_nao_tem_passagem(cenario):
     """FR-6100."""
     cenario.edital.status = "CANCELADO"
     assert pa.da_passagem(cenario.edital) is None
+
+
+# --- As identidades do treinamento num Edital real (134, FR-6730) -----------------------------
+
+
+@pytest.fixture
+def pessoa_de_treino(db):
+    """A pessoa que os cenários da 134 criam, com o papel na unidade — no mesmo banco que o real."""
+    from django.contrib.auth import get_user_model
+
+    treino = get_user_model().objects.create(username="treino.formalizacao", first_name="Treino")
+    vincular(treino, "cefor", nomes.PAPEL)
+    return treino
+
+
+def test_no_edital_real_a_pessoa_de_treino_nao_conta_nem_designada(
+    cenario, gestor, com_papel, pessoa_de_treino
+):
+    """FR-6730: o vínculo de treino é da unidade, mas o Centro do Edital real não o enxerga."""
+    definir_documentos(cenario.edital, gestor)
+    designar_direto(cenario.edital, pessoa_de_treino.username)
+    passagem = pa.da_passagem(cenario.edital)
+    assert passagem.com_o_papel == 1, "só o Rui"
+    assert passagem.designadas == 0
+    assert passagem.causas == ((pa.SEM_QUEM_RECEBA, 5),)
+
+
+def test_no_edital_real_a_pessoa_de_treino_nao_e_oferecida_para_designar(
+    cenario, com_papel, pessoa_de_treino
+):
+    """FR-6730: nem na tela de acessos, com ou sem Edital escolhido, nem na da presidência."""
+    from processo_seletivo.formalizacao.application.designar import pessoas_com_o_papel
+    from processo_seletivo.seguranca.acessos import GERIR
+    from processo_seletivo.seguranca.domain import Actor
+
+    acessos = Actor("ana-acessos", "cefor", frozenset({GERIR}))
+    for alvo in (None, cenario.edital):
+        oferecidas = {v.pessoa.username for v in pessoas_com_o_papel(acessos, alvo=alvo)}
+        assert oferecidas == {com_papel.username}
+    oferecidas = {v.pessoa.username for v in pessoas_com_o_papel(acessos, edital=cenario.edital)}
+    assert oferecidas == {com_papel.username}

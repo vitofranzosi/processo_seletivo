@@ -24,6 +24,7 @@ from processo_seletivo.treinamento.construcao import (
     ETAPA_DOCUMENTAL,
     ETAPA_PROVA,
     ETAPA_TITULOS,
+    FORMALIZACAO,
     GESTAO,
     HOMOLOGACAO,
     PRESIDENCIA,
@@ -51,6 +52,8 @@ class Cenario:
     # corre: o período de inscrições aberto, a janela recursal. `None` é sem prazo.
     validade_dias: int | None = None
     exige_fonte_de_demonstracao: bool = False
+    # O C16 e o C17 provisionam a pessoa do setor e o vínculo dela (FR-6720 a FR-6729); só eles.
+    provisiona_formalizacao: bool = False
     restauracao: str = (
         "restaurar_cenario_de_treinamento cria uma rodada nova, no estado inicial e com datas "
         "contadas do dia da restauração; a rodada anterior é cancelada pelo comando de "
@@ -93,13 +96,15 @@ NOTAS_DA_CONVOCACAO = (
 )
 
 
-def _edital_de_notas(m, *, inscritos, reservada=(), encerrar=True, janela="declarada"):
+def _edital_de_notas(
+    m, *, inscritos, reservada=(), encerrar=True, janela="declarada", documentos=None
+):
     m.criar()
     m.elaborar(
         perfis=c.perfil_de_notas(janela=janela),
         inicio=m.agora - timedelta(days=10),
         duracao_dias=40,
-        documentos=c.documentos_de_notas(),
+        documentos=c.documentos_de_notas() if documentos is None else documentos,
     )
     m.publicar()
     inscricoes = m.inscrever(inscritos, reservada=reservada) if inscritos else []
@@ -170,8 +175,8 @@ def montar_c05(m):
         )
 
 
-def _ate_o_resultado(m, notas, *, natureza="PRELIMINAR", janela="declarada"):
-    inscricoes = _edital_de_notas(m, inscritos=len(notas), janela=janela)
+def _ate_o_resultado(m, notas, *, natureza="PRELIMINAR", janela="declarada", documentos=None):
+    inscricoes = _edital_de_notas(m, inscritos=len(notas), janela=janela, documentos=documentos)
     m.constituir_comissao(alocar_em=(ETAPA_PROVA, ETAPA_TITULOS, ETAPA_DOCUMENTAL))
     _avaliar_as_pontuadas(m, inscricoes, notas)
     ato = m.emitir_ordem()
@@ -196,8 +201,8 @@ def montar_c09(m):
     _ate_o_resultado(m, NOTAS_DA_CONVOCACAO, natureza="DEFINITIVA", janela="negada")
 
 
-def _ate_a_apuracao(m, notas, *, habilitadas=None):
-    inscricoes = _ate_o_resultado(m, notas)
+def _ate_a_apuracao(m, notas, *, habilitadas=None, documentos=None):
+    inscricoes = _ate_o_resultado(m, notas, documentos=documentos)
     habilitadas = inscricoes if habilitadas is None else habilitadas
     m.avaliar(
         ETAPA_DOCUMENTAL,
@@ -274,6 +279,29 @@ def montar_c15(m):
         },
     )
     m.cortar_e_apurar()
+
+
+def _aptas_para_formalizacao(m):
+    """Três convocados com aceite, e a definição com a identificação (FR-6720, FR-6728, D-010).
+
+    O Edital não pede documento na convocação: o aceite passa sem conferência, e a pessoa nasce
+    apta. A pessoa do setor nasce habilitada — o vínculo Formalização na unidade (FR-6722).
+    """
+    inscricoes = _ate_a_apuracao(m, NOTAS_DA_CONVOCACAO, documentos=c.documentos_da_formalizacao())
+    for ordem, convocacao in enumerate(_convocar_e_comunicar(m, inscricoes[:3]), 1):
+        m.desfechar(convocacao, ordem)
+    m.definir_formalizacao([c.DOC_IDENTIFICACAO])
+    return m.habilitar_formalizacao()
+
+
+def montar_c16(m):
+    """Exportar: a pessoa do setor habilitada **e** designada (FR-6723)."""
+    m.designar_formalizacao(_aptas_para_formalizacao(m))
+
+
+def montar_c17(m):
+    """Designar: a pessoa do setor só habilitada, sem designação (FR-6723)."""
+    _aptas_para_formalizacao(m)
 
 
 # Quem declara a cota PPP no cenário de sorteio: três dos dez, de modo que a relação da cota tenha
@@ -614,6 +642,54 @@ CENARIOS = (
         resultado_esperado="Duas convocações; vagas restantes apontadas como não preenchidas.",
         dependencias=(),
         montar=montar_c15,
+    ),
+    Cenario(
+        codigo="C16",
+        nome="Exportação à formalização",
+        objetivo="Verificar e exportar, como o setor, os documentos das pessoas aptas.",
+        tipo_de_selecao=_SELECAO,
+        metodo="Notas (prova + títulos); documento só na inscrição",
+        estado_inicial=(
+            "3 convocados com aceite, aptos para formalização; definição dos documentos gravada "
+            f"(a identificação); {FORMALIZACAO} com o papel Formalização e designada."
+        ),
+        precondicoes=(f"Entrar pela página de acesso com {FORMALIZACAO}, marcando Formalização.",),
+        papeis=(f"Formalização ({FORMALIZACAO})", f"Presidência ({PRESIDENCIA})"),
+        proxima_acao="Formalização: abrir o Edital, verificar e exportar o pacote.",
+        resultado_esperado=(
+            "Pacote baixado e registrado; o Centro conta as pessoas como disponibilizadas."
+        ),
+        dependencias=(),
+        montar=montar_c16,
+        provisiona_formalizacao=True,
+        limitacoes=(
+            "O pacote leva só a identificação: o aceite com documento da convocação exigiria "
+            "conferência conforme, que o gerador não fabrica (D-010).",
+        ),
+    ),
+    Cenario(
+        codigo="C17",
+        nome="Designação para a formalização",
+        objetivo="Designar a pessoa do setor que vai receber os documentos do Edital.",
+        tipo_de_selecao=_SELECAO,
+        metodo="Notas (prova + títulos); documento só na inscrição",
+        estado_inicial=(
+            "3 convocados com aceite, aptos para formalização; definição gravada; "
+            f"{FORMALIZACAO} com o papel Formalização e sem designação."
+        ),
+        precondicoes=(f"{FORMALIZACAO} tem o papel Formalização na unidade.",),
+        papeis=(
+            f"Presidência ({PRESIDENCIA}), ou quem administra os acessos da unidade",
+            f"Formalização ({FORMALIZACAO})",
+        ),
+        proxima_acao=(
+            f"Presidência (ou quem administra os acessos): designar {FORMALIZACAO}; "
+            "Formalização: ver o Edital e exportar."
+        ),
+        resultado_esperado="Designação vigente; o Centro deixa de dizer que ninguém recebe.",
+        dependencias=(),
+        montar=montar_c17,
+        provisiona_formalizacao=True,
     ),
 )
 

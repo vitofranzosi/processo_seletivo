@@ -62,6 +62,9 @@ def do_molde(posicao):
     return f"{_PREFIXO_DO_MOLDE}{posicao}"
 
 
+# O domínio de todo e-mail fictício: `.test` é reservado (RFC 2606) e não entrega a ninguém.
+DOMINIO = "treinamento.exemplo.test"
+
 # Quantas pessoas cabem numa rodada. O CPF tem quatro dígitos para a rodada e a ordem juntas, e
 # este é o passo entre uma rodada e a seguinte: com ele, os números só se repetem depois da
 # rodada 500 de um mesmo cenário.
@@ -128,6 +131,6 @@ def pessoa(unidade, codigo, rodada, ordem):
     return {
         "nome": f"{prenome} Treinamento {codigo}-{ordem:02d}",
         "cpf": cpf(codigo, rodada, ordem),
-        "email": f"{sufixo}@treinamento.exemplo.test",
+        "email": f"{sufixo}@{DOMINIO}",
         "subject": f"cand:treinamento-{sufixo}",
     }

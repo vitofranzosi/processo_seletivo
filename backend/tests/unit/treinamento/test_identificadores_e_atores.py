@@ -121,3 +121,25 @@ def test_os_atores_do_gerador_nao_sao_sugeridos_a_equipe_na_pagina_de_acesso():
     from processo_seletivo.interface import demonstracao
 
     assert all(subject.startswith(demonstracao._FORA_DA_EQUIPE) for subject in construcao.EQUIPE)
+
+
+def test_quem_concede_e_designa_tem_so_o_papel_de_administrar_os_acessos_da_unidade():
+    """FR-6724: a exceção à FR-4642 é o Administrador de acessos do catálogo, e nada além dele."""
+    from processo_seletivo.seguranca.acessos import ADMINISTRADOR_DE_ACESSOS, PAPEIS_DE_ACESSO
+
+    permissoes = set(construcao._PERMISSOES[construcao.ACESSOS])
+    assert permissoes == set(PAPEIS_DE_ACESSO[ADMINISTRADOR_DE_ACESSOS][1])
+
+
+def test_a_pessoa_do_setor_e_quem_a_designa_ficam_fora_das_sugestoes_e_do_formato_institucional():
+    """FR-6721, FR-6727: nem a busca da gestão de acessos nem a página de acesso as oferecem."""
+    from processo_seletivo.interface import demonstracao
+
+    for subject in (construcao.ACESSOS, construcao.FORMALIZACAO):
+        assert subject.startswith(demonstracao._FORA_DA_EQUIPE)
+        assert not subject.startswith("pessoa-")
+
+
+def test_so_os_cenarios_da_formalizacao_provisionam():
+    """FR-4615: a exceção é nomeada — o C16 e o C17, e nenhum outro."""
+    assert [c.codigo for c in CENARIOS if c.provisiona_formalizacao] == ["C16", "C17"]

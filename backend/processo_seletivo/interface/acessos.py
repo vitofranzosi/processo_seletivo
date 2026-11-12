@@ -630,7 +630,11 @@ def formalizacao(request):
             designar.designar(
                 ator,
                 edital_id=escolhido.id,
-                pessoa=acessos.pessoa_institucional(request.POST.get("pessoa", "")),
+                # Só entre as pessoas que esta tela ofereceu para o Edital escolhido (134,
+                # FR-6731): a pessoa de treino entra no Edital de treino, e só nele.
+                pessoa=designar.pessoa_da_lista(
+                    ator, request.POST.get("pessoa", ""), alvo=escolhido
+                ),
                 perfis=request.POST.getlist("perfil"),
                 motivo=request.POST.get("motivo", ""),
                 now=timezone.now(),
@@ -672,7 +676,7 @@ def formalizacao(request):
                     "nome": acessos.nome_legivel(v.pessoa),
                     "email": v.pessoa.email,
                 }
-                for v in designar.pessoas_com_o_papel(ator)
+                for v in designar.pessoas_com_o_papel(ator, alvo=escolhido)
             ],
             "vigentes": [
                 {

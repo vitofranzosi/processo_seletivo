@@ -119,8 +119,74 @@ Os casos do C06 e do C07 em `test_proxima_acao.py` e o sorteio pela tela de
 Suíte completa (`make check test-pg`, 4 workers): **17 474 passando, 20 pulados, sem falha, em
 774 s**.
 
+## Provisionamento da formalização (12/11)
+
+Revisão da FR-4615 por decisão do usuário (FR-6720 a FR-6729). No banco novo `ps_treino_nav`
+(`make preparar`, uma autoridade cadastrada pelo comando do Gestor, nenhum outro dado), a carga do
+C16 e do C17 com `--autoridade`:
+
+- a pré-visualização disse `pessoa treino.formalizacao: criar; papel Formalização em cefor:
+  conceder` nos dois, e a carga criou os dois em 1 pessoa e 1 vínculo;
+- **entrar como o setor:** página de acesso → *Opções avançadas de demonstração* → *Nome na
+  auditoria* `treino.formalizacao`, *Formalização* marcada. A lista do setor trouxe **só o
+  `SIM16/2026`**, com *Todos os Perfis*; o `SIM17` não aparece, porque nele a pessoa não está
+  designada;
+- **exportar:** *Verificar e exportar todos os aptos (3)* → *Pacote completo: 3 de 3 pessoas
+  incluídas · 3 documentos · 2 KB* → *Baixar pacote*: 200, e uma exportação registrada por
+  `treino.formalizacao`;
+- **o Centro como Gestor**, fase Conclusão: no `SIM16`, *Feito · Quem recebe: 1 pessoa designada* e
+  *Feito · Pessoas disponibilizadas: 3 de 3*, e nenhuma ocorrência de "ninguém designado" — o N-03
+  da reavaliação sumiu; no `SIM17`, *Em aberto · Quem recebe: ninguém designado (quem administra os
+  acessos da unidade)* e a providência *designar quem recebe os documentos*, sem o "antes, é preciso
+  conceder o papel" da FR-6113 da `153`, porque a pessoa já está habilitada.
+
+O exercício de **designar** não foi feito pela tela: o seletor não oferece o Administrador de
+acessos (ver *Limitações* na spec). A suíte o faz pelo comando, com `treino.acessos`, e confere que a
+presidência é recusada.
+
+`tests/integration/treinamento/test_formalizacao_nos_cenarios.py`: a exportação pela tela e o
+Centro no C16 (SC-2210), a lista do setor e o Centro no C17 (SC-2211), as contagens de pessoa e
+vínculo na carga, na segunda carga e na restauração (SC-2212), a pessoa inativa que não é reativada,
+e a restauração do C16 que revoga a designação anterior (FR-6726).
+
+Suíte completa (`make lint check test-pg`, 4 workers, sem o grupo `navegador`): **19 031
+passando, 23 pulados, sem falha, em 908 s**.
+
+**Depois da revisão do #500** (achados 1, 3 a 7; o 2 espera a revisão da `117`): a restauração
+revoga as designações de todos os Editais do Processo, também do encerrado e em qualquer cenário,
+e a pré-visualização as conta; a pessoa suspensa com vínculo é recusada com `pessoa_indisponivel`;
+a pré-visualização do C16 e do C17 juntos diz que o C17 recebe a pessoa e o papel do cenário
+anterior. Num segundo banco novo (`ps_treino_nav2`), o mesmo percurso no navegador deu o mesmo
+resultado. Suíte completa: **19 033 passando, 23 pulados, sem falha, em 1396 s** (com outras
+suítes no mesmo cluster).
+
+**Depois do merge da revisão da `117` (12/11):** no banco novo `ps_treino_nav3`, com o C17, a
+presidência (`treino.presidencia`, pelo grupo Comissões) chega pelo Centro a *Designar quem recebe
+os documentos*, e a lista oferece **só** *Formalização Treinamento*. Ao designar, a tela recusa:
+*"Esta pessoa não está disponível para receber acesso: está suspensa ou desativada, ou o
+identificador não é de pessoa institucional."* — a tela resolve a pessoa por
+`pessoa_institucional`, que exige o prefixo `pessoa-`. O comando aceita a designação (a suíte o
+prova); a tela, não. Conflito registrado nas limitações da spec, à espera de decisão.
+Suíte completa depois do merge da main (`make lint check test-pg`, 4 workers): **19 109 passando,
+23 pulados, sem falha, em 582 s**.
+
+**Depois da FR-6731 ("Escolher da lista", 12/11):** no mesmo `ps_treino_nav3`, a presidência
+(`treino.presidencia`) segue do Centro do `SIM17` para *Designar quem recebe os documentos*,
+escolhe *Formalização Treinamento* e designa: *"Designação gravada"*, *por treino.presidencia*.
+Como o setor, o `SIM17` aparece na lista, *Pacote completo: 3 de 3 pessoas incluídas*, e *Baixar
+pacote* responde 200; no banco, a designação é de `treino.presidencia` e a exportação de
+`treino.formalizacao`, com 1 pessoa designada e 3 disponibilizadas. Suíte completa (`make lint check test-pg`,
+4 workers): **19 113 passando, 23 pulados, sem falha, em 745 s**.
+
+**Observação, sem mudança:** o *O que fazer agora* do `SIM16` também mostra a classificação da lista
+PPP, em que ninguém concorreu, e o resultado definitivo à espera do prazo recursal. É o estado da
+cadeia de notas que o C10 a C12 já percorrem, e não é da formalização.
+
 ## Pendente
 
 - **SC-1456 (humana):** uma pessoa da comissão percorrer um cenário só com o guia.
 - **A carga na homologação compartilhada** é do administrador, depois do backup e do ensaio do
   [manual](../../doc/cenarios-de-treinamento/manual-de-operacao.md). Nada foi carregado lá.
+- **O exercício de designar pela demonstração** (C17) depende da revisão da `117` que dá a designação
+  à presidência, em curso em 12/11; até lá, é de quem tem o Administrador de acessos pela entrada
+  institucional.

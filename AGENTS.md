@@ -224,8 +224,11 @@ nada se exclui nesta base, e um "restaurar" que apagasse esbarraria nos gatilhos
 pagas: **o primeiro uso de uma autoridade congela o cadastro dela** (`usada_em`, FR-1121 da `060`), e
 por isso o gerador só usa sozinho autoridade já usada — o instantâneo linha a linha da suíte acusou a
 alteração; e a página de acesso da demonstração sugere para cada papel **quem mais o exerceu na
-trilha**, de modo que os atores `treino.*` precisam ficar fora das sugestões, como `cand:`. O roteiro
-está em `doc/cenarios-de-treinamento/`.
+trilha**, de modo que os atores `treino.*` precisam ficar fora das sugestões, como `cand:`. **A exceção
+ao "o gerador não concede papel" é uma só** (revisão de 12/11): o C16 e o C17 criam a pessoa
+`treino.formalizacao`, sem senha e sem identidade institucional, e lhe concedem o papel Formalização
+— quem concede, `treino.acessos`, só existe em memória. A equipe entra com ela pelo campo livre da
+página de acesso, marcando Formalização. O roteiro está em `doc/cenarios-de-treinamento/`.
 
 **O piloto do assistente (071) pede três coisas de fora do repositório, e sem elas não chama o
 modelo.** O grupo opcional de dependências (`uv sync --extra dev --extra assistente`), que traz a

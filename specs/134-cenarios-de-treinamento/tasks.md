@@ -48,6 +48,32 @@
 - [x] T020 C06 e C07 com a cota PPP: Perfil com o quadro 3 + 1, três cotistas, autodeclaração na
   convocação, duas relações congeladas no C07 (FR-4656, D-008).
 
+## Fase 8 — Provisionamento da formalização (revisão de 12/11/2026)
+
+- [x] T021 Revisar a FR-4615, a FR-4650 e a SC-1455, com a redação anterior; FR-6720 a FR-6729,
+  SC-2210 a SC-2212, D-009 e D-010.
+- [x] T022 Passos de `construcao.py`: `treino.acessos`, a identidade, o aceite, a definição, o
+  vínculo e a designação (FR-6721 a FR-6724, FR-6728).
+- [x] T023 C16 e C17 no catálogo; a pré-visualização da identidade e do vínculo (FR-6720, FR-6725).
+- [x] T024 A restauração revoga as designações da rodada anterior (FR-6726).
+- [x] T025 Testes: a exportação pela tela e o Centro no C16 (SC-2210); a lista do setor e o Centro no
+  C17 (SC-2211); pessoa e vínculos contados na carga, na segunda carga e na restauração (SC-2212);
+  a contagem dos dezessete (SC-1455).
+- [x] T026 Guia da equipe e manual de operação: as fichas do C16 e do C17, a entrada como
+  `treino.formalizacao`, e a dependência do exercício de designar.
+- [x] T027 Verificação no navegador num banco novo; registro na [verificação](verificacao.md).
+
+- [x] T028 Revisão do #500: a restauração revoga as designações de todos os Editais do Processo,
+  também do encerrado e em qualquer cenário, e a pré-visualização as conta (FR-6726); a pessoa
+  suspensa com vínculo é recusada, e a criação simultânea não vira `ERRO` (FR-6721); a
+  pré-visualização acumula o provisionamento do plano (FR-6725).
+- [x] T029 Depois do merge da revisão da `117` (presidência designa): o C17 pela presidência, e as
+  identidades `treino.*` só contadas e oferecidas nos Editais de treinamento (FR-6730, SC-2213).
+
+- [x] T030 As telas de designar escolhem da lista que ofereceram (FR-6731, SC-2214), pela saída
+  (a), escolhida pelo usuário em 12/11: a tela recusava `treino.formalizacao`, que não é pessoa
+  institucional.
+
 ## Pendente
 
 - [ ] T017 Carga na homologação compartilhada, pelo administrador, depois do ensaio.

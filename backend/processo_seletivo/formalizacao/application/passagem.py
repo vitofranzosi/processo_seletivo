@@ -74,7 +74,7 @@ class Passagem:
 
 def da_passagem(edital):
     """A `Passagem` do Edital, ou `None` fora de publicado ou encerrado, ou sem pessoa apta."""
-    from processo_seletivo.formalizacao.application import conjunto, definir
+    from processo_seletivo.formalizacao.application import conjunto, definir, treino
     from processo_seletivo.formalizacao.domain import nomes
     from processo_seletivo.formalizacao.domain.autorizacao import designacoes_vigentes
     from processo_seletivo.seguranca.application import acessos
@@ -87,10 +87,14 @@ def da_passagem(edital):
         return None
     exportacoes = conjunto.exportacoes_do_edital(edital)
     incluidas = {str(p["inscricao"]) for e in exportacoes for p in e.incluidas}
-    com_o_papel = set(
+    # As identidades do treinamento só contam no Edital de treinamento (134, FR-6730): o vínculo
+    # delas é da unidade, e num banco partilhado o Centro de todo Edital real contaria a pessoa
+    # fictícia como alguém que pode receber.
+    com_o_papel = treino.so_as_admitidas(
         acessos.vigentes()
         .filter(escopo=edital.institution_scope, papel=nomes.PAPEL, pessoa__is_active=True)
-        .values_list("pessoa__username", flat=True)
+        .values_list("pessoa__username", flat=True),
+        edital,
     )
     efetivas = [d for d in designacoes_vigentes(edital=edital) if d.pessoa in com_o_papel]
 

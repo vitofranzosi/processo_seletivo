@@ -27,6 +27,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.auditoria.application import record_event
+from processo_seletivo.formalizacao.application import treino
 from processo_seletivo.formalizacao.application.definir import perfis_do_edital
 from processo_seletivo.formalizacao.domain import nomes
 from processo_seletivo.formalizacao.domain.autorizacao import (
@@ -83,23 +84,63 @@ def tem_o_papel(pessoa, escopo):
     return nomes.PAPEL in acessos.papeis_vigentes(pessoa.pk, escopo)
 
 
-def pessoas_com_o_papel(actor, *, edital=None):
-    """Quem tem o papel Formalização vigente na unidade do ator, para a tela escolher (FR-6701).
+def _vinculos_oferecidos(actor, *, edital=None, alvo=None):
+    """Os vínculos vigentes do papel na unidade do ator que a tela oferece, com o próprio ator.
 
     Com `edital`, pergunta o predicado de designar nele — é o que a tela da presidência pede; sem,
     exige `acesso:gerir`, como a tela de acessos, que não tem Edital escolhido de início.
+
+    `alvo` é o Edital para o qual se escolhe — por padrão, o próprio `edital`. Ele só decide a
+    oferta, e não a autorização: as identidades `treino.` saem quando o alvo não é Edital de
+    treinamento, ou quando não há alvo (134, FR-6730).
     """
     if edital is None:
         require_permission(actor, GERIR)
     else:
         exigir_quem_designa(actor, edital)
-    return (
+    vinculos = (
         acessos.vigentes()
         .filter(escopo=actor.institution_scope, papel=nomes.PAPEL, pessoa__is_active=True)
-        .exclude(pessoa__username=actor.subject)
         .select_related("pessoa")
         .order_by("pessoa__first_name", "pessoa__username")
     )
+    if not treino.admite_identidades_de_treino(alvo or edital):
+        vinculos = vinculos.exclude(pessoa__username__startswith=treino.PREFIXO)
+    return vinculos
+
+
+def pessoas_com_o_papel(actor, *, edital=None, alvo=None):
+    """Quem tem o papel Formalização vigente na unidade do ator, para a tela escolher (FR-6701).
+
+    O próprio ator não é oferecido: a autodesignação é recusada de qualquer modo.
+    """
+    return _vinculos_oferecidos(actor, edital=edital, alvo=alvo).exclude(
+        pessoa__username=actor.subject
+    )
+
+
+def pessoa_da_lista(actor, identificador, *, edital=None, alvo=None):
+    """A pessoa postada pela tela de designar, resolvida **só entre as que a tela ofereceu**.
+
+    134, FR-6731 (escolha do usuário de 12/11/2026, "Escolher da lista"). Antes, as duas telas a
+    resolviam entre as pessoas institucionais (`acessos.pessoa_institucional`), e a pessoa de treino
+    — que não é institucional de propósito — era recusada depois de oferecida. A lista é a mesma de
+    `pessoas_com_o_papel`, com a FR-6730, e mais o próprio ator, para que a autodesignação continue
+    recusada pelo comando com o código dela.
+
+    **Fora da lista, a resposta é a de antes**, e ninguém de fora é designado: a pessoa
+    institucional ativa sem o papel segue para o comando, que a recusa com o código da FR-3663
+    (a FR-6701 da `117`); qualquer outro identificador — inexistente, inativo, de treino fora do
+    treinamento, adulterado — recebe a recusa única de pessoa indisponível, que não serve de sonda.
+    """
+    vinculo = (
+        _vinculos_oferecidos(actor, edital=edital, alvo=alvo)
+        .filter(pessoa__username=identificador or "")
+        .first()
+    )
+    if vinculo is not None:
+        return vinculo.pessoa
+    return acessos.pessoa_institucional(identificador)
 
 
 #: Os estados em que um Edital recebe designação: publicado, e encerrado, que não fecha a página
