@@ -5,6 +5,8 @@ e o download serve exatamente o verificado. Cada uma das cinco mudanças da FR-3
 passos é verificação defasada, sem servir nada e sem registro (SC-1113).
 """
 
+import re
+
 import pytest
 from django.urls import reverse
 from django.utils import timezone
@@ -87,6 +89,13 @@ def test_completo_mostra_o_resultado_e_o_zip_tem_o_verificado(pronto, client):
     registro = ExportacaoDeFormalizacao.objects.get()
     assert registro.resultado == nomes.COMPLETO
     assert registro.alcance == nomes.RECORTE
+    # **Cada tamanho diz de que é** (problema novo N-06 da reavaliação de 12/11/2026): a
+    # verificação soma os documentos, e o histórico mede o ZIP com o manifesto.
+    assert re.search(r"20 documentos, \d+ (KB|MB) somados", corpo)
+    historico = client.get(
+        reverse("interface:formalizacao-edital", args=[pronto.edital.id])
+    ).content.decode()
+    assert re.search(r"20 arquivos · pacote de \d+ (KB|MB), com o manifesto", historico)
 
 
 def test_o_sha256_de_cada_arquivo_e_do_pacote_confere(pronto, client):

@@ -201,9 +201,41 @@ for _natureza in (a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR):
 #: depois, como "no GPS: …" (FR-4729).
 JARGAO = frozenset({a.RELACAO, a.SEMENTE, a.ORDEM, a.CORTE, a.APURACAO})
 
+#: **Os atos da vaga sem quem a ocupe já têm nome próprio** (155, FR-6321, UX-602), e não são a
+#: apuração: a derivação os põe na natureza dela só para que caiam na fase das vagas. Trocá-los
+#: pelo nome simples da apuração fazia o Centro anunciar "Distribuir as vagas entre as listas", com
+#: a frase de quem apura, para quem ia declarar a vaga não preenchida — e, para quem elabora, a
+#: mesma frase no lugar da Retificação (problema novo N-01 da reavaliação de 12/11/2026). Os nomes
+#: são os da derivação (`andamento.py`), que não pode importar este módulo.
+CONCEITOS_DE_ATO = {
+    "Declarar a vaga não preenchida": {
+        "simples": "Declarar a vaga não preenchida",
+        "termo": "declarar a vaga não preenchida",
+        "curta": "Registra, com fundamento, que a vaga reservada fica sem ocupante: ninguém mais "
+        "pode ocupá-la, e o Edital não declara para onde ela vai.",
+        "porque": "Sem a declaração, a vaga continua contando como a ocupar, e a fase das vagas "
+        "não se fecha.",
+        "ao_confirmar": "Passa pela conferência antes de ser registrada. Desfazer é ato "
+        "contrário, com motivo.",
+    },
+    "Retificar o Edital para declarar a reversão": {
+        "simples": "Retificar o Edital para declarar a reversão",
+        "termo": "retificar o Edital",
+        "curta": "Abre a Retificação que publica para onde vai a vaga reservada que ficar sem "
+        "ocupante.",
+        "porque": "Sem a reversão publicada no Edital, a vaga não passa à ampla concorrência.",
+        "ao_confirmar": "A Retificação segue o fluxo de aprovação e publicação do Edital.",
+    },
+}
+
 
 def conceito(chave):
     return CONCEITOS.get(chave)
+
+
+def conceito_da_providencia(natureza, ato):
+    """O conceito do ato, quando ele tem nome próprio; senão, o da natureza."""
+    return CONCEITOS_DE_ATO.get(ato) or conceito(natureza)
 
 
 def ato_simples(natureza, ato):
@@ -213,6 +245,8 @@ def ato_simples(natureza, ato):
     função só, lida pela providência, pela tabela da fase e pela linha de cada lista — com três
     cópias, uma natureza nova entrava no jargão de uma e não das outras.
     """
+    if ato in CONCEITOS_DE_ATO:
+        return ato
     if natureza in JARGAO:
         return CONCEITOS[natureza]["simples"]
     return ato

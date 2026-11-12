@@ -322,6 +322,15 @@ def test_o_historico_do_recorte_e_alcancavel_e_lista_as_apuracoes(
     # A proveniência de cada uma: versão lida, linha do quadro, ordem e corte.
     assert "Versão do conteúdo lida" in pagina
     assert "Linha do quadro" in pagina
+    # **Pela data, e o UUID só no `title`** (problema novo N-05 da reavaliação de 12/11/2026).
+    from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+
+    apuracao = ApuracaoDeOcupacao.objects.filter(edital=edital).latest("emitida_em")
+    assert "a que vigorava desde" in pagina
+    assert "emitida em" in pagina
+    for identificador in (apuracao.versao_id, apuracao.ato_id):
+        assert f'title="{identificador}"' in pagina
+        assert f">{identificador}<" not in pagina
 
 
 def test_o_historico_de_recorte_sem_apuracao_diz_que_nada_foi_afirmado(
