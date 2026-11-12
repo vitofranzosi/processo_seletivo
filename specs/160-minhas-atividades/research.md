@@ -147,11 +147,17 @@ segunda classificação divergiria.
 
 **Decisão.** Ficam em `publicacoes/application/selectors.py`:
 - um contexto `versao_vigente_da_requisicao()`, com `contextvars`;
-- dentro dele, `effective_version(edital_id=…, at=…)` memoriza o resultado por `edital_id`, **só
-  quando `at` é `None` ou o instante com que o contexto foi aberto**.
+- dentro dele, `effective_version(edital_id=…, at=…)` memoriza o resultado por `edital_id`, e a
+  memória vale **para todo instante entre a abertura do contexto e a próxima vigência daquele
+  Edital**, que se sabe numa consulta a mais. A falta de versão também se guarda.
 
-Uma chamada com outro `at`, que é a leitura de um ato histórico pela norma que ele citou, passa direto
-ao banco. As views de leitura, "Minhas atividades" e o Centro, abrem o contexto em volta da montagem.
+*Revisto na revisão de código do #511.* A primeira versão memorizava só para `at` igual ao instante
+de abertura, e por isso `do_edital` passava a ler com esse instante congelado: uma janela que
+fechasse durante a requisição podia ser lida aberta pela derivação e fechada por uma checagem ao
+lado, com `now()` próprio. Agora cada leitura usa o seu `now()`, como antes.
+
+Uma chamada com instante anterior à abertura, que é a leitura de um ato histórico pela norma que ele
+citou, passa direto ao banco. As views de leitura, "Minhas atividades" e o Centro, abrem o contexto em volta da montagem.
 Nenhum comando o abre.
 
 **Por quê.**

@@ -238,3 +238,10 @@ def test_valor_invalido_ou_de_edital_alheio_mostra_tudo():
         assert filtrada is atividades
         assert escolhido == ""
         assert len(opcoes) == 2
+
+
+def test_o_edital_mais_antigo_vem_primeiro_em_ordem_natural():
+    """Revisão do #511: em ordem de texto, o 10/2026 vinha antes do 9/2026."""
+    nove, dez, sim5, sim12 = edital("9"), edital("10"), edital("SIM05"), edital("SIM12")
+    linhas = [linha(prov(f"Ato {e.number}"), e) for e in (sim12, dez, sim5, nove)]
+    assert [li.edital.number for li in at.ordenar(linhas)] == ["9", "10", "SIM05", "SIM12"]

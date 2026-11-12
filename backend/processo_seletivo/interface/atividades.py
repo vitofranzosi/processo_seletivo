@@ -19,6 +19,7 @@ unidade inteira como "sua", ou tiraria do Gestor que preside o que é dele.
 
 import re
 from dataclasses import dataclass, field
+from functools import cached_property
 
 from django.urls import reverse
 
@@ -76,6 +77,23 @@ COBERTURA_DO_GESTOR = (
 NADA_PARA_FAZER = "Nada depende de você agora no que esta página cobre."
 
 _COM_NUMERO = re.compile(r"\d")
+_PARTES_DO_NUMERO = re.compile(r"(\d+)")
+
+
+def ordem_do_edital(edital):
+    """O Edital mais antigo primeiro: ano, e o número em ordem natural (revisão do #511).
+
+    O número é texto: em ordem de texto, o 10/2026 vinha antes do 9/2026. Cada parte numérica vale
+    pelo número; as de texto ("SIM"), pelo texto.
+    """
+    partes = tuple(
+        (0, int(parte), "") if parte.isdigit() else (1, 0, parte)
+        for parte in _PARTES_DO_NUMERO.split(str(edital.number))
+        if parte
+    )
+    return (edital.year, partes, str(edital.id))
+
+
 #: As linhas de avaliação entram depois das providências do mesmo Edital (R-007).
 _INDICE_DA_AVALIACAO = 10_000
 
@@ -92,7 +110,7 @@ class Linha:
 
     @property
     def chave_do_edital(self):
-        return (self.edital.year, self.edital.number, str(self.edital.id))
+        return ordem_do_edital(self.edital)
 
 
 @dataclass
@@ -133,14 +151,16 @@ class Grupo:
     def fase(self):
         return self.primeira.fase
 
-    @property
+    # As três são lidas várias vezes por linha no modelo, e as linhas não mudam depois de agrupadas
+    # (revisão do #511): calcula-se uma vez.
+    @cached_property
     def editais(self):
         vistos = {}
         for linha in self.linhas:
             vistos.setdefault(linha.edital.id, linha.edital)
         return list(vistos.values())
 
-    @property
+    @cached_property
     def quantos_editais(self):
         return len(self.editais)
 
@@ -148,7 +168,7 @@ class Grupo:
     def unico(self):
         return len(self.linhas) == 1
 
-    @property
+    @cached_property
     def lugar(self):
         """O lugar comum a todas as linhas, ou vazio quando cada Edital tem o seu."""
         lugares = {linha.providencia.onde_por_extenso for linha in self.linhas}
@@ -231,9 +251,7 @@ def filtrar(atividades, edital_id):
             atos[chave] = atos.get(chave, 0) + 1
     opcoes = [
         Opcao(edital, atos.get(chave, 0))
-        for chave, edital in sorted(
-            editais.items(), key=lambda par: (par[1].year, par[1].number, par[0])
-        )
+        for chave, edital in sorted(editais.items(), key=lambda par: ordem_do_edital(par[1]))
     ]
     escolhido = str(edital_id or "")
     if escolhido not in editais:
@@ -446,8 +464,19 @@ def ler(ator, *, vinculos, atribuicoes, carga, agora=None):
     lidos = [(edital, PRESIDENCIA, None) for edital in presididos] + [
         (edital, ALOCACAO, perfis) for edital, perfis in conferencia.values()
     ]
-    for edital, base, perfis in sorted(lidos, key=lambda t: (t[0].year, t[0].number, str(t[0].id))):
-        andamento = a.do_edital(edital, ator, agora=agora)
+    # A `104` uma vez para todos os Editais lidos, e não uma por Edital (revisão do #511): cada
+    # `do_edital` relia as alocações e a carga da pessoa.
+    from processo_seletivo.interface import trabalho as da_104
+
+    trabalho = (
+        da_104.do_ator(
+            ator, [edital for edital, _, _ in lidos], em_curso={e.id: [] for e, _, _ in lidos}
+        )
+        if lidos
+        else []
+    )
+    for edital, base, perfis in sorted(lidos, key=lambda t: ordem_do_edital(t[0])):
+        andamento = a.do_edital(edital, ator, agora=agora, trabalho=trabalho)
         if andamento is None:
             # O filtro de estado já deixou só Editais com andamento: `None` aqui é a leitura que
             # falhou, e uma lista pessoal que a calasse diria um falso "nada a fazer" (FR-6874).

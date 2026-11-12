@@ -443,3 +443,53 @@ def test_as_comissoes_ficam_recolhidas_e_abrem_quando_sao_o_unico_conteudo(clien
     atividades, sem_nada = abrir(client)
     assert atividades.vazia
     assert '<details class="comissoes-da-pessoa" open>' in sem_nada
+
+
+# --- a revisão do código (#511) ------------------------------------------------------------------
+
+
+def test_a_104_e_lida_uma_vez_e_nao_por_edital(client, base, monkeypatch):
+    from processo_seletivo.interface import trabalho
+
+    certame_p1(*base)
+    chamadas = []
+    original = trabalho.do_ator
+
+    def espiao(ator, editais, **kwargs):
+        chamadas.append(len(list(editais)))
+        return original(ator, editais, **kwargs)
+
+    monkeypatch.setattr(trabalho, "do_ator", espiao)
+    identificar(client, "maria", [])
+    abrir(client)
+    assert len(chamadas) == 1, chamadas
+
+
+def test_a_espera_da_convocacao_nao_tem_base_e_o_prazo_e_do_candidato(
+    client, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos, settings
+):
+    """A revisão visual de 12/11 achou "Resposta de N convocações" com a marca "Presidência"."""
+    from tests.fixtures import documentos_da_convocacao as cenarios
+
+    settings.INTERFACE_SELETOR_IDENTIDADE = True
+    cenario = cenarios.montar(
+        gestor,
+        api_client,
+        manager_headers,
+        process_payload,
+        documentos=cenarios.documentos_do_aluno(),
+        prefixo="160-espera-da-convocacao",
+    )
+    edital = cenario[0]
+    _, convocacao = cenarios.convocar_primeira(cenario, gestor, chave="160-espera-convocar")
+    cenarios.comunicar(edital, gestor, convocacao, chave="160-espera-comunicar")
+    identificar(client, "maria", [])
+    atividades, html = abrir(client)
+
+    resposta = [g for g in atividades.em_espera if g.ato.startswith("Resposta de")]
+    assert resposta, [g.ato for g in atividades.em_espera]
+    assert resposta[0].base == at.SEM_BASE
+    assert "o prazo do candidato" in resposta[0].providencia.razao
+    espera = html.split('<details class="em-espera-da-pagina">', 1)[1].split("</details>", 1)[0]
+    assert "base-da-atividade" not in espera
+    assert "o prazo do candidato" in espera
