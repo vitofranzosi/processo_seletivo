@@ -170,6 +170,14 @@ prova); a tela, não. Conflito registrado nas limitações da spec, à espera de
 Suíte completa depois do merge da main (`make lint check test-pg`, 4 workers): **19 109 passando,
 23 pulados, sem falha, em 582 s**.
 
+**Depois da FR-6731 ("Escolher da lista", 12/11):** no mesmo `ps_treino_nav3`, a presidência
+(`treino.presidencia`) segue do Centro do `SIM17` para *Designar quem recebe os documentos*,
+escolhe *Formalização Treinamento* e designa: *"Designação gravada"*, *por treino.presidencia*.
+Como o setor, o `SIM17` aparece na lista, *Pacote completo: 3 de 3 pessoas incluídas*, e *Baixar
+pacote* responde 200; no banco, a designação é de `treino.presidencia` e a exportação de
+`treino.formalizacao`, com 1 pessoa designada e 3 disponibilizadas. Suíte completa (`make lint check test-pg`,
+4 workers): **19 113 passando, 23 pulados, sem falha, em 745 s**.
+
 **Observação, sem mudança:** o *O que fazer agora* do `SIM16` também mostra a classificação da lista
 PPP, em que ninguém concorreu, e o resultado definitivo à espera do prazo recursal. É o estado da
 cadeia de notas que o C10 a C12 já percorrem, e não é da formalização.
