@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seu trabalho no GPS</title>
+<style>
+:root{
+  --fundo:#f6f7f9;--papel:#fff;--tinta:#1d2430;--suave:#5b6474;--linha:#d9dde4;
+  --acento:#1b5fa8;--acento-fundo:#e8f0fa;--alerta:#8a4b00;--alerta-fundo:#fff3e0;
+  --ok:#2f6b3a;--espera:#6b5aa8;--espera-fundo:#f0edfa;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --fundo:#14171c;--papel:#1d2128;--tinta:#e6e9ee;--suave:#a3abb8;--linha:#343a44;
+  --acento:#7db3ef;--acento-fundo:#1f2d3e;--alerta:#f0b46a;--alerta-fundo:#3a2c18;
+  --ok:#8fcf99;--espera:#b9adf0;--espera-fundo:#2a2640;}}
+:root[data-theme="dark"]{
+  --fundo:#14171c;--papel:#1d2128;--tinta:#e6e9ee;--suave:#a3abb8;--linha:#343a44;
+  --acento:#7db3ef;--acento-fundo:#1f2d3e;--alerta:#f0b46a;--alerta-fundo:#3a2c18;
+  --ok:#8fcf99;--espera:#b9adf0;--espera-fundo:#2a2640;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--tinta);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header.estudo{padding:20px 16px 8px;max-width:1080px;margin:0 auto}
+header.estudo h1{font-size:20px;margin:0 0 4px}
+header.estudo p{margin:0;color:var(--suave);max-width:72ch}
+nav.abas{display:flex;flex-wrap:wrap;gap:6px;max-width:1080px;margin:12px auto 0;padding:0 16px}
+nav.abas button{font:inherit;border:1px solid var(--linha);background:var(--papel);color:var(--tinta);padding:6px 12px;border-radius:999px;cursor:pointer}
+nav.abas button[aria-selected="true"]{background:var(--acento);border-color:var(--acento);color:var(--papel)}
+main{max-width:1080px;margin:0 auto;padding:12px 16px 40px}
+section.tela{display:none}
+section.tela.ativa{display:block}
+.moldura{display:grid;grid-template-columns:190px 1fr;border:1px solid var(--linha);border-radius:10px;overflow:hidden;background:var(--papel)}
+.barra{background:var(--fundo);border-right:1px solid var(--linha);padding:12px;font-size:13px}
+.barra b{display:block;color:var(--suave);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px}
+.barra a{display:block;padding:4px 6px;border-radius:6px;color:var(--tinta);text-decoration:none}
+.barra a.atual{background:var(--acento-fundo);color:var(--acento);font-weight:600}
+.conteudo{padding:16px 20px;min-width:0}
+.conteudo h2{font-size:18px;margin:0 0 2px}
+.sub{color:var(--suave);font-size:13px;margin:0 0 12px}
+.cartao{border:1px solid var(--linha);border-radius:8px;padding:12px 14px;margin:0 0 12px}
+.cartao h3{font-size:15px;margin:0 0 6px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.cartao h3 small{color:var(--suave);font-weight:400;font-size:13px}
+.grupo{margin:10px 0 0}
+.grupo>.rotulo{font-size:12px;color:var(--suave);margin:0 0 4px}
+ul.itens{list-style:none;margin:0;padding:0}
+ul.itens li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--linha)}
+ul.itens li:first-child{border-top:0}
+.sinal{width:1.2em;text-align:center}
+.sinal.sua{color:var(--acento)}
+.sinal.espera{color:var(--espera)}
+.sinal.atencao{color:var(--alerta)}
+.ato{font-weight:600}
+.onde{display:block;color:var(--suave);font-size:13px;font-weight:400}
+.acao{font-size:13px;color:var(--acento);white-space:nowrap;text-decoration:underline}
+.marca{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--acento-fundo);color:var(--acento);font-weight:600}
+.marca.espera{background:var(--espera-fundo);color:var(--espera)}
+.marca.atencao{background:var(--alerta-fundo);color:var(--alerta)}
+details{margin-top:8px}
+summary{cursor:pointer;color:var(--suave);font-size:13px}
+.nota{font-size:12px;color:var(--suave);margin:8px 0 0}
+.anotacao{border-left:3px solid var(--alerta);background:var(--alerta-fundo);padding:8px 12px;border-radius:0 6px 6px 0;font-size:13px;margin:14px 0 0}
+.anotacao b{color:var(--alerta)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-top:1px solid var(--linha);vertical-align:top}
+th{font-size:12px;color:var(--suave);font-weight:600;border-top:0}
+.tabela-rola{overflow-x:auto}
+.inventario{color:var(--suave);font-size:13px;border:1px dashed var(--linha);border-radius:8px;padding:10px 14px}
+.comparacao{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.comparacao .cartao{margin:0}
+.comparacao .rec{border-color:var(--acento);box-shadow:0 0 0 1px var(--acento) inset}
+.comparacao ul{margin:6px 0 0;padding-left:18px;font-size:13px}
+@media (max-width:760px){
+  .moldura{grid-template-columns:1fr}
+  .barra{display:none}
+  .comparacao{grid-template-columns:1fr}
+  .conteudo{padding:14px 12px}
+}
+</style>
+</head>
+<body>
+<header class="estudo">
+  <h1>Seu trabalho no GPS — wireframes conceituais</h1>
+  <p>Estudo de 12/11/2026. Os textos e números das três primeiras telas saem da derivação real (<code>andamento.do_edital</code>) rodada sobre os cenários de treinamento C01–C15. Nada aqui é tela de produção.</p>
+</header>
+<nav class="abas" role="tablist">
+  <button role="tab" aria-selected="true" data-alvo="t1">1 · Presidência: Minhas atividades</button>
+  <button role="tab" aria-selected="false" data-alvo="t2">2 · Avaliador</button>
+  <button role="tab" aria-selected="false" data-alvo="t3">3 · Presidência: quem faz o quê</button>
+  <button role="tab" aria-selected="false" data-alvo="t4">4 · Onde mora a visão</button>
+</nav>
+<main>
+
+<!-- 1 -->
+<section class="tela ativa" id="t1" role="tabpanel">
+  <div class="moldura">
+    <aside class="barra">
+      <b>Trabalho</b>
+      <a href="#">Processos Seletivos</a>
+      <a class="atual" href="#">Minhas atividades</a>
+      <a href="#">Visão Geral</a>
+      <a href="#">Agenda</a>
+    </aside>
+    <div class="conteudo">
+      <h2>Minhas atividades</h2>
+      <p class="sub">O que é seu nos Editais das comissões que você integra · treino.presidencia</p>
+
+      <div class="cartao">
+        <h3>Para fazer agora <small>20 atos em 11 Editais</small></h3>
+
+        <div class="grupo">
+          <ul class="itens">
+            <li><span class="sinal sua">●</span><span><span class="ato">Conferir os documentos de 3 convocações</span><span class="onde">Edital SIM12/2026 · Professor de Informática · Ampla concorrência</span></span><a class="acao" href="#">Conferir</a></li>
+            <li><span class="sinal sua">●</span><span><span class="ato">Conferir os documentos de 1 convocação</span><span class="onde">Edital SIM11/2026 · Professor de Informática · Ampla concorrência</span></span><a class="acao" href="#">Conferir</a></li>
+            <li><span class="sinal sua">●</span><span><span class="ato">Convocar 3 titulares</span><span class="onde">Edital SIM10/2026 · Professor de Informática · Ampla concorrência</span></span><a class="acao" href="#">Convocar</a></li>
+            <li><span class="sinal sua">●</span><span><span class="ato">Observar a extração</span><span class="onde">Edital SIM07/2026 · Técnico em Informática (EaD) · sorteio</span></span><a class="acao" href="#">Abrir o sorteio</a></li>
+            <li><span class="sinal sua">●</span><span><span class="ato">Congelar a relação</span><span class="onde">Edital SIM06/2026 · Técnico em Informática (EaD) · sorteio</span></span><a class="acao" href="#">Abrir o sorteio</a></li>
+          </ul>
+          <details>
+            <summary>Mais 7 linhas</summary>
+            <ul class="itens">
+              <li><span class="sinal sua">●</span><span><span class="ato">Convocar 2 titulares</span><span class="onde">Edital SIM15/2026 · Professor de Informática · Ampla concorrência</span></span><a class="acao" href="#">Convocar</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Distribuir inscrições sem avaliador suficiente</span><span class="onde">Editais SIM05, SIM06 e SIM07 · Análise de títulos</span></span><a class="acao" href="#">Distribuir</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Emitir a ordem que declara que ninguém concorreu</span><span class="onde">7 Editais · lista PPP · agrupado entre Editais (V-3)</span></span><a class="acao" href="#">Ver os 7</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Consolidar 3 inscrições prontas</span><span class="onde">Edital SIM05/2026 · Prova objetiva</span></span><a class="acao" href="#">Consolidar</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Emitir a ordem</span><span class="onde">Edital SIM04/2026 · Professor de Informática</span></span><a class="acao" href="#">Ordenar</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Emitir o corte</span><span class="onde">Edital SIM09/2026 · Professor de Informática</span></span><a class="acao" href="#">Cortar</a></li>
+              <li><span class="sinal sua">●</span><span><span class="ato">Emitir o corte</span><span class="onde">Edital SIM14/2026 · Professor de Informática</span></span><a class="acao" href="#">Cortar</a></li>
+            </ul>
+          </details>
+        </div>
+
+        <div class="grupo">
+          <p class="rotulo">Em espera nos seus Editais — ninguém precisa agir até a data</p>
+          <ul class="itens">
+            <li><span class="sinal espera">◷</span><span><span class="ato">Resposta de 3 convocações</span><span class="onde">Edital SIM11/2026 e SIM12/2026 · o prazo do candidato corre até 12/12 16:53</span></span><a class="acao" href="#">Ver Edital</a></li>
+            <li><span class="sinal espera">◷</span><span><span class="ato">Publicar o resultado definitivo</span><span class="onde">5 Editais · o prazo de recurso corre até 17/11 23:59</span></span><a class="acao" href="#">Ver</a></li>
+          </ul>
+        </div>
+
+        <p class="nota">Com outras pessoas, nos seus Editais: no SIM05, "Avaliar 5 inscrições" está com treino.avaliacao1. <a href="#">Ver no Edital</a></p>
+      </div>
+
+      <div class="inventario">Comissões que você integra (11) — como hoje: Presidente · Abrir o Processo e os Editais · Gerir comissão · Alocação por Etapa</div>
+
+      <div class="anotacao"><b>Rodada 2: a página é "Minhas Etapas" renomeada.</b> O endereço continua <code>/gestao/minhas-etapas</code>, porque as rotas da Mesa pendem dele. Esta já é a página em que a presidência entra na demonstração (<code>test_jornada_da_presidente.py</code>). Na Lista, a faixa continua com os itens baratos de hoje e passa a apontar para cá, sem número. <b>O que muda em relação a hoje.</b> A faixa "Ações disponíveis para você" mostra <b>zero</b> itens para esta pessoa (medido): convocação, conferência, sorteio, ordem e corte estão em <code>FORA_DA_FAIXA</code>. Os 20 atos acima já aparecem com a marca SUA, mas só um Edital por vez, dentro de cada Centro de Controle. A tela os junta em 12 linhas: as 7 ordens de lista vazia viram uma linha, e as 3 distribuições outra (achado V-3).</div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="tela" id="t2" role="tabpanel">
+  <div class="moldura">
+    <aside class="barra">
+      <b>Trabalho</b>
+      <a href="#">Processos Seletivos</a>
+      <a class="atual" href="#">Minhas atividades</a>
+      <a href="#">Agenda</a>
+    </aside>
+    <div class="conteudo">
+      <h2>Minhas atividades</h2>
+      <p class="sub">treino.avaliacao1 · membro de 11 comissões · alocado em 27 Etapas</p>
+      <div class="cartao">
+        <h3>Para fazer agora <small>1</small></h3>
+        <ul class="itens">
+          <li><span class="sinal sua">●</span><span><span class="ato">Avaliar 5 inscrições</span><span class="onde">Edital SIM05/2026 · Prova objetiva</span></span><a class="acao" href="#">Abrir a mesa</a></li>
+        </ul>
+        <p class="nota">Nas outras 10 comissões, nada depende de você agora.</p>
+      </div>
+      <div class="inventario">Suas Etapas de avaliação (27): os cartões de hoje, com a barra de quanto falta e o botão Abrir. Ficam abaixo, recolhidos depois da primeira tela.</div>
+      <div class="anotacao"><b>Custo (rodada 2).</b> Para quem não preside, nada nesta página passa pela derivação da 127. A única providência que pode ser dele é avaliar, que sai de <code>carga_nas_etapas</code>, a conta que a página já faz. Conferir também, mas só quando houver alocação à conferência. Rodar a derivação nos 11 Editais custou a ele 1696 consultas para achar um item.</div>
+      <div class="anotacao"><b>O que não aparece, de propósito.</b> A derivação mostra a esta pessoa 22 providências "de outro papel" nos mesmos Editais (convocar, cortar, conferir…). Na visão pessoal elas não entram: entram no Centro de cada Edital, onde já estão. Esta tela já existe quase igual hoje: a avaliação é a única família que a faixa da 104 decide por pessoa.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="tela" id="t3" role="tabpanel">
+  <div class="moldura">
+    <aside class="barra">
+      <b>Trabalho</b>
+      <a class="atual" href="#">Processos Seletivos</a>
+      <a href="#">Minhas Etapas</a>
+    </aside>
+    <div class="conteudo">
+      <h2>Edital SIM05/2026 — Centro de Controle</h2>
+      <p class="sub">… onde estamos, O que fazer agora e as fases continuam como hoje. O bloco novo fica recolhido, abaixo das providências.</p>
+      <div class="cartao">
+        <h3>Quem faz o quê neste Edital <small>só a presidência e quem consulta veem</small></h3>
+        <div class="tabela-rola">
+        <table>
+          <thead><tr><th>Trabalho</th><th>Quem pode fazer</th><th>Agora</th></tr></thead>
+          <tbody>
+            <tr><td>Avaliar a Prova objetiva</td><td>treino.avaliacao1 (alocado)<br>treino.avaliacao2 (alocado)</td><td>5 pendentes com avaliacao1<br>0 com avaliacao2</td></tr>
+            <tr><td>Distribuir a Análise de títulos</td><td>A presidência</td><td><span class="marca atencao">8 sem avaliador suficiente</span></td></tr>
+            <tr><td>Consolidar a Prova objetiva</td><td>A presidência</td><td><span class="marca">3 prontas</span></td></tr>
+            <tr><td>Conferir documentos da convocação</td><td>A presidência <span class="marca atencao">ninguém alocado</span><br><a class="acao" href="#">Alocar membros à conferência</a></td><td>Depois</td></tr>
+            <tr><td>Publicar resultado</td><td>Quem tem o papel Publicador na unidade</td><td>Depois</td></tr>
+            <tr><td>Julgar recursos</td><td>Quem tem o papel Julgador de recursos, menos os impedidos (elegibilidade)</td><td>Depois</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="nota">Cada linha lê quem <b>já</b> tem a base para o ato: presidência, alocação à Etapa, alocação à conferência, papel na unidade. Nada aqui concede permissão.</p>
+      </div>
+      <div class="anotacao"><b>A pergunta do pedido.</b> "João fica com o sorteio": hoje só a presidência sorteia, ordena, corta e convoca (<code>pode_gerir_comissao</code>). Designar João sem dar a ele a base para o ato colocaria na tela dele uma atividade que ele não consegue executar. Ver a decisão D-3 do estudo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="tela" id="t4" role="tabpanel">
+  <p class="sub">Três lugares possíveis para a visão pessoal. Todos leem a mesma derivação. O que muda é a entrada e o custo.</p>
+  <div class="comparacao">
+    <div class="cartao">
+      <h3>N1 · A faixa da Lista cresce <span class="marca espera">rodada 1</span></h3>
+      <p class="nota">"Ações disponíveis para você" passa a se chamar "Seu trabalho" e recebe as providências SUAS dos Editais das comissões da pessoa.</p>
+      <ul>
+        <li>Respeita a D-001 da 104: nenhuma página nova, e a entrada continua a mesma.</li>
+        <li>É a Frente B que a 129 deixou com dono.</li>
+        <li>O custo é de ~77 consultas por Edital. Carregada depois da página, a faixa não atrasa a Lista.</li>
+      </ul>
+    </div>
+    <div class="cartao rec">
+      <h3>N2 · Minhas Etapas vira "Minhas atividades" <span class="marca">recomendada na rodada 2</span></h3>
+      <p class="nota">A página que já é pessoal e já lista as comissões da pessoa ganha as providências dela.</p>
+      <ul>
+        <li>O escopo, as comissões da pessoa, sai em 2 consultas. Só quem abre a página paga a derivação. Na Lista, todos pagariam.</li>
+        <li>Já é a entrada da presidência na demonstração. O login institucional ainda cai na Lista: a nota da faixa aponta para cá.</li>
+        <li>O endereço fica, e só o nome muda. A troca de nome, que a D-007 da 104 adiou, é o que se valida.</li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>N3 · Página "Início" nova</h3>
+      <p class="nota">Um painel de entrada com trabalho, agenda e avisos.</p>
+      <ul>
+        <li>Recusada pela D-001 da 104, porque duplicaria a Visão Geral e a Agenda.</li>
+        <li>Muda a entrada de todos os papéis.</li>
+        <li>Tende a virar painel. O pedido recusa isso.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+</main>
+<script>
+document.querySelectorAll('nav.abas button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('nav.abas button').forEach(function(x){x.setAttribute('aria-selected','false')});
+    document.querySelectorAll('section.tela').forEach(function(s){s.classList.remove('ativa')});
+    b.setAttribute('aria-selected','true');
+    document.getElementById(b.dataset.alvo).classList.add('ativa');
+  });
+});
+</script>
+</body>
+</html>

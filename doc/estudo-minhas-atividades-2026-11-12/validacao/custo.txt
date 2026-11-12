@@ -1,0 +1,32 @@
+105 objects imported automatically (use -v 2 for details).
+
+
+treino.presidencia: recorte barato = 2 consultas, 11 Editais
+  1079 consultas em 1.11s; por Edital: min 38, max 189; itens seus: 20
+      175  resultados_resultadoetapa
+      159  publicacoes_versaoconsolidada
+      115  publicacoes_provenienciaconteudo
+       97  classificacao_corte
+       95  inscricoes_inscricao
+       95  classificacao_atodeordenacao
+       34  recursos_decisaorecurso
+       31  divulgacao_publicacaoresultado
+       30  ocupacao_apuracaodeocupacao
+       29  avaliacoes_avaliacao
+       29  avaliacoes_atribuicao
+       28  classificacao_posicaonaordem
+
+treino.avaliacao1: recorte barato = 2 consultas, 11 Editais
+  1696 consultas em 1.82s; por Edital: min 93, max 247; itens seus: 1
+      373  resultados_resultadoetapa
+      357  publicacoes_versaoconsolidada
+      313  publicacoes_provenienciaconteudo
+       97  classificacao_corte
+       95  inscricoes_inscricao
+       95  classificacao_atodeordenacao
+       40  avaliacoes_atribuicao
+       34  recursos_decisaorecurso
+       31  divulgacao_publicacaoresultado
+       30  ocupacao_apuracaodeocupacao
+       29  avaliacoes_avaliacao
+       28  classificacao_posicaonaordem
