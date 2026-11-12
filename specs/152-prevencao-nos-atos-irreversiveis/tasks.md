@@ -96,7 +96,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 **Independent Test**: quickstart §2, passos 1 e 2.
 
-- [ ] T016 [US3] Em `backend/processo_seletivo/convocacao/application/fluxo.py`, extrair `verificar_chamada(...)` das recusas de `backend/processo_seletivo/convocacao/application/convocar.py`, na ordem de hoje (R-004):
+- [x] T016 [US3] Em `backend/processo_seletivo/convocacao/application/fluxo.py`, extrair `verificar_chamada(...)` das recusas de `backend/processo_seletivo/convocacao/application/convocar.py`, na ordem de hoje (R-004):
   - marco, espécie, ordem vigente, apuração, convocação vigente;
   - ordem ou regularização com precedência;
   - déficit;
@@ -104,7 +104,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - vencimento passado.
 
   Ela devolve espécie, posição, anteriores (`fila.precedencia`) e o vencimento com a origem. `convocar` a chama sob a trava. A correção (`120`) fica no ramo dela. Rodar a suíte da convocação: nenhuma frase muda.
-- [ ] T017 [US3] Em `fluxo.py`, criar `conferencia_da_chamada(...)`, fora da trava e depois de `ensure_processo_accepts_changes`. Ela compõe:
+- [x] T017 [US3] Em `fluxo.py`, criar `conferencia_da_chamada(...)`, fora da trava e depois de `ensure_processo_accepts_changes`. Ela compõe:
   - o fundamento com o complemento;
   - a mensagem, por `comunicar.previa_das_mensagens` com uma inscrição, ou a frase da publicação;
   - o prazo, por `_prazo_da_conferencia`;
@@ -112,7 +112,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - na regularização, o Resultado indeferido, lido como `desfechar._suceder_o_resultado`.
 
   Devolve `{"recusa"}` quando o comando recusaria. Também `gesto_ja_concluido(*, actor, chave, operation=GESTO_TITULARES)` (FR-5811 a FR-5815, FR-5817).
-- [ ] T018 [US3] Em `convocar_view` (`backend/processo_seletivo/interface/views.py`), fora do ramo `corrige`, trocar `conferencia_do_texto.exigir` pelas cinco etapas de `convocar_titulares_view` (FR-5810, FR-5816, FR-5818 a FR-5821, FR-5823):
+- [x] T018 [US3] Em `convocar_view` (`backend/processo_seletivo/interface/views.py`), fora do ramo `corrige`, trocar `conferencia_do_texto.exigir` pelas cinco etapas de `convocar_titulares_view` (FR-5810, FR-5816, FR-5818 a FR-5821, FR-5823):
   1. autorização;
   2. `etapa=confirmar` com a chave de `convocacao:convocar` concluída vai ao comando;
   3. composição;
@@ -120,7 +120,7 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   5. resumo igual vai ao comando.
 
   O resumo cobre pessoa, espécie, fundamento, mensagem e prazo.
-- [ ] T019 [US3] Em `backend/processo_seletivo/interface/templates/interface/convocacao_conferir.html`, o modo de uma pessoa (R-008):
+- [x] T019 [US3] Em `backend/processo_seletivo/interface/templates/interface/convocacao_conferir.html`, o modo de uma pessoa (R-008):
   - "Será convocada";
   - "Passa à frente de";
   - o Resultado da regularização;
@@ -128,15 +128,15 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - o botão nomeando a pessoa ("Convocar Davi e enviar 1 mensagem") (UX-530, FR-5845).
 
   Regras novas em `backend/processo_seletivo/interface/static/interface/telas/convocacao-conferir.css`.
-- [ ] T020 [US3] Em `convocacao.html`, os botões da chamada individual e da regularização dizem "Conferir antes de convocar", e as ajudas do complemento dizem que nada é praticado nem enviado antes da conferência (FR-5822).
-- [ ] T021 [US3] Testes em `backend/tests/interface/test_conferencia_da_chamada.py`. Cobre SC-1902, SC-1903, SC-1907 e SC-1909.
+- [x] T020 [US3] Em `convocacao.html`, os botões da chamada individual e da regularização dizem "Conferir antes de convocar", e as ajudas do complemento dizem que nada é praticado nem enviado antes da conferência (FR-5822).
+- [x] T021 [US3] Testes em `backend/tests/interface/test_conferencia_da_chamada.py`. Cobre SC-1902, SC-1903, SC-1907 e SC-1909.
   - **Sem efeito**: a prévia não cria convocação, mensagem, trilha, chave reservada nem sessão.
   - **Confirmação**: ela pratica; um duplo POST produz uma convocação e uma mensagem; texto mudado volta à conferência.
   - **Recusas**: pessoa já convocada; precedência sem marca, recusada antes do botão.
   - **Regularização**: a chamada para regularizar passa pela mesma conferência.
   - **Publicação e autorização**: o canal de publicação, e quem não emite continua recusado.
   - **Mensagem**: a mostrada é igual à enviada, exceto o link.
-- [ ] T022 [US3] Ajustar os helpers que postam a chamada individual: `backend/tests/interface/test_convocacao_em_fluxo.py`, `backend/tests/interface/test_conferencia_do_texto.py` (os casos da `125` sobre a chamada individual passam a falar da conferência nova) e os demais que o `grep "interface:convocar\""` achar em `backend/tests/`.
+- [x] T022 [US3] Ajustar os helpers que postam a chamada individual: `backend/tests/interface/test_convocacao_em_fluxo.py`, `backend/tests/interface/test_conferencia_do_texto.py` (os casos da `125` sobre a chamada individual passam a falar da conferência nova) e os demais que o `grep "interface:convocar\""` achar em `backend/tests/`.
 
 ## Phase 6: User Story 4 — conferir antes de emitir o corte (P2)
 
@@ -144,15 +144,15 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 **Independent Test**: quickstart §2, passos 3 e 4.
 
-- [ ] T023 [P] [US4] Em `backend/processo_seletivo/classificacao/application/emissao_do_corte.py`, criar `previa_da_continuacao(...)` com as recusas de `continuar_corte` fora da trava, devolvendo a proposta e a assinatura. `continuar_corte` passa a chamá-la e aceita `confirmacao_do_calculo=None`: quando vem, é conferida por `assinatura_da_proposta(proposta, geracao=vigente)` e recusa `calculo_divergente` (R-007, FR-5829, FR-5831). `causar_faixa_seguinte` não muda.
-- [ ] T024 [US4] Em `emitir_corte_view` e `continuar_corte_view` (`backend/processo_seletivo/interface/views.py`), seguir o desenho de `emitir_ordenacao`: sem `confirmar=1`, responder `corte_confirmar.html` com:
+- [x] T023 [P] [US4] Em `backend/processo_seletivo/classificacao/application/emissao_do_corte.py`, criar `previa_da_continuacao(...)` com as recusas de `continuar_corte` fora da trava, devolvendo a proposta e a assinatura. `continuar_corte` passa a chamá-la e aceita `confirmacao_do_calculo=None`: quando vem, é conferida por `assinatura_da_proposta(proposta, geracao=vigente)` e recusa `calculo_divergente` (R-007, FR-5829, FR-5831). `causar_faixa_seguinte` não muda.
+- [x] T024 [US4] Em `emitir_corte_view` e `continuar_corte_view` (`backend/processo_seletivo/interface/views.py`), seguir o desenho de `emitir_ordenacao`: sem `confirmar=1`, responder `corte_confirmar.html` com:
   - a proposta e a assinatura recomposta;
   - `calculo_mudou`;
   - os avisos de espera e de reingresso (`_espera_do_corte`, `_reingressos_no_corte`);
   - o motivo.
 
   A recusa da prévia vai para a página só com a razão. Com `confirmar=1`, o comando de hoje (FR-5825 a FR-5833).
-- [ ] T025 [US4] Criar `backend/processo_seletivo/interface/templates/interface/corte_confirmar.html`, a partir de `ordenacao_confirmar.html` e do quadro da faixa de `corte.html`:
+- [x] T025 [US4] Criar `backend/processo_seletivo/interface/templates/interface/corte_confirmar.html`, a partir de `ordenacao_confirmar.html` e do quadro da faixa de `corte.html`:
   - o título "Confira antes de emitir o corte";
   - os números da faixa;
   - quem progride e quem fica fora, com causa;
@@ -162,14 +162,14 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
   - "Cancelar e voltar" (FR-5826 a FR-5829, UX-531).
 
   Regras em `backend/processo_seletivo/interface/static/interface/telas/corte.css`.
-- [ ] T026 [US4] Em `backend/processo_seletivo/interface/templates/interface/corte.html`, os botões "Conferir antes de emitir" e "Conferir a faixa seguinte". A faixa seguinte leva `confirmacao_do_calculo` só a partir da conferência.
-- [ ] T027 [US4] Testes em `backend/tests/interface/test_conferencia_do_corte.py`. Cobre SC-1903 (corte e faixa) e SC-1904.
+- [x] T026 [US4] Em `backend/processo_seletivo/interface/templates/interface/corte.html`, os botões "Conferir antes de emitir" e "Conferir a faixa seguinte". A faixa seguinte leva `confirmacao_do_calculo` só a partir da conferência.
+- [x] T027 [US4] Testes em `backend/tests/interface/test_conferencia_do_corte.py`. Cobre SC-1903 (corte e faixa) e SC-1904.
   - **Sem efeito**: a prévia não grava ato, trilha, chave nem sessão.
   - **Confirmação**: a emissão é praticada, e o duplo POST produz um ato só.
   - **Divergência**: o cálculo mudou entre a prévia e a confirmação.
   - **Sucessão e faixa seguinte**: a sucessão com motivo; a faixa seguinte com quantidade válida e com quantidade além do resto.
   - **Avisos e autorização**: os avisos se repetem, e a autorização é a de hoje.
-- [ ] T028 [US4] Ajustar os helpers e casos que postam `emitir-corte` e `continuar-corte`: `backend/tests/integration/classificacao/test_faixa_seguinte.py`, `backend/tests/integration/classificacao/test_emissao_do_corte.py`, `backend/tests/interface/test_publicacao_de_convocados.py` e os que o `grep "emitir-corte\|continuar-corte"` achar.
+- [x] T028 [US4] Ajustar os helpers e casos que postam `emitir-corte` e `continuar-corte`: `backend/tests/integration/classificacao/test_faixa_seguinte.py`, `backend/tests/integration/classificacao/test_emissao_do_corte.py`, `backend/tests/interface/test_publicacao_de_convocados.py` e os que o `grep "emitir-corte\|continuar-corte"` achar.
 
 ## Phase 7: User Story 5 — o desfecho oferece o que cabe (P2)
 

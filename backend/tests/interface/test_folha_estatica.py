@@ -345,8 +345,6 @@ QUEM_CARREGA = {
             "convocacao-conferir",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",
-            # O corte e a progressão numa coluna só (polish da 014).
-            "corte",
             "duvidas",
             "inscricao-detalhe",
             # O kit de divulgação (111).
@@ -365,6 +363,9 @@ QUEM_CARREGA = {
     # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
     # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
     "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},
+    # O corte e a progressão numa coluna só (polish da 014); a conferência do corte (152) é a mesma
+    # coluna, com a mesma faixa em números.
+    "interface/telas/corte.css": {"corte.html", "corte_confirmar.html"},
     # As publicações das inscrições (148): a escolha do ato e a conferência dos nomes.
     "interface/telas/publicacoes-das-inscricoes.css": {"publicacoes_das_inscricoes.html"},
 }

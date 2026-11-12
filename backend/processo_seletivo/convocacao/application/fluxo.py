@@ -37,11 +37,14 @@ from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.convocacao.application import selectors
 from processo_seletivo.convocacao.application.comunicar import comunicar, previa_das_mensagens
 from processo_seletivo.convocacao.application.convocar import (
+    _ESPECIE_POR_EXTENSO,
     _edital_do_processo,
     convocar,
     convocar_em_sequencia,
     declarado_da_convocacao,
+    verificar_chamada,
 )
+from processo_seletivo.convocacao.application.convocar import ATO as ATO_DA_CHAMADA
 from processo_seletivo.convocacao.application.desfechar import (
     apuracao_seguinte,
     auditar_desfecho,
@@ -50,6 +53,7 @@ from processo_seletivo.convocacao.application.desfechar import (
 )
 from processo_seletivo.convocacao.domain import (
     alcance,
+    fila,
     fundamento,
     nomes,
     prazo,
@@ -59,6 +63,7 @@ from processo_seletivo.convocacao.domain import especie as especie_da_posicao
 from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 from processo_seletivo.convocacao.models import Convocacao
 from processo_seletivo.editais.domain.recortes import rotulo_do_recorte
+from processo_seletivo.ocupacao.domain.apuracao import chave_da_inscricao
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
@@ -70,6 +75,8 @@ from processo_seletivo.publicacoes.models import VersaoConsolidada
 from processo_seletivo.shared.api.problems import DomainError
 
 GESTO_TITULARES = "convocacao:convocar_titulares"
+#: A chamada individual e a para regularizar: a operação do próprio comando (152, FR-5818).
+GESTO_CHAMADA = ATO_DA_CHAMADA
 GESTO_VENCIDOS = "convocacao:nao_atendimento_dos_vencidos"
 
 #: A frase que a trilha e a tela usam quando o vencimento foi digitado no ato.
@@ -457,8 +464,11 @@ def _fora_do_gesto(previa, leitura):
     return fora
 
 
-def gesto_ja_concluido(*, actor, chave):
-    """Se esta pessoa já concluiu o gesto dos titulares com esta chave (140, D-005, FR-4812).
+def gesto_ja_concluido(*, actor, chave, operation=GESTO_TITULARES):
+    """Se esta pessoa já concluiu o gesto com esta chave (140, D-005, FR-4812; 152, FR-5818).
+
+    `operation` é a do comando: a do lote dos titulares, ou `GESTO_CHAMADA` para a chamada
+    individual e a chamada para regularizar.
 
     **Só leitura.** A confirmação repetida — o duplo clique, a recarga — encontra o recorte já
     convocado, e recompor a conferência a recusaria como "alcance mudou" sobre um ato que aconteceu.
@@ -473,10 +483,143 @@ def gesto_ja_concluido(*, actor, chave):
     return IdempotencyRecord.objects.filter(
         institution_scope=actor.institution_scope,
         actor_subject=actor.subject,
-        operation=GESTO_TITULARES,
+        operation=operation,
         key=chave,
         response_status__isnull=False,
     ).exists()
+
+
+# --- A conferência da chamada individual (152, US3) ---------------------------------------------
+
+#: De onde vem a espécie, dito a quem confere (FR-5811).
+_ORIGEM_DA_ESPECIE = {
+    nomes.VAGA_INICIAL: "a pessoa está entre as vagas da apuração vigente",
+    nomes.SUPLENCIA: "a pessoa está na fila depois das vagas da apuração: a vaga é a que vagou",
+    nomes.PARA_REGULARIZAR: "a faixa alcançou a pessoa, e o Resultado dela está indeferido",
+}
+
+
+def conferencia_da_chamada(
+    *,
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    inscricao_id,
+    especie="",
+    vencimento=None,
+    evento_id="",
+    complemento="",
+    justifica_precedencia=False,
+    agora=None,
+):
+    """O que a chamada individual praticaria agora, **sem praticar nada** (152, FR-5810 a FR-5817).
+
+    O desenho é o de `conferencia_dos_titulares`, com uma pessoa (D-004): nada aqui grava, nem a
+    reserva da chave — por isso não abre o `comando_de_comissao` —, e a recusa vem antes do
+    conteúdo, pela mesma verificação do comando (`verificar_chamada`), sem a trava. A ordem das
+    recusas é a de `convocar_e_comunicar`: o vencimento primeiro, e depois as do comando.
+
+    Devolve `{"recusa": {codigo, detalhe}}` quando o comando recusaria.
+    """
+    agora = agora or timezone.now()
+    perfil, marco = identificador(perfil_id), identificador(marco_id)
+    lista = identificador(lista_id) if lista_id else None
+    inscricao = identificador(inscricao_id)
+    try:
+        ensure_processo_accepts_changes(edital.processo)
+        versao = effective_version(edital_id=edital.id, at=agora)
+        instante, origem = resolver_vencimento(
+            versao=versao, vencimento=vencimento, evento_id=evento_id
+        )
+        _recusar_vencimento_passado(instante, agora)
+        verificada = verificar_chamada(
+            edital=edital,
+            perfil=perfil,
+            marco=marco,
+            lista=lista,
+            inscricao=inscricao,
+            especie=especie,
+            agora=agora,
+            justifica_precedencia=justifica_precedencia,
+        )
+    except DomainError as recusa:
+        return {"recusa": {"codigo": recusa.code, "detalhe": recusa.detail}}
+    especie = verificada.especie
+    contexto = verificada.contexto
+    forma = forma_vigente(verificada.versao, perfil)
+    canal = vocabulario_do_canal.canal(forma)
+    texto_do_edital, texto_do_recorte = rotulos(
+        edital, verificada.versao, perfil_id=perfil, lista_id=lista
+    )
+    regularizar = especie == nomes.PARA_REGULARIZAR
+    ordem = contexto["regularizaveis"] if regularizar else contexto["fila"]
+    anteriores = fila.precedencia(ordem, inscricao)
+    # Pela chave da inscrição: a fila e o formulário não grafam o identificador do mesmo jeito.
+    identificadas = {
+        chave_da_inscricao(chave): identidade
+        for chave, identidade in selectors.identidades_de({inscricao, *anteriores}).items()
+    }
+    pessoa = identificadas[chave_da_inscricao(inscricao)]
+    mensagens = []
+    if forma == FORMA_POR_MENSAGEM_INDIVIDUAL:
+        mensagens = [
+            {**grupo, "pessoas": [f"{pessoa['protocolo']} — {pessoa['nome']}"]}
+            for grupo in previa_das_mensagens(
+                edital=edital,
+                versao=verificada.versao,
+                inscricoes=[inscricao],
+                vencimento=instante,
+                agora=agora,
+            )
+        ]
+    return {
+        "recusa": None,
+        "pessoa": {**pessoa, "posicao": len(anteriores) + 1},
+        "especie": especie,
+        "especie_por_extenso": _ESPECIE_POR_EXTENSO[especie],
+        "origem_da_especie": _ORIGEM_DA_ESPECIE[especie],
+        # Quem ela passa à frente (FR-5812): só chega aqui com a marca, porque sem ela a
+        # verificação recusou.
+        "passa_a_frente_de": [identificadas[chave_da_inscricao(i)] for i in anteriores],
+        "resultado": _resultado_a_regularizar(edital, contexto, inscricao) if regularizar else None,
+        "forma": forma,
+        "publicacao": canal.publicacao,
+        "canal": canal,
+        "fundamento": fundamento.com_complemento(
+            fundamento.da_convocacao(
+                especie=especie,
+                edital=texto_do_edital,
+                recorte=texto_do_recorte,
+                data_da_apuracao=_data(verificada.apuracao.emitida_em),
+            ),
+            complemento,
+        ),
+        "mensagens": mensagens,
+        "prazo": _prazo_da_conferencia(instante, origem, canal, agora),
+        "versao": verificada.versao,
+    }
+
+
+def _resultado_a_regularizar(edital, contexto, inscricao):
+    """O Resultado indeferido que a regularização sucederá (FR-5811), pela leitura do desfecho.
+
+    É a mesma escolha de `desfechar._suceder_o_resultado`: o vigente da Etapa governada pelo corte.
+    Sem ele, `None` — e a regularização é recusada no desfecho, como hoje.
+    """
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    etapa = getattr(contexto["corte"], "etapa_governada_id", None)
+    if etapa is None:
+        return None
+    indeferido = (
+        ResultadoEtapa.vigentes.filter(inscricao_id=inscricao, edital=edital, etapa_id=etapa)
+        .order_by("-consolidado_em")
+        .first()
+    )
+    if indeferido is None or indeferido.consequencia != ResultadoEtapa.Consequencia.ELIMINADA:
+        return None
+    return {"motivo": indeferido.motivo, "em": indeferido.consolidado_em}
 
 
 def convocar_titulares(

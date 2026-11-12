@@ -1,0 +1,95 @@
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
+{% block titulo %}Conferir — {% if continuacao %}Faixa seguinte{% else %}Emitir o corte{% endif %}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/corte.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ destino }}">Corte</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A conferência antes de emitir o corte, a sucessão e a faixa seguinte (152, FR-5825 a FR-5833,
+UX-531).
+
+**Esta página não grava nada** (FR-5830): é a resposta do próprio pedido, e recarregá-la pede a
+faixa de novo. O desenho é o da conferência da ordem — o que o clique constitui, num lugar só, e
+"Cancelar e voltar" ao lado do botão. Até a 152 o corte era gravado no primeiro clique.
+
+**A assinatura é a da faixa desta página**, recomposta no pedido; a chave de idempotência é a que a
+tela do corte emitiu, intacta (FR-5831). O comando confere a assinatura sob a trava, e a faixa que
+mudou entre esta página e o clique é recusada sem emitir.
+{% endcomment %}
+<h1>Confira antes de emitir o corte</h1>
+<div class="tela-do-corte">
+{% if recorte_atual %}<p class="sub">Recorte: <strong>{{ recorte_atual.rotulo }}</strong></p>{% endif %}
+
+{% if recusa %}
+<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não é possível emitir agora:</strong> {{ recusa }}</p>
+<p><a href="{{ destino }}" class="acao">Voltar ao corte</a></p>
+{% else %}
+<p class="sub">{% if continuacao %}Faixa seguinte da geração vigente.{% elif geracao %}Sucessão da geração vigente.{% else %}Primeiro corte deste recorte.{% endif %} Nada foi gravado até aqui: a emissão acontece quando você confirmar, no fim desta página.</p>
+
+{% if calculo_mudou %}
+<p class="aviso" role="status"><strong>O cálculo mudou desde que você abriu o corte.</strong> O que está declarado abaixo é a faixa de agora — confira antes de emitir.</p>
+{% endif %}
+
+<section aria-labelledby="titulo-faixa" class="consequencias irreversivel">
+  {% if continuacao %}
+  <h2 id="titulo-faixa">A faixa seguinte alcança {{ progridem|length }} {{ progridem|length|plural:"pessoa,pessoas" }}</h2>
+  <p>Pedida: {{ quantidade }}. Ela começa depois da última posição já alcançada e <strong>não revoga a faixa anterior</strong> — as duas ficam na mesma geração.</p>
+  {% else %}
+  <h2 id="titulo-faixa">A faixa que será emitida</h2>
+  <ul class="resumo" aria-label="A faixa que será emitida, em números">
+    <li><strong>{% if proposta.regra.targetKind == "FROM_VACANCY_TABLE" %}<span class="valor-em-texto">O que o quadro de vagas publicar no recorte</span>{% else %}{{ proposta.regra.targetCount }}{% endif %}</strong>Alvo declarado</li>
+    <li><strong>{{ proposta.alvo }}</strong>Alvo apurado</li>
+    <li><strong>{{ proposta.excedente }}</strong>Suplentes</li>
+    <li><strong>{{ proposta.progrediram }}</strong>Progridem</li>
+    <li><strong>{{ proposta.fora }}</strong>Ficam fora</li>
+    <li><strong>{% if proposta.ultima_posicao %}{{ proposta.ultima_posicao }}º{% else %}<span class="nenhuma">Nenhuma</span>{% endif %}</strong>Última posição alcançada</li>
+  </ul>
+  {% endif %}
+  <h3>{% if continuacao %}Alcançadas pela faixa seguinte{% else %}Progridem{% endif %} ({{ progridem|length }})</h3>
+  {% if progridem %}
+  <ol class="consequencias">{% for item in progridem %}<li>{{ item.posicao }}º — {{ item.inscricao.protocolo|default:item.inscricao_id }}{% if item.inscricao.nome %} — {{ item.inscricao.nome }}{% endif %}{% if item.excedente_por_empate %} · excedente por empate{% endif %}</li>{% endfor %}</ol>
+  {% else %}
+  <p>Ninguém.</p>
+  {% endif %}
+  {% if not continuacao %}
+  <h3>Ficam fora ({{ ficam_fora|length }})</h3>
+  {% if ficam_fora %}
+  <ul class="consequencias">{% for item in ficam_fora %}<li>{% if item.posicao %}{{ item.posicao }}º{% else %}Sem posição{% endif %} — {{ item.inscricao.protocolo|default:item.inscricao_id }}{% if item.inscricao.nome %} — {{ item.inscricao.nome }}{% endif %}: {{ item.motivo }}</li>{% endfor %}</ul>
+  {% else %}
+  <p>Ninguém fica fora.</p>
+  {% endif %}
+  {% endif %}
+</section>
+
+{% include "interface/_advertencias_do_corte.html" %}
+
+<section aria-labelledby="titulo-depois" class="consequencias">
+  <h2 id="titulo-depois">O que acontece depois</h2>
+  <p>Quem progride segue para a Etapa seguinte que o marco declara. Quem fica fora continua registrado no ato, com a posição e a causa. O ato é imutável: corrigi-lo é suceder a geração, com motivo.{% if geracao and not continuacao %} A geração vigente continua legível, ao lado da sucessora.{% endif %}</p>
+</section>
+
+<form method="post" action="{% if continuacao %}{% url 'interface:continuar-corte' edital.id marco_id %}{% else %}{% url 'interface:emitir-corte' edital.id marco_id %}{% endif %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="confirmacao_do_calculo" value="{{ confirmacao_do_calculo }}">
+  {% if lista_id %}<input type="hidden" name="lista" value="{{ lista_id }}">{% endif %}
+  {% if continuacao %}
+  <input type="hidden" name="quantidade" value="{{ quantidade }}">
+  <input type="hidden" name="motivo" value="{{ motivo }}">
+  <p><strong>Motivo:</strong> {{ motivo }}</p>
+  {% elif geracao %}
+  {% comment %}
+  **Campo, e não valor escondido**, pela razão da conferência da ordem: quem acabou de ler a faixa é
+  quem tem o que dizer sobre por que esta geração sucede a anterior, e o comando recusa sem motivo.
+  {% endcomment %}
+  <p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required aria-describedby="ajuda-motivo">{{ motivo }}</textarea><span class="ajuda" id="ajuda-motivo">A geração vigente permanece íntegra e legível; este motivo explica por que outra a sucede — e a sucessão alcança todas as faixas dela.</span></p>
+  {% endif %}
+  <p><strong>Emitir é irreversível.</strong> O ato é imutável e define quem prossegue para a Etapa seguinte.</p>
+  <p class="acoes">
+    <button type="submit" class="botao perigoso">{% if continuacao %}Emitir a faixa seguinte{% else %}Emitir o corte{% endif %}</button>
+    <a href="{{ destino }}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% endif %}
+</div>
+{% endblock %}

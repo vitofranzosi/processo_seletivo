@@ -1,5 +1,5 @@
 {% extends "interface/base.html" %}{% load interface_extras estaticos %}
-{% block titulo %}Conferir — Convocar os titulares{% endblock %}
+{% block titulo %}Conferir — {% if chamada %}Convocar uma pessoa{% else %}Convocar os titulares{% endif %}{% endblock %}
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/aviso.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-conferir.css' %}">{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{{ destino }}">Convocação</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
 {% block conteudo %}
@@ -20,18 +20,47 @@ fora, o prazo e o que cada pessoa lê, e o que acontece no clique — esta frase
 não no alto, a dois mil pixels dele. A mensagem inteira continua na página, recolhida: aberta, ela
 ocupava metade da conferência — e abre sozinha quando o texto mudou desde a prévia, que é quando
 reler é o passo. O texto que sai não muda; muda só o quanto dele fica à vista.
+
+**A chamada de uma pessoa usa esta mesma página** (152, R-008, UX-530): a da fila e a para
+regularizar. Mudam o grupo ("Será convocada", com a espécie e de onde ela vem), "Passa à frente de"
+no lugar de "Fica de fora", o Resultado que a regularização sucede, e o endereço do formulário. A
+chave e os campos da tela da convocação viajam intactos; a pessoa e o vencimento não se editam aqui.
 {% endcomment %}
 <h1>Confira antes de convocar</h1>
 <div class="tela-da-conferencia">
 
 {% if conferencia.recusa %}
-<p class="sub">Convocar os titulares — {{ rotulo_do_recorte }}, {{ rotulo_do_edital }}</p>
+<p class="sub">{% if chamada %}Convocar uma pessoa{% else %}Convocar os titulares{% endif %} — {{ rotulo_do_recorte }}, {{ rotulo_do_edital }}</p>
 <p class="erro" role="alert" tabindex="-1" autofocus><strong>Não é possível convocar agora:</strong> {{ conferencia.recusa.detalhe }}</p>
 <p><a href="{{ destino }}" class="acao">Voltar à convocação</a></p>
 {% else %}
-<p class="sub">Convocar os titulares. Nada foi gravado nem enviado até aqui: a operação acontece quando você confirmar, no fim desta página.</p>
+<p class="sub">{% if chamada %}Convocar uma pessoa{% else %}Convocar os titulares{% endif %}. Nada foi gravado nem enviado até aqui: a operação acontece quando você confirmar, no fim desta página.</p>
 {% if erro %}<p class="aviso" role="alert" tabindex="-1" autofocus>{{ erro }}</p>{% endif %}
 
+{% if chamada %}
+<section aria-labelledby="convocadas-titulo" class="consequencias irreversivel">
+  <h2 id="convocadas-titulo">Será convocada, {{ conferencia.especie_por_extenso }}</h2>
+  <dl class="fatos-da-operacao">
+    <div><dt>Edital</dt><dd>{{ rotulo_do_edital }}</dd></div>
+    <div><dt>Perfil e recorte</dt><dd>{{ rotulo_do_recorte }}</dd></div>
+    <div><dt>Chamada</dt><dd>{{ conferencia.especie_por_extenso|capfirst }}</dd></div>
+    <div><dt>Comunicação</dt><dd>{% if conferencia.publicacao %}Por publicação, que você registra depois{% else %}Uma mensagem a esta pessoa, no mesmo ato{% endif %}</dd></div>
+  </dl>
+  <ol class="convocadas"><li>{{ conferencia.pessoa.protocolo }} — {{ conferencia.pessoa.nome }} · {{ conferencia.pessoa.posicao }}ª {% if conferencia.especie == "PARA_REGULARIZAR" %}na ordem dos indeferidos{% else %}na fila{% endif %}</li></ol>
+  <p class="ajuda">A espécie vem da posição: {{ conferencia.origem_da_especie }}.</p>
+  {% if conferencia.resultado %}
+  <p>Regulariza o Resultado indeferido em {{ conferencia.resultado.em|date:"d/m/Y" }}: {{ conferencia.resultado.motivo }}</p>
+  {% endif %}
+</section>
+
+{% if conferencia.passa_a_frente_de %}
+<section aria-labelledby="fora-titulo" class="consequencias fora-da-operacao">
+  <h2 id="fora-titulo">Passa à frente de ({{ conferencia.passa_a_frente_de|length }})</h2>
+  <ul>{% for pessoa in conferencia.passa_a_frente_de %}<li><strong>{{ pessoa.protocolo }} — {{ pessoa.nome }}</strong></li>{% endfor %}</ul>
+  <p class="ajuda">Ainda sem convocação, e antes dela na ordem. A exceção fica registrada na trilha, com o fundamento deste ato.</p>
+</section>
+{% endif %}
+{% else %}
 <section aria-labelledby="convocadas-titulo" class="consequencias irreversivel">
   <h2 id="convocadas-titulo">{% if conferencia.pessoas|length == 1 %}Será convocada (1){% else %}Serão convocadas ({{ conferencia.pessoas|length }}){% endif %}, para vaga inicial</h2>
   <dl class="fatos-da-operacao">
@@ -54,7 +83,9 @@ reler é o passo. O texto que sai não muda; muda só o quanto dele fica à vist
   {% endif %}
 </section>
 
-<form method="post" action="{% url 'interface:convocar-titulares' edital.id marco_id %}" class="confirmar">
+{% endif %}
+
+<form method="post" action="{% url acao edital.id marco_id %}" class="confirmar">
   {% csrf_token %}
   {% for chave, valor in campos.items %}<input type="hidden" name="{{ chave }}" value="{{ valor }}">
   {% endfor %}<input type="hidden" name="texto_conferido" value="{{ resumo }}">
@@ -72,7 +103,7 @@ reler é o passo. O texto que sai não muda; muda só o quanto dele fica à vist
         <p class="campo">
           <label for="complemento-da-conferencia">Complemento do fundamento <span class="opcional">(opcional)</span></label>
           <textarea id="complemento-da-conferencia" name="complemento" rows="2" aria-describedby="ajuda-complemento-da-conferencia">{{ complemento }}</textarea>
-          <span class="ajuda" id="ajuda-complemento-da-conferencia"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado, igual em todas as convocações deste ato. Editou? Confira de novo antes de convocar.</span>
+          <span class="ajuda" id="ajuda-complemento-da-conferencia"><strong>Este texto será mostrado ao candidato.</strong> Entra depois do fundamento derivado{% if not chamada %}, igual em todas as convocações deste ato{% endif %}. Editou? Confira de novo antes de convocar.</span>
         </p>
       </div>
       <div class="mensagens-da-conferencia">
@@ -95,7 +126,11 @@ reler é o passo. O texto que sai não muda; muda só o quanto dele fica à vist
   </section>
 
   <div class="confirmacao-da-convocacao">
+    {% if chamada %}
+    <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor. Nenhuma mensagem sai neste ato: a forma deste Perfil é a publicação, que você registra depois, e o candidato só vê a convocação a partir do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável</strong>, com você como autor, e a mensagem sai no mesmo ato — e não volta.{% endif %} Corrigir a convocação é sucedê-la com motivo.</p>
+    {% else %}
     <p>{% if conferencia.publicacao %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor. Nenhuma mensagem sai neste ato: a forma deste Perfil é a publicação, que você registra depois, e o candidato só vê a convocação a partir do registro.{% else %}<strong>Ao confirmar, nasce uma convocação imutável por pessoa</strong>, com você como autor, e a mensagem sai no mesmo ato para cada uma — e não volta.{% endif %} Corrigir uma convocação é sucedê-la com motivo, uma a uma.</p>
+    {% endif %}
     <p class="salvar">
       <button type="submit" name="etapa" value="confirmar" class="botao perigoso">{{ rotulo_do_botao }}</button>
       <button type="submit" name="etapa" value="conferir" class="acao">Conferir de novo</button>

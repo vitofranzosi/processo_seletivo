@@ -18,6 +18,7 @@ from tests.fixtures.convocacao import convocar, montar_cenario_da_convocacao
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
 from tests.interface.conftest import identificar
+from tests.interface.test_convocacao_em_fluxo import postar_chamada
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
 
@@ -205,7 +206,9 @@ class TestAConfirmacaoAntesDoAtoIrreversivel:
         edital, _, _ = cenario_da_tela
         identificar(client, "carlos", ["gestor"])
 
-        resposta = client.post(
+        # Pela conferência da chamada (152, FR-5810): o primeiro clique só confere.
+        resposta = postar_chamada(
+            client,
             reverse("interface:convocar", args=[edital.id, MARCO]),
             {
                 "inscricao": str(proximo(edital)),

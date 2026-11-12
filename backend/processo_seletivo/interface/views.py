@@ -68,6 +68,7 @@ from processo_seletivo.classificacao.application.emissao_do_corte import (
 from processo_seletivo.classificacao.application.emissao_do_corte import (
     continuar_corte,
     emitir_corte,
+    previa_da_continuacao,
 )
 from processo_seletivo.classificacao.application.selectors import (
     ato_por_id,
@@ -10079,12 +10080,18 @@ def cartao_do_documento_da_convocacao(request, edital_id, marco_id, convocacao_i
 
 @require_http_methods(["POST"])
 def convocar_view(request, edital_id, marco_id):
-    """Pratica a convocação, comunica no mesmo ato, e volta à leitura (050, `FR-870`, `FR-871`).
+    """Pratica a convocação, comunica no mesmo ato, e volta à leitura (050, `FR-870`, `FR-871`) —
+    **depois da conferência** (152, FR-5810).
 
     **Espécie e fundamento não vêm do formulário.** A espécie sai da posição da pessoa, e o
     fundamento do Edital e dos atos que sustentam a chamada; o que vem é o vencimento — digitado ou
     tirado de um Evento do Cronograma — e o complemento opcional. A espécie ainda chega no
     formulário de regularizar, como campo oculto, e o comando a confere contra a derivada.
+
+    **A chamada individual e a para regularizar passam pela conferência do lote** (152, D-004):
+    sem `etapa=confirmar` e o resumo do que foi conferido, o pedido responde a conferência e nada
+    mais. Até a 152 elas eram praticadas e comunicadas no primeiro clique (achado 08 do estudo de
+    11/11/2026). A correção (`120`) continua com a prévia assinada dela (FR-5823).
     """
     from processo_seletivo.convocacao.application.fluxo import convocar_e_comunicar
 
@@ -10107,16 +10114,23 @@ def convocar_view(request, edital_id, marco_id):
         if corrige
         else None
     )
-    # **O texto que o candidato lerá, antes do ato** (125, FR-3993): com complemento digitado, a
-    # conferência mostra o fundamento composto e só depois deixa praticar.
-    conferencia = conferencia_do_texto.exigir(
-        request,
-        acao="correcao" if corrige else "convocacao",
-        compor=lambda: _texto_da_convocacao(request, edital, marco_id, lista_id, corrige),
-        destino=destino,
-    )
-    if conferencia is not None:
-        return conferencia
+    chave = request.POST.get("chave") or uuid4().hex
+    if correcao is None:
+        # Uma conferência só (FR-5821): a desta spec substitui a de texto da `125` nestes gestos.
+        pagina = _conferir_a_chamada(request, ator, edital, marco_id, lista_id, chave)
+        if pagina is not None:
+            return pagina
+    else:
+        # **O texto que o candidato lerá, antes do ato** (125, FR-3993): com complemento digitado,
+        # a conferência mostra o fundamento composto e só depois deixa praticar.
+        conferencia = conferencia_do_texto.exigir(
+            request,
+            acao="correcao",
+            compor=lambda: _texto_da_correcao(request, edital, marco_id, lista_id, corrige),
+            destino=destino,
+        )
+        if conferencia is not None:
+            return conferencia
     try:
         declarado = _serializavel(
             convocar_e_comunicar(
@@ -10133,7 +10147,7 @@ def convocar_view(request, edital_id, marco_id):
                 complemento=request.POST.get("complemento") or "",
                 motivo=(request.POST.get("motivo") or "").strip(),
                 justifica_precedencia=bool(request.POST.get("justifica_precedencia")),
-                idempotency_key=request.POST.get("chave") or uuid4().hex,
+                idempotency_key=chave,
                 correlation_id=f"interface-convocacao-{edital_id}",
                 endereco_do_portal=request.build_absolute_uri(reverse("portal:inscricoes")),
                 correcao=correcao,
@@ -10155,18 +10169,22 @@ def convocar_view(request, edital_id, marco_id):
     return redirect(destino)
 
 
-def _texto_da_convocacao(request, edital, marco_id, lista_id, corrige):
-    """O fundamento que a convocação gravará, como o candidato o lerá (125, FR-3993).
+def _texto_da_correcao(request, edital, marco_id, lista_id, corrige):
+    """O fundamento que a correção gravará, como o candidato o lerá (125, FR-3993).
 
-    Da mesma derivação do comando: os fundamentos por espécie da `050` e, na correção, a prévia da
-    `120` — e o complemento depois, por `com_complemento`. Sem apuração, ou sem a convocação a
-    corrigir, `None`: a recusa é a do comando, como sempre.
+    Da mesma derivação do comando: a prévia da `120`, e o complemento depois, por
+    `com_complemento`. Sem a convocação a corrigir, `None`: a recusa é a do comando, como sempre.
+    A chamada individual não passa mais por aqui — tem a conferência da 152 (FR-5821).
     """
     from processo_seletivo.convocacao.application import fluxo
     from processo_seletivo.convocacao.application.selectors import leitura_do_recorte
     from processo_seletivo.convocacao.domain import fundamento
-    from processo_seletivo.convocacao.domain.especie import derivada
 
+    if not (request.POST.get("vencimento") or request.POST.get("evento")):
+        # A correção sem vencimento novo é recusada pelo comando, com o campo nomeado e o que foi
+        # digitado de volta no cartão (120, `FR-3850`): conferir um texto antes dela seria um passo
+        # que só leva à recusa.
+        return None
     perfil_id = _perfil_do_marco(edital, marco_id)
     agora = timezone.now()
     leitura = leitura_do_recorte(
@@ -10179,33 +10197,91 @@ def _texto_da_convocacao(request, edital, marco_id, lista_id, corrige):
         apuracao=leitura["apuracao"],
         at=agora,
     )
+    previa = fluxo.previa_das_correcoes(
+        leitura,
+        versao=effective_version(edital_id=edital.id, at=agora),
+        perfil_id=perfil_id,
+        fundamentos=fundamentos,
+    ).get(corrige)
+    if previa is None:
+        return None
+    texto = fundamento.com_complemento(previa["fundamento"], request.POST.get("complemento") or "")
+    return texto, 1, "Fundamento", "Corrigir a convocação"
+
+
+def _conferir_a_chamada(request, ator, edital, marco_id, lista_id, chave):
+    """As etapas da conferência da chamada individual (152, FR-5810 a FR-5821, R-008).
+
+    As do lote dos titulares, com uma pessoa: a confirmação cuja chave já foi concluída vai ao
+    comando, que repete o resultado (FR-5818); a que traz o resumo igual ao recomposto agora
+    também vai (FR-5816). Todo o resto responde a conferência, sem gravar nada (FR-5815).
+
+    Devolve a página, ou `None` quando é para praticar.
+    """
+    from processo_seletivo.convocacao.application import fluxo
+
+    confirmar = request.POST.get("etapa") == "confirmar"
+    if confirmar and fluxo.gesto_ja_concluido(
+        actor=ator, chave=chave, operation=fluxo.GESTO_CHAMADA
+    ):
+        return None
+    vencimento = (request.POST.get("vencimento") or "").strip()
+    evento_id = (request.POST.get("evento") or "").strip()
     complemento = request.POST.get("complemento") or ""
-    if corrige and not (request.POST.get("vencimento") or request.POST.get("evento")):
-        # A correção sem vencimento novo é recusada pelo comando, com o campo nomeado e o que foi
-        # digitado de volta no cartão (120, `FR-3850`): conferir um texto antes dela seria um passo
-        # que só leva à recusa.
-        return None
-    if corrige:
-        previa = fluxo.previa_das_correcoes(
-            leitura,
-            versao=effective_version(edital_id=edital.id, at=agora),
-            perfil_id=perfil_id,
-            fundamentos=fundamentos,
-        ).get(corrige)
-        if previa is None:
-            return None
-        texto = fundamento.com_complemento(previa["fundamento"], complemento)
-        return texto, 1, "Fundamento", "Corrigir a convocação"
-    especie = (request.POST.get("especie") or "").strip() or derivada(
-        _identidade_ou_404(request.POST.get("inscricao")),
-        ocupando=leitura["ocupando"],
-        alcancados=leitura["alcancados"],
-        regularizaveis=(),
+    especie = (request.POST.get("especie") or "").strip()
+    justifica = bool(request.POST.get("justifica_precedencia"))
+    inscricao = _identidade_ou_404(request.POST.get("inscricao"))
+    conferencia = fluxo.conferencia_da_chamada(
+        edital=edital,
+        perfil_id=_perfil_do_marco(edital, marco_id),
+        marco_id=marco_id,
+        lista_id=lista_id,
+        inscricao_id=inscricao,
+        especie=especie,
+        vencimento=_instante_ou_none(vencimento),
+        evento_id=evento_id,
+        complemento=complemento,
+        justifica_precedencia=justifica,
     )
-    if not fundamentos.get(especie):
-        return None
-    botao = "Convocar para regularizar" if especie == "PARA_REGULARIZAR" else "Convocar"
-    return fundamento.com_complemento(fundamentos[especie], complemento), 1, "Fundamento", botao
+    resumo = ""
+    if conferencia["recusa"] is None:
+        resumo = conferencia_do_texto.resumo(_texto_conferido_da_chamada(conferencia), 1)
+        if confirmar and request.POST.get("texto_conferido") == resumo:
+            return None
+    return _pagina_da_conferencia(
+        request,
+        edital,
+        marco_id,
+        lista_id,
+        conferencia=conferencia,
+        resumo=resumo,
+        # **A pessoa e o vencimento viajam sem edição** (FR-5820): mudá-los é voltar à tela.
+        campos={
+            "lista": "" if lista_id is None else str(lista_id),
+            "chave": chave,
+            "inscricao": str(inscricao),
+            "especie": especie,
+            "vencimento": vencimento,
+            "evento": evento_id,
+            "justifica_precedencia": "1" if justifica else "",
+        },
+        complemento=complemento,
+        erro=conferencia_do_texto.TEXTO_MUDOU if confirmar else "",
+        chamada=True,
+    )
+
+
+def _texto_conferido_da_chamada(conferencia):
+    """O que o resumo da chamada assina (FR-5816): pessoa, espécie, fundamento, mensagem e prazo."""
+    partes = [
+        str(conferencia["pessoa"]["id"]),
+        conferencia["especie"],
+        conferencia["fundamento"],
+        conferencia["prazo"]["frase"],
+    ]
+    for mensagem in conferencia["mensagens"]:
+        partes += [mensagem["assunto"], mensagem["corpo"]]
+    return "\n".join(partes)
 
 
 def _texto_do_desfecho(especie, fundamento_digitado):
@@ -10468,7 +10544,7 @@ def convocar_titulares_view(request, edital_id, marco_id):
         )
         if confirmar and request.POST.get("texto_conferido") == resumo:
             return gesto()
-    return _pagina_da_conferencia_dos_titulares(
+    return _pagina_da_conferencia(
         request,
         edital,
         marco_id,
@@ -10501,18 +10577,39 @@ def _texto_conferido_dos_titulares(conferencia):
     return "\n".join(partes)
 
 
-def _pagina_da_conferencia_dos_titulares(
-    request, edital, marco_id, lista_id, *, conferencia, resumo, campos, complemento, erro
+def _pagina_da_conferencia(
+    request,
+    edital,
+    marco_id,
+    lista_id,
+    *,
+    conferencia,
+    resumo,
+    campos,
+    complemento,
+    erro,
+    chamada=False,
 ):
+    """A conferência do lote dos titulares (140) ou, com `chamada`, a de uma pessoa (152, R-008).
+
+    **Uma página para os dois** (D-004): duas divergiriam no primeiro polimento, como divergiram a
+    ordem e o lote até o #467.
+    """
     from processo_seletivo.convocacao.application.fluxo import rotulos
 
     versao = conferencia.get("versao") or effective_version(edital_id=edital.id)
     rotulo_do_edital, rotulo_do_recorte = rotulos(
         edital, versao, perfil_id=_perfil_do_marco(edital, marco_id), lista_id=lista_id
     )
-    pessoas = len(conferencia.get("pessoas") or ())
-    artigo = "a" if pessoas == 1 else "as"
-    botao = f"Convocar {artigo} {pessoas}"
+    if chamada:
+        pessoas = 1
+        # O botão nomeia a pessoa (UX-530): "Convocar Davi Souza e enviar 1 mensagem".
+        nome = (conferencia.get("pessoa") or {}).get("nome", "")
+        botao = f"Convocar {nome}"
+    else:
+        pessoas = len(conferencia.get("pessoas") or ())
+        artigo = "a" if pessoas == 1 else "as"
+        botao = f"Convocar {artigo} {pessoas}"
     if conferencia.get("recusa") is None and not conferencia["publicacao"]:
         botao += f" e enviar {pessoas} {'mensagem' if pessoas == 1 else 'mensagens'}"
     return marcar_como_privada(
@@ -10532,6 +10629,8 @@ def _pagina_da_conferencia_dos_titulares(
                 "complemento": complemento,
                 "rotulo_do_botao": botao,
                 "erro": erro,
+                "chamada": chamada,
+                "acao": "interface:convocar" if chamada else "interface:convocar-titulares",
             },
         )
     )
@@ -10928,7 +11027,14 @@ def causar_faixa_view(request, edital_id, marco_id):
 
 @require_http_methods(["POST"])
 def emitir_corte_view(request, edital_id, marco_id):
-    """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET."""
+    """Constitui a faixa conferida e volta à leitura pelo padrão POST-redirect-GET — **depois da
+    conferência** (152, FR-5825).
+
+    **O mesmo endereço, duas etapas**, pelo desenho de `emitir_ordenacao`: sem `confirmar=1`, o
+    pedido responde "Confira antes de emitir o corte", com a faixa recalculada e a assinatura
+    recomposta, e nada mais (FR-5830). Até a 152 o corte era gravado no primeiro clique — o único
+    ato da cadeia ordem → corte → convocação sem conferência (achado 08 do estudo de 11/11/2026).
+    """
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return identidade.pedir_identificacao(request)
@@ -10936,19 +11042,56 @@ def emitir_corte_view(request, edital_id, marco_id):
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
         destino = f"{destino}?lista={lista_id}"
+    chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    motivo = request.POST.get("motivo", "")
+    confirmacao_do_calculo = request.POST.get("confirmacao_do_calculo", "")
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    if request.POST.get("confirmar") != "1":
+        geracao = estado_do_corte(
+            edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+        )["geracao"]
+        try:
+            proposta = calcular_corte(
+                edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
+            )
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            request.session["erro_do_corte"] = recusa.detail
+            return redirect(destino)
+        _com_a_inscricao(proposta["itens"])
+        # **A assinatura é recomposta aqui**, pela razão de `emitir_ordenacao`: o que se confirma
+        # é o que **esta** página declara, e a divergência com a tela anterior é dita.
+        recomposta = assinatura_do_corte(proposta, geracao=geracao)
+        return _pagina_da_conferencia_do_corte(
+            request,
+            edital,
+            marco_id,
+            lista_id,
+            destino=destino,
+            proposta=proposta,
+            geracao=geracao,
+            assinatura=recomposta,
+            calculo_mudou=bool(confirmacao_do_calculo and confirmacao_do_calculo != recomposta),
+            # Os avisos da tela do corte, com o mesmo texto e as mesmas condições (FR-5828).
+            espera=None if geracao else _espera_do_corte(edital, marco_id, lista_id),
+            reingressos=_reingressos_no_corte(edital, marco_id),
+            motivo=motivo,
+            chave=chave,
+        )
     try:
         request.session.pop("acao_do_corte", None)
         request.session["resultado_do_corte"] = emitir_corte(
             actor=ator,
             processo_id=edital.processo_id,
             edital_id=edital.id,
-            perfil_id=_perfil_do_marco(edital, marco_id),
+            perfil_id=perfil_id,
             marco_id=marco_id,
             lista_id=lista_id,
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
-            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
-            motivo=request.POST.get("motivo", ""),
+            confirmacao_do_calculo=confirmacao_do_calculo,
+            motivo=motivo,
         )
     except DomainError as recusa:
         if recusa.status == 404:
@@ -10959,7 +11102,12 @@ def emitir_corte_view(request, edital_id, marco_id):
 
 @require_http_methods(["POST"])
 def continuar_corte_view(request, edital_id, marco_id):
-    """A faixa seguinte, onde a regra publicada a admite (014, FR-202)."""
+    """A faixa seguinte, onde a regra publicada a admite (014, FR-202) — **depois da
+    conferência** (152, FR-5829).
+
+    Sem `confirmar=1`, a conferência: as posições e as pessoas que a faixa alcança, ou a recusa
+    que o comando daria, antes do botão. Com ele, o comando, com a assinatura da conferência.
+    """
     ator, edital, _ = _edital_para_classificar(request, edital_id, somente_gestao=True)
     if ator is None:
         return identidade.pedir_identificacao(request)
@@ -10967,20 +11115,57 @@ def continuar_corte_view(request, edital_id, marco_id):
     destino = reverse("interface:corte", args=[edital_id, marco_id])
     if lista_id:
         destino = f"{destino}?lista={lista_id}"
+    chave = request.POST.get("chave_idempotencia") or uuid4().hex
+    # O texto chega como texto, e vira recusa de domínio — nunca `ValueError` no meio do
+    # comando. `abc` no campo é erro de quem preenche, e não defeito de servidor.
+    quantidade = _inteiro_do_formulario(request.POST.get("quantidade"))
+    motivo = request.POST.get("motivo", "")
+    perfil_id = _perfil_do_marco(edital, marco_id)
+    if request.POST.get("confirmar") != "1":
+        try:
+            previa = previa_da_continuacao(
+                edital=edital,
+                perfil_id=perfil_id,
+                marco_id=marco_id,
+                lista_id=lista_id,
+                quantidade=quantidade,
+                motivo=motivo,
+            )
+        except DomainError as recusa:
+            if recusa.status == 404:
+                raise Http404 from recusa
+            return _pagina_da_conferencia_do_corte(
+                request, edital, marco_id, lista_id, destino=destino, recusa=recusa.detail
+            )
+        _com_a_inscricao(previa["proposta"]["itens"])
+        return _pagina_da_conferencia_do_corte(
+            request,
+            edital,
+            marco_id,
+            lista_id,
+            destino=destino,
+            proposta=previa["proposta"],
+            assinatura=previa["assinatura"],
+            motivo=previa["motivo"],
+            chave=chave,
+            quantidade=quantidade,
+            continuacao=True,
+        )
     try:
         request.session["resultado_do_corte"] = continuar_corte(
             actor=ator,
             processo_id=edital.processo_id,
             edital_id=edital.id,
-            perfil_id=_perfil_do_marco(edital, marco_id),
+            perfil_id=perfil_id,
             marco_id=marco_id,
             lista_id=lista_id,
-            idempotency_key=request.POST.get("chave_idempotencia") or uuid4().hex,
+            idempotency_key=chave,
             correlation_id=getattr(request, "correlation_id", ""),
-            # O texto chega como texto, e vira recusa de domínio — nunca `ValueError` no meio do
-            # comando. `abc` no campo é erro de quem preenche, e não defeito de servidor.
-            quantidade=_inteiro_do_formulario(request.POST.get("quantidade")),
-            motivo=request.POST.get("motivo", ""),
+            quantidade=quantidade,
+            motivo=motivo,
+            # **Sempre presente, mesmo vazia** (FR-5831): a confirmação forjada sem a assinatura é
+            # recusada como cálculo divergente, e nunca emite.
+            confirmacao_do_calculo=request.POST.get("confirmacao_do_calculo", ""),
         )
         # **Só depois do sucesso** (126): gravada antes do comando, a marca sobrava na sessão quando
         # ele recusava com 404, e o corte seguinte, em qualquer marco, se diria "faixa seguinte".
@@ -10990,6 +11175,56 @@ def continuar_corte_view(request, edital_id, marco_id):
             raise Http404 from recusa
         request.session["erro_do_corte"] = recusa.detail
     return redirect(destino)
+
+
+def _pagina_da_conferencia_do_corte(
+    request,
+    edital,
+    marco_id,
+    lista_id,
+    *,
+    destino,
+    recusa="",
+    proposta=None,
+    geracao=(),
+    assinatura="",
+    calculo_mudou=False,
+    espera=None,
+    reingressos=0,
+    motivo="",
+    chave="",
+    quantidade=0,
+    continuacao=False,
+):
+    """ "Confira antes de emitir o corte" (152, FR-5825 a FR-5833, UX-531). Não grava nada."""
+    itens = (proposta or {}).get("itens") or []
+    return marcar_como_privada(
+        render(
+            request,
+            "interface/corte_confirmar.html",
+            {
+                "processo": edital.processo,
+                "edital": edital,
+                "marco_id": marco_id,
+                "lista_id": lista_id,
+                **_navegacao_do_recorte(edital, marco_id, rota="interface:corte", atual=lista_id),
+                "destino": destino,
+                "recusa": recusa,
+                "proposta": proposta,
+                "progridem": [item for item in itens if item["consequencia"] == "PROGREDIU"],
+                "ficam_fora": [item for item in itens if item["consequencia"] != "PROGREDIU"],
+                "geracao": geracao,
+                "confirmacao_do_calculo": assinatura,
+                "calculo_mudou": calculo_mudou,
+                "espera_do_corte": espera,
+                "reingressos": reingressos,
+                "motivo": motivo,
+                "chave_idempotencia": chave,
+                "quantidade": quantidade,
+                "continuacao": continuacao,
+            },
+        )
+    )
 
 
 @require_http_methods(["GET"])

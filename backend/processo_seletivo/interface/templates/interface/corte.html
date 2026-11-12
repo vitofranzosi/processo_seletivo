@@ -198,16 +198,12 @@ faixa seguinte, abaixo, não é sucessão, e continua como era (FR-4013).
   A faixa nunca vem do navegador: o POST só confirma que o servidor deve recalcular sob trava e
   constituir o ato. É a mesma regra da emissão da ordem, e pela mesma razão.
   {% endcomment %}
-  {% if espera_do_corte %}<p class="aviso" role="note"><strong>Recomendação: aguarde.</strong> {{ espera_do_corte.razao }}. Emitir agora continua possível.</p>{% endif %}
-  {% comment %}
-  O reingresso pendente (141, FR-4840, UX-342): a mesma pergunta que segura o corte no andamento e
-  que recusa a publicação. A conferência da ordem já avisa a parcial; aqui, o que a parcial faz com
-  a faixa. O botão continua: o comando aceita (FR-4841).
-  {% endcomment %}
-  {% if reingressos %}<p class="aviso" role="note"><strong>{{ reingressos }} {{ reingressos|plural:"inscrição reabilitada,inscrições reabilitadas" }} por recurso {{ reingressos|plural:"está,estão" }} sem resultado numa Etapa deste marco.</strong> Emitido agora, o corte {{ reingressos|plural:"a deixa,as deixa" }} fora da faixa, porque {{ reingressos|plural:"está,estão" }} sem posição. Quando o resultado for consolidado, a ordem e este corte ficarão para trás, e suceder os dois exigirá motivo. Emitir agora continua possível.</p>{% endif %}
+  {% include "interface/_advertencias_do_corte.html" %}
   <p><strong>Emitir é irreversível.</strong> O ato é imutável e define quem prossegue para a Etapa seguinte; quem ficar fora continua registrado nele, com a posição e a causa.</p>
   {% if geracao %}<p class="campo"><label for="motivo">Motivo da sucessão</label><textarea id="motivo" name="motivo" rows="3" required></textarea><span class="ajuda">A geração vigente permanece íntegra e legível; este motivo explica por que outra a sucede — e a sucessão alcança todas as faixas dela.</span></p>{% endif %}
-  <p class="acoes"><button type="submit" class="botao">Emitir corte</button></p>
+  {% comment %} O clique abre a conferência (152, FR-5825, UX-531): até a 152 ele gravava o corte. {% endcomment %}
+  <p class="acoes"><button type="submit" class="botao">Conferir antes de emitir</button></p>
+  <p class="ajuda">Abre a conferência: a faixa, quem progride e quem fica fora. Nada é gravado antes de você confirmar nela.</p>
 </form>
 {% if geracao %}</details>{% endif %}
 {% if geracao and proposta.regra.continuation == "ALLOWED" %}
@@ -226,7 +222,8 @@ faixa seguinte, abaixo, não é sucessão, e continua como era (FR-4013).
   <p><strong>Faixa seguinte.</strong> Ela começa depois da última posição alcançada e não revoga a anterior — as duas ficam na mesma geração.</p>
   <p class="campo curto"><label for="quantidade">Quantos alcançar</label><input type="number" min="1" step="1" id="quantidade" name="quantidade" required></p>
   <p class="campo"><label for="motivo-continuacao">Motivo</label><textarea id="motivo-continuacao" name="motivo" rows="3" required></textarea><span class="ajuda">Por que a faixa anterior não bastou. O sistema não o sabe, e não o inventa.</span></p>
-  <p class="acoes"><button type="submit" class="botao">Emitir faixa seguinte</button></p>
+  <p class="acoes"><button type="submit" class="botao">Conferir a faixa seguinte</button></p>
+  <p class="ajuda">Abre a conferência: as posições e as pessoas que a faixa alcança. Nada é gravado antes de você confirmar nela.</p>
 </form>
 {% endif %}
 {% endif %}
