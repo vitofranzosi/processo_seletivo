@@ -41,6 +41,12 @@ foi tomada aqui.
 - **Por quê**: o `username` é o que a `106` já compara na autoconcessão; não é dado pessoal, e
   ninguém o digita (`FR-3129`). Um campo oculto adulterado só alcança outra pessoa institucional
   ativa — o que a busca já alcançaria —, e todas as recusas continuam no servidor.
+- **Revista em 12/11/2026 pela `134`, só nas telas de designar para a formalização** (a FR-6731
+  dela, por decisão do usuário): ali a pessoa se resolve entre as que a própria tela ofereceu —
+  quem tem o papel Formalização na unidade —, e não entre as institucionais, para que a pessoa de
+  treino, que não é institucional, seja designável no Edital de treinamento. A concessão de papel
+  desta feature continua como descrito acima, e o campo adulterado continua só alcançando quem a
+  tela já oferecia. A redação acima fica como estava.
 
 ## D-005 — A busca é por POST, com piso de três caracteres e teto de dez
 

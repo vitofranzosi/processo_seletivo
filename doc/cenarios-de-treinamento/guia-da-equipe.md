@@ -438,20 +438,17 @@ administra os acessos da unidade também designa, pela tela de acessos.
    você ainda não foi designado.
 2. Como **Gestor**, abra o Edital `SIM17`, aba **Conclusão**: o GPS diz que ninguém está designado
    e a quem pedir.
-3. Entre como a presidência (`treino.presidencia`, no grupo **Comissões**). No Edital `SIM17`, abra
-   **Documentos para a formalização** e, em **Quem acessa os documentos**, escolha *Formalização
-   Treinamento*, deixe os Perfis sem marcar (todos), escreva o motivo e clique em **Designar**.
+3. Entre como a presidência (`treino.presidencia`, no grupo **Comissões**). No Edital `SIM17`, aba
+   **Conclusão**, siga **Designar quem recebe os documentos**; em **Quem acessa os documentos**,
+   escolha *Formalização Treinamento*, deixe os Perfis sem marcar (todos), escreva o motivo e clique
+   em **Designar para o Edital SIM17**.
 4. Entre de novo como o setor: o Edital `SIM17` aparece. Verifique e exporte, como no C16.
 
 **Resultado esperado:** designação registrada; o Centro deixa de dizer que ninguém recebe, e o
 pacote é exportado.
 
-**Atenção:** hoje o passo 3 **é recusado pela tela**, com a frase *"Esta pessoa não está disponível
-para receber acesso"*: a tela de designar só aceita pessoas da entrada institucional, e
-`treino.formalizacao` não é uma. A correção está à espera de uma decisão; até lá, faça os passos 1,
-2 e o começo do 3 (ver que a presidência chega à designação e que a pessoa é oferecida), e use o
-C16 para exportar. A pessoa `treino.formalizacao` só aparece para designar nos Editais de
-treinamento — nos Editais reais da unidade ela não é oferecida nem contada.
+**Atenção:** a pessoa `treino.formalizacao` só aparece para designar nos Editais de treinamento —
+nos Editais reais da unidade ela não é oferecida nem contada.
 
 ---
 

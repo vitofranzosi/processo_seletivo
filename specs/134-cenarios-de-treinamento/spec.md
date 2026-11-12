@@ -213,6 +213,26 @@ comandos da aplicação que a tela usa.
   Edital escolhido — elas não aparecem nem contam, embora o vínculo seja da unidade. A autorização
   da `117` não muda: só a oferta e a contagem. O Processo se reconhece pelo manifesto, lido pelo
   registro de apps, sem que o domínio importe o app de treinamento (D-001).
+- **FR-6731**: **Escolher da lista** (decisão do usuário de 12/11/2026). As duas telas de designar
+  para a formalização — a seção "Quem acessa os documentos", da presidência, e a de Acessos da
+  unidade — resolvem a pessoa enviada **só entre as que a própria tela ofereceu**: quem tem o papel
+  Formalização vigente na unidade, ativo, com a regra da FR-6730 para o Edital escolhido. Ninguém
+  de fora da lista é designado. Fora dela, a resposta é a de antes: a pessoa institucional ativa sem
+  o papel recebe o código da FR-3663 (a FR-6701 da `117`), e todo outro identificador — inexistente,
+  inativo, de treino fora do treinamento, adulterado — a recusa única de pessoa indisponível. A
+  autorização da `117` (quem designa) e as conferências do comando de designar — papel vigente,
+  autodesignação, trava — não mudam. A concessão de papel da `107` continua resolvendo a pessoa
+  entre as institucionais.
+
+  > **Redação anterior, preservada** (a prática das duas telas desde a `117`, sem alínea própria, e
+  > a decisão da `107` sobre o identificador no formulário): a pessoa enviada se resolvia entre as
+  > pessoas institucionais ativas, de identificador `pessoa-`, e a recusa de pessoa inexistente ou
+  > inativa era a mesma.
+  >
+  > *Por que mudou:* a pessoa de treino não é institucional, de propósito (FR-6721), e a tela a
+  > oferecia no Edital de treinamento para recusá-la ao gravar. O usuário escolheu, entre essa saída
+  > e dar à pessoa de treino um identificador institucional, a que mantém a pessoa fora da busca de
+  > pessoas e da entrada institucional.
 - **FR-6729**: **A primeira autoridade.** O provisionamento não usa autoridade: o C16 e o C17 assinam
   os atos do certame com a mesma autoridade dos outros cenários (FR-4616).
 
@@ -236,10 +256,12 @@ comandos da aplicação que a tela usa.
   pessoa designada, e não "ninguém designado".
 - **SC-2211**: No C17 carregado, a lista do setor diz a `treino.formalizacao` que ainda não foi
   designada, e o Centro conta uma pessoa com o papel e nenhuma designada, com as três pessoas aptas
-  sem quem receba. `treino.presidencia` a designa pelo comando da `117`, e o setor então exporta.
-  **Pela tela, pendente**: ver *Designar pela demonstração*, nas limitações.
+  sem quem receba. `treino.presidencia` a designa pela tela (FR-6731), e o setor então exporta.
 - **SC-2213**: Num Edital real da mesma unidade, com a pessoa de treino vinculada e até designada,
   o Centro não a conta e nenhuma tela de designar a oferece.
+- **SC-2214**: Pelas duas telas de designar, a pessoa institucional com o papel continua designável;
+  `treino.formalizacao` é designável no Edital de treinamento e recusada num Edital real; o
+  identificador fora da lista e o adulterado são recusados sem gravar nada.
 - **SC-2212**: A carga do C16 e do C17 juntos cria uma pessoa e um vínculo; a segunda carga, e a
   restauração, não criam pessoa nem vínculo. Nenhum vínculo além do Formalização da identidade
   `treino.formalizacao` nasce de carga ou restauração.
@@ -333,18 +355,10 @@ não os da convocação.
   entrega. Para exercitar o portal (C02, C08, C11), a equipe se inscreve com o próprio e-mail, ou
   lê o código no mailpit da homologação, com o e-mail do candidato, que segue um padrão (guia).
 - **Os PDFs fictícios** são válidos e marcados, mas não imitam documento real.
-- **Designar pela demonstração — conflito em aberto (12/11/2026).** Desde a revisão da `117` (a
-  FR-6700 dela), a presidência da comissão do Processo também designa, e o comando aceita
-  `treino.presidencia` designando `treino.formalizacao`. **A tela recusa**: as duas telas de
-  designar — a da presidência e a de Acessos da unidade — resolvem a pessoa enviada só entre as
-  pessoas institucionais, de identificador `pessoa-` (a decisão da `107` sobre o identificador no
-  formulário), e respondem *"Esta pessoa não está disponível para receber acesso"*. A pessoa de
-  treino não é institucional de propósito (FR-6721): é o que a tira da busca de pessoas e da entrada
-  institucional. Resolver pede uma decisão do usuário entre (a) as telas de designar resolverem a
-  pessoa entre as que oferecem — quem tem o papel na unidade, com a regra da FR-6730 —, o que muda a
-  `107` e a `117` na tela, ou (b) a pessoa de treino ganhar identificador institucional, o que a
-  devolve à busca da gestão de acessos e obriga a equipe a digitar `pessoa-…` na entrada. Até lá,
-  o exercício do C17 para no passo de designar, e o C16 continua treinando o fim da jornada.
+- **Designar pela demonstração.** Desde a revisão da `117` de 12/11/2026 (a FR-6700 dela), a
+  presidência da comissão do Processo também designa, e, desde a FR-6731, a tela aceita a pessoa de
+  treino que ela mesma ofereceu: o exercício do C17 se faz pela demonstração, com
+  `treino.presidencia`. O Administrador de acessos continua fora do seletor e do gerador (FR-6724).
 - **Arquivos.** Os documentos fictícios vão para `ARQUIVOS_CANDIDATOS_RAIZ`. Se a transação de um
   cenário falha depois de gravar um arquivo, o arquivo pode ficar órfão no disco: o banco não
   aponta para ele.

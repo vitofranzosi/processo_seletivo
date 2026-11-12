@@ -242,3 +242,43 @@ def test_restaurar_revoga_e_avisa_a_designacao_feita_a_mao_mesmo_no_edital_encer
     restaurar("C14", confirmar="C14", autoridade=AUTORIDADE)
     assert not designacoes_vigentes(edital=edital).exists()
     assert not _da_formalizacao().exists(), "o C14 não provisiona"
+
+
+@pytest.fixture
+def provedor(settings):
+    """O provedor simulado configurado, para quem administra os acessos entrar pela instituição."""
+    from tests.fixtures import provedor_simulado
+
+    provedor_simulado.limpar()
+    settings.GESTAO_PROVEDOR_INSTITUCIONAL = provedor_simulado.CAMINHO
+    yield provedor_simulado
+    provedor_simulado.limpar()
+
+
+@pytest.mark.parametrize("tela", ["presidencia", "acessos"])
+def test_c17_a_pessoa_de_treino_e_designada_pela_tela_e_o_setor_a_ve(
+    client, cenario, provedor, tela
+):
+    """FR-6731, SC-2211: no Edital de treinamento, as duas telas designam `treino.formalizacao` —
+    a da presidência como `treino.presidencia`, a de acessos como quem os administra.
+    """
+    from tests.integration.formalizacao.test_acesso import tela_de_designar
+
+    edital = cenario("C17")
+    if tela == "presidencia":
+        identificar(client, k.PRESIDENCIA, [])
+        oferecida = client.get(reverse("interface:formalizacao-definicao", args=[edital.id]))
+        assert 'value="treino.formalizacao"' in oferecida.content.decode()
+        client.post(
+            reverse("interface:formalizacao-designar", args=[edital.id]),
+            {"pessoa": k.FORMALIZACAO, "motivo": "Exercício."},
+        )
+    else:
+        tela_de_designar(client, edital, "acessos")(k.FORMALIZACAO)
+    designacao = designacoes_vigentes(edital=edital, pessoa=k.FORMALIZACAO).get()
+    if tela == "presidencia":
+        assert designacao.designado_por == k.PRESIDENCIA
+
+    identificar(client, *SETOR)
+    assert str(edital.id) in client.get(reverse("interface:formalizacao")).content.decode()
+    assert passagem.da_passagem(edital).designadas == 1

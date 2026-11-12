@@ -754,3 +754,72 @@ def test_a_tela_de_acessos_designa_e_revoga(cenario, client, provedor, com_papel
 def test_a_tela_de_acessos_recusa_quem_nao_administra(cenario, client, seletor):
     identificar(client, "maria", [])
     assert client.get(reverse("interface:acessos-formalizacao")).status_code == 403
+
+
+# --- As telas de designar escolhem da lista que ofereceram (134, FR-6731) -----------------------
+
+
+def tela_de_designar(client, edital, tela):
+    """Um `postar(pessoa) -> texto da tela depois`, pela tela da presidência ou pela de acessos.
+
+    A da presidência é a seção "Quem acessa os documentos", com `maria` pelo seletor; a de acessos
+    é a da unidade, com uma pessoa institucional que administra os acessos, pela entrada
+    institucional — o seletor de demonstração não oferece esse papel.
+    """
+    if tela == "presidencia":
+        identificar(client, "maria", [])
+        url = reverse("interface:formalizacao-designar", args=[edital.id])
+
+        def postar(alguem):
+            client.post(url, {"pessoa": alguem, "motivo": "Memorando 7"})
+            return client.get(_definicao(edital)).content.decode()
+
+        return postar
+    gil = pessoa("gil-acessos", nome="Gil Acessos", email="gil@ifes.edu.br")
+    vincular(gil, "cefor", catalogo.ADMINISTRADOR_DE_ACESSOS)
+    entrar(client, "gil-acessos", nome="Gil Acessos")
+    url = reverse("interface:acessos-formalizacao")
+
+    def postar(alguem):
+        resposta = client.post(
+            url, {"edital": str(edital.id), "pessoa": alguem, "motivo": "Memorando 7"}
+        )
+        return resposta.content.decode() if resposta.status_code != 302 else ""
+
+    return postar
+
+
+@pytest.fixture
+def pessoa_de_treino(db):
+    """A pessoa que os cenários da 134 criam, com o papel na unidade: não é institucional."""
+    from django.contrib.auth import get_user_model
+
+    treino = get_user_model().objects.create(
+        username="treino.formalizacao", first_name="Formalização Treinamento"
+    )
+    vincular(treino, "cefor", nomes.PAPEL)
+    return treino
+
+
+@pytest.mark.parametrize("tela", ["presidencia", "acessos"])
+def test_as_telas_de_designar_aceitam_so_quem_ofereceram(
+    cenario, client, seletor, provedor, com_papel, pessoa_de_treino, tela
+):
+    """FR-6731: a pessoa institucional com o papel continua designável pelas duas telas; a de
+    treino, num Edital real, não é oferecida e é recusada; o identificador inexistente e o
+    adulterado recebem a mesma recusa; e a institucional sem o papel, o código da FR-3663.
+    """
+    postar = tela_de_designar(client, cenario.edital, tela)
+    indisponivel = "não está disponível para receber acesso"
+    for fora in ("treino.formalizacao", "pessoa-inexistente", "pessoa-rui' OR '1'='1"):
+        assert indisponivel in postar(fora), fora
+        assert not DesignacaoParaFormalizacao.objects.filter(pessoa=fora).exists()
+
+    sem_papel = pessoa("carla", nome="Carla", email="carla@ifes.edu.br")
+    assert "não tem o papel" in postar(sem_papel.username)
+    assert not DesignacaoParaFormalizacao.objects.filter(pessoa=sem_papel.username).exists()
+
+    postar(com_papel.username)
+    assert DesignacaoParaFormalizacao.objects.filter(
+        edital=cenario.edital, pessoa=com_papel.username
+    ).exists()

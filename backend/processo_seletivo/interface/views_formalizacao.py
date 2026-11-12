@@ -594,8 +594,6 @@ def designar_na_definicao(request, edital_id):
     é recusada ali. A primeira conferência, aqui, vem antes de procurar a pessoa: quem não designa
     recebe a recusa de autorização, e não aprende pelo erro quem é pessoa institucional.
     """
-    from processo_seletivo.seguranca.application import acessos
-
     ator = _ator(request)
     if ator is None:
         return identidade.pedir_identificacao(request)
@@ -604,7 +602,11 @@ def designar_na_definicao(request, edital_id):
         designar.designar(
             ator,
             edital_id=edital_da_tela.id,
-            pessoa=acessos.pessoa_institucional(request.POST.get("pessoa", "")),
+            # Só entre as pessoas que esta tela ofereceu (134, FR-6731), e não entre as
+            # institucionais: é o que deixa a pessoa de treino ser designada no Edital de treino.
+            pessoa=designar.pessoa_da_lista(
+                ator, request.POST.get("pessoa", ""), edital=edital_da_tela
+            ),
             perfis=request.POST.getlist("perfil"),
             motivo=request.POST.get("motivo", ""),
             now=timezone.now(),
