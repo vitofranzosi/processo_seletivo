@@ -189,6 +189,33 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .selecao:hover{border-color:var(--verde-texto)}
 .selecao:focus-within{outline:3px solid var(--verde);outline-offset:2px}
 .selecao .meta{color:var(--texto-fraco);font-size:.9375rem;overflow-wrap:anywhere}
+/* O cartão **da vitrine** em coluna flexível, e o convite e os dados de apoio no pé. A grade iguala a
+   altura dos dois cartões de uma linha, e o mais curto ficava com o botão no meio e um vazio
+   embaixo: lado a lado, as ações de dois cartões nunca estavam na mesma altura. Só sob `.selecoes`:
+   a classe `.selecao` também veste cartões de outras telas, que continuam em grade. */
+.selecoes>.selecao{display:flex;flex-direction:column}
+.selecoes>.selecao .marca-situacao{align-self:flex-start}
+.selecoes>.selecao .convite-da-vitrine{margin-top:auto;padding-top:.6rem}
+/* **O título longo para na terceira linha.** Título de Edital é texto livre, e alguns ocupavam seis
+   ou sete linhas — o cartão virava o título, e a oferta e o prazo saíam da primeira leitura. O
+   corte é só visual: o texto inteiro continua no link, que é o que o leitor de tela anuncia, e na
+   página da seleção. Sem altura fixa: título de uma linha ocupa uma linha. */
+.selecoes>.selecao a.titulo{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  line-clamp:3;overflow:hidden;overflow-wrap:anywhere}
+/* A linha de apoio **não** leva o mesmo corte, embora também seja texto livre: o número do Edital e
+   a unidade ficam no fim dela, e o corte esconderia justamente o que identifica o ato. */
+/* As páginas do histórico. Alvos de 44 px, porque é com o polegar que se folheia; a página atual é
+   texto, e não link para onde já se está. `scroll-margin-top` dá respiro ao título da lista quando
+   a página seguinte abre na âncora. */
+.paginacao{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin:1rem 0 0;max-width:76rem}
+.paginacao a{display:inline-flex;align-items:center;min-height:2.75rem;padding:0 1rem;
+  border:1px solid var(--borda);border-radius:4px;background:var(--branco);
+  color:var(--verde-texto);font-weight:600;font-size:.9375rem;text-decoration:none}
+.paginacao a:hover{background:var(--verde-claro);border-color:var(--verde-texto)}
+.paginacao .pagina-atual{color:var(--texto-fraco);font-size:.9375rem;font-variant-numeric:tabular-nums}
+.mostrando{margin:0 0 .75rem;color:var(--texto-fraco);font-size:.9375rem}
+#resultado{scroll-margin-top:1rem}
+#encerradas{scroll-margin-top:3.5rem}
 /* Os perfis continuam em coluna única: o cartão tem duas zonas por dentro, e reparti-lo de novo
    em duas colunas espremeria o argumento à esquerda. O que ele ganha é largura — 960 px em vez de
    772 —, que é onde a lateral de vagas e ação cabe sem apertar. */
