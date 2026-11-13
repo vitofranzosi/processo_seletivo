@@ -1,5 +1,5 @@
-<fieldset class="linha evento-novo">
-  <legend><span class="nome">Evento a acrescentar</span></legend>
+<fieldset class="linha evento-novo" id="cartao-novo-evento-{{ indice }}"{% if na_proposta %} data-na-proposta{% endif %}>
+  <legend><span class="nome">Evento a acrescentar</span>{% if na_proposta %} <span class="na-proposta">na proposta</span>{% endif %}</legend>
   <div class="campos">
     {% for campo in campos %}
     <p class="campo{% if campo.tipo == 'instante' %} curto{% endif %}">

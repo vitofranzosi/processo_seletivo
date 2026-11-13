@@ -46,7 +46,7 @@ abaixo.
 | FR-3941 (mesma frase; só a guarda quando ela para) | T004, T013, T014 | `cc`; `ci` |
 | FR-3942 (link ao cartão, à coleção, à seção ou nenhum) | T006, T013, T014 | `cp`; `ci`; `nv` cenário B |
 | FR-3943 (a conferência não grava) | T004, T013 | `cc`; `ci` (contagem de Retificações) |
-| FR-3944 (a criação confere de novo; botão continua; criação recusada mostra a seção) | T004, T013, T014 | `ci` (relógio e Resultado no intervalo; recusa de «Criar» com a seção, R-013) |
+| FR-3944 (a criação confere de novo; botão continua; criação recusada mostra a seção) | T004, T013, T014 | `ci` (Resultado no intervalo; recusa de «Criar» com a seção, R-013) |
 | FR-3945 (advertência fora da conferência) | T013 | `ci` (formulário com só advertência não abre a seção) |
 | FR-3946 (preservação) | T008, T038 | as suítes existentes (lista em `plan.md`); `nv` regressão ponta a ponta; `vf` |
 | FR-3947 (CSP e classes com regra) | T015, T023, T031, T035, T039 | guardiões de estáticos e acessibilidade; `nv` (`violacoes == []`) |

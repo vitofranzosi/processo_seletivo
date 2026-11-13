@@ -118,6 +118,22 @@ def process_payload():
     }
 
 
+# Os Editais da auditoria de UX da Retificação (123, R-011). Aqui, e não num conftest de diretório,
+# porque `unit/`, `interface/` e `navegador/` usam os mesmos.
+@pytest.fixture
+def edital_da_auditoria(api_client, manager_headers, process_payload):
+    from tests.fixtures.edital_da_auditoria import publicar_edital_da_auditoria
+
+    return publicar_edital_da_auditoria(api_client, manager_headers, process_payload)
+
+
+@pytest.fixture
+def edital_extenso(api_client, manager_headers, process_payload):
+    from tests.fixtures.edital_da_auditoria import publicar_edital_extenso
+
+    return publicar_edital_extenso(api_client, manager_headers, process_payload)
+
+
 # ---------------------------------------------------------------------------
 # A jornada do candidato (009). Ficam aqui, e não num conftest de diretório, porque integração e
 # autorização exercitam as mesmas precondições — e fixture só é vista do conftest da raiz ou do

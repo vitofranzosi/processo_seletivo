@@ -56,6 +56,7 @@ ler as alterações. É a mesma lista do detalhe (`_alteracoes_legiveis`), e nã
 {% if ato.chave == 'homologar' or ato.chave == 'devolver' %}
 <section aria-labelledby="altera-titulo" class="cartao">
   <h2 id="altera-titulo">O que esta Retificação altera ({{ alteracoes|length }})</h2>
+  {% include "interface/_versao_base.html" with prefixo="«Antes» é o conteúdo da versão-base desta Retificação." %}
   <div class="tabela-rolavel">
   <table>
     <thead><tr><th scope="col">Onde</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
@@ -86,6 +87,7 @@ ler as alterações. É a mesma lista do detalhe (`_alteracoes_legiveis`), e nã
 {% if ato.chave == 'publicar' %}
 <section aria-labelledby="mudancas-titulo" class="cartao">
   <h2 id="mudancas-titulo">Conteúdo que passará a vigorar</h2>
+  {% include "interface/_versao_base.html" with prefixo="«Antes» é o conteúdo da versão-base desta Retificação." %}
   {% comment %}
   A coluna diz **onde** e **qual campo**, em português, como a tela de composição já dizia — e o
   caminho normativo fica em segundo plano, para quem audita. Esta é a tela em que se assina o ato

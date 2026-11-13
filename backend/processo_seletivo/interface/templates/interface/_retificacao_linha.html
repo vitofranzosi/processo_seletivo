@@ -8,10 +8,13 @@ oitenta linhas de marcação em cada uma seria pedir que as sete divergissem.
 agora é composta de duas partes — a categoria e o nome. Sem o atributo, "Remover Modalidade
 AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
 {% endcomment %}
-<fieldset class="linha{% if grupo.aninhado %} aninhada{% endif %}" data-linha data-nome="{{ grupo.titulo }}" id="cartao-{{ grupo.referencia }}">
+<fieldset class="linha{% if grupo.aninhado %} aninhada{% endif %}" data-linha data-nome="{{ grupo.titulo }}" id="cartao-{{ grupo.referencia }}"{% if grupo.na_proposta %} data-na-proposta{% endif %}>
   <legend data-rotulo="{{ grupo.titulo }}">
     {% if grupo.tipo and grupo.tipo != grupo.nome %}<span class="categoria">{{ grupo.tipo }}</span>{% endif %}
     <span class="nome">{{ grupo.nome }}</span>
+    {% comment %} O que o ato leva, dito pelo servidor (123, FR-3927): sobrevive à conferência, ao
+       contrário da marca «alterada», que é do que mudou nesta tela desde ela. {% endcomment %}
+    {% if grupo.na_proposta %}<span class="na-proposta">na proposta</span>{% endif %}
   </legend>
   <div class="campos">
     {% comment %}

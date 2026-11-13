@@ -169,6 +169,7 @@ from processo_seletivo.interface import (
     origens,
     revisao,
     trabalho,
+    versao_base,
 )
 from processo_seletivo.interface import agenda as agenda_dos_editais
 from processo_seletivo.interface import aplicacao as aplicacao_ui
@@ -202,6 +203,7 @@ from processo_seletivo.publicacoes.application.retificacoes import (
     advertencias_do_ato,
     advertencias_do_vigente,
     alteracoes_declaradas,
+    conferir_retificacao,
     conteudo_base,
     edit_retification,
 )
@@ -4374,7 +4376,14 @@ def _executar(ato, request, ator, edital):
     return ato.command(**argumentos)
 
 
-def _versao_vigente(edital):
+def _ultima_versao_publicada(edital):
+    """A base da composição: a de maior início de vigência, **mesmo que ainda não vigore**.
+
+    Chamava-se `_versao_vigente`, e o nome era o defeito (123, `RU-04`): com uma Retificação
+    publicada de vigência futura, ela devolve uma versão que ainda não vigora — e é a base certa,
+    porque é sobre ela que a precondição da publicação confere. A consulta não mudou (FR-3936); o
+    que a tela diz da base sai de `versao_base.descrever_versao_base`.
+    """
     return (
         VersaoConsolidada.objects.filter(edital=edital)
         .order_by("-valid_from", "-materialized_at")
@@ -4393,7 +4402,7 @@ def _base_da_composicao(edital, dados):
     volta a ela; quem publicou no intervalo é tratado pelas precondições da elaboração.
     """
     if dados is None:
-        return _versao_vigente(edital)
+        return _ultima_versao_publicada(edital)
     # No POST a versão é obrigatória, e não opcional com queda para a vigente: um formulário
     # antigo que não a envie resolveria as referências contra outro conteúdo, que é o defeito
     # que esta função existe para impedir.
@@ -4463,7 +4472,40 @@ def retificar(request, edital_id):
     return _compor_retificacao(request, ator, edital, base, projecao, dados, gravar)
 
 
-def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, edicao=None):
+def _marcar_novas(linhas, prefixo, cartoes):
+    """As linhas acrescentadas que a proposta faz nascer ganham a marca, como os cartões (123)."""
+    for linha in linhas:
+        linha["na_proposta"] = f"novo-{prefixo}-{linha['indice']}" in cartoes
+    return linhas
+
+
+def _impeditivos_da_conferencia(edital, ato, grupos, novas, secoes):
+    """O que «Criar» ou «Gravar» recusaria nesta proposta, com o caminho até o cartão (123, M4).
+
+    Pela mesma função que o ato chama (`conferir_retificacao`, R-001): a recusa da primeira guarda,
+    sozinha, ou cada impeditivo com a frase que a criação junta. Conteúdo que nem se monta não é
+    conferido aqui — a recusa dele já está no alto da tela, vinda de `diferencas` ou da fusão.
+    """
+    conteudo_da_base, alteracoes = ato
+    try:
+        conferido = conferir_retificacao(edital, conteudo_da_base, alteracoes)
+    except (ValueError, KeyError, TypeError):
+        return []
+    if conferido.recusa is not None:
+        return [{"mensagem": conferido.recusa.detail, "destino": None}]
+    na_pagina = {secao["id"] for secao in secoes}
+    return [
+        {
+            "mensagem": item.message,
+            "destino": retificacao_ui.cartao_do_caminho(grupos, item.path, novas, na_pagina),
+        }
+        for item in conferido.impeditivos
+    ]
+
+
+def _compor_retificacao(
+    request, ator, edital, base, projecao, dados, gravar, edicao=None, proposta=None
+):
     """O formulário de Retificar, para criar ou para editar (103, R-005).
 
     **Um miolo, duas portas.** A criação parte do conteúdo vigente e grava uma Retificação nova; a
@@ -4474,7 +4516,13 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
 
     `gravar(todas, calculados)` é o que a confirmação faz, e devolve o redirecionamento. `edicao` é
     `None` na criação; na edição, o que a tela precisa dizer da Retificação que está sendo editada.
+
+    `proposta(todas)` devolve `(conteudo_da_base, alteracoes_do_ato)`: o ato **inteiro** que a
+    confirmação gravaria agora (123, R-003). Na criação é `todas` sobre a projeção; na edição, a
+    fusão com o que a Retificação já declara. É dele que saem a marca «na proposta» e a conferência
+    dos impeditivos — e de mais lugar nenhum, para que a tela não calcule uma segunda diferença.
     """
+    proposta = proposta or (lambda todas: (projecao, todas))
     erros, resumo = [], []
     # Os gestos de "aplicar a todos" declarados na tela (051, R-011). Lidos **antes** de tudo o que
     # pode recusar o envio: uma recusa não pode apagar da tela o gesto que a pessoa declarou. **Não
@@ -4486,6 +4534,9 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
         else []
     )
     calculados, consequencias, todas, proposto = [], [], [], projecao
+    # A proposta calculada neste envio (`None` quando não se chegou a calculá-la), e se a recusa
+    # veio do ato — «Criar» ou «Gravar» recusado por conteúdo volta com a seção dos impeditivos.
+    ato, recusado_pelo_ato = None, False
     if request.method == "POST":
         if not ator.can("retificacao:elaborar"):
             erros.append("Você não tem a permissão para elaborar Retificações.")
@@ -4520,6 +4571,7 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
                 todas = alteracoes + [
                     alteracao for calculado in calculados for alteracao in calculado.alteracoes
                 ]
+                ato = proposta(todas)
                 # Na edição, nenhuma diferença é legítimo: a pessoa pode estar só corrigindo a
                 # justificativa ou desfazendo uma remoção. Se o ato inteiro ficar vazio, quem diz é
                 # a gravação, depois da fusão (103, FR-2718).
@@ -4546,7 +4598,11 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
                             "conteúdo para ter efeito."
                         )
                     else:
-                        return gravar(todas, calculados)
+                        try:
+                            return gravar(todas, calculados)
+                        except DomainError:
+                            recusado_pelo_ato = True
+                            raise
             except ValueError as exc:
                 erros.append(str(exc))
             except DomainError as exc:
@@ -4567,6 +4623,10 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
                 consequencias = gesto_na_retificacao.consequencias(edital, projecao, resultante)
             except ValueError:
                 consequencias = []
+    elif edicao is not None:
+        # A edição abre com o que o ato já contém (123, SC-1177): a Retificação devolvida tem N
+        # Alterações, e a tela que dizia "nenhum campo alterado" escondia justamente o trabalho.
+        ato = proposta([])
 
     grupos = retificacao_ui.reexibir(
         retificacao_ui.campos_editaveis(projecao, descricao_do_artefato=_descricao_do_artefato),
@@ -4575,6 +4635,18 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
     if ator.can("retificacao:elaborar") and edicao is None:
         gesto_na_retificacao.anotar_botoes(grupos, projecao)
     blocos = gesto_na_retificacao.blocos(calculados, projecao)
+    secoes = retificacao_ui.agrupar_em_secoes(grupos)
+    novas = retificacao_ui.linhas_novas_do_resumo(resumo)
+    cartoes, remocoes = (
+        retificacao_ui.referencias_na_proposta(grupos, ato[1], novas) if ato else (set(), 0)
+    )
+    for grupo in grupos:
+        grupo["na_proposta"] = grupo["referencia"] in cartoes
+    impeditivos = (
+        _impeditivos_da_conferencia(edital, ato, grupos, novas, secoes)
+        if ato and ato[1] and (not erros or recusado_pelo_ato)
+        else []
+    )
     return render(
         request,
         "interface/retificar.html",
@@ -4585,43 +4657,80 @@ def _compor_retificacao(request, ator, edital, base, projecao, dados, gravar, ed
             # As mesmas linhas, divididas nas seções que a tela desenha e que o índice do topo
             # alcança. `grupos` continua servindo a leitura de quem não pode elaborar, que é uma
             # lista corrida e não um formulário para navegar.
-            "secoes": retificacao_ui.agrupar_em_secoes(grupos),
+            "secoes": secoes,
             "digitado": dados,
             # As linhas acrescentadas nascem no cliente, mas precisam voltar do servidor depois
             # do POST: sem isto, ver o resumo devolve um formulário sem elas.
-            "novos_perfis": retificacao_ui.novas_para_formulario(
-                dados or {}, "perfil", retificacao_ui.NOVO_PERFIL
+            "novos_perfis": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {}, "perfil", retificacao_ui.NOVO_PERFIL
+                ),
+                "perfil",
+                cartoes,
             ),
-            "novos_eventos": retificacao_ui.novas_para_formulario(
-                dados or {}, "evento", retificacao_ui.NOVO_EVENTO
+            "novos_eventos": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {}, "evento", retificacao_ui.NOVO_EVENTO
+                ),
+                "evento",
+                cartoes,
             ),
-            "novos_anexos": retificacao_ui.novas_para_formulario(
-                dados or {}, "anexo", retificacao_ui.NOVO_ANEXO
+            "novos_anexos": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {}, "anexo", retificacao_ui.NOVO_ANEXO
+                ),
+                "anexo",
+                cartoes,
             ),
             # As linhas do quadro acrescentadas voltam com as **opções** junto: os dois campos de
             # escolha vêm do conteúdo vigente, e reexibi-los sem elas devolveria dois `select`
             # vazios — a pessoa leria "vai acrescentar" e confirmaria uma linha sem Perfil.
-            "novas_linhas_do_quadro": retificacao_ui.novas_para_formulario(
-                dados or {},
+            "novas_linhas_do_quadro": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {},
+                    "linha-do-quadro",
+                    retificacao_ui.NOVA_LINHA_DO_QUADRO,
+                    opcoes=retificacao_ui.opcoes_da_linha_nova(projecao),
+                ),
                 "linha-do-quadro",
-                retificacao_ui.NOVA_LINHA_DO_QUADRO,
-                opcoes=retificacao_ui.opcoes_da_linha_nova(projecao),
+                cartoes,
             ),
             # A Modalidade e o critério acrescentados voltam com as opções pela mesma razão da linha
             # do quadro (048).
-            "novas_modalidades": retificacao_ui.novas_para_formulario(
-                dados or {},
+            "novas_modalidades": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {},
+                    "modalidade",
+                    retificacao_ui.NOVA_MODALIDADE,
+                    opcoes=retificacao_ui.opcoes_da_modalidade_nova(projecao),
+                ),
                 "modalidade",
-                retificacao_ui.NOVA_MODALIDADE,
-                opcoes=retificacao_ui.opcoes_da_modalidade_nova(projecao),
+                cartoes,
             ),
-            "novos_criterios": retificacao_ui.novas_para_formulario(
-                dados or {},
+            "novos_criterios": _marcar_novas(
+                retificacao_ui.novas_para_formulario(
+                    dados or {},
+                    "criterio",
+                    retificacao_ui.NOVO_CRITERIO,
+                    opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
+                ),
                 "criterio",
-                retificacao_ui.NOVO_CRITERIO,
-                opcoes=retificacao_ui.opcoes_do_criterio_novo(projecao),
+                cartoes,
             ),
             "resumo": resumo,
+            # A proposta e a conferência (123). O estado vai em atributos do formulário, que o
+            # script lê para as duas frases da barra; os impeditivos, numa seção antes do resumo.
+            "proposta_estado": (
+                "conferida"
+                if ato is not None
+                else ("recusada" if request.method == "POST" else "nao-conferida")
+            ),
+            "proposta_cartoes": len(cartoes),
+            "proposta_remocoes": remocoes,
+            "enviado": request.method == "POST",
+            "impeditivos": impeditivos,
+            # De que versão é o «antes» (123, M3): a base da criação ou a da Retificação editada.
+            "versao_base": versao_base.descrever_versao_base(base) if base else None,
             # Os gestos declarados (051): os valores voltam ocultos no formulário, e cada um que
             # pôde ser calculado ganha o seu bloco na conferência, agrupado (FR-941).
             "gestos_declarados": [gesto.valor for gesto in gestos],
@@ -4782,8 +4891,21 @@ def retificacao_editar(request, retificacao_id):
             if alteracao["operation"] == "REMOVE"
         ],
     }
+
+    def proposta(todas):
+        fundidas, _ = fundir(projecao_da_base, existentes, todas, desfeitas=desfeitas)
+        return projecao_da_base, fundidas
+
     return _compor_retificacao(
-        request, ator, item.edital, base, proposto, dados, gravar, edicao=edicao
+        request,
+        ator,
+        item.edital,
+        base,
+        proposto,
+        dados,
+        gravar,
+        edicao=edicao,
+        proposta=proposta,
     )
 
 
@@ -4804,6 +4926,7 @@ def retificacao_detalhe(request, retificacao_id):
             "retificacao": item,
             "edital": item.edital,
             "alteracoes": _alteracoes_legiveis(item),
+            "versao_base": versao_base.descrever_versao_base(item.base_snapshot),
             "ofertas": ofertas,
             "proximo_passo": atos_retificacao.proximo_passo(item, ator, ofertas),
             "pode_editar": atos_retificacao.pode_editar(item, ator),
@@ -5087,6 +5210,7 @@ def praticar_ato_retificacao(request, retificacao_id, acao):
         "edital": item.edital,
         "ato": ato,
         "alteracoes": _alteracoes_legiveis(item),
+        "versao_base": versao_base.descrever_versao_base(item.base_snapshot),
         "impedimento": impedimento,
         "recusa_certa": bool(impedimento),
         # A passagem de bastão dita antes do ato (103, FR-2728), e a segregação que o ato vai

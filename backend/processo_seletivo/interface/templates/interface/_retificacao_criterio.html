@@ -1,5 +1,5 @@
-<fieldset class="linha criterio-novo">
-  <legend><span class="nome">Critério de desempate a acrescentar</span></legend>
+<fieldset class="linha criterio-novo" id="cartao-novo-criterio-{{ indice }}"{% if na_proposta %} data-na-proposta{% endif %}>
+  <legend><span class="nome">Critério de desempate a acrescentar</span>{% if na_proposta %} <span class="na-proposta">na proposta</span>{% endif %}</legend>
   {% comment %}
   As palavras são as da composição (`_criterio.html`). O marco é uma escolha só e carrega o Perfil
   junto, porque o caminho da Alteração passa pelos dois; o alvo é uma escolha só, e é o tipo que

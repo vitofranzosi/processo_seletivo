@@ -1719,6 +1719,145 @@ def exclusoes_do_tipo(tipo):
     ]
 
 
+# As coleções de topo do conteúdo. Um caminho que começa por uma delas fala de uma entidade dela, e
+# nunca da raiz; o que não começa por nenhuma é campo da raiz (`/title`, `/drawMethod/…`).
+_COLECOES_DE_TOPO = frozenset(
+    {"profiles", "schedule", "stages", "documentRequirements", "attachments", "sections"}
+)
+# De que seção da tela é a coleção de topo — a inversão de `COLECAO_DO_TIPO` até `SECOES_DA_TELA`.
+_SECAO_DA_COLECAO = {
+    COLECAO_DO_TIPO[tipo]: identificador
+    for identificador, _, tipos in SECOES_DA_TELA
+    for tipo in tipos
+    if COLECAO_DO_TIPO[tipo] in _COLECOES_DE_TOPO
+}
+
+
+def _segmentos(caminho):
+    return [parte for parte in (caminho or "").split("/") if parte]
+
+
+def _prefixo_de(prefixo, caminho):
+    """Ancestral em fronteira de segmento: `/a/id=1` não é ancestral de `/a/id=12`."""
+    return caminho == prefixo or caminho.startswith(f"{prefixo}/")
+
+
+def _da_raiz(caminho):
+    segmentos = _segmentos(caminho)
+    return bool(segmentos) and segmentos[0] not in _COLECOES_DE_TOPO
+
+
+def _linha_nova(caminho, novas):
+    """A linha acrescentada nesta tela de que o caminho fala, pela identidade da entidade nova."""
+    for segmento in _segmentos(caminho):
+        if segmento.startswith("id=") and segmento[3:] in novas:
+            return novas[segmento[3:]]
+    return None
+
+
+def _ancestral(grupos, caminho):
+    """A referência do grupo mais fundo que contém `caminho` (ele mesmo incluído), ou a da raiz."""
+    ancestral = max(
+        (g for g in grupos if g["caminho"] and _prefixo_de(g["caminho"], caminho)),
+        key=lambda g: len(g["caminho"]),
+        default=None,
+    )
+    if ancestral is not None:
+        return ancestral["referencia"]
+    if _da_raiz(caminho):
+        raiz = next((g for g in grupos if not g["caminho"]), None)
+        if raiz is not None:
+            return raiz["referencia"]
+    return None
+
+
+def cartao_do_caminho(grupos, caminho, novas=None, secoes=None):
+    """O cartão — ou a seção — onde mora o que um caminho normativo nomeia (123, R-004).
+
+    Devolve a âncora da tela (`cartao-g12`, `cartao-novo-evento-1`, `s-cronograma`) ou `None`, e
+    nunca o caminho: o HTML continua sem caminho normativo (FR-019 da `002`). A ordem importa:
+
+    1. **o próprio cartão**, quando o caminho é exatamente o de um grupo;
+    2. **a linha nova**, quando o caminho fala de uma entidade que esta tela acrescenta;
+    3. **o primeiro descendente**, quando o caminho é de uma coleção — o achado da soma do quadro,
+       em `/profiles/id=…/vacancyTable`, leva à primeira linha do quadro daquele Perfil;
+    4. **o ancestral mais próximo** — o campo `/profiles/id=…/immediateVacancies` leva ao Perfil, e
+       o campo da raiz, à Identificação;
+    5. **a seção** da coleção de topo, se ela estiver na página (`secoes`: os identificadores que a
+       tela desenha; Etapas, Documentos e Seções somem quando vazias).
+
+    Exato antes dos descendentes, para que um achado sobre o Perfil não vá parar na primeira
+    Modalidade dele.
+    """
+    caminho = caminho or ""
+    for grupo in grupos:
+        if grupo["caminho"] and grupo["caminho"] == caminho:
+            return f"cartao-{grupo['referencia']}"
+    nova = _linha_nova(caminho, novas or {})
+    if nova:
+        return f"cartao-{nova}"
+    if caminho:
+        for grupo in grupos:
+            if grupo["caminho"] and grupo["caminho"].startswith(f"{caminho}/"):
+                return f"cartao-{grupo['referencia']}"
+    ancestral = _ancestral(grupos, caminho)
+    if ancestral is not None:
+        return f"cartao-{ancestral}"
+    segmentos = _segmentos(caminho)
+    secao = _SECAO_DA_COLECAO.get(segmentos[0]) if segmentos else None
+    if secao and (secoes is None or secao in secoes):
+        return f"s-{secao}"
+    return None
+
+
+def _caminho_da_entidade_nova(alteracao):
+    """`/profiles/-` com `newValue.id` → `/profiles/id=<id>`: a entidade que o `ADD` faz nascer."""
+    alvo = alteracao.get("targetPath", "")
+    novo = alteracao.get("newValue")
+    if alvo.endswith("/-") and isinstance(novo, dict) and novo.get("id"):
+        return f"{alvo[:-2]}/id={novo['id']}"
+    return alvo
+
+
+def referencias_na_proposta(grupos, alteracoes, novas=None):
+    """Os cartões que a proposta altera, e as remoções que não têm cartão (123, R-005).
+
+    Uma regra por operação, e é ela que impede o Perfil intocado de ganhar a marca:
+
+    - `REPLACE` marca o cartão do campo — o próprio ou o ancestral mais próximo;
+    - `ADD` marca **só** a entidade que nasce: o cartão dela (a edição, que já a desenha no
+      proposto) ou a linha nova desta tela (a criação). Nunca o Perfil de quem ela é filha;
+    - `REMOVE` marca **só** o cartão da entidade removida. Sem ele — a edição, em que ela já não
+      está no proposto —, conta como remoção já declarada.
+
+    Devolve `(referencias, remocoes_sem_cartao)`; as referências são as de `cartao-<ref>`.
+    """
+    novas = novas or {}
+    referencias, remocoes = set(), 0
+    por_caminho = {grupo["caminho"]: grupo["referencia"] for grupo in grupos if grupo["caminho"]}
+    for alteracao in alteracoes:
+        operacao = alteracao.get("operation")
+        if operacao == "ADD":
+            entidade = _caminho_da_entidade_nova(alteracao)
+            if entidade in por_caminho:
+                referencias.add(por_caminho[entidade])
+            elif (nova := _linha_nova(entidade, novas)) is not None:
+                referencias.add(nova)
+            continue
+        alvo = alteracao.get("targetPath", "")
+        if operacao == "REMOVE":
+            if alvo in por_caminho:
+                referencias.add(por_caminho[alvo])
+            else:
+                remocoes += 1
+            continue
+        if (nova := _linha_nova(alvo, novas)) is not None:
+            referencias.add(nova)
+        elif (ancestral := _ancestral(grupos, alvo)) is not None:
+            referencias.add(ancestral)
+    return referencias, remocoes
+
+
 def agrupar_em_secoes(grupos):
     """As mesmas linhas, na mesma ordem, divididas nas seções que a tela mostra.
 
@@ -1931,7 +2070,15 @@ def novas_para_formulario(dados, prefixo, campos, *, opcoes=None):
 
 
 def _linhas_novas(dados, prefixo, campos, opcoes=None):
+    """As linhas acrescentadas, sem o índice — a leitura de quem só quer os valores."""
+    return [valores for _, valores in _linhas_novas_indexadas(dados, prefixo, campos, opcoes)]
+
+
+def _linhas_novas_indexadas(dados, prefixo, campos, opcoes=None):
     """Linhas acrescentadas, agrupadas pelo índice que o servidor deu a cada uma.
+
+    O índice volta junto desde a `123`: é ele que nomeia o cartão da linha na tela
+    (`cartao-novo-<prefixo>-<indice>`), para onde a linha do resumo e o impeditivo levam.
 
     `opcoes` só existe para os campos de referência: o `select` da tela **não** é fronteira — um
     POST fabricado traria qualquer UUID —, e é aqui que a escolha é conferida contra o que o
@@ -1955,7 +2102,7 @@ def _linhas_novas(dados, prefixo, campos, opcoes=None):
                 valores[chave] = _converter(bruto, tipo, rotulo, tuple(opcoes.get(chave, ())))
         # Linha em branco é a que a pessoa acrescentou e desistiu de preencher.
         if not vazia:
-            linhas.append(valores)
+            linhas.append((indice, valores))
     return linhas
 
 
@@ -2056,6 +2203,30 @@ def _anexo_completo(valores, resumo_do_artefato):
     }
 
 
+def _da_linha_nova(prefixo, indice, entidades):
+    """O que liga a linha do resumo à linha nova da tela (123, R-006).
+
+    `entidades` são as identidades que o acréscimo faz nascer, e valem só nesta requisição — elas
+    são sorteadas a cada envio. É por elas que um impeditivo sobre a entidade nova chega à linha.
+    """
+    return {
+        "cartao": f"novo-{prefixo}-{indice}",
+        "campo": None,
+        "entidades": [str(e) for e in entidades if e],
+    }
+
+
+def _do_caminho(grupos, caminho):
+    """O cartão de uma linha montada fora do laço dos grupos (o vínculo automático)."""
+    ancora = cartao_do_caminho(grupos, caminho) or ""
+    return {"cartao": ancora.removeprefix("cartao-") or None, "campo": None}
+
+
+def linhas_novas_do_resumo(resumo):
+    """O mapa identidade nova → linha da tela, montado do que `diferencas` registrou."""
+    return {entidade: item["cartao"] for item in resumo for entidade in item.get("entidades") or ()}
+
+
 def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefato=None):
     """Alterações Normativas derivadas do que mudou entre o vigente e o que foi submetido.
 
@@ -2121,6 +2292,8 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                         {
                             "grupo": grupo["titulo"],
                             "rotulo": campo["rotulo"],
+                            "cartao": grupo["referencia"],
+                            "campo": campo["referencia"],
                             "antes": "—",
                             "depois": _exibir(novo_valor, campo) or "—",
                         }
@@ -2153,6 +2326,8 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                     {
                         "grupo": grupo["titulo"],
                         "rotulo": campo["rotulo"],
+                        "cartao": grupo["referencia"],
+                        "campo": campo["referencia"],
                         # O nome e o tamanho dos dois, e não "anterior/novo": a conferência é onde
                         # um arquivo trocado por engano deveria aparecer, e era a única etapa que
                         # não permitia notá-lo (POLISH020-005).
@@ -2192,6 +2367,8 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 {
                     "grupo": grupo["titulo"],
                     "rotulo": campo["rotulo"],
+                    "cartao": grupo["referencia"],
+                    "campo": campo["referencia"],
                     "antes": _exibir(anterior, campo) or "—",
                     "depois": _exibir(novo_valor, campo) or "—",
                 }
@@ -2225,21 +2402,21 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 # do prefixo do caminho errava para modalidade, que também começa em /profiles.
                 "grupo": grupo["titulo"],
                 "rotulo": "Remoção",
+                "cartao": grupo["referencia"],
+                "campo": None,
                 "antes": nome or "—",
                 "depois": "removido do Edital",
             }
         )
 
-    for valores in _linhas_novas(dados, "perfil", NOVO_PERFIL):
+    for indice, valores in _linhas_novas_indexadas(dados, "perfil", NOVO_PERFIL):
+        perfil_novo = _perfil_completo(valores)
         alteracoes.append(
-            {
-                "targetPath": "/profiles/-",
-                "operation": "ADD",
-                "newValue": _perfil_completo(valores),
-            }
+            {"targetPath": "/profiles/-", "operation": "ADD", "newValue": perfil_novo}
         )
         resumo.append(
             {
+                **_da_linha_nova("perfil", indice, [perfil_novo["id"]]),
                 "grupo": f"Perfil {valores.get('code') or ''}".strip(),
                 "rotulo": "Acréscimo",
                 "antes": "—",
@@ -2250,17 +2427,28 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
     # As Modalidades acrescentadas vêm **antes** das linhas do quadro, e é só ordem de leitura: cada
     # alteração nomeia a entidade de que fala, e a linha da cota nova já sai daqui, junto dela.
     codigos_por_perfil = _codigos_que_continuam(conteudo, set(removidos))
-    for valores in _linhas_novas(
+    for indice, valores in _linhas_novas_indexadas(
         dados, "modalidade", NOVA_MODALIDADE, opcoes_da_modalidade_nova(conteudo)
     ):
         emitidas, linhas = _modalidade_nova(valores, conteudo, codigos_por_perfil)
         alteracoes.extend(emitidas)
-        resumo.extend(linhas)
+        # A Modalidade nova faz nascer também a linha do quadro dela: as duas identidades levam à
+        # mesma linha da tela, que é onde as duas foram declaradas.
+        nascidas = [
+            a["newValue"]["id"]
+            for a in emitidas
+            if a["operation"] == "ADD" and isinstance(a.get("newValue"), dict)
+        ]
+        resumo.extend(
+            {**linha, **_da_linha_nova("modalidade", indice, nascidas)} for linha in linhas
+        )
 
     # Uma vez, e não uma por linha: `opcoes_da_linha_nova` percorre todos os Perfis, Modalidades e
     # Anexos do conteúdo vigente, e ele não muda dentro do laço.
     opcoes_da_linha = opcoes_da_linha_nova(conteudo)
-    for valores in _linhas_novas(dados, "linha-do-quadro", NOVA_LINHA_DO_QUADRO, opcoes_da_linha):
+    for indice, valores in _linhas_novas_indexadas(
+        dados, "linha-do-quadro", NOVA_LINHA_DO_QUADRO, opcoes_da_linha
+    ):
         perfil_id = valores.get("profileId")
         if not perfil_id:
             raise ValueError("Perfil: a linha do quadro precisa dizer a que Perfil ela pertence.")
@@ -2288,22 +2476,24 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             ),
             "Ampla concorrência",
         )
+        linha_nova = {
+            # A identidade nasce **aqui**, e é ela que a Retificação seguinte usa para alcançar a
+            # linha: acrescentar sem identidade produziria linha endereçável só por posição, que é
+            # o que o sistema proíbe (FR-170, FR-171).
+            "id": str(uuid4()),
+            "modalityId": valores.get("modalityId") or None,
+            "immediateVacancies": quantidade,
+        }
         alteracoes.append(
             {
                 "targetPath": f"/profiles/id={perfil_id}/vacancyTable/-",
                 "operation": "ADD",
-                "newValue": {
-                    # A identidade nasce **aqui**, e é ela que a Retificação seguinte usa para
-                    # alcançar a linha: acrescentar sem identidade produziria linha endereçável só
-                    # por posição, que é o que o sistema proíbe (FR-170, FR-171).
-                    "id": str(uuid4()),
-                    "modalityId": valores.get("modalityId") or None,
-                    "immediateVacancies": quantidade,
-                },
+                "newValue": linha_nova,
             }
         )
         resumo.append(
             {
+                **_da_linha_nova("linha-do-quadro", indice, [linha_nova["id"]]),
                 "grupo": f"Linha do quadro {recorte}",
                 "rotulo": "Acréscimo",
                 "antes": "—",
@@ -2313,11 +2503,14 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
 
     opcoes_do_criterio = opcoes_do_criterio_novo(conteudo)
     ordens_por_marco = _ordens_que_continuam(conteudo, set(removidos))
-    for valores in _linhas_novas(dados, "criterio", NOVO_CRITERIO, opcoes_do_criterio):
+    for indice, valores in _linhas_novas_indexadas(
+        dados, "criterio", NOVO_CRITERIO, opcoes_do_criterio
+    ):
         caminho, criterio = _criterio_novo(valores, conteudo, ordens_por_marco)
         alteracoes.append({"targetPath": caminho, "operation": "ADD", "newValue": criterio})
         resumo.append(
             {
+                **_da_linha_nova("criterio", indice, [criterio.get("id")]),
                 "grupo": "Critério de desempate "
                 + dict(opcoes_do_criterio["milestone"]).get(valores.get("milestone"), ""),
                 "rotulo": "Acréscimo",
@@ -2329,16 +2522,14 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             }
         )
 
-    for valores in _linhas_novas(dados, "anexo", NOVO_ANEXO):
+    for indice, valores in _linhas_novas_indexadas(dados, "anexo", NOVO_ANEXO):
+        anexo_novo = _anexo_completo(valores, resumo_do_artefato)
         alteracoes.append(
-            {
-                "targetPath": "/attachments/-",
-                "operation": "ADD",
-                "newValue": _anexo_completo(valores, resumo_do_artefato),
-            }
+            {"targetPath": "/attachments/-", "operation": "ADD", "newValue": anexo_novo}
         )
         resumo.append(
             {
+                **_da_linha_nova("anexo", indice, [anexo_novo.get("id")]),
                 "grupo": f"Anexo {valores.get('order') or ''}".strip(),
                 "rotulo": "Acréscimo",
                 "antes": "—",
@@ -2379,6 +2570,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
             )
             resumo.append(
                 {
+                    **_do_caminho(grupos, caminho_do_vinculo),
                     "grupo": f"Documento {documento.get('name', '')}".strip(),
                     "rotulo": "Modelo que o Edital fornece",
                     "antes": "o Anexo removido",
@@ -2398,16 +2590,17 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
     # mesmo ato passa — a verificação é sobre o conteúdo resultante, e não sobre cada operação.
     eventos_removidos = [caminho for caminho in removidos if caminho.startswith("/schedule/")]
     proxima_ordem = len(conteudo.get("schedule") or []) - len(eventos_removidos)
-    for deslocamento, valores in enumerate(_linhas_novas(dados, "evento", NOVO_EVENTO)):
+    for deslocamento, (indice, valores) in enumerate(
+        _linhas_novas_indexadas(dados, "evento", NOVO_EVENTO)
+    ):
+        evento_novo = _evento_completo(valores, proxima_ordem + deslocamento + 1)
         alteracoes.append(
-            {
-                "targetPath": "/schedule/-",
-                "operation": "ADD",
-                "newValue": _evento_completo(valores, proxima_ordem + deslocamento + 1),
-            }
+            {"targetPath": "/schedule/-", "operation": "ADD", "newValue": evento_novo}
         )
+        da_linha = _da_linha_nova("evento", indice, [evento_novo.get("id")])
         resumo.append(
             {
+                **da_linha,
                 "grupo": f"Evento {valores.get('type') or ''}".strip(),
                 "rotulo": "Acréscimo",
                 "antes": "—",
@@ -2420,6 +2613,7 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
         if valores.get("location"):
             resumo.append(
                 {
+                    **da_linha,
                     "grupo": f"Evento {valores.get('type') or ''}".strip(),
                     "rotulo": "Local",
                     "antes": "—",

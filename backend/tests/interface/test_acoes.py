@@ -151,7 +151,7 @@ def test_alcancada_por_url_a_tela_de_retificar_e_de_leitura(
 
     assert resposta.status_code == 200
     assert "Somente leitura" in corpo
-    assert "Conteúdo vigente" in corpo
+    assert "Conteúdo da versão-base" in corpo
     assert 'name="campo:' not in corpo, "nenhum campo editável"
     assert 'name="justificativa"' not in corpo
     assert "Ver o que vai mudar" not in corpo

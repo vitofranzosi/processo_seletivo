@@ -132,9 +132,13 @@ diagnósticos e acrescentou o que o pedido não sabia. É isso que muda o que es
   que a criação diria.
 - **Na edição, o conteúdo conferido é o ato inteiro**, depois da fusão com o que a Retificação já
   declara e das remoções desfeitas — e não o proposto mais a diferença da tela.
-- **Há regras dependentes do instante e do banco** (Evento vencido, período de inscrições
-  encerrado, corte sobre Etapa já avaliada). Entre conferir e criar, elas podem mudar de resposta.
-  Por isso a validação final continua obrigatória, e um teste o prende.
+- **Há regras dependentes do banco** — a regra de corte que nasce governando Etapa já avaliada
+  consulta se há Resultado — e, entre conferir e criar, outra pessoa pode registrá-lo. Por isso a
+  validação final continua obrigatória, e um teste o prende. *(Corrigido em 06/11, na implementação:
+  a primeira redação citava também o Evento vencido e o período de inscrições encerrado, mas no ato
+  de Retificação essas regras não se aplicam — `_eventos_vencidos` e
+  `_periodo_de_inscricoes_encerrado` só valem na publicação do Edital, e a extração inviável é
+  advertência. Nenhuma regra impeditiva do ato de Retificação depende do relógio hoje.)*
 - **Advertências não são impeditivos.** A criação as descarta; as telas de submeter e homologar as
   mostram (`advertencias_do_ato`, 104). Trazê-las à conferência seria uma terceira superfície de
   aviso, com outra base de cálculo (o conteúdo em vigor na fronteira, e não a base). Fica fora
@@ -316,9 +320,9 @@ link sem criar nada; a criação com o mesmo formulário recusa com a mesma fras
    cartão da linha do quadro.
 3. **Given** a linha do quadro corrigida para somar 4, **When** a pessoa confere de novo, **Then**
    nenhum impeditivo é mostrado.
-4. **Given** uma conferência sem impeditivo e um Evento que vence entre a conferência e o «Criar»,
-   **When** a pessoa clica «Criar Retificação», **Then** a criação recusa pela regra que já existe,
-   e nada é gravado.
+4. **Given** uma conferência sem impeditivo de uma regra de corte que nasce governando uma Etapa, e
+   um Resultado registrado nessa Etapa entre a conferência e o «Criar», **When** a pessoa clica
+   «Criar Retificação», **Then** a criação recusa pela regra que já existe, e nada é gravado.
 5. **Given** uma Retificação em edição, **When** a pessoa confere uma alteração que deixaria o ato
    inteiro com impeditivo, **Then** a conferência o mostra, calculado sobre o ato inteiro.
 
@@ -580,7 +584,8 @@ Cada caso abaixo é requisito, e tem linha própria na matriz de rastreabilidade
   pela conferência. Para cada formulário com impeditivo coberto pelos testes, o conjunto de frases da
   conferência é igual ao que a recusa da criação junta.
 - **SC-1180**: A criação recusa em **100%** dos casos de teste em que o impeditivo surge entre a
-  conferência e o «Criar» (Evento vencido no intervalo, Resultado registrado no intervalo).
+  conferência e o «Criar» (Resultado registrado no intervalo), e a criação chama a mesma conferência
+  de conteúdo de novo, mesmo depois de uma conferência sem impeditivo.
 - **SC-1181**: As suítes existentes da Retificação passam sem asserção afrouxada; as jornadas de
   navegador registram **zero** violações da política de conteúdo e **zero** pixels de rolagem
   lateral a 375 px.

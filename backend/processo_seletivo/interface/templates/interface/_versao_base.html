@@ -1,0 +1,7 @@
+{% comment %}
+De que versão é o «antes» (123, M3, FR-3935). O que a base incorpora e a situação de vigência dela,
+no instante da tela — sem chamá-la de "vigente" quando ela não vigora. `prefixo` é a frase que liga
+a descrição à tela: no detalhe e nas confirmações, "«Antes» é o conteúdo da versão-base desta
+Retificação.". A numeração é a do detalhe do Edital (D-006).
+{% endcomment %}{% with d=versao_base %}{% if d %}<p class="versao-base">{% if prefixo %}{{ prefixo }} {% endif %}{% if d.retificacoes %}A versão-base reúne a Publicação original de {{ d.original_em|date:"d/m/Y" }} e {{ d.retificacoes|length|pluralize:"a Retificação,as Retificações" }} {% for r in d.retificacoes %}nº {{ r.numero }} ({{ r.publicada_em|date:"d/m/Y" }}){% if not forloop.last %}{% if forloop.revcounter == 2 %} e {% else %}, {% endif %}{% endif %}{% endfor %}.{% else %}A versão-base é a Publicação original de {{ d.original_em|date:"d/m/Y" }}.{% endif %}
+  {% if d.situacao == "VIGORA" %}Ela vigora desde {{ d.inicio|date:"d/m/Y H:i" }}.{% elif d.situacao == "FUTURA" %}Ela ainda não vigora: passa a vigorar em {{ d.inicio|date:"d/m/Y H:i" }}. Até lá vigora uma versão anterior.{% else %}Ela vigorou a partir de {{ d.inicio|date:"d/m/Y H:i" }} e já não é a versão em vigor.{% endif %}</p>{% endif %}{% endwith %}

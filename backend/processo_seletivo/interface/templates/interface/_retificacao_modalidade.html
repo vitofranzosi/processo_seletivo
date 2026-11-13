@@ -1,5 +1,5 @@
-<fieldset class="linha modalidade-nova">
-  <legend><span class="nome">Modalidade de Concorrência a acrescentar</span></legend>
+<fieldset class="linha modalidade-nova" id="cartao-novo-modalidade-{{ indice }}"{% if na_proposta %} data-na-proposta{% endif %}>
+  <legend><span class="nome">Modalidade de Concorrência a acrescentar</span>{% if na_proposta %} <span class="na-proposta">na proposta</span>{% endif %}</legend>
   {% comment %}
   Os campos da composição (`_modalidade.html`), mais as duas decisões que só se tomam no mesmo ato:
   se ela é a ampla concorrência do Perfil, e, sendo cota, quantas vagas ela tem. A ampla não tem

@@ -1,5 +1,5 @@
-<fieldset class="linha anexo-novo">
-  <legend><span class="nome">Anexo a acrescentar</span></legend>
+<fieldset class="linha anexo-novo" id="cartao-novo-anexo-{{ indice }}"{% if na_proposta %} data-na-proposta{% endif %}>
+  <legend><span class="nome">Anexo a acrescentar</span>{% if na_proposta %} <span class="na-proposta">na proposta</span>{% endif %}</legend>
   <div class="campos">
     {% for campo in campos %}
     {% if campo.tipo == 'oculto' %}

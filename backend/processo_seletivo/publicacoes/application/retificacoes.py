@@ -1,4 +1,5 @@
 import hashlib
+from dataclasses import dataclass
 
 from django.db.models import F
 from django.utils import timezone
@@ -208,25 +209,67 @@ def _no_effective_change():
     )
 
 
-def _apply_declared_changes(edital, base, changes):
-    """Aplica sobre a base declarada e exige efeito prático (FR-026) e precondições (FR-036)."""
+@dataclass(frozen=True)
+class ConferenciaDoConteudo:
+    """O que a criação diria do conteúdo, sem gravar nada (123, R-001).
+
+    `recusa` é a primeira guarda que recusou — e então `impeditivos` vem vazio, porque a criação
+    pararia ali. Sem recusa, `impeditivos` são os achados que `_assert_well_formed` juntaria numa
+    recusa só.
+    """
+
+    content: dict | None
+    recusa: DomainError | None
+    impeditivos: list
+
+
+def conferir_conteudo(edital, base, changes):
+    """A conferência de conteúdo da criação e da edição, **uma vez**, para os dois caminhos (123).
+
+    Saiu de dentro de `_apply_declared_changes` para que «Ver o que vai mudar» diga o que «Criar»
+    diria (FR-3940): as mesmas funções, na mesma ordem, com os mesmos parâmetros. Uma segunda cópia
+    na tela divergiria na primeira guarda que alguém acrescentasse aqui.
+
+    **Não escreve** e não levanta por conteúdo: devolve. Quem recusa é `_apply_declared_changes`. As
+    leituras são as que a criação já faz — a topologia publicada, e o Resultado quando nasce corte.
+    `changes` já elevadas; a tela passa por `conferir_retificacao`, que eleva como o comando.
+    """
     try:
         content, _ = apply_changes(base, changes, publication_id="draft")
     except ValueError as exc:
-        raise _recusa_de_caminho(exc) from exc
-    _recusar_troca_pelo_objeto_inteiro(base, content)
-    _recusar_o_que_o_ato_acrescenta(edital, base, content)
-    _reject_stale_changes(base, changes)
+        return ConferenciaDoConteudo(None, _recusa_de_caminho(exc), [])
+    try:
+        _recusar_troca_pelo_objeto_inteiro(base, content)
+        _recusar_o_que_o_ato_acrescenta(edital, base, content)
+        _reject_stale_changes(base, changes)
+    except DomainError as exc:
+        return ConferenciaDoConteudo(content, exc, [])
     # Depois das precondições, porque quando as duas valem a precondição é mais acionável: ela diz
     # "outra pessoa publicou no intervalo", enquanto esta diz "o que você mandou está incompleto".
     # Antes do efeito prático, porque "não muda nada" é queixa mais fraca que "deixaria um Perfil
     # sem denominação" (FR-002).
-    _assert_well_formed(
-        content, "O conteúdo que esta Retificação produz", topologia_publicada(edital)
+    return ConferenciaDoConteudo(
+        content, None, impeditivos_do_conteudo(content, topologia_publicada(edital))
     )
-    if canonical_sha256(content) == canonical_sha256(base):
+
+
+def conferir_retificacao(edital, base, changes):
+    """`conferir_conteudo` sobre as alterações como a tela as deriva, elevadas como no comando."""
+    return conferir_conteudo(edital, base, elevar_alteracoes(changes))
+
+
+def _apply_declared_changes(edital, base, changes):
+    """Aplica sobre a base declarada e exige efeito prático (FR-026) e precondições (FR-036)."""
+    conferido = conferir_conteudo(edital, base, changes)
+    if conferido.recusa is not None:
+        raise conferido.recusa
+    if conferido.impeditivos:
+        raise _recusa_dos_impeditivos(
+            "O conteúdo que esta Retificação produz", conferido.impeditivos
+        )
+    if canonical_sha256(conferido.content) == canonical_sha256(base):
         raise _no_effective_change()
-    return content
+    return conferido.content
 
 
 def _recusar_troca_pelo_objeto_inteiro(base, content):
@@ -723,17 +766,30 @@ def _assert_well_formed(content, contexto, topologia, situacoes=None):
     # na publicação, o mesmo Edital é conferido uma vez por fronteira de vigência.
     # `situacoes` são as referências que **esta** Retificação introduz, já conferidas na fonte
     # (116, FR-3635): só a publicação da Retificação as passa, e as que ela não muda não estão lá.
-    errors = blocking_findings(
+    errors = impeditivos_do_conteudo(content, topologia, situacoes=situacoes)
+    if errors:
+        raise _recusa_dos_impeditivos(contexto, errors)
+
+
+def impeditivos_do_conteudo(content, topologia, *, situacoes=None):
+    """Os impeditivos do ato de Retificação: o que a criação, a edição e a publicação recusam.
+
+    Uma função para os três, e para a conferência da tela (123, R-002). `situacoes` só a publicação
+    passa (116, FR-3635); `None` é "a fonte do sorteio não foi consultada", e não há achado dela.
+    """
+    return blocking_findings(
         validate_for_publication(
             content, ato=ATO_DE_RETIFICACAO, topologia=topologia, situacoes=situacoes
         )
     )
-    if errors:
-        raise DomainError(
-            "blocking_findings",
-            f"{contexto} possui erros impeditivos: " + "; ".join(item.message for item in errors),
-            422,
-        )
+
+
+def _recusa_dos_impeditivos(contexto, impeditivos):
+    return DomainError(
+        "blocking_findings",
+        f"{contexto} possui erros impeditivos: " + "; ".join(item.message for item in impeditivos),
+        422,
+    )
 
 
 def advertencias_do_ato(retificacao):

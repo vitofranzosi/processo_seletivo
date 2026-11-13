@@ -1,5 +1,5 @@
-<fieldset class="linha linha-do-quadro-nova">
-  <legend><span class="nome">Linha do quadro a acrescentar</span></legend>
+<fieldset class="linha linha-do-quadro-nova" id="cartao-novo-linha-do-quadro-{{ indice }}"{% if na_proposta %} data-na-proposta{% endif %}>
+  <legend><span class="nome">Linha do quadro a acrescentar</span>{% if na_proposta %} <span class="na-proposta">na proposta</span>{% endif %}</legend>
   {% comment %}
   Três campos, e dois deles são escolha. `profileId` diz a que Perfil a linha se acrescenta — ele
   não é campo do conteúdo publicado, e sim o que compõe o caminho da Alteração. `modalityId` é

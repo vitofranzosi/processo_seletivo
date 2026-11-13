@@ -31,3 +31,48 @@
    numa linha, e o rótulo quebra a 375 px em vez de alargar o cartão. */
 .remocoes-declaradas{border:1px solid var(--borda);border-radius:4px;padding:.5rem .75rem}
 .remocoes-declaradas p{margin:.25rem 0;overflow-wrap:anywhere}
+
+/* O que o ato leva, dito pelo servidor (123, M2). Distinto da marca «alterada», que é verde e diz o
+   que mudou nesta tela desde a conferência: as duas podem estar no mesmo cartão, e por isso cada uma
+   tem palavra própria (WCAG 1.4.1) e uma cor que não se confunde com a outra. O traço à esquerda é
+   o da marca verde quando ela também está — a alteração nova é a mais urgente de reconferir. */
+fieldset.linha[data-na-proposta]:not([data-alterado]){box-shadow:inset 3px 0 0 var(--texto-fraco)}
+fieldset.linha>legend .na-proposta{font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.03em;color:var(--texto);background:var(--cinza-fundo);
+  border:1px solid var(--borda);padding:.05rem .4rem;border-radius:3px;margin-left:.4rem}
+/* As duas frases da barra, uma por estado (FR-3930): a contagem continua a primeira, à direita. */
+.barra-de-acoes .estado-da-proposta{font-size:.875rem;color:var(--texto)}
+.barra-de-acoes .estado-da-proposta strong{color:var(--texto)}
+
+/* O caminho de volta: do resumo ao campo, do impeditivo ao cartão, da busca ao campo. Quebra linha
+   a 375 px em vez de alargar a tabela. */
+.ir-ao-campo{white-space:nowrap;font-size:.8125rem;font-weight:600}
+.consequencias td.ir{width:1%;text-align:right}
+@media (max-width:34rem){
+  .consequencias td.ir{width:auto;text-align:left}
+}
+
+/* O que impede criar (123, M4): a caixa de recusa de sempre, antes do resumo. A lista é de frases do
+   domínio, que podem ser longas — o link fica no fim de cada uma. */
+.impeditivos h2{font-size:1rem;margin:0 0 .35rem}
+.impeditivos p{margin:0 0 .35rem}
+.impeditivos ul{margin:.25rem 0 0 1.2rem;padding:0}
+.impeditivos li{margin:.2rem 0;overflow-wrap:anywhere}
+
+/* A lista da busca por campo (123, M1): onde, qual campo, o valor atual e o caminho até ele. Ocupa a
+   largura da caixa do filtro, abaixo dos controles, e cada item quebra linha a 375 px. */
+.filtro-da-retificacao .resultados-da-busca{flex:1 1 100%;list-style:none;margin:.25rem 0 0;
+  padding:0;max-height:22rem;overflow-y:auto;border-top:1px solid var(--borda)}
+.resultados-da-busca li{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;
+  padding:.4rem 0;border-bottom:1px solid var(--borda)}
+.resultados-da-busca .onde{flex:1 1 100%;font-size:.75rem;color:var(--texto-fraco);
+  overflow-wrap:anywhere}
+.resultados-da-busca .rotulo{font-weight:600}
+.resultados-da-busca .valor{color:var(--texto);font-variant-numeric:tabular-nums;
+  overflow-wrap:anywhere}
+.resultados-da-busca .ir-ao-campo{margin-left:auto}
+
+/* De que versão é o «antes» (123, M3): a frase da base, dentro do «Como funciona» e acima do resumo. */
+.versao-base{margin:.5rem 0 0;font-size:.875rem}
+.aviso>p:first-child{margin-top:0}
+.aviso>p:last-child{margin-bottom:0}

@@ -32,15 +32,19 @@ publicação já confere conflito de conteúdo entre elas.
 {% endif %}
 
 {% if edicao and pode_elaborar %}
-<p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>proposto</em> por esta
-Retificação: o vigente com o que ela já declara. Altere o que precisa mudar; o que já foi declarado e
-você não tocar continua no ato, e o campo que voltar ao valor vigente deixa de ser alterado. Nada
-muda para o público até a Retificação ser publicada.</p>
+<div class="aviso"><p><strong>Como funciona.</strong> Abaixo está o conteúdo <em>proposto</em> por esta
+Retificação: a versão-base com o que ela já declara. Altere o que precisa mudar; o que já foi
+declarado e você não tocar continua no ato, e o campo que voltar ao valor da versão-base deixa de ser
+alterado. Nada muda para o público até a Retificação ser publicada.</p>
+{% include "interface/_versao_base.html" %}</div>
 {% elif pode_elaborar %}
-<p class="aviso"><strong>Como funciona.</strong> Abaixo está o conteúdo <em>vigente</em> do Edital.
+{% comment %} "Vigente" saiu daqui (123, M3): a base é a última versão publicada, que pode ainda não
+   vigorar. A frase abaixo diz qual é e em que situação ela está. {% endcomment %}
+<div class="aviso"><p><strong>Como funciona.</strong> Abaixo está o conteúdo da versão-base do Edital.
 Cada campo que você alterar vira uma Alteração Normativa; os demais não são tocados. Marcar
 <em>Remover do Edital</em> tira a linha inteira da versão futura — os campos dela passam a não ter
 efeito. Nada muda para o público até a Retificação ser publicada.</p>
+{% include "interface/_versao_base.html" %}</div>
 {% else %}
 {% comment %}
 FR-026: sem a permissão, a tela é de leitura. Antes ela abria inteira — campos, acrescentar
@@ -48,8 +52,28 @@ Perfil, justificativa — e a recusa só chegava no envio: a pessoa preenchia tu
 fim. Não há vazamento, porque o conteúdo vigente já é visível a quem alcança o Edital; o que se
 corrige é o caminho que não termina.
 {% endcomment %}
-<p class="aviso"><strong>Somente leitura.</strong> Você não tem a permissão
-  <code>retificacao:elaborar</code>. Abaixo está o conteúdo vigente do Edital, como referência.</p>
+<div class="aviso"><p><strong>Somente leitura.</strong> Você não tem a permissão
+  <code>retificacao:elaborar</code>. Abaixo está o conteúdo da versão-base do Edital, como
+  referência.</p>
+{% include "interface/_versao_base.html" %}</div>
+{% endif %}
+
+{% comment %}
+**O que impede criar, antes do que vai mudar** (123, M4, D-009). A mesma conferência que «Criar» e
+«Gravar» fazem — a mesma função, os mesmos parâmetros —, e por isso a mesma frase. Antes, a recusa
+chegava só no último clique, sem caminho até a linha do quadro. O botão continua oferecido (D-004):
+o impeditivo vale para este instante, e a criação confere de novo.
+{% endcomment %}
+{% if impeditivos %}
+<section id="impeditivos" aria-labelledby="impeditivos-titulo" class="erro impeditivos" tabindex="-1">
+  <h2 id="impeditivos-titulo">O que impede {% if edicao %}gravar{% else %}criar{% endif %} esta Retificação ({{ impeditivos|length }})</h2>
+  <p>«{% if edicao %}Gravar a Retificação{% else %}Criar Retificação{% endif %}» será recusado enquanto houver {{ impeditivos|length|pluralize:"este impeditivo,estes impeditivos" }}.</p>
+  <ul>
+    {% for item in impeditivos %}
+    <li>{{ item.mensagem }}{% if item.destino %} <a class="ir-ao-campo" href="#{{ item.destino }}">Ir ao {% if item.destino|slice:":2" == "s-" %}lugar{% else %}cartão{% endif %}</a>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
 {% endif %}
 
 {% if resumo or gestos or consequencias %}
@@ -66,11 +90,15 @@ corrige é o caminho que não termina.
     ainda.{% endif %}</p>
   {% endif %}
   {% if resumo %}
+  {% if not edicao %}{% include "interface/_versao_base.html" %}{% endif %}
   <div class="rolagem">
   <table>
     <thead><tr>
       <th scope="col">Onde</th><th scope="col">Campo</th>
-      <th scope="col">Vigente hoje</th><th scope="col">Passará a ser</th>
+      {% comment %} A coluna diz de onde vem o «antes» (123, D-007): na criação, da versão-base — que pode
+         ainda não vigorar —; na edição, do rascunho, que é contra o que o resumo da edição compara. {% endcomment %}
+      <th scope="col">{% if edicao %}No rascunho{% else %}Na versão-base{% endif %}</th><th scope="col">Passará a ser</th>
+      <th scope="col"><span class="oculto">Caminho de volta</span></th>
     </tr></thead>
     <tbody>
       {% for item in resumo %}
@@ -79,6 +107,9 @@ corrige é o caminho que não termina.
         <td>{{ item.rotulo }}</td>
         <td class="antes">{{ item.antes }}</td>
         <td class="depois">{{ item.depois }}</td>
+        {% comment %} O caminho de volta da conferência ao campo (123, FR-3932): a referência opaca que o
+           cartão já tem, e nunca o caminho normativo. {% endcomment %}
+        <td class="ir">{% if item.campo %}<a class="ir-ao-campo" href="#c-{{ item.campo }}" aria-label="Ir ao campo {{ item.rotulo }} — {{ item.grupo }}">Ir ao campo</a>{% elif item.cartao %}<a class="ir-ao-campo" href="#cartao-{{ item.cartao }}" aria-label="Ir ao cartão {{ item.grupo }}">Ir ao cartão</a>{% endif %}</td>
       </tr>
       {% endfor %}
     </tbody>
@@ -103,7 +134,7 @@ corrige é o caminho que não termina.
 
 {% if not pode_elaborar %}
 <section aria-labelledby="vigente-titulo" class="conteudo-vigente">
-  <h2 id="vigente-titulo">Conteúdo vigente</h2>
+  <h2 id="vigente-titulo">Conteúdo da versão-base</h2>
   {% for grupo in grupos %}
   <section class="cartao conferencia" aria-labelledby="v-{{ forloop.counter }}">
     <h3 id="v-{{ forloop.counter }}">{{ grupo.titulo }}</h3>
@@ -143,7 +174,7 @@ um "Ir para" ou de um "Ir ao cartão de origem" termina em âncora — e a tela 
 conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou de pedir para ver.
 {% endcomment %}
 <form method="post" enctype="multipart/form-data" id="formulario-da-retificacao"
-      action="{{ acao_do_formulario }}"{% if resumo or gestos %} data-conferido{% endif %}>
+      action="{{ acao_do_formulario }}"{% if resumo or gestos %} data-conferido{% endif %}{% if edicao %} data-modo="edicao"{% endif %}{% if enviado %} data-enviado{% endif %} data-proposta="{{ proposta_estado }}"{% if proposta_estado == "conferida" %} data-proposta-cartoes="{{ proposta_cartoes }}"{% if edicao %} data-proposta-remocoes="{{ proposta_remocoes }}"{% endif %}{% endif %}>
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
   {% comment %}
@@ -212,7 +243,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% if secao.id == 'perfis' %}
     <div id="novos-perfis">
       {% for linha in novos_perfis %}
-      {% include "interface/_retificacao_perfil.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_perfil.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
@@ -229,7 +260,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% endcomment %}
     <div id="novas-modalidades">
       {% for linha in novas_modalidades %}
-      {% include "interface/_retificacao_modalidade.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_modalidade.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
@@ -248,7 +279,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% endcomment %}
     <div id="novas-linhas-do-quadro">
       {% for linha in novas_linhas_do_quadro %}
-      {% include "interface/_retificacao_linha_do_quadro.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_linha_do_quadro.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
@@ -265,7 +296,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% endcomment %}
     <div id="novos-criterios">
       {% for linha in novos_criterios %}
-      {% include "interface/_retificacao_criterio.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_criterio.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
@@ -280,7 +311,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% elif secao.id == 'cronograma' %}
     <div id="novos-eventos">
       {% for linha in novos_eventos %}
-      {% include "interface/_retificacao_evento.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_evento.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
@@ -293,7 +324,7 @@ conferência no alto, abria rolada até o cartão, longe do que a pessoa acabou 
     {% elif secao.id == 'anexos' %}
     <div id="novos-anexos">
       {% for linha in novos_anexos %}
-      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos %}
+      {% include "interface/_retificacao_anexo.html" with indice=linha.indice campos=linha.campos na_proposta=linha.na_proposta %}
       {% endfor %}
     </div>
     <p class="acrescentar">
