@@ -111,6 +111,12 @@ e pelo título. A cor nunca é o único portador do sentido:
 **Ação principal.** Um botão por mensagem, no máximo, com verbo que diz o destino ("Acessar minha
 convocação", "Rever minha inscrição", "Abrir minha convocação", "Entrar na área do candidato"), e o
 endereço por extenso, em cinza, logo abaixo — para quem tem o link bloqueado ou usa leitor de tela.
+**Largura total no celular** (pedido do usuário, 13/11): a tabela do botão é fluida até 340 px e o
+link é bloco, de modo que, no celular, o botão ocupa a largura do texto e o toque vale nele
+inteiro; no computador, fica com 340 px, alinhado à esquerda com o resto. Sem media query — a guarda
+da CSP não deixa o modelo ter `<style>` —, e com uma tabela de 340 px entre comentários condicionais
+para o Outlook do Windows, que não lê largura máxima. **À esquerda, e não centralizado**: ele
+continua a frase que o anuncia, e o endereço por extenso, abaixo, fica alinhado com ele.
 O código de acesso **não** tem botão nem link (P-001 da `010`: nenhum link autentica).
 
 **Preheader.** Uma frase da própria mensagem, que aparece ao lado do assunto na caixa de entrada: o

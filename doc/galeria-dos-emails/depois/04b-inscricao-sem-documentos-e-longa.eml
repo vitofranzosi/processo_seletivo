@@ -1,15 +1,15 @@
 Content-Type: multipart/alternative;
- boundary="===============5683883048507674482=="
+ boundary="===============5971895348341138957=="
 MIME-Version: 1.0
 Subject: =?utf-8?b?SW5zY3Jpw6fDo28gcmVjZWJpZGEg4oCUIDIwMjYtMDA0Mi03NzMx?=
 From: =?utf-8?b?U2VsZcOnw7VlcyBJZmVz?= <nao-responda@exemplo.test>
 To: maria@exemplo.test
-Date: Fri, 13 Nov 2026 20:53:27 -0000
+Date: Fri, 13 Nov 2026 21:41:48 -0000
 Message-ID: 
- <179460320716.39135.12007037130517856424@139.31.168.192.in-addr.arpa>
+ <179460610846.71039.14874693026586486523@139.31.168.192.in-addr.arpa>
 Auto-Submitted: auto-generated
 
---===============5683883048507674482==
+--===============5971895348341138957==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -38,7 +38,7 @@ Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há 
 Cefor/Ifes — Seleções
 Esta mensagem é automática; não responda.
 
---===============5683883048507674482==
+--===============5971895348341138957==
 Content-Type: text/html; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -84,9 +84,11 @@ Content-Transfer-Encoding: 8bit
 <p style="font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1c1c1c;margin:0 0 16px 0;font-size:16px;line-height:24px;">(nenhum)</p>
 <p style="font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0 0 12px 0;font-size:14px;line-height:21px;color:#555555;">O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos são feitas pela comissão, nos prazos do Edital.</p>
 <p style="font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1c1c1c;margin:0 0 16px 0;font-size:16px;line-height:24px;">Para rever a inscrição e baixar o comprovante, acesse:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 8px 0;border-collapse:separate;">
-<tr><td style="background-color:#15803d;border-radius:6px;" bgcolor="#15803d" align="center"><a style="display:inline-block;padding:14px 26px;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:6px;" href="https://selecoes.ifes.edu.br/selecoes/">Rever minha inscrição</a></td></tr>
+<!--[if mso]><table role="presentation" width="340" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:340px;margin:4px 0 8px 0;border-collapse:separate;">
+<tr><td style="background-color:#15803d;border-radius:6px;" bgcolor="#15803d" align="center"><a style="display:block;text-align:center;padding:14px 26px;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:6px;" href="https://selecoes.ifes.edu.br/selecoes/">Rever minha inscrição</a></td></tr>
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 <p style="font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0 0 20px 0;font-size:13px;line-height:19px;color:#555555;word-break:break-all;">https://selecoes.ifes.edu.br/selecoes/</p>
 
 <p style="font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;margin:0 0 12px 0;font-size:14px;line-height:21px;color:#555555;">Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há senha.</p>
@@ -103,4 +105,4 @@ Content-Transfer-Encoding: 8bit
 </body>
 </html>
 
---===============5683883048507674482==--
+--===============5971895348341138957==--

@@ -55,9 +55,11 @@ do texto puro. Mudou uma frase aqui? Mude lá também.
 <p class="prazo"><strong>até {{ prazo.por_extenso }}.</strong></p>{% else %}<p class="texto fim">O prazo para atender é o que o Edital publica.</p>{% endif %}</td></tr>
 </table>
 
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="acao">
+<!--[if mso]><table role="presentation" width="340" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="acao">
 <tr><td class="botao-celula" bgcolor="#15803d" align="center"><a class="botao" href="{{ link }}">Acessar minha convocação</a></td></tr>
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 <p class="endereco">{{ link }}</p>
 
 <p class="texto">Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviaremos numa mensagem separada.</p>

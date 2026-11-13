@@ -1,8 +1,16 @@
 {% comment %}
-O botão da ação, e o endereço por extenso logo abaixo dele: quem não consegue tocar no botão — o
+O botão da ação, e o endereço por extenso logo abaixo dele. **Largura total no celular, sem media
+query** (a guarda da CSP não deixa o modelo ter `<style>`): a tabela é fluida até 340 px, e a área de
+texto de um celular é mais estreita que isso; no computador ele fica com 340 px, à esquerda. O
+Outlook do Windows não lê largura máxima, e a tabela de 340 px entre comentários condicionais é só
+para ele. O link é bloco, e o toque vale no botão inteiro, e não só no texto.
+
+O endereço por extenso vem logo abaixo: quem não consegue tocar no botão — o
 Outlook que bloqueou o link, o leitor de tela que pulou a tabela — copia o endereço. Um só por
 mensagem; o rótulo é um verbo que diz para onde leva.
-{% endcomment %}<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="acao">
+{% endcomment %}<!--[if mso]><table role="presentation" width="340" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="acao">
 <tr><td class="botao-celula" bgcolor="#15803d" align="center"><a class="botao" href="{{ endereco }}">{{ rotulo }}</a></td></tr>
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 <p class="endereco">{{ endereco }}</p>
