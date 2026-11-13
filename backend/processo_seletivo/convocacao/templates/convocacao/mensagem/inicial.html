@@ -43,7 +43,7 @@ do texto puro. Mudou uma frase aqui? Mude lá também.
 {% if unidade %}<p class="unidade">{{ unidade }} · Seleções</p>{% endif %}
 </td></tr>
 <tr><td class="conteudo">
-<h1 class="titulo">Você foi convocado no {{ edital }}</h1>
+<h1 class="titulo">Você tem uma convocação no {{ edital }}</h1>
 <p class="subtitulo">{{ processo }}</p>
 
 {% if variante == "documento_e_requerimento" %}<p class="texto">Esta convocação pede documentos e o Requerimento de Matrícula.</p>
@@ -59,7 +59,7 @@ do texto puro. Mudou uma frase aqui? Mude lá também.
 </table>
 <p class="endereco">{{ link }}</p>
 
-<p class="texto">Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviamos numa mensagem separada.</p>
+<p class="texto">Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviaremos numa mensagem separada.</p>
 
 <p class="fraco">{% if requerimento_exigido %}Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.{% else %}Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o resultado.{% endif %}</p>
 
@@ -79,7 +79,7 @@ do texto puro. Mudou uma frase aqui? Mude lá também.
 <tr><td class="rodape">
 <p class="assinatura">{{ assinatura }} — Seleções</p>
 <p class="nota">Esta mensagem é automática; não responda.</p>
-<p class="nota">Você a recebe porque foi convocado num processo seletivo em que se inscreveu.</p>
+<p class="nota">Você a recebe porque tem uma convocação num processo seletivo em que se inscreveu.</p>
 </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->

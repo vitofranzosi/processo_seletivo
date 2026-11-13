@@ -542,7 +542,10 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 - **FR-3883** *(revista pela `156` em 2026-11-11, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
   A mensagem inicial MUST ter, de cima para baixo:
   - a identificação institucional por extenso, em texto (FR-3887);
-  - o título *"Você foi convocado no Edital ‹NN/AAAA›"* e o Processo;
+  - o título *"Você tem uma convocação no Edital ‹NN/AAAA›"* e o Processo *(revisto em 2026-11-13,
+    na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`: era *"Você foi convocado no
+    Edital ‹NN/AAAA›"*, masculino genérico; o rodapé, pela mesma razão, diz que a pessoa recebe a
+    mensagem porque *"tem uma convocação"*, e não porque *"foi convocado"*)*;
   - a frase das obrigações (FR-3884) e *"Você envia tudo pela sua área do candidato."*;
   - o prazo em destaque, com o dia da semana, como *"Prazo para atender: até ‹data por extenso›."*,
     sem *"contado do envio desta mensagem"* (FR-3875; FR-6428 da `156`);

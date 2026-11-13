@@ -129,7 +129,7 @@ def test_o_codigo_de_vincular_endereco_diz_o_risco_certo(caixa):
     corpo = caixa[-1].body
     assert "Confirme este e-mail" in caixa[-1].subject
     assert "não informe este código a ninguém" in corpo
-    assert "entrar na conta dele\npor este endereço" in corpo
+    assert "usar este endereço para entrar na própria conta" in corpo
     # A frase do login está errada aqui: o risco não é alguém entrar na conta de quem recebeu.
     assert "ninguém entra sem ele" not in corpo
 

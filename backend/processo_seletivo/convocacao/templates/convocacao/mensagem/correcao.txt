@@ -36,7 +36,7 @@ Você envia tudo pela sua área do candidato.{% elif variante == "so_documento" 
 Acessar minha convocação:
 {{ link }}
 
-Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviamos numa mensagem separada.
+Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviaremos numa mensagem separada.
 
 {% if requerimento_exigido %}Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.{% else %}Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o resultado.{% endif %}
 
@@ -49,5 +49,5 @@ Para a sua segurança
 
 {{ assinatura }} — Seleções
 Esta mensagem é automática; não responda.
-Você a recebe porque foi convocado num processo seletivo em que se inscreveu.
+Você a recebe porque tem uma convocação num processo seletivo em que se inscreveu.
 {% endautoescape %}

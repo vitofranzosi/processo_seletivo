@@ -238,7 +238,7 @@ def test_o_texto_puro_termina_na_assinatura(nome):
     assert texto.rstrip().endswith(
         "Esta mensagem é automática; não responda."
     ) or texto.rstrip().endswith(
-        "Você a recebe porque foi convocado num processo seletivo em que se inscreveu."
+        "Você a recebe porque tem uma convocação num processo seletivo em que se inscreveu."
     )
 
 
@@ -382,3 +382,34 @@ def test_os_modelos_cobrem_as_cinco_situacoes():
     nomes = {modelo.name for modelo in MODELOS_DE_MENSAGEM}
     assert {"codigo.html", "vinculo.html", "mudanca.html", "comprovante.html"} <= nomes
     assert {"inicial.html", "correcao.html", "aviso.html", "base.html"} <= nomes
+
+
+@pytest.mark.parametrize("nome", ["convocacao", "correcao"])
+def test_o_codigo_de_entrada_e_futuro_e_nao_ja_enviado(nome):
+    """O código só sai quando a pessoa o pede (o quadro de segurança diz isso na mesma mensagem).
+
+    "que enviamos numa mensagem separada" mandava procurar na caixa um código que ainda não existe —
+    e quem procura e não acha desconfia da própria convocação. A FR-3883 da `121` fixa só *"numa
+    mensagem separada"*; o tempo do verbo é o do fato.
+    """
+    mensagem = MENSAGENS[nome]()
+    for parte in (mensagem.texto, mensagem.html):
+        assert "código de seis dígitos que enviaremos numa mensagem separada." in parte
+        assert "que enviamos numa mensagem separada" not in parte
+
+
+#: As formas que diziam o gênero de quem lê. "área do candidato" fica: é o nome da área no portal.
+MASCULINO_GENERICO = re.compile(r"\b(convocado|inscrito|aprovado|classificado|dele)\b", re.I)
+
+
+@pytest.mark.parametrize("nome", MENSAGENS)
+def test_a_mensagem_nao_presume_o_genero_de_quem_le(nome):
+    """O e-mail vai a uma pessoa, e o sistema não sabe — nem precisa saber — o gênero dela.
+
+    O título da convocação dizia *"Você foi convocado"*, o rodapé *"porque foi convocado"*, e o
+    código de vínculo *"a conta dele"*. As formas novas não perdem sentido: *"Você tem uma
+    convocação"* e *"entrar na própria conta"*.
+    """
+    mensagem = MENSAGENS[nome]()
+    for parte in (mensagem.assunto, mensagem.texto, mensagem.html):
+        assert not MASCULINO_GENERICO.findall(parte.replace("área do candidato", ""))

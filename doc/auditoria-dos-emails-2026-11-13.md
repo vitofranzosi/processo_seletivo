@@ -148,7 +148,9 @@ estão na galeria com HTML, texto puro, `.eml` e captura em 600 e 375 px. Em res
 - **Convocação.** Antes: HTML sem estilo, prazo em azul genérico, link sublinhado. Depois: título,
   processo como subtítulo, o que a convocação pede, **prazo em quadro âmbar rotulado**, botão "Acessar
   minha convocação" com o endereço abaixo, "como entrar", a ressalva em tom secundário, e o quadro de
-  segurança com borda. **Nenhuma frase mudou** — o teste frase a frase da SC-1159 continua verde.
+  segurança com borda. **Três frases mudaram**, a pedido do usuário depois da primeira versão: "que
+  enviaremos numa mensagem separada" (achado 1), e o título e o rodapé sem masculino genérico (achado
+  5). O teste frase a frase da SC-1159 continua verde.
 - **Pendência documental.** Antes: texto com a URL inteira no meio da frase e o rodapé com cara de
   assinatura. Depois: a lista de documentos como lista, o botão "Abrir minha convocação", o prazo, e
   "Este aviso não é a convocação e não altera o seu prazo" num quadro âmbar. Mesmo texto puro, byte a byte.
@@ -169,7 +171,7 @@ longos, convocação sem vencimento, implantação com várias unidades, pendên
 | `identidade/application/mensagem.py` | compõe pelos modelos e envia `html_message`; destinatário, gatilho e falha silenciosa iguais |
 | `inscricoes/templates/inscricoes/mensagem/comprovante.{txt,html}` (novos) | idem |
 | `inscricoes/application/mensagem.py` | idem; envio continua depois do commit e fora da transação |
-| `convocacao/templates/convocacao/mensagem/{inicial,correcao}.html` | só apresentação; nenhuma frase |
+| `convocacao/templates/convocacao/mensagem/{inicial,correcao}.{html,txt}` | apresentação; e "que enviaremos", no lugar de "que enviamos", na frase de como entrar |
 | `convocacao/application/comunicar.py` | `_renderizar` aplica `correio.estilizar` — envio e conferência pela mesma composição |
 | `avisos/application/despacho.py` | `EmailMultiAlternatives` com a forma HTML; recaída no texto puro |
 | `scripts/galeria_dos_emails.py` (novo) | a galeria, sem banco e sem enviar |
@@ -232,16 +234,28 @@ da convocação, contagem de situações da FR-084, tokens, nenhuma migration e 
 
 Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do usuário.
 
-1. **"o código de seis dígitos que enviamos numa mensagem separada"** (convocação) está no passado,
-   mas o código só sai quando a pessoa o pede — o próprio quadro de segurança diz isso na linha
-   seguinte. Fixado na spec `121` (linhas 551 e 568). Sugestão: "que enviaremos numa mensagem separada".
+1. ~~**"o código de seis dígitos que enviamos numa mensagem separada"**~~ **Corrigido em 13/11**, a
+   pedido do usuário: "que enviaremos numa mensagem separada", na inicial e na correção, texto e HTML.
+   O código só sai quando a pessoa o pede, e o passado mandava procurar na caixa um código que ainda
+   não existe. A FR-3883 da `121` fixa só *"numa mensagem separada"*, e a spec não precisou mudar. O
+   resumo do modelo (FR-3889) muda para os envios seguintes, e não para os já gravados.
+   `test_o_codigo_de_entrada_e_futuro_e_nao_ja_enviado` prende a forma nova.
 2. ~~**`Auto-Submitted: auto-generated` só nos avisos.**~~ **Corrigido em 13/11**, a pedido do
    usuário: toda mensagem do GPS leva o cabeçalho (seção E).
-3. **"quem o tiver poderá entrar na conta dele"** (vínculo): masculino genérico, e a quebra de linha
-   no meio da frase é fixada por `test_o_codigo_de_vincular_endereco_diz_o_risco_certo`.
+3. ~~**"quem o tiver poderá entrar na conta dele"**~~ **Corrigido em 13/11**, a pedido do usuário:
+   *"quem o tiver poderá usar este endereço para entrar na própria conta"*, num parágrafo por linha.
+   O teste que prendia a forma antiga prende a nova.
 4. **O assunto da pendência é singular com vários documentos** ("há documento … para revisar"); o
    corpo concorda o número. Texto da 3ª decisão de 08/11.
-5. **"Você foi convocado"** em masculino genérico, também fixado pela `121`.
+5. ~~**"Você foi convocado"** em masculino genérico~~ **Corrigido em 13/11**, a pedido do usuário: o
+   título diz *"Você tem uma convocação no Edital ‹NN/AAAA›"*, e o rodapé, *"porque tem uma
+   convocação num processo seletivo"*. A FR-3883 da `121` citava o título literalmente e foi revista,
+   com a redação anterior anotada ao lado. `test_a_mensagem_nao_presume_o_genero_de_quem_le` varre os
+   treze e-mails da composição.
+7. **A página da convocação no portal diz "Você foi convocado!"** — título de tela, não de e-mail, e
+   por isso fora desta correção. Está fixado pelo quadro de títulos da `121` (linhas 101, 157 e
+   293–360) e por uma dezena de testes do portal. A correção pede a mesma revisão de spec, numa
+   mudança à parte.
 6. **O mapa de estilos não entra no resumo da FR-3889.** Mudar uma cor muda o HTML que sai sem mudar o
    resumo gravado. Hoje é aceitável — estilo não é texto —, mas se a auditoria precisar reconstruir o
    HTML exato, o mapa precisa entrar no resumo, e isso muda o contrato da `121`.
