@@ -4694,8 +4694,6 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           (AUD-RET-05, decisão do usuário).</li>
         <li>A trilha grava a permissão usada, e não o papel.</li>
         <li>A jornada com três pessoas reais (SC-978) espera o usuário. <span class="selo selo-parc">Parcial</span></li>
-        <li>Com duas ou mais em curso, o título da tela Retificar sai <em>“Retificaçãoões”</em>: o plural do
-          <em>template</em> acrescenta o sufixo ao singular. Ver <a href="#evolucoes-codigo">Polimento que se vê na tela</a>.</li>
       </ul>
     </div>
 
@@ -9749,12 +9747,12 @@ Em paralelo, se o Edital pede:
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Convocar e as recusas</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/convocar.py">convocacao/application/convocar.py</a></dd>
-      <dt>A leitura do recorte</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/selectors.py">application/selectors.py</a></dd>
-      <dt>A fila, pura</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/fila.py">domain/fila.py</a></dd>
-      <dt>Espécie e fundamento derivados</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/especie.py">domain/especie.py</a> · <a href="../../backend/processo_seletivo/convocacao/domain/fundamento.py">domain/fundamento.py</a></dd>
-      <dt>Vocabulário e códigos de recusa</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/nomes.py">domain/nomes.py</a></dd>
-      <dt>Os sete modelos append-only (três da 115: item da lista, apresentação e conferência)</dt><dd><a href="../../backend/processo_seletivo/convocacao/models.py">convocacao/models.py</a></dd>
+      <dt>Convocar e as recusas</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/convocar.py">convocacao/application/convocar.py</a></dd>
+      <dt>A leitura do recorte</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/selectors.py">application/selectors.py</a></dd>
+      <dt>A fila, pura</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/fila.py">domain/fila.py</a></dd>
+      <dt>Espécie e fundamento derivados</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/especie.py">domain/especie.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/fundamento.py">domain/fundamento.py</a></dd>
+      <dt>Vocabulário e códigos de recusa</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/nomes.py">domain/nomes.py</a></dd>
+      <dt>Os sete modelos append-only (três da 115: item da lista, apresentação e conferência)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/models.py">convocacao/models.py</a></dd>
     </dl></div></details>
   </section>
 
@@ -9931,11 +9929,11 @@ Em paralelo, se o Edital pede:
     </p>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Os três gestos e a chamada individual</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/fluxo.py">convocacao/application/fluxo.py</a></dd>
-      <dt>O alcance e a assinatura</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/alcance.py">domain/alcance.py</a></dd>
-      <dt>A comunicação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">application/comunicar.py</a></dd>
+      <dt>Os três gestos e a chamada individual</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/fluxo.py">convocacao/application/fluxo.py</a></dd>
+      <dt>O alcance e a assinatura</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/alcance.py">domain/alcance.py</a></dd>
+      <dt>A comunicação</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/comunicar.py">application/comunicar.py</a></dd>
       <dt>A tela</dt><dd><code>interface/templates/interface/convocacao.html</code> · <code>interface/views.py</code> (<code>convocacao</code>, <code>convocar_titulares_view</code>, <code>emitir_pendentes_view</code>) · <code>interface/conducao_da_convocacao.py</code> (o passo de cada chamada, o índice e a situação do aviso, desde a <a href="#convocacao-pelas-perguntas">143</a>)</dd>
-      <dt>A correção (120)</dt><dd><code>convocacao/application/convocar.py</code> (a convocação nomeada e a assinatura conferidas sob a trava) · <code>convocacao/application/fluxo.py</code> (a prévia e o impedimento) · <code>_correcao_da_convocacao.html</code> · <code>static/interface/correcao-da-convocacao.js</code> (estende, antecipa ou mantém) · <code>tests/navegador/test_jornada_da_correcao_da_convocacao.py</code> · <a href="../../specs/120-correcao-da-convocacao-pela-gestao/spec.md">spec 120</a></dd>
+      <dt>A correção (120)</dt><dd><code>convocacao/application/convocar.py</code> (a convocação nomeada e a assinatura conferidas sob a trava) · <code>convocacao/application/fluxo.py</code> (a prévia e o impedimento) · <code>_correcao_da_convocacao.html</code> · <code>static/interface/correcao-da-convocacao.js</code> (estende, antecipa ou mantém) · <code>tests/navegador/test_jornada_da_correcao_da_convocacao.py</code> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/specs/120-correcao-da-convocacao-pela-gestao/spec.md">spec 120</a></dd>
     </dl></div></details>
 
     <h3 id="conferencia-antes-de-convocar">Convocar os titulares passa sempre por uma conferência (140) <span class="selo selo-impl">Implementado</span></h3>
@@ -10604,9 +10602,9 @@ Em paralelo, se o Edital pede:
     </ul>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Desfechar e a apuração seguinte</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/desfechar.py">convocacao/application/desfechar.py</a></dd>
-      <dt>Atestar</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/atestar.py">application/atestar.py</a></dd>
-      <dt>O prazo</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/prazo.py">domain/prazo.py</a></dd>
+      <dt>Desfechar e a apuração seguinte</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/desfechar.py">convocacao/application/desfechar.py</a></dd>
+      <dt>Atestar</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/atestar.py">application/atestar.py</a></dd>
+      <dt>O prazo</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/prazo.py">domain/prazo.py</a></dd>
       <dt>Histórico do recorte</dt><dd><code>interface/templates/interface/convocacao_historico.html</code> (mostra os identificadores da apuração e da ordem citadas)</dd>
     </dl></div></details>
   </section>
@@ -10731,13 +10729,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </ul>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Disponibilidade (a política)</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/disponibilidade.py">requerimentos/domain/disponibilidade.py</a></dd>
-      <dt>A metade que a submissão da inscrição alcança</dt><dd><a href="../../backend/processo_seletivo/requerimentos/application/exigencia.py">application/exigencia.py</a></dd>
-      <dt>Abrir, copiar, gravar, enviar, suceder</dt><dd><a href="../../backend/processo_seletivo/requerimentos/application/preencher.py">application/preencher.py</a></dd>
-      <dt>Declaração, saneamento e conferência</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/declaracao.py">domain/declaracao.py</a></dd>
-      <dt>Porta do endereço e base de CEP</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/endereco.py">domain/endereco.py</a> · <a href="../../backend/processo_seletivo/requerimentos/infrastructure/referencia_local.py">infrastructure/referencia_local.py</a> · comando <code>carregar_ceps</code></dd>
-      <dt>Vocabulário fechado</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/nomes.py">domain/nomes.py</a></dd>
-      <dt>Declaração do momento, no Edital</dt><dd><a href="../../backend/processo_seletivo/editais/application/requerimento.py">editais/application/requerimento.py</a> · <code>compor_inscricao.html</code></dd>
+      <dt>Disponibilidade (a política)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/disponibilidade.py">requerimentos/domain/disponibilidade.py</a></dd>
+      <dt>A metade que a submissão da inscrição alcança</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/application/exigencia.py">application/exigencia.py</a></dd>
+      <dt>Abrir, copiar, gravar, enviar, suceder</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/application/preencher.py">application/preencher.py</a></dd>
+      <dt>Declaração, saneamento e conferência</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/declaracao.py">domain/declaracao.py</a></dd>
+      <dt>Porta do endereço e base de CEP</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/endereco.py">domain/endereco.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/infrastructure/referencia_local.py">infrastructure/referencia_local.py</a> · comando <code>carregar_ceps</code></dd>
+      <dt>Vocabulário fechado</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/nomes.py">domain/nomes.py</a></dd>
+      <dt>Declaração do momento, no Edital</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/editais/application/requerimento.py">editais/application/requerimento.py</a> · <code>compor_inscricao.html</code></dd>
     </dl></div></details>
   </section>
 
@@ -10854,13 +10852,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <p>A da versão que a convocação citou. Ler a norma de hoje faria uma Retificação mudar, em silêncio, o arquivo de quem já foi chamado.</p></div></details>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Quem entra no arquivo</dt><dd><a href="../../backend/processo_seletivo/matriculas/application/populacao.py">matriculas/application/populacao.py</a></dd>
-      <dt>As 34 colunas — uma função por coluna</dt><dd><a href="../../backend/processo_seletivo/matriculas/domain/colunas.py">domain/colunas.py</a> · <a href="../../backend/processo_seletivo/matriculas/domain/flexao.py">domain/flexao.py</a></dd>
-      <dt>O conceito de lacuna</dt><dd><a href="../../backend/processo_seletivo/matriculas/domain/lacuna.py">domain/lacuna.py</a></dd>
-      <dt>Compor, gerar e registrar</dt><dd><a href="../../backend/processo_seletivo/matriculas/application/exportar.py">application/exportar.py</a> · <code>matriculas/models.py</code> (<code>GeracaoDeArquivo</code>)</dd>
-      <dt>A planilha, construída e nunca copiada</dt><dd><a href="../../backend/processo_seletivo/matriculas/infrastructure/planilha.py">infrastructure/planilha.py</a></dd>
+      <dt>Quem entra no arquivo</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/application/populacao.py">matriculas/application/populacao.py</a></dd>
+      <dt>As 34 colunas — uma função por coluna</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/colunas.py">domain/colunas.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/flexao.py">domain/flexao.py</a></dd>
+      <dt>O conceito de lacuna</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/lacuna.py">domain/lacuna.py</a></dd>
+      <dt>Compor, gerar e registrar</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/application/exportar.py">application/exportar.py</a> · <code>matriculas/models.py</code> (<code>GeracaoDeArquivo</code>)</dd>
+      <dt>A planilha, construída e nunca copiada</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/infrastructure/planilha.py">infrastructure/planilha.py</a></dd>
       <dt>Papel próprio</dt><dd><code>interface/identidade.py</code> (<code>exportador</code>) · <code>interface/acoes.py</code></dd>
-      <dt>Contrato de saída</dt><dd><a href="../../specs/029-requerimento-de-matricula/contrato-de-saida.md">specs/029-…/contrato-de-saida.md</a> · <a href="../../specs/031-exportacao-de-matriculas/contracts/">specs/031-…/contracts/</a></dd>
+      <dt>Contrato de saída</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/specs/029-requerimento-de-matricula/contrato-de-saida.md">specs/029-…/contrato-de-saida.md</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/specs/031-exportacao-de-matriculas/contracts">specs/031-…/contracts/</a></dd>
     </dl></div></details>
   </section>
 
@@ -11113,14 +11111,14 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Rotas do portal</dt><dd><a href="../../backend/processo_seletivo/portal/urls.py">portal/urls.py</a></dd>
-      <dt>Vitrine, página do Edital, situação pública</dt><dd><a href="../../backend/processo_seletivo/portal/views.py">portal/views.py</a> (<code>vitrine</code>, <code>selecao</code>) · <a href="../../backend/processo_seletivo/portal/leitura.py">portal/leitura.py</a></dd>
-      <dt>Rascunho, retomada e preenchimento</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/rascunho.py">inscricoes/application/rascunho.py</a></dd>
-      <dt>As conferências do envio</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/submissao.py">inscricoes/application/submissao.py</a></dd>
-      <dt>A lista exigida gravada no envio</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/lista_exigida.py">inscricoes/application/lista_exigida.py</a> · <code>inscricoes/models.py</code> (<code>ItemDaListaExigida</code>)</dd>
-      <dt>Protocolo e autenticidade do comprovante</dt><dd><a href="../../backend/processo_seletivo/inscricoes/domain/protocolo.py">domain/protocolo.py</a> · <a href="../../backend/processo_seletivo/inscricoes/domain/autenticidade.py">domain/autenticidade.py</a></dd>
-      <dt>Titularidade</dt><dd><a href="../../backend/processo_seletivo/inscricoes/domain/titularidade.py">domain/titularidade.py</a></dd>
-      <dt>Entrega mediada de documento</dt><dd><a href="../../backend/processo_seletivo/portal/arquivos.py">portal/arquivos.py</a> · <a href="../../backend/processo_seletivo/inscricoes/storage.py">inscricoes/storage.py</a> · <code>shared/arquivos.py</code></dd>
+      <dt>Rotas do portal</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/urls.py">portal/urls.py</a></dd>
+      <dt>Vitrine, página do Edital, situação pública</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/views.py">portal/views.py</a> (<code>vitrine</code>, <code>selecao</code>) · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/leitura.py">portal/leitura.py</a></dd>
+      <dt>Rascunho, retomada e preenchimento</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/rascunho.py">inscricoes/application/rascunho.py</a></dd>
+      <dt>As conferências do envio</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/submissao.py">inscricoes/application/submissao.py</a></dd>
+      <dt>A lista exigida gravada no envio</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/lista_exigida.py">inscricoes/application/lista_exigida.py</a> · <code>inscricoes/models.py</code> (<code>ItemDaListaExigida</code>)</dd>
+      <dt>Protocolo e autenticidade do comprovante</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/protocolo.py">domain/protocolo.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/autenticidade.py">domain/autenticidade.py</a></dd>
+      <dt>Titularidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/titularidade.py">domain/titularidade.py</a></dd>
+      <dt>Entrega mediada de documento</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/arquivos.py">portal/arquivos.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/storage.py">inscricoes/storage.py</a> · <code>shared/arquivos.py</code></dd>
       <dt>Convocação do candidato</dt><dd><code>portal/views.py</code> (<code>convocacao</code>) · <code>portal/templates/portal/convocacao.html</code></dd>
     </dl></div></details>
   </section>
@@ -11388,11 +11386,11 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Modelos da identidade</dt><dd><a href="../../backend/processo_seletivo/identidade/models.py">identidade/models.py</a></dd>
-      <dt>Desafio de acesso, tetos e consumo atômico</dt><dd><a href="../../backend/processo_seletivo/identidade/application/desafio.py">application/desafio.py</a> · <code>domain/codigo.py</code></dd>
-      <dt>A quem o endereço pertence</dt><dd><a href="../../backend/processo_seletivo/identidade/application/associacao.py">application/associacao.py</a></dd>
-      <dt>Forma canônica do e-mail</dt><dd><a href="../../backend/processo_seletivo/identidade/domain/enderecos.py">domain/enderecos.py</a></dd>
-      <dt>Identidade na sessão do portal</dt><dd><a href="../../backend/processo_seletivo/portal/identidade.py">portal/identidade.py</a></dd>
+      <dt>Modelos da identidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/models.py">identidade/models.py</a></dd>
+      <dt>Desafio de acesso, tetos e consumo atômico</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/desafio.py">application/desafio.py</a> · <code>domain/codigo.py</code></dd>
+      <dt>A quem o endereço pertence</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/associacao.py">application/associacao.py</a></dd>
+      <dt>Forma canônica do e-mail</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/domain/enderecos.py">domain/enderecos.py</a></dd>
+      <dt>Identidade na sessão do portal</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/identidade.py">portal/identidade.py</a></dd>
     </dl></div></details>
   </section>
 
@@ -11485,9 +11483,9 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Código e aviso de mudança</dt><dd><a href="../../backend/processo_seletivo/identidade/application/mensagem.py">identidade/application/mensagem.py</a></dd>
-      <dt>Confirmação de inscrição</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/mensagem.py">inscricoes/application/mensagem.py</a></dd>
-      <dt>Convocação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
+      <dt>Código e aviso de mudança</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/mensagem.py">identidade/application/mensagem.py</a></dd>
+      <dt>Confirmação de inscrição</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/mensagem.py">inscricoes/application/mensagem.py</a></dd>
+      <dt>Convocação</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
       <dt>Aviso de pendência documental</dt><dd><code>avisos/application/pendencias.py</code> · <code>avisos/domain/pendencia.py</code> · <code>avisos/migrations/0002_origem_pendencia.py</code></dd>
       <dt>Aviso complementar</dt><dd><code>avisos/application/despacho.py</code> · <code>avisos/domain/modelos_iniciais.py</code> · <code>interface/avisos.py</code></dd>
       <dt>A varredura das cinco situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code></dd>
@@ -12745,19 +12743,19 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <summary>Onde isso mora no código</summary>
       <div class="evidencia-corpo">
         <dl>
-          <dt>Política de papéis e append-only</dt><dd><a href="../../backend/processo_seletivo/seguranca/papeis.py">seguranca/papeis.py</a> (é a <strong>única</strong> fonte da política)</dd>
+          <dt>Política de papéis e append-only</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/seguranca/papeis.py">seguranca/papeis.py</a> (é a <strong>única</strong> fonte da política)</dd>
           <dt>Comando de provisionamento</dt><dd><code>manage.py provisionar_papeis</code></dd>
-          <dt>Trilha e idempotência</dt><dd><a href="../../backend/processo_seletivo/auditoria/models.py">auditoria/models.py</a> (inclui <code>detalhe</code>) · <a href="../../backend/processo_seletivo/shared/idempotency.py">shared/idempotency.py</a></dd>
-          <dt>Controle otimista e Problem Details</dt><dd><a href="../../backend/processo_seletivo/shared/concurrency.py">shared/concurrency.py</a> · <a href="../../backend/processo_seletivo/shared/api/problems.py">shared/api/problems.py</a></dd>
-          <dt>Integridade dos arquivos</dt><dd><a href="../../backend/processo_seletivo/shared/arquivos.py">shared/arquivos.py</a> (<code>resumo</code>, SHA-256)</dd>
-          <dt>Serialização canônica (a base de todo resumo)</dt><dd><a href="../../backend/processo_seletivo/shared/canonical.py">shared/canonical.py</a></dd>
+          <dt>Trilha e idempotência</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/auditoria/models.py">auditoria/models.py</a> (inclui <code>detalhe</code>) · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/idempotency.py">shared/idempotency.py</a></dd>
+          <dt>Controle otimista e Problem Details</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/concurrency.py">shared/concurrency.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/api/problems.py">shared/api/problems.py</a></dd>
+          <dt>Integridade dos arquivos</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/arquivos.py">shared/arquivos.py</a> (<code>resumo</code>, SHA-256)</dd>
+          <dt>Serialização canônica (a base de todo resumo)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/canonical.py">shared/canonical.py</a></dd>
           <dt>Limite de campos</dt><dd><code>config/settings/base.py</code> (<code>DATA_UPLOAD_MAX_NUMBER_FIELDS</code>) · <code>interface/erros.py</code></dd>
           <dt>Política de segurança de conteúdo</dt><dd><code>shared/politica_de_conteudo.py</code> (o primeiro do <code>MIDDLEWARE</code>, em <code>config/settings/base.py</code>)</dd>
           <dt>Barreiras de produção</dt><dd><code>config/settings/production.py</code> — seletor, identidade demo do portal, fonte de demonstração do sorteio, o assistente na página pública da seleção (074), <code>API_AUTHENTICATION_CLASSES</code></dd>
           <dt>Autenticação provisória</dt><dd><code>seguranca/api/authentication.py</code></dd>
           <dt>E-mails</dt><dd><code>identidade/application/mensagem.py</code> · <code>inscricoes/application/mensagem.py</code> · <code>convocacao/application/comunicar.py</code> · <code>avisos/application/despacho.py</code></dd>
           <dt>Ações em lote explícitas</dt><dd><code>.specify/memory/constitution.md</code> (versão 1.2.0, 28/09)</dd>
-          <dt>Observabilidade</dt><dd><a href="../../backend/processo_seletivo/shared/observability.py">shared/observability.py</a> (logs em JSON, recusas de domínio) · <code>/health</code>, <code>/readiness</code>, <code>/metrics</code></dd>
+          <dt>Observabilidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/observability.py">shared/observability.py</a> (logs em JSON, recusas de domínio) · <code>/health</code>, <code>/readiness</code>, <code>/metrics</code></dd>
         </dl>
       </div>
     </details>
@@ -14510,8 +14508,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Polimento que se vê na tela</h4>
     <ul>
-      <li><strong>“Retificaçãoões”</strong>: com duas ou mais Retificações em curso, o título da tela Retificar acrescenta o plural ao singular (<code>retificar.html</code>, linha 27). Encontrado em 30/10; continua em 13/11. A correção é de uma linha.</li>
-      <li><strong>Os 58 links desta página para o repositório quebram dentro da gestão.</strong> Caminhos como <code>../../backend/…</code> funcionam com a página aberta do disco; servida em <code>/gestao/documentacao/</code> (105), resolvem fora dela e respondem 404, porque <code>interface/documentacao.py</code> serve só cinco arquivos, por lista literal. São 53 para <code>backend/</code>, 3 para <code>specs/</code>, mais <code>AGENTS.md</code> e <code>.specify</code>.</li>
       <li><strong>Identificadores crus na tela de quem julga e no caminho do topo</strong>: o recurso imprime o identificador do objeto, do ato vigente e da versão (<code>recurso.html</code>), e o Ato de classificação aparece pelo identificador de 36 caracteres (<code>ato_ordenacao.html</code>).</li>
       <li><strong>A tela de recusa não diz de onde a pessoa veio</strong>: oferece só <span class="rotulo-ui">Voltar aos Processos Seletivos</span> (<code>recusa.html</code>; a origem só entra nos casos de envio acima do limite e de CSRF).</li>
       <li><strong>Três renderizações do mesmo prazo</strong>: <em>“Faltam 19 dias”</em> no portal, <em>“2 semanas, 5 dias”</em> no painel e só a data nas demais (<code>supervisao.html</code>, <code>portal/_periodo.html</code>).</li>
@@ -14659,7 +14655,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <h3 id="evolucoes-resolvidas">O que já fechou</h3>
     <p>
       Itens que esta página listava como pendentes e que a conferência de 13/11 encontrou resolvidos.
-      Ficam aqui só para o leitor que os conhecia: saíram dos grupos acima.
+      Ficam aqui só para o leitor que os conhecia: saíram dos grupos acima. As duas últimas linhas
+      fecharam depois da conferência, no mesmo dia, e não entram no placar.
     </p>
     <div class="rolagem"><table>
       <thead><tr><th>O que era</th><th>Como fechou</th><th>Evidência</th></tr></thead>
@@ -14682,6 +14679,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Suceder uma convocação, com motivo</td><td>120 (#385): correção com motivo e <em>“Corrigida em…”</em>. O desfecho segue sem tela (grupo 1)</td><td><code>convocacao.html</code></td></tr>
         <tr><td>Aviso de pendência por e-mail (QI-7); a marca do Cefor fora do documento</td><td>134 (#435); 109 (31/10): telas, e-mails e página da seleção dizem a unidade de cada ato</td><td><code>portal/templates/portal/base.html</code>; <code>identidade/application/mensagem.py</code></td></tr>
         <tr><td>Um critério da 008 pedia o Processo na primeira página</td><td>Emendado pela 054 (FR-998): <em>“sem o Processo”</em>, o certo para os Editais reais</td><td><code>specs/008-composicao-institucional/spec.md</code></td></tr>
+        <tr><td>O título <em>“Retificaçãoões”</em> com duas ou mais Retificações em curso (desde 30/10)</td><td>13/11: o plural troca a palavra inteira, e um teste abre a tela com duas em curso</td><td><code>interface/templates/interface/retificar.html</code>; <code>tests/interface/test_jornada_da_retificacao.py</code></td></tr>
+        <tr><td>Os 59 links desta página para o repositório (<code>../../backend/…</code>) respondiam 404 dentro da gestão (105)</td><td>13/11: apontam para o repositório no GitHub, e valem do disco e de <code>/gestao/documentacao/</code>; um guardião recusa link relativo que saia da pasta servida</td><td><code>tests/interface/test_documentacao_do_sistema.py</code></td></tr>
         <tr><td>Decididas e executadas desde 26/09</td><td>DP-01 a DP-06, DP-08 item 2, DP-13 (<a href="#heranca">aplicar a todos</a>), DP-14 (ampla na inscrição), DP-16 (não atendimento em lote), DP-17 (automação explícita na Constituição 1.2.0), DP-19 (campos definitivos na Revisão) e DP-21 (limite de 13.000 campos da composição). A DP-05 foi revista em 21/10 pela 097, que voltou à opção A — a vaga acrescida depois da publicação</td><td><code>.specify/memory/constitution.md</code>; <code>config/settings/base.py</code>; <code>compor_revisao.html</code></td></tr>
       </tbody>
     </table></div>
@@ -14907,9 +14906,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
-  <p>A <a href="../../.specify/memory/constitution.md">Constituição</a> é a autoridade de engenharia e
+  <p>A <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/.specify/memory/constitution.md">Constituição</a> é a autoridade de engenharia e
   domínio; em conflito com qualquer coisa escrita aqui, ela prevalece. As armadilhas de ambiente estão em
-  <a href="../../AGENTS.md">AGENTS.md</a>.</p>
+  <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/AGENTS.md">AGENTS.md</a>.</p>
 </footer>
 </div>
 </main>

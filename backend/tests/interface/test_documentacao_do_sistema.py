@@ -29,6 +29,7 @@ class _Marcacao(HTMLParser):
     def __init__(self):
         super().__init__()
         self.referencias = []
+        self.links = []
         self.embutidos = []
         self._em_script_sem_src = False
 
@@ -48,6 +49,8 @@ class _Marcacao(HTMLParser):
                     self.embutidos.append(f'<{tag} {nome}="{valor[:40]}…">')
                 elif tag in ("link", "script", "img") and not urlsplit(valor).scheme:
                     self.referencias.append(valor)
+                elif tag == "a":
+                    self.links.append(valor)
 
 
 def _marcacao():
@@ -136,3 +139,22 @@ def test_o_voltar_do_manual_leva_ao_inicio_da_gestao():
 
     assert '<a class="voltar-a-gestao" href="../">' in pagina
     assert reverse("interface:lista") == INICIO.removesuffix("documentacao/")
+
+
+def test_nenhum_link_do_manual_sai_da_pasta_servida():
+    """`FR-2903`, `D-002`: o relativo que sai da pasta abre do disco e responde 404 na gestão.
+
+    Os 59 `../../backend/…` do manual valiam com a página aberta do repositório e caíam fora de
+    `/gestao/documentacao/` (13/11). O código vai pelo endereço absoluto do repositório; relativo,
+    só a âncora, o voltar à gestão e o que a lista serve.
+    """
+    fora = [
+        link
+        for link in _marcacao().links
+        if not urlsplit(link).scheme
+        and not link.startswith("#")
+        and link != "../"
+        and link not in documentacao.ARQUIVOS
+    ]
+
+    assert fora == []

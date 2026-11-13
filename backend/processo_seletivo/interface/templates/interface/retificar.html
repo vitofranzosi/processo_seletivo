@@ -24,7 +24,7 @@ publicação já confere conflito de conteúdo entre elas.
 {% endcomment %}
 {% if em_curso %}
 <section class="aviso" aria-labelledby="em-curso-titulo">
-  <h2 id="em-curso-titulo">Este Edital já tem {{ em_curso|length }} Retificação{{ em_curso|length|pluralize:"ões" }} em curso</h2>
+  <h2 id="em-curso-titulo">Este Edital já tem {{ em_curso|length }} {{ em_curso|length|pluralize:"Retificação,Retificações" }} em curso</h2>
   {% include "interface/_retificacoes_em_curso.html" with com_continuar=pode_elaborar %}
   <p class="ajuda">Para corrigir uma delas, continue a elaboração dela. Para tratar de outro assunto,
     componha uma nova abaixo.</p>

@@ -429,3 +429,12 @@ A seção listava o que faltava em 20/09, e crescera por camadas de datas. Em 13
 - o ponto exato em que a falta de autoridade vigente recusa a publicação;
 - o item *"cadastro de reserva limitado em N"* sem regra, e o de a Retificação da reversão ser mesmo uma causa ausente: vêm das fichas da conferência, sem releitura minha;
 - os números do bloco *Estado atual* (pastas, tabelas, gatilhos, rotas) não foram recontados: continuam os da revisão de 02/11.
+
+## Acréscimo de 13/11: dois itens de polimento corrigidos
+
+Dois itens de *Polimento que se vê na tela*, ambos registrados como de correção curta, foram corrigidos e passaram a *O que já fechou*. O placar de 13/11 não mudou: os dois fecharam depois da conferência.
+
+- **“Retificaçãoões”** (desde 30/10). O título da tela Retificar acrescentava `pluralize:"ões"` à palavra no singular. Agora o plural troca a palavra inteira (`retificar.html`). Um teste abre a tela com duas Retificações em curso (`test_jornada_da_retificacao.py`). A nota em *O que a 103 deixou aberto* saiu.
+- **Os links para o repositório** (desde 02/11). Eram 59, e não 58: 54 para `backend/`, 3 para `specs/`, mais `AGENTS.md` e `.specify`. Apontam agora para `https://github.com/vitofranzosi/processo_seletivo` (`blob/main/…`, e `tree/main/…` para a pasta de contratos da 031), e valem tanto com a página aberta do disco quanto em `/gestao/documentacao/`. A lista literal da 105 (D-002) não mudou: servir o repositório pela gestão era justamente o que ela recusa. Um guardião novo (`test_documentacao_do_sistema.py`) recusa link relativo que não seja âncora, o voltar à gestão ou arquivo da lista.
+
+**Não verificado:** os links apontam para a `main`, e não para o commit que a página descreve. Um arquivo renomeado depois quebra o link no GitHub, e nada o acusa.
