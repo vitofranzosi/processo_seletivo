@@ -36,7 +36,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 
 from django.conf import settings
-from django.core.mail import EmailMessage, get_connection
+from django.core.mail import EmailMultiAlternatives, get_connection
 from django.core.mail.message import sanitize_address
 from django.db import connection, transaction
 from django.utils import timezone
@@ -329,7 +329,7 @@ def _mensagem(destinatario, conexao):
     remetente = settings.DEFAULT_FROM_EMAIL or None
     # **Um destinatário só, sem cópia e sem cópia oculta** (`FR-1271`): nenhum endereço é exposto a
     # outra pessoa.
-    mensagem = EmailMessage(
+    mensagem = EmailMultiAlternatives(
         subject=assunto,
         body=corpo,
         from_email=remetente,
@@ -337,6 +337,9 @@ def _mensagem(destinatario, conexao):
         headers=dict(CABECALHOS),
         connection=conexao,
     )
+    html = _html(assunto, corpo, origem=aviso.origem)
+    if html:
+        mensagem.attach_alternative(html, "text/html")
     codificacao = mensagem.encoding or settings.DEFAULT_CHARSET
     sanitize_address(destinatario.endereco, codificacao)
     # O remetente vazio só existe fora de produção, que recusa subir sem `DEFAULT_FROM_EMAIL`.
@@ -344,6 +347,28 @@ def _mensagem(destinatario, conexao):
         sanitize_address(mensagem.from_email, codificacao)
     mensagem.message()
     return mensagem
+
+
+def _html(assunto, corpo, *, origem):
+    """A forma HTML do texto congelado, ou `""` quando ela não se compõe.
+
+    **O texto puro é o aviso**: é ele que está gravado, e é ele que sai sempre. O HTML só o mostra
+    em blocos, na moldura comum (`shared/correio.py`), sem frase que o texto não tenha. Por isso a
+    falha dele não é falha do aviso: a mensagem sai só com o texto, e o registro técnico diz por
+    quê. Deixá-la subir faria uma moldura quebrada virar `ValueError` de preparação — e o aviso
+    não sairia por uma razão que nada tem a ver com ele.
+    """
+    from processo_seletivo.shared import correio
+
+    try:
+        return correio.html_do_aviso(
+            assunto=assunto,
+            corpo=corpo,
+            estado="pendencia" if origem == nomes.PENDENCIA else "informacao",
+        )
+    except Exception:  # noqa: BLE001 — sem a forma HTML, o texto sai sozinho, como antes
+        logger.exception("O aviso saiu sem a forma HTML, que não se compôs.")
+        return ""
 
 
 def _registrar(tentativa, classificacao, *, aviso):

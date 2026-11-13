@@ -1,0 +1,28 @@
+{% extends "correio/base.html" %}
+{% comment %}
+O aviso complementar (066) e o de pendência documental (134), em HTML: o mesmo texto congelado, em
+blocos — parágrafo, lista e ação —, e nenhuma frase que o texto não tenha.
+
+O assunto é o título, porque é o que a pessoa leu na caixa de entrada para chegar aqui. O rodapé do
+sistema — o que o aviso não é, e a quem perguntar — vem num quadro, e não em letra miúda: é a frase
+que impede o aviso de ser lido como o ato (FR-1257 da 066). A assinatura é a do próprio texto.
+{% endcomment %}
+{% block titulo_do_documento %}{{ assunto }}{% endblock %}
+{% block preheader %}{{ preheader }}{% endblock %}
+{% block conteudo %}
+<h1 class="titulo">{{ assunto }}</h1>
+{% for bloco in blocos %}{% if bloco.tipo == "lista" %}<ul class="lista">
+{% for linha in bloco.linhas %}<li class="item">{{ linha }}</li>
+{% endfor %}</ul>
+{% elif bloco.tipo == "acao" %}{% for linha in bloco.linhas %}<p class="texto">{{ linha }}</p>
+{% endfor %}{% include "correio/_botao.html" with endereco=bloco.endereco rotulo=bloco.rotulo %}
+{% else %}<p class="texto">{% for linha in bloco.linhas %}{{ linha|urlize }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
+{% endif %}{% endfor %}
+{% if nota %}<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
+<tr><td class="destaque-{{ estado }}">
+{% for linha in nota %}<p class="fraco{% if forloop.last %} fim{% endif %}">{{ linha|urlize }}</p>
+{% endfor %}</td></tr>
+</table>{% endif %}
+{% endblock %}
+{% block rodape %}{% for linha in assinatura %}<p class="{% if forloop.first %}assinatura{% else %}nota{% endif %}">{{ linha }}</p>
+{% endfor %}{% endblock %}

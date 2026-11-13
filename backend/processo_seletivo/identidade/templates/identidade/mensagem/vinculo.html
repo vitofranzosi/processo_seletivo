@@ -1,0 +1,23 @@
+{% extends "correio/base.html" %}
+{% comment %}
+O código para acrescentar este endereço a uma conta, em HTML. O aviso do risco fica num quadro de
+pendência, logo abaixo do código: é a frase que separa este caso do de entrar (FR-082a da 010).
+{% endcomment %}
+{% block titulo_do_documento %}Confirme este e-mail{% endblock %}
+{% block preheader %}Alguém pediu para usar este e-mail como forma de entrar numa conta das Seleções {{ assinatura }}.{% endblock %}
+{% block conteudo %}
+<h1 class="titulo">Confirme este e-mail</h1>
+<p class="texto">Alguém pediu para usar este e-mail como forma de entrar numa conta das Seleções {{ assinatura }}. Se foi você, o código é:</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
+<tr><td class="destaque-informacao" align="center">
+<p class="codigo">{{ codigo }}</p>
+</td></tr>
+</table>
+<p class="texto">Digite-o na tela em que você o pediu. Ele vale por {{ validade }} minutos e só pode ser usado uma vez.</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
+<tr><td class="destaque-pendencia">
+<p class="texto">Se não foi você, não informe este código a ninguém: quem o tiver poderá entrar na conta dele por este endereço.</p>
+<p class="fraco fim">Ignorar esta mensagem é suficiente — nada acontece sem o código.</p>
+</td></tr>
+</table>
+{% endblock %}

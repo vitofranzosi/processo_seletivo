@@ -36,35 +36,42 @@ import logging
 from django.conf import settings
 from django.core.mail import send_mail
 
+from processo_seletivo.shared import correio
 from processo_seletivo.unidades.application import identificacao
 
 logger = logging.getLogger("processo_seletivo.inscricoes")
 
-ASSUNTO = "Inscrição recebida — {protocolo}"
+# **O texto mora nos modelos** (`inscricoes/templates/inscricoes/mensagem/comprovante.*`): o texto
+# puro, com o assunto na primeira linha, e o HTML na moldura comum de `shared/correio.py`.
+MODELO = "inscricoes/mensagem/comprovante"
 
-CORPO = """Recebemos a sua inscrição.
 
-    Protocolo: {protocolo}
-    Código de verificação: {verificacao}
+def compor_comprovante(dados):
+    """O assunto, o texto e o HTML do recibo — sem enviar.
 
-{selecao}
-Perfil de vaga: {perfil}
-Concorrência: {modalidade}
-Enviada em {quando}
-
-Documentos recebidos:
-{documentos}
-
-O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos são
-feitas pela comissão, nos prazos do Edital.
-
-Para rever a inscrição e baixar o comprovante, acesse
-{endereco}
-e entre com este e-mail — enviamos um código de acesso a cada entrada, e não há senha.
-
-{assinatura} — Seleções
-Esta mensagem é automática; não responda.
-"""
+    `dados["assinatura"]` é a unidade do ato, que o portal resolve como o comprovante em papel
+    (109). Sem ela, a da implantação — e nunca um Cefor escrito aqui.
+    """
+    assinatura = dados.get("assinatura") or identificacao.da_implantacao().rotulo
+    sigla, _, instituicao = assinatura.partition("/")
+    return correio.compor(
+        MODELO,
+        {
+            "instituicao": identificacao.SIGLA_DA_INSTITUICAO,
+            "instituicao_por_extenso": identificacao.NOME_DA_INSTITUICAO,
+            # O cabeçalho diz a unidade que assina, e só a instituição quando é ela que assina.
+            "unidade": sigla if instituicao else "",
+            "assinatura": assinatura,
+            "protocolo": dados["protocolo"],
+            "verificacao": dados["verificacao"],
+            "selecao": [linha for linha in str(dados["selecao"]).split("\n") if linha.strip()],
+            "perfil": dados["perfil"],
+            "modalidade": dados["modalidade"],
+            "quando": dados["quando"],
+            "documentos": dados["documentos"],
+            "endereco": dados["endereco"],
+        },
+    )
 
 
 def enviar_comprovante(*, para: str, dados: dict) -> None:
@@ -75,29 +82,12 @@ def enviar_comprovante(*, para: str, dados: dict) -> None:
     """
     if not para:
         return
-    documentos = (
-        "\n".join(
-            f"    - {documento['requisito']}: {documento['arquivo']}"
-            for documento in dados["documentos"]
-        )
-        or "    (nenhum)"
-    )
     try:
+        mensagem = compor_comprovante(dados)
         send_mail(
-            subject=ASSUNTO.format(protocolo=dados["protocolo"]),
-            message=CORPO.format(
-                protocolo=dados["protocolo"],
-                verificacao=dados["verificacao"],
-                selecao=dados["selecao"],
-                perfil=dados["perfil"],
-                modalidade=dados["modalidade"],
-                quando=dados["quando"],
-                documentos=documentos,
-                endereco=dados["endereco"],
-                # A unidade do ato, que o portal resolve como o comprovante em papel (109). Sem
-                # ela, a da implantação — e nunca um Cefor escrito aqui.
-                assinatura=dados.get("assinatura") or identificacao.da_implantacao().rotulo,
-            ),
+            subject=mensagem.assunto,
+            message=mensagem.texto,
+            html_message=mensagem.html,
             from_email=settings.DEFAULT_FROM_EMAIL or None,
             recipient_list=[para],
             fail_silently=False,

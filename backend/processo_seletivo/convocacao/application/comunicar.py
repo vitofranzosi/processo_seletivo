@@ -47,6 +47,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 from processo_seletivo.requerimentos.domain.disponibilidade import momento_declarado
+from processo_seletivo.shared import correio
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.unidades.application import identificacao
 
@@ -484,7 +485,9 @@ def _renderizar(html_do_modelo, texto_do_modelo, dados):
     feita para a tela poderia divergir do envio em silêncio; esta é a única.
     """
     contexto = _contexto(dados)
-    html = html_do_modelo.render(contexto)
+    # As classes do modelo viram estilo em linha, com os tokens da moldura comum: o modelo não pode
+    # escrever `style` (a guarda da CSP), e o cliente de e-mail só respeita o que está em linha.
+    html = correio.estilizar(html_do_modelo.render(contexto))
     assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
     return html, assunto, corpo
 

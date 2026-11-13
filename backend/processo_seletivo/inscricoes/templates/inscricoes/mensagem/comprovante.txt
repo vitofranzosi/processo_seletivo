@@ -1,0 +1,32 @@
+{% autoescape off %}{% comment %}
+A confirmação do envio da inscrição, em texto puro (010, FR-084). A PRIMEIRA LINHA É O ASSUNTO.
+
+O que a pessoa acabou de ver na tela do comprovante, sem CPF e sem telefone. Um parágrafo por linha:
+quem quebra a linha é o leitor de e-mail, na largura da tela de quem lê — a quebra fixa deixava
+palavra sozinha na linha seguinte em todo celular.
+{% endcomment %}Inscrição recebida — {{ protocolo }}
+
+Recebemos a sua inscrição.
+
+    Protocolo: {{ protocolo }}
+    Código de verificação: {{ verificacao }}
+
+{% for linha in selecao %}{{ linha }}
+{% endfor %}Perfil de vaga: {{ perfil }}
+Concorrência: {{ modalidade }}
+Enviada em {{ quando }}
+
+Documentos recebidos:
+{% for documento in documentos %}    - {{ documento.requisito }}: {{ documento.arquivo }}
+{% empty %}    (nenhum)
+{% endfor %}
+O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos são feitas pela comissão, nos prazos do Edital.
+
+Para rever a inscrição e baixar o comprovante, acesse:
+{{ endereco }}
+
+Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há senha.
+
+{{ assinatura }} — Seleções
+Esta mensagem é automática; não responda.
+{% endautoescape %}

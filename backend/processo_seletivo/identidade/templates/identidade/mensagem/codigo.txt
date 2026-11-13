@@ -1,0 +1,19 @@
+{% autoescape off %}{% comment %}
+O código de acesso, em texto puro (010, FR-082, FR-082a). A PRIMEIRA LINHA É O ASSUNTO.
+
+Sem link (P-001): o código é digitado na tela em que foi pedido. Sem CPF e sem dado de inscrição
+(FR-082): a caixa ainda não se sabe de quem é. O código é o primeiro número de seis dígitos do corpo,
+e a suíte o lê assim.
+{% endcomment %}Seu código de acesso — Seleções {{ assinatura }}
+
+Seu código de acesso é:
+
+    {{ codigo }}
+
+Digite-o na tela em que você o pediu. Ele vale por {{ validade }} minutos e só pode ser usado uma vez.
+
+Se não foi você que pediu este código, ignore esta mensagem: ninguém entra sem ele.
+
+{{ assinatura }} — Seleções
+Esta mensagem é automática; não responda.
+{% endautoescape %}
