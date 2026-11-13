@@ -169,6 +169,9 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 /* A encerrada não é apagada: Edital encerrado continua sendo ato normativo publicado, e sumir com
    ele visualmente diria "descartado" onde o certo é "não recebe mais inscrição". */
 .marca-situacao.encerrado{background:var(--cinza-fundo);color:var(--texto-fraco)}
+/* O Edital que fechou as inscrições e segue. Não é o verde do convite nem o cinza do registro: é o
+   tom do que está por acontecer, o mesmo da seleção que ainda vai abrir. */
+.marca-situacao.andamento{background:var(--amarelo-fundo);color:var(--amarelo)}
 /* O Edital que acabou (047, FR-760, FR-763). O encerrado tem o desenho da encerrada, porque os dois
    são registro consultável; a palavra da marca é que os distingue. O cancelado se destaca: é
    interrupção, e quem chega pelo endereço precisa vê-lo antes de ler qualquer outra coisa. */
@@ -215,7 +218,7 @@ h3{font-size:1rem;margin:0 0 .35rem;font-weight:600}
 .paginacao .pagina-atual{color:var(--texto-fraco);font-size:.9375rem;font-variant-numeric:tabular-nums}
 .mostrando{margin:0 0 .75rem;color:var(--texto-fraco);font-size:.9375rem}
 #resultado{scroll-margin-top:1rem}
-#encerradas{scroll-margin-top:3.5rem}
+#fora-do-prazo{scroll-margin-top:3.5rem}
 /* Os perfis continuam em coluna única: o cartão tem duas zonas por dentro, e reparti-lo de novo
    em duas colunas espremeria o argumento à esquerda. O que ele ganha é largura — 960 px em vez de
    772 —, que é onde a lateral de vagas e ação cabe sem apertar. */

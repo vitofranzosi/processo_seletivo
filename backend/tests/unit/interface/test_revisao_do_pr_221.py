@@ -79,11 +79,14 @@ def _conteudo(status):
     }
 
 
-def test_o_cartao_da_vitrine_diz_periodo_cancelado_e_o_grupo_continua_o_das_encerradas():
+def test_o_cartao_da_vitrine_diz_periodo_cancelado_e_o_grupo_e_o_das_em_andamento():
+    """O grupo era o das encerradas até a vitrine separar o Edital que segue do que acabou: o
+    período cancelado não recebe inscrição, mas o Edital continua publicado e sem desfecho."""
     periodo = periodo_de_inscricoes(_conteudo("CANCELADO"), AGORA)
 
     assert leitura.situacao_publica(periodo, None) == (ENCERRADO, "Período cancelado")
-    assert leitura.estado_na_vitrine(periodo, None) == ENCERRADO
+    assert leitura.marca_da_selecao(periodo, None) == (ENCERRADO, "Período cancelado")
+    assert leitura.estado_na_vitrine(periodo, None) == leitura.EM_ANDAMENTO
     # O que não foi cancelado continua com a etiqueta de sempre.
     aberto = periodo_de_inscricoes(_conteudo("PLANEJADO"), AGORA)
     assert leitura.situacao_publica(aberto, None) == ("aberto", "Aberta")

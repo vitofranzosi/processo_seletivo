@@ -232,10 +232,12 @@ def test_as_quatro_situacoes_aparecem_em_grupos_distintos(
     def cabecalho(titulo):
         return corpo.index(f'<h2 class="secao-vitrine">{titulo}</h2>')
 
+    # O Edital que só fechou as inscrições está **em andamento**: "encerrada" passou a ser a
+    # seleção que um ato encerrou (`test_desfecho_publico.py`).
     for titulo in (
         "Inscrições abertas",
         "Próximas seleções",
-        "Inscrições encerradas",
+        "Em andamento",
         "Outras seleções publicadas",
     ):
         assert f'<h2 class="secao-vitrine">{titulo}</h2>' in corpo, (
@@ -245,7 +247,7 @@ def test_as_quatro_situacoes_aparecem_em_grupos_distintos(
     assert (
         cabecalho("Inscrições abertas")
         < cabecalho("Próximas seleções")
-        < cabecalho("Inscrições encerradas")
+        < cabecalho("Em andamento")
         < cabecalho("Outras seleções publicadas")
     )
 
