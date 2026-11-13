@@ -153,3 +153,70 @@ def test_a_previa_da_lista_nao_toma_a_publicacao_de_outra_como_predecessora(clie
         "a prévia da PcD tomou a publicação de outra lista como predecessora"
     )
     assert resposta.context["publicabilidade"].publicavel is True
+
+
+def _previa(client, certame, sorteio):
+    identificar(client, "paula.publicadora", ["publicador"])
+    return client.get(
+        reverse(
+            "interface:previa-de-publicacao",
+            args=[certame["edital"].id, sorteio.marco_id, sorteio.ato_id],
+        )
+    )
+
+
+def test_a_previa_nomeia_a_lista_que_se_confirma(client, sorteadas):
+    """Com três recortes no marco, a prévia de cada um diz de qual lista é (021, FR-045).
+
+    Antes, a prévia da PPI e a da ampla traziam o mesmo cabeçalho — Processo, Edital, Perfil e
+    marco —, e quem publicava confirmava um ato irreversível sem ver a lista. O nome é o dos bytes:
+    a ampla concorrência também se nomeia, e não fica em branco.
+    """
+    certame, sorteios = sorteadas
+
+    ampla = _previa(client, certame, sorteios[None])
+    ppi = _previa(client, certame, sorteios[LISTA_PPI])
+
+    assert ampla.context["lista"] == "Ampla concorrência"
+    assert "Pretos, pardos e indígenas" in ppi.context["lista"]
+    corpo = ppi.content.decode()
+    assert "Lista de concorrência: <strong>" in corpo
+    assert f"O que será divulgado — {ppi.context['lista']}" in corpo
+    assert ppi.context["lista"] in corpo.split("<title>", 1)[1].split("</title>", 1)[0]
+
+
+def test_a_previa_diz_que_a_lista_ja_tem_resultado_e_nao_o_marco(client, sorteadas):
+    """O aviso de sucessão é da cadeia da lista, e a frase falava do marco inteiro."""
+    certame, sorteios = sorteadas
+    _publicar_pela_tela(client, certame, sorteios[LISTA_PPI])
+
+    corpo = _previa(client, certame, sorteios[LISTA_PPI]).content.decode()
+
+    assert "Esta lista já tem resultado divulgado neste marco" in corpo
+    assert "Este marco já tem resultado divulgado" not in corpo
+
+
+def test_o_historico_do_marco_diz_a_lista_de_cada_publicacao(client, sorteadas):
+    """Três listas vigentes no mesmo marco, e cada linha diz de qual é (021, FR-045).
+
+    A situação é por cadeia: sem a coluna, a tabela dizia "Vigente" três vezes, e só a data
+    separava as linhas.
+    """
+    certame, sorteios = sorteadas
+    for sorteio in sorteios.values():
+        _publicar_pela_tela(client, certame, sorteio)
+
+    marco_id = sorteios[None].marco_id
+    resposta = client.get(
+        reverse("interface:publicacoes-do-marco", args=[certame["edital"].id, marco_id])
+    )
+
+    assert resposta.status_code == 200
+    listas = sorted(linha["lista"] for linha in resposta.context["historico"])
+    assert listas[0] == "Ampla concorrência"
+    assert any("Pessoas com deficiência" in lista for lista in listas)
+    assert any("Pretos, pardos e indígenas" in lista for lista in listas)
+    corpo = resposta.content.decode()
+    assert '<th scope="col">Lista</th>' in corpo
+    for lista in listas:
+        assert f"<td>{lista}</td>" in corpo

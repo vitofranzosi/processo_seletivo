@@ -244,6 +244,20 @@ def _rotulos(publicacao):
     }
 
 
+def lista_da_publicacao(publicacao):
+    """O nome da lista como **a publicação** o gravou (021, FR-045).
+
+    Dos bytes, como na página pública e no documento: uma Retificação que renomeie a Modalidade
+    depois não alcança o ato já praticado. Fora de `historico_do_marco` de propósito — a supervisão
+    e a condução leem o histórico por marco e não precisam do nome, e decodificar a ordem inteira
+    de cada publicação, sucedidas incluídas, só para descartá-la seria custo sem leitor.
+    """
+    import json
+
+    conteudo = json.loads(bytes(publicacao.conteudo_publico).decode("utf-8"))
+    return nome_da_lista(conteudo.get("cabecalho") or {})
+
+
 def divulgacao_do_ato(*, edital, marco_id, ato, lista_id=None, historico=None):
     """Se o que está divulgado corresponde **àquele** ato, ou `None` quando não há ato.
 
@@ -291,6 +305,7 @@ __all__ = [
     "historico_do_marco",
     "historico_publico_do_edital",
     "historico_publico_dos_editais",
+    "lista_da_publicacao",
     "publicacao_por_id",
     "situacoes_do_candidato",
     "vigente_do_marco",
