@@ -1,5 +1,9 @@
 # GPS por Dentro
 
+Para compartilhar **um arquivo só, incluindo todos os documentos e evidências**, use
+[gps-por-dentro-autocontido.html](gps-por-dentro-autocontido.html). Os anexos abrem dentro do
+próprio guia, sem levar esta pasta junto.
+
 Abra [index.html](index.html) diretamente no navegador. Um único HTML contém estilos, interações,
 dados, fontes conceituais e três capturas reais de referência. Não precisa de servidor, conexão,
 conta ou instalação; pode copiar só o HTML para outro computador.
@@ -34,3 +38,10 @@ node doc/gps-por-dentro/verificar_interface.cjs
 As fontes de manutenção ficam separadas para permitir conferência; não são dependências do HTML.
 Os documentos de investigação são complementares e os links para eles pedem a pasta completa.
 Plano e rastreabilidade da entrega: [spec 133](../../specs/133-guia-visual-conceitos/spec.md).
+
+Para regenerar a versão integral autocontida a partir do índice e dos documentos:
+
+```bash
+python3 doc/gps-por-dentro/gerar_autocontido.py
+node doc/gps-por-dentro/verificar_interface.cjs doc/gps-por-dentro/gps-por-dentro-autocontido.html
+```
