@@ -4,6 +4,13 @@
 oportunidade de melhoria de texto, e não defeito de regra. Não é escopo de nenhuma feature aberta, e
 fica para decisão do usuário.*
 
+> **Situação em 13/11/2026.** A **primeira oportunidade está resolvida** pela `156` (FR-6428, D-014;
+> tarefas T025 e T026): a mensagem inicial e a da correção dizem só a data, e as já enviadas não
+> mudaram. A **segunda continua aberta**: nenhuma spec a especifica. O parágrafo *De passagem*, ao
+> fim, também continua sem spec e sem teste. As frases do portal que dizem *"contado do envio da
+> comunicação"* (FR-3998 da `125`) ficaram fora da `156` de propósito, porque o achado é sobre a
+> mensagem.
+
 ## O que foi descartado
 
 A suspeita era que reenviar a comunicação reiniciasse o prazo, porque `envio_de` toma o envio

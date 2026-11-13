@@ -95,7 +95,9 @@ def _carregar(convocacao_id):
 
 
 def _prazo_da_mensagem(mensagem):
-    return mensagem.body.split("Prazo para atender:")[1].split(",")[0]
+    # A linha inteira, e não até a primeira vírgula: o dia da semana é a primeira coisa depois de
+    # "até", e duas datas do mesmo dia da semana passariam por iguais.
+    return mensagem.body.split("Prazo para atender:")[1].split("\n")[0].strip()
 
 
 def test_o_reenvio_nao_move_o_vencimento_nem_o_estado(cenario, gestor, caixa):
@@ -123,6 +125,8 @@ def test_o_reenvio_nao_move_o_vencimento_nem_o_estado(cenario, gestor, caixa):
     assert _prazo_da_mensagem(caixa[0]) == _prazo_da_mensagem(caixa[1]), (
         "as duas mensagens trazem a mesma data-limite"
     )
+    # FR-6428 da 156: o reenvio dizia "contado do envio desta mensagem" e parecia dar prazo novo.
+    assert all("contado do envio" not in mensagem.body for mensagem in caixa[:2])
 
 
 def test_depois_do_vencimento_o_reenvio_e_recusado(cenario, gestor, caixa, relogio):
