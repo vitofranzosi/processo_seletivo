@@ -274,10 +274,26 @@ def test_c17_a_pessoa_de_treino_e_designada_pela_tela_e_o_setor_a_ve(
             {"pessoa": k.FORMALIZACAO, "motivo": "Exercício."},
         )
     else:
-        tela_de_designar(client, edital, "acessos")(k.FORMALIZACAO)
+        postar = tela_de_designar(client, edital, "acessos")
+        postar(k.FORMALIZACAO)
     designacao = designacoes_vigentes(edital=edital, pessoa=k.FORMALIZACAO).get()
     if tela == "presidencia":
         assert designacao.designado_por == k.PRESIDENCIA
+
+    # FR-6740: designada, ela sai da lista; a tela aberta antes, que a envia de novo, recebe a
+    # recusa única de pessoa indisponível — ela não é institucional —, e nada se grava.
+    if tela == "presidencia":
+        definicao = reverse("interface:formalizacao-definicao", args=[edital.id])
+        assert 'value="treino.formalizacao"' not in client.get(definicao).content.decode()
+        client.post(
+            reverse("interface:formalizacao-designar", args=[edital.id]),
+            {"pessoa": k.FORMALIZACAO, "motivo": "De novo."},
+        )
+        resposta = client.get(definicao).content.decode()
+    else:
+        resposta = postar(k.FORMALIZACAO)
+    assert "não está disponível para receber acesso" in resposta
+    assert designacoes_vigentes(edital=edital, pessoa=k.FORMALIZACAO).count() == 1
 
     identificar(client, *SETOR)
     assert str(edital.id) in client.get(reverse("interface:formalizacao")).content.decode()

@@ -823,3 +823,62 @@ def test_as_telas_de_designar_aceitam_so_quem_ofereceram(
     assert DesignacaoParaFormalizacao.objects.filter(
         edital=cenario.edital, pessoa=com_papel.username
     ).exists()
+
+
+# --- Quem já está designado não é oferecido (134, FR-6740, SC-2220) ----------------------------
+
+
+@pytest.mark.parametrize("tela", ["presidencia", "acessos"])
+def test_as_telas_nao_oferecem_quem_ja_esta_designado(
+    cenario, client, seletor, provedor, com_papel, tela
+):
+    """FR-6740: fora da lista, e enviado assim mesmo, nada se grava; com todas designadas, a tela
+    diz isso, e não que ninguém tem o papel."""
+    postar = tela_de_designar(client, cenario.edital, tela)
+    designar_direto(cenario.edital, com_papel.username)
+    if tela == "presidencia":
+        pagina = client.get(_definicao(cenario.edital)).content.decode()
+    else:
+        url = reverse("interface:acessos-formalizacao")
+        pagina = client.get(f"{url}?edital={cenario.edital.id}").content.decode()
+        assert "Escolher este Edital" in pagina, "a escolha de outro Edital continua"
+
+    assert f'value="{com_papel.username}"' not in pagina
+    assert "já estão designadas" in pagina
+    assert "Ninguém nesta unidade tem o papel" not in pagina
+
+    resposta = postar(com_papel.username)
+
+    assert "já está designada para este Edital" in resposta
+    assert DesignacaoParaFormalizacao.objects.filter(pessoa=com_papel.username).count() == 1
+
+
+def test_designado_num_edital_continua_oferecido_nos_outros(cenario, com_papel):
+    """FR-6740: a regra é do Edital escolhido; sem Edital escolhido, ninguém sai."""
+    designar_direto(cenario.edital, com_papel.username)
+    outro = Edital(institution_scope="cefor")
+
+    def oferecidas(alvo):
+        return [v.pessoa.username for v in designar.pessoas_com_o_papel(GIL, alvo=alvo)]
+
+    assert oferecidas(cenario.edital) == []
+    assert oferecidas(None) == oferecidas(outro) == [com_papel.username]
+    pessoas, todas = designar.oferta_para_designar(GIL, alvo=outro)
+    assert ([v.pessoa.username for v in pessoas], todas) == ([com_papel.username], False)
+    assert designar.oferta_para_designar(GIL, alvo=cenario.edital) == ([], True)
+    assert designar.oferta_para_designar(GIL)[1] is False, "sem Edital, não se sabe"
+
+
+def test_na_tela_de_acessos_a_lista_vazia_nao_esconde_a_escolha_do_edital(
+    cenario, client, seletor, provedor, pessoa_de_treino
+):
+    """FR-6740 com a FR-6730: num Edital real, a pessoa de treino não conta, e a lista sai vazia;
+    a tela diz que ninguém tem o papel, e a escolha de outro Edital continua."""
+    tela_de_designar(client, cenario.edital, "acessos")
+    url = reverse("interface:acessos-formalizacao")
+
+    pagina = client.get(f"{url}?edital={cenario.edital.id}").content.decode()
+
+    assert "Escolher este Edital" in pagina
+    assert "Ninguém nesta unidade tem o papel" in pagina
+    assert 'name="pessoa"' not in pagina
