@@ -74,6 +74,57 @@ def test_c12_o_membro_alocado_ve_conferir_com_a_marca_alocacao(cenario, client):
     assert "· pela alocação</span>" in html
 
 
+def test_c12_dois_membros_de_subject_com_o_mesmo_final_tem_alocacoes_distintas(cenario):
+    """A chave levava só o último caractere do subject: a segunda alocação de quem também
+    termina em "2" reusava a chave com outro membro, e era recusada como `idempotency_conflict`
+    (revisão do #513)."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_membro
+
+    m = cenario("C12")
+    outro = "treino.revisao2"
+    m.membros[outro], _ = adicionar_membro(
+        actor=m.ator(c.GESTAO),
+        processo_id=m.processo.id,
+        identity_subject=outro,
+        funcao=Funcao.MEMBRO,
+        idempotency_key=m.chave("v8-membro-revisao2"),
+        correlation_id=m.correlacao,
+    )
+    alocacao = m.alocar_a_conferencia(outro)
+
+    assert alocacao.membro.identity_subject == outro
+    ativas = AlocacaoAConferencia.objects.filter(edital=m.edital, ativo=True)
+    assert set(ativas.values_list("membro__identity_subject", flat=True)) == {c.AVALIACAO_2, outro}
+
+
+def test_c04_dois_avaliadores_de_subject_com_o_mesmo_final_sao_alocados_as_mesmas_etapas(
+    cenario, monkeypatch
+):
+    """O mesmo defeito, na alocação à Etapa de `constituir_comissao` (revisão do #513).
+
+    A receita aloca sempre os dois avaliadores da equipe, e eles terminam em "1" e "2": para
+    provocar a colisão, o segundo passa a terminar em "1" também. Com a chave antiga, a alocação
+    dele reusava a chave do primeiro com outro membro, e a carga do C04 era recusada inteira
+    (`idempotency_conflict`) — conferido revertendo a linha.
+    """
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    outro = "treino.revisao1"
+    monkeypatch.setattr(c, "AVALIACAO_2", outro)
+    m = cenario("C04")
+
+    etapas = {m.id(etapa) for etapa in (c.ETAPA_PROVA, c.ETAPA_TITULOS, c.ETAPA_DOCUMENTAL)}
+    ativas = AlocacaoEtapa.objects.filter(edital=m.edital, ativo=True)
+    for subject in (c.AVALIACAO_1, outro):
+        alocadas = {
+            str(etapa)
+            for etapa in ativas.filter(membro__identity_subject=subject).values_list(
+                "etapa_id", flat=True
+            )
+        }
+        assert alocadas == {str(etapa) for etapa in etapas}, subject
+
+
 def test_c12_a_presidencia_continua_conferindo_pela_presidencia(cenario, client):
     cenario("C12")
     atividades, _ = _minhas_atividades(client, c.PRESIDENCIA)
@@ -138,21 +189,18 @@ def test_c08_o_julgador_ve_o_recurso_na_faixa_da_lista(cenario, client):
     assert (("recursos", m.edital.id), "Decidir recursos (1)") in itens
 
 
-def test_c08_o_candidato_08_continua_podendo_recorrer(cenario):
-    """O exercício do candidato não colide com o recurso já interposto: são pessoas diferentes."""
+def test_c08_o_candidato_08_continua_podendo_recorrer_pela_montagem_retomada(cenario):
+    """O exercício do candidato não colide com o recurso já interposto: são pessoas diferentes.
+
+    **Pela montagem retomada**, que não divulgou nada no próprio objeto: `recorrer` lia a publicação
+    só do atributo que `divulgar` grava, e dava `AttributeError` (revisão do #513).
+    """
     from processo_seletivo.divulgacao.models import PublicacaoResultado
-    from processo_seletivo.recursos.application.interpor import interpor
 
     m = cenario("C08")
-    publicacao = PublicacaoResultado.objects.get(edital=m.edital)
-    recurso = interpor(
-        identidade=m.identidade(m.pessoas[7]),
-        inscricao=m.inscricoes[7],
-        publicacao=publicacao,
-        fundamentacao="Peço a revisão da prova (exercício).",
-        assinatura_do_objeto=str(publicacao.pk),
-        idempotency_key=m.chave("v8-candidato-08"),
-    )
+    assert m.resultado_divulgado is None
+    recurso = m.recorrer(m.inscricoes[7], "Peço a revisão da prova (exercício)", "08")
+    assert recurso.publicacao_atacada == PublicacaoResultado.objects.get(edital=m.edital)
     assert Recurso.objects.filter(inscricao__edital=m.edital).count() == 2
     assert recurso.inscricao_id == m.inscricoes[7].id
 
