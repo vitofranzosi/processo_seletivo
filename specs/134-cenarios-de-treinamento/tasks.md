@@ -74,6 +74,9 @@
   (a), escolhida pelo usuário em 12/11: a tela recusava `treino.formalizacao`, que não é pessoa
   institucional.
 
+- [x] T031 As telas de designar não oferecem quem já está designado para o Edital (FR-6740,
+  SC-2220), com a frase de todas designadas; a pessoa enviada continua resolvida pela mesma lista.
+
 ## Pendente
 
 - [ ] T017 Carga na homologação compartilhada, pelo administrador, depois do ensaio.

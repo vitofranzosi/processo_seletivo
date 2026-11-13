@@ -81,7 +81,9 @@ não impedem a gravação. O auditor lê a tela e o histórico; o setor não a a
   {% endif %}
   {% if quem_designa and quem_designa.designavel %}
   <h3 id="designar">Designar</h3>
-  {% if not quem_designa.pessoas %}
+  {% if quem_designa.todas_designadas %}
+  <p class="nenhuma">Todas as pessoas desta unidade com o papel {{ quem_designa.papel }} já estão designadas para este Edital.</p>
+  {% elif not quem_designa.pessoas %}
   <p class="nenhuma">Ninguém nesta unidade tem o papel {{ quem_designa.papel }}. Peça a quem administra os acessos da unidade que o conceda a alguém do setor.</p>
   {% else %}
   <form method="post" action="{% url 'interface:formalizacao-designar' edital.id %}" class="definicao-da-formalizacao">
