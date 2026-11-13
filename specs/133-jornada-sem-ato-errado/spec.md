@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-07
 
-**Status**: Draft, para revisão antes do plano. **Uma regra de domínio nova**: a recusa de apurar
+**Status**: Implementada e mergeada (#432). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft, para revisão antes do plano. **Uma regra de domínio nova**: a recusa de apurar
 ocupação e de convocar num marco intermediário, decidida pelo usuário em 07/11/2026 (R1). O resto
 corrige apresentação. Não há migration, tabela, coluna, permissão nem estado persistido novo.
 

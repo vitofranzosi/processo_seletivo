@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft.
+**Status**: Implementada e mergeada (#449). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft.
 
 **Nenhuma regra de domínio nova.** Esta spec corrige a derivação do andamento da `127`, que o Centro
 de Controle da `136` mostra. Não há migration, tabela, coluna, permissão, estado persistido nem

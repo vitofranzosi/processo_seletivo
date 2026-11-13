@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-04
 
-**Status**: Especificada e planejada em 04/11/2026; revista no mesmo dia — inventário de recusas,
+**Status**: Implementada e mergeada: incrementos 1, 2 e as famílias 3a–3f (#382 a #393). T044 é medição em produção e T056 é validação humana. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Especificada e planejada em 04/11/2026; revista no mesmo dia — inventário de recusas,
 ZIP com vários formatos, versão aprovada de cada template, exceção dos valores literais e provas da
 impressão v1/v2. `/speckit-analyze` sem achado crítico. **Não implementada.** As decisões T-1 a T-9 do estudo foram aceitas pelo
 usuário em 04/11/2026 e entram aqui como regra. O que depende da comunicação — licença e banco de

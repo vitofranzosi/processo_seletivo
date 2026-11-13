@@ -5,7 +5,9 @@
 
 **Created**: 2026-11-12
 
-**Status**: Em implementação. Evolução deliberada da `149`, pedida pelo usuário em 12/11/2026 depois
+**Status**: Implementada e mergeada (#504). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Em implementação. Evolução deliberada da `149`, pedida pelo usuário em 12/11/2026 depois
 da demonstração no cenário C10. As decisões de desenho estão no [research](research.md), de D-001 a
 D-010; a D-001 lista o que esta spec substitui da `149`, da `140` e da `125`.
 

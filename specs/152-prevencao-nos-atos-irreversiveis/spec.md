@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — as três questões respondidas pelo usuário em 11/11/2026 (D-002, D-010, D-011)
+**Status**: Parcialmente implementada: histórias 1, 3, 4, 5 e 6 mergeadas (#489, #502, #520). A história 2 (ciência do prazo no indeferimento, T012–T015) não foi implementada. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft — as três questões respondidas pelo usuário em 11/11/2026 (D-002, D-010, D-011)
 
 **Uma regra nova, e só uma.** Com o prazo em curso e documento ainda não conforme, o indeferimento
 passa a exigir a ciência de quem registra, e o comando a confere (FR-5805). O resto é **quando e com

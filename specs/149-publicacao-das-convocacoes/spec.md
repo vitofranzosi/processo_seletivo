@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: Em implementação. As decisões têm duas origens:
+**Status**: Implementada e mergeada (#470, #503). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Em implementação. As decisões têm duas origens:
 
 - **Do usuário, em 11/11/2026**, sobre quatro perguntas feitas depois do diagnóstico, todas na
   alternativa recomendada: a *1ª* a *4ª decisão*, abaixo. Não se reabrem.

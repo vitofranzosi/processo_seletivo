@@ -1,5 +1,7 @@
 # GPS por Dentro — POC pedagógica local
 
+**Status**: Prova de conceito pedagógica, mergeada no #433 (guia "GPS por Dentro" em `doc/gps-por-dentro/`). Não é incremento de produto. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
 Data: 08/11/2026. Escopo autorizado pelo pedido integral anexado pelo usuário nesta sessão.
 Não é integração ao produto. Nenhum achado abaixo autoriza mudança no GPS.
 

@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-05
 
-**Status**: Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
+**Status**: Implementada e mergeada (#398). T040 é validação humana. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
 decisões têm duas origens:
 
 - **Do usuário, em 05/11/2026, nesta sessão:** a avaliação dos links de divulgação da página do

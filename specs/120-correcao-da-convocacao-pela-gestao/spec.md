@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-04
 
-**Status**: Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
+**Status**: Implementada e mergeada (#385). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft, **só documental**. Nenhum código, migration, rota ou tela foi alterado. As
 decisões têm duas origens:
 
 - **Do usuário, em 04/11/2026:** D-001 (spec própria, e não emenda à `050`) e as quatro respostas de

@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft
+**Status**: Implementada e mergeada (#453). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft
 
 **Nenhuma regra de domínio nova.** Quem é chamado, a espécie, a ordem da fila, o fundamento, a
 forma de comunicar, o prazo, a conferência de cada documento, o desfecho, a apuração da ocupação e

@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-31
 
-**Status**: Especificada, planejada e revista em 31/10–01/11/2026. A
+**Status**: Implementada e mergeada: incrementos A (#361), B (#364) e C (#377). T033–T035 dependem da comunicação. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Especificada, planejada e revista em 31/10–01/11/2026. A
 [revisão crítica independente](revisao-critica.md) encontrou 26 achados, três deles bloqueantes, e
 todos foram incorporados. Em 01/11 o usuário aprovou a divisão A → B → C, pediu duas correções de
 consistência (feitas) e encaminhou a P-2 a spec própria. **Não implementada.** A sequência

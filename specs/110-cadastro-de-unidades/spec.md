@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-31
 
-**Status**: Especificada, planejada e revista em 31/10/2026 sobre a `main` com a `108` e a `109`
+**Status**: Implementada e mergeada: incrementos A (#350), B (#351) e C (#352). T051 é validação humana. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Especificada, planejada e revista em 31/10/2026 sobre a `main` com a `108` e a `109`
 integradas; a direção e as decisões revistas foram aprovadas pelo usuário no mesmo dia. Três
 incrementos (D-019); a implementação começa pelo A.
 

@@ -5,7 +5,9 @@
 
 **Created**: 2026-10-18
 
-**Status**: Implementada — PR aberto, merge com o usuário
+**Status**: Implementada e mergeada (#307). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Implementada — PR aberto, merge com o usuário
 
 **Input**: os quatro achados menores que as revisões e as pesquisas da etapa 4 registraram e não
 corrigiram, que o usuário pediu em 18/10/2026 que virassem um incremento de limpeza. Cada um sai daqui

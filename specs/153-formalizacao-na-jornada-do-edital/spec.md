@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: **Em implementação, no mesmo PR da spec.** As **perguntas P-1 a P-5** foram respondidas pelo
+**Status**: Implementada e mergeada (spec #476, implementação #486). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): **Em implementação, no mesmo PR da spec.** As **perguntas P-1 a P-5** foram respondidas pelo
 usuário em 11/11/2026, todas na alternativa recomendada (ver Clarifications). A P-6 e a P-7 ficaram fora,
 como a spec recomenda. As decisões D-001 a D-008, abaixo, são **propostas de desenho**.
 

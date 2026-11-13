@@ -5,7 +5,9 @@
 
 **Created**: 2026-10-18
 
-**Status**: Implementada — PR aberto, merge com o usuário
+**Status**: Implementada e mergeada (#305). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Implementada — PR aberto, merge com o usuário
 
 **Input**: as quatro perguntas de produto que as revisões dos incrementos da etapa 4 do
 [estudo da entrada na gestão](../../doc/estudo-acesso-a-gestao-2026-10-16.md) deixaram abertas — duas

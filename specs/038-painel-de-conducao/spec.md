@@ -4,7 +4,9 @@
 
 **Created**: 2026-09-19
 
-**Status**: Draft
+**Status**: Implementada e mergeada (spec #146, implementação #149, correção #152). As tarefas não foram marcadas à época. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft
 
 **Input**: reauditoria de 2026-09-16 — `ACH-25` (S2/P2), raiz estrutural `E-6`, melhoria 13.6. Item 1 da ordem de investimento confirmada em 19/09.
 

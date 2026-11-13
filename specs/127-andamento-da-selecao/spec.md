@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-06
 
-**Status**: Especificada. Dois incrementos, cada um num PR: **B1** (P1, as providências por papel em
+**Status**: Implementada e mergeada: B1 (#415), B2 (#416) e o complemento do #417. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Especificada. Dois incrementos, cada um num PR: **B1** (P1, as providências por papel em
 "O que fazer agora") e **B2** (P2, o "Andamento da seleção" no lugar do cartão "Classificação").
 
 **Input**: o estudo "O GPS orienta quem conduz a jornada do Edital?" de 06/11/2026 (PR #412, ainda

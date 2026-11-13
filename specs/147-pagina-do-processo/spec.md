@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: Spec escrita em 11/11/2026, depois da rodada 1 da revisão de UX — diagnóstico, dois
+**Status**: Implementada e mergeada (#466), com spec e código no mesmo PR. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Spec escrita em 11/11/2026, depois da rodada 1 da revisão de UX — diagnóstico, dois
 protótipos e validação em sete Processos, sete papéis e cinco larguras. O usuário escolheu a
 alternativa B **com os seis ajustes** que a validação mostrou ([research.md](research.md) §2). As
 quatro decisões que o relatório deixou abertas foram tomadas pela recomendação dele e estão em

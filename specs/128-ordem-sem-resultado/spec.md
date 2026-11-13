@@ -5,7 +5,9 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft. **Uma regra de negócio nova**, decidida pelo usuário em 06/11/2026: a emissão da
+**Status**: Implementada e mergeada (#419). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft. **Uma regra de negócio nova**, decidida pelo usuário em 06/11/2026: a emissão da
 ordem por pontuação passa a ser recusada num caso que hoje é aceito. Sem migration, tabela, coluna,
 permissão ou estado persistido novo.
 

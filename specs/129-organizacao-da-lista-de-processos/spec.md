@@ -5,7 +5,9 @@
 
 **Created**: 2026-11-06
 
-**Status**: Draft. **Leitura e apresentação, sem regra de negócio nova.** A página inicial da gestão
+**Status**: Implementada e mergeada (estudo e spec #420, implementação #422). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft. **Leitura e apresentação, sem regra de negócio nova.** A página inicial da gestão
 passa a recortar, buscar e paginar os Processos, e a linha de cada Edital deixa de oferecer ações.
 Sem migration, tabela, coluna, permissão ou estado persistido novo. Nenhum fluxo de elaboração,
 homologação, publicação, classificação, sorteio ou convocação muda.
