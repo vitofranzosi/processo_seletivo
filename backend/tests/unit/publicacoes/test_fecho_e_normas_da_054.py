@@ -166,7 +166,8 @@ def _com_requerimento(momento, matricula=""):
     ("momento", "frase"),
     [
         ("AT_ENROLLMENT", "no ato da inscrição"),
-        ("AT_CALL", "quando o candidato for convocado"),
+        # Redação 3 (2026-11-13): o documento composto agora diz o momento sem presumir gênero.
+        ("AT_CALL", "na convocação"),
     ],
 )
 def test_a_matricula_publica_o_momento_e_a_declaracao_mesmo_vazia(momento, frase):
@@ -177,7 +178,7 @@ def test_a_matricula_publica_o_momento_e_a_declaracao_mesmo_vazia(momento, frase
     # **Na redação 2 desde a `069`** (V11, V12): no presente, e a frase que anuncia a declaração
     # junto da que diz o momento.
     corrido = " ".join(texto.split())
-    assert f"O Requerimento de Matrícula é enviado {frase}. Ao enviá-lo, o candidato declara:" in (
+    assert f"O Requerimento de Matrícula é enviado {frase}. Ao enviá-lo, a pessoa declara:" in (
         corrido
     )
     for paragrafo in DECLARACAO.splitlines():
@@ -205,7 +206,7 @@ def test_a_inscricao_vazia_com_teto_sai_com_a_frase_do_teto():
             secao["content"] = ""
     texto = texto_de(documento(conteudo))
     assert "DA INSCRIÇÃO" in texto
-    assert "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital." in texto
+    assert "Cada pessoa pode enviar apenas 1 (uma) inscrição neste Edital." in texto
 
 
 # --- O total (FR-997) ----------------------------------------------------------------------------

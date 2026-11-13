@@ -186,8 +186,8 @@ def test_retificar_o_excedente_muda_o_numero_e_a_conferencia_o_diz(api_client, e
     # O consolidado diz o número novo na unidade do corte do Perfil, com a frase da FR-6942. A frase
     # "até N" do cadastro só sai na tabela de características, que este Edital não compõe.
     corrido = " ".join(_linhas(_documento(edital, 2)))
-    assert "mais 12 suplentes" in corrido
-    assert pdf.SUPLENTES_DO_CADASTRO in corrido
+    assert "mais 12 pessoas suplentes" in corrido
+    assert pdf.SUPLENTES_DO_CADASTRO_3 in corrido
 
 
 def test_levar_o_numero_a_zero_e_recusado(api_client, edital):

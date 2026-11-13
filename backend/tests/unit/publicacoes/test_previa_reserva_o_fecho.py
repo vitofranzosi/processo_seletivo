@@ -41,7 +41,7 @@ PREVISTAS = {
 }
 
 
-def _publicado(conteudo, autoridade):
+def _publicado(conteudo, autoridade, *, redacao=pdf.REDACAO_VIGENTE):
     return pdf.render_edital_pdf(
         conteudo,
         congelado("B")["hash"],
@@ -49,12 +49,13 @@ def _publicado(conteudo, autoridade):
         unidade=UNIDADE,
         autoridade=autoridade,
         data_do_ato=DATA_DO_ATO,
+        redacao=redacao,
     )
 
 
-def _previa(conteudo, previstos):
+def _previa(conteudo, previstos, *, redacao=pdf.REDACAO_VIGENTE):
     return pdf.render_edital_pdf(
-        conteudo, "", pdf.MODO_PREVIA, unidade=UNIDADE, fechos_previstos=previstos
+        conteudo, "", pdf.MODO_PREVIA, unidade=UNIDADE, fechos_previstos=previstos, redacao=redacao
     )
 
 
@@ -100,8 +101,10 @@ def test_sem_a_reserva_o_cenario_b_volta_a_divergir(monkeypatch):
     monkeypatch.setattr(pdf, "fecho_reservado", lambda *args, **kwargs: [])
     conteudo, autoridade = CONTEUDOS_DE_B["B plana"](), PREVISTAS["a do contrato"]
 
-    previa = _corpo_por_pagina(_previa(conteudo, (autoridade,)))
-    publicado = _corpo_por_pagina(_publicado(conteudo, autoridade))
+    # **Na redação 2**, a do cenário B: é nela que, sem a reserva, a última seção não salta. Na 3
+    # (2026-11-13), as frases mais longas já a deslocam por acaso, e a prova perderia o caso.
+    previa = _corpo_por_pagina(_previa(conteudo, (autoridade,), redacao=pdf.REDACAO_2))
+    publicado = _corpo_por_pagina(_publicado(conteudo, autoridade, redacao=pdf.REDACAO_2))
 
     assert previa != publicado
 

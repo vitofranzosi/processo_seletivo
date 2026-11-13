@@ -29,6 +29,7 @@ from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import secoes
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     REDACAO_2,
+    REDACAO_VIGENTE,
     frase_da_convocacao,
     inicial_minuscula,
     por_identificador,
@@ -365,7 +366,7 @@ def _item_do_resumo(numero):
     return f" (item {numero})" if numero else ""
 
 
-def linhas_do_resumo(snapshot, plano_):
+def linhas_do_resumo(snapshot, plano_, *, redacao=REDACAO_VIGENTE):
     """`[(rótulo, valor)]` do resumo — só dado estruturado, cada linha com o item (R-010).
 
     Nenhuma linha inventa o que o dado não diz: a do cadastro só sai quando ele é igual em todos os
@@ -413,7 +414,7 @@ def linhas_do_resumo(snapshot, plano_):
         if all(perfil.get("reserveType") not in (None, "", "NONE") for perfil in perfis):
             valor += "; há cadastro de reserva"
         linhas.append(("Vagas", f"{valor}{_item_do_resumo(item_das_vagas)}."))
-    cadastros = {composicao_pdf._reserva(perfil, redacao=REDACAO_2) for perfil in perfis}
+    cadastros = {composicao_pdf._reserva(perfil, redacao=redacao) for perfil in perfis}
     if len(cadastros) == 1:
         cadastro = cadastros.pop()
         if cadastro not in ("—", ""):
@@ -428,7 +429,9 @@ def linhas_do_resumo(snapshot, plano_):
     if isinstance(teto, int) and not isinstance(teto, bool):
         quantas = composicao_pdf._numero_por_extenso(teto, feminino=True)
         valor = f"até {quantas} {'inscrição' if teto == 1 else 'inscrições'}"
-        linhas.append(("Por candidato", f"{valor}{_item_do_resumo(item_da_inscricao)}."))
+        # "Por pessoa" desde a redação 3 (2026-11-13): o rótulo não presume o gênero.
+        rotulo = "Por candidato" if redacao == REDACAO_2 else "Por pessoa"
+        linhas.append((rotulo, f"{valor}{_item_do_resumo(item_da_inscricao)}."))
     if selecao := _selecao_em_poucas_palavras(snapshot):
         item = plano_.numero_da("Como será a seleção?")
         linhas.append(("Seleção", f"{selecao}{_item_do_resumo(item)}."))
@@ -479,7 +482,7 @@ def _selecao_em_poucas_palavras(snapshot):
 
 def _resumo(composicao, snapshot, plano_):
     """O resumo, em bloco destacado, logo depois do preâmbulo (FR-1370, FR-1382)."""
-    linhas = linhas_do_resumo(snapshot, plano_)
+    linhas = linhas_do_resumo(snapshot, plano_, redacao=_redacao(composicao))
     if not linhas:
         return
     with composicao.bloco(moldura=composicao_pdf.DESTAQUE):
@@ -605,6 +608,15 @@ def _texto(composicao, snapshot, chave, *, antes=composicao_pdf.ANTES_DE_BLOCO):
 
 def _par(composicao, rotulo, valor, *, recuo=composicao_pdf.RECUO_NO_DESTAQUE):
     composicao_pdf._pares(composicao, [[rotulo, valor]], recuo=recuo)
+
+
+def _redacao(composicao):
+    """A redação das frases desta apresentação: a da composição, e nunca antes da 2.
+
+    A apresentação por perguntas nasceu com a redação 2 (069, R-016), e só a 2 em diante a compõe.
+    Desde a 3 (2026-11-13), a da composição chega às frases, e o Edital da 2 continua com a dele.
+    """
+    return max(composicao.redacao, REDACAO_2)
 
 
 def compor(composicao, snapshot, *, paginas=None, unidade=None, fecho=None):
@@ -753,7 +765,7 @@ def _vagas(composicao, snapshot, plano_, tabelas):
     else:
         _vagas_em_partes(composicao, perfis, com_vaga, listas, tabelas)
     _caracteristicas(composicao, perfis, tabelas)
-    if frase := composicao_pdf.frase_dos_atributos_comuns(perfis):
+    if frase := composicao_pdf.frase_dos_atributos_comuns(perfis, redacao=_redacao(composicao)):
         _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_BLOCO)
     _reserva_de_vagas(composicao, perfis, tabelas)
     _reversao(composicao, perfis, com_vaga)
@@ -919,12 +931,13 @@ def _caracteristicas(composicao, perfis, tabelas):
         )
         if len(valores) > 1 or sem_lugar_na_frase:
             colunas.append((rotulo, lambda perfil, chave=chave: perfil.get(chave) or "—"))
-    cadastros = {composicao_pdf.frase_do_cadastro(perfil) for perfil in perfis}
+    redacao = _redacao(composicao)
+    cadastros = {composicao_pdf.frase_do_cadastro(perfil, redacao=redacao) for perfil in perfis}
     if len(cadastros) > 1:
         colunas.append(
             (
                 "Cadastro de reserva",
-                lambda perfil: composicao_pdf._reserva(perfil, redacao=REDACAO_2),
+                lambda perfil: composicao_pdf._reserva(perfil, redacao=redacao),
             )
         )
     if not colunas:
@@ -1001,7 +1014,7 @@ def _reversao(composicao, perfis, com_vaga):
     com_quadro = [perfil for perfil in com_vaga if composicao_pdf._com_vaga_no_quadro(perfil)]
     especies = {(perfil.get("vacancyReversion") or {}).get("kind") for perfil in com_quadro}
     if len(especies) == 1 and (especie := especies.pop()):
-        frase = composicao_pdf.frase_da_reversao(especie)
+        frase = composicao_pdf.frase_da_reversao(especie, redacao=_redacao(composicao))
         if frase and len(com_quadro) != len(perfis):
             codigos = faixa_de_codigos(perfil.get("code", "") for perfil in com_quadro)
             frase = frase.replace(
@@ -1011,7 +1024,7 @@ def _reversao(composicao, perfis, com_vaga):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_BLOCO)
         return
     composicao_pdf._frases_consolidadas(
-        composicao, composicao_pdf._frases_da_reversao(perfis, REDACAO_2)
+        composicao, composicao_pdf._frases_da_reversao(perfis, _redacao(composicao))
     )
 
 
@@ -1102,7 +1115,7 @@ def _fatos_usados_no_desempate(snapshot):
 def _teto(composicao, snapshot, plano_, tabelas):
     _paragrafo(
         composicao,
-        composicao_pdf.teto_de_inscricoes(snapshot),
+        composicao_pdf.teto_de_inscricoes(snapshot, redacao=_redacao(composicao)),
         antes=composicao_pdf.ANTES_DE_PARAGRAFO,
     )
 
@@ -1121,7 +1134,7 @@ def _lembrete(composicao, snapshot, plano_, tabelas, *, na_inscricao):
 # --- Como será a seleção? -----------------------------------------------------------------------
 
 
-def _unidades_do_perfil(snapshot, perfil, sem_cadastro, rotular):
+def _unidades_do_perfil(snapshot, perfil, sem_cadastro, rotular, *, redacao=REDACAO_VIGENTE):
     """As unidades de regra que o Perfil imprime, comparáveis por identidade (R-009).
 
     As frases da ordem são uma unidade; o corte com o empate, os suplentes e a continuação é outra;
@@ -1145,6 +1158,7 @@ def _unidades_do_perfil(snapshot, perfil, sem_cadastro, rotular):
             sem_cadastro=sem_cadastro,
             com_reservadas=composicao_pdf.tem_lista_reservada(snapshot, perfil),
             perfil=perfil,
+            redacao=redacao,
         ):
             unidades.append((marco_, "corte", tuple(corte)))
         if desempate := composicao_pdf.frases_do_desempate(marco, etapas, fatos):
@@ -1199,7 +1213,9 @@ def _regras_dos_marcos(composicao, snapshot, plano_, tabelas):
     sem_cadastro = composicao_pdf.sem_cadastro_de_reserva(snapshot)
     rotular = _rotular_marcos(snapshot)
     unidades = {
-        id(perfil): _unidades_do_perfil(snapshot, perfil, sem_cadastro, rotular)
+        id(perfil): _unidades_do_perfil(
+            snapshot, perfil, sem_cadastro, rotular, redacao=_redacao(composicao)
+        )
         for perfil in perfis
     }
     grupos = _agrupar(perfis, lambda perfil: tuple(unidades[id(perfil)]))
@@ -1298,7 +1314,7 @@ def _recurso_dos_marcos(composicao, snapshot, plano_, tabelas):
 
 def _forma_de_convocacao(composicao, snapshot, plano_, tabelas):
     composicao_pdf._frases_consolidadas(
-        composicao, composicao_pdf._frases_da_convocacao(_perfis(snapshot), REDACAO_2)
+        composicao, composicao_pdf._frases_da_convocacao(_perfis(snapshot), _redacao(composicao))
     )
 
 

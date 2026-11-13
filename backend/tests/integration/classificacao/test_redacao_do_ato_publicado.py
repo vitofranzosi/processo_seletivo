@@ -21,7 +21,11 @@ from processo_seletivo.classificacao.application.selectors import (
     nomear_criterios,
 )
 from processo_seletivo.publicacoes.application import publish_edital
-from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_1, REDACAO_2
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
+    REDACAO_1,
+    REDACAO_2,
+    REDACAO_VIGENTE,
+)
 from processo_seletivo.publicacoes.models import Publicacao
 from tests.fixtures.divulgacao import montar_ato_publicavel
 from tests.fixtures.edital import identificador
@@ -88,7 +92,10 @@ def test_o_ato_sobre_versao_de_redacao_2_mostra_a_redacao_2(
     client, seletor_ligado, gestor, api_client, manager_headers, process_payload
 ):
     cenario = _cenario(gestor, api_client, manager_headers, process_payload, "0793")
-    assert Publicacao.objects.get(edital=cenario["edital"]).redacao_do_documento == REDACAO_2
+    # A versão publicada agora grava a redação vigente — a 3 desde 2026-11-13, que só difere da 2 no
+    # momento do Requerimento: a frase da etapa é a da 2.
+    assert Publicacao.objects.get(edital=cenario["edital"]).redacao_do_documento == REDACAO_VIGENTE
+    assert REDACAO_VIGENTE >= REDACAO_2
 
     pagina = _pagina_do_ato(client, cenario)
 
