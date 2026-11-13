@@ -67,23 +67,27 @@ sistema, no mesmo balde. O domínio já distinguia as três; era a tela que as f
 o que ainda vai abrir tinha de ler o que já fechou para descobrir.
 
 Grupo vazio não aparece: um título sobre nenhum cartão anuncia uma categoria que o catálogo não tem.
+
+**E hoje são cinco**: "Inscrições encerradas" fundia o Edital que fechou as inscrições e segue com o
+que um ato encerrou. São "Em andamento" e "Seleções encerradas" (`leitura.GRUPOS`).
 {% endcomment %}
 {% comment %}
-**As encerradas são histórico, e histórico se folheia.** Só esse grupo tem páginas: as abertas e as
-próximas são o motivo da visita e ficam inteiras em toda página. A frase diz o tamanho do histórico
-e qual parte se vê; a mais recentemente encerrada vem primeiro.
+**O que já fechou as inscrições se folheia.** "Em andamento" e "Seleções encerradas" são uma
+sequência só, com uma paginação: as em andamento primeiro — o recurso aberto na frente —, e depois
+o histórico, da mais recente para a mais antiga. As abertas e as próximas são o motivo da visita e
+ficam inteiras em toda página. A frase diz o tamanho da sequência e qual parte se vê.
 {% endcomment %}
 {% for grupo in grupos %}
 <h2 class="secao-vitrine">{{ grupo.titulo }}</h2>
-{% if grupo.pagina.varias %}
+{% if grupo.abre_paginas.varias %}
 {% comment %}A âncora das páginas mora na frase, que só existe quando há páginas; a margem de rolagem
 da folha deixa o título do grupo à vista acima dela.{% endcomment %}
-<p class="mostrando" id="encerradas">Mostrando {{ grupo.pagina.intervalo }} de {{ grupo.pagina.total }} seleções, da mais recente para a mais antiga.</p>
+<p class="mostrando" id="fora-do-prazo">Mostrando {{ grupo.abre_paginas.intervalo }} de {{ grupo.abre_paginas.total }} seleções em andamento ou encerradas.</p>
 {% endif %}
 <ul class="selecoes">
   {% for selecao in grupo.selecoes %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
-{% if grupo.pagina %}{% include "portal/_paginacao.html" with pagina=grupo.pagina rotulo="Páginas das inscrições encerradas" %}{% endif %}
+{% if grupo.fecha_paginas %}{% include "portal/_paginacao.html" with pagina=grupo.fecha_paginas rotulo="Páginas das seleções em andamento e encerradas" %}{% endif %}
 {% endfor %}
 {% endif %}
 

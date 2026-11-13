@@ -174,12 +174,25 @@ def atos_publicados(edital_id):
 # O domínio distingue quatro, e a tela passa a dizer as quatro. A quarta **não é** "encerrada":
 # chamá-la assim afirmaria um fechamento que Edital nenhum declarou. É o Edital que não recebe
 # inscrição por este sistema, e para ele nenhuma frase de prazo é escrita (FR-149).
+#
+# **E uma quinta, que a vitrine fundia na terceira.** "Inscrições encerradas" reunia o Edital que
+# fechou as inscrições e segue — resultado a publicar, recurso aberto, convocação — e o Edital que
+# acabou. Para quem se inscreveu são opostos: um ainda pede atenção, o outro é registro. O que os
+# separa não é fase inventada, é ato: o desfecho do próprio Edital. Sem ele, o Edital está em
+# andamento; com ele, encerrado. A situação é **da vitrine**, e não do período: o domínio das
+# inscrições continua com três estados e uma ausência.
+EM_ANDAMENTO = "em-andamento"
 GRUPOS = (
     (ABERTO, "Inscrições abertas"),
     (FUTURO, "Próximas seleções"),
-    (ENCERRADO, "Inscrições encerradas"),
+    (EM_ANDAMENTO, "Em andamento"),
+    (ENCERRADO, "Seleções encerradas"),
     (NAO_DESIGNADO, "Outras seleções publicadas"),
 )
+
+# As duas situações de quem já fechou as inscrições: juntas, são a parte da vitrine que cresce sem
+# parar, e por isso a que se reparte em páginas (`views.vitrine`).
+SITUACOES_FOLHEADAS = (EM_ANDAMENTO, ENCERRADO)
 
 # A ordem de urgência de quem lê, e não a de criação de quem publicou.
 ORDEM_DAS_SITUACOES = {estado: posicao for posicao, (estado, _) in enumerate(GRUPOS)}
@@ -254,18 +267,41 @@ def situacao_publica(periodo, desfecho):
     return periodo.estado, SITUACAO_DO_CARTAO.get(periodo.estado, "")
 
 
+# A marca do Edital que fechou as inscrições e não acabou. Era "Encerrada" — a do período —, e
+# num cartão com recurso aberto ela dizia o contrário do que o cartão mostrava logo abaixo. A frase
+# do período continua dizendo quando as inscrições fecharam; a marca diz em que pé está o Edital.
+MARCA_EM_ANDAMENTO = ("andamento", "Em andamento")
+
+
+def marca_da_selecao(periodo, desfecho):
+    """A marca que a vitrine e a página da seleção mostram: a de `situacao_publica`, salvo no
+    Edital em andamento.
+
+    Separada de `situacao_publica` porque esta também marca a ficha de divulgação, que descreve o
+    período de inscrições e não o andamento do Edital. O período cancelado conserva a marca
+    própria: "Período cancelado" informa mais que "Em andamento", e é o que a página diz.
+    """
+    if estado_na_vitrine(periodo, desfecho) == EM_ANDAMENTO and not periodo.cancelado:
+        return MARCA_EM_ANDAMENTO
+    return situacao_publica(periodo, desfecho)
+
+
 def estado_na_vitrine(periodo, desfecho):
     """O estado que decide grupo, ordem e filtro da vitrine (`FR-763`, `R-3`).
 
-    O Edital com desfecho **próprio** vai para *"Inscrições encerradas"* qualquer que seja o
-    período: o sistema não recebe mais inscrição dele (`recebe_inscricoes` exige publicado). O de
-    Processo encerrado fica onde o período o põe, porque continua recebendo — caso que, desde a
-    decisão de 28/09 sobre o RC-118, só existe no Processo encerrado antes dela. Pelo período, um
-    Edital encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite ao que acabou.
-    Não é um quinto grupo: a `024` fixou quatro pelo que o candidato procura, e a marca do cartão
-    já diz de quem é o fim.
+    O Edital com desfecho **próprio** vai para *"Seleções encerradas"* qualquer que seja o
+    período: o sistema não recebe mais inscrição dele (`recebe_inscricoes` exige publicado), e
+    pelo período um Edital encerrado antes do prazo cairia em *"Inscrições abertas"* — um convite
+    ao que acabou. O de Processo encerrado fica onde o período o põe, porque continua recebendo —
+    caso que, desde a decisão de 28/09 sobre o RC-118, só existe no Processo encerrado antes dela.
+
+    **O período que terminou, sem desfecho do Edital, é "Em andamento"** — e o período cancelado
+    também: o Edital segue publicado, e uma Retificação pode lhe dar outro período. Até aqui os
+    dois iam para o mesmo grupo do Edital encerrado, e o histórico escondia o que ainda corre.
     """
-    return ENCERRADO if desfecho is not None and desfecho.do_edital else periodo.estado
+    if desfecho is not None and desfecho.do_edital:
+        return ENCERRADO
+    return EM_ANDAMENTO if periodo.estado == ENCERRADO else periodo.estado
 
 
 # ---------------------------------------------------------------------------
@@ -459,34 +495,49 @@ def paginar(itens, consulta, ancora):
 
 
 def encerrou_em(selecao, agora):
-    """Quando a seleção deixou de receber inscrições — o instante que ordena o histórico.
+    """Quando o Edital acabou — o instante que ordena o histórico.
 
-    É o **mesmo fato que a pôs no grupo**, e por isso tem três origens (`estado_na_vitrine`): o fim
-    do período que já passou; o desfecho do próprio Edital, quando ele veio antes desse fim; e,
-    para o período declarado cancelado — que não "encerrou em" data nenhuma —, a vigência do
-    conteúdo que o declara. Nunca a criação nem a publicação do Edital: um Edital publicado há um
-    ano e fechado ontem é o mais recente do histórico.
-
-    Sem nenhum deles, a vigência do conteúdo: é o que há, e mantém a ordem definida.
+    O do **ato de desfecho**, que é o fato que o pôs em "Seleções encerradas". Nunca a criação nem a
+    publicação do Edital: um Edital publicado há um ano e encerrado ontem é o mais recente do
+    histórico. Sem a data do ato (`Desfecho.em` pode faltar), o fim das inscrições que já passou;
+    sem ele, a vigência do conteúdo — é o que há, e mantém a ordem definida.
     """
-    periodo = selecao["periodo"]
     desfecho = selecao.get("desfecho")
-    instantes = []
-    if periodo.fim is not None and periodo.fim <= agora and not periodo.cancelado:
-        instantes.append(periodo.fim)
     if desfecho is not None and desfecho.do_edital and desfecho.em is not None:
-        instantes.append(desfecho.em)
-    return min(instantes) if instantes else selecao["vigente_desde"]
+        return desfecho.em
+    periodo = selecao["periodo"]
+    if periodo.fim is not None and periodo.fim <= agora and not periodo.cancelado:
+        return periodo.fim
+    return selecao["vigente_desde"]
+
+
+def _ordem_do_andamento(selecao, agora):
+    """O que pede atenção primeiro, entre os Editais em andamento.
+
+    Recurso aberto na frente, pelo prazo que termina antes: é o único item deste grupo que se pode
+    **perder**. Depois, o que teve publicação mais recente; e o que ainda não publicou nada conta
+    do fim das inscrições — de modo que o Edital recém-fechado não some atrás dos antigos.
+    """
+    resumo = selecao.get("acompanhamento") or {}
+    prazo = resumo.get("prazo_unico") or resumo.get("primeiro_prazo")
+    periodo = selecao["periodo"]
+    fechou = periodo.fim if periodo.fim is not None and periodo.fim <= agora else None
+    movimento = resumo.get("mais_recente") or fechou or selecao["vigente_desde"]
+    return (
+        (0, prazo.timestamp()) if prazo else (1, 0.0),
+        -movimento.timestamp(),
+    )
 
 
 def ordenar_por_urgencia(selecoes, agora):
-    """A ordem padrão: as quatro situações, e dentro de cada uma o que importa primeiro a quem lê.
+    """A ordem padrão: as situações, e dentro de cada uma o que importa primeiro a quem lê.
 
-    Aberta e futura, pelo prazo **mais próximo** — é o que se pode perder. Encerrada, pela **mais
-    recente**: quem volta ao histórico procura o resultado da seleção que acabou de fechar, e a
-    ordem crescente punha na frente a mais antiga do catálogo, que é a que menos gente procura.
+    Aberta e futura, pelo prazo **mais próximo** — é o que se pode perder. Em andamento, o recurso
+    aberto e depois o movimento mais recente. Encerrada, a **mais recente**: quem volta ao
+    histórico procura a seleção que acabou de fechar, e a ordem crescente punha na frente a mais
+    antiga do catálogo, que é a que menos gente procura.
 
-    **O desempate é total** — ano, número e identificador —, porque a lista é repartida em
+    **O desempate é total** — ano, número e identificador —, porque o histórico é repartido em
     páginas: com empate indefinido, a mesma seleção poderia aparecer em duas e outra em nenhuma.
     Vários Editais fechando no mesmo instante é o caso comum, e não o raro: um Processo costuma
     publicar os seus com um prazo só. Entre as encerradas o desempate também desce — o Edital de
@@ -503,12 +554,15 @@ def ordenar_por_urgencia(selecoes, agora):
         periodo = selecao["periodo"]
         return ((periodo.fim or periodo.inicio or agora), desempate(selecao))
 
-    encerradas = [selecao for selecao in selecoes if selecao["estado"] == ENCERRADO]
-    demais = [selecao for selecao in selecoes if selecao["estado"] != ENCERRADO]
-    encerradas.sort(key=lambda s: (encerrou_em(s, agora), desempate(s)), reverse=True)
+    partes = {EM_ANDAMENTO: [], ENCERRADO: []}
+    demais = []
+    for selecao in selecoes:
+        partes.get(selecao["estado"], demais).append(selecao)
+    partes[ENCERRADO].sort(key=lambda s: (encerrou_em(s, agora), desempate(s)), reverse=True)
+    partes[EM_ANDAMENTO].sort(key=lambda s: (_ordem_do_andamento(s, agora), desempate(s)))
     demais.sort(key=prazo)
     # A ordenação é estável: repartir por situação conserva a ordem que cada parte acabou de ganhar.
-    return sorted(demais + encerradas, key=situacao)
+    return sorted(demais + partes[EM_ANDAMENTO] + partes[ENCERRADO], key=situacao)
 
 
 def filtrar(selecoes, consulta):

@@ -221,7 +221,7 @@ def test_encerrado_com_periodo_em_curso_fica_entre_as_encerradas(
 
     vitrine = client.get(reverse("portal:vitrine")).content.decode()
 
-    assert grupo_do_cartao(vitrine, edital) == "Inscrições encerradas"
+    assert grupo_do_cartao(vitrine, edital) == "Seleções encerradas"
 
 
 def test_encerrado_com_periodo_por_abrir_nunca_vai_para_as_proximas(
@@ -234,7 +234,7 @@ def test_encerrado_com_periodo_por_abrir_nunca_vai_para_as_proximas(
 
     vitrine = client.get(reverse("portal:vitrine")).content.decode()
 
-    assert grupo_do_cartao(vitrine, edital) == "Inscrições encerradas"
+    assert grupo_do_cartao(vitrine, edital) == "Seleções encerradas"
 
 
 def test_o_filtro_de_abertas_nao_devolve_o_encerrado(

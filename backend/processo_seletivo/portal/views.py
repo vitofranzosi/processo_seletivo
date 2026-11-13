@@ -380,12 +380,18 @@ def vitrine(request):
     opcoes = leitura.opcoes_da_consulta(selecoes)
     consulta = leitura.consulta_da_vitrine(request.GET, opcoes)
     encontradas = leitura.filtrar(selecoes, consulta)
-    # **O histórico em páginas, e as oportunidades inteiras.** Com dezenas de Editais encerrados, a
-    # página era quase toda histórico: quem chegava atrás de uma seleção aberta rolava seis telas
-    # de cartões que não recebem inscrição. Folheando, só o grupo das encerradas é repartido — as
-    # abertas e as próximas são o motivo da página, e escondê-las atrás de "Próxima" seria trocar
-    # um defeito pelo oposto. Com consulta ativa a lista é uma só (FR-146a), e é ela que se reparte:
-    # reparti-la por situação desfaria a ordem que a pessoa escolheu.
+    # **O que já fechou as inscrições em páginas, e as oportunidades inteiras.** Com dezenas de
+    # Editais fora do prazo, a página era quase toda deles: quem chegava atrás de uma seleção
+    # aberta rolava seis telas de cartões que não recebem inscrição. Folheando, as abertas e as
+    # próximas ficam inteiras — são o motivo da página, e escondê-las atrás de "Próxima" seria
+    # trocar um defeito pelo oposto. Com consulta ativa a lista é uma só (FR-146a), e é ela que se
+    # reparte: reparti-la por situação desfaria a ordem que a pessoa escolheu.
+    #
+    # **"Em andamento" e "Seleções encerradas" formam uma sequência só, com uma paginação.** As em
+    # andamento vêm antes, e por isso ocupam as primeiras páginas. Deixá-las inteiras foi a
+    # primeira ideia, e não se sustenta: o grupo só esvazia quando a gestão encerra o Edital por
+    # ato, e num catálogo em que ninguém encerra ele é o catálogo inteiro. Duas paginações lado a
+    # lado pediriam dois parâmetros e dois "Próxima" na mesma tela.
     #
     # O recorte é feito aqui, sobre o que a leitura já carregou e ordenou (024, D-003): a situação
     # de cada seleção sai do conteúdo publicado e dos atos, e não de uma coluna que o banco pudesse
@@ -394,11 +400,21 @@ def vitrine(request):
     pagina = None
     if consulta["ativa"]:
         pagina = leitura.paginar(encontradas, consulta, "resultado")
-    for grupo in grupos:
-        if grupo["estado"] == leitura.ENCERRADO:
-            pagina = leitura.paginar(grupo["selecoes"], consulta, "encerradas")
-            grupo["selecoes"] = pagina.itens
-            grupo["pagina"] = pagina
+    folheados = [grupo for grupo in grupos if grupo["estado"] in leitura.SITUACOES_FOLHEADAS]
+    if folheados:
+        pagina = leitura.paginar(
+            [selecao for grupo in folheados for selecao in grupo["selecoes"]],
+            consulta,
+            "fora-do-prazo",
+        )
+        for grupo in folheados:
+            grupo["selecoes"] = [s for s in pagina.itens if s["estado"] == grupo["estado"]]
+        # Grupo sem cartão nesta página não aparece: título sobre nada anuncia o que não se vê.
+        grupos = [grupo for grupo in grupos if grupo["selecoes"]]
+        visiveis = [grupo for grupo in grupos if grupo["estado"] in leitura.SITUACOES_FOLHEADAS]
+        # A frase antes do primeiro e a navegação depois do último: os dois grupos são uma lista.
+        visiveis[0]["abre_paginas"] = pagina
+        visiveis[-1]["fecha_paginas"] = pagina
     exibidas = pagina.itens if consulta["ativa"] else [s for g in grupos for s in g["selecoes"]]
     for selecao in exibidas:
         _recortar_para_o_cartao(selecao, consulta["busca"])
@@ -425,6 +441,9 @@ def vitrine(request):
             # que não estava aberto: futuras, encerradas e sem período designado no mesmo balde,
             # embora o domínio já distinguisse as três. Quem procurava o que ainda vai abrir tinha
             # de ler tudo para descobrir o que já fechou.
+            #
+            # Hoje são cinco: o que fechou as inscrições se reparte em "Em andamento" e "Seleções
+            # encerradas", pelo desfecho do próprio Edital (`leitura.estado_na_vitrine`).
             #
             # Com consulta ativa não há grupos: quatro cabeçalhos sobre um cartão cada é ruído, e a
             # marca de cada cartão é o que mantém as quatro distinguíveis (FR-146a).
@@ -470,7 +489,7 @@ def _selecao_da_vitrine(versao, agora, desfecho=None, siglas=None, acompanhament
     dados = _selecao(versao, agora)
     perfis = versao.content.get("profiles") or []
     periodo = dados["periodo"]
-    chave, rotulo = leitura.situacao_publica(periodo, desfecho)
+    chave, rotulo = leitura.marca_da_selecao(periodo, desfecho)
     numero = f"{dados['numero']}/{dados['ano']}"
     return {
         **dados,
@@ -676,7 +695,7 @@ def selecao(request, edital_id, *, assistente=True):
     contexto["atos_recentes"] = list(reversed(contexto["atos"]))
     # A marca de situação também aqui, e não só no cartão da vitrine: quem chega pelo endereço
     # direto — de um e-mail, de um compartilhamento — nunca passou pela vitrine (FR-145).
-    contexto["situacao_chave"], contexto["situacao_rotulo"] = leitura.situacao_publica(
+    contexto["situacao_chave"], contexto["situacao_rotulo"] = leitura.marca_da_selecao(
         contexto["periodo"], contexto["desfecho"]
     )
     # A pergunta que o histórico responde é "mudou?", e quem responde é a natureza do ato — não a

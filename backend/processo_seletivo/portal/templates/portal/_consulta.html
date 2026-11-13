@@ -65,6 +65,7 @@ nenhuma é prometer resultado onde não há.
       <option value="">Todas</option>
       <option value="aberto" {% if consulta.situacao == "aberto" %}selected{% endif %}>Inscrições abertas</option>
       <option value="futuro" {% if consulta.situacao == "futuro" %}selected{% endif %}>Próximas</option>
+      <option value="em-andamento" {% if consulta.situacao == "em-andamento" %}selected{% endif %}>Em andamento</option>
       <option value="encerrado" {% if consulta.situacao == "encerrado" %}selected{% endif %}>Encerradas</option>
       <option value="nao-designado" {% if consulta.situacao == "nao-designado" %}selected{% endif %}>Sem inscrição por aqui</option>
     </select>

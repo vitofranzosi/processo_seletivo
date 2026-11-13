@@ -1,9 +1,9 @@
 """A ordem e as páginas da vitrine, sem banco.
 
-**Por que existe.** A vitrine mostrava todas as seleções de uma vez, e as encerradas da mais antiga
-para a mais nova: com dezenas de Editais fechados, a página era quase toda histórico, e o histórico
-começava pelo que menos gente procura. Estes casos prendem as duas regras que saíram disso — a
-encerrada mais recente primeiro, com desempate total, e o recorte em páginas que leva a consulta
+**Por que existe.** A vitrine mostrava todas as seleções de uma vez, as encerradas da mais antiga
+para a mais nova, e chamava de "encerrada" a que só tinha fechado as inscrições. Estes casos prendem
+as três regras que saíram disso: o Edital sem desfecho próprio está em andamento, e não encerrado;
+a encerrada mais recente vem primeiro, com desempate total; e o recorte em páginas leva a consulta
 consigo. Os casos de página estão em `tests/integration/portal/test_paginas_da_vitrine.py`.
 """
 
@@ -47,38 +47,56 @@ def numeros(selecoes):
     return [item["numero"] for item in selecoes]
 
 
-def test_encerradas_vem_da_mais_recente_para_a_mais_antiga():
-    """O critério é o fim das inscrições — não a ordem de chegada nem a vigência do conteúdo.
+def encerrado(em):
+    return SimpleNamespace(do_edital=True, em=dias(em), operacao="ENCERRADO")
 
-    A `3` é a publicada há mais tempo e a que fechou por último: é a primeira do histórico.
+
+def test_encerradas_vem_da_mais_recente_para_a_mais_antiga():
+    """O critério é o ato que encerrou o Edital — não a ordem de chegada, nem o fim das inscrições,
+    nem a vigência do conteúdo.
+
+    A `3` é a publicada há mais tempo e a que foi encerrada por último: é a primeira do histórico.
     """
     catalogo = [
-        selecao(1, ENCERRADO, fim=dias(-40), vigente=-10),
-        selecao(2, ENCERRADO, fim=dias(-5), vigente=-60),
-        selecao(3, ENCERRADO, fim=dias(-1), vigente=-300),
+        selecao(1, ENCERRADO, fim=dias(-50), desfecho=encerrado(-40), vigente=-10),
+        selecao(2, ENCERRADO, fim=dias(-90), desfecho=encerrado(-5), vigente=-60),
+        selecao(3, ENCERRADO, fim=dias(-200), desfecho=encerrado(-1), vigente=-300),
     ]
 
     assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == ["3", "2", "1"]
 
 
-def test_abertas_continuam_pelo_prazo_mais_proximo_e_antes_do_historico():
-    """A inversão é só do histórico: no que ainda recebe inscrição, o que fecha antes vem antes."""
+def test_cada_situacao_no_seu_lugar_e_com_a_sua_ordem():
+    """Abertas e próximas pelo prazo mais próximo; depois o que está em andamento; o histórico
+    por último entre os que tiveram inscrição."""
     catalogo = [
-        selecao(1, ENCERRADO, fim=dias(-1)),
+        selecao(1, ENCERRADO, fim=dias(-60), desfecho=encerrado(-1)),
         selecao(2, NAO_DESIGNADO),
         selecao(3, ABERTO, inicio=dias(-3), fim=dias(20)),
         selecao(4, FUTURO, inicio=dias(5), fim=dias(15)),
         selecao(5, ABERTO, inicio=dias(-3), fim=dias(2)),
-        selecao(6, ENCERRADO, fim=dias(-30)),
+        selecao(6, ENCERRADO, fim=dias(-90), desfecho=encerrado(-30)),
+        selecao(7, leitura.EM_ANDAMENTO, fim=dias(-4)),
     ]
 
-    assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == ["5", "3", "4", "1", "6", "2"]
+    assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == [
+        "5",
+        "3",
+        "4",
+        "7",
+        "1",
+        "6",
+        "2",
+    ]
 
 
 def test_o_empate_tem_ordem_e_ela_nao_depende_da_chegada():
-    """Um Processo publica vários Editais com o mesmo prazo: é o caso comum. Sem desempate total,
-    a mesma seleção poderia sair em duas páginas e outra em nenhuma."""
-    juntas = [selecao(numero, ENCERRADO, fim=dias(-7)) for numero in (11, 12, 13, 14)]
+    """Um Processo encerra vários Editais de uma vez: é o caso comum. Sem desempate total, a
+    mesma seleção poderia sair em duas páginas e outra em nenhuma."""
+    juntas = [
+        selecao(numero, ENCERRADO, fim=dias(-30), desfecho=encerrado(-7))
+        for numero in (11, 12, 13, 14)
+    ]
 
     ida = numeros(leitura.ordenar_por_urgencia(juntas, AGORA))
     volta = numeros(leitura.ordenar_por_urgencia(list(reversed(juntas)), AGORA))
@@ -86,35 +104,83 @@ def test_o_empate_tem_ordem_e_ela_nao_depende_da_chegada():
     assert ida == volta == ["14", "13", "12", "11"]
 
 
-def test_o_edital_encerrado_antes_do_prazo_conta_do_desfecho():
-    """O que o tirou das abertas foi o ato, e não o fim do período — que nem chegou."""
-    desfecho = SimpleNamespace(do_edital=True, em=dias(-2), operacao="CANCELADO")
-    interrompido = selecao(1, ENCERRADO, inicio=dias(-20), fim=dias(10), desfecho=desfecho)
-    interrompido["periodo"] = Periodo(ABERTO, dias(-20), dias(10))
+def test_sem_a_data_do_ato_o_historico_conta_do_fim_das_inscricoes():
+    sem_data = SimpleNamespace(do_edital=True, em=None, operacao="ENCERRADO")
 
-    assert leitura.encerrou_em(interrompido, AGORA) == dias(-2)
-
-
-def test_o_desfecho_depois_do_prazo_nao_rejuvenesce_o_historico():
-    """Encerrar hoje um Edital cujas inscrições fecharam há um ano não o traz para a frente."""
-    desfecho = SimpleNamespace(do_edital=True, em=dias(-1), operacao="ENCERRADO")
-    antigo = selecao(1, ENCERRADO, fim=dias(-365), desfecho=desfecho)
-
-    assert leitura.encerrou_em(antigo, AGORA) == dias(-365)
+    assert leitura.encerrou_em(selecao(1, ENCERRADO, fim=dias(-50), desfecho=sem_data), AGORA) == (
+        dias(-50)
+    )
 
 
-def test_o_desfecho_do_processo_nao_e_o_fim_das_inscricoes():
-    desfecho = SimpleNamespace(do_edital=False, em=dias(-1), operacao="ENCERRADO")
-    do_processo = selecao(1, ENCERRADO, fim=dias(-50), desfecho=desfecho)
-
-    assert leitura.encerrou_em(do_processo, AGORA) == dias(-50)
+# ---------------------------------------------------------------------------
+# Em andamento: fechou as inscrições e o Edital não acabou
+# ---------------------------------------------------------------------------
 
 
-def test_o_periodo_cancelado_conta_da_vigencia_do_conteudo_que_o_declara():
-    """Ele não "encerrou em" data nenhuma, e as datas do período podem estar no futuro."""
-    cancelado = selecao(1, ENCERRADO, inicio=dias(-3), fim=dias(30), cancelado=True, vigente=-4)
+def test_o_periodo_que_terminou_sem_desfecho_do_edital_esta_em_andamento():
+    """O furo que este grupo fecha: "Inscrições encerradas" reunia o que segue e o que acabou."""
+    terminou = Periodo(ENCERRADO, dias(-30), dias(-5))
 
-    assert leitura.encerrou_em(cancelado, AGORA) == dias(-4)
+    assert leitura.estado_na_vitrine(terminou, None) == leitura.EM_ANDAMENTO
+    assert leitura.marca_da_selecao(terminou, None) == ("andamento", "Em andamento")
+    # A ficha de divulgação descreve o período, e continua dizendo o dele.
+    assert leitura.situacao_publica(terminou, None) == (ENCERRADO, "Encerrada")
+
+
+def test_o_desfecho_do_edital_e_o_que_encerra():
+    terminou = Periodo(ENCERRADO, dias(-30), dias(-5))
+    aberto = Periodo(ABERTO, dias(-3), dias(9))
+
+    for periodo in (terminou, aberto):
+        assert leitura.estado_na_vitrine(periodo, encerrado(-1)) == ENCERRADO
+        assert leitura.marca_da_selecao(periodo, encerrado(-1)) == (
+            "encerrado_edital",
+            "Edital encerrado",
+        )
+
+
+def test_o_desfecho_do_processo_nao_encerra_o_edital():
+    do_processo = SimpleNamespace(do_edital=False, em=dias(-1), operacao="ENCERRADO")
+    terminou = Periodo(ENCERRADO, dias(-30), dias(-5))
+
+    assert leitura.estado_na_vitrine(terminou, do_processo) == leitura.EM_ANDAMENTO
+    assert leitura.estado_na_vitrine(Periodo(ABERTO, dias(-3), dias(9)), do_processo) == ABERTO
+
+
+def test_o_periodo_cancelado_segue_em_andamento_com_a_marca_propria():
+    cancelado = Periodo(ENCERRADO, dias(-3), dias(30), cancelado=True)
+
+    assert leitura.estado_na_vitrine(cancelado, None) == leitura.EM_ANDAMENTO
+    assert leitura.marca_da_selecao(cancelado, None) == (ENCERRADO, "Período cancelado")
+
+
+def em_andamento(numero, *, fim, **resumo):
+    item = selecao(numero, leitura.EM_ANDAMENTO, fim=dias(fim))
+    item["periodo"] = Periodo(ENCERRADO, None, dias(fim))
+    item["acompanhamento"] = resumo or None
+    return item
+
+
+def test_em_andamento_o_recurso_aberto_vem_antes_e_o_prazo_mais_curto_primeiro():
+    """É o único item do grupo que se pode perder."""
+    catalogo = [
+        em_andamento(1, fim=-2),
+        em_andamento(2, fim=-40, mais_recente=dias(-1), prazo_unico=dias(6)),
+        em_andamento(3, fim=-40, mais_recente=dias(-3), primeiro_prazo=dias(2)),
+        em_andamento(4, fim=-40, mais_recente=dias(-1)),
+    ]
+
+    assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == ["3", "2", "4", "1"]
+
+
+def test_em_andamento_sem_publicacao_conta_do_fim_das_inscricoes():
+    """O Edital recém-fechado não some atrás dos que publicaram há meses."""
+    catalogo = [
+        em_andamento(1, fim=-90, mais_recente=dias(-60)),
+        em_andamento(2, fim=-2),
+    ]
+
+    assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == ["2", "1"]
 
 
 @pytest.mark.parametrize(
@@ -137,7 +203,7 @@ def test_a_pagina_reparte_sem_perder_nem_repetir():
     itens = list(range(1, 24))
     vistos = []
     for numero in (1, 2, 3):
-        pagina = leitura.paginar(itens, consulta(pagina=str(numero)), "encerradas")
+        pagina = leitura.paginar(itens, consulta(pagina=str(numero)), "fora-do-prazo")
         vistos.extend(pagina.itens)
         assert pagina.total == 23 and pagina.total_de_paginas == 3
 
@@ -145,28 +211,28 @@ def test_a_pagina_reparte_sem_perder_nem_repetir():
 
 
 def test_o_intervalo_dito_e_o_mostrado():
-    pagina = leitura.paginar(list(range(23)), consulta(pagina="3"), "encerradas")
+    pagina = leitura.paginar(list(range(23)), consulta(pagina="3"), "fora-do-prazo")
 
     assert (pagina.primeiro, pagina.ultimo, len(pagina.itens)) == (21, 23, 3)
     assert pagina.intervalo == "21–23"
 
 
 def test_a_pagina_de_um_cartao_diz_um_numero_so():
-    pagina = leitura.paginar(list(range(21)), consulta(pagina="3"), "encerradas")
+    pagina = leitura.paginar(list(range(21)), consulta(pagina="3"), "fora-do-prazo")
 
     assert pagina.intervalo == "21"
 
 
 def test_a_pagina_que_passa_da_ultima_mostra_a_ultima():
     """O endereço guardado continua mostrando seleções depois que o catálogo encolheu."""
-    pagina = leitura.paginar(list(range(23)), consulta(pagina="99"), "encerradas")
+    pagina = leitura.paginar(list(range(23)), consulta(pagina="99"), "fora-do-prazo")
 
     assert pagina.numero == 3 and pagina.itens == [20, 21, 22]
     assert pagina.seguinte == ""
 
 
 def test_uma_pagina_so_nao_tem_navegacao():
-    pagina = leitura.paginar(list(range(leitura.POR_PAGINA)), consulta(), "encerradas")
+    pagina = leitura.paginar(list(range(leitura.POR_PAGINA)), consulta(), "fora-do-prazo")
 
     assert not pagina.varias
     assert pagina.anterior == "" and pagina.seguinte == ""
@@ -190,10 +256,10 @@ def test_trocar_de_pagina_leva_a_consulta_e_a_ancora():
 
 
 def test_sem_consulta_a_volta_a_primeira_e_so_a_ancora():
-    pagina = leitura.paginar(list(range(35)), consulta(pagina="2"), "encerradas")
+    pagina = leitura.paginar(list(range(35)), consulta(pagina="2"), "fora-do-prazo")
 
-    assert pagina.anterior == "#encerradas"
-    assert pagina.seguinte == "?pagina=3#encerradas"
+    assert pagina.anterior == "#fora-do-prazo"
+    assert pagina.seguinte == "?pagina=3#fora-do-prazo"
 
 
 def test_a_pagina_nao_e_filtro():
