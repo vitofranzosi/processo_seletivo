@@ -58,9 +58,9 @@ com_cadastro`, ou a reconstituir o acervo pelo caminho de antes, `tests/fixtures
 - **T046, o roteiro manual** (`quickstart.md`, passos 2 a 5) num banco de demonstração novo: não
   rodou nesta sessão.
 - **SC-2304, humano**: pendente.
-- **A Visão do Sistema** (`docs/visao-sistema/`): no merge, como as anteriores — o item "O limite do
-  cadastro de reserva não é aplicado" sai de "O que ainda precisa evoluir", e a tabela "Onde ele
-  aparece" do cadastro de reserva passa a dizer que o número vem do corte.
+- ~~**A Visão do Sistema**~~ — feita no próprio PR #537 (13/11): `#cadastro-de-reserva` reescrito, o
+  tutorial e a Receita 7 corrigidos, e o item foi para "O que já fechou" (registro em
+  `docs/visao-sistema/CHANGELOG-2026-11.md`).
 - **Rascunho submetido antes do deploy e publicado depois**: se o rascunho guardava o número, o
   conteúdo recomposto na publicação já não o leva, e o resumo difere do da revisão homologada — a
   publicação recusa com `homologated_revision_changed`, e o caminho é submeter de novo.

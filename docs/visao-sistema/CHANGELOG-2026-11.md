@@ -429,3 +429,20 @@ A seção listava o que faltava em 20/09, e crescera por camadas de datas. Em 13
 - o ponto exato em que a falta de autoridade vigente recusa a publicação;
 - o item *"cadastro de reserva limitado em N"* sem regra, e o de a Retificação da reversão ser mesmo uma causa ausente: vêm das fichas da conferência, sem releitura minha;
 - os números do bloco *Estado atual* (pastas, tabelas, gatilhos, rotas) não foram recontados: continuam os da revisão de 02/11.
+
+## Acréscimo de 13/11: a 162, o limite do cadastro de reserva lido do corte
+
+A spec 162 viaja no PR #537, sobre a `main` em `84cbeeb5`, e esta atualização vai junto, no mesmo PR: a página passa a descrever a `main` quando ele for mergeado. O número do cadastro de reserva limitado deixa de ser digitado e passa a ser o que o corte do marco que convoca alcança além das vagas, por lista.
+
+- **Reescrito:** `#cadastro-de-reserva` — a frase, o exemplo, o que se pode e o que não se pode, a nova subseção *De onde vem o número*, a tabela *Onde ele aparece* (agora com a Retificação), o aviso dos Editais publicados antes da 162 e o porquê do selo, que continua *Parcial*: a convocação sem vaga imediata segue só na ampla sem Modalidade (097).
+- **O tutorial:** o INF-VIT passa a ter o cadastro limitado *pelo corte* — 10 suplentes por lista, **sem** continuação. Com a continuação do exemplo anterior, a publicação recusaria. Mudaram o resumo do exemplo, o passo 4 (a opção limitada sem número e o aviso *O número do cadastro vem do corte*), o passo 8 (*Faixa seguinte* em *Não admite*) e a lista do que impede publicar.
+- **Corrigido:** a Receita 7 (que mandava "manter os dois iguais — nada os confere"); as tabelas de configuração e de capacidades (*limitar o cadastro de reserva a N* virou ✓); *Alterei o cadastro de reserva*, que perdeu a lacuna da espécie × limite na Retificação (o campo só existe no Perfil legado, e o Perfil acrescentado nasce sem ele); o exemplo do conceito Perfil e a árvore de configuração; a tabela de campos; os campos da Retificação; as duas perguntas e o glossário; o histórico de achados (096 e 097); os *Campos gravados que nenhuma regra lê* (o `reserveLimit` saiu da lista); a nota do `CR` em zero; e o exemplo do selo *Implementado, não operacionalizado*, que era o limite do cadastro.
+- **Placar:** o item *O limite do cadastro de reserva não é aplicado* saiu do grupo 1 e foi para *O que já fechou*: 30 resolvidos e 68 abertos no código (eram 29 e 69). As pastas de spec passaram a 163, e 160 têm a linha de `Status`.
+
+**Como foi conferido:** as frases e os rótulos vêm do código da branch (`editais/domain/cadastro_de_reserva.py`, `publicacoes/infrastructure/pdf.py`, `interface/templates/interface/_perfil.html`, as recusas de `incoerencias`); a suíte inteira rodou contra PostgreSQL (19 564 passando, 24 pulados); a página passou pelos guardiões de documentação.
+
+**Não verificado:**
+
+- nenhuma tela foi percorrida, e o roteiro manual da 162 (T046) não rodou;
+- os números de *Maturidade* não foram recontados: o selo do cadastro de reserva não mudou, e a tabela de capacidades ganhou um ✓;
+- o SC-2304, humano, segue aberto.

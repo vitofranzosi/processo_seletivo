@@ -1020,14 +1020,14 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <span class="titulo">O certame que vamos montar (fictício, com as regras reais do código)</span>
 <pre class="arte">Processo "Técnico Subsequente 2027/1" (código PS-TEC-2027-1)
 └── Edital 12/2026 — Técnico em Informática
-    ├── Perfil INF-VIT · Campus Vitória · 40 vagas · cadastro de reserva limitado a 20
+    ├── Perfil INF-VIT · Campus Vitória · 40 vagas · cadastro de reserva limitado (10 por lista, pelo corte)
     │     cotas: PPI 25% · PcD 5%   →  quadro: ampla 28 · PPI 10 · PcD 2
     ├── Perfil INF-SER · Campus Serra   · 20 vagas · (cópia do INF-VIT, ajustada)
     │     cotas: PPI 25% · PcD 5%   →  quadro: ampla 14 · PPI 5 · PcD 1
     ├── Etapa 1 "Análise documental" · com decisão (Deferido/Indeferido) · eliminatória
     ├── Etapa 2 "Prova"              · com pontuação, 0 a 100, mínima 50 · eliminatória · classificatória · peso 1
     └── Marco "FINAL" em cada Perfil · pela pontuação da Prova · desempate: nascido antes
-                                     · recurso em 3 dias · corte: vagas do quadro + 10 suplentes</pre>
+                                     · recurso em 3 dias · corte: vagas do quadro + 10 suplentes, sem continuação</pre>
     </div>
     <p>Entra-se pela <span class="rotulo-ui">Área de gestão</span> do portal › <span class="rotulo-ui">Acessar
     ambiente de demonstração</span> › a identidade (ver <a href="#entrar-e-navegar">Entrar na gestão</a>). Os
@@ -1108,13 +1108,14 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <h3>Informar as vagas</h3>
       <p class="onde">Cartão do Perfil › “Vagas imediatas” · fieldset “Cadastro Reserva”</p>
       <p>40 no INF-VIT. Em “Cadastro Reserva”, escolha entre “Não há cadastro reserva”, “Cadastro reserva
-      limitado” (com “Limite da reserva”) ou “Cadastro reserva ilimitado”. Sem cota, a vaga da ampla
-      concorrência <strong>é</strong> o total — o sistema deriva a linha sozinho.</p>
-      <div class="aviso aviso-risco"><span class="titulo">O cadastro de reserva não limita a lista</span><p>Ele sai no documento e no portal. Quem realmente fica na lista além das vagas é decidido pelos <strong>suplentes</strong> da regra de corte (passo 8). Um Perfil com 0 vagas e só cadastro de reserva classifica, e só convoca pelo sistema quando uma <a href="#vaga-acrescida">vaga é acrescida</a> depois da publicação — e só se o quadro do Perfil tiver só a linha geral (097). <a href="#cadastro-de-reserva">Mais →</a></p></div>
+      limitado” ou “Cadastro reserva ilimitado” — no INF-VIT, o limitado. Ele não pede número: o número vem
+      do corte do marco que convoca (passo 8), e a nota debaixo da opção o diz quando o corte já está salvo
+      (162). Sem cota, a vaga da ampla concorrência <strong>é</strong> o total — o sistema deriva a linha sozinho.</p>
+      <div class="aviso aviso-risco"><span class="titulo">O número do cadastro vem do corte</span><p>Desde a 162, o cadastro limitado é o que o corte do marco que convoca alcança além das vagas, em cada lista de concorrência: os <strong>suplentes</strong> do passo 8, ou o alvo fixo além das vagas. A Revisão recusa o limitado com continuação, o ilimitado sem ela, o limitado sem corte e o limitado que não alcança ninguém. Um Perfil com 0 vagas e só cadastro de reserva classifica, e só convoca pelo sistema quando uma <a href="#vaga-acrescida">vaga é acrescida</a> depois da publicação — e só se o quadro do Perfil tiver só a linha geral (097). <a href="#cadastro-de-reserva">Mais →</a></p></div>
       <div class="decisao">
         <div class="d-decide"><b>Você está decidindo</b>Quantas vagas imediatas e o que se declara além delas.</div>
         <div class="d-produz"><b>Isso produzirá</b>O total que o quadro de vagas precisa fechar.</div>
-        <div class="d-altera"><b>Depois poderá alterar</b>Vagas e limite do cadastro por Retificação (mudando também a linha da ampla no mesmo ato).</div>
+        <div class="d-altera"><b>Depois poderá alterar</b>Vagas por Retificação (mudando também a linha da ampla no mesmo ato); o número do cadastro limitado muda com o alvo e os suplentes do corte.</div>
         <div class="d-trava"><b>Fica travado depois de publicar</b>A <strong>espécie</strong> do cadastro de reserva (não há / limitado / ilimitado).</div>
       </div>
     </div>
@@ -1184,7 +1185,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <li>“Casas decimais” 2, “Arredondamento” <em>Meio para cima</em> (é o padrão do marco novo).</li>
         <li><span class="rotulo-ui">Acrescentar critério</span>: “Menor valor de um fato declarado”, fato Data de nascimento (nasceu antes = data menor = vem primeiro), “Quando o valor não existe”: <em>Fica por último neste critério</em>.</li>
         <li>“Recurso contra o resultado”: <em>Admite recurso, no prazo abaixo</em>, 3 dias corridos.</li>
-        <li>“Regra de corte” — o primeiro marco já nasce com <em>Quantas vagas o quadro publicar no recorte</em>, 0 suplentes, não governa Etapa. Mude “Suplentes” para 10, “Empate na última posição” para <em>Todos os empatados progridem</em> e “Faixa seguinte” para <em>Admite continuar além da faixa publicada</em>.</li>
+        <li>“Regra de corte” — o primeiro marco já nasce com <em>Quantas vagas o quadro publicar no recorte</em>, 0 suplentes, não governa Etapa. Mude “Suplentes” para 10 e “Empate na última posição” para <em>Todos os empatados progridem</em>, e deixe “Faixa seguinte” em <em>Não admite</em>: o INF-VIT declara cadastro limitado, e os 10 suplentes de cada lista <strong>são</strong> o cadastro dele (162). Com continuação, a publicação recusaria.</li>
         <li>Depois de pronto, <span class="rotulo-ui">Aplicar aos demais Perfis (N)</span> leva o marco ao INF-SER (o critério casa o fato pelo código e tipo).</li>
       </ol>
       <div class="decisao">
@@ -1193,7 +1194,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <div class="d-altera"><b>Depois poderá alterar</b>Combinação, arredondamento, janela, alvo e suplentes; acrescentar e remover critério; fazer nascer janela, corte e método de sorteio.</div>
         <div class="d-trava"><b>Fica travado depois de publicar</b>Quais Etapas o marco mede; a espécie do alvo, a Etapa governada e a continuação do corte; o tipo de cada critério (troca-se removendo e acrescentando).</div>
       </div>
-      <div class="aviso aviso-risco"><span class="titulo">O que impede publicar aqui</span><p>Perfil sem marco; Perfil em que nenhum marco corta; marco que corta sem forma de convocação no Perfil; marco sem forma da ordem; Etapa enumerada sem peso; corte sem desfecho de empate ou sem política de continuação; marco de sorteio sem método.</p></div>
+      <div class="aviso aviso-risco"><span class="titulo">O que impede publicar aqui</span><p>Perfil sem marco; Perfil em que nenhum marco corta; marco que corta sem forma de convocação no Perfil; marco sem forma da ordem; Etapa enumerada sem peso; corte sem desfecho de empate ou sem política de continuação; marco de sorteio sem método; cadastro de reserva incoerente com o corte do marco que convoca — limitado com continuação, ilimitado sem ela, limitado sem corte ou que não alcança ninguém além das vagas (162).</p></div>
     </div>
 
     <div class="passo-tutorial" id="t-09"><span class="num">9</span>
@@ -1401,7 +1402,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>Quantas ofertas separadas</td><td>Um <a href="#perfis">Perfil de Vaga</a> por disputa; sem limite</td><td>Passo <em>Perfis de Vaga</em></td><td>Curso, campus, turno e polo <strong>não</strong> são eixos: vão no código, denominação e “Localidade”. <span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td>Descrever a oferta</td><td>Denominação, localidade, descrição, requisitos (um por linha), atribuições, carga horária, remuneração</td><td>Cartão do Perfil</td><td>Atribuições, carga e remuneração servem a Editais de bolsista/tutor. Desde a 119, a carga horária publicada também entra no <a href="#kit-de-divulgacao">Kit de divulgação</a>.</td></tr>
         <tr><td>Quantas vagas</td><td>Vagas imediatas ≥ 0</td><td>Cartão do Perfil</td><td>Zero é legítimo: com cadastro de reserva, o documento imprime <code>CR</code> (096), e o Perfil convoca pela vaga acrescida depois da publicação, só na ampla sem Modalidade (097).</td></tr>
-        <tr><td>Cadastro de reserva</td><td>Não há · limitado (com limite) · ilimitado</td><td>Fieldset “Cadastro Reserva”</td><td>Publicado; a espécie autoriza a vaga acrescida, e o limite não é lido. <span class="selo selo-parc">Parcial</span> <a href="#cadastro-de-reserva">Mais</a></td></tr>
+        <tr><td>Cadastro de reserva</td><td>Não há · limitado · ilimitado</td><td>Fieldset “Cadastro Reserva”</td><td>Publicado; o número do limitado vem do corte do marco que convoca (162), e a espécie autoriza a vaga acrescida. <span class="selo selo-parc">Parcial</span> <a href="#cadastro-de-reserva">Mais</a></td></tr>
         <tr><td>Criar muitos Perfis parecidos</td><td>Duplicar este Perfil (pede Código e Localidade)</td><td>Cartão do Perfil</td><td>Só antes de publicar. <a href="#duplicar-perfil">O que copia</a></td></tr>
       </tbody>
     </table></div>
@@ -1554,7 +1555,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>várias modalidades por Perfil</td><td class="centro"><span class="m m-sim">✓</span></td><td>Modalidades</td><td>Sem limite.</td></tr>
         <tr><td>a mesma cota em todos os Perfis</td><td class="centro"><span class="m m-sim">✓</span></td><td>“Aplicar aos demais Perfis (N)”</td><td>Cópia, não catálogo único.</td></tr>
         <tr><td>devolver vaga de cota para a ampla</td><td class="centro"><span class="m m-sim">✓</span></td><td>Reversão</td><td>Na apuração da cota.</td></tr>
-        <tr><td>limitar o cadastro de reserva a N</td><td class="centro"><span class="m m-parc">◐</span></td><td>Cadastro Reserva limitado</td><td>Só declara. Quem limita de fato são os suplentes do corte.</td></tr>
+        <tr><td>limitar o cadastro de reserva a N</td><td class="centro"><span class="m m-sim">✓</span></td><td>Cadastro Reserva limitado + N suplentes no corte, sem continuação</td><td>O número é o do corte, por lista (162).</td></tr>
         <tr><td>convocar do cadastro de reserva sem vaga imediata</td><td class="centro"><span class="m m-parc">◐</span></td><td>Vaga acrescida, na ocupação</td><td>Só na ampla de Perfil sem linha de Modalidade e sem reversão (097). Com cotas, fora do sistema.</td></tr>
         <tr><td>várias Etapas, com eliminação entre elas</td><td class="centro"><span class="m m-sim">✓</span></td><td>Etapas</td><td>Eliminado sai das seguintes automaticamente.</td></tr>
         <tr><td>só os N primeiros seguirem para a Etapa seguinte</td><td class="centro"><span class="m m-sim">✓</span></td><td>Corte que governa a Etapa</td><td>O corte é um ato emitido.</td></tr>
@@ -1640,8 +1641,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
     </table></div>
 
     <h3>Alterei o cadastro de reserva</h3>
-    <p>Rascunho: livre (a espécie e o limite são conferidos entre si). Retificação: o <strong>limite</strong> é retificável; a <strong>espécie</strong> não (“oferece outra coisa”). O limite não é lido por corte, ocupação nem convocação; a espécie publicada é o que autoriza a <a href="#vaga-acrescida">vaga acrescida</a> na ocupação (097).</p>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna [a validar]</span><p>Na Retificação, a coerência espécie × limite não é conferida: é possível publicar “não há cadastro reserva” com limite 6.</p></div>
+    <p>Rascunho: livre na espécie; o limitado não guarda número, e a Revisão confere a espécie contra o corte (162). Retificação: a <strong>espécie</strong> não se retifica (“oferece outra coisa”); o número do limitado muda quando se retificam o alvo ou os suplentes do corte, e a conferência mostra o antes e o depois na linha <span class="rotulo-ui">Cadastro de reserva</span>. A Retificação que leve o número a zero, ou que faça nascer num marco que convoca um corte com continuação, é recusada. A espécie publicada é o que autoriza a <a href="#vaga-acrescida">vaga acrescida</a> na ocupação (097).</p>
+    <p>No Edital publicado antes da 162, o campo <span class="rotulo-ui">Limite do Cadastro Reserva</span> continua retificável, e o número continua só exibido.</p>
   </section>
 
   <section id="impacto-perfil">
@@ -1869,9 +1870,9 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <h3 id="r-reserva">Receita 7 — Suplentes e cadastro de reserva</h3>
     <div class="rolagem"><table><tbody>
       <tr><th>Quando faz sentido</th><td>O Edital promete chamar, além das vagas, até N classificados.</td></tr>
-      <tr><th>O que configurar</th><td>No marco que corta: “Suplentes” = N (é isso que o sistema executa). No Perfil: “Cadastro reserva limitado” com limite N (é isso que o documento publica). Mantenha os dois iguais — nada os confere.</td></tr>
-      <tr><th>Decisões</th><td>N; se a faixa pode continuar depois de esgotada (“Faixa seguinte: admite”).</td></tr>
-      <tr><th>Limites</th><td>O limite do cadastro de reserva não é executado. Um Perfil <strong>só</strong> de cadastro de reserva (0 vagas imediatas) classifica e publica, e convoca pela <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação se o quadro tiver só a linha geral; com linha de Modalidade, a Revisão avisa que a convocação será feita fora do sistema (097). <a href="#cadastro-de-reserva">Mais</a></td></tr>
+      <tr><th>O que configurar</th><td>No marco que convoca: “Suplentes” = N e “Faixa seguinte” <em>Não admite</em>. No Perfil: “Cadastro reserva limitado”, sem número — o documento, o portal e a Revisão dizem “até N”, lido do corte (162). Para chamar sem limite: “Cadastro reserva ilimitado” com a faixa seguinte admitida.</td></tr>
+      <tr><th>Decisões</th><td>N, ou se o cadastro é sem limite — a espécie e a continuação andam juntas, e a Revisão recusa o par incoerente.</td></tr>
+      <tr><th>Limites</th><td>O número vale por lista de concorrência: com cotas, o documento diz “em cada lista” ou o número de cada uma. Um Perfil <strong>só</strong> de cadastro de reserva (0 vagas imediatas) classifica e publica, e convoca pela <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação se o quadro tiver só a linha geral; com linha de Modalidade, a Revisão avisa que a convocação será feita fora do sistema (097). <a href="#cadastro-de-reserva">Mais</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-polos">Receita 8 — Muitos Perfis (vários polos)</h3>
@@ -5259,7 +5260,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           apuração de vagas, a convocação e a divulgação. Sem o Perfil, não haveria a quem ligar “quantas
           vagas” e “como se classifica”.</dd>
         <dt>Exemplo</dt><dd><code>INF-VIT</code> “Técnico em Informática”,
-          localidade “Campus Vitória”, 40 vagas imediatas, cadastro reserva limitado em 20.</dd>
+          localidade “Campus Vitória”, 40 vagas imediatas, cadastro reserva limitado — 10 por lista, pelo corte.</dd>
         <dt>Quando configurar</dt><dd>Na etapa <span class="rotulo-ui">Perfis de Vaga</span> do
           assistente de composição, com o Edital em elaboração.</dd>
         <dt>O que posso fazer</dt><dd>Acrescentar, duplicar e remover Perfis. Declarar os campos
@@ -5299,7 +5300,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
 │   └── (controle "Declarado uma vez para todos os Perfis" → grava EM CADA Perfil)
 │
 ├── Perfil INF-VIT   "Técnico em Informática — Campus Vitória"   Localidade: Campus Vitória
-│   ├── Vagas imediatas: 40        Cadastro reserva: limitado em 20
+│   ├── Vagas imediatas: 40        Cadastro reserva: limitado (10 por lista, pelo corte)
 │   ├── Modalidades: PPI (25%)  ·  PCD (5%)
 │   ├── Quadro de vagas: Ampla concorrência 28 · PPI 10 · PCD 2
 │   ├── Reversão: "A quantidade que ficou sem preencher"
@@ -5335,7 +5336,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td><span class="rotulo-ui">Denominação</span>, <span class="rotulo-ui">Localidade</span>, <span class="rotulo-ui">Descrição</span>, <span class="rotulo-ui">Carga horária</span>, <span class="rotulo-ui">Remuneração</span>, <span class="rotulo-ui">Atribuições</span></td><td>Texto descritivo</td><td>PDF, portal; Localidade vira <code>NOME_POLO</code> na exportação de matrículas</td><td><span class="m m-sim">✓</span></td></tr>
         <tr><td><span class="rotulo-ui">Requisitos</span></td><td>Lista de texto, um por linha</td><td>PDF, portal (não há verificação automática)</td><td><span class="m m-sim">✓</span> lista inteira</td></tr>
         <tr><td><span class="rotulo-ui">Vagas imediatas</span></td><td>Total de vagas do Perfil</td><td><a href="#quadro-de-vagas">Quadro</a>, sugestão pelo percentual, conferência da soma</td><td><span class="m m-sim">✓</span></td></tr>
-        <tr><td><span class="rotulo-ui">Cadastro Reserva</span> + <span class="rotulo-ui">Limite da reserva</span></td><td>Não há / limitado / ilimitado</td><td>A espécie autoriza a vaga acrescida na ocupação (097); o limite é só exibição. Ver <a href="#cadastro-de-reserva">cadastro de reserva</a></td><td>espécie <span class="m m-nao">—</span> · limite <span class="m m-sim">✓</span></td></tr>
+        <tr><td><span class="rotulo-ui">Cadastro Reserva</span></td><td>Não há / limitado / ilimitado</td><td>O número do limitado vem do corte do marco que convoca (162); a espécie autoriza a vaga acrescida na ocupação (097). Ver <a href="#cadastro-de-reserva">cadastro de reserva</a></td><td>espécie <span class="m m-nao">—</span> · número pelo corte</td></tr>
         <tr><td><span class="rotulo-ui">Qual delas é a ampla concorrência</span></td><td>Aponta a Modalidade que é a ampla</td><td>Recortes, quadro, corte, ocupação, inscrição</td><td><span class="m m-sim">✓</span></td></tr>
         <tr><td><span class="rotulo-ui">Reverter vaga reservada não preenchida para a ampla concorrência</span></td><td>Espécie da reversão</td><td><a href="#ocupacao">Ocupação</a></td><td><span class="m m-sim">✓</span>, e pode nascer</td></tr>
         <tr><td><span class="rotulo-ui">Como a convocação é comunicada</span></td><td>Por publicação ou por mensagem individual</td><td><a href="#convocacao">Convocação</a>; sem ela, Perfil que corta não publica</td><td><span class="m m-sim">✓</span></td></tr>
@@ -5745,53 +5746,90 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <div class="conceito" id="c-cadastro-de-reserva">
       <header><h3>Cadastro de reserva</h3><span class="selo selo-parc">Parcial</span>
         <p class="frase">A declaração, por Perfil, de que o Edital forma cadastro reserva: não há,
-          limitado a N, ou ilimitado.</p></header>
+          limitado, ou ilimitado. O número do limitado vem do corte do marco que convoca (162).</p></header>
       <dl>
         <dt>Por que existe</dt><dd>O Edital publica isso, e o candidato decide concorrer sabendo se há
-          reserva e de que tipo.</dd>
-        <dt>Exemplo</dt><dd>“Cadastro reserva limitado” com <span class="rotulo-ui">Limite da reserva</span> = 6.
-          O portal diz “Cadastro reserva — até 6 classificados, para convocação futura”.</dd>
+          reserva, de que tipo e de quantos.</dd>
+        <dt>Exemplo</dt><dd>Perfil com 2 vagas, “Cadastro reserva limitado”, e o marco que convoca com
+          alvo do quadro, 3 suplentes e sem continuação. O documento diz <em>“cadastro de reserva de até 3
+          (três) classificados por Perfil”</em>, e o portal <em>“até 3 classificados, para convocação
+          futura”</em>. Com cotas, o número vale por lista: <em>“… em cada lista de concorrência”</em>, ou
+          o de cada uma quando diferem.</dd>
         <dt>Quando configurar</dt><dd>Etapa Perfis, fieldset <span class="rotulo-ui">Cadastro Reserva</span>:
           <span class="rotulo-ui">Não há cadastro reserva</span> ·
           <span class="rotulo-ui">Cadastro reserva limitado</span> ·
-          <span class="rotulo-ui">Cadastro reserva ilimitado</span>. O limite só aparece com “limitado”.</dd>
-        <dt>O que posso fazer</dt><dd>Declarar e publicar. Retificar o limite depois de publicado. Com o cadastro publicado, chamar além das vagas pela <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação (097).</dd>
-        <dt>O que não posso</dt><dd>Retificar a espécie (“trocá-la depois não corrige um erro de redação,
-          oferece outra coisa”). <strong>Esperar que o sistema limite a lista, a faixa, a convocação
-          ou as vagas acrescidas por esse número</strong>: nada lê o limite para decidir. Acrescentar vaga
-          num Perfil que reparte vagas entre Modalidades: a convocação desse Perfil é feita fora do sistema (097).</dd>
-        <dt>Relaciona-se com</dt><dd><a href="#corte">Corte</a> (os “excedentes” da regra de corte são
-          outra coisa) · <a href="#convocacao">Convocação</a> · <a href="#g-cadastro-de-reserva">Glossário</a></dd>
-        <dt>Na interface</dt><dd>Etapa Perfis; Retificação (<span class="rotulo-ui">Limite do Cadastro Reserva</span>);
-          PDF (coluna “Cadastro reserva”; o Perfil só de cadastro de reserva sai com <code>CR</code> no lugar das vagas e a nota <em>“CR: cadastro de reserva.”</em>, 096, e não imprime quadro nem reversão, 067); portal, que não diz o zero (096), inclusive no acompanhamento de quem aguarda chamada, como fato do Edital (063); Revisão; tabela da etapa; ocupação, com o formulário da vaga acrescida (097).</dd>
-        <dt>Evidência técnica</dt><dd><code>PerfilVaga.reserve_type</code>/<code>reserve_limit</code> ·
-          <code>editais/domain/perfis.py</code> (<code>validate_profile</code>) · <code>portal/views.py</code>
-          (<code>_oferta</code>) · <code>publicacoes/infrastructure/pdf.py</code> · <code>editais/domain/quadro.py</code>
-          (<code>cadastro_sem_vaga_imediata</code>) · <code>ocupacao/application/acrescimo.py</code></dd>
+          <span class="rotulo-ui">Cadastro reserva ilimitado</span>. Debaixo do limitado, uma nota diz de
+          onde vem o número e, com o corte já salvo, qual é. O corte se declara na etapa Classificação.</dd>
+        <dt>O que posso fazer</dt><dd>Declarar e publicar. Mudar o número retificando o alvo ou os
+          suplentes do corte. Com o cadastro publicado, chamar além das vagas pela
+          <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação (097).</dd>
+        <dt>O que não posso</dt><dd>Digitar o número: a gravação recusa, <em>“O número do cadastro de
+          reserva limitado não se digita: ele vem do corte do marco que convoca deste Perfil.”</em>
+          Publicar o limitado com continuação, o ilimitado sem ela, o limitado sem corte no marco que
+          convoca, o que não alcança ninguém além das vagas, ou com dois marcos que convocam e dão números
+          diferentes. Retificar a espécie (“trocá-la depois não corrige um erro de redação, oferece outra
+          coisa”). Acrescentar vaga num Perfil que reparte vagas entre Modalidades: a convocação desse
+          Perfil é feita fora do sistema (097).</dd>
+        <dt>Relaciona-se com</dt><dd><a href="#corte">Corte</a> (os suplentes do marco que convoca
+          <strong>são</strong> o cadastro) · <a href="#convocacao">Convocação</a> ·
+          <a href="#g-cadastro-de-reserva">Glossário</a></dd>
+        <dt>Na interface</dt><dd>Etapa Perfis (a nota da opção limitada e o resumo da tabela da etapa);
+          Revisão (linha <span class="rotulo-ui">Cadastro Reserva</span>, recusas e advertências); Retificação
+          (a linha derivada <span class="rotulo-ui">Cadastro de reserva</span> na conferência);
+          PDF (a frase e a coluna “Cadastro reserva”; o Perfil só de cadastro de reserva sai com <code>CR</code> no lugar das vagas e a nota <em>“CR: cadastro de reserva.”</em>, 096, e não imprime quadro nem reversão, 067); portal, que não diz o zero (096), inclusive no acompanhamento de quem aguarda chamada, como fato do Edital (063); relatório do Edital; visão institucional; assistente de dúvidas; ocupação, com o formulário da vaga acrescida (097).</dd>
+        <dt>Evidência técnica</dt><dd><code>editais/domain/cadastro_de_reserva.py</code> (<code>do_perfil</code>,
+          <code>incoerencias</code>) · <code>PerfilVaga.reserve_type</code>/<code>reserve_limit</code> (a
+          <code>editais/0028</code> admite o limitado sem número) · <code>editais/domain/perfis.py</code>
+          (<code>validate_profile</code>) · <code>publicacoes/infrastructure/pdf.py</code>
+          (<code>frase_do_cadastro</code>, <code>frases_do_corte</code>) · <code>portal/views.py</code>
+          (<code>_oferta</code>) · <code>editais/domain/quadro.py</code> (<code>cadastro_sem_vaga_imediata</code>) ·
+          <code>ocupacao/application/acrescimo.py</code></dd>
       </dl>
     </div>
 
-    <h3>Onde ele aparece, e onde não aparece</h3>
+    <h3>De onde vem o número</h3>
+    <p>Em cada lista de concorrência, o número é o que a faixa do marco que convoca alcança sem
+      continuação, menos as vagas da linha: com alvo do quadro, os suplentes; com alvo fixo, o alvo mais
+      os suplentes menos as vagas. O marco que convoca é o que não é intermediário (133). No Perfil só de
+      cadastro de reserva, as vagas são zero, e o número é o alcance da faixa.</p>
+    <div class="rolagem"><table>
+      <thead><tr><th>Espécie</th><th>O corte do marco que convoca precisa</th><th>O documento diz</th></tr></thead>
+      <tbody>
+        <tr><td>Limitado</td><td>Existir, sem continuação, e alcançar alguém além das vagas em toda lista</td><td>“cadastro de reserva de até N classificados” (por Perfil, em cada lista, ou o número de cada lista); no Perfil só de reserva, a unidade do corte abre com <em>“Compõem o cadastro de reserva os N primeiros classificados”</em></td></tr>
+        <tr><td>Ilimitado</td><td>Admitir continuação, se houver corte</td><td>“cadastro de reserva sem limite de classificados”; no Perfil só de reserva, <em>“Compõem o cadastro de reserva todos os classificados, sem limite. São chamados primeiro os N primeiros.”</em></td></tr>
+        <tr><td>Não há</td><td>Nada: suplentes e continuação sem cadastro são legítimos (o 77/2026)</td><td>“não há cadastro de reserva”</td></tr>
+      </tbody>
+    </table></div>
+    <p>Com suplentes e vagas, o documento diz como eles se relacionam: <em>“Os suplentes formam o
+      cadastro de reserva deste Perfil e são chamados, na ordem, para as vagas que não forem preenchidas
+      pelos primeiros classificados.”</em> No Perfil sem cadastro, a frase de antes continua, agora também
+      quando outro Perfil do Edital tem cadastro.</p>
+
+    <h3>Onde ele aparece</h3>
     <div class="rolagem"><table>
       <thead><tr><th>Lugar</th><th>Lê o cadastro reserva?</th><th>Efeito</th></tr></thead>
       <tbody>
-        <tr><td>Gravação do rascunho</td><td><span class="m m-sim">✓</span></td><td>“Cadastro Reserva inexistente não admite limite.” · “…limitado exige limite não negativo.” · “…ilimitado não admite limite.”</td></tr>
-        <tr><td>Revisão / publicação</td><td><span class="m m-parc">◐</span></td><td>Duas advertências no Perfil com 0 vaga imediata e reserva: “…a convocação depende de vagas acrescidas depois da publicação, registradas na ocupação.”, com quantos a faixa pode alcançar; e, se ele reparte vagas entre Modalidades, que “a convocação deste Perfil será feita fora do sistema” (097)</td></tr>
-        <tr><td>PDF, portal, Revisão, visão institucional, tabela da etapa</td><td><span class="m m-sim">✓</span></td><td>Texto: “limitado em 6”, “até 6 classificados, para convocação futura”. Sem vaga imediata, o documento imprime <code>CR</code> com nota, e o portal não diz o zero (096)</td></tr>
-        <tr><td><a href="#ocupacao">Ocupação</a>, <a href="#convocacao">convocação</a></td><td><span class="m m-parc">◐</span></td><td>A espécie: com cadastro limitado ou ilimitado, a ocupação aceita a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, e a convocação a chama (097). O limite não é lido</td></tr>
-        <tr><td><a href="#classificacao">Classificação</a>, <a href="#corte">corte</a>, <a href="#sorteio">sorteio</a></td><td><span class="m m-nao">—</span></td><td>Nenhum. A faixa usa o alvo e os <em>excedentes</em> da regra de corte do marco, e nada os compara com o limite.</td></tr>
+        <tr><td>Gravação do rascunho</td><td><span class="m m-sim">✓</span></td><td>Recusa número no limitado, e no “não há” e no ilimitado, como antes. O rascunho salvo antes da 162 guarda o número que tinha, e a Revisão diz o digitado e o derivado quando diferem</td></tr>
+        <tr><td>Revisão / publicação</td><td><span class="m m-sim">✓</span></td><td>As recusas da espécie contra o corte (acima); e as duas advertências do Perfil com 0 vaga imediata: <em>“…a convocação depende de vagas acrescidas depois da publicação, registradas na ocupação.”</em>, com quantos a faixa pode alcançar, e, se ele reparte vagas entre Modalidades, que <em>“a convocação deste Perfil será feita fora do sistema”</em> (097)</td></tr>
+        <tr><td>Retificação</td><td><span class="m m-sim">✓</span></td><td>O número muda com o alvo e os suplentes, e a conferência mostra o antes e o depois. Recusa o zero, a divergência entre marcos e o corte que nasce com continuação num limitado</td></tr>
+        <tr><td>PDF, portal, Revisão, relatório, visão institucional, tabela da etapa, assistente</td><td><span class="m m-sim">✓</span></td><td>O mesmo número, por uma regra só. Sem vaga imediata, o documento imprime <code>CR</code> com nota, e o portal não diz o zero (096)</td></tr>
+        <tr><td><a href="#ocupacao">Ocupação</a>, <a href="#convocacao">convocação</a></td><td><span class="m m-parc">◐</span></td><td>A espécie: com cadastro limitado ou ilimitado, a ocupação aceita a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, e a convocação a chama (097). O alcance é o do corte, que é o número do cadastro</td></tr>
+        <tr><td><a href="#classificacao">Classificação</a>, <a href="#corte">corte</a>, <a href="#sorteio">sorteio</a></td><td><span class="m m-nao">—</span></td><td>Nenhum motor mudou: é o corte que executa, e o número do cadastro é lido dele</td></tr>
       </tbody>
     </table></div>
-    <div class="aviso aviso-risco"><span class="titulo">Atenção</span>
-      <p>“Limitado em 6” é uma frase publicada, e não uma regra executada — nem o acréscimo de vagas a confere. Para que 6 pessoas além das
-        vagas avancem, declare os <strong>excedentes</strong> na regra de corte do
-        <a href="#marco">marco</a>, que é o que o sistema executa.</p>
+    <div class="aviso aviso-nota"><span class="titulo">Editais publicados antes da 162</span>
+      <p>Os que publicaram “limitado em N” digitado continuam dizendo esse número — no documento, no portal
+        e na Revisão —, e a unidade do corte deles sai como saía. Nada é reavaliado nem republicado, e a
+        Retificação deles não é recusada pelas regras novas; o campo <span class="rotulo-ui">Limite do
+        Cadastro Reserva</span> continua retificável neles. Na ocupação e na convocação desses Perfis, uma
+        nota diz: <em>“O Edital publicou cadastro de reserva limitado em N. O sistema não aplica esse
+        número: a convocação alcança quem o corte alcança — …”</em>.</p>
     </div>
-    <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: espécie × limite na Retificação</span>
-      <p>A coerência entre espécie e limite só é conferida no rascunho. Na Retificação, retificar o limite
-        de um Perfil “não há” ou “ilimitado”, ou acrescentar Perfil com limite (ele nasce “não há”), pode
-        publicar um limite incoerente com a espécie. <span class="selo selo-infer">Inferido</span>, não
-        reproduzido.</p>
+    <div class="aviso aviso-risco"><span class="titulo">Por que <span class="selo selo-parc">Parcial</span></span>
+      <p>O número é executado, mas a convocação do cadastro de reserva sem vaga imediata só existe na ampla
+        de Perfil sem linha de Modalidade e sem reversão (097); com cotas, ela é feita fora do sistema. O
+        suplente por multiplicador das vagas (<em>“até o triplo do número de vagas”</em>, 46/2026), a
+        validade e a prorrogação do Edital não são modelados.</p>
     </div>
   </section>
 
@@ -6050,7 +6088,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <ul>
       <li><strong>Alterar no Perfil</strong>, na ordem da composição desde a 056: denominação, localidade,
         descrição, carga horária, remuneração, atribuições, requisitos, <strong>Vagas imediatas</strong>,
-        <strong>Limite do Cadastro Reserva</strong>, “Modalidade que é a ampla concorrência”, forma de convocação e o gatilho da reversão (que nasce
+        <strong>Limite do Cadastro Reserva</strong> (só no Perfil publicado antes da 162; nos demais, o
+        número muda pelo corte), “Modalidade que é a ampla concorrência”, forma de convocação e o gatilho da reversão (que nasce
         se não havia).</li>
       <li><strong>Alterar na Modalidade:</strong> denominação, descrição, percentual, fundamento, versão e
         “Vigente desde”. Não se retificam o código nem o arredondamento, e a regra normativa não nasce onde
@@ -6107,9 +6146,10 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <details class="pergunta"><summary>Preciso cadastrar “Ampla concorrência” como Modalidade?</summary><div><p>Não.
       A ampla é a linha geral do quadro. Se cadastrar, aponte-a em “Qual delas é a ampla concorrência”:
       só aparece depois de salvar a Modalidade.</p></div></details>
-    <details class="pergunta"><summary>“Cadastro reserva limitado em 6” limita a lista?</summary><div><p>Não. É
-      texto publicado. Quem executa quantas pessoas avançam além das vagas são os excedentes da regra de
-      corte do <a href="#marco">marco</a>.</p></div></details>
+    <details class="pergunta"><summary>“Cadastro reserva limitado” limita a lista?</summary><div><p>Sim,
+      desde a 162, porque o número é o do corte: os suplentes do <a href="#marco">marco</a> que convoca,
+      sem continuação. No Edital publicado antes, com “limitado em 6” digitado, não — o número é texto
+      publicado, e a ocupação e a convocação dizem que o sistema não o aplica.</p></div></details>
     <details class="pergunta"><summary>A soma das cotas não bate e o sistema deixou salvar. Está certo?</summary><div><p>Sim.
       O rascunho aceita trabalho pela metade. A Revisão e a publicação impedem o excesso sempre, e a
       diferença quando todas as listas têm linha.</p></div></details>
@@ -12999,7 +13039,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>O que é um Marco Classificatório?</summary><div><p>A regra, no Perfil, de como uma ordem se forma — pela pontuação combinada de Etapas ou por sorteio — e do que vem com ela: desempates, prazo de recurso, corte. Não avalia ninguém e não calcula sozinho: a ordem nasce quando alguém a emite, uma por lista. <a href="#classificacao">Mais</a></p></div></details>
     <details class="pergunta"><summary>O que é um Ato?</summary><div><p>Um registro de decisão com autor, instante e a norma citada, que nunca muda: publicação, Resultado, ordem, corte, apuração, convocação, desfecho. Corrige-se por sucessor. O “Ato de ordenação” é, especificamente, a ordem emitida de um recorte. <a href="#ato">Mais</a></p></div></details>
     <details class="pergunta"><summary>Qual a diferença entre classificação e convocação?</summary><div><p>Classificação diz a ordem de todos numa lista. Convocação chama uma pessoa da fila para uma vaga que falta, com prazo — e só vem depois do corte e da apuração de vagas. <a href="#nc-cadeia">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que é cadastro de reserva?</summary><div><p>O que o Edital declara oferecer além das vagas imediatas (não há, limitado a N, ilimitado). Hoje é só declaração: nenhum corte, apuração ou convocação o lê. Quem é chamável além das vagas é decidido pelos <em>suplentes</em> da regra de corte. <a href="#cadastro-de-reserva">Mais</a></p></div></details>
+    <details class="pergunta"><summary>O que é cadastro de reserva?</summary><div><p>O que o Edital declara oferecer além das vagas imediatas (não há, limitado, ilimitado). Desde a 162, o número do limitado é o que o corte do marco que convoca alcança além das vagas — os <em>suplentes</em> —, e a Revisão recusa a espécie incoerente com a continuação do corte. <a href="#cadastro-de-reserva">Mais</a></p></div></details>
     <details class="pergunta"><summary>Como funciona a reserva de vagas (cotas)?</summary><div><p>Cada cota é uma Modalidade do Perfil, com percentual e fundamento. O quadro de vagas diz quantas vagas cada lista tem — números digitados, que o percentual sugere. A ampla concorrência inclui todos, inclusive os cotistas; cada lista tem ordem e vagas próprias; quem já ocupa pela ampla sai da conta da cota; e, se declarado, o que sobrar da cota reverte para a ampla. <a href="#reservas">Mais</a></p></div></details>
   </section>
 
@@ -13221,8 +13261,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-papel">Papel</a> · <a href="#g-visao-institucional">Visão institucional</a></dd>
   <dd class="mais"><a href="#barra-da-gestao">Saiba mais →</a></dd>
   <dt id="g-cadastro-de-reserva" data-letra="C">Cadastro de reserva</dt>
-  <dd class="def">A declaração do Perfil sobre o que se oferece além das vagas imediatas: não há, limitado a N, ilimitado. Publicada; com ela, a ocupação aceita a vaga acrescida depois da publicação. O limite N não é executado.</dd>
-  <dd class="ex">“Cadastro reserva limitado em 20”.</dd>
+  <dd class="def">A declaração do Perfil sobre o que se oferece além das vagas imediatas: não há, limitado, ilimitado. Publicada; com ela, a ocupação aceita a vaga acrescida depois da publicação. O número do limitado é o que o corte do marco que convoca alcança além das vagas, por lista (162).</dd>
+  <dd class="ex">“Cadastro de reserva de até 10 (dez) classificados em cada lista de concorrência”.</dd>
   <dd class="rel"><a href="#g-suplentes">Suplentes (regra de corte)</a> · <a href="#g-reserva-de-vaga">Reserva de vaga (cota)</a> · <a href="#g-vaga-acrescida">Vaga acrescida</a> · <a href="#g-cr">CR</a></dd>
   <dd class="mais"><a href="#cadastro-de-reserva">Saiba mais →</a></dd>
   <dt id="g-comissao" data-letra="C">Comissão</dt>
@@ -14092,8 +14132,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>A marca “irreversível” muda para o leitor de tela</td><td>Nos detalhes do Processo, do Edital e da Retificação, quem chegava a um ato sem volta pelo teclado ouvia só o rótulo</td><td>18/10, spec 090: a marca é a descrição acessível do botão</td></tr>
           <tr><td>O caminho no topo oferecia ao Auditor duas telas que o recusavam</td><td>Em Resultados da Etapa, Trilha da avaliação e Conclusões preservadas, Alocação por Etapa e a Etapa eram links que respondiam 403 a quem audita sem presidir</td><td>18/10, spec 090: os dois níveis viram texto para quem não os abre</td></tr>
           <tr><td>A recusa de CSRF sem desenho</td><td>O formulário expirado respondia com a página do Django, em inglês, falando em <em>“cookie”</em>, e sem estilo sob a política de conteúdo</td><td>20/10, spec 093: a moldura da área de onde o envio veio, 403, <em>“Nada foi gravado.”</em> e o caminho de volta</td></tr>
-          <tr><td>“0” nas vagas do Perfil só de cadastro de reserva (P-2 dos Editais externos)</td><td>O documento imprimia 0 vaga imediata, que se lia como ausência de oferta; o portal dizia <em>“0 vagas imediatas agora”</em></td><td>21/10, spec 096: <code>CR</code> com a nota <em>“CR: cadastro de reserva.”</em>, e o portal não diz o zero. O dado continua 0, e a gestão o mostra. Atendido em parte: o cadastro limitado em 0 também sai <code>CR</code></td></tr>
-          <tr><td>Edital só de cadastro de reserva sem convocação (RC-58)</td><td>Classificava e divulgava, e convocar era recusado por falta de vaga apurada</td><td>21/10, spec 097, em parte: a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação, para a ampla de Perfil sem Modalidade. O limite “até N” continua sem execução, e com cotas a convocação é externa</td></tr>
+          <tr><td>“0” nas vagas do Perfil só de cadastro de reserva (P-2 dos Editais externos)</td><td>O documento imprimia 0 vaga imediata, que se lia como ausência de oferta; o portal dizia <em>“0 vagas imediatas agora”</em></td><td>21/10, spec 096: <code>CR</code> com a nota <em>“CR: cadastro de reserva.”</em>, e o portal não diz o zero. O dado continua 0, e a gestão o mostra. O cadastro limitado a zero deixou de ser publicável na 162</td></tr>
+          <tr><td>Edital só de cadastro de reserva sem convocação (RC-58)</td><td>Classificava e divulgava, e convocar era recusado por falta de vaga apurada</td><td>21/10, spec 097, em parte: a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, na ocupação, para a ampla de Perfil sem Modalidade. O limite “até N” passou a vir do corte na 162; com cotas, a convocação continua externa</td></tr>
           <tr><td>Retificação em curso sem porta (AUD-RET-01 a 04, da auditoria de 29/10)</td><td>Nenhuma tela listava Retificação ainda não publicada: quem homologa só chegava a ela colando o endereço, e a devolvida só se editava pela API</td><td>30/10, spec 103: <a href="#retificacao-em-curso">Retificações em curso</a> na página do Edital e marca na Lista; quem age a seguir; <span class="rotulo-ui">Editar a Retificação</span> no mesmo registro</td></tr>
           <tr><td>Extração do sorteio no dia do fim das inscrições (Edital 72/2026)</td><td>O Edital publicava um sorteio que seria sempre recusado, e nada avisava até o dia do certame; a recusa dizia os instantes em UTC</td><td>30/10, PR 335 e spec 102: a publicação é <a href="#sorteio-viavel">impedida</a>, a Retificação adverte, a tela do sorteio avisa antes de congelar, e a recusa diz a saída no fuso da tela</td></tr>
           <tr><td>“Nenhuma ação disponível para seus papéis” ao lado da Retificação que espera quem lê</td><td>A coluna da Lista só conhecia os atos do Edital</td><td>30/10, spec 104: o ato da Retificação vem primeiro, e a Lista abre por <a href="#acoes-disponiveis">Ações disponíveis para você</a></td></tr>
@@ -14186,11 +14226,12 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="aviso aviso-lacuna">
       <span class="titulo">Campos gravados que nenhuma regra lê</span>
       <p>
-        <code>reserveLimit</code> (o <em>“Cadastro Reserva limitado em N”</em>) sai no documento e nada o
-        aplica. <code>callRules</code>, <code>calculation</code> e <code>distribution</code> da regra
+        <code>callRules</code>, <code>calculation</code> e <code>distribution</code> da regra
         normativa da Modalidade são gravados, preservados e publicados, sem tela e sem leitor. A ordem de
         trabalho de 27/09 decidiu que o que ficar sem consumidor deixa de ser pedido — e não é apagado,
-        porque os Editais publicados guardam o valor. Ainda não foi feito.
+        porque os Editais publicados guardam o valor. Para estes três, ainda não foi feito. O
+        <code>reserveLimit</code>, que estava nesta lista, deixou de ser pedido na 162: o número do
+        limitado vem do corte, e o campo só continua no conteúdo dos Editais publicados antes.
       </p>
       <p class="miudo"><strong>Como medi:</strong> nenhuma ocorrência das quatro chaves em
         <code>ocupacao/</code>, <code>convocacao/</code>, <code>classificacao/</code>,
@@ -14444,9 +14485,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="rolagem"><table>
       <thead><tr><th>Situação em 13/11</th><th class="centro">Itens</th><th>O que quer dizer</th></tr></thead>
       <tbody>
-        <tr><td><strong>Resolvido</strong></td><td class="centro">29</td><td>Fechou desde que a lista foi escrita. Saiu dos grupos abaixo e está em <a href="#evolucoes-resolvidas">O que já fechou</a></td></tr>
+        <tr><td><strong>Resolvido</strong></td><td class="centro">30</td><td>Fechou desde que a lista foi escrita. Saiu dos grupos abaixo e está em <a href="#evolucoes-resolvidas">O que já fechou</a></td></tr>
         <tr><td><strong>Parcial</strong></td><td class="centro">20</td><td>Entrou parte; o que resta está dito no item, no grupo de quem o fecha</td></tr>
-        <tr><td><strong>Aberto, no código</strong></td><td class="centro">69</td><td>Falta fazer, e é trabalho de quem escreve o software: grupo 1</td></tr>
+        <tr><td><strong>Aberto, no código</strong></td><td class="centro">68</td><td>Falta fazer, e é trabalho de quem escreve o software: grupo 1</td></tr>
         <tr><td><strong>Decisão, validação ou terceiros</strong></td><td class="centro">68</td><td>Nada no código fecha: grupos 2, 3 e 4</td></tr>
       </tbody>
     </table></div>
@@ -14491,7 +14532,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>A apuração da ocupação não fica obsoleta com a Retificação da reversão</strong></td><td>Ela continua <em>vigente</em>, com um número calculado sob outra norma, num ato que decide vaga. Raro: exige retificar a reversão depois de apurar</td><td><code>ocupacao/application/selectors.py</code> (<code>causas_de_obsolescencia</code>: <strong>sete</strong> causas — ordem sucedida, corte, quadro retificado, movimento, efeito, acréscimo e declaração —, nenhuma de reversão; <code>_quadro_retificado</code> compara só a linha do quadro)</td></tr>
         <tr><td><strong>O desfecho da convocação não tem sucessão pela tela</strong></td><td>A convocação já se corrige com motivo (120). O desfecho não: <span class="rotulo-ui">Registrar desfecho</span> só aparece enquanto não há desfecho, e a inércia de quem já aceitou, ou um desfecho errado, não se registra pela interface</td><td><code>convocacao/models.py</code> (a sucessão existe no modelo); <code>convocacao.html</code></td></tr>
         <tr><td><strong>Atos que não se desfazem saem de botão comum</strong></td><td>A 152 pôs conferência e desenho de perigo no corte e na chamada individual. Seguem como ação principal, sem conferência: <span class="rotulo-ui">Realizar o sorteio desta lista</span>, <span class="rotulo-ui">Fixar os N participantes</span>, <span class="rotulo-ui">Apurar a ocupação</span>, <span class="rotulo-ui">Registrar desfecho</span> e <span class="rotulo-ui">Pedir a faixa seguinte</span>; só a anulação do sorteio é perigo. A história 2 da 152 — a ciência do prazo antes de um ato que o conta — não foi entregue: o predicado existe sem uso</td><td><code>sorteio.html</code>, <code>ocupacao.html</code>, <code>convocacao.html</code>; <code>specs/152-*/</code>. Rever isso é decisão de governança (084)</td></tr>
-        <tr><td><strong>O limite do cadastro de reserva não é aplicado</strong></td><td><em>“Limitado em N”</em> (<code>reserveLimit</code>) sai no documento e na tela, e nenhuma regra de ocupação, classificação ou convocação o lê. O Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em></td><td>lido só em exibição (<code>interface/relatorio_do_edital.py</code>, <code>portal/situacao.py</code>); <code>publicacoes/infrastructure/pdf.py</code></td></tr>
         <tr><td><strong>A vaga de cota sem concorrente só tem a entrega mínima</strong></td><td>A 155 registra a vaga <em>não preenchida</em> pelo ato manual. A lista reservada vazia ser sorteada, apurada e reverter (FR-6328 a FR-6333) é a <em>próxima entrega</em>, e a reversão por saldo (D-015 da 155) está aberta. O inventário de 13/11 dá a 155 como incompleta</td><td><code>ocupacao/application/destinacao.py</code>; <code>doc/achado-reservada-vazia-nao-reverte.md</code></td></tr>
         <tr><td><strong>A mensagem de reenvio da convocação sugere prazo novo</strong></td><td>Ela diz <em>“contado do envio desta mensagem”</em> para um prazo que é data fixa, num ato cujo efeito é perder a vaga. A 156 prevê o ajuste e está como <em>Previsto</em></td><td><code>convocacao/templates/convocacao/mensagem/inicial.txt</code>, <code>inicial.html</code>, <code>correcao.txt</code>, <code>correcao.html</code>; <code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code></td></tr>
         <tr><td><strong>Alocação de avaliação e distribuição sem Perfil nem polo</strong></td><td>A conferência documental ganhou o Perfil (115). A alocação à Etapa e a distribuição não: com 7 polos, a comissão inteira alcança os sete, e nenhuma comissão local recebe só o que é dela (DP-11)</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> sem <em>“Perfil”</em></td></tr>
@@ -14520,7 +14560,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <li><strong>Duas grafias para trocar de identidade</strong> (<em>Trocar identidade</em> na barra, <em>Trocar de identidade</em> na página de acesso), a lista de Processos que diz que a identidade foi escolhida <em>“acima”</em> quando está no pé da barra, e <em>“Mostrar as outras N”</em> numa tela e <em>“os outros N”</em> noutra (<code>_acoes_disponiveis.html</code>, <code>processo_detalhe.html</code>). Os assuntos dos e-mails dizem <em>“Seleções”</em> e a unidade, e não o nome novo do produto — só importa quando a chave de avisos for ligada em produção.</li>
       <li><strong>A Revisão de um Edital publicado</strong> ainda diz <span class="rotulo-ui">O que falta para submeter</span> e <span class="rotulo-ui">Nada pendente — o Edital pode ser submetido.</span>; a conferência abaixo é a vigente (<code>compor_revisao.html</code>). A <strong>prévia da divulgação</strong> não diz a data-limite do recurso nem qual versão do Edital fundamenta a janela.</li>
       <li><strong>A hora do Evento</strong> é obrigatória, e meia-noite sai <em>“às 00h”</em> no documento (<code>publicacoes/infrastructure/humano.py</code>).</li>
-      <li><strong>O <code>CR</code> do documento</strong> (096): o cadastro limitado em 0 também sai <code>CR</code> (<code>pdf.py</code>), e o assistente de dúvidas imprime o <code>immediateVacancies</code> publicado sem testar o <code>CR</code>, podendo responder <em>“0 vagas”</em> (<code>duvidas/domain/respostas.py</code>). A prévia do documento reserva o espaço do fecho com a autoridade mais alta da unidade: se outra assinar o ato, a paginação da prévia pode divergir da publicada.</li>
+      <li><strong>O <code>CR</code> do documento</strong> (096): o cadastro limitado em 0 de Edital publicado antes da 162 também sai <code>CR</code> (<code>pdf.py</code>) — depois dela, o limitado a zero não publica —, e o assistente de dúvidas imprime o <code>immediateVacancies</code> publicado sem testar o <code>CR</code>, podendo responder <em>“0 vagas”</em> (<code>duvidas/domain/respostas.py</code>). A prévia do documento reserva o espaço do fecho com a autoridade mais alta da unidade: se outra assinar o ato, a paginação da prévia pode divergir da publicada.</li>
       <li><strong>A prévia da classificação</strong> (094, 095): ao abrir, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um empate na última vaga da ampla (mantido em 20/10); o rótulo da ampla diz <em>“(linha geral do quadro), todos os candidatos”</em>; e trocar de recorte, pela spec, não recalcula <span class="rotulo-ui">O que mudou com a sua alteração</span> — não verificado pela tela. A rastreabilidade da 095 ainda diz que os arquivos de teste não existem, e eles existem (<code>tests/interface/test_previa_por_recorte.py</code>).</li>
       <li><strong>Em <span class="rotulo-ui">Minhas inscrições</span></strong> não há a nota de pendência do Requerimento (118, X1): o candidato só a vê no acompanhamento (<code>portal/inscricoes.html</code>).</li>
       <li><strong>O documento do recurso responde 409 sem o evento de arquivo indisponível</strong> na trilha, ao contrário das outras três telas que servem arquivo (<code>interface/views.py</code>). A correção é de uma linha, mas a trilha é decisão do usuário (FR-3705).</li>
@@ -14664,6 +14704,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <div class="rolagem"><table>
       <thead><tr><th>O que era</th><th>Como fechou</th><th>Evidência</th></tr></thead>
       <tbody>
+        <tr><td>O limite do cadastro de reserva não era aplicado: <em>“limitado em N”</em> saía no documento e nas telas, e o Perfil só de reserva imprimia <em>“os 10 primeiros”</em> ao lado dele</td><td>162 (13/11, PR #537): o número do limitado vem do corte do marco que convoca; a Revisão recusa a espécie incoerente com o corte; o Perfil só de reserva abre pelo cadastro. Item acrescentado ao placar depois da conferência de 13/11</td><td><code>editais/domain/cadastro_de_reserva.py</code>; <code>publicacoes/infrastructure/pdf.py</code></td></tr>
         <tr><td>Retificação não acrescentava Modalidade; o sentido do desempate não era retificável</td><td>048 (26/09): acrescenta qualquer Modalidade, com a linha do quadro, e o critério se remove e outro se acrescenta no mesmo ato</td><td><code>interface/retificacao.py</code> (<code>NOVA_MODALIDADE</code>, <code>NOVO_CRITERIO</code>)</td></tr>
         <tr><td><code>schedule.status</code> não derivado; defeitos e vista parcial do painel</td><td>045 (26/09): a fase do Evento é derivada, <code>CANCELADO</code> é a única declaração, e a frase de ausência é relativa ao alcance do leitor</td><td><code>editais/domain/fase_do_evento.py</code>; <code>interface/supervisao.py</code></td></tr>
         <tr><td>Teto de inscrições não publicado; prazo recursal fora da página do resultado; marco sem regra de corte</td><td>Impresso e dito no portal; a página diz o prazo (047); o marco sem regra de corte é impeditivo (046)</td><td><code>publicacoes/infrastructure/pdf.py</code>; <code>recursos/application/selectors.py</code>; <code>editais/domain/validation.py</code></td></tr>
@@ -14688,7 +14729,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h3 id="evolucoes-higiene">Divergências entre código e documentação</h3>
     <ul>
-      <li><strong>O campo <code>Status</code> das specs.</strong> Das 162 pastas, 159 têm a linha, e <strong>73 começam com <code>Draft</code></strong> (eram 67 de 114 na revisão anterior), inclusive as implementadas — entre elas a 069, 070, 071, 072, 097, 100, 101, 102, 113, 114, 116 e 118. O #530 (13/11) corrigiu 35 linhas à mão e guardou a antiga como <em>“Status anterior”</em>, sem decidir a DP-12: nada guarda o campo, o guardião do README só confere a existência da pasta na tabela de incrementos, e o <code>spec-template.md</code> ainda nasce <code>Draft</code>. A 103, a 104 e as 105 a 109 ainda dizem <em>“merge não autorizado”</em>; a 099 diz <em>“PR aberto, merge é do usuário”</em>; a 076 diz <em>“Em emenda”</em>. <strong>Dezesseis</strong> specs — da 077 à 087, a 089, a 091 a 093 e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>. Todas as conferidas estão na <code>main</code>.</li>
+      <li><strong>O campo <code>Status</code> das specs.</strong> Das 163 pastas, 160 têm a linha, e <strong>73 começam com <code>Draft</code></strong> (eram 67 de 114 na revisão anterior), inclusive as implementadas — entre elas a 069, 070, 071, 072, 097, 100, 101, 102, 113, 114, 116 e 118. O #530 (13/11) corrigiu 35 linhas à mão e guardou a antiga como <em>“Status anterior”</em>, sem decidir a DP-12: nada guarda o campo, o guardião do README só confere a existência da pasta na tabela de incrementos, e o <code>spec-template.md</code> ainda nasce <code>Draft</code>. A 103, a 104 e as 105 a 109 ainda dizem <em>“merge não autorizado”</em>; a 099 diz <em>“PR aberto, merge é do usuário”</em>; a 076 diz <em>“Em emenda”</em>. <strong>Dezesseis</strong> specs — da 077 à 087, a 089, a 091 a 093 e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>. Todas as conferidas estão na <code>main</code>.</li>
       <li>A 099 e a 100 dizem <em>“Baixar PDF”</em>, e a tela diz <span class="rotulo-ui">Emitir e baixar PDF</span>; a 104 diz <em>“Mostrar as outras N”</em>, e uma tela diz <em>“os outros N”</em>.</li>
       <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
       <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
@@ -14776,7 +14817,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tbody>
           <tr><td><span class="selo selo-impl">Implementado</span></td><td>Existe e é alcançável pelo canal do ator</td><td>A cadeia inteira existe: tela ou comando, gravação, regra e efeito</td></tr>
           <tr><td><span class="selo selo-parc">Parcial</span></td><td>Funciona para uma parte dos casos</td><td>O código recusa explicitamente o resto, ou uma metade do fluxo não tem superfície</td></tr>
-          <tr><td><span class="selo selo-nop">Implementado, não operacionalizado</span></td><td>O código existe, mas a jornada não o usa</td><td>Há configuração e persistência (às vezes publicação), e nenhuma regra de execução lê o valor — ex.: o limite do cadastro de reserva</td></tr>
+          <tr><td><span class="selo selo-nop">Implementado, não operacionalizado</span></td><td>O código existe, mas a jornada não o usa</td><td>Há configuração e persistência (às vezes publicação), e nenhuma regra de execução lê o valor — ex.: <code>callRules</code>, <code>calculation</code> e <code>distribution</code> da regra normativa da Modalidade</td></tr>
           <tr><td><span class="selo selo-prev">Previsto</span></td><td>Há especificação ou decisão registrada, sem código</td><td>Está em <code>specs/</code> ou em decisão de governança em <code>doc/</code></td></tr>
           <tr><td><span class="selo selo-infer">Inferido</span></td><td>Conclusão a partir da estrutura</td><td>Usado com parcimônia e sempre com a evidência dita</td></tr>
           <tr><td><span class="selo selo-lacun">Lacuna</span></td><td>Falta algo para o fluxo fechar</td><td>Medido no código, ou registrado numa auditoria do próprio repositório</td></tr>
@@ -14838,6 +14879,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>60f9ff24</code>, 147 a 161</td><td>A <a href="#pagina-do-processo">página do Processo</a> reorganizada (147); <a href="#minhas-atividades">Minhas atividades</a> (160, implementada) e <a href="#quem-faz-o-que">“Quem faz o quê”</a> (161, só especificada); a <a href="#publicacao-das-inscricoes">publicação das inscrições</a> (148) e a <a href="#publicacao-das-convocacoes">das convocações, e o gesto único de convocar e publicar</a> (149 e 159); o <a href="#envio-de-varios-documentos">envio de vários documentos</a> (150), a <a href="#convocacao-depois-do-envio">convocação depois do envio</a> (154, US1 e US3) e a <a href="#conferencia-com-o-documento-a-vista">conferência com o documento à vista</a> (157); a <a href="#conferencia-nos-atos-irreversiveis">prevenção nos atos irreversíveis</a> (152, parcial), a <a href="#passagem-ao-setor">passagem ao setor</a> (153) e a <a href="#vaga-sem-ocupante">vaga reservada sem ocupante</a> (155, entrega mínima); o <a href="#desfecho-comunicado">desfecho comunicado</a> (156) e a <a href="#passagem-entre-cotas">passagem entre cotas</a> (158) como Previstos. A designação pela presidência (117, D-025) e os cenários C16 e C17 (134) entraram em <a href="#formalizacao">formalização</a> e <a href="#cenarios-de-treinamento">cenários</a>. Corrigidas as frases que tratavam “Minhas Etapas”, a página do Processo antiga, o botão da faixa seguinte e a contagem de tabelas append-only (59). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>95904252</code></td><td>A seção <a href="#pg-evolucoes">O que ainda precisa evoluir</a> refeita: 186 itens conferidos de novo no código, nas specs e no histórico, separados em <a href="#evolucoes-codigo">falta código</a>, <a href="#evolucoes-decisoes">decisão do usuário</a>, <a href="#evolucoes-validacao">validação com pessoas</a> e <a href="#evolucoes-externo">depende de fora</a>, com <a href="#evolucoes-resolvidas">o que já fechou</a> à parte. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td>PRs 524 e 526, sobre a <code>main</code> em <code>26748113</code></td><td>A <a href="#vitrine-em-andamento-e-paginas">vitrine</a> separa <em>Em andamento</em> de <em>Seleções encerradas</em> pelo desfecho, ordena cada grupo pelo que importa a quem lê e mostra de dez em dez o que já fechou as inscrições; a etiqueta <em>“Em andamento”</em> chega também à página do Edital. Sem spec própria. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>13/11/2026</td><td>PR #537, a 162, sobre a <code>main</code> em <code>84cbeeb5</code></td><td>O <a href="#cadastro-de-reserva">cadastro de reserva</a> reescrito: o número do limitado vem do corte do marco que convoca, a espécie é conferida contra a continuação, o Perfil só de reserva abre pelo cadastro, e o Edital publicado antes diz o número digitado com uma nota na condução. O tutorial (passos 4 e 8, o INF-VIT sem continuação), a Receita 7, as tabelas de configuração, a Retificação, as perguntas e o glossário acompanham; o item <em>“O limite do cadastro de reserva não é aplicado”</em> foi para <a href="#evolucoes-resolvidas">O que já fechou</a>. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
@@ -14862,6 +14904,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A atualização de 10/11 sobre o incremento A da 144 foi feita por leitura do código da <code>main</code> em <code>d184fcee</code>, conferindo o olho, as frases da Revisão, a numeração do PDF e a regra de omissão da seção. Não rodou a suíte inteira, e a tela não foi percorrida; o número de testes vem do <code>verificacao.md</code> da spec.</li>
         <li>A atualização de 11/11 sobre a 145 e a 146 foi feita por leitura das specs e do código da <code>main</code> em <code>04797399</code>: os rótulos das telas, as frases da ficha, do portal e da Revisão, o PDF e as regras de cálculo. Não rodou a suíte inteira, e nenhuma tela foi percorrida aqui — a jornada do barema no navegador está registrada em <code>specs/146-barema-da-etapa/capturas/jornada/</code>. A medida de tempo da Mesa com o barema (hoje de 10 a 20 minutos por inscrição, sem ele) não foi refeita, e a confirmação institucional dos Editais (P-1) continua aberta.</li>
         <li>A atualização de 13/11 (147 a 161) foi feita por leitura das specs, dos corpos dos PRs e do código da <code>main</code> em <code>60f9ff24</code>, em quatro frentes que escreveram fichas de fatos conferidas contra os templates e o código; os rótulos das telas vêm dos templates. Não rodou a suíte inteira, e nenhuma tela foi percorrida aqui. Ficaram sem verificar: se o seletor de demonstração oferece a presidência sem os cenários (a designação pela presidência), em que grupo do Centro de Controle aparece a Ação <em>Publicações das inscrições</em>, e a validação humana de 149, 150, 157, 159 e 160. Os READMEs das specs 150, 154, 152 e 157 estavam defasados em relação ao código e foram corrigidos junto; as specs 149 e 159 ainda dizem <em>Em implementação</em> e a 134 ainda diz <em>sem merge</em>, embora mergeadas.</li>
+        <li>A atualização de 13/11 sobre a 162 foi feita junto da implementação, no próprio PR #537: os rótulos e as frases vêm do código da branch (<code>cadastro_de_reserva.py</code>, <code>pdf.py</code>, <code>_perfil.html</code>, as recusas de <code>incoerencias</code>), e a suíte inteira rodou contra PostgreSQL (19 564 passando, 24 pulados). Nenhuma tela foi percorrida, e o roteiro manual da 162 (T046) não rodou.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
         <li>A spec <code>054</code> (o PDF do sistema como Edital oficial) foi mergeada em 30/09, depois da revisão de 29/09, e está descrita pela atualização de 30/09, que conferiu no código da <code>main</code> e rodou os testes dela contra PostgreSQL. O restante da documentação continua sendo o de 29/09.</li>
@@ -14903,7 +14946,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
   (<code>a3e23b1f</code>), a 120 a 122, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>) a 145 e a 146, em 11/11/2026 (<code>04797399</code>) a 147 a 161, com as implementações da 147, 148, 149, 150, 152 (parcial), 153, 154 (parcial), 155 (entrega mínima), 157, 159 e 160 e as 156, 158 e 161 só como especificação, em 13/11/2026 (<code>60f9ff24</code>). Onde documentação e código
+  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>) a 145 e a 146, em 11/11/2026 (<code>04797399</code>) a 147 a 161, com as implementações da 147, 148, 149, 150, 152 (parcial), 153, 154 (parcial), 155 (entrega mínima), 157, 159 e 160 e as 156, 158 e 161 só como especificação, em 13/11/2026 (<code>60f9ff24</code>), e a 162 no PR #537, sobre <code>84cbeeb5</code>. Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
