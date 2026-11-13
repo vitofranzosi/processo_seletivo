@@ -74,6 +74,9 @@
   var resumos = formularios.map(function () {
     return null;
   });
+  /* Enquanto um resumo é calculado, os avisos ficam como estão: refeitos no meio, o de um cartão
+     sumia e voltava com a mesma frase, e o leitor de tela a anunciava de novo. */
+  var calculando = 0;
 
   function no(formulario, seletor) {
     return formulario.querySelector(seletor);
@@ -140,6 +143,7 @@
      aviso do outro também (FR-5617). O próprio cartão não conta — o mesmo arquivo de novo no mesmo
      documento o servidor já reconhece (FR-3581 da `115`). */
   function avisarRepetidos() {
+    if (calculando) return;
     var recebidos = Array.prototype.slice.call(
       document.querySelectorAll("[data-resumo-recebido]")
     );
@@ -155,8 +159,15 @@
           if (outro !== formulario && resumoDe(outro) === resumo) escolhidoPara.push(nomeDe(outro));
         });
         recebidos.forEach(function (outro) {
-          if (outro !== cartao && outro.getAttribute("data-resumo-recebido") === resumo) {
-            enviadoPara.push(outro.getAttribute("data-documento") || "");
+          var documento = outro.getAttribute("data-documento") || "";
+          /* O documento já nomeado como escolhido não se repete como enviado: a substituição pelo
+             mesmo arquivo faria a frase nomear o mesmo documento duas vezes. */
+          if (
+            outro !== cartao &&
+            outro.getAttribute("data-resumo-recebido") === resumo &&
+            escolhidoPara.indexOf(documento) === -1
+          ) {
+            enviadoPara.push(documento);
           }
         });
       }
@@ -192,7 +203,12 @@
     var arquivo = arquivoDe(formulario);
     var sutil = window.crypto && window.crypto.subtle;
     if (!arquivo || !sutil || !arquivo.arrayBuffer) return;
+    /* Acima do limite o arquivo nem viaja (R-009), e lê-lo inteiro na memória só para comparar
+       podia derrubar a aba do celular com um escaneamento de centenas de megabytes. */
+    var limite = parseInt(formulario.getAttribute("data-limite-em-bytes"), 10);
+    if (limite && arquivo.size > limite) return;
     var indice = formularios.indexOf(formulario);
+    calculando += 1;
     arquivo
       .arrayBuffer()
       .then(function (bytes) {
@@ -200,13 +216,17 @@
       })
       .then(
         function (digest) {
+          calculando -= 1;
           /* A escolha mudou enquanto o cálculo corria: o resultado é de um arquivo que já saiu. */
-          if (arquivoDe(formulario) !== arquivo) return;
-          resumos[indice] = { arquivo: arquivo, resumo: hexadecimal(digest) };
+          if (arquivoDe(formulario) === arquivo) {
+            resumos[indice] = { arquivo: arquivo, resumo: hexadecimal(digest) };
+          }
           avisarRepetidos();
         },
         function () {
           /* Sem resumo, sem aviso (FR-5619). */
+          calculando -= 1;
+          avisarRepetidos();
         }
       );
   }
@@ -371,6 +391,13 @@
     travar(false);
     esconderProgresso();
     recebidos.forEach(function (formulario) {
+      /* O que chegou passa a contar como enviado na comparação (FR-5615): sem isso, o mesmo
+         arquivo escolhido de novo noutro cartão, sem recarregar, não avisava. */
+      var resumo = resumoDe(formulario);
+      var cartaoRecebido = cartaoDe(formulario);
+      if (resumo && cartaoRecebido && cartaoRecebido.setAttribute) {
+        cartaoRecebido.setAttribute("data-resumo-recebido", resumo);
+      }
       limparEscolha(formulario, RECEBIDO_AGORA);
       /* A recusa que a volta anterior pôs no cartão já não vale: o documento acabou de chegar. */
       var cartao = cartaoDe(formulario);
@@ -470,8 +497,9 @@
     var campo = campoDe(formulario);
     if (campo) {
       campo.addEventListener("change", function () {
-        rotular();
+        /* O cálculo começa antes, para que `rotular` não refaça os avisos com a escolha a meio. */
         calcularResumo(formulario);
+        rotular();
       });
     }
 

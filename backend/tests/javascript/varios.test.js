@@ -94,6 +94,9 @@ function cartao(
     classList: classes(),
     getAttribute: (chave) =>
       ({ "data-documento": nome, "data-resumo-recebido": recebido })[chave] ?? null,
+    setAttribute: (chave, valor) => {
+      if (chave === "data-resumo-recebido") recebido = valor;
+    },
     hasAttribute: (chave) => chave === "data-tarefa" && tarefa,
     querySelector: (s) => {
       if (s === "[data-some-com-a-escolha]") return substituicao ? null : situacao;
@@ -776,7 +779,8 @@ test("igual ao já enviado para outro documento avisa; igual ao do próprio cart
   b.escolherArquivo(pdf("de-novo.pdf", "diploma"));
   await esperar();
 
-  assert.equal(a.repetido.textContent, ESCOLHIDO + "Diploma. " + ENVIADO + "Diploma.");
+  // O mesmo documento escolhido e já enviado é nomeado uma vez só.
+  assert.equal(a.repetido.textContent, ESCOLHIDO + "Diploma.");
   assert.equal(b.repetido.textContent, ESCOLHIDO + "Comprovante de residência.", "o próprio recebido não conta");
 
   a.escolherArquivo(pdf("certidao.pdf", "certidão"));
@@ -839,7 +843,7 @@ test("a escolha trocada durante o cálculo descarta o resultado velho", async ()
   a.escolherArquivo(lento);
   a.escolherArquivo(pdf("a.pdf", "diferente"));
   await esperar();
-  liberar(Buffer.from("igual").buffer);
+  liberar(await pdf("x", "igual").arrayBuffer());
   await esperar();
 
   assert.equal(a.repetido.hidden, true, "o arquivo lento já saiu do campo");
@@ -858,4 +862,54 @@ test("o envio não espera o cálculo, e a escolha sozinha não faz requisição"
 
   tela.area.botao.clicar();
   assert.equal(tela.chamadas.length, 1, "o lote sai com o cálculo ainda correndo (FR-5619)");
+});
+
+test("acima do limite, o arquivo não é lido para comparar", async () => {
+  const [a, b] = [cartao("Certidão", { limite: 10 }), cartao("Histórico", { limite: 10 })];
+  carregar([a, b], { sutil: webcrypto.subtle });
+  let lido = false;
+  const grande = { name: "grande.pdf", size: 11, arrayBuffer: async () => ((lido = true), new ArrayBuffer(11)) };
+
+  a.escolherArquivo(grande);
+  b.escolherArquivo({ ...grande, name: "outro.pdf" });
+  await esperar();
+
+  assert.equal(lido, false);
+  assert.equal(a.repetido.hidden, true);
+});
+
+test("o que chegou num lote interrompido passa a contar como enviado", async () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  a.escolherArquivo(pdf("diploma.pdf", "o diploma"));
+  b.escolherArquivo(pdf("comprovante.pdf", "o comprovante"));
+  await esperar();
+
+  tela.area.botao.clicar();
+  tela.chamadas[0].resolver(json({ resultado: "recebido", volta: "/volta" }));
+  await esperar();
+  tela.chamadas[1].rejeitar(new Error("queda"));
+  await esperar();
+
+  b.escolherArquivo(pdf("de-novo.pdf", "o diploma"));
+  await esperar();
+  assert.equal(b.repetido.textContent, ENVIADO + "Certidão.");
+});
+
+test("o aviso que não mudou não pisca nem é anunciado de novo", async () => {
+  const [a, b] = tres();
+  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  a.escolherArquivo(pdf("x.pdf", "igual"));
+  b.escolherArquivo(pdf("y.pdf", "igual"));
+  await esperar();
+  tela.anuncio.textContent = "";
+
+  let liberar;
+  b.escolherArquivo({ name: "y.pdf", size: 5, arrayBuffer: () => new Promise((r) => (liberar = r)) });
+  assert.equal(a.repetido.hidden, false, "durante o cálculo, o aviso fica");
+  liberar(await pdf("x", "igual").arrayBuffer());
+  await esperar();
+
+  assert.equal(a.repetido.textContent, ESCOLHIDO + "Histórico.");
+  assert.equal(tela.anuncio.textContent, "", "a mesma frase não se anuncia de novo");
 });
