@@ -229,7 +229,8 @@ def test_aluno_envia_corrige_a_pendencia_e_fica_apto(
 
     # A comissão confere o resto e registra o aceite.
     pagina_dos_documentos(comissao, tela.servidor, edital, convocacao)
-    expect(comissao.get_by_text("Complementado, aguardando conferência")).to_be_visible()
+    # O item e a contagem dizem o mesmo nome (154, FR-6212).
+    expect(comissao.get_by_text("Reenviado — aguardando nova conferência").first).to_be_visible()
     abrir_e_conferir(comissao, _item(convocacao, HISTORICO), "CONFORME")
     abrir_e_conferir(comissao, _item(convocacao, RESIDENCIA), "CONFORME")
     registrar_aceite(comissao, tela.servidor, edital)

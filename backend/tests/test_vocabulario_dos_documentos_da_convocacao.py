@@ -102,3 +102,36 @@ def test_a_conferencia_diz_conforme_ao_exigido():
         "conforme ao exigido pelo edital"
         in visivel(TEMPLATES / "_documento_da_convocacao.html").lower()
     )
+
+
+# --- O documento reenviado tem um nome só (154, FR-6214) -----------------------------------------
+
+#: Os nomes que o mesmo fato tinha antes da `154` (achado 23 do estudo da jornada final).
+NOMES_ANTIGOS_DO_REENVIADO = (
+    "complementado, aguardando conferência",
+    r"reenviados?(\(s\))?, a conferir de novo",
+    "documento reenviado, a conferir de novo",
+    "documento reenviado: nova conferência",
+    "documento reenviado, aguardando conferência",
+)
+
+#: Onde o nome é dito: as telas da `115`, o resumo da página de documentos (parcial desde a `157`),
+#: o passo e a frase da condução, o rótulo do item e a exclusão do aviso de pendência.
+DO_REENVIADO = [
+    *DA_115,
+    TEMPLATES / "_situacao_dos_documentos.html",
+    RAIZ / "interface/conducao_da_convocacao.py",
+    RAIZ / "interface/views.py",
+    RAIZ / "avisos/application/pendencias.py",
+    # A Visão do Sistema, que a gestão serve em "Documentação do Sistema" (105): texto visível dela.
+    RAIZ.parents[1] / "docs/visao-sistema/index.html",
+]
+
+
+@pytest.mark.parametrize(
+    "caminho", DO_REENVIADO, ids=lambda item: f"{item.parent.name}/{item.name}"
+)
+def test_nenhum_nome_antigo_do_reenviado(caminho):
+    corpo = visivel(caminho).lower()
+    achados = [nome for nome in NOMES_ANTIGOS_DO_REENVIADO if re.search(nome, corpo)]
+    assert achados == [], f"{caminho.name}: {achados}"

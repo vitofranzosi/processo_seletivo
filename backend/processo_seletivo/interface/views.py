@@ -100,6 +100,7 @@ from processo_seletivo.comissoes.domain.etapas import (
     evento_vigente,
 )
 from processo_seletivo.comissoes.models import Funcao
+from processo_seletivo.convocacao.domain import vocabulario_dos_documentos
 from processo_seletivo.divulgacao.application.publicar import (
     assinatura_da_previa,
 )
@@ -9339,7 +9340,8 @@ ROTULO_DO_ITEM = {
     "A_APRESENTAR": "A apresentar",
     "RECEBIDO": "Recebido, aguardando conferência",
     "PENDENTE": "Pendente",
-    "COMPLEMENTADO": "Complementado, aguardando conferência",
+    # O nome do reenviado é um só, na gestão e no portal (154, FR-6211).
+    "COMPLEMENTADO": vocabulario_dos_documentos.REENVIADO,
     "CONFORME": "Conforme",
     # **"após análise"** (131, UX-301): é juízo de quem conferiu, e não o "não se aplica" do
     # recorte, que nem chega a esta página.

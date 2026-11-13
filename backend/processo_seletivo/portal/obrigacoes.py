@@ -36,7 +36,7 @@ from processo_seletivo.convocacao.application.documentos import (
 )
 from processo_seletivo.convocacao.domain import documentos as dominio
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
-from processo_seletivo.convocacao.domain import vocabulario_do_canal
+from processo_seletivo.convocacao.domain import vocabulario_do_canal, vocabulario_dos_documentos
 from processo_seletivo.convocacao.domain.prazo_apresentado import apresentar
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 
@@ -661,16 +661,17 @@ def texto_do_item(lido, categoria_do_item, momento, prazo):
         return f"Precisava de correção: {motivo}."
 
     if estado == convocacao_nomes.ITEM_COMPLEMENTADO:
+        # **O nome da gestão abre o cartão** (154, FR-6213, D-003): a comissão e o candidato falam
+        # do mesmo fato com a mesma palavra. Sem conferência possível, o nome vai ao passado
+        # (D-005); o prazo vencido, sozinho, cai no último ramo e mantém "aguardando", porque a
+        # conferência ainda é aceita (FR-3588 da `115`).
         if momento == ENCERRADA_PELO_PROCESSO:
-            return (
-                f"Novo arquivo recebido em {data(em)}; não foi conferido antes do encerramento "
-                "do Processo."
-            )
+            return f"Reenviado em {data(em)}; não foi conferido antes do encerramento do Processo."
         if momento == DECIDIDA:
-            return f"Novo arquivo enviado em {data(em)}; não foi conferido antes do resultado."
+            return f"Reenviado em {data(em)}; não foi conferido antes do resultado."
         return (
-            f"Novo arquivo recebido em {data_e_hora(em)}, depois da correção pedida. "
-            "A comissão vai conferir."
+            f"{vocabulario_dos_documentos.REENVIADO}. Novo arquivo recebido em "
+            f"{data_e_hora(em)}, depois da correção pedida."
         )
 
     # Recebido: pelo portal, ou aproveitado da inscrição ou da chamada anterior.

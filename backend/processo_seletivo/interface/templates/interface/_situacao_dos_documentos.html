@@ -1,4 +1,4 @@
-{% comment %} A situação desta convocação (143, FR-5021 a FR-5023). Parcial desde a 157: o registro sem recarga a troca no lugar (FR-6514). {% endcomment %}<section class="situacao-da-convocacao tom-{{ linha.passo.tom }}" id="situacao-da-convocacao" aria-labelledby="titulo-da-situacao"{% if oob %} hx-swap-oob="true"{% endif %}>
+{% load interface_extras %}{% comment %} A situação desta convocação (143, FR-5021 a FR-5023). Parcial desde a 157: o registro sem recarga a troca no lugar (FR-6514). {% endcomment %}<section class="situacao-da-convocacao tom-{{ linha.passo.tom }}" id="situacao-da-convocacao" aria-labelledby="titulo-da-situacao"{% if oob %} hx-swap-oob="true"{% endif %}>
   <h2 id="titulo-da-situacao">Situação desta convocação</h2>
   <p class="passo-da-chamada"><span class="rotulo-do-passo">{% if linha.passo.tom == "feito" %}Situação{% else %}Próximo passo{% endif %}</span> {{ linha.passo.frase }}
     {% if linha.passo.acao == "conferir" and pode_conferir and primeiro_a_conferir %}<a class="acao acao-do-passo" href="#item-{{ primeiro_a_conferir.item.id }}">Ir ao primeiro documento a conferir</a>
@@ -9,7 +9,7 @@
   <ul class="resumo" aria-label="Documentos pedidos nesta convocação">
     <li><strong>{{ c.conformes }}</strong>Conforme{{ c.conformes|pluralize }}</li>
     <li><strong>{{ c.recebidos }}</strong>Recebido{{ c.recebidos|pluralize }}, a conferir</li>
-    {% if c.complementados %}<li><strong>{{ c.complementados }}</strong>Reenviado{{ c.complementados|pluralize }}, a conferir de novo</li>{% endif %}
+    {% if c.complementados %}<li><strong>{{ c.complementados }}</strong>{{ c.complementados|reenviados:"rotulo" }}</li>{% endif %}
     <li><strong>{{ c.pendentes }}</strong>Pendente{{ c.pendentes|pluralize }}</li>
     <li><strong>{{ c.a_apresentar }}</strong>A apresentar</li>
     {% if c.nao_se_aplica %}<li><strong>{{ c.nao_se_aplica }}</strong>Não se aplica após análise</li>{% endif %}

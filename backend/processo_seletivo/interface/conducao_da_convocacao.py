@@ -23,6 +23,7 @@ from django.utils import timezone
 
 from processo_seletivo.classificacao.domain import faixa
 from processo_seletivo.convocacao.domain import nomes
+from processo_seletivo.convocacao.domain.vocabulario_dos_documentos import reenviado_em_frase
 
 # --- O passo da chamada (data-model, FR-5011) ---------------------------------------------------
 
@@ -106,11 +107,13 @@ def passo_da_chamada(*, estado, desfecho, documentos, vencimento=None, canal=Non
             if contagens["complementados"]:
                 return Passo(
                     REENVIADO,
-                    "Conferir de novo: o candidato reenviou "
+                    # **O passo nomeia o estado com o nome da página de documentos** (154,
+                    # FR-6212): "o candidato reenviou" era um terceiro nome para o mesmo fato.
+                    "Conferir de novo: "
                     + _n(
                         contagens["complementados"],
-                        "documento que estava pendente",
-                        "documentos que estavam pendentes",
+                        "documento " + reenviado_em_frase(),
+                        "documentos " + reenviado_em_frase(plural=True),
                     )
                     + ".",
                     "acao",
@@ -189,10 +192,9 @@ class SituacaoDoAviso:
         if self.pendencia_em is not None:
             return f"Pendência registrada em {_quando(self.pendencia_em)}."
         if self.reenviado_em is not None:
-            return (
-                f"O candidato reenviou o documento pendente em {_quando(self.reenviado_em)}; "
-                "a nova conferência está por fazer."
-            )
+            # Quem e quando, sem "a nova conferência está por fazer": o passo logo acima já
+            # nomeia o estado, e a paráfrase seria outro nome dele (154, FR-6212, R-009).
+            return f"O candidato reenviou o documento pendente em {_quando(self.reenviado_em)}."
         return ""
 
     @property

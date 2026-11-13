@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from processo_seletivo.avisos.application import pendencias
 from processo_seletivo.avisos.domain import nomes as avisos
 from processo_seletivo.convocacao.domain import nomes
 from processo_seletivo.convocacao.domain import vocabulario_do_canal as canal
@@ -101,6 +102,25 @@ def test_a_precedencia_do_passo(estado, docs, codigo, acao):
     )
 
     assert (passo.codigo, passo.acao) == (codigo, acao)
+
+
+@pytest.mark.parametrize(
+    ("quantos", "frase"),
+    [
+        (1, "Conferir de novo: 1 documento reenviado — aguardando nova conferência."),
+        (2, "Conferir de novo: 2 documentos reenviados — aguardando nova conferência."),
+    ],
+)
+def test_o_passo_do_reenvio_nomeia_o_estado_como_a_pagina_de_documentos(quantos, frase):
+    """154, FR-6212, R-009: o nome do item; o código e a ação não mudam."""
+    passo = c.passo_da_chamada(
+        estado=nomes.CONVOCADO_PRAZO_EM_CURSO,
+        desfecho=None,
+        documentos=documentos(nomes.DOCUMENTOS_PARA_CONFERIR, complementados=quantos),
+        vencimento=AGORA + timedelta(days=3),
+    )
+
+    assert (passo.codigo, passo.acao, passo.frase) == (c.REENVIADO, c.CONFERIR, frase)
 
 
 def test_vencida_sem_nada_apresentado_aponta_o_nao_atendimento():
@@ -273,9 +293,13 @@ def test_aviso_anterior_a_pendencia_nao_a_cobre():
 def test_documento_reenviado_pede_nova_conferencia_e_nao_oferece_o_aviso():
     reenviado = SimpleNamespace(pedidos=[_lido(nomes.ITEM_COMPLEMENTADO, apresentado_em=AGORA)])
 
-    situacao = c.situacao_do_aviso(reenviado, motivo="documento reenviado, aguardando conferência")
+    situacao = c.situacao_do_aviso(reenviado, motivo=pendencias.COMPLEMENTADA)
 
-    assert "reenviou o documento pendente em 10/11/2026 12:00" in situacao.frase_da_pendencia
+    # Quem e quando, sem paráfrase do estado: o passo já o nomeia (154, FR-6212, R-009).
+    assert (
+        situacao.frase_da_pendencia
+        == "O candidato reenviou o documento pendente em 10/11/2026 12:00."
+    )
     assert situacao.frase_do_aviso == ""
     assert not situacao.oferece_o_aviso
 

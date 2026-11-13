@@ -7,10 +7,24 @@ from django import template
 from django.http import QueryDict
 from django.utils import timezone
 
+from processo_seletivo.convocacao.domain import vocabulario_dos_documentos
 from processo_seletivo.interface import andamento
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
 register = template.Library()
+
+
+@register.filter
+def reenviados(quantos, forma=""):
+    """A contagem do reenviado, com o nome da `154` (FR-6212, D-004), e não um terceiro nome.
+
+    `"rotulo"` é a forma do resumo de cartões, em que o número vem à parte, em destaque:
+    *"Reenviados — aguardando nova conferência"*. Sem forma, a contagem corrida da condução.
+    """
+    if forma == "rotulo":
+        return vocabulario_dos_documentos.rotulo_da_contagem(quantos)
+    return vocabulario_dos_documentos.reenviados(quantos)
+
 
 # Edital e Processo usam a forma masculina; Retificação, a feminina. Sem as duas, a trilha
 # de auditoria mistura "Em revisão → HOMOLOGADA" com o código cru na tela.
