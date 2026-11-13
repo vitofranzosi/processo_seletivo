@@ -6,6 +6,7 @@ passe a pedir, ou um `<script>` embutido que volte, reprovam a suíte antes de v
 e sem erro no servidor — a CSP só se queixa no console do navegador.
 """
 
+from functools import cache
 from html.parser import HTMLParser
 from urllib.parse import urlsplit
 
@@ -17,6 +18,10 @@ from processo_seletivo.shared.politica_de_conteudo import CABECALHO, POLITICA
 from tests.interface.conftest import identificar
 
 INICIO = reverse("interface:documentacao")
+
+# O manual cita o código pelo endereço do repositório, e não por `../../`, que só abre do disco.
+REPOSITORIO = "https://github.com/vitofranzosi/processo_seletivo/"
+RAIZ_DO_REPOSITORIO = documentacao.PASTA.parent.parent
 
 
 def arquivo(caminho):
@@ -53,6 +58,7 @@ class _Marcacao(HTMLParser):
                     self.links.append(valor)
 
 
+@cache
 def _marcacao():
     leitor = _Marcacao()
     leitor.feed((documentacao.PASTA / "index.html").read_text())
@@ -158,3 +164,25 @@ def test_nenhum_link_do_manual_sai_da_pasta_servida():
     ]
 
     assert fora == []
+
+
+def test_todo_link_do_manual_para_o_repositorio_aponta_para_o_que_existe():
+    """Os links seguem a `main`: um arquivo movido sem acertar o manual vira 404 no GitHub.
+
+    Conferir aqui é conferir o que a `main` terá quando o PR entrar, porque a árvore da suíte é a do
+    PR. `blob` pede arquivo e `tree` pede pasta, como o GitHub.
+    """
+    links = [link for link in _marcacao().links if link.startswith(REPOSITORIO)]
+
+    assert links, "o manual deixou de citar o repositório — o prefixo mudou?"
+    errados = []
+    for link in links:
+        tipo, ramo, caminho = (
+            urlsplit(link).path.removeprefix(urlsplit(REPOSITORIO).path).split("/", 2)
+        )
+        alvo = RAIZ_DO_REPOSITORIO / caminho
+        existe = alvo.is_file() if tipo == "blob" else tipo == "tree" and alvo.is_dir()
+        if ramo != "main" or not existe:
+            errados.append(link)
+
+    assert errados == []
