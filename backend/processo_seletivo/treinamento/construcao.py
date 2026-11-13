@@ -331,6 +331,9 @@ class Montagem:
     agora: object = None
     registros: dict = field(default_factory=dict)
     pessoas: list = field(default_factory=list)
+    # A publicação que `divulgar` acabou de gravar. **Nula numa montagem retomada** (`retomar`, na
+    # suíte), que não divulgou nada no próprio objeto: `recorrer` a relê do banco nesse caso.
+    resultado_divulgado: object = None
 
     def __post_init__(self):
         self.agora = self.agora or timezone.now()
@@ -684,7 +687,9 @@ class Montagem:
             processo_id=self.processo.id,
             membro_id=self.membros[subject].id,
             edital_id=self.edital.id,
-            idempotency_key=self.chave(f"conferencia-{subject[-1]}"),
+            # **O subject inteiro**: com só o último caractere, `treino.avaliacao2` e qualquer outro
+            # terminado em "2" partilhavam a chave, e a segunda alocação voltava a primeira.
+            idempotency_key=self.chave(f"conferencia-{subject}"),
             correlation_id=self.correlacao,
         )
         self.anotar("alocacao_a_conferencia", alocacao.id)
@@ -856,7 +861,7 @@ class Montagem:
         from processo_seletivo.recursos.application.interpor import interpor
 
         pessoa = next(p for p in self.pessoas if p["subject"] == inscricao.identity_subject)
-        publicacao = self.resultado_divulgado
+        publicacao = self.resultado_divulgado or self._ultima_divulgacao()
         recurso = interpor(
             identidade=self.identidade(pessoa),
             inscricao=inscricao,
@@ -868,6 +873,23 @@ class Montagem:
         )
         self.anotar("recurso", recurso.id)
         return recurso
+
+    def _ultima_divulgacao(self):
+        """A última publicação de resultado do Edital — a mesma que `divulgar` teria guardado.
+
+        Sem desempate pelo `id`, duas publicações no mesmo instante sairiam em ordem do heap, que a
+        limpeza dos casos transacionais embaralha (ver o CLAUDE.md, a limpeza por `DELETE`).
+        """
+        from processo_seletivo.divulgacao.models import PublicacaoResultado
+
+        publicacao = (
+            PublicacaoResultado.objects.filter(edital=self.edital)
+            .order_by("-publicado_em", "-id")
+            .first()
+        )
+        if publicacao is None:
+            raise ValueError(f"O Edital {self.numero} não tem resultado divulgado para recorrer.")
+        return publicacao
 
     def admitir_recurso(self, recurso, passo):
         """O juízo de admissibilidade, positivo e motivado, por quem julga recursos.

@@ -74,6 +74,28 @@ def test_c12_o_membro_alocado_ve_conferir_com_a_marca_alocacao(cenario, client):
     assert "· pela alocação</span>" in html
 
 
+def test_c12_dois_membros_de_subject_com_o_mesmo_final_tem_alocacoes_distintas(cenario):
+    """A chave levava só o último caractere do subject, e a segunda alocação de quem também
+    termina em "2" voltava a primeira, sem erro (revisão do #513)."""
+    from processo_seletivo.comissoes.application.comissao import adicionar_membro
+
+    m = cenario("C12")
+    outro = "treino.revisao2"
+    m.membros[outro], _ = adicionar_membro(
+        actor=m.ator(c.GESTAO),
+        processo_id=m.processo.id,
+        identity_subject=outro,
+        funcao=Funcao.MEMBRO,
+        idempotency_key=m.chave("v8-membro-revisao2"),
+        correlation_id=m.correlacao,
+    )
+    alocacao = m.alocar_a_conferencia(outro)
+
+    assert alocacao.membro.identity_subject == outro
+    ativas = AlocacaoAConferencia.objects.filter(edital=m.edital, ativo=True)
+    assert set(ativas.values_list("membro__identity_subject", flat=True)) == {c.AVALIACAO_2, outro}
+
+
 def test_c12_a_presidencia_continua_conferindo_pela_presidencia(cenario, client):
     cenario("C12")
     atividades, _ = _minhas_atividades(client, c.PRESIDENCIA)
@@ -138,21 +160,18 @@ def test_c08_o_julgador_ve_o_recurso_na_faixa_da_lista(cenario, client):
     assert (("recursos", m.edital.id), "Decidir recursos (1)") in itens
 
 
-def test_c08_o_candidato_08_continua_podendo_recorrer(cenario):
-    """O exercício do candidato não colide com o recurso já interposto: são pessoas diferentes."""
+def test_c08_o_candidato_08_continua_podendo_recorrer_pela_montagem_retomada(cenario):
+    """O exercício do candidato não colide com o recurso já interposto: são pessoas diferentes.
+
+    **Pela montagem retomada**, que não divulgou nada no próprio objeto: `recorrer` lia a publicação
+    só do atributo que `divulgar` grava, e dava `AttributeError` (revisão do #513).
+    """
     from processo_seletivo.divulgacao.models import PublicacaoResultado
-    from processo_seletivo.recursos.application.interpor import interpor
 
     m = cenario("C08")
-    publicacao = PublicacaoResultado.objects.get(edital=m.edital)
-    recurso = interpor(
-        identidade=m.identidade(m.pessoas[7]),
-        inscricao=m.inscricoes[7],
-        publicacao=publicacao,
-        fundamentacao="Peço a revisão da prova (exercício).",
-        assinatura_do_objeto=str(publicacao.pk),
-        idempotency_key=m.chave("v8-candidato-08"),
-    )
+    assert m.resultado_divulgado is None
+    recurso = m.recorrer(m.inscricoes[7], "Peço a revisão da prova (exercício)", "08")
+    assert recurso.publicacao_atacada == PublicacaoResultado.objects.get(edital=m.edital)
     assert Recurso.objects.filter(inscricao__edital=m.edital).count() == 2
     assert recurso.inscricao_id == m.inscricoes[7].id
 
