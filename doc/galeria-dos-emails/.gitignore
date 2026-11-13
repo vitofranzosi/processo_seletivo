@@ -1,0 +1,4 @@
+# Gerados, e não versionados: as capturas mudam de bytes a cada execução do navegador, e os .eml
+# levam data e Message-ID novos a cada geração. Para gerá-los, veja o README desta pasta.
+*.png
+*.eml

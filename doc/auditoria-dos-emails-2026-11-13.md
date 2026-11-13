@@ -6,7 +6,9 @@ e entregar a prova. **Sem spec nova**, por pedido explícito ("não quero uma gr
 arquitetura"): nenhum `FR-`/`SC-` foi criado, e os testes novos citam só os que já existem.
 
 A galeria está em [`galeria-dos-emails/depois/index.html`](galeria-dos-emails/depois/index.html) — abre
-direto do disco —, e o "antes" em [`galeria-dos-emails/antes/`](galeria-dos-emails/antes/).
+direto do disco —, e o "antes" em [`galeria-dos-emails/antes/`](galeria-dos-emails/antes/). As capturas
+de tela e os `.eml` não são versionados; o [README da galeria](galeria-dos-emails/README.md) diz como
+gerá-los.
 
 ---
 
@@ -152,7 +154,7 @@ como antes, e a tentativa é registrada pelo resultado do envio — nunca como f
 ## D. Antes e depois
 
 Os três representativos pedidos — convocação (5), providência (8) e confirmação (4) — mais os demais,
-estão na galeria com HTML, texto puro, `.eml` e captura em 600 e 375 px. Em resumo:
+estão na galeria com HTML e texto puro, e prévias lado a lado em 600 e 375 px. Em resumo:
 
 - **Convocação.** Antes: HTML sem estilo, prazo em azul genérico, link sublinhado. Depois: título,
   processo como subtítulo, o que a convocação pede, **prazo em quadro âmbar rotulado**, botão "Acessar
@@ -235,7 +237,7 @@ da convocação, contagem de situações da FR-084, tokens, nenhuma migration e 
 ### O que não foi verificado
 
 - **Clientes reais.** Nada foi enviado. A renderização foi conferida no navegador (600 e 375 px, sem
-  rolagem horizontal) e estruturalmente pelos testes. Os `.eml` da galeria abrem no Apple Mail, Outlook
+  rolagem horizontal) e estruturalmente pelos testes. Os `.eml` que o script da galeria gera abrem no Apple Mail, Outlook
   e Thunderbird sem envio — **é o próximo passo antes de produção**, sobretudo o Outlook do Windows e o
   Gmail com imagens bloqueadas e modo escuro.
 
@@ -298,10 +300,6 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
      dizendo *"Candidato"* nos dois. A prévia da gestão mostra *"Nome"*, como o ato que vai sair.
    - **Resumo da seleção**: *"N pessoas habilitadas"*, no lugar de *"N candidatos habilitados"*. É
      texto da página da seleção, e não do ato.
-   - **Edital: redação 3.** O momento do Requerimento na convocação passa a *"na convocação"*, e não
-     *"quando o candidato for convocado"* — pelo versionamento de redação que o PDF já tinha (R-004
-     da `069`): o Edital publicado com a 1 ou a 2 grava o número e se recompõe como foi. A Revisão,
-     o seletor da gestão e o assistente dizem o momento como a redação vigente.
    - **Ficaram, por decisão do usuário**: o nome do ato *"Publicação de convocados"* (`149`).
    - **Ficaram, por decisão do usuário (13/11), porque exigiriam migration**: a coluna
      *"Candidato"* do **comprovante de inscrição** e da **relação de habilitados**. O comprovante não é gravado: é regenerado a cada download com bytes
@@ -309,15 +307,12 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
      comprovante já baixado deixar de conferir. A relação de habilitados não tem conteúdo em JSON
      onde gravar o rótulo. Nos dois, "só atos futuros" pede uma coluna que diga o vocabulário de
      cada registro.
-   - **O resto do Edital, corrigido em 13/11, a pedido do usuário**: a redação 3 passou a ser a 2
-     sem o masculino genérico — corte, empate, suplentes, continuação, cadastro de reserva,
-     reversão, teto, Requerimento, grupos de documentos, documentos da convocação e o resumo. O
-     inventário frase a frase está em `specs/069-edital-linguagem-simples/contracts/redacao.md`.
-     O compositor (`render_edital_pdf`) passou a receber a redação, e o compositor por perguntas a
-     leva a cada frase em vez de confiar no padrão: o Edital da 2 continua se recompondo byte a
-     byte, e os testes de bytes compõem com ela. `tests/unit/publicacoes/test_redacao_3.py` compõe o
-     mesmo Edital nas duas redações e confere as duas pontas. Na célula estreita do cadastro, a 3
-     diz *"até N pessoas"*: *"pessoas classificadas"* quebrava a linha da tabela.
+   - **O texto do Edital foi para um PR próprio**,
+     [vitofranzosi/processo_seletivo#540](https://github.com/vitofranzosi/processo_seletivo/pull/540),
+     empilhado sobre este: a redação 3, a 2 sem o masculino genérico, incluindo o momento do
+     Requerimento (*"na convocação"*). Saiu daqui a pedido do usuário, por ser redação jurídica da
+     instituição, que pede revisão própria. O inventário e as garantias de que o Edital publicado não
+     muda estão na descrição daquele PR.
    - **A gestão fica como está, por decisão do usuário (13/11).** O inventário achou ~430 frases em
      ~135 arquivos — 224 ocorrências em 67 modelos da gestão e 209 em 68 módulos Python —, e quase
      todas falam **do** candidato **para** a equipe que conduz o certame: "candidato" é o nome do

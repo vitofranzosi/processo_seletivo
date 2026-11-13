@@ -356,8 +356,7 @@ def _cartao(arquivo, nome, quem, gatilho, estado, antes, mensagem):
      <b>Estado:</b> {e(estado)}</p>
   <p class="meta"><b>Assunto:</b> {e(mensagem.assunto)}</p>
   <p class="meta"><a href="{arquivo}.html">HTML</a> · <a href="{arquivo}.txt">texto puro</a> ·
-     <a href="{arquivo}.eml">.eml</a> · <a href="{arquivo}-600.png">captura 600</a> ·
-     <a href="{arquivo}-375.png">captura 375</a></p>
+     <a href="{arquivo}.eml">.eml</a> (gerado pelo script, fora do Git)</p>
   {antes_html}
   <div class="previas">
     <figure><figcaption>Computador, 600 px</figcaption>
