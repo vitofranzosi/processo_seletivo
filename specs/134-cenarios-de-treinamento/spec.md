@@ -228,6 +228,11 @@ comandos da aplicação que a tela usa.
   > a decisão da `107` sobre o identificador no formulário): a pessoa enviada se resolvia entre as
   > pessoas institucionais ativas, de identificador `pessoa-`, e a recusa de pessoa inexistente ou
   > inativa era a mesma.
+  >
+  > *Por que mudou:* a pessoa de treino não é institucional, de propósito (FR-6721), e a tela a
+  > oferecia no Edital de treinamento para recusá-la ao gravar. O usuário escolheu, entre essa saída
+  > e dar à pessoa de treino um identificador institucional, a que mantém a pessoa fora da busca de
+  > pessoas e da entrada institucional.
 - **FR-6740**: **Sem quem já está designado** (revisão de 12/11/2026, V-N01 da reavaliação da
   jornada final). A lista das duas telas de designar da FR-6731 MUST deixar de fora quem já tem
   designação vigente no Edital escolhido, e a pessoa enviada continua resolvida por essa mesma lista.
@@ -235,17 +240,12 @@ comandos da aplicação que a tela usa.
   de fora dela: a pessoa institucional segue ao comando, que a recusa por designação vigente, como
   antes; a de treino recebe a recusa única de pessoa indisponível. Quando todas as pessoas com o
   papel já estão designadas, a tela MUST dizer isso, e não que ninguém tem o papel; na tela de
-  Acessos da unidade, a escolha de outro Edital continua oferecida. Sem Edital escolhido, ninguém sai
-  da lista. Nada muda no comando de designar nem na revogação.
+  Acessos da unidade, escolhido um Edital, a escolha de outro continua oferecida mesmo com a lista
+  vazia. Sem Edital escolhido, ninguém sai da lista. Nada muda no comando de designar nem na revogação.
 
   > **Redação anterior, preservada** (a FR-6731, sem esta alínea): a lista era a de quem tem o papel
   > vigente na unidade, ativo, com a FR-6730, e oferecia também quem já estava designado para o
   > Edital — escolhê-lo só levava à recusa de designação vigente.
-  >
-  > *Por que mudou:* a pessoa de treino não é institucional, de propósito (FR-6721), e a tela a
-  > oferecia no Edital de treinamento para recusá-la ao gravar. O usuário escolheu, entre essa saída
-  > e dar à pessoa de treino um identificador institucional, a que mantém a pessoa fora da busca de
-  > pessoas e da entrada institucional.
 - **FR-6729**: **A primeira autoridade.** O provisionamento não usa autoridade: o C16 e o C17 assinam
   os atos do certame com a mesma autoridade dos outros cenários (FR-4616).
 

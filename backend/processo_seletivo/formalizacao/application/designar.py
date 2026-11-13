@@ -134,21 +134,18 @@ def pessoas_com_o_papel(actor, *, edital=None, alvo=None):
     )
 
 
-def todas_ja_designadas(actor, *, edital=None, alvo=None):
-    """Há quem tenha o papel, e todos já estão designados para o Edital escolhido (FR-6740).
+def oferta_para_designar(actor, *, edital=None, alvo=None):
+    """A lista que a tela oferece, e se ela está vazia porque todos já estão designados (FR-6740).
 
-    A tela diz isso no lugar de *"Ninguém nesta unidade tem o papel"*, que seria falso. As telas
-    só a chamam com a lista vazia, para não custar consulta à tela de sempre.
+    Uma autorização só, e uma consulta a mais só quando a lista sai vazia: aí a tela precisa saber
+    se diz *"Ninguém nesta unidade tem o papel"* ou que todos já estão designados para o Edital.
     """
-    if (alvo or edital) is None:
-        return False
     com_o_papel = _vinculos_oferecidos(actor, edital=edital, alvo=alvo).exclude(
         pessoa__username=actor.subject
     )
-    return (
-        com_o_papel.exists()
-        and not _sem_quem_ja_esta_designado(com_o_papel, alvo or edital).exists()
-    )
+    pessoas = list(_sem_quem_ja_esta_designado(com_o_papel, alvo or edital))
+    todas_designadas = not pessoas and (alvo or edital) is not None and com_o_papel.exists()
+    return pessoas, todas_designadas
 
 
 def pessoa_da_lista(actor, identificador, *, edital=None, alvo=None):
