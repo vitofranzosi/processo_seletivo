@@ -4,7 +4,9 @@
 
 **Created**: 2026-09-19
 
-**Status**: Draft
+**Status**: Implementada e mergeada (spec #140, implementação #142, correção #258). As tarefas não foram marcadas à época. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft
 
 **Input**: Reauditoria exploratória de UX de 2026-09-16 —
 [doc/auditoria-exploratoria-ux-2026-09-16.md](../../doc/auditoria-exploratoria-ux-2026-09-16.md) —,

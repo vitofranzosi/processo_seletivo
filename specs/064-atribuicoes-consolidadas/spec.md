@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-08
 
-**Status**: Implementado — aguardando a revisão do responsável pelo produto e o merge da `063` (T034)
+**Status**: Implementada e mergeada (#264). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Implementado — aguardando a revisão do responsável pelo produto e o merge da `063` (T034)
 
 **Input**: a *Solicitação de análise de melhoria na geração de editais*, da elaboradora do Edital
 90/2026, a auditoria de 08/10/2026 feita sobre a `main` `d7d3fe0b`, e os ajustes do responsável pelo

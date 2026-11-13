@@ -4,7 +4,9 @@
 
 **Created**: 2026-10-19
 
-**Status**: Especificada, com a segunda rodada de UX de 19/10 — spec, plan, tasks e protótipo no PR;
+**Status**: Fatia 1 implementada e mergeada (#316, #317, #320). T039 é validação humana. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Especificada, com a segunda rodada de UX de 19/10 — spec, plan, tasks e protótipo no PR;
 implementação não iniciada, e só autorizada pelo usuário depois desta rodada. O merge é do usuário.
 
 > **Segunda rodada (19/10/2026).** O usuário aprovou a direção técnica — o motor puro, a reprodução

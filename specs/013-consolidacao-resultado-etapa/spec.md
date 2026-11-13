@@ -4,7 +4,9 @@
 
 **Created**: 2026-09-02
 
-**Status**: Draft
+**Status**: Implementada e mergeada (#25, #26; extensão no #35). Resta T063, conferência a 375 px. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft
 
 **Input**: Consolidar as avaliações concluídas em um Resultado por inscrição e Etapa, com
 prontidão visível, consequência eliminatória, operação em lote, proveniência e progressão para a

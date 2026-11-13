@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft
+**Status**: Implementada e mergeada (#448). As tarefas não foram marcadas à época. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft
 
 **Nenhuma regra de convocação nova.** Quem é chamado, a espécie, a ordem da fila, o fundamento, a
 forma de comunicar e o prazo continuam os de hoje, derivados pelos mesmos caminhos da `050`, da

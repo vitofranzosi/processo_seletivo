@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft.
+**Status**: Implementada e mergeada (#451). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft.
 
 **Nenhuma regra de domínio nova.** Esta spec troca a página que a rota do Edital desenha. Não há
 migration, tabela, coluna, permissão, estado persistido, regra de disponibilidade nem regra de

@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-08
 
-**Status**: Implementada em 08/11/2026, com uma migration (`avisos/0002`). PR aberto, sem merge.
+**Status**: Implementada e mergeada (#435). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Implementada em 08/11/2026, com uma migration (`avisos/0002`). PR aberto, sem merge.
 Verificação em [verificacao.md](verificacao.md). As decisões têm duas origens:
 
 - **Do usuário, em 08/11/2026**: a *1ª* à *6ª decisão*, em *Clarifications*. Não se reabrem.

@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: **Revisão de requisitos vigentes; plano e tarefas no PR #484, sem código.** **Todas as
+**Status**: Parcialmente implementada: US1 (#497) e US3 (#514) mergeadas. A US2 (T016–T020) não foi implementada. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): **Revisão de requisitos vigentes; plano e tarefas no PR #484, sem código.** **Todas as
 decisões são do usuário, e nenhuma está pendente:**
 
 - **Sobre os achados 20 e 23 do estudo da jornada final, em 11/11/2026:** transcritas na seção

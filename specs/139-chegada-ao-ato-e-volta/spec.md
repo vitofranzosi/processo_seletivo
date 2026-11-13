@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft.
+**Status**: Implementada e mergeada (#447). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft.
 
 **Nenhuma regra de domínio nova.** Esta spec muda **para onde** um link leva dentro da tela de
 destino, e acrescenta links a um bloco que já existe. Não há migration, rota, permissão, regra de

@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-09
 
-**Status**: Draft, para revisão antes do plano.
+**Status**: Implementada e mergeada (spec #442, implementação #443). *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft, para revisão antes do plano.
 
 **Nenhuma regra de domínio nova.** Esta spec cria uma página de leitura sobre a derivação do
 andamento da `127`. Não há migration, tabela, coluna, permissão, estado persistido, regra de

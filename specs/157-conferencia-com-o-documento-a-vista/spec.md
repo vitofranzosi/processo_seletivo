@@ -4,7 +4,9 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft — as quatro questões respondidas pelo usuário em 11/11/2026 (D-002, D-005 a D-008)
+**Status**: Implementada e mergeada (spec #481, implementação #494). As verificações humanas seguem pendentes. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): Draft — as quatro questões respondidas pelo usuário em 11/11/2026 (D-002, D-005 a D-008)
 
 **Nenhuma regra nova.** Quem confere, o que o "conforme" exige, a recusa, a idempotência, os estados
 e a trilha continuam os da `115`, da `131` e da `143`. Muda **onde** o arquivo aparece e **o que a

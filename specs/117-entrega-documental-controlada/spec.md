@@ -5,7 +5,9 @@
 **Created**: 2026-11-04 · **Revista**: 2026-11-04 (revisão final) · **Consolidada**: 2026-11-04 ·
 **Ajustada**: 2026-11-04, depois da revisão independente · **Revista**: 2026-11-12 (quem designa, D-025)
 
-**Status**: **Aprovada quanto ao desenho pelo usuário em 04/11/2026**, com os ajustes da
+**Status**: Implementada e mergeada (#373) e revista no #501. H01–H03 são institucionais. *Atualizado em 13/11/2026 pela auditoria de consolidação.*
+
+**Status anterior** (até 13/11/2026): **Aprovada quanto ao desenho pelo usuário em 04/11/2026**, com os ajustes da
 consolidação. Nenhum código, migration ou tela foi alterado. Situação das decisões:
 
 - **Premissas do usuário:** D-001 a D-006.
