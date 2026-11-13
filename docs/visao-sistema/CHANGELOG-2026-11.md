@@ -407,3 +407,25 @@ O PR 524 entrou na `main` (`e815aeb5`) com a paginação das encerradas e a orde
 - quantos Editais reais têm o ato de encerramento — é o que decide o tamanho do grupo *Em andamento*;
 - os números de *Maturidade* não foram recontados;
 - a volta da página do Edital abre a página certa da vitrine, mas no topo, sem a âncora da lista.
+
+## Acréscimo de 13/11: a seção "O que ainda precisa evoluir" refeita
+
+A seção listava o que faltava em 20/09, e crescera por camadas de datas. Em 13/11, sobre a `main` em `95904252`, os 186 itens que ela trazia foram conferidos de novo no código, nas specs e no histórico, e a seção foi reescrita em quatro grupos, pelo que pode fechá-los.
+
+- **Placar:** 29 resolvidos, 20 parciais, 69 abertos no código, 68 que dependem de decisão, validação ou terceiros. O placar de 28/09 (160 unidades, 69 abertas, duas de grupo A) saiu.
+- **Novos trechos:** `#evolucoes-placar`, `#evolucoes-codigo` (bloqueia a produção, atrapalha quem opera, polimento, sem impacto hoje), `#evolucoes-decisoes`, `#evolucoes-validacao`, `#evolucoes-externo` (com quem bloqueia a produção), `#evolucoes-resolvidas` e `#evolucoes-higiene`. Os ids `#abertas-desde-*` e `#evolucoes-revistas`, `#evolucoes-novas` saíram; os dois links que os usavam foram repontados.
+- **Saíram por terem fechado:** as famílias do Kit (hoje oito), a janela de impasse da 113, a A-03, os `pessoa-<uuid>` dos históricos, as duas grafias do desfecho no portal (156), o texto do `CR` do portal, a sucessão da convocação (120), "qual Edital precisa de atenção" (147), o aviso de pendência por e-mail (134).
+- **Entraram:** a apuração da ocupação, que tem sete causas de obsolescência e nenhuma de reversão; a história 2 da 152 (ciência do prazo), não entregue; o papel Comunicação atribuível antes da 112 (0 de 35 tarefas); a vaga de cota sem concorrente (155) só com a entrega mínima; 73 specs em `Draft`, eram 67 de 114.
+
+**Como foi conferido:** leitura do código, das specs e do histórico por quatro frentes, e releitura minha dos itens de maior peso (o adaptador de autenticação, o papel Comunicação e a 112, as causas de obsolescência, a contagem de `Draft`). Os guardiões de documentação rodaram.
+
+**Não verificado:**
+
+- a suíte não rodou e nenhuma tela foi percorrida;
+- o número atual de consultas do acompanhamento por publicação;
+- se a *"Tabela N"* renumerada numa Retificação é acusada;
+- as três grafias dos rótulos da Retificação e o Perfil no nível do marco do caminho do topo;
+- as lacunas L-2 e L-4 a L-7 da 063, uma a uma;
+- o ponto exato em que a falta de autoridade vigente recusa a publicação;
+- o item *"cadastro de reserva limitado em N"* sem regra, e o de a Retificação da reversão ser mesmo uma causa ausente: vêm das fichas da conferência, sem releitura minha;
+- os números do bloco *Estado atual* (pastas, tabelas, gatilhos, rotas) não foram recontados: continuam os da revisão de 02/11.
