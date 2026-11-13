@@ -23,6 +23,8 @@ está, como nas listas que o Ifes publica; nenhuma coluna a repete.
 import unicodedata
 from dataclasses import dataclass, field
 
+from processo_seletivo.divulgacao.domain import vocabulario_dos_atos as vocabulario
+
 RECEBIDAS = "RECEBIDAS"
 PRELIMINAR = "PRELIMINAR"
 HOMOLOGACAO = "HOMOLOGACAO"
@@ -304,6 +306,9 @@ def conteudo_publico(
         "cabecalho": cabecalho,
         "rotulo_constam": CONSTAM[natureza],
         "rotulo_nao_constam": NAO_CONSTAM.get(natureza, ""),
+        # As palavras com que o ato nomeia a pessoa, gravadas nele (revisão de 13/11): o ato
+        # anterior, sem elas, continua dizendo "Candidato" e "cada candidato".
+        **vocabulario.para_gravar(com_quem_consulta=True),
         "perfis": projecao.perfis,
         "total": projecao.total,
     }

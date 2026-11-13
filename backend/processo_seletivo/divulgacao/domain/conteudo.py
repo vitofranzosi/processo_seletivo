@@ -27,6 +27,7 @@ from decimal import Decimal, InvalidOperation
 
 from processo_seletivo.classificacao.domain.nomes import edital_por_extenso, nomes_do_marco
 from processo_seletivo.classificacao.models import PosicaoNaOrdem
+from processo_seletivo.divulgacao.domain import vocabulario_dos_atos as vocabulario
 from processo_seletivo.divulgacao.domain.inscricoes import AMPLA_CONCORRENCIA
 from processo_seletivo.divulgacao.models import Natureza, SituacaoDivulgada
 
@@ -203,6 +204,10 @@ def conteudo_divulgado(composicao, *, natureza, publicado_em, signatario, unidad
                 "cabecalho": list(unidade.cabecalho),
             },
             **({"retificacoes": list(retificacoes)} if retificacoes else {}),
+            # O rótulo da coluna do nome, gravado no ato (revisão de 13/11), no cabeçalho: o
+            # primeiro nível dos bytes é contrato da `017` (cabeçalho e posições). O ato anterior,
+            # sem ele, continua dizendo "Candidato" na página e no PDF.
+            **vocabulario.para_gravar(),
         },
         "posicoes": composicao["posicoes"],
     }

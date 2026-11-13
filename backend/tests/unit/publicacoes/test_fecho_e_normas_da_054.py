@@ -166,7 +166,8 @@ def _com_requerimento(momento, matricula=""):
     ("momento", "frase"),
     [
         ("AT_ENROLLMENT", "no ato da inscrição"),
-        ("AT_CALL", "quando o candidato for convocado"),
+        # Redação 3 (2026-11-13): o documento composto agora diz o momento sem presumir gênero.
+        ("AT_CALL", "na convocação"),
     ],
 )
 def test_a_matricula_publica_o_momento_e_a_declaracao_mesmo_vazia(momento, frase):

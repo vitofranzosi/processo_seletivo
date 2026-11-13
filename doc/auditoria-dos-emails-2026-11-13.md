@@ -281,16 +281,34 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
    A FR-3752 da `118` citava a frase do Requerimento enviado e foi revista, com a anterior anotada.
    `tests/portal/test_sem_masculino_generico.py` varre as telas do portal e os quatro módulos cujo
    texto chega a elas.
-9. **O masculino genérico que ficou** é de outra natureza, e é decisão de quem responde pelos atos:
-   - **nomes e colunas de atos oficiais** publicados no portal: *"Publicação de convocados"* (`149`),
-     a coluna *"Candidato"* das listas públicas (`publicacao_das_inscricoes.html`,
-     `relacao_de_habilitados.html`, `resultado.html`, `comprovante.html`), *"N candidato habilitado"*
-     (`_lista_do_sorteio.html`) e *"cada candidato consulta a própria situação"*;
-   - **o texto do Edital** — *"quando o candidato for convocado"* (`interface/revisao.py`,
-     `duvidas/domain/rotulos.py`) —, que é o ato legal (PDF) e se revê por Retificação, não por código;
-   - **a gestão** — *"quem foi convocado"* —, que fala da pessoa em terceira pessoa a quem conduz o
-     certame, e não a ela;
-   - *"área do candidato"*, nome da área no portal.
+9. **Masculino genérico nos atos oficiais — corrigido em parte, em 13/11, por decisão do usuário,
+   e só nos atos futuros.** Nenhum ato publicado foi reescrito (Princípio II da Constituição).
+   - **Resultado e publicação das inscrições.** A coluna passa a *"Nome"* (o rótulo que a publicação
+     de convocados da `149` já usava) e *"cada candidato consulta"* passa a *"cada pessoa
+     consulta"*. As palavras são **gravadas no conteúdo do ato**, que entra no resumo
+     (`divulgacao/domain/vocabulario_dos_atos.py`): no cabeçalho, no resultado, porque o primeiro
+     nível é contrato da `017`; no primeiro nível, na publicação das inscrições, ao lado de
+     `rotulo_nao_constam`. A página e o PDF leem dali; o ato anterior, sem as chaves, continua
+     dizendo *"Candidato"* nos dois. A prévia da gestão mostra *"Nome"*, como o ato que vai sair.
+   - **Resumo da seleção**: *"N pessoas habilitadas"*, no lugar de *"N candidatos habilitados"*. É
+     texto da página da seleção, e não do ato.
+   - **Edital: redação 3.** O momento do Requerimento na convocação passa a *"na convocação"*, e não
+     *"quando o candidato for convocado"* — pelo versionamento de redação que o PDF já tinha (R-004
+     da `069`): o Edital publicado com a 1 ou a 2 grava o número e se recompõe como foi. A Revisão,
+     o seletor da gestão e o assistente dizem o momento como a redação vigente.
+   - **Ficaram, por decisão do usuário**: o nome do ato *"Publicação de convocados"* (`149`).
+   - **Ficaram, porque exigem migration** — o que o pedido inicial pediu para evitar — e por isso
+     voltam ao usuário: a coluna *"Candidato"* do **comprovante de inscrição** e da **relação de
+     habilitados**. O comprovante não é gravado: é regenerado a cada download com bytes
+     determinísticos, e a página publica o SHA-256 dele; trocar o rótulo para todos faria o
+     comprovante já baixado deixar de conferir. A relação de habilitados não tem conteúdo em JSON
+     onde gravar o rótulo. Nos dois, "só atos futuros" pede uma coluna que diga o vocabulário de
+     cada registro.
+   - **Ficaram, fora do que a decisão alcançou**: o resto do Edital — *"Cada candidato pode…"* (V7,
+     V8), *"o candidato declara"*, *"Dos candidatos ao perfil"* e outras —, que é a redação jurídica
+     do documento e pede revisão própria; e a gestão (*"quem foi convocado"*), que fala da pessoa a
+     quem conduz o certame.
+   - *"área do candidato"* é o nome da área no portal.
 6. ~~**O mapa de estilos não entra no resumo da FR-3889.**~~ **Corrigido em 13/11**, a pedido do
    usuário. O mapa saiu do Python para um arquivo versionado,
    `shared/templates/correio/estilos.json`, que `correio.py` lê uma vez: a mesma leitura estiliza o

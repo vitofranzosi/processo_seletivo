@@ -129,7 +129,7 @@ leem é este.
   <thead>
     <tr>
       <th scope="col">Posição</th>
-      <th scope="col">Candidato</th>
+      <th scope="col">{{ rotulo_da_pessoa }}</th>
       <th scope="col">Protocolo</th>
       <th scope="col">Modalidade</th>
       {% comment %}
@@ -148,7 +148,7 @@ leem é este.
       marca visual. Nenhum desempate é inventado para desfazê-lo (FR-014).
       {% endcomment %}
       <td data-rotulo="Posição">{{ item.posicao }}º{% if item.compartilhada %} <span class="compartilhada">(posição compartilhada)</span>{% endif %}</td>
-      <td data-rotulo="Candidato">{{ item.candidato }}</td>
+      <td data-rotulo="{{ rotulo_da_pessoa }}">{{ item.candidato }}</td>
       <td data-rotulo="Protocolo">{{ item.protocolo }}</td>
       <td data-rotulo="Modalidade">{{ item.modalidade|default:"—" }}</td>
       {% comment %}

@@ -36,6 +36,7 @@ from processo_seletivo.divulgacao.application.selectors import (
 from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
+from processo_seletivo.divulgacao.domain import vocabulario_dos_atos
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain.documentos import (
@@ -3618,6 +3619,9 @@ def resultado(request, publicacao_id):
             # marco abriam com o mesmo cabeçalho.
             "lista": nome_da_lista(conteudo["cabecalho"]),
             "posicoes": conteudo["posicoes"],
+            # A coluna do nome como o ato a gravou, e "Candidato" no ato anterior a 13/11: a página
+            # diz o que o PDF gravado diz (vocabulario_dos_atos).
+            "rotulo_da_pessoa": vocabulario_dos_atos.rotulo_da_pessoa(conteudo["cabecalho"]),
             "foi_sucedida": foi_sucedida,
             "vigente": vigente,
             "prazo": prazo,
@@ -3714,6 +3718,9 @@ def publicacao_das_inscricoes(request, publicacao_id):
             "publicacao": publicacao,
             "cabecalho": cabecalho,
             "conteudo": conteudo,
+            # As palavras com que o ato nomeia a pessoa, como ele as gravou (vocabulario_dos_atos).
+            "rotulo_da_pessoa": vocabulario_dos_atos.rotulo_da_pessoa(conteudo),
+            "quem_consulta": vocabulario_dos_atos.quem_consulta(conteudo),
             "grupos": grupos,
             "frase_das_listas": FRASE_DAS_LISTAS if tem_lista_reservada(grupos) else "",
             "explicacao": frase_da_natureza(cabecalho["natureza"]),

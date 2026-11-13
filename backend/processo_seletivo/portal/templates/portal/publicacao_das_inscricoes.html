@@ -74,11 +74,11 @@ nome por Perfil, e então não há título de lista a mostrar (FR-5447).
 <div class="tabela-rolavel">
 <table class="resultado" aria-labelledby="{% if lista.lista %}perfil-{{ perfil }}-lista-{{ forloop.counter }}{% else %}perfil-{{ perfil }}{% endif %}">
   <thead>
-    <tr><th scope="col">Candidato</th><th scope="col">Protocolo</th></tr>
+    <tr><th scope="col">{{ rotulo_da_pessoa }}</th><th scope="col">Protocolo</th></tr>
   </thead>
   <tbody>
   {% for linha in lista.constam %}
-    <tr><td data-rotulo="Candidato">{{ linha.candidato }}</td><td data-rotulo="Protocolo">{{ linha.protocolo }}</td></tr>
+    <tr><td data-rotulo="{{ rotulo_da_pessoa }}">{{ linha.candidato }}</td><td data-rotulo="Protocolo">{{ linha.protocolo }}</td></tr>
   {% endfor %}
   </tbody>
 </table>
@@ -93,7 +93,7 @@ nome por Perfil, e então não há título de lista a mostrar (FR-5447).
 expõe publicamente quem foi eliminado. O próprio candidato vê a situação e o motivo na área dele.
 {% endcomment %}
 {% if conteudo.rotulo_nao_constam and lista.nao_constam %}
-<p class="meta">{{ conteudo.rotulo_nao_constam|capfirst }} {% if lista.lista %}nesta lista{% else %}neste Perfil{% endif %}: {{ lista.nao_constam }}. Elas não são nomeadas aqui: cada candidato consulta a própria situação e o motivo na área do candidato.</p>
+<p class="meta">{{ conteudo.rotulo_nao_constam|capfirst }} {% if lista.lista %}nesta lista{% else %}neste Perfil{% endif %}: {{ lista.nao_constam }}. Elas não são nomeadas aqui: {{ quem_consulta }} consulta a própria situação e o motivo na área do candidato.</p>
 {% endif %}
 {% endfor %}
 {% endwith %}

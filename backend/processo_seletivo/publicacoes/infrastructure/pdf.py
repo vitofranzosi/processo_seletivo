@@ -5079,10 +5079,13 @@ def teto_de_inscricoes(snapshot, *, redacao=REDACAO_VIGENTE):
 # A seção textual onde a declaração do Requerimento de Matrícula é publicada (054, FR-996, D-006).
 SECAO_DA_MATRICULA = "matricula"
 
+# O momento do Requerimento como as redações 1 e 2 o dizem, e como a 3 o diz (2026-11-13): sem
+# presumir o gênero de quem lê. O Edital publicado com a 1 ou a 2 continua dizendo o que disse.
 MOMENTO_DO_REQUERIMENTO = {
     "AT_ENROLLMENT": "no ato da inscrição",
     "AT_CALL": "quando o candidato for convocado",
 }
+MOMENTO_DO_REQUERIMENTO_3 = {**MOMENTO_DO_REQUERIMENTO, "AT_CALL": "na convocação"}
 
 # O recuo da declaração transcrita: é texto que o candidato aceitará, e não redação do Edital, e o
 # recuo é o que o separa das frases que o anunciam. Desde a `069` ela sai em bloco destacado, e o
@@ -5108,7 +5111,10 @@ def requerimento_de_matricula(snapshot, *, redacao=REDACAO_VIGENTE):
     requerimento = snapshot.get("matriculationRequest")
     if not isinstance(requerimento, dict) or not requerimento.get("moment"):
         return []
-    momento = MOMENTO_DO_REQUERIMENTO.get(requerimento["moment"], str(requerimento["moment"]))
+    momentos = (
+        MOMENTO_DO_REQUERIMENTO if redacao in (REDACAO_1, REDACAO_2) else MOMENTO_DO_REQUERIMENTO_3
+    )
+    momento = momentos.get(requerimento["moment"], str(requerimento["moment"]))
     declaracao = _paragrafos(requerimento.get("declarationText", ""))
     if redacao == REDACAO_1:
         partes = [(f"O Requerimento de Matrícula será enviado {momento}.", 0.0)]

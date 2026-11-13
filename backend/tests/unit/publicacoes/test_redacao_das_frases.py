@@ -21,6 +21,7 @@ from processo_seletivo.publicacoes.domain import vocabulario_da_regra as vocabul
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     REDACAO_1,
     REDACAO_2,
+    REDACAO_3,
     REDACAO_VIGENTE,
     criterio_com_a_ausencia,
     criterio_por_extenso,
@@ -143,9 +144,12 @@ def _snapshot(*marcos, metodo=METODO):
     return {"drawMethod": metodo, "profiles": [perfil], "stages": list(ETAPAS.values())}, perfil
 
 
-def test_a_redacao_vigente_e_a_2():
-    """O que se compõe a partir desta feature usa a redação 2; a 1 continua alcançável (R-004)."""
-    assert (REDACAO_1, REDACAO_2, REDACAO_VIGENTE) == (1, 2, 2)
+def test_a_redacao_vigente_e_a_3():
+    """A 2 veio da `069`; a 3, de 2026-11-13, só troca o momento do Requerimento na convocação.
+
+    A 1 e a 2 continuam alcançáveis (R-004): o Edital publicado com elas se recompõe como foi.
+    """
+    assert (REDACAO_1, REDACAO_2, REDACAO_3, REDACAO_VIGENTE) == (1, 2, 3, 3)
 
 
 # ---------------------------------------------------------------------------
@@ -944,7 +948,7 @@ def test_v11_e_v12_requerimento(momento, redacao_2, redacao_1):
     """V11 e V12 — o momento e a declaração se preservam; a declaração, transcrita inteira."""
     snapshot = {"matriculationRequest": {"moment": momento, "declarationText": "Declaro X.\nE Y."}}
 
-    assert pdf.requerimento_de_matricula(snapshot) == [
+    assert pdf.requerimento_de_matricula(snapshot, redacao=REDACAO_2) == [
         (redacao_2, 0.0),
         ("Declaro X.", pdf.RECUO_DA_DECLARACAO),
         ("E Y.", pdf.RECUO_DA_DECLARACAO),
@@ -953,6 +957,23 @@ def test_v11_e_v12_requerimento(momento, redacao_2, redacao_1):
         (redacao_1, 0.0),
         ("Ao enviá-lo, o candidato declarará:", 0.0),
     ]
+
+
+def test_v12_na_redacao_3_o_momento_nao_presume_o_genero():
+    """Redação 3 (2026-11-13): *"na convocação"*, e não *"quando o candidato for convocado"*."""
+    snapshot = {"matriculationRequest": {"moment": "AT_CALL", "declarationText": "Declaro X."}}
+
+    assert pdf.requerimento_de_matricula(snapshot)[0] == (
+        "O Requerimento de Matrícula é enviado na convocação. Ao enviá-lo, o candidato declara:",
+        0.0,
+    )
+    assert pdf.requerimento_de_matricula(snapshot, redacao=REDACAO_3) == (
+        pdf.requerimento_de_matricula(snapshot)
+    )
+    no_inscricao = {"matriculationRequest": {"moment": "AT_ENROLLMENT", "declarationText": ""}}
+    assert pdf.requerimento_de_matricula(no_inscricao, redacao=REDACAO_3) == (
+        pdf.requerimento_de_matricula(no_inscricao, redacao=REDACAO_2)
+    ), "a 3 só muda o momento da convocação"
 
 
 def test_v11_sem_declaracao_nao_anuncia_o_que_nao_ha():

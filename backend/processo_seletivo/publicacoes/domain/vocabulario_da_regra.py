@@ -26,7 +26,12 @@ podem dizê-la na redação nova (FR-1397).
 # As redações das frases geradas. A 1 nunca muda: é a que os atos publicados antes da `069` dizem.
 REDACAO_1 = 1
 REDACAO_2 = 2
-REDACAO_VIGENTE = REDACAO_2
+# **A 3 (2026-11-13) só troca uma expressão**: o momento do Requerimento de Matrícula na convocação
+# diz *"na convocação"*, e não *"quando o candidato for convocado"*, que presumia o gênero de quem
+# lê (decisão do usuário, achado 9 da auditoria dos e-mails). Tudo o mais é a 2. O Edital publicado
+# com a 1 ou a 2 grava o número em `redacao_do_documento`, e continua se recompondo como foi.
+REDACAO_3 = 3
+REDACAO_VIGENTE = REDACAO_3
 
 # `{alvo}` já vem com o substantivo que o antecede — "Etapa Prova didática", "Meses de
 # experiência" —, porque é o que permite à mesma frase servir ao alvo resolvido e ao ausente sem
@@ -89,6 +94,8 @@ FORMA_DE_CONVOCACAO_POR_REDACAO = {
         FORMA_POR_MENSAGEM_INDIVIDUAL: "por mensagem individual à pessoa convocada",
     },
 }
+# A 3 não muda a forma de convocação: é a da 2.
+FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_3] = FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_2]
 # A forma na redação vigente — a que o documento, o portal e a Revisão dizem agora.
 FORMA_DE_CONVOCACAO_POR_EXTENSO = FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_VIGENTE]
 FORMA_DE_CONVOCACAO_NAO_DECLARADA = "forma de convocação não declarada neste Edital"

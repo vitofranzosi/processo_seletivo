@@ -108,6 +108,8 @@ derivação, semente e substituição, nos pares.
 | V12 | Requerimento na convocação | "O Requerimento de Matrícula será enviado quando o candidato for convocado." | "O Requerimento de Matrícula é enviado quando o candidato for convocado. Ao enviá-lo, o candidato declara:" |
 | V13 | Lembrete em Documentos e Inscrição (novo) | — | "Além destes documentos, a inscrição inclui o Requerimento de Matrícula (item «N»)." (só AT_ENROLLMENT) |
 
+> **Redação 3 (2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`, achado 9).** Só a V12 muda: *"O Requerimento de Matrícula é enviado na convocação. Ao enviá-lo, o candidato declara:"* — *"na convocação"* no lugar de *"quando o candidato for convocado"*, que presumia o gênero de quem lê. Todas as outras frases da 3 são as da 2. O Edital publicado com a 1 ou a 2 grava o número da redação e continua se recompondo com ela. *"Cada candidato"* (V7, V8), *"o candidato declara"* e as demais frases do Edital com masculino genérico ficaram como estão: a decisão do usuário alcançou só a expressão do momento.
+
 ## 7. Etapas, documentos, atributos, fecho
 
 | # | Variante | Hoje | Redação 2 |
