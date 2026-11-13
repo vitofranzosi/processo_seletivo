@@ -30,17 +30,22 @@ inscrever passou do título para a descrição. A caminho da convocação, diz p
          com o arroba à mão (UX-009). {% endcomment %}
       <input type="email" id="email" name="email" value="{{ email }}" autocomplete="email"
              inputmode="email" autofocus required
-             {% if erro %}aria-invalid="true" aria-describedby="erro-email"{% endif %}>
+             aria-describedby="{% if erro %}erro-email {% endif %}dica-email"{% if erro %} aria-invalid="true"{% endif %}>
       {% if erro %}<span class="recusa" id="erro-email">{{ erro }}</span>{% endif %}
+      {% comment %}
+      Sem senha, e sem cadastro prévio: a identidade nasce quando o código confere (010, FR-052). O
+      "nem de cadastro" é o que tira a dúvida de quem nunca se inscreveu e chega procurando onde se
+      cadastrar; o mecanismo, a pessoa não precisa saber. A frase é a mesma para quem tem e para quem
+      não tem identidade, porque não depende do endereço (FR-020, FR-021).
+
+      Fica no campo, antes do botão, e não num rodapé depois dele: quem lê de cima para baixo já
+      tinha clicado quando chegava à explicação. "Este e-mail" porque o rótulo acima já diz "Seu
+      e-mail", e "um código" porque o botão abaixo já diz "código de acesso".
+      {% endcomment %}
+      <span class="dica" id="dica-email">Enviaremos um código para este e-mail. Não precisa de senha nem de cadastro.</span>
     </div>
     <button type="submit" class="principal">Receber código de acesso</button>
   </form>
-  {% comment %}
-  Sem senha, e sem cadastro prévio: a identidade nasce quando o código confere (010, FR-052). Dizer
-  isso aqui é o que tira a dúvida de quem nunca se inscreveu — e a frase é a mesma para quem tem e
-  para quem não tem identidade, porque não depende do endereço (FR-020, FR-021).
-  {% endcomment %}
-  <p class="nota-do-acesso">Sem senha: enviamos um código temporário para o seu e-mail. Se é a sua primeira vez, o acesso é criado quando você confirma o código.</p>
 </section>
 </div>
 {% endblock %}
