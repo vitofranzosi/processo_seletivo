@@ -742,12 +742,27 @@ function sha256(conteudo) {
   return createHash("sha256").update(Buffer.from(conteudo)).digest("hex");
 }
 
+/* O `crypto.subtle` do Node calcula fora da fila de microtarefas: num runner lento, os ticks de
+   `esperar()` não bastavam, e o aviso ainda não estava escrito (CI do #516). Os casos de regra usam
+   o mesmo SHA-256, resolvido na fila; o resumo do `crypto.subtle` real tem um caso só, que espera
+   por ele. */
+const SUTIL = {
+  digest: async (_algoritmo, bytes) => {
+    const resumo = createHash("sha256").update(Buffer.from(bytes)).digest();
+    return resumo.buffer.slice(resumo.byteOffset, resumo.byteOffset + resumo.length);
+  },
+};
+
+async function ate(condicao) {
+  for (let i = 0; i < 200 && !condicao(); i++) await new Promise((r) => setTimeout(r, 10));
+}
+
 const ESCOLHIDO = "Atenção: este arquivo é o mesmo que você escolheu para ";
 const ENVIADO = "Atenção: este arquivo é o mesmo que você já enviou para ";
 
 test("dois escolhidos idênticos, de nomes diferentes, avisam nos dois, cada um nomeando o outro", async () => {
   const [a, b, c] = tres();
-  const tela = carregar([a, b, c], { sutil: webcrypto.subtle });
+  const tela = carregar([a, b, c], { sutil: SUTIL });
 
   a.escolherArquivo(pdf("diploma.pdf", "o mesmo"));
   b.escolherArquivo(pdf("comprovante.pdf", "o mesmo"));
@@ -773,7 +788,7 @@ test("igual ao já enviado para outro documento avisa; igual ao do próprio cart
   const b = cartao("Diploma", { substituicao: true, recebido });
   /* Um conferido, sem formulário: o cartão dele também diz o resumo. */
   const conferido = { getAttribute: (k) => ({ "data-documento": "Certidão", "data-resumo-recebido": sha256("certidão") })[k] ?? null };
-  carregar([a, b], { sutil: webcrypto.subtle, recebidos: [conferido] });
+  carregar([a, b], { sutil: SUTIL, recebidos: [conferido] });
 
   a.escolherArquivo(pdf("qualquer.pdf", "diploma"));
   b.escolherArquivo(pdf("de-novo.pdf", "diploma"));
@@ -791,7 +806,7 @@ test("igual ao já enviado para outro documento avisa; igual ao do próprio cart
 
 test("com mais de um coincidente, os nomes vão por vírgula e \"e\"", async () => {
   const cartoes = ["A", "B", "C", "D"].map((nome) => cartao(nome));
-  carregar(cartoes, { sutil: webcrypto.subtle });
+  carregar(cartoes, { sutil: SUTIL });
 
   for (const c of cartoes) c.escolherArquivo(pdf(`${c.form.nome}.pdf`, "igual"));
   await esperar();
@@ -802,7 +817,7 @@ test("com mais de um coincidente, os nomes vão por vírgula e \"e\"", async () 
 
 test("remover a escolha tira o aviso dos dois cartões", async () => {
   const [a, b] = tres();
-  carregar([a, b], { sutil: webcrypto.subtle });
+  carregar([a, b], { sutil: SUTIL });
   a.escolherArquivo(pdf("x.pdf", "igual"));
   b.escolherArquivo(pdf("y.pdf", "igual"));
   await esperar();
@@ -824,7 +839,7 @@ test("sem crypto.subtle, ou com a leitura recusada, não há aviso nem frase de 
   assert.equal(a.repetido.textContent + b.repetido.textContent, "");
 
   const [c, d] = tres();
-  carregar([c, d], { sutil: webcrypto.subtle });
+  carregar([c, d], { sutil: SUTIL });
   const recusado = { name: "x.pdf", size: 5, arrayBuffer: () => Promise.reject(new Error("leitura")) };
   c.escolherArquivo(recusado);
   d.escolherArquivo({ ...recusado, name: "y.pdf" });
@@ -837,7 +852,7 @@ test("a escolha trocada durante o cálculo descarta o resultado velho", async ()
   const [a, b] = tres();
   let liberar;
   const lento = { name: "lento.pdf", size: 5, arrayBuffer: () => new Promise((r) => (liberar = r)) };
-  carregar([a, b], { sutil: webcrypto.subtle });
+  carregar([a, b], { sutil: SUTIL });
   b.escolherArquivo(pdf("b.pdf", "igual"));
 
   a.escolherArquivo(lento);
@@ -852,7 +867,7 @@ test("a escolha trocada durante o cálculo descarta o resultado velho", async ()
 
 test("o envio não espera o cálculo, e a escolha sozinha não faz requisição", async () => {
   const [a, b] = tres();
-  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  const tela = carregar([a, b], { sutil: SUTIL });
   const nunca = { name: "x.pdf", size: 5, arrayBuffer: () => new Promise(() => {}) };
 
   a.escolherArquivo(nunca);
@@ -866,7 +881,7 @@ test("o envio não espera o cálculo, e a escolha sozinha não faz requisição"
 
 test("acima do limite, o arquivo não é lido para comparar", async () => {
   const [a, b] = [cartao("Certidão", { limite: 10 }), cartao("Histórico", { limite: 10 })];
-  carregar([a, b], { sutil: webcrypto.subtle });
+  carregar([a, b], { sutil: SUTIL });
   let lido = false;
   const grande = { name: "grande.pdf", size: 11, arrayBuffer: async () => ((lido = true), new ArrayBuffer(11)) };
 
@@ -880,7 +895,7 @@ test("acima do limite, o arquivo não é lido para comparar", async () => {
 
 test("o que chegou num lote interrompido passa a contar como enviado", async () => {
   const [a, b] = tres();
-  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  const tela = carregar([a, b], { sutil: SUTIL });
   a.escolherArquivo(pdf("diploma.pdf", "o diploma"));
   b.escolherArquivo(pdf("comprovante.pdf", "o comprovante"));
   await esperar();
@@ -898,7 +913,7 @@ test("o que chegou num lote interrompido passa a contar como enviado", async () 
 
 test("o aviso que não mudou não pisca nem é anunciado de novo", async () => {
   const [a, b] = tres();
-  const tela = carregar([a, b], { sutil: webcrypto.subtle });
+  const tela = carregar([a, b], { sutil: SUTIL });
   a.escolherArquivo(pdf("x.pdf", "igual"));
   b.escolherArquivo(pdf("y.pdf", "igual"));
   await esperar();
@@ -912,4 +927,16 @@ test("o aviso que não mudou não pisca nem é anunciado de novo", async () => {
 
   assert.equal(a.repetido.textContent, ESCOLHIDO + "Histórico.");
   assert.equal(tela.anuncio.textContent, "", "a mesma frase não se anuncia de novo");
+});
+
+test("com o crypto.subtle de verdade, o resumo é o mesmo de shared.arquivos.resumo", async () => {
+  const recebido = sha256("o mesmo conteúdo");
+  const a = cartao("Comprovante de residência");
+  const b = cartao("Diploma", { substituicao: true, recebido });
+  carregar([a, b], { sutil: webcrypto.subtle });
+
+  a.escolherArquivo(pdf("outro-nome.pdf", "o mesmo conteúdo"));
+  await ate(() => !a.repetido.hidden);
+
+  assert.equal(a.repetido.textContent, ENVIADO + "Diploma.");
 });
