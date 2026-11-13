@@ -34,7 +34,7 @@ isso ela é registrada no servidor em vez de interromper a pessoa.
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 
 from processo_seletivo.shared import correio
 from processo_seletivo.unidades.application import identificacao
@@ -74,6 +74,24 @@ def compor_comprovante(dados):
     )
 
 
+def entregar(*, para, mensagem):
+    """Põe a mensagem na fila do correio: texto puro, HTML e os cabeçalhos de mensagem automática.
+
+    **Um destinatário só, sem cópia.** `EmailMultiAlternatives`, e não `send_mail`, porque só ela
+    leva cabeçalho: `Auto-Submitted` diz aos servidores que ninguém a escreveu à mão, e a resposta
+    automática de férias não volta para uma caixa que ninguém lê.
+    """
+    email = EmailMultiAlternatives(
+        subject=mensagem.assunto,
+        body=mensagem.texto,
+        from_email=settings.DEFAULT_FROM_EMAIL or None,
+        to=[para],
+        headers=dict(correio.CABECALHOS),
+    )
+    email.attach_alternative(mensagem.html, "text/html")
+    email.send(fail_silently=False)
+
+
 def enviar_comprovante(*, para: str, dados: dict) -> None:
     """Envia o recibo do envio — e, falhando, registra sem interromper quem se inscreveu.
 
@@ -83,15 +101,7 @@ def enviar_comprovante(*, para: str, dados: dict) -> None:
     if not para:
         return
     try:
-        mensagem = compor_comprovante(dados)
-        send_mail(
-            subject=mensagem.assunto,
-            message=mensagem.texto,
-            html_message=mensagem.html,
-            from_email=settings.DEFAULT_FROM_EMAIL or None,
-            recipient_list=[para],
-            fail_silently=False,
-        )
+        entregar(para=para, mensagem=compor_comprovante(dados))
     except Exception:
         # Sem o endereço e sem o protocolo: o registro técnico diz que falhou, e nada além disso.
         logger.exception("Falha ao enviar a confirmação de inscrição.")

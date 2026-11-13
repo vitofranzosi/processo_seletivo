@@ -111,7 +111,7 @@ def test_falha_do_aviso_nao_custa_o_ato(client, caixa, com_duas, monkeypatch):
     from processo_seletivo.identidade.application import mensagem
 
     monkeypatch.setattr(
-        mensagem, "send_mail", lambda **_: (_ for _ in ()).throw(RuntimeError("smtp fora"))
+        mensagem, "entregar", lambda **_: (_ for _ in ()).throw(RuntimeError("smtp fora"))
     )
 
     client.post(reverse("portal:conta-remover", args=[com_duas.id]))

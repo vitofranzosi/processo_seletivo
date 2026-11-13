@@ -105,7 +105,7 @@ def test_falha_no_envio_da_mensagem_nao_custa_a_inscricao(client, caixa, pronta,
     def explodir(**_):
         raise RuntimeError("smtp fora do ar")
 
-    monkeypatch.setattr(mensagem, "send_mail", explodir)
+    monkeypatch.setattr(mensagem, "entregar", explodir)
     identificar(client, MARIA)
 
     resposta = enviar(client, pronta)

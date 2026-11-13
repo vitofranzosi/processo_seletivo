@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.domain.variaveis import escapar, resolver, resolver_no_envio
+from processo_seletivo.shared import correio
 
 # **O rodapé é do sistema, e não da seleção** (`FR-1257`). É ele que impede o aviso de ser lido como
 # o ato: aponta a publicação oficial, diz que ela é a referência e que o aviso não a substitui.
@@ -47,8 +48,9 @@ FRASE_DA_CHAMADA = (
 LINHA_DA_RETIFICACAO = "Este aviso se refere a publicação que retifica a de {datas}."
 
 #: Cabeçalhos de toda mensagem. `Auto-Submitted` (RFC 3834) faz as respostas automáticas de férias
-#: não voltarem para uma caixa que ninguém lê.
-CABECALHOS = {"Auto-Submitted": "auto-generated"}
+#: não voltarem para uma caixa que ninguém lê. Desde 13/11 é o de toda mensagem do GPS, e mora na
+#: moldura comum; este nome fica, para que o despacho não mude.
+CABECALHOS = correio.CABECALHOS
 
 ATENDIMENTO_PADRAO = "a comissão do certame"
 

@@ -181,9 +181,16 @@ longos, convocação sem vencimento, implantação com várias unidades, pendên
   "Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há senha."; e um parágrafo
   por linha.
 
+**Cabeçalho `Auto-Submitted: auto-generated` em toda mensagem** (RFC 3834). Era só dos avisos; agora
+o código, o vínculo, a mudança de credencial, o comprovante e a convocação também se declaram
+automáticos, e a resposta de férias de quem recebe não volta para uma caixa que ninguém lê. A constante
+mora em `shared/correio.py` (`CABECALHOS`), e a dos avisos passou a apontar para ela. Para levar
+cabeçalho, identidade e inscrição trocaram `send_mail` por `EmailMultiAlternatives`, numa função
+`entregar` por módulo — os seis testes que simulavam a queda do correio trocando `send_mail` passaram a
+trocar `entregar`. Era o achado 2 da primeira versão deste relatório, corrigido a pedido do usuário.
+
 **Não mudou**: destinatários, remetente, cópias, gatilhos, idempotência, ordem reservar–enviar–gravar
-da convocação, contagem de situações da FR-084, cabeçalho `Auto-Submitted` dos avisos, tokens, nenhuma
-migration e nenhuma dependência nova.
+da convocação, contagem de situações da FR-084, tokens, nenhuma migration e nenhuma dependência nova.
 
 **Testes novos**:
 
@@ -195,7 +202,8 @@ migration e nenhuma dependência nova.
 - `tests/integration/avisos/test_despacho_em_html.py`: o despacho anexa a forma HTML, mantém um
   destinatário, `Auto-Submitted` e o texto congelado; sem a forma HTML, os dois avisos saem e são `ACEITA`.
 - `tests/integration/test_envios_em_duas_partes.py`: código, vínculo, mudança e comprovante saem uma
-  vez, ao mesmo destinatário, com texto e HTML; sem destinatário, nada sai.
+  vez, ao mesmo destinatário, com texto, HTML e `Auto-Submitted`; a convocação também leva o
+  cabeçalho; sem destinatário, nada sai.
 
 ## F. Cobertura
 
@@ -227,9 +235,8 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
 1. **"o código de seis dígitos que enviamos numa mensagem separada"** (convocação) está no passado,
    mas o código só sai quando a pessoa o pede — o próprio quadro de segurança diz isso na linha
    seguinte. Fixado na spec `121` (linhas 551 e 568). Sugestão: "que enviaremos numa mensagem separada".
-2. **`Auto-Submitted: auto-generated` só nos avisos.** Código, comprovante e convocação também são
-   automáticos, e sem o cabeçalho as respostas de férias voltam para uma caixa que ninguém lê. É
-   cabeçalho de envio, não de apresentação.
+2. ~~**`Auto-Submitted: auto-generated` só nos avisos.**~~ **Corrigido em 13/11**, a pedido do
+   usuário: toda mensagem do GPS leva o cabeçalho (seção E).
 3. **"quem o tiver poderá entrar na conta dele"** (vínculo): masculino genérico, e a quebra de linha
    no meio da frase é fixada por `test_o_codigo_de_vincular_endereco_diz_o_risco_certo`.
 4. **O assunto da pendência é singular com vários documentos** ("há documento … para revisar"); o

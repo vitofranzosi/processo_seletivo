@@ -142,6 +142,11 @@ for _estado, (_cor, _fundo) in ESTADOS.items():
         "padding:16px 18px;"
     )
 
+#: Cabeçalhos de toda mensagem do GPS. `Auto-Submitted` (RFC 3834) diz que ninguém a escreveu à mão:
+#: as respostas de férias e os avisos de ausência não voltam para uma caixa que ninguém lê.
+#: Era só dos avisos (066); toda mensagem do sistema é automática, e o rodapé de todas já o diz.
+CABECALHOS = {"Auto-Submitted": "auto-generated"}
+
 _CLASSE = re.compile(r'\sclass="([^"]*)"')
 
 
@@ -317,6 +322,7 @@ def html_do_aviso(*, assunto, corpo, estado="informacao"):
 
 
 __all__ = [
+    "CABECALHOS",
     "ESTADOS",
     "ESTILOS",
     "Mensagem",

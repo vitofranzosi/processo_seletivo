@@ -89,7 +89,7 @@ def test_a_falha_de_envio_nao_registra_endereco_nem_codigo(monkeypatch, registro
     def explodir(*_args, **_kwargs):
         raise OSError("indisponível")
 
-    monkeypatch.setattr(mensagem, "send_mail", explodir)
+    monkeypatch.setattr(mensagem, "entregar", explodir)
     mensagem.enviar_codigo(para=ENDERECO, codigo="424242")
 
     assert "424242" not in registro_tecnico.texto

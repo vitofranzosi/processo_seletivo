@@ -8,7 +8,7 @@ que a origina.
 **São três situações desde a `019`**, e não duas: a convocação por mensagem individual entrou depois
 de a `FR-084` ser revisada por escrito, e não por exceção silenciosa. Ela mora em
 `convocacao/application/comunicar.py`, e a contagem é varrida por
-`tests/test_situacoes_de_mensagem.py` — um `send_mail` num módulo não declarado reprova a suíte.
+`tests/test_situacoes_de_mensagem.py` — um remetente num módulo não declarado reprova a suíte.
 
 **O código muda de texto conforme a finalidade** (FR-082a). Entrar e adicionar credencial produzem
 riscos opostos para quem recebe: no primeiro, ignorar a mensagem basta, porque ninguém entra sem o
@@ -26,7 +26,7 @@ de quem é — é justamente o que ela está tentando descobrir.
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 
 from processo_seletivo.identidade.models import VALIDADE_EM_MINUTOS, DesafioDeAcesso
 from processo_seletivo.shared import correio
@@ -47,15 +47,22 @@ MODELO_DO_VINCULO = "identidade/mensagem/vinculo"
 MODELO_DA_MUDANCA = "identidade/mensagem/mudanca"
 
 
-def _enviar(para, mensagem):
-    send_mail(
+def entregar(*, para, mensagem):
+    """Põe a mensagem na fila do correio: texto puro, HTML e os cabeçalhos de mensagem automática.
+
+    **Um destinatário só, sem cópia.** `EmailMultiAlternatives`, e não `send_mail`, porque só ela
+    leva cabeçalho: `Auto-Submitted` diz aos servidores que ninguém a escreveu à mão, e a resposta
+    automática de férias não volta para uma caixa que ninguém lê.
+    """
+    email = EmailMultiAlternatives(
         subject=mensagem.assunto,
-        message=mensagem.texto,
-        html_message=mensagem.html,
+        body=mensagem.texto,
         from_email=settings.DEFAULT_FROM_EMAIL or None,
-        recipient_list=[para],
-        fail_silently=False,
+        to=[para],
+        headers=dict(correio.CABECALHOS),
     )
+    email.attach_alternative(mensagem.html, "text/html")
+    email.send(fail_silently=False)
 
 
 def compor_codigo(*, codigo, identificacao_da_implantacao, finalidade=""):
@@ -94,9 +101,9 @@ def enviar_codigo(*, para: str, codigo: str, finalidade: str = "") -> None:
     if not codigo:
         return
     try:
-        _enviar(
-            para,
-            compor_codigo(
+        entregar(
+            para=para,
+            mensagem=compor_codigo(
                 codigo=codigo,
                 identificacao_da_implantacao=identificacao.da_implantacao(),
                 finalidade=finalidade,
@@ -129,9 +136,9 @@ def avisar_mudanca_de_credencial(*, para: str, endereco: str, acao: str, atendim
     if not para:
         return
     try:
-        _enviar(
-            para,
-            compor_mudanca(
+        entregar(
+            para=para,
+            mensagem=compor_mudanca(
                 endereco=endereco,
                 acao=acao,
                 atendimento=atendimento,

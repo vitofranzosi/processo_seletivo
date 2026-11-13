@@ -330,6 +330,7 @@ def _eml(mensagem):
         body=mensagem.texto,
         from_email="Seleções Ifes <nao-responda@exemplo.test>",
         to=["maria@exemplo.test"],
+        headers=dict(correio.CABECALHOS),
     )
     email.attach_alternative(mensagem.html, "text/html")
     return email.message().as_bytes()

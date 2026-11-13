@@ -445,7 +445,7 @@ def test_os_quatro_motivos_tem_codigos_distintos(caixa, registro_tecnico, monkey
     def explodir(*_args, **_kwargs):
         raise OSError("servidor de e-mail indisponível")
 
-    monkeypatch.setattr(mensagem, "send_mail", explodir)
+    monkeypatch.setattr(mensagem, "entregar", explodir)
     candidato_no_polo("sem-correio@exemplo.test", origem="192.0.2.202")
 
     assert [e["level"] for e in registro_tecnico.eventos(servico.TETO_DA_ORIGEM)] == ["WARNING"]

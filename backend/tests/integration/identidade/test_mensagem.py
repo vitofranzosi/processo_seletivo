@@ -64,5 +64,5 @@ def test_falha_de_envio_nao_estoura(settings, monkeypatch):
     def explodir(*_args, **_kwargs):
         raise OSError("indisponível")
 
-    monkeypatch.setattr(modulo, "send_mail", explodir)
+    monkeypatch.setattr(modulo, "entregar", explodir)
     enviar_codigo(para=ENDERECO, codigo="123456")

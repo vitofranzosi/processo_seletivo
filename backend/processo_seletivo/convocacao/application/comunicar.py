@@ -589,6 +589,8 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         body=corpo,
         from_email=settings.DEFAULT_FROM_EMAIL or None,
         to=[para],
+        # A mensagem é automática, como a dos avisos: a resposta de férias não volta (RFC 3834).
+        headers=dict(correio.CABECALHOS),
     )
     mensagem.attach_alternative(html, "text/html")
     try:
