@@ -501,3 +501,12 @@ As 156, 158, 161, 123 e 144 B/C foram procuradas pelas FRs e pelos textos. Delas
 - a suíte não rodou: só os guardiões que leem esta página;
 - nenhuma tela foi percorrida;
 - a repartição dos 91 gatilhos por espécie não foi refeita.
+
+## Acréscimo de 13/11: a lista na gestão (#534) e o resto do reenvio (#533)
+
+O #534 fechou um item de *Atrapalha quem opera*, e a consolidação da Visão (#535) já tinha levado o item da mensagem da convocação (#533) a *O que já fechou*. O placar de 13/11 não mudou: eles fecharam depois da conferência.
+
+- **A lista, na gestão** (#534). A prévia de publicação nomeia a lista e o histórico *Resultados divulgados* ganhou a coluna *Lista*. O aviso da seção *Resultado* e a linha da matriz passaram de *Parcial* a *Implementado*. A frase *"Este marco ainda não pode ser publicado como definitivo"* ficou como estava, de propósito.
+- **O resto do reenvio.** A #535 tirou o item inteiro do grupo 1, mas o achado tem uma segunda oportunidade aberta: o cartão da convocação mostra só o último envio, e as frases do portal que dizem *"contado do envio da comunicação"* (FR-3998 da 125) ficaram fora da 156 de propósito. O item voltou ao grupo 1 com esse resto.
+
+**Não verificado:** as telas não foram abertas, e a suíte não rodou; a leitura é dos corpos dos PRs e do código.
