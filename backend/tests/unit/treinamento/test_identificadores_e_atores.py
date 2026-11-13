@@ -81,6 +81,7 @@ PAPEL_DE = {
     construcao.ELABORACAO: "elaborador",
     construcao.HOMOLOGACAO: "homologador",
     construcao.PUBLICACAO: "publicador",
+    construcao.JULGAMENTO: "julgador",
 }
 
 

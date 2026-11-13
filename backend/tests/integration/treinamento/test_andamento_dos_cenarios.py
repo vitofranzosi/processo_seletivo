@@ -18,7 +18,7 @@ from processo_seletivo.interface import providencias as pr
 from processo_seletivo.treinamento import construcao as c
 from processo_seletivo.treinamento.models import CenarioDeTreinamento
 from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
-from tests.fixtures.treinamento import carregar, retomar
+from tests.fixtures.treinamento import carregar, indeferir_o_recurso_ja_admitido, retomar
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
@@ -155,6 +155,9 @@ def test_o_preliminar_publicado_continua_sem_ser_feito(cenario):
 @pytest.mark.parametrize("codigo", ["C08", "C12"])
 def test_a_espera_do_definitivo_nao_oferece_publicar_como_preliminar(cenario, codigo):
     m = cenario(codigo)
+    if codigo == "C08":
+        # A janela, e não o recurso que o C08 traz admitido: esse segura o definitivo sem data.
+        indeferir_o_recurso_ja_admitido(m)
     for quem in (c.PRESIDENCIA, c.PUBLICACAO):
         andamento, nivel = _nivel(m, quem)
         [espera] = [i for i in nivel.itens if i.natureza == a.RESULTADO and i.grupo == pr.EM_ESPERA]
@@ -175,6 +178,7 @@ def test_c08_na_previa_de_publicacao_a_mensagem_e_a_de_antes(cenario):
     from processo_seletivo.divulgacao.domain import publicabilidade as p
 
     m = cenario("C08")
+    indeferir_o_recurso_ja_admitido(m)
     andamento, _ = _nivel(m, c.PRESIDENCIA)
     marco, _, _ = _ordem_da_ppp(andamento)
     ato = ato_vigente(edital=m.edital, marco_id=str(marco["id"]), lista_id=None)
@@ -184,6 +188,24 @@ def test_c08_na_previa_de_publicacao_a_mensagem_e_a_de_antes(cenario):
     assert afericao.codigo == p.JANELA_ABERTA
     assert afericao.mensagem == p.MENSAGENS[p.JANELA_ABERTA].format(fecha=p._quando(afericao.ate))
     assert afericao.mensagem.endswith("ou publique como resultado preliminar.")
+
+
+def test_c08_como_carregado_o_definitivo_espera_o_recurso_admitido(cenario):
+    """O C08 nasce com um recurso admitido (V-8): o definitivo espera a decisão, e não uma data."""
+    from processo_seletivo.classificacao.application.selectors import ato_vigente
+    from processo_seletivo.divulgacao.domain import publicabilidade as p
+
+    m = cenario("C08")
+    andamento, nivel = _nivel(m, c.PRESIDENCIA)
+    marco, _, _ = _ordem_da_ppp(andamento)
+    ato = ato_vigente(edital=m.edital, marco_id=str(marco["id"]), lista_id=None)
+    afericao = p.aferir(
+        edital=m.edital, marco_id=str(marco["id"]), ato=ato, natureza="DEFINITIVA", lista_id=None
+    )
+    assert afericao.codigo == p.RECURSO_PENDENTE
+    [espera] = [i for i in nivel.itens if i.natureza == a.RESULTADO and i.grupo == pr.EM_ESPERA]
+    assert espera.ato == "Publicar o resultado definitivo" and espera.ate is None
+    assert OFERTA not in espera.razao
 
 
 def test_c08_a_previa_de_publicacao_mostra_a_mensagem_de_antes(cenario, client, seletor_ligado):

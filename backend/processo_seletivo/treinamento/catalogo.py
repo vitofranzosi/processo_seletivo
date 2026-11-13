@@ -20,6 +20,7 @@ from django.utils import timezone
 from processo_seletivo.treinamento import construcao as c
 from processo_seletivo.treinamento.construcao import (
     AVALIACAO_1,
+    AVALIACAO_2,
     ELABORACAO,
     ETAPA_DOCUMENTAL,
     ETAPA_PROVA,
@@ -27,6 +28,7 @@ from processo_seletivo.treinamento.construcao import (
     FORMALIZACAO,
     GESTAO,
     HOMOLOGACAO,
+    JULGAMENTO,
     PRESIDENCIA,
     PUBLICACAO,
     notas_de,
@@ -192,8 +194,26 @@ def _ate_o_resultado(m, notas, *, natureza="PRELIMINAR", janela="declarada", doc
     return inscricoes
 
 
+# Quem já recorreu no C08: o candidato 03, do empate residual com o 04. **Não o 07 nem o 08**: o
+# exercício do candidato é o do 08, eliminado na prova, e a mesma pessoa não recorre duas vezes do
+# mesmo resultado (FR-011 da `018`).
+RECORRENTE_DO_C08 = 3
+
+
 def montar_c08(m):
-    _ate_o_resultado(m, NOTAS_DA_CLASSIFICACAO[:8])
+    """O preliminar divulgado, e um recurso já interposto **e admitido** (V-8 do estudo de 12/11).
+
+    Sem ele, o Julgador abria o cenário com a fila vazia, e a frente dele — que a presidência
+    precisa enxergar em "quem faz o quê" — não tinha trabalho nenhum a mostrar.
+    """
+    inscricoes = _ate_o_resultado(m, NOTAS_DA_CLASSIFICACAO[:8])
+    recurso = m.recorrer(
+        inscricoes[RECORRENTE_DO_C08 - 1],
+        "Empatei em tudo com o candidato 04. Peço a revisão da nota de títulos: o certificado de "
+        "especialização que anexei não foi pontuado",
+        f"{RECORRENTE_DO_C08:02d}",
+    )
+    m.admitir_recurso(recurso, f"{RECORRENTE_DO_C08:02d}")
 
 
 def montar_c09(m):
@@ -256,6 +276,9 @@ def montar_c12(m):
     for convocacao, inscricao in zip(convocacoes, inscricoes[:3], strict=True):
         m.apresentar(convocacao, inscricao, c.DOC_DIPLOMA)
         m.apresentar(convocacao, inscricao, c.DOC_RESIDENCIA)
+    # **Um membro que não preside, alocado à conferência** (V-8 do estudo de 12/11): é a outra base
+    # de quem confere, e sem ela a conferência deste Edital só tinha a presidência para mostrar.
+    m.alocar_a_conferencia(AVALIACAO_2)
 
 
 def montar_c13(m):
@@ -518,17 +541,27 @@ CENARIOS = (
         objetivo="Interpor e julgar recursos contra o resultado preliminar.",
         tipo_de_selecao=_SELECAO,
         metodo="Notas (prova + títulos)",
-        estado_inicial="Resultado PRELIMINAR divulgado; janela recursal de 5 dias aberta.",
-        precondicoes=("Candidato 08 eliminado na prova, com motivo para recorrer.",),
+        estado_inicial=(
+            "Resultado PRELIMINAR divulgado; janela recursal de 5 dias aberta; o candidato 03 já "
+            "recorreu, e o recurso dele foi admitido."
+        ),
+        precondicoes=(
+            "Candidato 08 eliminado na prova, com motivo para recorrer.",
+            f"Recurso do candidato 03 admitido por {JULGAMENTO}, aguardando o mérito.",
+        ),
         papeis=(
             "Candidato (portal)",
             "Julgador de recursos (papel do seletor)",
             f"Presidência ({PRESIDENCIA})",
         ),
-        proxima_acao="Candidato: recorrer; Julgador: decidir; Presidência: cumprir a decisão.",
-        resultado_esperado="Recurso julgado e, se deferido, a ordem sucessora.",
+        proxima_acao=(
+            "Julgador: decidir o recurso do 03; candidato 08: recorrer; Julgador: admitir e "
+            "decidir; Presidência: cumprir a decisão."
+        ),
+        resultado_esperado="Recursos julgados e, se deferido algum, a ordem sucessora.",
         dependencias=("Correio do ambiente para o código de acesso do candidato.",),
         montar=montar_c08,
+        versao="2",
         validade_dias=5,
     ),
     Cenario(
@@ -587,14 +620,22 @@ CENARIOS = (
         metodo="Notas (prova + títulos)",
         estado_inicial=(
             "3 convocados com diploma e residência entregues e nada conferido; autodeclaração "
-            "'não se aplica' a quem é da ampla."
+            f"'não se aplica' a quem é da ampla; {AVALIACAO_2} alocada à conferência."
         ),
-        precondicoes=("Prazo da convocação de 30 dias.",),
-        papeis=(f"Presidência ({PRESIDENCIA})",),
-        proxima_acao="Presidência: conferir os itens, devolver um como pendente, desfechar.",
+        precondicoes=(
+            "Prazo da convocação de 30 dias.",
+            f"{AVALIACAO_2} é membro, não preside, e está alocada à conferência de todos os "
+            "Perfis: confere, e não desfecha.",
+        ),
+        papeis=(f"Presidência ({PRESIDENCIA})", f"Conferência ({AVALIACAO_2}, por alocação)"),
+        proxima_acao=(
+            f"{AVALIACAO_2}: conferir os itens de um convocado; Presidência: conferir os demais, "
+            "devolver um como pendente, desfechar."
+        ),
         resultado_esperado="Conferências registradas e desfecho de cada convocação.",
         dependencias=(),
         montar=montar_c12,
+        versao="2",
         validade_dias=30,
     ),
     Cenario(

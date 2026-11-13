@@ -39,6 +39,20 @@ com esse poder. Nenhum outro papel é concedido, e nada é revogado na carga. A 
 C16 e do C17 diz se a pessoa e o papel serão criados ou mantidos. Uma `treino.formalizacao`
 desativada ou suspensa não é reativada: o cenário falha com `pessoa_indisponivel`.
 
+### As outras frentes de trabalho (C08 e C12)
+
+Desde a segunda revisão de 12/11/2026, para que se veja quem cobre cada frente de um Edital, dois
+cenários trazem mais do que a presidência e a avaliação. Nenhum dos dois concede papel:
+
+- **C08**: a candidata 03 já recorreu do resultado preliminar, pelo mesmo comando do portal, e o
+  recurso foi **admitido** por `treino.julgamento` — que, como `treino.acessos`, só existe em
+  memória, com a capacidade do Julgador de recursos e nenhuma outra. O mérito fica para a equipe.
+- **C12**: `treino.avaliacao2`, membro que não preside, está **alocado à conferência** dos
+  documentos da convocação, pelo comando de quem gere a comissão.
+
+As duas receitas subiram para a **versão 2**. Uma rodada carregada antes aparece na verificação como
+gerada com a versão 1: continua válida, mas sem essas frentes; restaure o C08 e o C12 para tê-las.
+
 ## As três barreiras
 
 | Barreira | O que exige | Sem ela |

@@ -23,7 +23,7 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.treinamento import construcao as c
 from processo_seletivo.treinamento.models import CenarioDeTreinamento
 from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
-from tests.fixtures.treinamento import carregar, retomar
+from tests.fixtures.treinamento import carregar, indeferir_o_recurso_ja_admitido, retomar
 
 pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 
@@ -40,9 +40,11 @@ CORTES = ("Emitir o corte", "Emitir a geração sucessora do corte")
 def c08(treinamento):
     saida = carregar("C08", autoridade=str(AUTORIDADE_DA_SUITE))
     assert "C08  CRIADO" in saida, saida
-    return retomar(
-        CenarioDeTreinamento.objects.get(codigo="C08"), autoridade=str(AUTORIDADE_DA_SUITE)
-    )
+    m = retomar(CenarioDeTreinamento.objects.get(codigo="C08"), autoridade=str(AUTORIDADE_DA_SUITE))
+    # O C08 nasce com o recurso do 03 admitido (V-8), e ele seguraria o corte sem data. A cadeia
+    # aqui é a do reabilitado: o recurso de outra pessoa, decidido, fica fora do caminho.
+    indeferir_o_recurso_ja_admitido(m)
+    return m
 
 
 # --- os atos, pelos comandos que as telas chamam ------------------------------------------------
