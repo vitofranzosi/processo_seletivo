@@ -34,9 +34,10 @@ A contagem é **uma só**, do total encontrado, e não um número por grupo (FR-
 **Sem resultado, uma frase só, com caminho** (072, FR-1613). Eram duas — "Nenhuma seleção encontrada" e
 logo abaixo "Nenhuma seleção publicada corresponde a esses filtros" —, e nenhuma sugeria para onde ir.
 {% endcomment %}
-<p class="contagem" role="status">
+<p class="contagem" id="resultado" role="status">
   {% if total_encontrado %}
   <strong>{{ total_encontrado }}</strong> seleç{{ total_encontrado|pluralize:"ão,ões" }} encontrada{{ total_encontrado|pluralize:"s" }}{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
+  {% if pagina.varias %}Mostrando {{ pagina.intervalo }}.{% endif %}
   {% else %}
   Nenhuma seleção encontrada{% if consulta.busca %} para “{{ consulta.busca }}”{% endif %}.
   {% if abertas %}<a href="{% url 'portal:vitrine' %}?situacao=aberto">Ver as que estão com inscrições abertas</a> ou{% endif %}
@@ -53,6 +54,7 @@ um catálogo que não tem aquilo hoje.
 <ul class="selecoes">
   {% for selecao in encontradas %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
+{% include "portal/_paginacao.html" with pagina=pagina rotulo="Páginas do resultado" %}
 {% endif %}
 
 {% else %}
@@ -66,11 +68,22 @@ o que ainda vai abrir tinha de ler o que já fechou para descobrir.
 
 Grupo vazio não aparece: um título sobre nenhum cartão anuncia uma categoria que o catálogo não tem.
 {% endcomment %}
+{% comment %}
+**As encerradas são histórico, e histórico se folheia.** Só esse grupo tem páginas: as abertas e as
+próximas são o motivo da visita e ficam inteiras em toda página. A frase diz o tamanho do histórico
+e qual parte se vê; a mais recentemente encerrada vem primeiro.
+{% endcomment %}
 {% for grupo in grupos %}
 <h2 class="secao-vitrine">{{ grupo.titulo }}</h2>
+{% if grupo.pagina.varias %}
+{% comment %}A âncora das páginas mora na frase, que só existe quando há páginas; a margem de rolagem
+da folha deixa o título do grupo à vista acima dela.{% endcomment %}
+<p class="mostrando" id="encerradas">Mostrando {{ grupo.pagina.intervalo }} de {{ grupo.pagina.total }} seleções, da mais recente para a mais antiga.</p>
+{% endif %}
 <ul class="selecoes">
   {% for selecao in grupo.selecoes %}{% include "portal/_cartao_da_selecao.html" %}{% endfor %}
 </ul>
+{% if grupo.pagina %}{% include "portal/_paginacao.html" with pagina=grupo.pagina rotulo="Páginas das inscrições encerradas" %}{% endif %}
 {% endfor %}
 {% endif %}
 

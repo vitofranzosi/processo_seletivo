@@ -1,0 +1,19 @@
+{% comment %}
+A navegação entre as páginas de uma lista da vitrine.
+
+**Links, e não botões com script**: cada página tem endereço próprio, que se copia, se guarda e
+funciona com o *voltar* do navegador — a mesma razão de a consulta morar no endereço (024, FR-143).
+Os endereços vêm prontos de `leitura.Pagina`, já com a busca, os filtros e a ordenação: avançar de
+página não pode desfazer a pergunta que trouxe a pessoa até aqui. E levam a âncora da lista, para a
+página seguinte abrir na lista, e não no topo.
+
+O molde é o da lista de Processos da gestão: anterior, "Página N de M", próxima. Só com mais de
+uma página — "Página 1 de 1" é ruído.
+{% endcomment %}
+{% if pagina.varias %}
+<nav class="paginacao" aria-label="{{ rotulo }}">
+  {% if pagina.anterior %}<a href="{% url 'portal:vitrine' %}{{ pagina.anterior }}" rel="prev">Anterior</a>{% endif %}
+  <span class="pagina-atual" aria-current="page">Página {{ pagina.numero }} de {{ pagina.total_de_paginas }}</span>
+  {% if pagina.seguinte %}<a href="{% url 'portal:vitrine' %}{{ pagina.seguinte }}" rel="next">Próxima</a>{% endif %}
+</nav>
+{% endif %}

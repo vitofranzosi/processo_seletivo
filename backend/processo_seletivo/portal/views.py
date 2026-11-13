@@ -372,12 +372,7 @@ def vitrine(request):
         )
         for versao in versoes
     ]
-    selecoes.sort(
-        key=lambda item: (
-            leitura.ORDEM_DAS_SITUACOES.get(item["estado"], len(leitura.GRUPOS)),
-            item["periodo"].fim or item["periodo"].inicio or agora,
-        )
-    )
+    selecoes = leitura.ordenar_por_urgencia(selecoes, agora)
     # **A consulta opera sobre o que a página já carregou** (024, D-003): busca, filtro e ordenação
     # não acrescentam consulta nenhuma ao banco. É adequado à ordem de grandeza de dezenas de
     # seleções simultâneas — e o sinal que obrigaria a revisar está nomeado na `D-003`, que é
@@ -385,8 +380,30 @@ def vitrine(request):
     opcoes = leitura.opcoes_da_consulta(selecoes)
     consulta = leitura.consulta_da_vitrine(request.GET, opcoes)
     encontradas = leitura.filtrar(selecoes, consulta)
-    for selecao in encontradas:
+    # **O histórico em páginas, e as oportunidades inteiras.** Com dezenas de Editais encerrados, a
+    # página era quase toda histórico: quem chegava atrás de uma seleção aberta rolava seis telas
+    # de cartões que não recebem inscrição. Folheando, só o grupo das encerradas é repartido — as
+    # abertas e as próximas são o motivo da página, e escondê-las atrás de "Próxima" seria trocar
+    # um defeito pelo oposto. Com consulta ativa a lista é uma só (FR-146a), e é ela que se reparte:
+    # reparti-la por situação desfaria a ordem que a pessoa escolheu.
+    #
+    # O recorte é feito aqui, sobre o que a leitura já carregou e ordenou (024, D-003): a situação
+    # de cada seleção sai do conteúdo publicado e dos atos, e não de uma coluna que o banco pudesse
+    # ordenar. O que deixa de viajar é o HTML dos cartões que ninguém pediu.
+    grupos = [] if consulta["ativa"] else leitura.agrupar_por_situacao(encontradas)
+    pagina = None
+    if consulta["ativa"]:
+        pagina = leitura.paginar(encontradas, consulta, "resultado")
+    for grupo in grupos:
+        if grupo["estado"] == leitura.ENCERRADO:
+            pagina = leitura.paginar(grupo["selecoes"], consulta, "encerradas")
+            grupo["selecoes"] = pagina.itens
+            grupo["pagina"] = pagina
+    exibidas = pagina.itens if consulta["ativa"] else [s for g in grupos for s in g["selecoes"]]
+    for selecao in exibidas:
         _recortar_para_o_cartao(selecao, consulta["busca"])
+    if pagina is not None:
+        consulta = leitura.na_pagina(consulta, pagina.numero)
     return render(
         request,
         "portal/vitrine.html",
@@ -399,8 +416,9 @@ def vitrine(request):
             # A unidade entra no título quando o catálogo tem uma só (FR-1611); com várias, o título
             # não escolhe uma delas.
             "unidade_do_catalogo": (opcoes["unidades"][0] if len(opcoes["unidades"]) == 1 else ""),
-            "encontradas": encontradas,
+            "encontradas": pagina.itens if consulta["ativa"] else encontradas,
             "total_encontrado": len(encontradas),
+            "pagina": pagina if consulta["ativa"] else None,
             "consulta": consulta,
             "opcoes": opcoes,
             # **Quatro grupos, e não dois** (024, FR-145, FR-146). "Outras" era literalmente tudo o
@@ -410,7 +428,7 @@ def vitrine(request):
             #
             # Com consulta ativa não há grupos: quatro cabeçalhos sobre um cartão cada é ruído, e a
             # marca de cada cartão é o que mantém as quatro distinguíveis (FR-146a).
-            "grupos": [] if consulta["ativa"] else leitura.agrupar_por_situacao(encontradas),
+            "grupos": grupos,
         },
     )
 

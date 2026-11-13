@@ -643,6 +643,16 @@
       ],
       "port": 8154,
       "url": "http://localhost:8154"
+    },
+    {
+      "name": "vitrine-paginada",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_vitrine_pag DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8162"
+      ],
+      "port": 8162,
+      "url": "http://localhost:8162"
     }
   ]
 }

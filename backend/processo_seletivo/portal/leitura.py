@@ -14,6 +14,7 @@ Aqui não há regra de domínio nova. O que existe é leitura: conteúdo publica
 tela sai. Nada neste módulo grava, e nada aqui sabe quem está lendo.
 """
 
+from dataclasses import dataclass
 from urllib.parse import urlencode
 
 from django.utils.dateparse import parse_datetime
@@ -271,10 +272,10 @@ def estado_na_vitrine(periodo, desfecho):
 # A consulta da vitrine (024, FR-138 a FR-146a)
 # ---------------------------------------------------------------------------
 
-# Os cinco parâmetros, e nenhum a mais. A lista é fechada porque ela é também o que atravessa para
-# o caminho de volta na página da seleção: repassar texto arbitrário para dentro de um endereço é
-# como se abre redirecionamento (T-007).
-PARAMETROS = ("busca", "unidade", "situacao", "perfil", "ordem")
+# Os cinco parâmetros da consulta e o da página, e nenhum a mais. A lista é fechada porque ela é
+# também o que atravessa para o caminho de volta na página da seleção: repassar texto arbitrário
+# para dentro de um endereço é como se abre redirecionamento (T-007).
+PARAMETROS = ("busca", "unidade", "situacao", "perfil", "ordem", "pagina")
 
 ORDEM_PADRAO = "prazo"
 ORDENS = (ORDEM_PADRAO, "recentes")
@@ -315,6 +316,9 @@ def consulta_da_vitrine(parametros, opcoes):
         "situacao": situacao if situacao in ORDEM_DAS_SITUACOES else "",
         "perfil": perfil if perfil in opcoes["perfis"] else "",
         "ordem": ordem if ordem in ORDENS else ORDEM_PADRAO,
+        # A página **não** é filtro: não entra em `ativa`, e o formulário não a reenvia — quem
+        # muda a busca ou um filtro recomeça da primeira página do novo conjunto.
+        "pagina": pagina_pedida(parametros.get("pagina")),
     }
     # "Há consulta ativa" **não** inclui a ordenação: ordenar não reduz o catálogo, e tratá-la como
     # filtro faria a lista perder os grupos por um gesto que não filtrou nada (FR-146, FR-146a).
@@ -328,14 +332,183 @@ def consulta_da_vitrine(parametros, opcoes):
     # A ordem padrão **não** entra no endereço. Sem esta linha, uma vitrine sem consulta nenhuma
     # punha `?ordem=prazo` no link de todo cartão: o endereço deixava de ser canônico, e quem
     # copiasse compartilharia um parâmetro que não escolheu.
-    consulta["querystring"] = urlencode(
-        {
-            chave: consulta[chave]
-            for chave in PARAMETROS
-            if consulta[chave] and not (chave == "ordem" and consulta[chave] == ORDEM_PADRAO)
-        }
-    )
+    consulta["querystring"] = _querystring(consulta, consulta["pagina"])
     return consulta
+
+
+def na_pagina(consulta, numero):
+    """A mesma consulta, noutra página — para o endereço que os cartões levam dizer a página
+    **mostrada**: a pedida pode ter passado da última, e a volta da seleção cairia noutro lugar."""
+    return {**consulta, "pagina": numero, "querystring": _querystring(consulta, numero)}
+
+
+def _querystring(consulta, pagina):
+    """A consulta como endereço, com a página pedida — a primeira não se escreve, como a ordem
+    padrão: o endereço sem consulta continua sendo o canônico."""
+    pares = {
+        chave: consulta[chave]
+        for chave in PARAMETROS
+        if chave != "pagina"
+        and consulta[chave]
+        and not (chave == "ordem" and consulta[chave] == ORDEM_PADRAO)
+    }
+    if pagina > 1:
+        pares["pagina"] = pagina
+    return urlencode(pares)
+
+
+# ---------------------------------------------------------------------------
+# As páginas do histórico
+# ---------------------------------------------------------------------------
+
+# Par, porque a grade tem duas colunas: página ímpar terminaria com um cartão sozinho na linha.
+POR_PAGINA = 10
+
+# Acima disso o número é ruído de endereço colado, e não página que alguém pediu; o corte evita
+# converter um inteiro de milhares de dígitos só para descobrir que ele passa da última.
+_DIGITOS_DA_PAGINA = 6
+
+
+def pagina_pedida(valor):
+    """Inteiro positivo, ou 1. Texto, zero e negativo levam à primeira — nunca a um erro, pela
+    mesma régua de `consulta_da_vitrine`: endereço malformado não pode ser pior que endereço sem
+    consulta."""
+    texto = str(valor or "").strip()
+    if not texto.isascii() or not texto.isdigit() or len(texto) > _DIGITOS_DA_PAGINA:
+        return 1
+    return max(int(texto), 1)
+
+
+@dataclass(frozen=True)
+class Pagina:
+    """O recorte de uma lista que se mostra de cada vez, e os endereços das vizinhas.
+
+    `ancora` é o `id` do que antecede a lista: sem ela, trocar de página devolveria a pessoa ao
+    topo, acima do formulário e das seleções abertas, e ela teria de rolar tudo de novo para
+    continuar de onde estava.
+    """
+
+    itens: list
+    numero: int
+    total_de_paginas: int
+    total: int
+    consulta: dict
+    ancora: str
+
+    @property
+    def varias(self):
+        return self.total_de_paginas > 1
+
+    @property
+    def primeiro(self):
+        return (self.numero - 1) * POR_PAGINA + 1 if self.total else 0
+
+    @property
+    def ultimo(self):
+        return min(self.numero * POR_PAGINA, self.total)
+
+    @property
+    def intervalo(self):
+        """ "11–20", ou só "21" quando a página tem um cartão: "21–21" se lê como defeito."""
+        return (
+            str(self.primeiro) if self.primeiro == self.ultimo else f"{self.primeiro}–{self.ultimo}"
+        )
+
+    @property
+    def anterior(self):
+        return self._endereco(self.numero - 1) if self.numero > 1 else ""
+
+    @property
+    def seguinte(self):
+        return self._endereco(self.numero + 1) if self.numero < self.total_de_paginas else ""
+
+    def _endereco(self, numero):
+        # Sem consulta, só a âncora — e por isso o template escreve o endereço da vitrine antes:
+        # `href="#ancora"` sozinho conservaria a querystring da página atual, e a "Anterior" da
+        # segunda página voltaria à segunda.
+        consulta = _querystring(self.consulta, numero)
+        return f"{'?' if consulta else ''}{consulta}#{self.ancora}"
+
+
+def paginar(itens, consulta, ancora):
+    """A página pedida — ou a última, quando a pedida passa dela.
+
+    A última, e não uma lista vazia: o endereço da página 5 continua existindo depois que o
+    catálogo encolheu para quatro, e quem o guardou merece ver seleções, não um vazio.
+
+    **A ordem vem pronta de quem chama.** Paginar antes de ordenar repartiria o histórico em
+    páginas que não se sucedem.
+    """
+    total = len(itens)
+    total_de_paginas = max(1, -(-total // POR_PAGINA))
+    numero = min(consulta["pagina"], total_de_paginas)
+    inicio = (numero - 1) * POR_PAGINA
+    return Pagina(
+        itens=itens[inicio : inicio + POR_PAGINA],
+        numero=numero,
+        total_de_paginas=total_de_paginas,
+        total=total,
+        consulta=consulta,
+        ancora=ancora,
+    )
+
+
+# ---------------------------------------------------------------------------
+# A ordem da vitrine
+# ---------------------------------------------------------------------------
+
+
+def encerrou_em(selecao, agora):
+    """Quando a seleção deixou de receber inscrições — o instante que ordena o histórico.
+
+    É o **mesmo fato que a pôs no grupo**, e por isso tem três origens (`estado_na_vitrine`): o fim
+    do período que já passou; o desfecho do próprio Edital, quando ele veio antes desse fim; e,
+    para o período declarado cancelado — que não "encerrou em" data nenhuma —, a vigência do
+    conteúdo que o declara. Nunca a criação nem a publicação do Edital: um Edital publicado há um
+    ano e fechado ontem é o mais recente do histórico.
+
+    Sem nenhum deles, a vigência do conteúdo: é o que há, e mantém a ordem definida.
+    """
+    periodo = selecao["periodo"]
+    desfecho = selecao.get("desfecho")
+    instantes = []
+    if periodo.fim is not None and periodo.fim <= agora and not periodo.cancelado:
+        instantes.append(periodo.fim)
+    if desfecho is not None and desfecho.do_edital and desfecho.em is not None:
+        instantes.append(desfecho.em)
+    return min(instantes) if instantes else selecao["vigente_desde"]
+
+
+def ordenar_por_urgencia(selecoes, agora):
+    """A ordem padrão: as quatro situações, e dentro de cada uma o que importa primeiro a quem lê.
+
+    Aberta e futura, pelo prazo **mais próximo** — é o que se pode perder. Encerrada, pela **mais
+    recente**: quem volta ao histórico procura o resultado da seleção que acabou de fechar, e a
+    ordem crescente punha na frente a mais antiga do catálogo, que é a que menos gente procura.
+
+    **O desempate é total** — ano, número e identificador —, porque a lista é repartida em
+    páginas: com empate indefinido, a mesma seleção poderia aparecer em duas e outra em nenhuma.
+    Vários Editais fechando no mesmo instante é o caso comum, e não o raro: um Processo costuma
+    publicar os seus com um prazo só. Entre as encerradas o desempate também desce — o Edital de
+    número maior é o mais novo dos que fecharam juntos.
+    """
+
+    def situacao(selecao):
+        return ORDEM_DAS_SITUACOES.get(selecao["estado"], len(GRUPOS))
+
+    def desempate(selecao):
+        return (str(selecao["ano"]), str(selecao["numero"]), str(selecao["edital_id"]))
+
+    def prazo(selecao):
+        periodo = selecao["periodo"]
+        return ((periodo.fim or periodo.inicio or agora), desempate(selecao))
+
+    encerradas = [selecao for selecao in selecoes if selecao["estado"] == ENCERRADO]
+    demais = [selecao for selecao in selecoes if selecao["estado"] != ENCERRADO]
+    encerradas.sort(key=lambda s: (encerrou_em(s, agora), desempate(s)), reverse=True)
+    demais.sort(key=prazo)
+    # A ordenação é estável: repartir por situação conserva a ordem que cada parte acabou de ganhar.
+    return sorted(demais + encerradas, key=situacao)
 
 
 def filtrar(selecoes, consulta):
@@ -358,7 +531,9 @@ def filtrar(selecoes, consulta):
         # Pela vigência **do conteúdo exibido**, e não pelo instante do ato que o produziu: uma
         # Retificação publicada hoje e vigente semana que vem não muda a posição hoje, porque o
         # cartão ainda mostra o conteúdo anterior (FR-140, T-006).
-        resultado.sort(key=lambda s: s["vigente_desde"], reverse=True)
+        # O identificador desempata: sem ele, duas vigências iguais trocariam de lugar entre uma
+        # página e a seguinte.
+        resultado.sort(key=lambda s: (s["vigente_desde"], str(s["edital_id"])), reverse=True)
     return resultado
 
 
@@ -384,7 +559,7 @@ def _texto_do_cartao(selecao):
 def caminho_de_volta(parametros, destino):
     """O endereço da vitrine com a consulta que trouxe a pessoa até aqui (024, FR-144, T-007).
 
-    **Só os cinco parâmetros declarados atravessam, e só com valor de forma conhecida.** A página
+    **Só os parâmetros declarados atravessam, e só com valor de forma conhecida.** A página
     da seleção não interpreta a consulta — ela só a devolve —, e por isso o que ela repassa precisa
     ser conferido: valor arbitrário ecoado para dentro de um endereço é como se abre
     redirecionamento. O portal já trata disso em `_destino_seguro`, e o critério aqui é mais
@@ -402,15 +577,19 @@ def caminho_de_volta(parametros, destino):
     resultado nunca sai deste host.
     """
     aceitos = {"situacao": ORDEM_DAS_SITUACOES, "ordem": ORDENS}
-    consulta = urlencode(
-        {
-            chave: valor
-            for chave in PARAMETROS
-            if (valor := (parametros.get(chave) or "").strip()[:LIMITE_DA_BUSCA])
-            and (chave not in aceitos or valor in aceitos[chave])
-            and not (chave == "ordem" and valor == ORDEM_PADRAO)
-        }
-    )
+    pares = {
+        chave: valor
+        for chave in PARAMETROS
+        if chave != "pagina"
+        and (valor := (parametros.get(chave) or "").strip()[:LIMITE_DA_BUSCA])
+        and (chave not in aceitos or valor in aceitos[chave])
+        and not (chave == "ordem" and valor == ORDEM_PADRAO)
+    }
+    # A página volta junto: quem abriu uma seleção da terceira página do histórico volta à
+    # terceira. Só como inteiro — é o único valor que ela admite.
+    if (pagina := pagina_pedida(parametros.get("pagina"))) > 1:
+        pares["pagina"] = pagina
+    consulta = urlencode(pares)
     return f"{destino}?{consulta}" if consulta else destino
 
 
