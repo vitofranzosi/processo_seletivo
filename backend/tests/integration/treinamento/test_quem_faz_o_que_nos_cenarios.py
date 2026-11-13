@@ -75,8 +75,9 @@ def test_c12_o_membro_alocado_ve_conferir_com_a_marca_alocacao(cenario, client):
 
 
 def test_c12_dois_membros_de_subject_com_o_mesmo_final_tem_alocacoes_distintas(cenario):
-    """A chave levava só o último caractere do subject, e a segunda alocação de quem também
-    termina em "2" voltava a primeira, sem erro (revisão do #513)."""
+    """A chave levava só o último caractere do subject: a segunda alocação de quem também
+    termina em "2" reusava a chave com outro membro, e era recusada como `idempotency_conflict`
+    (revisão do #513)."""
     from processo_seletivo.comissoes.application.comissao import adicionar_membro
 
     m = cenario("C12")
@@ -94,6 +95,34 @@ def test_c12_dois_membros_de_subject_com_o_mesmo_final_tem_alocacoes_distintas(c
     assert alocacao.membro.identity_subject == outro
     ativas = AlocacaoAConferencia.objects.filter(edital=m.edital, ativo=True)
     assert set(ativas.values_list("membro__identity_subject", flat=True)) == {c.AVALIACAO_2, outro}
+
+
+def test_c04_dois_avaliadores_de_subject_com_o_mesmo_final_sao_alocados_as_mesmas_etapas(
+    cenario, monkeypatch
+):
+    """O mesmo defeito, na alocação à Etapa de `constituir_comissao` (revisão do #513).
+
+    A receita aloca sempre os dois avaliadores da equipe, e eles terminam em "1" e "2": para
+    provocar a colisão, o segundo passa a terminar em "1" também. Com a chave antiga, a alocação
+    dele reusava a chave do primeiro com outro membro, e a carga do C04 era recusada inteira
+    (`idempotency_conflict`) — conferido revertendo a linha.
+    """
+    from processo_seletivo.comissoes.models import AlocacaoEtapa
+
+    outro = "treino.revisao1"
+    monkeypatch.setattr(c, "AVALIACAO_2", outro)
+    m = cenario("C04")
+
+    etapas = {m.id(etapa) for etapa in (c.ETAPA_PROVA, c.ETAPA_TITULOS, c.ETAPA_DOCUMENTAL)}
+    ativas = AlocacaoEtapa.objects.filter(edital=m.edital, ativo=True)
+    for subject in (c.AVALIACAO_1, outro):
+        alocadas = {
+            str(etapa)
+            for etapa in ativas.filter(membro__identity_subject=subject).values_list(
+                "etapa_id", flat=True
+            )
+        }
+        assert alocadas == {str(etapa) for etapa in etapas}, subject
 
 
 def test_c12_a_presidencia_continua_conferindo_pela_presidencia(cenario, client):

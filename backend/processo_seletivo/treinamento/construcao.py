@@ -671,8 +671,8 @@ class Montagem:
                     edital_id=self.edital.id,
                     etapa_id=self.id(etapa),
                     # O subject inteiro, pela razão da alocação à conferência: com só o último
-                    # caractere, um avaliador novo terminado em "1" ou "2" herdaria a chave de
-                    # quem já está aqui, e a alocação dele voltaria a do outro.
+                    # caractere, um avaliador novo terminado em "1" ou "2" reusaria a chave de
+                    # quem já está aqui, com outro membro — e a carga inteira seria recusada.
                     idempotency_key=self.chave(f"alocar-{etapa[-2:]}-{subject}"),
                     correlation_id=self.correlacao,
                 )
@@ -691,7 +691,8 @@ class Montagem:
             membro_id=self.membros[subject].id,
             edital_id=self.edital.id,
             # **O subject inteiro**: com só o último caractere, `treino.avaliacao2` e qualquer outro
-            # terminado em "2" partilhavam a chave, e a segunda alocação voltava a primeira.
+            # terminado em "2" partilhavam a chave com membros diferentes, e a segunda alocação
+            # era recusada como `idempotency_conflict` — desfazendo o cenário inteiro.
             idempotency_key=self.chave(f"conferencia-{subject}"),
             correlation_id=self.correlacao,
         )
