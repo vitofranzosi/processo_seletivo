@@ -297,9 +297,8 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
      da `069`): o Edital publicado com a 1 ou a 2 grava o número e se recompõe como foi. A Revisão,
      o seletor da gestão e o assistente dizem o momento como a redação vigente.
    - **Ficaram, por decisão do usuário**: o nome do ato *"Publicação de convocados"* (`149`).
-   - **Ficaram, porque exigem migration** — o que o pedido inicial pediu para evitar — e por isso
-     voltam ao usuário: a coluna *"Candidato"* do **comprovante de inscrição** e da **relação de
-     habilitados**. O comprovante não é gravado: é regenerado a cada download com bytes
+   - **Ficaram, por decisão do usuário (13/11), porque exigiriam migration**: a coluna
+     *"Candidato"* do **comprovante de inscrição** e da **relação de habilitados**. O comprovante não é gravado: é regenerado a cada download com bytes
      determinísticos, e a página publica o SHA-256 dele; trocar o rótulo para todos faria o
      comprovante já baixado deixar de conferir. A relação de habilitados não tem conteúdo em JSON
      onde gravar o rótulo. Nos dois, "só atos futuros" pede uma coluna que diga o vocabulário de
