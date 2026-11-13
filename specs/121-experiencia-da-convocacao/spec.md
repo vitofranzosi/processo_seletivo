@@ -98,7 +98,7 @@ arquivos das specs revistas neste mesmo PR (D-001).
 
 ### Session 2026-11-05 (parecer do usuário sobre o estudo)
 
-- Q: O título da página? → A: **"Você foi convocado!"**, sem afirmar matrícula, contratação, bolsa
+- Q: O título da página? → A: **"Você foi convocado!"** *(revisto em 2026-11-13 para *"Você tem uma convocação!"*, sem masculino genérico — `doc/auditoria-dos-emails-2026-11-13.md`)*, sem afirmar matrícula, contratação, bolsa
   concedida ou vaga garantida, e com o resto da interface coerente com ele (1ª decisão do estudo).
   *Revista pela `154` em 2026-11-11, por decisão do usuário, que vigora com a implementação dela:*
   a resposta vale com providência pendente do candidato; sem ela, o título é **"Acompanhe sua
@@ -290,10 +290,10 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   `063`). Na mensagem, o e-mail não existe ainda: ele é o que inicia o prazo. Na publicação, o cenário
   só existe na correção de convocação já comunicada: antes do registro da primeira publicação, a
   convocação não aparece no portal (FR-3981 da `125`). *Acréscimo da `154`, em 2026-11-11, que
-  vigora com a implementação dela:* o título é *"Você foi convocado!"* com providência pendente do
+  vigora com a implementação dela:* o título é *"Você tem uma convocação!"* *(revisto em 2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`: era *"Você foi convocado!"*, masculino genérico)* com providência pendente do
   candidato, e *"Acompanhe sua convocação"* sem ela (FR-6202 da `154`).
 - **Chamada que não pede documento pelo portal** *(acrescido pela `154` em 2026-11-11, que vigora
-  com a implementação dela)*. Só com o Requerimento de Matrícula: *"Você foi convocado!"* e a
+  com a implementação dela)*. Só com o Requerimento de Matrícula: *"Você tem uma convocação!"* e a
   consequência até o envio; enviado, *"Acompanhe sua convocação"*, com o prazo e sem a consequência.
   Sem nada pedido pelo portal: como hoje até o desfecho, com *"Siga as instruções do Edital para esta
   convocação."* (FR-6201 da `154`).
@@ -357,7 +357,7 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
   | Estado | Título |
   |---|---|
-  | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **com** providência pendente do candidato (FR-6200 e FR-6201 da `154`) | *"Você foi convocado!"* |
+  | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **com** providência pendente do candidato (FR-6200 e FR-6201 da `154`) | *"Você tem uma convocação!"* |
   | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **sem** providência pendente do candidato | *"Acompanhe sua convocação"* |
   | chamada *encerrada pelo prazo* | *"O prazo desta convocação terminou"* |
   | chamada *encerrada pelo Processo* | *"O envio pelo portal está encerrado"* |
@@ -630,13 +630,18 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
   A versão exata do modelo usado em cada envio MUST ficar **gravada na própria comunicação emitida**,
   na mesma linha e na mesma transação que registra o resultado:
   - o **nome do modelo**, *inicial* ou *correção*;
-  - o **resumo SHA-256** do conteúdo dos dois arquivos, HTML e texto, **efetivamente usados na
+  - o **resumo SHA-256** do conteúdo dos dois arquivos, HTML e texto, **e do mapa de estilos** que
+    dá forma ao HTML (`shared/templates/correio/estilos.json`), **efetivamente usados na
     renderização** daquele envio, e não lidos de novo do disco depois, numa composição
-    **determinística** dos dois: a mesma ordem, os mesmos rótulos e o mesmo separador, de modo que o
-    mesmo par de arquivos dê sempre o mesmo resumo.
+    **determinística** dos três: a mesma ordem, os mesmos rótulos e o mesmo separador, de modo que
+    as mesmas três fontes deem sempre o mesmo resumo. *(O mapa de estilos entrou em 2026-11-13, na
+    auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`: desde que o HTML ganhou estilo
+    em linha, mudar uma cor mudava a mensagem sem mudar o resumo. Até então, o resumo era só dos dois
+    arquivos; os valores gravados antes conservam o rótulo `sha256` e se conferem pela regra
+    anterior, preservada na R-009.)*
 
-  Os arquivos de modelo MUST ser versionados no repositório, nunca gerados nem ignorados, de modo que
-  o conteúdo de cada versão gravada continue **recuperável pelo Git**.
+  Os arquivos de modelo **e o mapa de estilos** MUST ser versionados no repositório, nunca gerados
+  nem ignorados, de modo que o conteúdo de cada versão gravada continue **recuperável pelo Git**.
 
   A identificação MUST ser gravada também na tentativa que **falhou**, porque ela diz qual texto se
   tentou enviar. A comunicação por publicação não tem modelo, e fica sem identificação. As comunicações

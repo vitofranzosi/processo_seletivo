@@ -73,7 +73,8 @@ Lendo como um candidato com pouca familiaridade digital, no celular:
 ## C. O padrão visual
 
 Implementado em `backend/processo_seletivo/shared/correio.py` e
-`backend/processo_seletivo/shared/templates/correio/`. Pequeno de propósito: **uma moldura, um botão,
+`backend/processo_seletivo/shared/templates/correio/`, onde fica também o mapa de estilos
+(`estilos.json`). Pequeno de propósito: **uma moldura, um botão,
 seis estados e ~35 classes**.
 
 **Moldura.** Faixa verde-escura de 6 px no topo; cabeçalho em texto — "Instituto Federal do Espírito
@@ -131,8 +132,10 @@ linha. Em vez de abrir exceção na guarda, os modelos de mensagem escrevem `cla
 o e-mail, da regra "classe no template exige regra na folha".
 
 **A convocação não herda a moldura**, e repete a estrutura dela: o resumo gravado em cada comunicação
-(FR-3889, `identificacao_do_modelo`) é o dos dois arquivos dela, e uma moldura herdada mudaria palavras
-que saíram sem mudar o resumo. O mapa de estilos fica fora do resumo — é apresentação, não texto.
+(FR-3889, `identificacao_do_modelo`) é o dos dois arquivos dela e do mapa de estilos, e uma moldura
+herdada mudaria palavras que saíram sem mudar o resumo. **O mapa de estilos é um arquivo versionado**
+(`shared/templates/correio/estilos.json`), e não um dicionário em Python, justamente para entrar no
+resumo e se reconstituir pelo Git (achado 6).
 
 **Os avisos 066/134 ganham a forma HTML na hora do envio**, a partir do texto congelado e só dele:
 parágrafos, listas (`- `), o endereço final de parágrafo que leva a uma página conhecida do portal vira
@@ -245,17 +248,54 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
 3. ~~**"quem o tiver poderá entrar na conta dele"**~~ **Corrigido em 13/11**, a pedido do usuário:
    *"quem o tiver poderá usar este endereço para entrar na própria conta"*, num parágrafo por linha.
    O teste que prendia a forma antiga prende a nova.
-4. **O assunto da pendência é singular com vários documentos** ("há documento … para revisar"); o
-   corpo concorda o número. Texto da 3ª decisão de 08/11.
+4. ~~**O assunto da pendência é singular com vários documentos**~~ **Corrigido em 13/11**, a pedido
+   do usuário: com dois ou mais, *"há documentos da sua convocação para revisar"*, o número que o corpo
+   já concordava. A FR-4613 da `134` fixava o assunto literalmente e foi revista, com a redação
+   anterior preservada. Vale para os avisos gravados daqui em diante: o texto congelado dos já
+   gravados não se reescreve.
 5. ~~**"Você foi convocado"** em masculino genérico~~ **Corrigido em 13/11**, a pedido do usuário: o
    título diz *"Você tem uma convocação no Edital ‹NN/AAAA›"*, e o rodapé, *"porque tem uma
    convocação num processo seletivo"*. A FR-3883 da `121` citava o título literalmente e foi revista,
    com a redação anterior anotada ao lado. `test_a_mensagem_nao_presume_o_genero_de_quem_le` varre os
    treze e-mails da composição.
-7. **A página da convocação no portal diz "Você foi convocado!"** — título de tela, não de e-mail, e
-   por isso fora desta correção. Está fixado pelo quadro de títulos da `121` (linhas 101, 157 e
-   293–360) e por uma dezena de testes do portal. A correção pede a mesma revisão de spec, numa
-   mudança à parte.
-6. **O mapa de estilos não entra no resumo da FR-3889.** Mudar uma cor muda o HTML que sai sem mudar o
-   resumo gravado. Hoje é aceitável — estilo não é texto —, mas se a auditoria precisar reconstruir o
-   HTML exato, o mapa precisa entrar no resumo, e isso muda o contrato da `121`.
+7. ~~**A página da convocação no portal diz "Você foi convocado!"**~~ **Corrigido em 13/11**, a
+   pedido do usuário: o título da chamada aberta com providência pendente é *"Você tem uma
+   convocação!"* (`portal/obrigacoes.py`, `TITULO_ABERTA`), como o e-mail. A norma foi revista onde
+   ela mora — a FR-6202 e a tabela de títulos da `154`, a tabela e os acréscimos da `121`, o cenário K
+   da `125` —, com a redação anterior anotada; os cenários narrados e os registros históricos das três
+   specs continuam citando o título antigo, que era o vigente quando foram escritos.
+8. ~~**Ainda há masculino genérico em três frases do portal**~~ **Corrigido em 13/11**, a pedido do
+   usuário, junto com outras quatro frases dirigidas ao candidato que a varredura achou:
+
+   | Onde | Antes | Agora |
+   |---|---|---|
+   | `portal/selecao.html` | Se for convocado, a convocação pedirá também: | A convocação, se houver, pedirá também: |
+   | `portal/selecao.html` | Se concorrer em ‹X› e for convocado, a convocação pedirá também: | Para quem concorre em ‹X›, a convocação, se houver, pedirá também: |
+   | `portal/requerimento.html` | Você foi convocado e pode conferir o que enviou. | Você tem uma convocação e pode conferir o que enviou. |
+   | `portal/_convocacoes_da_selecao.html` | Foi convocado? … Estar convocado não é… | Tem uma convocação? … Ter uma convocação não é… |
+   | `requerimentos/application/preencher.py` | …ficará disponível quando você for convocado. | …ficará disponível na sua convocação. |
+   | `requerimentos/application/selectors.py` | …pede o Requerimento de Matrícula quando você for convocado. | …pede o Requerimento de Matrícula na convocação. |
+   | idem | Se algo mudar e você for convocado, esta página… | Se algo mudar e houver convocação, esta página… |
+   | `duvidas/domain/respostas.py` (assistente) | Se você for convocado, a convocação pedirá também: | Se houver convocação, ela pedirá também: |
+
+   A FR-3752 da `118` citava a frase do Requerimento enviado e foi revista, com a anterior anotada.
+   `tests/portal/test_sem_masculino_generico.py` varre as telas do portal e os quatro módulos cujo
+   texto chega a elas.
+9. **O masculino genérico que ficou** é de outra natureza, e é decisão de quem responde pelos atos:
+   - **nomes e colunas de atos oficiais** publicados no portal: *"Publicação de convocados"* (`149`),
+     a coluna *"Candidato"* das listas públicas (`publicacao_das_inscricoes.html`,
+     `relacao_de_habilitados.html`, `resultado.html`, `comprovante.html`), *"N candidato habilitado"*
+     (`_lista_do_sorteio.html`) e *"cada candidato consulta a própria situação"*;
+   - **o texto do Edital** — *"quando o candidato for convocado"* (`interface/revisao.py`,
+     `duvidas/domain/rotulos.py`) —, que é o ato legal (PDF) e se revê por Retificação, não por código;
+   - **a gestão** — *"quem foi convocado"* —, que fala da pessoa em terceira pessoa a quem conduz o
+     certame, e não a ela;
+   - *"área do candidato"*, nome da área no portal.
+6. ~~**O mapa de estilos não entra no resumo da FR-3889.**~~ **Corrigido em 13/11**, a pedido do
+   usuário. O mapa saiu do Python para um arquivo versionado,
+   `shared/templates/correio/estilos.json`, que `correio.py` lê uma vez: a mesma leitura estiliza o
+   HTML e entra no resumo, como terceira fonte. O valor gravado ganhou rótulo de regra próprio,
+   `‹nome›:sha256-com-estilos:‹hex›`; os gravados antes conservam `‹nome›:sha256:` e se conferem pela
+   regra anterior. A FR-3889, a R-009, o data-model e o roteiro de conferência do quickstart da `121`
+   foram revistos, com a redação anterior preservada. Um teste confere que o arquivo está no índice
+   do Git e não é ignorado.

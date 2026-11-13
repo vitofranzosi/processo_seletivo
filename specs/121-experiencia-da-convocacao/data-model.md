@@ -69,7 +69,7 @@ Uma coluna em `ComunicacaoEmitida`, em migration própria:
 
 | Coluna | Tipo | Valor | Quando vazia |
 |---|---|---|---|
-| `modelo_da_mensagem` | `CharField(max_length=100, blank=True, default="")` | `inicial:sha256:<64 hex>` ou `correcao:sha256:<64 hex>`, pela regra da R-009, das fontes que renderizaram o envio | publicação, e as linhas anteriores à `121`, sem valor atribuído depois |
+| `modelo_da_mensagem` | `CharField(max_length=100, blank=True, default="")` | `inicial:sha256-com-estilos:<64 hex>` ou `correcao:sha256-com-estilos:<64 hex>`, pela regra da R-009 revista em 2026-11-13, das três fontes que deram forma ao envio — os valores gravados antes conservam `inicial:sha256:` ou `correcao:sha256:`, da regra anterior | publicação, e as linhas anteriores à `121`, sem valor atribuído depois |
 
 - **Append-only sem mudança.** A migration é só `ADD COLUMN` com `default` constante, que o PostgreSQL
   aplica sem reescrever linha, e o gatilho de `UPDATE` não dispara. A tabela continua na lista, e o

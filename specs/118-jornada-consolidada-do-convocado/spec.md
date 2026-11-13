@@ -836,8 +836,9 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 
 - **FR-3752**: A página do Requerimento *enviado*, com convocação vigente, MUST oferecer *"Voltar à
   convocação"*. A explicação do estado MUST depender da convocação:
-  - sem convocação vigente: a de hoje (*"Enviado não é alterado. Se algo mudar e você for convocado,
-    esta página oferece a atualização."*);
+  - sem convocação vigente: a de hoje (*"Enviado não é alterado. Se algo mudar e houver convocação,
+    esta página oferece a atualização."* — *revista em 2026-11-13, na auditoria dos e-mails
+    (`doc/auditoria-dos-emails-2026-11-13.md`): era "e você for convocado", masculino genérico*);
   - com a atualização admitida pela política (FR-410 da `029`): *"Enviado não é alterado. Se algo
     mudou, a atualização cria uma nova versão, e esta continua registrada."*;
   - com a atualização não admitida (prazo decorrido ou desfecho): *"Enviado não é alterado."*

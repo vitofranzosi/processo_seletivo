@@ -168,7 +168,7 @@ def test_c1_e_c2_o_acompanhamento_representa_o_conjunto(fx, client):
     assert "Se algo mudou, a atualização cria uma nova versão, e esta continua registrada." in (
         texto(requerimento)
     )
-    assert "você for convocado" not in requerimento
+    assert "assim que a sua convocação acontecer" not in requerimento
 
 
 def test_o_aviso_do_envio_com_documento_aponta_a_convocacao(fx, client):
@@ -542,7 +542,8 @@ def test_n_o_pedido_e_nunca_enviado_aparece_como_nao_enviado(fx, client, rascunh
         "Esta convocação já tem resultado registrado, e o Requerimento não foi enviado. Não é "
         "mais possível enviá-lo pelo portal." in corpo
     )
-    assert "Ainda não é a hora" not in corpo and "for convocado" not in corpo
+    assert "Ainda não é a hora" not in corpo
+    assert "assim que a sua convocação acontecer" not in corpo
     assert "Voltar à convocação" in corpo
     assert RequerimentoDeMatricula.objects.count() == antes
 
@@ -575,7 +576,8 @@ def test_i_depois_do_resultado_a_pagina_e_so_historico(fx, client, letra):
         # FR-3752: com o resultado registrado não há atualização, e a frase não a promete.
         requerimento = texto(main(abrir(client, cenario, "requerimento")))
         assert "Enviado não é alterado." in requerimento
-        assert "Se algo mudou" not in requerimento and "for convocado" not in requerimento
+        assert "Se algo mudou" not in requerimento
+        assert "assim que a sua convocação acontecer" not in requerimento
         assert "Voltar à convocação" in requerimento
     else:
         assert "Indeferido na convocação" in lido

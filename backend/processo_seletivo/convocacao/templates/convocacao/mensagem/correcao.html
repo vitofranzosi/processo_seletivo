@@ -8,8 +8,9 @@ O quadro logo abaixo do título cita a última mensagem enviada com sucesso na c
 varredura da CSP recusa o atributo `style` em todo modelo `.html` do repositório. O modelo escreve
 `class`, e `shared/correio.py` troca cada classe pela declaração dela depois de renderizar — a mesma
 moldura das demais mensagens (`shared/templates/correio/base.html`), repetida aqui por inteiro porque
-o resumo gravado na comunicação (FR-3889) é o destes dois arquivos, e uma moldura herdada mudaria o
-texto que saiu sem mudar o resumo. Os atributos de apresentação (`bgcolor`, `width`) ficam para o
+o resumo gravado na comunicação (FR-3889) é o destes dois arquivos e do mapa de estilos
+(`shared/templates/correio/estilos.json`), e uma moldura herdada mudaria o texto que saiu sem mudar o
+resumo. Os atributos de apresentação (`bgcolor`, `width`) ficam para o
 Outlook do Windows, que ignora o resto.
 
 **Sem imagem, sem fonte ou folha externa, sem `src=`** (FR-3886): a identificação é texto, e o

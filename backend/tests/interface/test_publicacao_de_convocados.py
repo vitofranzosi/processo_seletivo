@@ -109,7 +109,7 @@ def test_a_secao_a_relacao_e_o_documento_abrem_sem_sessao(client, publicado):
     documento = client.get(reverse("portal:convocados-documento", args=[ato.id]))
 
     assert "Convocações" in selecao and "1ª publicação de convocados" in selecao
-    assert "Estar convocado não é ter a documentação aceita" in selecao
+    assert "Ter uma convocação não é ter a documentação aceita" in selecao
     assert pessoa.nome in relacao and pessoa.protocolo in relacao
     assert "ato oficial de convocação" in relacao
     assert documento.status_code == 200

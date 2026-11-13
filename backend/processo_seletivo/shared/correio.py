@@ -18,129 +18,39 @@ retângulo vazio no topo da mensagem, e uma logomarca hospedada seria o único e
 que não é do GPS (FR-3886 da `121`). Nenhum recurso é carregado de fora.
 """
 
+import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.parse import urlparse
 
 from django.template.loader import get_template
 from django.urls import Resolver404, resolve
 
 # --- Os tokens -----------------------------------------------------------------------------------
-# Os da folha comum (`shared/static/shared/tokens.css`), copiados porque o e-mail não lê folha: o
-# verde que preenche, o que escreve sobre fundo claro, e os fundos de estado. Os contrastes contra
-# o branco são os do portal — todos acima de 4,5:1.
+# **Num arquivo versionado, e não em Python** (`templates/correio/estilos.json`): classe →
+# declaração em linha. O mapa decide como o HTML sai, e o resumo gravado em cada convocação
+# (FR-3889) precisa cobri-lo e ser recalculável pelo Git sem o código de produção (R-009 da `121`).
+# Montado aqui, com f-strings, ele só se reconstituiria rodando o código daquele commit.
+#
+# Os valores são os da folha comum (`shared/static/shared/tokens.css`), copiados porque o e-mail não
+# lê folha: o verde que preenche (#15803d), o que escreve sobre fundo claro (#146c37), o da faixa
+# (#0b5a2a) e os fundos de estado. Os contrastes contra o fundo em que aparecem passam de 4,5:1.
+#
+# **Seis estados, e a diferença é discreta** (`destaque-‹estado›`): a cor da borda e do fundo do
+# quadro. Quem diz o estado é o título, e não a cor. O desfavorável é ardósia, e não vermelho: um
+# resultado ruim pede cuidado, não alarme.
 
-VERDE = "#15803d"
-VERDE_TEXTO = "#146c37"
-VERDE_ESCURO = "#0b5a2a"
-VERDE_CLARO = "#e7f5ec"
-AMBAR = "#8a5300"
-AMBAR_FUNDO = "#fdf5e5"
-ARDOSIA = "#4b5563"
-ARDOSIA_FUNDO = "#f3f4f6"
-TEXTO = "#1c1c1c"
-TEXTO_FRACO = "#555555"
-BORDA = "#d4d4d4"
-FUNDO = "#f3f4f2"
-BRANCO = "#ffffff"
+CAMINHO_DOS_ESTILOS = Path(__file__).resolve().parent / "templates" / "correio" / "estilos.json"
 
-FONTE = "'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif"
-MONO = "Consolas,'Courier New',monospace"
-
-# **Seis estados, e a diferença é discreta**: a cor da borda e do fundo do quadro de destaque. Quem
-# diz o estado é o título, e não a cor — ninguém precisa distinguir verde de âmbar para entender a
-# mensagem. O desfavorável é ardósia, e não vermelho: um resultado ruim pede cuidado, não alarme.
-ESTADOS = {
-    "informacao": (VERDE_ESCURO, "#f1f5f2"),
-    "acao": (VERDE, VERDE_CLARO),
-    "prazo": (AMBAR, AMBAR_FUNDO),
-    "confirmacao": (VERDE_TEXTO, VERDE_CLARO),
-    "pendencia": (AMBAR, AMBAR_FUNDO),
-    "desfavoravel": (ARDOSIA, ARDOSIA_FUNDO),
-}
-
-_TEXTO_BASE = f"font-family:{FONTE};color:{TEXTO};"
-
-ESTILOS = {
-    # A moldura.
-    "fundo": f"background-color:{FUNDO};",
-    "moldura": "padding:24px 12px;",
-    "cartao": (
-        f"width:100%;max-width:600px;background-color:{BRANCO};border:1px solid {BORDA};"
-        "border-radius:6px;border-collapse:separate;"
-    ),
-    "faixa": f"background-color:{VERDE_ESCURO};height:6px;line-height:6px;font-size:0;",
-    "cabecalho": f"padding:20px 28px 16px 28px;border-bottom:1px solid {BORDA};",
-    "marca": f"{_TEXTO_BASE}margin:0;font-size:15px;line-height:20px;font-weight:700;",
-    "unidade": f"font-family:{FONTE};margin:2px 0 0 0;font-size:13px;color:{TEXTO_FRACO};",
-    "conteudo": "padding:28px 28px 8px 28px;",
-    "rodape": f"padding:20px 28px 24px 28px;border-top:1px solid {BORDA};",
-    "preheader": (
-        "display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;"
-        f"color:{FUNDO};opacity:0;"
-    ),
-    # O texto.
-    "titulo": (f"{_TEXTO_BASE}margin:0 0 12px 0;font-size:22px;line-height:30px;font-weight:700;"),
-    "subtitulo": f"{_TEXTO_BASE}margin:0 0 20px 0;font-size:15px;line-height:22px;",
-    "texto": f"{_TEXTO_BASE}margin:0 0 16px 0;font-size:16px;line-height:24px;",
-    "fraco": f"font-family:{FONTE};margin:0 0 12px 0;font-size:14px;line-height:21px;"
-    f"color:{TEXTO_FRACO};",
-    "rotulo": (
-        f"font-family:{FONTE};margin:0 0 4px 0;font-size:13px;line-height:18px;"
-        f"color:{TEXTO_FRACO};text-transform:uppercase;letter-spacing:.04em;font-weight:600;"
-    ),
-    "forte": "font-weight:700;",
-    # Modificadores: vêm depois da classe principal e ganham dela — a declaração posterior vale.
-    "espaco": "margin-top:14px;",
-    "fim": "margin-bottom:0;",
-    "lista": f"{_TEXTO_BASE}margin:0 0 16px 0;padding:0 0 0 22px;font-size:16px;line-height:24px;",
-    "item": "margin:0 0 6px 0;",
-    # O destaque: o código, o prazo, o protocolo, o quadro de segurança.
-    "quadro": "width:100%;margin:0 0 20px 0;border-collapse:separate;",
-    "codigo": (
-        f"font-family:{MONO};margin:0;font-size:34px;line-height:44px;font-weight:700;"
-        f"letter-spacing:8px;color:{TEXTO};"
-    ),
-    "prazo": f"{_TEXTO_BASE}margin:0;font-size:18px;line-height:26px;font-weight:700;",
-    "dados": "width:100%;margin:0 0 20px 0;border-collapse:collapse;",
-    "dado-rotulo": (
-        f"font-family:{FONTE};padding:8px 12px 8px 0;font-size:14px;line-height:20px;"
-        f"color:{TEXTO_FRACO};border-bottom:1px solid {BORDA};vertical-align:top;width:38%;"
-    ),
-    "dado-valor": (
-        f"{_TEXTO_BASE}padding:8px 0;font-size:15px;line-height:21px;"
-        f"border-bottom:1px solid {BORDA};vertical-align:top;"
-    ),
-    # A ação: um botão só, e o endereço por extenso abaixo dele.
-    "acao": "margin:4px 0 8px 0;border-collapse:separate;",
-    "botao-celula": f"background-color:{VERDE};border-radius:6px;",
-    "botao": (
-        f"display:inline-block;padding:14px 26px;font-family:{FONTE};font-size:16px;"
-        f"line-height:20px;font-weight:700;color:{BRANCO};text-decoration:none;border-radius:6px;"
-    ),
-    "endereco": (
-        f"font-family:{FONTE};margin:0 0 20px 0;font-size:13px;line-height:19px;"
-        f"color:{TEXTO_FRACO};word-break:break-all;"
-    ),
-    "seguranca": (
-        f"width:100%;margin:8px 0 20px 0;border:1px solid {BORDA};border-radius:6px;"
-        "border-collapse:separate;"
-    ),
-    "seguranca-celula": "padding:14px 18px 4px 18px;",
-    "seguranca-lista": (
-        f"font-family:{FONTE};margin:0 0 12px 0;padding:0 0 0 20px;font-size:14px;"
-        f"line-height:21px;color:{TEXTO_FRACO};"
-    ),
-    "assinatura": f"{_TEXTO_BASE}margin:0 0 4px 0;font-size:14px;line-height:20px;font-weight:700;",
-    "nota": f"font-family:{FONTE};margin:0 0 4px 0;font-size:13px;line-height:19px;"
-    f"color:{TEXTO_FRACO};",
-}
-
-for _estado, (_cor, _fundo) in ESTADOS.items():
-    ESTILOS[f"destaque-{_estado}"] = (
-        f"background-color:{_fundo};border-left:4px solid {_cor};border-radius:4px;"
-        "padding:16px 18px;"
-    )
+#: O texto do arquivo como o processo o leu — **a fonte que estiliza e a que se resume**, a mesma
+#: leitura, como a R-009 pede da fonte compilada dos modelos: um arquivo trocado depois do início do
+#: processo não muda nem o HTML que sai nem o resumo que se grava.
+FONTE_DOS_ESTILOS = CAMINHO_DOS_ESTILOS.read_text(encoding="utf-8")
+ESTILOS = json.loads(FONTE_DOS_ESTILOS)
+ESTADOS = tuple(
+    classe.removeprefix("destaque-") for classe in ESTILOS if classe.startswith("destaque-")
+)
 
 #: Cabeçalhos de toda mensagem do GPS. `Auto-Submitted` (RFC 3834) diz que ninguém a escreveu à mão:
 #: as respostas de férias e os avisos de ausência não voltam para uma caixa que ninguém lê.
@@ -323,8 +233,10 @@ def html_do_aviso(*, assunto, corpo, estado="informacao"):
 
 __all__ = [
     "CABECALHOS",
+    "CAMINHO_DOS_ESTILOS",
     "ESTADOS",
     "ESTILOS",
+    "FONTE_DOS_ESTILOS",
     "Mensagem",
     "ROTULOS_DAS_ROTAS",
     "assunto_e_corpo",

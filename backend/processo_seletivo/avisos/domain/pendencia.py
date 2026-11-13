@@ -28,6 +28,9 @@ DOCUMENTOS_DE_MODALIDADE = "{n} documentos da sua modalidade de concorrência"
 NAO_E_A_CONVOCACAO = "Este aviso não é a convocação e não altera o seu prazo."
 
 ASSUNTO = "{instituicao} · {edital}: há documento da sua convocação para revisar"
+#: O assunto com dois ou mais documentos: concorda o número, como o corpo já concordava (revisão de
+#: 13/11 da FR-4613). O singular com vários documentos fazia a pessoa procurar um só.
+ASSUNTO_DOS_DOCUMENTOS = "{instituicao} · {edital}: há documentos da sua convocação para revisar"
 
 RODAPE = (
     "—\n"
@@ -113,12 +116,15 @@ def compor(*, instituicao, edital, pendentes, prazo, link, atendimento, assinatu
             RODAPE.format(atendimento=atendimento, assinatura=assinatura),
         ]
     )
-    assunto = ASSUNTO.format(instituicao=instituicao, edital=edital)
+    assunto = (ASSUNTO if um else ASSUNTO_DOS_DOCUMENTOS).format(
+        instituicao=instituicao, edital=edital
+    )
     return escapar(assunto), escapar(corpo)
 
 
 __all__ = [
     "ASSUNTO",
+    "ASSUNTO_DOS_DOCUMENTOS",
     "DOCUMENTOS_DE_MODALIDADE",
     "DOCUMENTO_DE_MODALIDADE",
     "NAO_E_A_CONVOCACAO",

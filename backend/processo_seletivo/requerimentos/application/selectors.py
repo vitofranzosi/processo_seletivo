@@ -54,7 +54,7 @@ _FRASES = {
     ),
     nomes.AINDA_INDISPONIVEL: (
         "Ainda não é a hora",
-        "Este Processo Seletivo pede o Requerimento de Matrícula quando você for convocado. Esta "
+        "Este Processo Seletivo pede o Requerimento de Matrícula na convocação. Esta "
         "página passa a aceitar o preenchimento assim que a sua convocação acontecer — continue "
         "acompanhando.",
     ),
@@ -68,7 +68,7 @@ _FRASES = {
     ),
     nomes.ESTADO_ENVIADO: (
         "Enviado",
-        "Enviado não é alterado. Se algo mudar e você for convocado, esta página oferece a "
+        "Enviado não é alterado. Se algo mudar e houver convocação, esta página oferece a "
         "atualização.",
     ),
 }

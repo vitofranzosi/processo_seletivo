@@ -123,7 +123,7 @@ class TestOEstadoAindaIndisponivel:
 
         corpo = abrir(client, inscricao).content.decode()
 
-        assert "quando você for convocado" in corpo
+        assert "pede o Requerimento de Matrícula na convocação" in corpo
         assert "Nome da mãe" not in corpo, "não há o que preencher antes da chamada"
 
 

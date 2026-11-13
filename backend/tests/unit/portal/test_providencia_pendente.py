@@ -20,7 +20,7 @@ from processo_seletivo.requerimentos.domain import nomes as req_nomes
 from tests.unit.portal.test_obrigacoes_da_convocacao import disp, lido, projetar
 
 ACOMPANHE = "Acompanhe sua convocação"
-CONVOCADO = "Você foi convocado!"
+CONVOCADO = "Você tem uma convocação!"
 
 
 def _cenarios():

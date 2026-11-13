@@ -94,7 +94,7 @@ class TestOsTresPercursos:
         assert chegada.status_code == 302 and chegada["Location"] == destino
         pagina = client.get(destino)
         assert pagina.status_code == 200
-        assert "Você foi convocado!" in pagina.content.decode()
+        assert "Você tem uma convocação!" in pagina.content.decode()
 
     def test_reconciliacao_de_inscricao_antiga(self, client, canal, cenario):
         pessoa = cenario.pessoa

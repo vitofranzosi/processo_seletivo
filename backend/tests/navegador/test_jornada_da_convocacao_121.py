@@ -187,7 +187,7 @@ def test_do_link_ao_codigo_a_convocacao(tela, fx, gestor):
     pagina.get_by_role("button", name="Entrar", exact=True).click()
 
     expect(pagina).to_have_url(tela.servidor.url + destino)
-    expect(pagina.get_by_role("heading", name="Você foi convocado!", level=1)).to_be_visible()
+    expect(pagina.get_by_role("heading", name="Você tem uma convocação!", level=1)).to_be_visible()
 
 
 def test_sem_script_o_foco_vai_a_confirmacao(tela, fx, gestor, pdfs):

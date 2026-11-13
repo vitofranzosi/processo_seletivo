@@ -426,8 +426,8 @@ def test_o_texto_nomeia_o_documento_e_oculta_o_de_modalidade(cenario, alocado):
     edital = cenario["edital"]
     texto = f"{mensagem.subject}\n{mensagem.body}"
     assert mensagem.subject == (
-        f"Ifes · Edital {edital.number}/{edital.year}: há documento da sua convocação para revisar"
-    )
+        f"Ifes · Edital {edital.number}/{edital.year}: há documentos da sua convocação para revisar"
+    ), "dois documentos pendentes: o assunto concorda o número, como o corpo"
     assert not mensagem.subject.startswith("Convocação")
     assert "- Comprovante de residência" in mensagem.body
     assert f"- {DOCUMENTO_DE_MODALIDADE}" in mensagem.body

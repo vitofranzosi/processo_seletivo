@@ -375,13 +375,13 @@ documentos, que é a ordem das perguntas de quem decide.
             </ul>
             {% endfor %}
             {% if perfil.documentos_anunciados.na_convocacao %}
-            <p class="meta">Se for convocado, a convocação pedirá também:</p>
+            <p class="meta">A convocação, se houver, pedirá também:</p>
             <ul>
               {% for documento in perfil.documentos_anunciados.na_convocacao %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>
             {% endif %}
             {% for grupo in perfil.documentos_anunciados.na_convocacao_por_modalidade %}
-            <p class="meta">Se concorrer em <strong>{{ grupo.modalidade }}</strong> e for convocado, a convocação pedirá também:</p>
+            <p class="meta">Para quem concorre em <strong>{{ grupo.modalidade }}</strong>, a convocação, se houver, pedirá também:</p>
             <ul>
               {% for documento in grupo.documentos %}<li>{{ documento }}{% if not documento.obrigatorio %} <span class="ajuda">(facultativo)</span>{% endif %}</li>{% endfor %}
             </ul>

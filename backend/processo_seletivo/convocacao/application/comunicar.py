@@ -576,7 +576,12 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
     # O resumo das fontes que o motor compilou e que renderizam logo abaixo, e não do arquivo
     # relido do disco (R-009). Antes da renderização, para a falha dela também dizer o modelo.
-    modelo = identificacao_do_modelo(dados["escolha"].modelo, html_do_modelo, texto_do_modelo)
+    modelo = identificacao_do_modelo(
+        dados["escolha"].modelo,
+        html_do_modelo,
+        texto_do_modelo,
+        estilos=correio.FONTE_DOS_ESTILOS,
+    )
     try:
         html, assunto, corpo = _renderizar(html_do_modelo, texto_do_modelo, dados)
     except Exception as erro:

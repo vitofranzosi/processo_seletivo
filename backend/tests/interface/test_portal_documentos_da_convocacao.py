@@ -84,7 +84,7 @@ def test_a_convocada_ve_o_que_apresentar_e_ate_quando(aluno, gestor, client):
     # prazo que não corria (F12); a de agora diz que ele não começou, e a data fica só nos dados do
     # ato (FR-3749 da `118`).
     # A chamada da 121 no lugar de "O que fazer agora" (FR-3735 da 118, revista).
-    assert "Você foi convocado!" in corpo and "O que falta" in corpo
+    assert "Você tem uma convocação!" in corpo and "O que falta" in corpo
     assert "O que fazer agora" not in corpo
     assert "Certidão de nascimento ou casamento" in corpo
     assert "Todas as páginas, em arquivo único." in corpo
@@ -372,7 +372,7 @@ def test_a_pagina_publica_avisa_o_que_a_convocacao_pedira(aluno, client):
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
 
-    assert "Se for convocado, a convocação pedirá também:" in corpo
+    assert "A convocação, se houver, pedirá também:" in corpo
     assert "Certidão de nascimento ou casamento" in corpo
 
 

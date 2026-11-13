@@ -301,7 +301,7 @@ def test_o_aviso_da_pendencia_vira_lista_botao_e_nota():
     nota = "Este aviso não é a convocação e não altera o seu prazo."
     assert nota in mensagem.html
     assert "Cefor/Ifes — Seleções" in mensagem.html
-    assert correio.ESTADOS["pendencia"][1] in mensagem.html
+    assert correio.ESTILOS["destaque-pendencia"] in mensagem.html
 
 
 def test_o_endereco_fora_do_portal_nao_vira_botao():
@@ -323,7 +323,7 @@ def test_o_texto_sem_rodape_nao_ganha_rodape():
 def test_o_rodape_do_aviso_de_resultado_fica_num_quadro():
     mensagem = _aviso()
     assert "Este aviso não substitui a publicação." in mensagem.html
-    assert correio.ESTADOS["informacao"][1] in mensagem.html
+    assert correio.ESTILOS["destaque-informacao"] in mensagem.html
     assert ">Entrar na área do candidato</a>" in mensagem.html
 
 

@@ -10,6 +10,7 @@ consigo mesma.
 """
 
 import hashlib
+import json
 import re
 import shutil
 import subprocess
@@ -34,7 +35,8 @@ pytestmark = pytest.mark.django_db(transaction=True)
 
 RAIZ = Path(__file__).resolve().parents[3]
 MODELOS = RAIZ / "processo_seletivo/convocacao/templates/convocacao/mensagem"
-FORMATO = re.compile(r"(inicial|correcao):sha256:[0-9a-f]{64}")
+ESTILOS = RAIZ / "processo_seletivo/shared/templates/correio/estilos.json"
+FORMATO = re.compile(r"(inicial|correcao):sha256-com-estilos:[0-9a-f]{64}")
 
 
 @pytest.fixture
@@ -46,10 +48,21 @@ def caixa(settings):
     return mail.outbox
 
 
-def resumo(nome, html, texto):
-    """A regra da R-009, escrita de novo: HTML e texto, rotulados, separados por NUL, em UTF-8."""
-    conteudo = b"html\0" + html.encode("utf-8") + b"\0texto\0" + texto.encode("utf-8")
-    return f"{nome}:sha256:{hashlib.sha256(conteudo).hexdigest()}"
+def resumo(nome, html, texto, estilos=None):
+    """A regra da R-009, escrita de novo: HTML, texto e estilos, rotulados, separados por NUL, em
+    UTF-8. Os estilos, sem outro dado, são os do arquivo versionado — o que a conferência pelo Git
+    lê.
+    """
+    estilos = ESTILOS.read_text(encoding="utf-8") if estilos is None else estilos
+    conteudo = (
+        b"html\0"
+        + html.encode("utf-8")
+        + b"\0texto\0"
+        + texto.encode("utf-8")
+        + b"\0estilos\0"
+        + estilos.encode("utf-8")
+    )
+    return f"{nome}:sha256-com-estilos:{hashlib.sha256(conteudo).hexdigest()}"
 
 
 def do_carregador(nome):
@@ -222,7 +235,13 @@ class TestSemRetroatividade:
 class TestRecuperavelPeloGit:
     """`FR-3889`: os modelos são versionados, nunca gerados nem ignorados."""
 
-    ARQUIVOS = ("inicial.html", "inicial.txt", "correcao.html", "correcao.txt")
+    ARQUIVOS = (
+        *(
+            MODELOS / nome
+            for nome in ("inicial.html", "inicial.txt", "correcao.html", "correcao.txt")
+        ),
+        ESTILOS,
+    )
 
     @pytest.fixture
     def git(self):
@@ -236,9 +255,9 @@ class TestRecuperavelPeloGit:
 
         return rodar
 
-    @pytest.mark.parametrize("arquivo", ARQUIVOS)
+    @pytest.mark.parametrize("arquivo", ARQUIVOS, ids=lambda caminho: caminho.name)
     def test_no_indice_e_nao_ignorado(self, git, arquivo):
-        caminho = str((MODELOS / arquivo).relative_to(RAIZ.parent))
+        caminho = str(arquivo.relative_to(RAIZ.parent))
 
         assert git("ls-files", "--error-unmatch", caminho).returncode == 0, caminho
         assert git("check-ignore", caminho).stdout == "", caminho
@@ -299,3 +318,30 @@ class TestAFalhaNaMontagem:
         # A chave não ficou presa: outra emissão, com a chave nova da tela, sai.
         declarado = comunicar(edital, gestor, a, "m-modelo-de-novo")
         assert declarado["resultado"] == "ENVIADA"
+
+
+class TestOsEstilosEntramNoResumo:
+    """O mapa de estilos decide o HTML que sai, e entra no resumo (R-009, revista em 13/11).
+
+    Sem ele, mudar uma cor mudava a mensagem sem mudar o resumo gravado, e a conferência pelo Git
+    apontaria um commit cujo HTML não é o que saiu.
+    """
+
+    def test_o_resumo_gravado_e_o_das_tres_fontes(self, caixa, cenario, gestor):
+        edital, _, _ = cenario
+        declarado = comunicar(edital, gestor, chamar(edital, gestor, chave="estilos"), "estilos-c")
+
+        assert gravada(declarado) == do_disco("inicial")
+        assert gravada(declarado) != resumo(
+            "inicial",
+            (MODELOS / "inicial.html").read_text(encoding="utf-8"),
+            (MODELOS / "inicial.txt").read_text(encoding="utf-8"),
+            estilos="",
+        )
+
+    def test_o_resumo_usa_a_mesma_leitura_que_estiliza(self):
+        from processo_seletivo.shared import correio
+
+        assert correio.CAMINHO_DOS_ESTILOS == ESTILOS
+        assert correio.FONTE_DOS_ESTILOS == ESTILOS.read_text(encoding="utf-8")
+        assert correio.ESTILOS == json.loads(correio.FONTE_DOS_ESTILOS)

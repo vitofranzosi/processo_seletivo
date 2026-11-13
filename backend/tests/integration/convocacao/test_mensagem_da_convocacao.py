@@ -434,7 +434,7 @@ class TestAReconstrucao:
             relida = Convocacao.objects.get(id=convocacao.id)
             escolha = escolha_de(relida, instante=enviada.enviado_em)
             assert escolha.modelo == modelo
-            assert enviada.modelo_da_mensagem.startswith(f"{modelo}:sha256:")
+            assert enviada.modelo_da_mensagem.startswith(f"{modelo}:sha256-com-estilos:")
         escolha_de_c = escolha_de(Convocacao.objects.get(id=c.id), instante=timezone.now())
         assert escolha_de_c.citada.enviado_em == _comunicacao(a).enviado_em
         assert escolha_de_c.citada.vencimento == a.vencimento

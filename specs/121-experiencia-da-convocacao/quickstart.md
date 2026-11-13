@@ -52,14 +52,18 @@ exige o *backend* de e-mail que recusa, que só a suíte monta.
 
 ## Conferir uma comunicação contra o Git (D-009)
 
-Com o valor de `modelo_da_mensagem` de uma comunicação emitida, por exemplo `correcao:sha256:…`:
+Com o valor de `modelo_da_mensagem` de uma comunicação emitida, por exemplo
+`correcao:sha256-com-estilos:…`:
 
 ```bash
-git log --format=%H -- backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.html backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.txt
+git log --format=%H -- backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.html backend/processo_seletivo/convocacao/templates/convocacao/mensagem/correcao.txt backend/processo_seletivo/shared/templates/correio/estilos.json
 ```
 
 Em cada commit listado, recalcule o resumo pela regra da R-009 sobre `git show <commit>:<arquivo>` dos
-dois arquivos. O commit com o mesmo resumo tem o texto que saiu.
+três arquivos. O commit com o mesmo resumo tem o texto e a forma que saíram.
+
+**Valor gravado antes de 2026-11-13** (`correcao:sha256:…`, sem `-com-estilos`): liste só os dois
+modelos e recalcule pela regra anterior, das duas fontes, preservada na R-009.
 
 ## Antes do uso real
 

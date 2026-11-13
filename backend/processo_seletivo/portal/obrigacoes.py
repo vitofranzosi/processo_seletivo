@@ -109,7 +109,10 @@ LINHA_DO_REQUERIMENTO = {
 # **O título diz o estado, e absorve o do bloco 1** (D-005): com *"O prazo desta convocação
 # terminou"* no topo, o bloco não repete *"O prazo terminou"* abaixo. Nenhum promete vaga,
 # matrícula nem contratação (FR-3751 da `118`).
-TITULO_ABERTA = "Você foi convocado!"
+# **Sem masculino genérico** (revisão de 2026-11-13, na auditoria dos e-mails): era *"Você foi
+# convocado!"*. O sistema não sabe o gênero de quem lê, e o título não precisa dele. O e-mail da
+# mesma convocação diz *"Você tem uma convocação no Edital ‹NN/AAAA›"*, e a página fala igual.
+TITULO_ABERTA = "Você tem uma convocação!"
 TITULO_ENCERRADA_PELO_PRAZO = "O prazo desta convocação terminou"
 TITULO_ENCERRADA_PELO_PROCESSO = "O envio pelo portal está encerrado"
 TITULO_DECIDIDA = "Resultado da sua convocação"
@@ -120,9 +123,10 @@ TITULOS = {
     DECIDIDA: TITULO_DECIDIDA,
 }
 # **A chamada aberta sem providência pendente** (154, FR-6202): a linha da chamada aberta da FR-3858
-# se dividiu em duas. Com tudo enviado, *"Você foi convocado!"* repetia um convite que a pessoa já
-# tinha atendido (achado 20 do estudo da jornada final). Não é momento novo — a etapa, o prazo, a
-# ressalva e o andamento continuam os da chamada aberta —, e por isso não entra em `TITULOS`.
+# se dividiu em duas. Com tudo enviado, o título da chamada aberta repetia um convite que a
+# pessoa já tinha atendido (achado 20 do estudo da jornada final). Não é momento novo — a etapa,
+# o prazo, a ressalva e o andamento continuam os da chamada aberta —, e por isso não entra em
+# `TITULOS`.
 TITULO_SEM_PROVIDENCIA = "Acompanhe sua convocação"
 # **A etapa descreve as obrigações da chamada, e não o estado** (FR-3860): sai da lista gravada no
 # ato de convocar e da política do Requerimento, e vale igual antes e depois de qualquer envio. Sem

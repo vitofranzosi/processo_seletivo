@@ -164,41 +164,61 @@ class TestAIdentificacaoDoModelo:
 
     HTML = "<p>Você foi convocado.</p>\n"
     TEXTO = "Você foi convocado.\n"
+    ESTILOS = '{"texto": "color:#1c1c1c;"}\n'
 
     def test_o_formato(self):
-        valor = identificacao_do_modelo("inicial", self.HTML, self.TEXTO)
+        valor = identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=self.ESTILOS)
 
-        assert re.fullmatch(r"inicial:sha256:[0-9a-f]{64}", valor)
+        assert re.fullmatch(r"inicial:sha256-com-estilos:[0-9a-f]{64}", valor)
 
     def test_o_mesmo_par_da_o_mesmo_valor(self):
-        assert identificacao_do_modelo("correcao", self.HTML, self.TEXTO) == (
-            identificacao_do_modelo("correcao", self.HTML, self.TEXTO)
+        assert identificacao_do_modelo("correcao", self.HTML, self.TEXTO, estilos=self.ESTILOS) == (
+            identificacao_do_modelo("correcao", self.HTML, self.TEXTO, estilos=self.ESTILOS)
         )
 
     @pytest.mark.parametrize("qual", ["html", "texto"])
     def test_um_caractere_muda_o_valor(self, qual):
-        original = identificacao_do_modelo("inicial", self.HTML, self.TEXTO)
+        original = identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=self.ESTILOS)
         html = self.HTML.replace("convocado", "convocada") if qual == "html" else self.HTML
         texto = self.TEXTO.replace(".", "!") if qual == "texto" else self.TEXTO
 
-        assert identificacao_do_modelo("inicial", html, texto) != original
+        assert identificacao_do_modelo("inicial", html, texto, estilos=self.ESTILOS) != original
+
+    def test_uma_cor_do_mapa_de_estilos_muda_o_valor(self):
+        """Revisão de 13/11 da R-009: o mapa decide o HTML que sai, e entra no resumo."""
+        original = identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=self.ESTILOS)
+        outra_cor = self.ESTILOS.replace("#1c1c1c", "#000000")
+
+        assert identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=outra_cor) != (
+            original
+        )
+
+    def test_um_trecho_movido_do_texto_para_os_estilos_muda_o_valor(self):
+        assert identificacao_do_modelo(
+            "inicial", self.HTML, "ab", estilos="c"
+        ) != identificacao_do_modelo("inicial", self.HTML, "a", estilos="bc")
 
     def test_mover_um_trecho_de_arquivo_muda_o_valor(self):
         """Os rótulos impedem que a mesma concatenação, partida em outro lugar, coincida."""
-        assert identificacao_do_modelo("inicial", "ab", "c") != identificacao_do_modelo(
-            "inicial", "a", "bc"
-        )
+        assert identificacao_do_modelo(
+            "inicial", "ab", "c", estilos=self.ESTILOS
+        ) != identificacao_do_modelo("inicial", "a", "bc", estilos=self.ESTILOS)
 
     def test_a_composicao_e_a_da_r_009(self):
         """A regra escrita, recalculada aqui sem a função: é ela que a conferência pelo Git usa."""
         import hashlib
 
         esperado = hashlib.sha256(
-            b"html\0" + self.HTML.encode() + b"\0texto\0" + self.TEXTO.encode()
+            b"html\0"
+            + self.HTML.encode()
+            + b"\0texto\0"
+            + self.TEXTO.encode()
+            + b"\0estilos\0"
+            + self.ESTILOS.encode()
         ).hexdigest()
 
-        assert identificacao_do_modelo("inicial", self.HTML, self.TEXTO) == (
-            f"inicial:sha256:{esperado}"
+        assert identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=self.ESTILOS) == (
+            f"inicial:sha256-com-estilos:{esperado}"
         )
 
     def test_le_a_fonte_do_modelo_compilado(self):
@@ -206,6 +226,6 @@ class TestAIdentificacaoDoModelo:
         html = SimpleNamespace(template=SimpleNamespace(source=self.HTML))
         texto = SimpleNamespace(template=SimpleNamespace(source=self.TEXTO))
 
-        assert mensagem.identificacao_do_modelo("inicial", html, texto) == (
-            identificacao_do_modelo("inicial", self.HTML, self.TEXTO)
+        assert mensagem.identificacao_do_modelo("inicial", html, texto, estilos=self.ESTILOS) == (
+            identificacao_do_modelo("inicial", self.HTML, self.TEXTO, estilos=self.ESTILOS)
         )
