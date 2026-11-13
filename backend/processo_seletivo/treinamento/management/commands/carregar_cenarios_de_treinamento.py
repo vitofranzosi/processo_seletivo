@@ -11,14 +11,19 @@ class Command(ComandoDeTreinamento):
     )
     escrita = True
 
-    def executar(self, *, escreve, unidade, cenario, autoridade, **_):
+    def executar(self, *, escreve, unidade, cenario, autoridade, dias_atras, **_):
         if not escreve:
             self.stdout.write("Pré-visualização: nada será gravado.")
             for item, decisao, motivos in servico.planejar(cenario, unidade):
                 linha(self.stdout, item.codigo, decisao, [item.nome, *motivos])
             return
         resultados = servico.carregar(
-            cenario, unidade, saida=self.stdout, erros=self.stderr, autoridade=autoridade or None
+            cenario,
+            unidade,
+            saida=self.stdout,
+            erros=self.stderr,
+            autoridade=autoridade or None,
+            dias_atras=dias_atras,
         )
         self.stdout.write("\nResumo:")
         for item, decisao, motivos in resultados:
