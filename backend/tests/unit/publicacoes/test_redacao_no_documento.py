@@ -209,43 +209,37 @@ def test_a_leitura_pega_o_termo_que_o_sistema_voltasse_a_gerar(monkeypatch):
         "Participam do sorteio só as inscrições habilitadas na Etapa “Prova didática”.",
         "A ordem de classificação segue a nota final.",
         "Depois, o resultado é dividido pela soma dos pesos.",
-        "Passam para a Etapa “Análise de títulos” as primeiras pessoas classificadas de cada "
-        "lista de "
-        "concorrência, em número igual ao das vagas dessa lista, mais 3 (três) pessoas suplentes.",
+        "Passam para a Etapa “Análise de títulos” os primeiros classificados de cada lista de "
+        "concorrência, em número igual ao das vagas dessa lista, mais 3 (três) suplentes.",
         # 133 (FR-4553): o Perfil do cenário tem reservada, e o alvo fixo vale para cada lista.
-        "Seguem no processo as 10 (dez) primeiras pessoas classificadas de cada lista de "
-        "concorrência.",
-        "Se houver empate na última posição, passam todas as pessoas empatadas, mesmo que "
-        "ultrapassem "
+        "Seguem no processo os 10 (dez) primeiros classificados de cada lista de concorrência.",
+        "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
         "esse número.",
-        "Depois, poderão ser chamadas outras pessoas, além dessas, seguindo a mesma ordem.",
-        "Não serão chamadas pessoas além dessas.",
+        "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem.",
+        "Não serão chamados candidatos além desses.",
         "Contra o resultado de “Sorteio público”: no prazo de 2 (dois) dias corridos",
         "Não caberá recurso contra o resultado de “Classificação final”.",
         "Critérios de desempate, nesta ordem:",
         "2º maior número de meses de experiência em EaD, informado na inscrição",
         "As vagas reservadas de um código que não forem preenchidas passam para a ampla "
         "concorrência do mesmo código.",
-        "A convocação das pessoas classificadas será feita por publicação.",
-        "Cada pessoa pode enviar no máximo 2 (duas) inscrições neste Edital.",
-        "O Requerimento de Matrícula é enviado no ato da inscrição. Ao enviá-lo, a pessoa declara:",
+        "A convocação dos classificados será feita por publicação.",
+        "Cada candidato pode enviar no máximo 2 (duas) inscrições neste Edital.",
+        "O Requerimento de Matrícula é enviado no ato da inscrição. Ao enviá-lo, o candidato "
+        "declara:",
         "Regras de classificação",
         "Na inscrição, informe também:",
         "Autenticidade — este documento corresponde integralmente à versão homologada do Edital",
     ],
 )
 def test_cada_frase_do_contrato_sai_onde_a_variante_existe(frase):
-    """FR-1360: a redação vigente é a que sai, variante a variante, no documento composto.
-
-    A 3 (2026-11-13) é a 2 sem o masculino genérico; a 2 continua alcançável, e o teste abaixo a
-    compõe.
-    """
+    """FR-1360: a redação 2 é a que sai, variante a variante, no documento composto."""
     assert frase in _normal(texto_de(documento(_completo())))
 
 
 def test_sem_cadastro_os_suplentes_sao_explicados_e_com_cadastro_nao():
     """K7 e K8 no documento (FR-1362): com cadastro de reserva, nada; sem ele, a frase."""
-    k7 = "As pessoas suplentes são chamadas, na ordem, para as vagas deste Edital"
+    k7 = "Os suplentes são chamados, na ordem, para as vagas deste Edital"
     com_cadastro = _completo()
     sem_cadastro = _completo()
     for perfil in sem_cadastro["profiles"]:

@@ -68,14 +68,14 @@ NOMES = {
 PERCENTUAIS = {"PPI": "25.0000", "PcD": "5.0000", "PTT": None}
 FUNDAMENTO = "Resolução CS nº 10/2017 do Ifes"
 REVERSAO_ESGOTAMENTO = (
-    "Se não houver pessoas aprovadas para as vagas reservadas de um código, essas vagas passam "
+    "Se não houver candidatos aprovados para as vagas reservadas de um código, essas vagas passam "
     "para a ampla concorrência do mesmo código."
 )
 REVERSAO_SALDO = (
     "As vagas reservadas de um código que não forem preenchidas passam para a ampla concorrência "
     "do mesmo código."
 )
-CONVOCACAO_PUBLICACAO = "A convocação das pessoas classificadas será feita por publicação."
+CONVOCACAO_PUBLICACAO = "A convocação dos classificados será feita por publicação."
 SEPARADAMENTE = (
     "A classificação é feita separadamente em cada Perfil: cada Perfil tem a sua própria "
     "classificação e o seu próprio resultado."
@@ -711,7 +711,7 @@ def test_o_marco_da_subsecao_comum_quebra_entre_as_partes_e_nunca_dentro_de_uma(
     assert pagina("SORTEIO —") == pagina("• Participam do sorteio")
     assert pagina("Sorteio") == pagina("Método:") == pagina("Se faltar:")
     assert pagina("Recurso") == pagina("Contra o resultado de")
-    assert pagina("• Passam para a Etapa") == pagina("• Depois, poderão ser chamadas")
+    assert pagina("• Passam para a Etapa") == pagina("• Depois, poderão ser chamados")
     # Com atribuições, a subseção de marcos é a 5.7; sem, a 5.6.
     titulo = [n for n, linha in paginas if " Regras de classificação comuns aos" in f" {linha[4:]}"]
     assert titulo == [pagina("A classificação é feita")] == [pagina("SORTEIO —")], (
@@ -748,7 +748,7 @@ def test_cada_frase_sai_uma_vez_sem_prefixo_quando_vale_para_todos():
     assert texto.count(CONVOCACAO_PUBLICACAO) == 1
     for codigo in QUATRO:
         bloco = " ".join(bloco_do_perfil(conteudo, codigo))
-        assert "Se não houver pessoas" not in bloco and "A convocação" not in bloco
+        assert "Se não houver candidatos" not in bloco and "A convocação" not in bloco
 
 
 def test_a_reversao_vem_logo_abaixo_da_tabela_de_vagas_e_a_convocacao_depois_das_modalidades():
@@ -777,7 +777,7 @@ def test_perfil_sem_reversao_nao_e_alcancado_e_os_outros_sao_nomeados():
     texto = corrido(conteudo)
     minuscula = REVERSAO_ESGOTAMENTO[0].lower() + REVERSAO_ESGOTAMENTO[1:]
     assert f"Nos Perfis INF-BJN, INF-SMT e INF-VAL, {minuscula}" in texto
-    assert texto.count("Se não houver pessoas") + texto.count("se não houver pessoas") == 1
+    assert texto.count("Se não houver candidatos") + texto.count("se não houver candidatos") == 1
 
 
 def test_perfil_fora_da_tabela_de_vagas_nao_e_alcancado_pela_reversao():
@@ -791,8 +791,8 @@ def test_um_perfil_so_e_nomeado_no_singular():
     texto = corrido(conteudo)
     assert "No Perfil INF-VAL, a convocação será feita por mensagem individual" in texto
     assert (
-        "Nos Perfis INF-BJN, INF-IUN e INF-SMT, a convocação das pessoas classificadas será feita "
-        "por publicação" in texto
+        "Nos Perfis INF-BJN, INF-IUN e INF-SMT, a convocação dos classificados será feita por "
+        "publicação" in texto
     )
 
 
@@ -866,7 +866,7 @@ def test_codigo_com_o_separador_da_enumeracao_vai_entre_aspas_no_titulo_e_na_fra
     )
     texto = corrido(conteudo)
     assert "Requisitos comuns aos Perfis “Tutor e Mediador”, “TEC” e “ADM”" in texto
-    assert "Nos Perfis “Tutor e Mediador” e “TEC”, a convocação das pessoas classificadas" in texto
+    assert "Nos Perfis “Tutor e Mediador” e “TEC”, a convocação dos classificados" in texto
 
 
 def test_o_que_a_grafia_normaliza_nao_impede_o_agrupamento():

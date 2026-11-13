@@ -19,7 +19,7 @@ from tests.unit.publicacoes.test_pdf import documento, snapshot, texto_de
 # As duas espécies, na redação 2 desde a `069` (V1, V2), e as da redação 1, que também não saem.
 REVERSOES = (
     "As vagas reservadas de um código que não forem preenchidas",
-    "Se não houver pessoas aprovadas para as vagas reservadas",
+    "Se não houver candidatos aprovados para as vagas reservadas",
     "Na hipótese do não preenchimento total",
     "Havendo ausência de candidatos aprovados",
 )
@@ -90,7 +90,7 @@ def test_sem_vaga_imediata_nem_quadro_nem_reversao_e_o_resto_fica():
     # O que é verdade continua: a tabela de Modalidades com percentual e fundamento (FR-1322).
     assert "Modalidades de concorrência" in corrido
     assert "30%" in corrido and "Lei nº 12.711" in corrido
-    assert "A convocação das pessoas classificadas será feita por publicação" in corrido
+    assert "A convocação dos classificados será feita por publicação" in corrido
 
 
 def test_nenhuma_frase_nova_sobre_a_reserva_no_cadastro():

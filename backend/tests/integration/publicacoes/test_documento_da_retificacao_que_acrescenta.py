@@ -109,9 +109,7 @@ def test_o_documento_da_retificacao_mostra_as_seis(api_client, manager_headers, 
         in corrido
     ), "a janela que nasceu"
     # Na redação 2 desde a `069` (K4, V2).
-    assert "Seguem no processo as 2 (duas) primeiras pessoas classificadas" in corrido, (
-        "a regra de corte"
-    )
+    assert "Seguem no processo os 2 (dois) primeiros classificados" in corrido, "a regra de corte"
     assert "que não forem preenchidas passam para a ampla concorrência" in corrido, "a reversão"
     assert "3º" in corrido, "o terceiro critério de desempate"
     assert "Egressos da escola pública" in corrido, "a Modalidade acrescentada"

@@ -54,8 +54,8 @@ def test_sob_sorteio_declarado_nem_arredondamento_nem_empate_mesmo_declarados():
         "Sorteio",
         "Participam do sorteio",
         "Recurso",
-        "Seguem no processo as 10 (dez) primeiras pessoas classificadas",
-        "Depois, poderão ser chamadas",
+        "Seguem no processo os 10 (dez) primeiros classificados",
+        "Depois, poderão ser chamados",
     ):
         assert trecho in corrido, trecho
 

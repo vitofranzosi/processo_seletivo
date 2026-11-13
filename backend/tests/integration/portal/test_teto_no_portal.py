@@ -34,7 +34,7 @@ from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 pytestmark = [pytest.mark.integration, pytest.mark.django_db(transaction=True)]
 
 # A frase do documento, na redação 2 desde a `069` (V7): o portal diz a da versão vigente.
-FRASE = "Cada pessoa pode enviar apenas 1 (uma) inscrição neste Edital."
+FRASE = "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
 
 
 def _com_teto(api_client, edital, teto, *, suffix="teto"):
@@ -91,7 +91,7 @@ def test_sem_teto_o_portal_nao_fala_de_limite(client, selecao, candidatos_regist
     revisao = _revisao(client, tecnico)
 
     for corpo in (pagina, revisao):
-        assert "Cada pessoa pode" not in corpo
+        assert "Cada candidato poderá" not in corpo
         assert "Limite atingido" not in corpo
     assert "Enviar inscrição" in revisao
 
@@ -176,6 +176,6 @@ def test_a_leitura_segue_a_versao_vigente(client, api_client, selecao, candidato
     pagina = _pagina(client, selecao)
     revisao = _revisao(client, tecnico)
 
-    assert "Cada pessoa pode enviar no máximo 2 (duas) inscrições neste Edital." in pagina
+    assert "Cada candidato pode enviar no máximo 2 (duas) inscrições neste Edital." in pagina
     assert "Limite atingido" not in pagina
     assert "Esta inscrição não pode ser enviada." not in revisao

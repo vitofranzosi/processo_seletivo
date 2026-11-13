@@ -13,7 +13,7 @@ import pytest
 from django.db import DatabaseError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
-from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_1, REDACAO_VIGENTE
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_1, REDACAO_2
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.publicacao import publish_original, retify
@@ -33,7 +33,7 @@ def publicado(api_client, manager_headers, process_payload):
 def test_a_publicacao_do_edital_grava_a_redacao_vigente(publicado):
     publicacao = Publicacao.objects.get(edital=publicado)
 
-    assert publicacao.redacao_do_documento == REDACAO_VIGENTE
+    assert publicacao.redacao_do_documento == REDACAO_2
 
 
 def test_a_publicacao_da_retificacao_grava_a_redacao_vigente(api_client, publicado):
@@ -58,7 +58,7 @@ def test_a_publicacao_da_retificacao_grava_a_redacao_vigente(api_client, publica
         .order_by("publication_order")
         .values_list("redacao_do_documento", flat=True)
     )
-    assert ordens == [REDACAO_VIGENTE, REDACAO_VIGENTE]
+    assert ordens == [REDACAO_2, REDACAO_2]
 
 
 def _hash_anterior(conteudo, secao_id):
@@ -81,7 +81,7 @@ def test_o_gatilho_recusa_mudar_a_redacao_depois(publicado):
     with pytest.raises(DatabaseError), transaction.atomic():
         Publicacao.objects.filter(edital=publicado).update(redacao_do_documento=REDACAO_1)
 
-    assert Publicacao.objects.get(edital=publicado).redacao_do_documento == REDACAO_VIGENTE
+    assert Publicacao.objects.get(edital=publicado).redacao_do_documento == REDACAO_2
 
 
 @postgresql_only

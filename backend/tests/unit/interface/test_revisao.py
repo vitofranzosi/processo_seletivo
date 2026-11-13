@@ -390,8 +390,8 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
         "da divulgação desse resultado." in tudo
     )
     assert (
-        "Corte: Seguem no processo as 3 (três) primeiras pessoas classificadas de cada lista de "
-        "concorrência, mais 1 (uma) pessoa suplente." in (tudo)
+        "Corte: Seguem no processo os 3 (três) primeiros classificados de cada lista de "
+        "concorrência, mais 1 (um) suplente." in (tudo)
     )
     # As frases do documento, e não uma redação própria da conferência (014, FR-185). O empate no
     # corte **não** sai sob sorteio declarado, como no documento: a ordem sorteada é total (067,
@@ -399,7 +399,7 @@ def test_a_classificacao_mostra_o_metodo_comum_e_o_que_o_marco_declara():
     assert "Empate no corte" not in tudo
     assert "Arredondamento" not in tudo
     assert (
-        "Continuação: Depois, poderão ser chamadas outras pessoas, além dessas, seguindo a "
+        "Continuação: Depois, poderão ser chamados outros candidatos, além desses, seguindo a "
         "mesma ordem." in tudo
     )
     assert "Etapa que o corte alimenta: nenhuma" in tudo
@@ -456,8 +456,8 @@ def test_o_marco_que_diverge_diz_em_que():
     assert [item["titulo"] for item in marcos] == ["3 Perfis: LP01, LP02 e LP04", "Perfil LP03"]
     assert marcos[1]["diverge"] == "Diverge do marco de 3 Perfis em: Corte."
     assert (
-        "Corte: Seguem no processo as 5 (cinco) primeiras pessoas classificadas de cada lista de "
-        "concorrência, mais 1 (uma) pessoa suplente." in (marcos[1]["linhas"])
+        "Corte: Seguem no processo os 5 (cinco) primeiros classificados de cada lista de "
+        "concorrência, mais 1 (um) suplente." in (marcos[1]["linhas"])
     )
 
 

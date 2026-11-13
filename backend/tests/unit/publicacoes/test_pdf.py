@@ -323,7 +323,7 @@ def test_document_reproduces_every_profile_of_the_homologated_version():
     assert perfil["requirements"][0] in texto
     assert "Vagas imediatas" in texto and "3" in texto
     # **Forma atualizada pela `069`** (P2): o cadastro dito pelo efeito, com o extenso.
-    assert "até 6 (seis) pessoas" in texto
+    assert "até 6 (seis) classificados" in texto
 
 
 def test_document_reproduces_competition_modalities_and_their_normative_rule():
@@ -703,7 +703,7 @@ def test_o_ato_sai_sempre_do_numero_e_do_ano(titulo, anuncio):
 def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
     """RC-12, pela DP-20: o teto executado na submissão é publicado no documento (015, FR-063)."""
     sem_teto = texto_de(documento(snapshot(), HASH))
-    assert "Cada pessoa pode enviar" not in sem_teto
+    assert "Cada candidato pode enviar" not in sem_teto
     assert "inscrição enviada" not in sem_teto
 
     um = [
@@ -712,7 +712,7 @@ def test_o_teto_de_inscricoes_sai_na_secao_da_inscricao():
             documento(snapshot(maxInscricoesPorCandidato=1), HASH)
         )
     ]
-    frase = "Cada pessoa pode enviar apenas 1 (uma) inscrição neste Edital."
+    frase = "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
     assert frase in um
     # Dentro da seção "Da Inscrição", depois do texto de quem redigiu, e antes da seção seguinte.
     inicio = next(i for i, linha in enumerate(um) if linha.endswith(". DA INSCRIÇÃO"))
