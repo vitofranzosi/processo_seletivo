@@ -318,7 +318,14 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
      byte, e os testes de bytes compõem com ela. `tests/unit/publicacoes/test_redacao_3.py` compõe o
      mesmo Edital nas duas redações e confere as duas pontas. Na célula estreita do cadastro, a 3
      diz *"até N pessoas"*: *"pessoas classificadas"* quebrava a linha da tabela.
-   - **Ficou a gestão** (*"quem foi convocado"*), que fala da pessoa a quem conduz o certame.
+   - **A gestão fica como está, por decisão do usuário (13/11).** O inventário achou ~430 frases em
+     ~135 arquivos — 224 ocorrências em 67 modelos da gestão e 209 em 68 módulos Python —, e quase
+     todas falam **do** candidato **para** a equipe que conduz o certame: "candidato" é o nome do
+     papel, e não tratamento de quem lê. Boa parte são termos do domínio definidos nas specs e
+     citados literalmente nos requisitos ("titulares", "suplentes", "habilitados", "classificados",
+     "empatados"), que os testes de vocabulário cobram; trocá-los por varredura deixaria tela, spec e
+     trilha desencontradas. Se a instituição adotar política de linguagem neutra também para a
+     equipe, ela cabe numa spec própria, que defina o vocabulário e revise as specs de uma vez.
    - *"área do candidato"* é o nome da área no portal.
 6. ~~**O mapa de estilos não entra no resumo da FR-3889.**~~ **Corrigido em 13/11**, a pedido do
    usuário. O mapa saiu do Python para um arquivo versionado,
