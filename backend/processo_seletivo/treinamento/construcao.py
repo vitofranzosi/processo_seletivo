@@ -670,7 +670,10 @@ class Montagem:
                     membro_id=self.membros[subject].id,
                     edital_id=self.edital.id,
                     etapa_id=self.id(etapa),
-                    idempotency_key=self.chave(f"alocar-{etapa[-2:]}-{subject[-1]}"),
+                    # O subject inteiro, pela razão da alocação à conferência: com só o último
+                    # caractere, um avaliador novo terminado em "1" ou "2" herdaria a chave de
+                    # quem já está aqui, e a alocação dele voltaria a do outro.
+                    idempotency_key=self.chave(f"alocar-{etapa[-2:]}-{subject}"),
                     correlation_id=self.correlacao,
                 )
 
