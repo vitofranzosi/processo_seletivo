@@ -79,7 +79,7 @@ def test_sem_destino_de_vaga_o_acesso_e_neutro(client, selecao, canal):
 
     assert titulo(resposta) == "Acesse sua área do candidato"
     assert "inscrição" not in titulo(resposta)
-    assert "Se é a sua primeira vez" in acesso
+    assert "Não precisa de senha nem de cadastro" in acesso, "quem chega não procura cadastro"
     assert CONTEXTO not in acesso
 
 

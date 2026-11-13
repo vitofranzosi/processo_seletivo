@@ -1340,8 +1340,8 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 /* O que aconteceu com o último pedido: às vezes boa notícia, às vezes recusa — tom neutro. */
 .cartao-de-acesso .aviso-do-envio{padding:.6rem .8rem;border-left:4px solid var(--texto-fraco);
   border-radius:0 6px 6px 0;background:var(--fundo);color:var(--texto);}
-.cartao-de-acesso .nota-do-acesso{margin:1rem 0 0;font-size:.875rem;color:var(--texto-fraco);
-  line-height:1.5;}
+/* A dica do campo no cartão sobe de .8125 para .875: é a única linha de explicação da tela. */
+.cartao-de-acesso .campo .dica{font-size:.875rem;line-height:1.5;}
 .cartao-de-acesso form.convite{margin:0;}
 .cartao-de-acesso .secundario{border-radius:6px;}
 /* O reenvio separado por um filete: é o caminho de quem não recebeu, e não uma segunda ação
