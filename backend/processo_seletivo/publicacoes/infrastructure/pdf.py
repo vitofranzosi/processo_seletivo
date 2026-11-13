@@ -1981,6 +1981,46 @@ SUPLENTES_DO_CADASTRO = (
     "vagas que não forem preenchidas pelos primeiros classificados."
 )
 
+# **A redação 3 (2026-11-13) nomeia a pessoa sem presumir o gênero** (achado 9 da auditoria dos
+# e-mails, decisão do usuário). "Pessoa" é o substantivo do Edital — já era "à pessoa convocada" e
+# "de quem concorre" —, e os numerais que o acompanham vão ao feminino: "as 3 (três) primeiras
+# pessoas classificadas". As frases da 1 e da 2 ficam como estão: o Edital publicado com elas grava
+# o número da redação e se recompõe com ele.
+EMPATE_NO_CORTE_3 = {
+    **EMPATE_NO_CORTE_2,
+    "ADMITS_SURPLUS": (
+        "Se houver empate na última posição, passam todas as pessoas empatadas, mesmo que "
+        "ultrapassem esse número."
+    ),
+}
+CONTINUACAO_DO_CORTE_3 = {
+    "ALLOWED": "Depois, poderão ser chamadas outras pessoas, além dessas, seguindo a mesma ordem.",
+    "NONE": "Não serão chamadas pessoas além dessas.",
+}
+SUPLENTES_SEM_CADASTRO_3 = (
+    "As pessoas suplentes são chamadas, na ordem, para as vagas deste Edital que não forem "
+    "preenchidas pelas primeiras pessoas classificadas."
+)
+SUPLENTES_DO_CADASTRO_3 = (
+    "As pessoas suplentes formam o cadastro de reserva deste Perfil e são chamadas, na ordem, para "
+    "as vagas que não forem preenchidas pelas primeiras pessoas classificadas."
+)
+
+
+def _sem_genero(redacao):
+    """A redação 3 em diante: a que não presume o gênero de quem o Edital nomeia (2026-11-13)."""
+    return redacao not in (REDACAO_1, REDACAO_2)
+
+
+def _tabela_do_empate(redacao):
+    return EMPATE_NO_CORTE_3 if _sem_genero(redacao) else EMPATE_NO_CORTE_2
+
+
+def _suplentes(do_cadastro, redacao):
+    if _sem_genero(redacao):
+        return SUPLENTES_DO_CADASTRO_3 if do_cadastro else SUPLENTES_SEM_CADASTRO_3
+    return SUPLENTES_DO_CADASTRO if do_cadastro else SUPLENTES_SEM_CADASTRO
+
 
 def tem_lista_reservada(snapshot, perfil):
     """Se o Perfil ordena mais de uma lista — a ampla e ao menos uma reservada (133, D-005).
@@ -1993,15 +2033,16 @@ def tem_lista_reservada(snapshot, perfil):
     return len(recortes_do_perfil(snapshot, perfil_id=(perfil or {}).get("id"))) > 1
 
 
-def frase_da_continuacao(marco):
+def frase_da_continuacao(marco, *, redacao=REDACAO_VIGENTE):
     """K9 e K10 — a continuação além dos que o corte publica, ou `""`."""
     regra = marco.get("cutRule")
-    return (
-        CONTINUACAO_DO_CORTE_2.get(regra.get("continuation"), "") if isinstance(regra, dict) else ""
-    )
+    tabela = CONTINUACAO_DO_CORTE_3 if _sem_genero(redacao) else CONTINUACAO_DO_CORTE_2
+    return tabela.get(regra.get("continuation"), "") if isinstance(regra, dict) else ""
 
 
-def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil=None):
+def frases_do_corte(
+    marco, etapas, *, sem_cadastro, com_reservadas=False, perfil=None, redacao=REDACAO_VIGENTE
+):
     """K1 a K10 — **a unidade indivisível** (FR-1375, R-009): corte, empate, suplentes, continuação.
 
     O empate fala de "esse número", e a continuação de "além desses": separadas na partilha parcial
@@ -2033,11 +2074,17 @@ def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil
         item.marco_id == str(marco.get("id")) for item in cadastro.marcos
     )
     if convoca and cadastro.so_de_reserva:
-        return _corte_do_cadastro(marco, regra, cadastro, etapas, com_reservadas=com_reservadas)
+        return _corte_do_cadastro(
+            marco, regra, cadastro, etapas, com_reservadas=com_reservadas, redacao=redacao
+        )
     um_so = False
+    sem_genero = _sem_genero(redacao)
     if regra.get("targetKind") == "FROM_VACANCY_TABLE":
         quantos = (
-            "os primeiros classificados de cada lista de concorrência, em número igual ao das "
+            "as primeiras pessoas classificadas de cada lista de concorrência, em número igual ao "
+            "das vagas dessa lista"
+            if sem_genero
+            else "os primeiros classificados de cada lista de concorrência, em número igual ao das "
             "vagas dessa lista"
         )
     else:
@@ -2045,11 +2092,20 @@ def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil
         if not _inteiro(alvo) or alvo < 0:
             return []
         um_so = alvo == 1
-        quantos = (
-            "o 1 (um) primeiro classificado"
-            if um_so
-            else f"os {_numero_por_extenso(alvo)} primeiros classificados"
-        )
+        if sem_genero:
+            quantos = (
+                "a 1 (uma) primeira pessoa classificada"
+                if um_so
+                else (
+                    f"as {_numero_por_extenso(alvo, feminino=True)} primeiras pessoas classificadas"
+                )
+            )
+        else:
+            quantos = (
+                "o 1 (um) primeiro classificado"
+                if um_so
+                else f"os {_numero_por_extenso(alvo)} primeiros classificados"
+            )
         # **O alvo fixo vale para cada lista** (133, FR-4553, CV-10). O motor o aplica em cada
         # recorte, e a frase dizia "os 8 primeiros" num Perfil com ampla, PcD e PPI: no Edital 900
         # do estudo de 07/11, 12 foram à Entrevista, e o teto era 24. Só com reservada, porque
@@ -2068,26 +2124,30 @@ def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil
         inicio = "Seguem no processo" if plural else "Segue no processo"
     frase = f"{inicio} {quantos}"
     if com_suplentes:
-        suplentes = "suplentes" if excedente != 1 else "suplente"
-        frase += f", mais {_numero_por_extenso(excedente)} {suplentes}"
+        if sem_genero:
+            suplentes = "pessoas suplentes" if excedente != 1 else "pessoa suplente"
+            frase += f", mais {_numero_por_extenso(excedente, feminino=True)} {suplentes}"
+        else:
+            suplentes = "suplentes" if excedente != 1 else "suplente"
+            frase += f", mais {_numero_por_extenso(excedente)} {suplentes}"
     unidade = [f"{frase}."]
     if not regras_do_marco.declara_sorteio(marco):
-        if empate := EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), ""):
+        if empate := _tabela_do_empate(redacao).get(regra.get("tieOutcome"), ""):
             unidade.append(empate)
     if com_suplentes:
         if cadastro is None:
             if sem_cadastro:
-                unidade.append(SUPLENTES_SEM_CADASTRO)
+                unidade.append(_suplentes(False, redacao))
         elif cadastro.especie == cadastro_de_reserva.NAO_HA:
-            unidade.append(SUPLENTES_SEM_CADASTRO)
+            unidade.append(_suplentes(False, redacao))
         elif convoca:
-            unidade.append(SUPLENTES_DO_CADASTRO)
-    if continuacao := frase_da_continuacao(marco):
+            unidade.append(_suplentes(True, redacao))
+    if continuacao := frase_da_continuacao(marco, redacao=redacao):
         unidade.append(continuacao)
     return unidade
 
 
-def _corte_do_cadastro(marco, regra, cadastro, etapas, *, com_reservadas):
+def _corte_do_cadastro(marco, regra, cadastro, etapas, *, com_reservadas, redacao=REDACAO_VIGENTE):
     """C3 — a unidade do corte do marco que convoca, no Perfil só de reserva (FR-6943).
 
     As vagas são zero, e por isso o alcance da faixa **é** o número do cadastro (T-006); com zero em
@@ -2099,16 +2159,37 @@ def _corte_do_cadastro(marco, regra, cadastro, etapas, *, com_reservadas):
     alcance = max((lista.numero for lista in numeros), default=0)
     de_cada = " de cada lista de concorrência" if com_reservadas else ""
     um_so = False
+    sem_genero = _sem_genero(redacao)
     if cadastro.especie == cadastro_de_reserva.LIMITADO:
         um_so = alcance == 1
-        abertura = (
-            f"Compõe o cadastro de reserva o 1 (um) primeiro classificado{de_cada}."
-            if um_so
-            else (
-                f"Compõem o cadastro de reserva os {_numero_por_extenso(alcance)} primeiros "
-                f"classificados{de_cada}."
+        if sem_genero:
+            abertura = (
+                f"Compõe o cadastro de reserva a 1 (uma) primeira pessoa classificada{de_cada}."
+                if um_so
+                else (
+                    "Compõem o cadastro de reserva as "
+                    f"{_numero_por_extenso(alcance, feminino=True)} primeiras pessoas "
+                    f"classificadas{de_cada}."
+                )
             )
-        )
+        else:
+            abertura = (
+                f"Compõe o cadastro de reserva o 1 (um) primeiro classificado{de_cada}."
+                if um_so
+                else (
+                    f"Compõem o cadastro de reserva os {_numero_por_extenso(alcance)} primeiros "
+                    f"classificados{de_cada}."
+                )
+            )
+    elif sem_genero:
+        abertura = "Compõem o cadastro de reserva todas as pessoas classificadas, sem limite."
+        if alcance == 1:
+            abertura += f" É chamada primeiro a 1 (uma) primeira{de_cada}."
+        elif alcance > 1:
+            abertura += (
+                " São chamadas primeiro as "
+                f"{_numero_por_extenso(alcance, feminino=True)} primeiras{de_cada}."
+            )
     else:
         abertura = "Compõem o cadastro de reserva todos os classificados, sem limite."
         if alcance == 1:
@@ -2120,16 +2201,23 @@ def _corte_do_cadastro(marco, regra, cadastro, etapas, *, com_reservadas):
     governada = regra.get("governedStage")
     destino = etapas.get(str(governada)) if governada else None
     if nome := (destino.get("name") if isinstance(destino, dict) else ""):
-        abertura += (
-            f" Ele participa da Etapa {_aspas(nome)}."
-            if um_so
-            else f" Eles participam da Etapa {_aspas(nome)}."
-        )
+        if sem_genero:
+            abertura += (
+                f" Ela participa da Etapa {_aspas(nome)}."
+                if um_so
+                else f" Elas participam da Etapa {_aspas(nome)}."
+            )
+        else:
+            abertura += (
+                f" Ele participa da Etapa {_aspas(nome)}."
+                if um_so
+                else f" Eles participam da Etapa {_aspas(nome)}."
+            )
     unidade = [abertura]
     if not regras_do_marco.declara_sorteio(marco):
-        if empate := EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), ""):
+        if empate := _tabela_do_empate(redacao).get(regra.get("tieOutcome"), ""):
             unidade.append(empate)
-    if continuacao := frase_da_continuacao(marco):
+    if continuacao := frase_da_continuacao(marco, redacao=redacao):
         unidade.append(continuacao)
     return unidade
 
@@ -2233,11 +2321,24 @@ FRASE_DA_REVERSAO_2 = {
         "concorrência do mesmo código."
     ),
 }
+# A 3 só muda o gatilho por ausência: "pessoas aprovadas", e não "candidatos aprovados".
+FRASE_DA_REVERSAO_3 = {
+    **FRASE_DA_REVERSAO_2,
+    "ON_EXHAUSTION": (
+        "Se não houver pessoas aprovadas para as vagas reservadas de um código, essas vagas "
+        "passam para a ampla concorrência do mesmo código."
+    ),
+}
 
 
 def frase_da_reversao(especie, *, redacao=REDACAO_VIGENTE):
     """V1 e V2 — o gatilho e o destino; "a respectiva" ampla concorrência é a do mesmo código."""
-    tabela = FRASE_DA_REVERSAO if redacao == REDACAO_1 else FRASE_DA_REVERSAO_2
+    if redacao == REDACAO_1:
+        tabela = FRASE_DA_REVERSAO
+    elif _sem_genero(redacao):
+        tabela = FRASE_DA_REVERSAO_3
+    else:
+        tabela = FRASE_DA_REVERSAO_2
     return tabela.get(especie, "")
 
 
@@ -2383,7 +2484,7 @@ def texto_do_documento(documento):
     return texto
 
 
-def frase_do_cadastro(perfil):
+def frase_do_cadastro(perfil, *, redacao=REDACAO_VIGENTE):
     """P2 — o cadastro de reserva por extenso (FR-1371), com o número do corte (162, C1).
 
     **O número do limitado vem do corte do marco que convoca** (FR-6929, FR-6941): é o que a faixa
@@ -2392,41 +2493,65 @@ def frase_do_cadastro(perfil):
     frase não o inventa: esse Perfil não publica (FR-6935).
     """
     cadastro = cadastro_de_reserva.do_perfil(perfil)
+    sem_genero = _sem_genero(redacao)
     if cadastro.especie == cadastro_de_reserva.ILIMITADO:
+        if sem_genero:
+            return "cadastro de reserva sem limite de pessoas classificadas"
         return "cadastro de reserva sem limite de classificados"
     if cadastro.especie == cadastro_de_reserva.NAO_HA:
         return "não há cadastro de reserva"
     if cadastro.especie != cadastro_de_reserva.LIMITADO:
         return ""
     if cadastro.legado:
+        if sem_genero:
+            return (
+                "cadastro de reserva de até "
+                f"{_classificados(cadastro.publicado, redacao=redacao)} por Perfil"
+            )
         return (
             f"cadastro de reserva de até {_numero_por_extenso(cadastro.publicado)} classificados "
             "por Perfil"
         )
     if not cadastro.por_lista:
         return ""
-    frase = f"cadastro de reserva de até {_numeros_do_cadastro(cadastro)}"
+    frase = f"cadastro de reserva de até {_numeros_do_cadastro(cadastro, redacao=redacao)}"
     # O empate que admite excedente pode levar a faixa além do número (FR-6938): a unidade do corte
     # já diz que "passam todos os empatados", e o cadastro não pode afirmar o contrário.
     if cadastro.admite_empate:
-        frase += ", além dos empatados na última posição"
+        frase += (
+            ", além das pessoas empatadas na última posição"
+            if sem_genero
+            else ", além dos empatados na última posição"
+        )
     return frase
 
 
-def _classificados(numero):
-    return f"{_numero_por_extenso(numero)} {'classificado' if numero == 1 else 'classificados'}"
+def _unidade_dos_classificados(numero, redacao):
+    if _sem_genero(redacao):
+        return "pessoa classificada" if numero == 1 else "pessoas classificadas"
+    return "classificado" if numero == 1 else "classificados"
 
 
-def _numeros_do_cadastro(cadastro):
+def _classificados(numero, *, redacao=REDACAO_VIGENTE):
+    extenso = _numero_por_extenso(numero, feminino=_sem_genero(redacao))
+    return f"{extenso} {_unidade_dos_classificados(numero, redacao)}"
+
+
+def _pessoas(numero, *, redacao=REDACAO_VIGENTE):
+    """`3 (três) pessoas` — o número da célula estreita do cadastro, na redação 3."""
+    return f"{_numero_por_extenso(numero, feminino=True)} {'pessoa' if numero == 1 else 'pessoas'}"
+
+
+def _numeros_do_cadastro(cadastro, *, redacao=REDACAO_VIGENTE):
     """`3 (três) classificados por Perfil`, `… em cada lista de concorrência`, ou um por lista."""
     unico = cadastro.numero_unico
     if unico is not None:
         onde = " em cada lista de concorrência" if cadastro.com_modalidade else " por Perfil"
-        return f"{_classificados(unico)}{onde}"
+        return f"{_classificados(unico, redacao=redacao)}{onde}"
     return cadastro_de_reserva.frase_das_listas(
         cadastro.por_lista,
-        numero=_numero_por_extenso,
-        unidade=lambda n: "classificado" if n == 1 else "classificados",
+        numero=lambda n: _numero_por_extenso(n, feminino=_sem_genero(redacao)),
+        unidade=lambda n: _unidade_dos_classificados(n, redacao),
     )
 
 
@@ -2435,7 +2560,7 @@ def _igual_em_todos(perfis, chave):
     return len(valores) == 1 and bool(perfis[0].get(chave))
 
 
-def frase_dos_atributos_comuns(perfis):
+def frase_dos_atributos_comuns(perfis, *, redacao=REDACAO_VIGENTE):
     """P1 — o que é **igual em todos os Perfis**, uma vez (FR-1374), ou `""`.
 
     Só o que é igual em todos, por identidade do valor: nome, descrição, carga horária,
@@ -2460,7 +2585,7 @@ def frase_dos_atributos_comuns(perfis):
         partes.append(f"carga horária de {perfis[0]['workload']}")
     if _igual_em_todos(perfis, "compensation"):
         partes.append(f"remuneração: {inicial_minuscula(perfis[0]['compensation'])}")
-    cadastros = {frase_do_cadastro(perfil) for perfil in perfis}
+    cadastros = {frase_do_cadastro(perfil, redacao=redacao) for perfil in perfis}
     if len(cadastros) == 1 and (cadastro := cadastros.pop()):
         partes.append(cadastro)
     if not partes:
@@ -2712,6 +2837,7 @@ def _marcos_na_redacao_2(
                     sem_cadastro=sem_cadastro,
                     com_reservadas=tem_lista_reservada(snapshot, perfil),
                     perfil=perfil,
+                    redacao=composicao.redacao,
                 ):
                     with parte():
                         for indice, frase in enumerate(corte):
@@ -4071,20 +4197,24 @@ def _reserva(perfil, *, redacao=REDACAO_VIGENTE):
     )
     if redacao != REDACAO_1:
         tipo, limite = perfil.get("reserveType"), perfil.get("reserveLimit")
+        # **Na célula estreita, a 3 diz "pessoas"** (2026-11-13): "até 3 (três) pessoas
+        # classificadas" quebraria a linha da tabela, e sob o título "Cadastro de reserva" o
+        # "classificadas" é redundante. A frase corrida, que tem espaço, diz por inteiro.
+        quantos = _pessoas if _sem_genero(redacao) else _classificados
         if tipo == "LIMITED" and _inteiro(limite):
-            return f"até {_numero_por_extenso(limite)} classificados"
+            return f"até {quantos(limite, redacao=redacao)}"
         # O número do corte (162, C2), na célula estreita: um só, ou um por lista pelo código.
         if derivado and (unico := cadastro.numero_unico) is not None:
-            return f"até {_classificados(unico)}" + (
+            return f"até {quantos(unico, redacao=redacao)}" + (
                 " por lista" if cadastro.com_modalidade else ""
             )
         if derivado:
             return "até " + ", ".join(
-                f"{_numero_por_extenso(lista.numero)} {lista.codigo}"
+                f"{_numero_por_extenso(lista.numero, feminino=_sem_genero(redacao))} {lista.codigo}"
                 for lista in cadastro.por_lista
             )
         if tipo == "UNLIMITED":
-            return "sem limite de classificados"
+            return "sem limite" if _sem_genero(redacao) else "sem limite de classificados"
         if tipo == "NONE":
             return "não há"
     reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
@@ -4446,7 +4576,9 @@ def _titulo_do_grupo(
     Editais escritos à mão.
     """
     if redacao != REDACAO_1:
-        return _titulo_do_grupo_2(perfil_id, modalidade_id, perfis, codigo, snapshot)
+        return _titulo_do_grupo_2(
+            perfil_id, modalidade_id, perfis, codigo, snapshot, redacao=redacao
+        )
     if codigo:
         # O recorte transversal (044, FR-712): um grupo por código, sem Perfil. O título é o que o
         # PDF já imprimia para "Todos os Perfis + Modalidade" — a diferença é que agora ele é
@@ -4477,7 +4609,9 @@ def _lista_por_extenso(modalidade):
     return nome or codigo
 
 
-def _titulo_do_grupo_2(perfil_id, modalidade_id, perfis, codigo, snapshot):
+def _titulo_do_grupo_2(
+    perfil_id, modalidade_id, perfis, codigo, snapshot, *, redacao=REDACAO_VIGENTE
+):
     """D1 a D4 — a quem o grupo de documentos se dirige, e que é **além** dos de todos.
 
     "Também" diz o que a redação 1 deixava implícito: os documentos do grupo se somam aos que todos
@@ -4492,7 +4626,8 @@ def _titulo_do_grupo_2(perfil_id, modalidade_id, perfis, codigo, snapshot):
         lista = modalidades.get(("codigo", codigo)) or {"code": codigo}
         return f"Também, de quem concorre às vagas para {_lista_por_extenso(lista)}:"
     if perfil_id is None and modalidade_id is None:
-        return "De todos os candidatos:"
+        # A 3 diz a quem como os demais grupos dizem: "de quem…" (2026-11-13).
+        return "De quem se inscreve:" if _sem_genero(redacao) else "De todos os candidatos:"
     lista = _lista_por_extenso(modalidades.get(modalidade_id) or {})
     if modalidade_id is None:
         return f"Também, de quem concorre ao Perfil {perfis.get(perfil_id, '')}:"
@@ -4560,8 +4695,13 @@ def _documentos_exigidos(composicao, snapshot, secao=0, tabelas=None):
             junto=True,
         )
         composicao.escrever(
-            "Estes documentos são pedidos só a quem for convocado, e são apresentados na área do "
-            "candidato dentro do prazo da convocação.",
+            (
+                "Estes documentos são pedidos só na convocação, e são apresentados na área do "
+                "candidato dentro do prazo dela."
+                if _sem_genero(composicao.redacao)
+                else "Estes documentos são pedidos só a quem for convocado, e são apresentados na "
+                "área do candidato dentro do prazo da convocação."
+            ),
             tamanho=CORPO_TEXTO,
             antes=ANTES_DE_LINHA,
         )
@@ -5068,10 +5208,11 @@ def teto_de_inscricoes(snapshot, *, redacao=REDACAO_VIGENTE):
         return f"Cada candidato poderá ter no máximo {teto} inscrições enviadas neste Edital."
     # V7, V8: "enviar" diz o mesmo que "ter enviada" — o rascunho não conta (FR-064) —, e o número
     # ganha o extenso, como todo número de regra do documento.
+    quem = "Cada pessoa" if _sem_genero(redacao) else "Cada candidato"
     if teto == 1:
-        return "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital."
+        return f"{quem} pode enviar apenas 1 (uma) inscrição neste Edital."
     return (
-        f"Cada candidato pode enviar no máximo {_numero_por_extenso(teto, feminino=True)} "
+        f"{quem} pode enviar no máximo {_numero_por_extenso(teto, feminino=True)} "
         "inscrições neste Edital."
     )
 
@@ -5125,7 +5266,8 @@ def requerimento_de_matricula(snapshot, *, redacao=REDACAO_VIGENTE):
         # duas são uma regra só, e a paginação não as separa da declaração (FR-1391).
         anuncio = f"O Requerimento de Matrícula é enviado {momento}."
         if declaracao:
-            anuncio += " Ao enviá-lo, o candidato declara:"
+            quem = "a pessoa" if _sem_genero(redacao) else "o candidato"
+            anuncio += f" Ao enviá-lo, {quem} declara:"
         partes = [(anuncio, 0.0)]
     partes.extend((paragrafo, RECUO_DA_DECLARACAO) for paragrafo in declaracao)
     return partes
@@ -5442,6 +5584,7 @@ def render_edital_pdf(
     data_do_ato: date | None = None,
     consolidacao: Consolidacao | None = None,
     fechos_previstos: tuple = (),
+    redacao: int = REDACAO_VIGENTE,
 ) -> bytes:
     """O mesmo documento, em dois modos.
 
@@ -5489,7 +5632,10 @@ def render_edital_pdf(
     def compor(paginas):
         # A fonte embutida mede o texto do Edital (069, FR-1381): a quebra, a justificação e a
         # posição são as do glifo que o arquivo carrega, em qualquer leitor.
-        composicao = Composicao(metrica=METRICA_DO_EDITAL, equilibrio=True)
+        # A redação das frases geradas: a vigente, quando se publica; a gravada, quando se recompõe
+        # o documento de um ato (R-004 da 069). Sem ela, o documento publicado com a 2 deixaria de
+        # se reproduzir byte a byte assim que a 3 passou a vigente.
+        composicao = Composicao(metrica=METRICA_DO_EDITAL, equilibrio=True, redacao=redacao)
         _cabecalho(composicao, snapshot, unidade, consolidacao)
 
         def fecho():

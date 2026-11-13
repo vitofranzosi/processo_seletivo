@@ -103,7 +103,7 @@ DOCUMENTOS = [
 @pytest.mark.parametrize(
     ("trecho", "porque"),
     [
-        ("De todos os candidatos", "o bloco sem restrição se anuncia como de todos"),
+        ("De quem se inscreve", "o bloco sem restrição se anuncia como de todos"),
         ("Documento de identificacao", "o nome do requisito vai para o documento"),
         # **Forma atualizada pela `069`** (D3, D5): a instrução segue o travessão em minúscula, e o
         # bloco restrito nomeia a lista pelas vagas a que ela concorre.

@@ -291,6 +291,8 @@ def test_o_documento_da_auditoria_sai_com_os_bytes_esperados_depois_da_069(cenar
             sigla="Cefor",
         ),
         autoridade=AUTORIDADES[cenario],
+        # A redação destes bytes (a 3, de 2026-11-13, só muda frases).
+        redacao=pdf.REDACAO_2,
         data_do_ato=date(2026, 10, 8),
     )
     assert documento == ESPERADOS[cenario].read_bytes()

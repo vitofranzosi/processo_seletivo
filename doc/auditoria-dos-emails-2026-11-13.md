@@ -309,10 +309,16 @@ Fora do escopo de apresentação, ou fixados por spec/decisão; a decisão é do
      comprovante já baixado deixar de conferir. A relação de habilitados não tem conteúdo em JSON
      onde gravar o rótulo. Nos dois, "só atos futuros" pede uma coluna que diga o vocabulário de
      cada registro.
-   - **Ficaram, fora do que a decisão alcançou**: o resto do Edital — *"Cada candidato pode…"* (V7,
-     V8), *"o candidato declara"*, *"Dos candidatos ao perfil"* e outras —, que é a redação jurídica
-     do documento e pede revisão própria; e a gestão (*"quem foi convocado"*), que fala da pessoa a
-     quem conduz o certame.
+   - **O resto do Edital, corrigido em 13/11, a pedido do usuário**: a redação 3 passou a ser a 2
+     sem o masculino genérico — corte, empate, suplentes, continuação, cadastro de reserva,
+     reversão, teto, Requerimento, grupos de documentos, documentos da convocação e o resumo. O
+     inventário frase a frase está em `specs/069-edital-linguagem-simples/contracts/redacao.md`.
+     O compositor (`render_edital_pdf`) passou a receber a redação, e o compositor por perguntas a
+     leva a cada frase em vez de confiar no padrão: o Edital da 2 continua se recompondo byte a
+     byte, e os testes de bytes compõem com ela. `tests/unit/publicacoes/test_redacao_3.py` compõe o
+     mesmo Edital nas duas redações e confere as duas pontas. Na célula estreita do cadastro, a 3
+     diz *"até N pessoas"*: *"pessoas classificadas"* quebrava a linha da tabela.
+   - **Ficou a gestão** (*"quem foi convocado"*), que fala da pessoa a quem conduz o certame.
    - *"área do candidato"* é o nome da área no portal.
 6. ~~**O mapa de estilos não entra no resumo da FR-3889.**~~ **Corrigido em 13/11**, a pedido do
    usuário. O mapa saiu do Python para um arquivo versionado,

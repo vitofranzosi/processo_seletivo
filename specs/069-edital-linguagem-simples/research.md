@@ -95,8 +95,8 @@ as três numerações que a `054` unificou (RC-26).
 
 - a 1, de hoje, congelada;
 - a 2, desta feature.
-- a 3, de 2026-11-13 (auditoria dos e-mails), que só troca o momento do Requerimento na convocação
-  (V12) por *"na convocação"* — ver `contracts/redacao.md`.
+- a 3, de 2026-11-13 (auditoria dos e-mails), que é a 2 sem o masculino genérico — o inventário está
+  em `contracts/redacao.md`.
 
 As funções públicas (`criterio_por_extenso`, `forma_de_convocacao_por_extenso`, `teto_de_inscricoes`
 e as do marco que a Revisão importa) recebem a redação, e por padrão usam a vigente. A `Publicacao`

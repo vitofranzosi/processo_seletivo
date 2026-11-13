@@ -743,7 +743,8 @@ def cortado(**regra):
     [
         (
             "ADMITS_SURPLUS",
-            "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
+            "Se houver empate na última posição, passam todas as pessoas empatadas, mesmo que "
+            "ultrapassem "
             "esse número.",
         ),
         (
@@ -758,8 +759,8 @@ def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
 
     # 133 (FR-4553): com reservada no Perfil, o alvo fixo diz "de cada lista de concorrência".
     assert (
-        "Seguem no processo os 10 (dez) primeiros classificados de cada lista de concorrência."
-        in escrito
+        "Seguem no processo as 10 (dez) primeiras pessoas classificadas de cada lista de "
+        "concorrência." in escrito
     )
     assert frase in escrito
 
@@ -769,9 +770,9 @@ def test_o_documento_imprime_o_desfecho_do_empate_no_corte(desfecho, frase):
     [
         (
             "ALLOWED",
-            "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem.",
+            "Depois, poderão ser chamadas outras pessoas, além dessas, seguindo a mesma ordem.",
         ),
-        ("NONE", "Não serão chamados candidatos além desses."),
+        ("NONE", "Não serão chamadas pessoas além dessas."),
     ],
 )
 def test_o_documento_imprime_a_continuacao_do_corte(continuacao, frase):
@@ -800,10 +801,14 @@ def test_o_alvo_de_um_concorda_com_o_numero():
         com_classificacao(marcos=[cortado(targetCount=1, surplusCount=1, tieOutcome="STRICT")])
     )
 
-    assert "Segue no processo o 1 (um) primeiro classificado de cada lista de concorrência." in um
     assert (
-        "Seguem no processo o 1 (um) primeiro classificado de cada lista de concorrência, mais "
-        "1 (um) suplente."
+        "Segue no processo a 1 (uma) primeira pessoa classificada de cada lista de concorrência."
+        in um
+    )
+    assert (
+        "Seguem no processo a 1 (uma) primeira pessoa classificada de cada lista de concorrência, "
+        "mais "
+        "1 (uma) pessoa suplente."
     ) in com_suplente
 
 

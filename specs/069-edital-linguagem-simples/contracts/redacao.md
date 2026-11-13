@@ -108,7 +108,28 @@ derivação, semente e substituição, nos pares.
 | V12 | Requerimento na convocação | "O Requerimento de Matrícula será enviado quando o candidato for convocado." | "O Requerimento de Matrícula é enviado quando o candidato for convocado. Ao enviá-lo, o candidato declara:" |
 | V13 | Lembrete em Documentos e Inscrição (novo) | — | "Além destes documentos, a inscrição inclui o Requerimento de Matrícula (item «N»)." (só AT_ENROLLMENT) |
 
-> **Redação 3 (2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`, achado 9).** Só a V12 muda: *"O Requerimento de Matrícula é enviado na convocação. Ao enviá-lo, o candidato declara:"* — *"na convocação"* no lugar de *"quando o candidato for convocado"*, que presumia o gênero de quem lê. Todas as outras frases da 3 são as da 2. O Edital publicado com a 1 ou a 2 grava o número da redação e continua se recompondo com ela. *"Cada candidato"* (V7, V8), *"o candidato declara"* e as demais frases do Edital com masculino genérico ficaram como estão: a decisão do usuário alcançou só a expressão do momento.
+> **Redação 3 (2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`, achado 9).**
+> A 2 sem o masculino genérico, por decisão do usuário. "Pessoa" é o substantivo — o Edital já dizia
+> "à pessoa convocada" e "de quem concorre" —, e os numerais que a acompanham vão ao feminino. O
+> Edital publicado com a 1 ou a 2 grava o número da redação e continua se recompondo com ela.
+>
+> | # | Redação 2 | Redação 3 |
+> |---|---|---|
+> | V1 | "Se não houver candidatos aprovados para as vagas reservadas…" | "Se não houver pessoas aprovadas para as vagas reservadas…" |
+> | V4 | "A convocação dos classificados será feita por publicação." | "A convocação das pessoas classificadas será feita por publicação." |
+> | V7, V8 | "Cada candidato pode enviar…" | "Cada pessoa pode enviar…" |
+> | V11, V12 | "…Ao enviá-lo, o candidato declara:"; "quando o candidato for convocado" | "…Ao enviá-lo, a pessoa declara:"; "na convocação" |
+> | K1 a K3 | "os primeiros classificados…", "os 10 (dez) primeiros classificados", "o 1 (um) primeiro classificado", "mais 3 (três) suplentes" | "as primeiras pessoas classificadas…", "as 10 (dez) primeiras pessoas classificadas", "a 1 (uma) primeira pessoa classificada", "mais 3 (três) pessoas suplentes" |
+> | K5 | "passam todos os empatados" | "passam todas as pessoas empatadas" |
+> | K7 | "Os suplentes são chamados… pelos primeiros classificados." | "As pessoas suplentes são chamadas… pelas primeiras pessoas classificadas." |
+> | K9, K10 | "poderão ser chamados outros candidatos, além desses"; "Não serão chamados candidatos além desses." | "poderão ser chamadas outras pessoas, além dessas"; "Não serão chamadas pessoas além dessas." |
+> | D1 | "De todos os candidatos:" | "De quem se inscreve:" |
+> | P2 | "cadastro de reserva de até N classificados…", "sem limite de classificados"; na célula, "até N classificados" | "…de até N pessoas classificadas…", "sem limite de pessoas classificadas"; na célula estreita, "até N pessoas" e "sem limite" |
+> | C3, C4 (162) | "Compõem o cadastro de reserva os N primeiros classificados…", "Os suplentes formam o cadastro…", "Eles participam" | "…as N primeiras pessoas classificadas…", "As pessoas suplentes formam o cadastro…", "Elas participam" |
+> | Documentos na convocação | "pedidos só a quem for convocado… dentro do prazo da convocação" | "pedidos só na convocação… dentro do prazo dela" |
+> | Resumo | "Por candidato" | "Por pessoa" |
+>
+> *"área do candidato"*, nome da área no portal, fica.
 
 ## 7. Etapas, documentos, atributos, fecho
 

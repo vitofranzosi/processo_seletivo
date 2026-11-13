@@ -26,10 +26,14 @@ def congelado(cenario):
     return json.loads((CONGELADOS / f"{cenario}-conteudo-publicado.json").read_text("utf-8"))
 
 
-def composto(cenario, conteudo=None, *, modo=pdf.MODO_PUBLICADO):
-    """O documento do cenário composto agora — com outro conteúdo, se for dado."""
+def composto(cenario, conteudo=None, *, modo=pdf.MODO_PUBLICADO, redacao=pdf.REDACAO_2):
+    """O documento do cenário composto agora — com outro conteúdo, se for dado.
+
+    **Na redação 2**, que é a destes cenários: os PDFs deles foram gravados com ela, e a 3
+    (2026-11-13) só muda frases. Quem quer o cenário na redação vigente passa `redacao`.
+    """
     dados = congelado(cenario)
-    kwargs = {"unidade": UNIDADE}
+    kwargs = {"unidade": UNIDADE, "redacao": redacao}
     if modo == pdf.MODO_PUBLICADO:
         kwargs.update(autoridade=AUTORIDADES[cenario], data_do_ato=DATA_DO_ATO)
     return pdf.render_edital_pdf(
@@ -56,10 +60,12 @@ def levado_ao_catalogo_novo(conteudo):
     return novo
 
 
-def por_perguntas(cenario, conteudo=None, *, modo=pdf.MODO_PUBLICADO):
+def por_perguntas(cenario, conteudo=None, *, modo=pdf.MODO_PUBLICADO, redacao=pdf.REDACAO_2):
     """O documento do cenário levado ao catálogo novo: a apresentação por perguntas."""
     dados = congelado(cenario)
-    return composto(cenario, levado_ao_catalogo_novo(conteudo or dados["content"]), modo=modo)
+    return composto(
+        cenario, levado_ao_catalogo_novo(conteudo or dados["content"]), modo=modo, redacao=redacao
+    )
 
 
 def variante_de_b():
