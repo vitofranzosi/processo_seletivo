@@ -652,8 +652,13 @@ def test_nenhuma_frase_afirma_o_que_ninguem_decidiu(momento):
         assert [p for p in PROIBIDOS if re.search(p, lidas)] == [], momento
 
 
-def test_a_frase_do_aceite_diz_o_que_o_registro_nao_e():
-    assert o.ACEITE.startswith("Este registro não é matrícula, bolsa nem contrato")
+def test_a_frase_do_aceite_diz_o_que_vem_depois_e_nao_repete_a_frase_simples():
+    """O que o registro não é foi para a frase simples do aceite (156, FR-6406)."""
+    from processo_seletivo.portal import desfecho
+
+    assert o.ACEITE == "Os próximos passos são os que o Edital indica."
+    assert desfecho.NAO_E_MATRICULA == "Este registro não é matrícula, bolsa nem contrato."
+    assert desfecho.NAO_E_MATRICULA not in o.ACEITE
 
 
 def test_o_formato_do_prazo_e_um_so():

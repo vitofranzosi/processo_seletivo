@@ -84,12 +84,13 @@ def convocacao(*, lista_id=None, vencimento=INSTANTE, especie="Para vaga inicial
     )
 
 
-def desfecho(especie):
+def desfecho(especie, atestado=None):
     return SimpleNamespace(
         especie=especie,
         fundamento="Registro da comissão.",
         registrado_em=INSTANTE,
         get_especie_display=lambda: especie,
+        atestado=SimpleNamespace(especie=atestado) if atestado else None,
     )
 
 
@@ -129,15 +130,37 @@ class TestCadaDegrau:
             estado=convocacao_nomes.DESFECHADO,
         )
         assert resultado.rotulo == "Vaga aceita"
-        assert "Registro da comissão." in textos(resultado)
+        # Duas camadas (156, FR-1172 revista): a frase simples no texto, e o fundamento gravado,
+        # com a data do registro, só no recolhido.
+        assert "A comissão registrou o resultado da sua convocação em 23/09/2026." in textos(
+            resultado
+        )
+        assert "Registro da comissão." not in textos(resultado)
+        assert resultado.porque[0].fundamento == "Registrado em 23/09/2026: Registro da comissão."
+        assert resultado.porque[0].rotulo_do_fundamento == "Fundamento do registro"
         assert resultado.o_que_fazer.principal == situacao.NADA_POR_ENQUANTO
         assert not resultado.provisoria
 
     @pytest.mark.parametrize("especie", convocacao_nomes.ESPECIES_DE_DESFECHO)
     def test_cada_desfecho_tem_o_rotulo_da_tabela(self, especie):
-        resultado = calcular(convocacao=convocacao(), desfecho=desfecho(especie))
+        resultado = calcular(
+            convocacao=convocacao(),
+            desfecho=desfecho(especie, atestado=convocacao_nomes.ATESTADO_NAO_ENTREGA_PRESENCIAL),
+        )
         assert resultado.rotulo == situacao.DESFECHOS[especie]
         assert resultado.codigo == f"DESFECHO_{especie}"
+
+    @pytest.mark.parametrize("especie", convocacao_nomes.ESPECIES_DE_DESFECHO)
+    def test_cada_desfecho_diz_a_frase_simples_e_recolhe_o_fundamento(self, especie):
+        """156, FR-6400, FR-6406: a primeira linha do porquê é a frase da espécie."""
+        resultado = calcular(
+            convocacao=convocacao(),
+            desfecho=desfecho(especie, atestado=convocacao_nomes.ATESTADO_NAO_ENTREGA_PRESENCIAL),
+        )
+        primeira = resultado.porque[0]
+        assert primeira.texto.startswith(("A comissão registrou", "O prazo desta convocação"))
+        assert "23/09/2026" in primeira.texto
+        assert primeira.fundamento.endswith("Registro da comissão.")
 
     def test_convocacao_aberta_e_convocado(self):
         resultado = calcular(convocacao=convocacao(), estado=EM_CURSO)

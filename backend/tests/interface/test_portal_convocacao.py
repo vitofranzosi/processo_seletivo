@@ -599,6 +599,10 @@ def _frases_da_sc_1150(letra):
         "I1": [
             "Resultado da sua convocação",
             f"Resultado registrado: {situacao.DESFECHOS[nomes.ACEITE]}",
+            # A frase simples do aceite diz o que o registro não é (156, FR-6406; FR-6206 da `154`).
+            "A comissão registrou o resultado da sua convocação em",
+            "Este registro não é matrícula, bolsa nem contrato.",
+            "Fundamento do registro",
             obrigacoes.ACEITE,
             "Conferido",
         ],

@@ -212,7 +212,8 @@ class TestMinhasInscricoes:
         item = item_da_lista(client, pessoa)
 
         assert "Convocação aberta" not in item
-        assert "Convocação: Aceite" in item
+        # O rótulo da FR-1172 da `063`, e não a espécie crua (156, FR-6405).
+        assert "Convocação: Vaga aceita" in item
         assert acao_principal(item) == (
             reverse("portal:acompanhamento", args=[pessoa.id]),
             "Acompanhar",
@@ -364,7 +365,9 @@ class TestAcompanhamento:
 
         secao = self.secao(self.abrir(client, pessoa))
 
-        assert "Para vaga inicial" in secao
+        # *"Chamada"*, e não *"Espécie"* (156, FR-6403, R-005).
+        assert "1ª chamada, para vaga inicial" in secao
+        assert "Espécie" not in secao
         # O formato único do prazo (FR-3747 da `118`), dito como dado do ato nesta seção.
         assert vencimento.strftime("%d/%m/%Y, às %Hh%M") in secao
         assert "contado do envio da comunicação" in secao

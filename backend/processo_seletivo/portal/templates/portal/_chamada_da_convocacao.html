@@ -66,8 +66,10 @@ Toda frase vem de `portal/obrigacoes.py`; o template só a coloca no lugar.
   </ul>
 
   {% elif o.decidida %}
+  {% comment %}Duas camadas (156, FR-6400): a frase simples da espécie, e o fundamento gravado recolhido sob ela.{% endcomment %}
   <p class="acao-principal">Resultado registrado: {{ rotulo_do_desfecho }}</p>
-  <p>Registrado em {{ desfecho.registrado_em|date:"d/m/Y" }}: {{ desfecho.fundamento }}</p>
+  <p>{{ frase_do_desfecho }}</p>
+  {% include "portal/_fundamento_do_ato.html" with rotulo=rotulo_do_fundamento texto=fundamento_do_registro %}
   {% if aceite %}<p>{{ aceite }}</p>{% endif %}
   {% endif %}
 </section>

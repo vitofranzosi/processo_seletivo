@@ -84,10 +84,12 @@ CONVITE_AO_OPCIONAL = "Há documento opcional que você pode enviar, se quiser."
 # **O núcleo mora com as recusas** (FR-3748): os comandos de envio o usam, e a tela não pode dizer
 # outra coisa.
 NUCLEO_DO_PRAZO = NUCLEO_DO_PRAZO_DECORRIDO
-ACEITE = (
-    "Este registro não é matrícula, bolsa nem contrato: ele registra o resultado desta convocação. "
-    "Os próximos passos são os que o Edital indica."
-)
+# **Só o que vem depois da frase simples** (156): *"Este registro não é matrícula, bolsa nem
+# contrato"* passou para a frase do aceite e da regularização (`portal/desfecho.py`, FR-6406), que
+# as duas telas mostram logo acima, e repeti-la aqui era dizer a mesma coisa duas vezes. O que fica
+# é a segunda oração da FR-3750 da `118`, até que o próximo passo pelo Edital publicado
+# (FR-6410 a FR-6413 da `156`, User Story 1) a substitua.
+ACEITE = "Os próximos passos são os que o Edital indica."
 REQUERIMENTO = "Requerimento de Matrícula"
 REQUERIMENTO_ENVIADO = "✓ Requerimento de Matrícula enviado."
 REQUERIMENTO_NAO_ENVIADO = "Requerimento de Matrícula: não enviado."

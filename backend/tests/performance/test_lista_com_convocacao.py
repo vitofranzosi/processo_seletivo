@@ -176,7 +176,7 @@ def test_o_item_da_lista_nao_consulta_nada_em_tabela_nenhuma(dois_titulares, ges
     )
     assert estados.count("aberta") == 1 and estados.count("concluida") == 1, estados
     assert "nenhuma" in estados, "os três estados precisam estar no laço medido"
-    assert "Convocação aberta" in html and "Convocação: Aceite" in html
+    assert "Convocação aberta" in html and "Convocação: Vaga aceita" in html
     assert [c["sql"] for c in capturadas] == [], (
         f"{len(capturadas)} consulta(s) para {len(itens)} itens: "
         "o custo passou a crescer com a lista"
