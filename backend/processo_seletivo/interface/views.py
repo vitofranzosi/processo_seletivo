@@ -109,6 +109,7 @@ from processo_seletivo.divulgacao.application.publicar import (
 )
 from processo_seletivo.divulgacao.application.selectors import (
     divulgacao_do_ato,
+    lista_da_publicacao,
 )
 from processo_seletivo.divulgacao.application.selectors import (
     historico_do_marco as historico_das_publicacoes,
@@ -117,6 +118,7 @@ from processo_seletivo.divulgacao.application.selectors import (
     vigente_do_marco as publicacao_vigente_do_marco,
 )
 from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulgacao
+from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
 from processo_seletivo.duvidas.application.perguntar import PERMISSAO as PERMISSAO_DO_PILOTO
@@ -11530,6 +11532,12 @@ def _renderizar_previa(request, ator, edital, ato, marco_id, *, erro="", status=
                 "ato": ato,
                 "marco_id": marco_id,
                 "cabecalho": projecao["cabecalho"],
+                # **A lista que esta confirmação divulga, nomeada.** A prévia já lia a cadeia pela
+                # lista do ato (021, FR-068) e não a dizia: com três recortes no marco, quem publica
+                # confirmava um ato irreversível sem ver de qual lista ele é. O nome é o que vai
+                # para os bytes — a mesma função da página pública e do documento (FR-045) —, e
+                # não o rótulo de gestão: a prévia mostra o que será divulgado.
+                "lista": nome_da_lista(projecao["cabecalho"]),
                 "posicoes": projecao["posicoes"],
                 "consideradas": len(projecao["situacoes"]),
                 "publicabilidade": publicabilidade,
@@ -11640,6 +11648,18 @@ def _com_a_marca_do_excedente(edital, historico):
     return historico
 
 
+def _com_a_lista_publicada(historico):
+    """Cada publicação com o nome da lista que ela gravou (021, FR-045).
+
+    A situação é por cadeia, e o marco com cotas tem uma cadeia por lista: sem o nome, a tabela
+    dizia "Vigente" três vezes, e só a data distinguia as linhas. Aqui, e não no selector, porque
+    só esta tela o lê (ver `lista_da_publicacao`).
+    """
+    for linha in historico:
+        linha["lista"] = lista_da_publicacao(linha["publicacao"])
+    return historico
+
+
 @require_http_methods(["GET"])
 def publicacoes_do_marco(request, edital_id, marco_id):
     """O que foi divulgado, quando, por quem — e o que vale hoje (FR-068).
@@ -11658,8 +11678,10 @@ def publicacoes_do_marco(request, edital_id, marco_id):
                 "processo": edital.processo,
                 "edital": edital,
                 "marco_id": marco_id,
-                "historico": _com_a_marca_do_excedente(
-                    edital, historico_das_publicacoes(edital=edital, marco_id=marco_id)
+                "historico": _com_a_lista_publicada(
+                    _com_a_marca_do_excedente(
+                        edital, historico_das_publicacoes(edital=edital, marco_id=marco_id)
+                    )
                 ),
                 # Os dois caminhos para as telas da 015 — o **ato de origem** e a **classificação
                 # do marco** — condicionados à autorização de quem lê: elas têm porta própria, e

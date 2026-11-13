@@ -1,5 +1,5 @@
 {% extends "interface/base.html" %}{% load interface_extras %}
-{% block titulo %}Publicar resultado — {{ cabecalho.marco }}{% endblock %}
+{% block titulo %}Publicar resultado — {{ cabecalho.marco }} · {{ lista }}{% endblock %}
 {% comment %}
 O degrau nomeia de onde esta tela vem, e nomear não é abrir: a tela do ato é da presidência e da
 auditoria, e quem só publica recebe 404 nela. Sem o link, a trilha continua dizendo onde a
@@ -10,6 +10,13 @@ cabeçalho de contexto desde a 083, com a mesma condição (D-003 da 083).
 {% block conteudo %}
 <h1>Publicar resultado</h1>
 <p class="sub">{{ cabecalho.processo }} · {{ cabecalho.edital }} · {{ cabecalho.perfil }} — {{ cabecalho.marco }}</p>
+{% comment %}
+**A lista que se confirma, logo abaixo do marco.** Um marco com cotas tem um ato por lista, e cada
+um se publica nesta mesma tela: sem o nome, a prévia da PPI e a da ampla eram indistinguíveis, e a
+divulgação é irreversível (021, FR-045). O nome é o que o documento grava em "Lista de
+concorrência", ampla incluída.
+{% endcomment %}
+<p>Lista de concorrência: <strong>{{ lista }}</strong></p>
 
 {% comment %} A recusa do envio logo abaixo do título, antes da frase da prévia (083, `FR-1856`). {% endcomment %}
 {% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível publicar:</strong> {{ erro }}</p>{% endif %}
@@ -37,14 +44,14 @@ tem texto próprio: sem ele, "não há aviso" e "a verificação não rodou" fic
 tela, e a autoridade confirmaria sem saber qual dos dois estava vendo.
 {% endcomment %}
 {% if publicabilidade.nivel == "informacao" %}
-<p class="sucesso" role="status">Verificação de publicabilidade: <strong>nada impede esta divulgação</strong>. O ato é o vigente do marco, e a norma e o universo não mudaram desde a emissão.</p>
+<p class="sucesso" role="status">Verificação de publicabilidade: <strong>nada impede esta divulgação</strong>. O ato é o vigente desta lista, e a norma e o universo não mudaram desde a emissão.</p>
 {% endif %}
 {% if publicabilidade.nivel == "aviso" %}
 {% comment %}
 O degrau do meio da FR-005: há o que ler antes de confirmar, e nada impede. Quem decide que este é
 o nível é a aferição, e não o template — a tela mostra o que o domínio classificou.
 {% endcomment %}
-<p class="aviso"><strong>Este marco já tem resultado divulgado</strong> — {{ sucede.get_natureza_display }}, publicado em {{ sucede.publicado_em|date:"d/m/Y" }} às {{ sucede.publicado_em|date:"H:i" }}. Publicar de novo <strong>sucede</strong> aquela divulgação: ela permanece consultável no mesmo endereço e passa a dizer que foi sucedida.</p>
+<p class="aviso"><strong>Esta lista já tem resultado divulgado neste marco</strong> — {{ sucede.get_natureza_display }}, publicado em {{ sucede.publicado_em|date:"d/m/Y" }} às {{ sucede.publicado_em|date:"H:i" }}. Publicar de novo <strong>sucede</strong> aquela divulgação: ela permanece consultável no mesmo endereço e passa a dizer que foi sucedida.</p>
 {% endif %}
 
 {% comment %}
@@ -154,12 +161,12 @@ confirmação adicional (D-001, FR-004, FR-006).
 {% endif %}
 
 <section aria-labelledby="titulo-divulgado">
-  <h2 id="titulo-divulgado">O que será divulgado</h2>
+  <h2 id="titulo-divulgado">O que será divulgado — {{ lista }}</h2>
   <p class="ajuda">{{ consideradas }} participante{{ consideradas|pluralize:"s" }} considerado{{ consideradas|pluralize:"s" }} pelo ato. A lista pública nomeia apenas quem recebeu posição; quem não recebeu vê a própria situação dentro da inscrição.</p>
   {% if posicoes %}
   <div class="tabela-rolavel">
   <table>
-    <caption class="oculto">Lista que será divulgada publicamente</caption>
+    <caption class="oculto">{{ lista }}: ordem que será divulgada publicamente</caption>
     <thead><tr><th scope="col">Posição</th><th scope="col">Candidato</th><th scope="col">Protocolo</th><th scope="col">Modalidade</th><th scope="col">Pontuação</th></tr></thead>
     <tbody>
     {% for item in posicoes %}
@@ -175,7 +182,7 @@ confirmação adicional (D-001, FR-004, FR-006).
   </table>
   </div>
   {% else %}
-  <p class="nenhuma">Nenhum participante recebeu posição neste marco.</p>
+  <p class="nenhuma">Nenhum participante recebeu posição nesta lista.</p>
   {% endif %}
 </section>
 {% endblock %}
