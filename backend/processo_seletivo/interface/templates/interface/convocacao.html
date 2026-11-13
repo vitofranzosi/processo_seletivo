@@ -470,20 +470,29 @@ envio, ou do registro externo —, e a página de publicação diz isso antes do
       {% comment %}
       **Sem desfecho pré-escolhido** (050, polimento). O seletor nascia em "Aceite", e um ato
       irreversível não pode ter resposta padrão: quem registra escolhe, ou o formulário não envia.
+      Nem quando só uma espécie cabe (152, FR-5839).
+
+      **Só o que o comando aceitaria agora** (152, FR-5835 a FR-5838): as opções e a nota saem da
+      mesma verificação que as guardas de `desfechar` levantam. O seletor listava as sete espécies a
+      toda chamada, e o comando recusava as que não cabiam. A espécie que a chamada nunca admite não
+      aparece nem na nota (FR-5837); a que ainda não cabe é dita com a razão da recusa (D-008), para
+      quem procura o não atendimento não concluir que o sistema não o tem.
       {% endcomment %}
       <p class="campo">
         <label for="desfecho-{{ forloop.counter }}">O que aconteceu</label>
         <select id="desfecho-{{ forloop.counter }}" name="especie" required>
           <option value="">Escolha o desfecho</option>
-          <option value="ACEITE">Aceite</option>
-          <option value="REGULARIZACAO">Regularização</option>
-          <option value="INDEFERIMENTO">Indeferimento</option>
-          <option value="DESISTENCIA_EXPRESSA">Desistência expressa</option>
-          <option value="NAO_ATENDIMENTO">Não atendimento à convocação</option>
-          <option value="INERCIA">Cancelamento de matrícula por inércia</option>
-          <option value="RECLASSIFICACAO">Reclassificação</option>
+          {% for valor, rotulo in linha.desfechos.cabem %}<option value="{{ valor }}">{{ rotulo }}</option>
+          {% endfor %}
         </select>
       </p>
+      {% if linha.desfechos.ainda_nao %}
+      <p class="nota"><strong>Ainda não cabem nesta chamada</strong></p>
+      <ul class="nota">
+        {% for item in linha.desfechos.ainda_nao %}<li><strong>{{ item.rotulo }}</strong>: {{ item.frase }}{% if item.a_partir_de %} Cabe a partir de {{ item.a_partir_de|date:"d/m/Y H:i" }}.{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
       <p class="campo">
         <label for="fundamento-{{ forloop.counter }}">Fundamento</label>
         <textarea id="fundamento-{{ forloop.counter }}" name="fundamento" rows="2" required aria-describedby="ajuda-fundamento-{{ forloop.counter }}"></textarea>
@@ -493,9 +502,10 @@ envio, ou do registro externo —, e a página de publicação diz isso antes do
       O atestado e **obrigatorio na inercia** (FR-277), e a constraint do banco diz o mesmo por
       forma: fato externo sem atestante nao entra. O seletor so aparece quando ha atestado
       registrado para esta Inscricao — oferecer um campo vazio ensinaria a pessoa a tentar contra
-      uma porta fechada.
+      uma porta fechada. E só onde a inércia cabe (152, FR-5837): na chamada para regularizar, o
+      rótulo "exigido na inércia" citaria a espécie que a chamada nunca admite.
       {% endcomment %}
-      {% if linha.atestados %}
+      {% if linha.atestados and linha.admite_atestado %}
       <p class="campo">
         <label for="atestado-{{ forloop.counter }}">Atestado de fato externo (exigido na inércia)</label>
         <select id="atestado-{{ forloop.counter }}" name="atestado">
@@ -512,9 +522,6 @@ envio, ou do registro externo —, e a página de publicação diz isso antes do
       {% endcomment %}
       {% if linha.documentos.aguardando_conferencia %}
       <p class="nota">Aguarda{{ linha.documentos.aguardando_conferencia|pluralize:"m" }} conferência: {% for lido in linha.documentos.aguardando_conferencia %}{{ lido.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}. O indeferimento {{ linha.documentos.aguardando_conferencia|pluralize:"o,os" }} deixa sem conferir.</p>
-      {% endif %}
-      {% if linha.documentos.pendencias_para_incluir %}
-      <p class="nota">Aceite e regularização são recusados enquanto faltar conferir: {% for lido in linha.documentos.pendencias_para_incluir %}{{ lido.nome }}{% if lido.sem_condicao_publicada %} ("não se aplica" registrado sem condição publicada){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
       {% endif %}
       {% comment %}
       **O que o aceite está aceitando** (131, FR-4467, FR-4468, UX-303). Cada obrigatório afastado,
@@ -587,7 +594,12 @@ envio, ou do registro externo —, e a página de publicação diz isso antes do
 
     A referencia do prazo e **copiada do conteudo publicado** por quem atesta: o sistema nao tem
     prazo de matricula publicado para ler, porque a R-004 recusou criar calendario.
+
+    **So onde a inercia cabe** (152, FR-5840, D-009): na chamada para regularizar nao ha matricula a
+    cancelar, e o gesto ensinaria um caminho que nao leva a desfecho nenhum. Os fatos oferecidos
+    continuam os de hoje (FR-5841, D-010).
     {% endcomment %}
+    {% if linha.admite_atestado %}
     <details class="como-preencher">
       <summary>Atestar fato externo</summary>
     <form method="post" action="{% url 'interface:atestar' linha.convocacao.inscricao_id %}" class="confirmar">
@@ -614,6 +626,7 @@ envio, ou do registro externo —, e a página de publicação diz isso antes do
       <p class="acoes"><button type="submit" class="botao">Registrar atestado</button></p>
     </form>
     </details>
+    {% endif %}
 
     {% comment %}
     **Depois do desfecho e do atestado** (050, segunda rodada): registrar o que a pessoa respondeu é

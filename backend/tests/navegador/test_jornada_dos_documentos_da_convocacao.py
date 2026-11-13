@@ -179,6 +179,22 @@ def registrar_aceite(gestao, servidor, edital):
     gestao.wait_for_load_state()
 
 
+def aceite_ainda_nao_cabe(gestao, servidor, edital):
+    """Com obrigatório por conferir, o aceite sai do seletor e a nota diz por quê (152, FR-5835).
+
+    Antes da `152`, a jornada escolhia o aceite e lia a recusa do comando. A frase é a mesma: a nota
+    e a recusa são o mesmo predicado (FR-5838).
+    """
+    from django.urls import reverse
+
+    gestao.goto(servidor.url + reverse("interface:convocacao", args=[edital.id, MARCO]))
+    desfecho = gestao.locator("details.desfecho-da-chamada").first
+    if not desfecho.evaluate("elemento => elemento.open"):
+        desfecho.locator("summary", has_text="Registrar desfecho").click()
+    expect(desfecho.locator("select[name=especie] option[value=ACEITE]")).to_have_count(0)
+    expect(desfecho.get_by_text("Ainda não cabem nesta chamada")).to_be_visible()
+
+
 def _item(convocacao, requisito):
     return cenarios.item(convocacao, requisito).id
 
@@ -234,7 +250,7 @@ def test_aluno_envia_corrige_a_pendencia_e_fica_apto(
     abrir_e_conferir(comissao, _item(convocacao, CERTIFICADO_DO_MEDIO), "CONFORME")
     abrir_e_conferir(comissao, _item(convocacao, HISTORICO), "PENDENTE", "Falta a página 2.")
     tela.capturar(comissao, "comissao-pendencia")
-    registrar_aceite(comissao, tela.servidor, edital)
+    aceite_ainda_nao_cabe(comissao, tela.servidor, edital)
     expect(
         comissao.get_by_text("todo documento obrigatório da convocação precisa estar")
     ).to_be_visible()
