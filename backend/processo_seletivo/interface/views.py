@@ -9009,6 +9009,51 @@ def _documentos_por_linha(linhas, *, ordem="", agora=None):
     return raizes, leituras
 
 
+def _desfechos_por_linha(linhas, *, ocupando, agora):
+    """O que o seletor do desfecho oferece e o que a nota diz, por linha (152, FR-5835 a FR-5840).
+
+    **A verificação é a do comando** (FR-5838): os predicados de `desfechos_cabiveis`, que as
+    guardas de `desfechar` também levantam. Sem isso, o seletor oferecia as sete espécies a toda
+    chamada, e o comando recusava três delas numa chamada para vaga com o prazo em curso (achado 12
+    do estudo de 11/11/2026).
+
+    **Sem consulta** (R-006): a ocupação é a do contexto do recorte que a leitura já trouxe, e o
+    envio, o canal, os atestados e as pendências já estão na linha. Os rótulos são os do modelo, e
+    não mudam (FR-5841, D-010).
+    """
+    from processo_seletivo.convocacao.domain import desfechos_cabiveis
+    from processo_seletivo.convocacao.models import DesfechoDaConvocacao
+    from processo_seletivo.ocupacao.domain.apuracao import chave_da_inscricao
+
+    rotulos = dict(DesfechoDaConvocacao._meta.get_field("especie").choices)
+    for linha in linhas:
+        convocacao = linha["convocacao"]
+        cabem, ainda_nao = desfechos_cabiveis.cabiveis(
+            especie_da_chamada=convocacao.especie,
+            enviado_em=linha["enviadaEm"],
+            vencimento=convocacao.vencimento,
+            agora=agora,
+            canal=linha["canal"],
+            ocupando=chave_da_inscricao(convocacao.inscricao_id) in ocupando,
+            tem_atestado=bool(linha["atestados"]),
+            pendentes=(linha["documentos"].pendencias_para_incluir if linha["documentos"] else []),
+        )
+        linha["desfechos"] = {
+            "cabem": [(especie, rotulos[especie]) for especie in cabem],
+            "ainda_nao": [
+                {
+                    "rotulo": rotulos[especie],
+                    "frase": achado.frase,
+                    "a_partir_de": achado.a_partir_de,
+                }
+                for especie, achado in ainda_nao
+            ],
+        }
+        # **O atestado segue a inércia** (FR-5840, D-009): ele não tem outro uso no sistema, e na
+        # chamada para regularizar não há matrícula a cancelar.
+        linha["admite_atestado"] = desfechos_cabiveis.admite_inercia(convocacao.especie)
+
+
 def convocacao(request, edital_id, marco_id):
     """A tela do recorte: quem foi chamado, o que respondeu, e quantas vagas ainda faltam (019).
 
@@ -9049,6 +9094,7 @@ def convocacao(request, edital_id, marco_id):
     raizes, leituras_documentais = _documentos_por_linha(
         leitura["linhas"], ordem=request.GET.get("ordem") or "", agora=agora
     )
+    _desfechos_por_linha(leitura["linhas"], ocupando=leitura["ocupando"], agora=agora)
     recusa_da_correcao = request.session.pop("recusa_da_correcao", None)
     # **As prévias dos gestos da `050` saem da mesma leitura**, e não de três: o que a tela mostra
     # e o que cada gesto alcançaria são a mesma fotografia do recorte (`FR-888`).

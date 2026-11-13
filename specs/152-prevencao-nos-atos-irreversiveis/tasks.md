@@ -177,14 +177,14 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 **Independent Test**: quickstart §3, passo 1.
 
-- [ ] T029 [US5] Em `backend/processo_seletivo/interface/views.py`, onde a tela monta as linhas (`leitura_do_recorte` e `_documentos_por_linha`), calcular `linha.desfechos = cabiveis(...)`.
+- [x] T029 [US5] Em `backend/processo_seletivo/interface/views.py`, onde a tela monta as linhas (`leitura_do_recorte` e `_documentos_por_linha`), calcular `linha.desfechos = cabiveis(...)`.
   - Usar a ocupação de um `contexto_do_recorte` por recorte, os atestados, o envio, o vencimento e as pendências que a linha já tem.
   - Nenhuma consulta por linha (R-006). Medir o número de consultas da tela.
   - Depende de T002.
-- [ ] T030 [US5] Em `convocacao.html`, gerar as opções do seletor de `linha.desfechos.cabem`, sem pré-escolha, e a nota "Ainda não cabem nesta chamada", uma linha por espécie (FR-5835 a FR-5839, UX-533).
+- [x] T030 [US5] Em `convocacao.html`, gerar as opções do seletor de `linha.desfechos.cabem`, sem pré-escolha, e a nota "Ainda não cabem nesta chamada", uma linha por espécie (FR-5835 a FR-5839, UX-533).
   - Remover a nota antiga "Aceite e regularização são recusados enquanto faltar conferir", que passa a ser uma linha da nota nova.
   - Manter a lista de rótulos do seletor na varredura de vocabulário.
-- [ ] T031 [US5] Testes. Cobre SC-1905 e SC-1906.
+- [x] T031 [US5] Testes. Cobre SC-1905 e SC-1906.
   - Em `backend/tests/interface/test_desfecho_cabivel.py`: os cinco cenários da história 5 e o C09 de Alice (4 opções, 2 na nota, "Regularização" ausente).
   - No mesmo arquivo, o oráculo da SC-1906: para cada combinação montada no banco, toda espécie oferecida passa pelas guardas do comando, e toda não oferecida é recusada.
 
@@ -194,8 +194,8 @@ exige a rastreabilidade. Os caminhos são relativos à raiz do repositório.
 
 **Independent Test**: quickstart §3, passo 2.
 
-- [ ] T032 [US6] Levar `linha.admite_atestado = admite_inercia(especie)` e condicionar o `<details>` do atestado em `convocacao.html` a ele (FR-5840). Os rótulos dos fatos não mudam (FR-5841, D-010).
-- [ ] T033 [US6] Testes: o gesto ausente na chamada para regularizar e presente nas duas outras, no mesmo arquivo da T031.
+- [x] T032 [US6] Levar `linha.admite_atestado = admite_inercia(especie)` e condicionar o `<details>` do atestado em `convocacao.html` a ele (FR-5840). Os rótulos dos fatos não mudam (FR-5841, D-010).
+- [x] T033 [US6] Testes: o gesto ausente na chamada para regularizar e presente nas duas outras, no mesmo arquivo da T031.
 
 ## Phase 9: Polish & Cross-Cutting
 

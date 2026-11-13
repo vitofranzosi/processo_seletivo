@@ -98,6 +98,11 @@ DA_019 = [
     # A `159`: a publicação no gesto de convocar diz o que fica público e quando o prazo começa.
     TEMPLATES / "_publicacao_no_gesto.html",
     TEMPLATES / "convocacao_conferir.html",
+    # A `152`: o seletor do desfecho e a nota "Ainda não cabem nesta chamada" deixaram de ser texto
+    # do template. Os rótulos são os do modelo, e as razões, as frases dos predicados que o comando
+    # também levanta: sem estas duas linhas, o que a tela diz ali escaparia da varredura.
+    RAIZ / "convocacao/models.py",
+    RAIZ / "convocacao/domain/desfechos_cabiveis.py",
 ]
 
 # Cada termo com o que ele afirmaria indevidamente. A mensagem entra na falha, para que quem a
