@@ -21,6 +21,11 @@ def test_a_contagem_tem_singular_e_plural_sem_parenteses():
     assert "(s)" not in v.reenviados(1) + v.reenviados(2)
 
 
+def test_o_rotulo_da_contagem_e_o_rotulo_do_item_no_singular():
+    assert v.rotulo_da_contagem(1) == v.REENVIADO
+    assert v.rotulo_da_contagem(2) == "Reenviados — aguardando nova conferência"
+
+
 def test_o_resumo_de_cartoes_diz_o_rotulo_com_o_numero_a_parte():
     assert reenviados(1, "rotulo") == v.REENVIADO
     assert reenviados(2, "rotulo") == "Reenviados — aguardando nova conferência"
@@ -35,3 +40,27 @@ def test_as_superficies_dizem_o_mesmo_nome_salvo_a_caixa_da_inicial():
     assert pendencias.COMPLEMENTADA == f"documento {nome}"
     assert v.REENVIADO.lower() == nome
     assert nome in v.reenviados(1)
+
+
+def test_o_resumo_renderizado_diz_o_singular_e_o_plural():
+    """T023: a contagem com um e com dois, no parcial da página de documentos (FR-6212, D-004)."""
+    from django.template.loader import render_to_string
+
+    def resumo(quantos):
+        contagens = {
+            "conformes": 0,
+            "recebidos": 0,
+            "complementados": quantos,
+            "pendentes": 0,
+            "a_apresentar": 0,
+            "nao_se_aplica": 0,
+        }
+        linha = {"passo": {"tom": "acao", "frase": "", "acao": ""}, "aviso": None}
+        return render_to_string(
+            "interface/_situacao_dos_documentos.html",
+            {"linha": linha, "leitura": {"contagens": contagens}},
+        )
+
+    assert "<strong>1</strong>Reenviado — aguardando nova conferência</li>" in resumo(1)
+    assert "<strong>2</strong>Reenviados — aguardando nova conferência</li>" in resumo(2)
+    assert "complementad" not in (resumo(1) + resumo(2)).lower()

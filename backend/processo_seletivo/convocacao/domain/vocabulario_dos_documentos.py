@@ -25,3 +25,8 @@ def reenviado_em_frase(*, plural=False):
 def reenviados(quantos):
     """A contagem, com singular e plural naturais e sem "(s)" na tela (D-004)."""
     return f"{quantos} {reenviado_em_frase(plural=quantos != 1)}"
+
+
+def rotulo_da_contagem(quantos):
+    """O rótulo sob o número em destaque, no resumo de cartões: *"Reenviados — aguardando …"*."""
+    return f"{'Reenviado' if quantos == 1 else 'Reenviados'} — {_ESPERA}"

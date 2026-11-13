@@ -313,6 +313,29 @@ def test_item_reenviado_depois_da_pendencia_nao_entra(cenario, alocado):
     assert "documento reenviado — aguardando nova conferência" in erro.detail
 
 
+def test_o_gesto_gravado_antes_da_154_continua_com_o_texto_dele(cenario, alocado, monkeypatch):
+    """FR-6215, SC-2005: o motivo gravado no `reason` e nas `exclusoes` do `detalhe` fica com o
+    texto do dia. O gesto antigo é simulado com a constante de antes da `154`; nada o reescreve, e
+    o texto de hoje é o novo."""
+    novo = pendencias.COMPLEMENTADA
+    antigo = "documento reenviado, aguardando conferência"
+    monkeypatch.setattr(pendencias, "COMPLEMENTADA", antigo)
+    monkeypatch.setattr(
+        pendencias, "EXCLUSOES", tuple(antigo if m == novo else m for m in pendencias.EXCLUSOES)
+    )
+    ppi, pessoa = cenario["ppi"], cenario["pessoa_ppi"]
+    _pendente(alocado, cenario["ampla"], RESIDENCIA, "pend-1")
+    _pendente(alocado, ppi, RESIDENCIA, "pend-2")
+    apresentar(pessoa, ppi, RESIDENCIA, corpo=b"comprovante legivel")
+    _avisar(alocado, cenario["edital"], chave="antes-da-154")
+    monkeypatch.undo()
+
+    gesto = RegistroAuditoria.objects.get(operation=nomes.OPERACAO_AVISAR_PENDENCIAS)
+    assert f"fora: {antigo}: 1." in gesto.reason
+    assert {"motivo": antigo, "quantas": 1} in gesto.detalhe["exclusoes"]
+    assert novo != antigo and novo == "documento reenviado — aguardando nova conferência"
+
+
 def test_so_o_item_ainda_pendente_entra_no_texto(cenario, alocado):
     ampla, pessoa = cenario["ampla"], cenario["pessoa_ampla"]
     _pendente(alocado, ampla, RESIDENCIA, "pend-1")

@@ -123,6 +123,8 @@ DO_REENVIADO = [
     RAIZ / "interface/conducao_da_convocacao.py",
     RAIZ / "interface/views.py",
     RAIZ / "avisos/application/pendencias.py",
+    # A Visão do Sistema, que a gestão serve em "Documentação do Sistema" (105): texto visível dela.
+    RAIZ.parents[1] / "docs/visao-sistema/index.html",
 ]
 
 

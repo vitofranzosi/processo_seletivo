@@ -245,7 +245,7 @@ def test_c11(client, cenario, settings):
     ).content.decode()
     assert "<strong>1</strong>Reenviado — aguardando nova conferência</li>" in pagina
     assert pagina.count("Reenviado — aguardando nova conferência") == 2, "o item e a contagem"
-    assert "complementad" not in re.sub(r'"COMPLEMENTADO"', "", pagina).lower()
+    assert "complementad" not in pagina.lower()
 
     # Quem só consulta lê tudo, e nenhuma ação lhe é oferecida (FR-5012).
     identificar(client, "auditora-143", ["auditor"])

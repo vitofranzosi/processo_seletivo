@@ -22,7 +22,7 @@ def reenviados(quantos, forma=""):
     *"Reenviados — aguardando nova conferência"*. Sem forma, a contagem corrida da condução.
     """
     if forma == "rotulo":
-        return vocabulario_dos_documentos.reenviado_em_frase(plural=quantos != 1).capitalize()
+        return vocabulario_dos_documentos.rotulo_da_contagem(quantos)
     return vocabulario_dos_documentos.reenviados(quantos)
 
 
