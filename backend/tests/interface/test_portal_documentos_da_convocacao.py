@@ -124,6 +124,50 @@ def test_a_convocada_envia_pelo_portal_e_le_o_resultado(aluno, gestor, client):
     assert not any(termo in corpo.lower() for termo in TERMOS_DE_VINCULO)
 
 
+def test_o_reenviado_tem_o_nome_da_gestao_ate_ser_conferido(aluno, gestor, client):
+    """154, FR-6213, D-003, SC-2004: o cartão começa pelo nome; conferido, o nome sai."""
+    from processo_seletivo.convocacao.domain.vocabulario_dos_documentos import REENVIADO
+
+    pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+    entrar_como(client, pessoa)
+    apresentar(pessoa, convocacao, HISTORICO, corpo=b"primeira")
+    conferir(gestor, convocacao, HISTORICO, "PENDENTE", chave="r1", motivo="Falta a página 2.")
+    apresentar(pessoa, convocacao, HISTORICO, corpo=b"segunda")
+
+    corpo = _texto(tela(client, pessoa))
+    assert f"{REENVIADO}. Novo arquivo recebido em " in corpo
+    assert ", depois da correção pedida." in corpo
+    assert "complementad" not in corpo.lower()
+
+    conferir(gestor, convocacao, HISTORICO, "CONFORME", chave="r2")
+    corpo = _texto(tela(client, pessoa))
+    assert "Reenviado" not in corpo
+    assert "Conferido: de acordo com o Edital." in corpo
+
+
+def test_o_mesmo_arquivo_sobre_o_pendente_nao_e_reenvio(aluno, gestor, client):
+    """154, caso-limite *O mesmo arquivo enviado de novo*: o item continua pendente."""
+    pessoa, convocacao = cenarios.convocar_primeira(aluno, gestor)
+    entrar_como(client, pessoa)
+    alvo = item(convocacao, HISTORICO)
+    client.post(
+        reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
+        {"arquivo": cenarios.pdf(b"igual")},
+    )
+    conferir(gestor, convocacao, HISTORICO, "PENDENTE", chave="m1", motivo="Falta a página 2.")
+    tela(client, pessoa)
+
+    client.post(
+        reverse("portal:apresentar-documento-da-convocacao", args=[pessoa.id, alvo.id]),
+        {"arquivo": cenarios.pdf(b"igual")},
+    )
+
+    corpo = tela(client, pessoa)
+    assert _texto(_confirmacao(corpo)) == "Este arquivo já tinha sido recebido."
+    assert "Precisa de correção: Falta a página 2." in corpo
+    assert "Reenviado" not in corpo
+
+
 def test_o_arquivo_invalido_volta_com_a_recusa_da_inscricao(aluno, gestor, client):
     from django.core.files.uploadedfile import SimpleUploadedFile
 

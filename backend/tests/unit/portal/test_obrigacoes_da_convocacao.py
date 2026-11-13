@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from processo_seletivo.convocacao.application.documentos import ItemLido, LeituraDocumental
-from processo_seletivo.convocacao.domain import nomes
+from processo_seletivo.convocacao.domain import nomes, vocabulario_dos_documentos
 from processo_seletivo.portal import obrigacoes as o
 from processo_seletivo.requerimentos.domain import nomes as req_nomes
 from processo_seletivo.requerimentos.domain.disponibilidade import Disponibilidade
@@ -414,13 +414,15 @@ TEXTOS = {
         "Aproveitado da chamada anterior, enviado em 02/03/2026; não foi conferido antes do "
         "resultado.",
     ),
+    # 154, FR-6213: o nome da gestão abre o cartão (D-003); o prazo vencido, sozinho, mantém
+    # "aguardando"; sem conferência possível, o passado (D-005).
     ("complementado", True): (
-        "Novo arquivo recebido em 04/11/2026, às 09h05, depois da correção pedida. A comissão vai "
-        "conferir.",
-        "Novo arquivo recebido em 04/11/2026, às 09h05, depois da correção pedida. A comissão vai "
-        "conferir.",
-        "Novo arquivo recebido em 04/11/2026; não foi conferido antes do encerramento do Processo.",
-        "Novo arquivo enviado em 04/11/2026; não foi conferido antes do resultado.",
+        "Reenviado — aguardando nova conferência. Novo arquivo recebido em 04/11/2026, às 09h05, "
+        "depois da correção pedida.",
+        "Reenviado — aguardando nova conferência. Novo arquivo recebido em 04/11/2026, às 09h05, "
+        "depois da correção pedida.",
+        "Reenviado em 04/11/2026; não foi conferido antes do encerramento do Processo.",
+        "Reenviado em 04/11/2026; não foi conferido antes do resultado.",
     ),
     ("conforme", True): ("Conferido: de acordo com o Edital.",) * 4,
     ("conforme_inscricao", True): (
@@ -458,6 +460,13 @@ def test_o_texto_de_cada_celula(caso, obrigatorio):
         item = lido(estado, obrigatorio=obrigatorio, origem=origem, apresentado=apresentado)
         (projetado,) = projetar([item], momento).itens
         assert projetado.texto == TEXTOS[(caso, obrigatorio)][coluna], momento
+
+
+def test_o_facultativo_reenviado_usa_o_mesmo_nome_com_o_selo():
+    """154, caso-limite *Facultativo reenviado*."""
+    (item,) = projetar([lido(nomes.ITEM_COMPLEMENTADO, obrigatorio=False)]).itens
+    assert item.texto.startswith(vocabulario_dos_documentos.REENVIADO + ". ")
+    assert item.selos == (o.SELO_AGUARDANDO, o.SELO_OPCIONAL)
 
 
 def test_o_facultativo_recebido_usa_a_linha_do_estado_com_o_selo():

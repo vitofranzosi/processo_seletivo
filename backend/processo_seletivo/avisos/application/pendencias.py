@@ -33,6 +33,7 @@ from processo_seletivo.avisos.application.comando import (
 )
 from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.domain import pendencia as texto
+from processo_seletivo.convocacao.domain import vocabulario_dos_documentos
 from processo_seletivo.shared.api.problems import DomainError
 
 # --- As exclusões, na ordem em que se aplicam (FR-4606 a FR-4608) ---------------------------------
@@ -40,7 +41,9 @@ from processo_seletivo.shared.api.problems import DomainError
 COM_DESFECHO = "desfecho registrado"
 NAO_COMUNICADA = "convocação ainda não comunicada"
 VENCIDA = "vencimento decorrido"
-COMPLEMENTADA = "documento reenviado, aguardando conferência"
+# O nome da página de documentos (154, FR-6212). O texto gravado nos avisos já feitos — no `reason`
+# e nas `exclusoes` do `detalhe` — fica com o do dia (FR-6215): nada o relê para comparar.
+COMPLEMENTADA = "documento " + vocabulario_dos_documentos.reenviado_em_frase()
 JA_AVISADA_HOJE = "já avisada hoje"
 SEM_ENDERECO = "sem endereço"
 
