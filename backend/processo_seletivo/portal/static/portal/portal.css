@@ -621,6 +621,9 @@ details.como-converter li{margin-bottom:.4rem}
 .escolher .escolha{display:flex;flex-direction:column;gap:.1rem;flex:1 1 14rem;min-width:0}
 .escolher .escolha .nome-do-arquivo{flex:none}
 .estado-da-escolha{color:var(--texto-fraco);font-size:.875rem}
+/* O mesmo arquivo em outro documento (150, UX-504): atenção em palavra — "Atenção:" abre a frase —,
+   e não só na cor. Não bloqueia nada (D-006). */
+.arquivo-repetido{color:var(--amarelo);font-size:.875rem;font-weight:600;overflow-wrap:anywhere}
 .ir-ao-envio{display:block;width:fit-content;margin-top:.15rem;font-weight:600}
 .cartao-do-documento.com-escolha .escolher{background:var(--cinza-fundo);border-radius:6px;
   padding:.5rem .75rem}
