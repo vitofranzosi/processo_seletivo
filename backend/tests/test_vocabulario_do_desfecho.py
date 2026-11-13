@@ -14,17 +14,16 @@ da `029`: registrar sete desfechos pelo comando exigiria sete chamadas e sete ap
 de novo a `019`, que já tem os seus testes. O fundamento de cada um é o mais técnico que existe — o
 derivado do não atendimento em lote —, para que a varredura tenha o que achar.
 
-**O fundamento da convocação fica de fora desta varredura, por enquanto.** É ele que diz *"na faixa
-vigente deste recorte"*, e a FR-6400 e a FR-6442 da `156` o mandam recolher sob a frase da espécie
-da convocação (User Story 3). Mas a FR-3740 da `118` exige o bloco *"Sobre esta convocação"*
-visível e **sem `details`**, com o fundamento, e a `156` não a reviu: o conflito está registrado no
-PR desta implementação e espera a decisão do usuário. Até lá, as três espécies de convocação da
-SC-2120 não se varrem, e o texto do fundamento da convocação sai da página antes da varredura — só
-ele, pelo valor gravado no ato, e não um bloco inteiro.
+**E as três espécies de convocação** (FR-6442; FR-3740 da `118`, revista pela `156` em 13/11): o
+fundamento da convocação — o que diz *"na faixa vigente deste recorte"* — também só aparece
+recolhido, sob a frase que diz por que a pessoa foi chamada. A vaga inicial é a da própria chamada
+do cenário; a vaga que vagou e a de regularizar são chamadas seguintes da mesma pessoa, montadas por
+ORM pelo mesmo motivo, com o fundamento derivado da `050`.
 """
 
 import html
 import re
+from datetime import timedelta
 
 import pytest
 from django.urls import reverse
@@ -127,14 +126,12 @@ def suceder(convocacao, pessoa, especie):
     )
 
 
-def fora_do_recolhido(client, rota, pessoa, convocacao):
+def fora_do_recolhido(client, rota, pessoa):
     resposta = client.get(reverse(rota, args=[pessoa.id]))
     assert resposta.status_code == 200
     principal = re.search(r"<main[^>]*>(.*)</main>", resposta.content.decode(), re.S).group(1)
     recolhidos = RECOLHIDO.findall(principal)
     principal = RECOLHIDO.sub(" ", principal)
-    # O fundamento da convocação, enquanto o conflito com a FR-3740 da `118` espera decisão.
-    principal = principal.replace(html.escape(convocacao.fundamento, quote=False), " ")
     texto = " ".join(re.sub(r"<[^>]+>", " ", principal).split())
     return html.unescape(texto), recolhidos
 
@@ -148,7 +145,7 @@ def test_o_vocabulario_do_ato_so_aparece_recolhido(client, fx, montar):
         if especie != nomes.ACEITE:
             suceder(convocacao, pessoa, especie)
         for rota in ("portal:convocacao", "portal:acompanhamento"):
-            texto, recolhidos = fora_do_recolhido(client, rota, pessoa, convocacao)
+            texto, recolhidos = fora_do_recolhido(client, rota, pessoa)
             achados += [
                 f"{especie} em {rota}: {termo!r}" for termo in DO_ATO if termo in texto.lower()
             ]
@@ -159,4 +156,44 @@ def test_o_vocabulario_do_ato_so_aparece_recolhido(client, fx, montar):
                     rota,
                 )
             assert "Fundamento do registro" in " ".join(recolhidos), (especie, rota)
+        texto, recolhidos = fora_do_recolhido(client, "portal:convocacao", pessoa)
+        assert "Você foi chamado para uma das vagas" in texto, especie
+        assert any("Fundamento da convocação" in r for r in recolhidos), especie
+    for numero, especie in enumerate((nomes.SUPLENCIA, nomes.PARA_REGULARIZAR), start=2):
+        chamada_seguinte(convocacao, especie, numero)
+        texto, recolhidos = fora_do_recolhido(client, "portal:convocacao", pessoa)
+        achados += [f"{especie}: {termo!r}" for termo in DO_ATO if termo in texto.lower()]
+        assert "Você foi chamado" in texto, especie
+        assert any("Fundamento da convocação" in r and "apuração" in r for r in recolhidos), especie
     assert achados == []
+
+
+def chamada_seguinte(modelo, especie, numero):
+    """Uma chamada seguinte da mesma pessoa, da espécie dada, sem desfecho — por ORM, como na `029`.
+
+    Mais recente que a anterior, para ser a que o portal mostra; o fundamento é o derivado da
+    `050`, com a apuração e a faixa de que a frase do ato fala.
+    """
+    from processo_seletivo.convocacao.models import Convocacao
+
+    return Convocacao.objects.create(
+        edital=modelo.edital,
+        perfil_id=modelo.perfil_id,
+        marco_id=modelo.marco_id,
+        lista_id=modelo.lista_id,
+        inscricao=modelo.inscricao,
+        especie=especie,
+        fundamento=fundamento_derivado.da_convocacao(
+            especie=especie,
+            edital="Edital 01/2026",
+            recorte="Perfil 1, ampla concorrência",
+            data_da_apuracao="10/11/2026",
+        ),
+        apuracao=modelo.apuracao,
+        ato_de_ordenacao_id=modelo.ato_de_ordenacao_id,
+        corte_id=modelo.corte_id,
+        versao=modelo.versao,
+        chamada=numero,
+        criado_por="teste",
+        criado_em=timezone.now() + timedelta(seconds=numero),
+    )

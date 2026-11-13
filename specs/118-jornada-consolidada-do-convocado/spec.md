@@ -661,15 +661,30 @@ Cada caso aponta o requisito que o rege. Os casos com letra são cenários da va
 
   > **Redação anterior, preservada:** O cartão com a comissão MUST oferecer *"Enviar outro
   > arquivo"* recolhido, como a `115` já oferece, enquanto a chamada estiver aberta. O resto, igual.
-- **FR-3740** *(acrescida pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
-  O bloco **Sobre esta convocação** MUST continuar visível, sem `details`: espécie,
-  chamada, comunicação enviada em, vencimento registrado, fundamento e atendimento. É o ato que a
-  pessoa tem direito de ler; ele só desce de posição.
+- **FR-3740** *(acrescida pela `121` em 2026-11-05, e revista pela `156` em 2026-11-13, as duas com vigência na implementação de cada uma — as redações anteriores estão ao fim desta alínea)*:
+  O bloco **Sobre esta convocação** MUST continuar visível: a chamada, com a espécie
+  (*"1ª chamada, para vaga inicial"*), comunicação enviada em, vencimento registrado, fundamento e
+  atendimento. É o ato que a pessoa tem direito de ler; ele só desce de posição. O fundamento MUST
+  vir em duas camadas (FR-6400 da `156`): a frase da espécie da convocação (FR-6442 da `156`) e,
+  recolhido sob *"Fundamento da convocação"*, o texto gravado no ato, sem edição. O resto do bloco
+  continua sem `details`.
 
   **Acréscimo da `121`.** Quando a convocação vigente sucede outra, o bloco ganha a linha
   *"Convocação substituída"*, com a comunicação e o prazo da anterior e *"Esse prazo não vale
   mais."*, sem o motivo (FR-3869 da `121`). O resto não muda.
 
+  > **Redação anterior à `156`, preservada:** *"O bloco **Sobre esta convocação** MUST continuar
+  > visível, sem `details`: espécie, chamada, comunicação enviada em, vencimento registrado,
+  > fundamento e atendimento. É o ato que a pessoa tem direito de ler; ele só desce de posição."*,
+  > com o acréscimo da `121`.
+  >
+  > *Por que mudou:* o fundamento da convocação é o derivado da norma — *"…dentro das vagas que a
+  > apuração de ocupação emitida em ‹data› considerou, na faixa vigente deste recorte"* —, o primeiro
+  > exemplo do achado 18 do estudo da jornada final de 11/11/2026, e a FR-6400 da `156` manda
+  > recolhê-lo sob a frase simples; *"espécie"* é termo que a FR-6403 da `156` deixa fora da tela, e
+  > a espécie passa a ser dita na linha da chamada. A `156` não previa esta revisão; o conflito foi
+  > levado ao usuário na implementação dela (PR #525), e ele decidiu rever, em 13/11/2026.
+  >
   > **Redação anterior à `121`:** a mesma, sem este acréscimo.
 - **FR-3741** *(revista pela `121` em 2026-11-05, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
   O título do bloco 1 passa a ser o título de primeiro nível da página (FR-3858 da `121`): pelo

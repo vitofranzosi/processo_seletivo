@@ -72,7 +72,7 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
     <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd>
     {% endif %}
     {% if substituida %}<dt>Convocação substituída</dt><dd>{{ substituida }}</dd>{% endif %}
-    <dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd>
+    <dt>Fundamento</dt><dd>{{ frase_da_convocacao }}{% include "portal/_fundamento_do_ato.html" with rotulo=rotulo_do_fundamento_da_convocacao texto=convocacao.fundamento %}</dd>
   </dl>
 
   {% if frase_do_vencido %}
