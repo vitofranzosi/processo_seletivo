@@ -442,3 +442,62 @@ Dois itens de *Polimento que se vê na tela*, ambos registrados como de correç�
   - **Os links conferidos.** Os links apontam para a `main`, e não para o commit que a página descreve. Por isso um guardião confere que cada `blob/main/…` é arquivo e cada `tree/main/…` é pasta na árvore do próprio PR: mover um arquivo citado sem acertar o manual reprova a suíte.
 
 **Não verificado:** a tela dos Perfis com inscrições de Perfil retirado não foi aberta no navegador. A correção foi conferida no filtro do Django.
+
+## Revisão de 13/11: a visão do produto consolidada
+
+Base: `main` em `214c8cd7`. A pergunta desta revisão foi outra: não *"o que entrou desde a última?"*, mas *"um novo integrante entende o GPS lendo esta página?"*.
+
+### O diagnóstico
+
+A página vinha sendo mantida spec a spec, e o conteúdo de referência estava em dia até a 161. O que envelhecia era a camada de entrada.
+
+- **O Início era um portal, e não uma visão.** Tinha a ideia dos atos, o fluxo e doze conceitos. Não dizia por que o sistema existe, para quem, sob quais princípios, nem como a gestão e o portal se ligam.
+- **Os números do Início eram de 02/11:** 114 pastas, 53 append-only, 14 638 testes. Contradiziam a própria página, que noutro lugar dizia 59 tabelas e 17 698 testes.
+- **A trilha do topo parava em 02/11** (105–113).
+- **O nome do produto não era o das telas.** O título, a marca e o rodapé diziam *"Processos Seletivos e Editais"*, e as telas dizem *GPS — Gestão de Processos Seletivos* desde a 075.
+- **O fluxo geral e o mapa paravam no Requerimento.** Faltavam a publicação das inscrições (148), os documentos e a conferência na convocação (115, 157), a entrega à formalização (117), a publicação das convocações (149) e o encerramento. Os cartões de recursos não tinham o Centro de Controle, Minhas atividades nem as conferências.
+- **A 156 estava como Previsto, com "nada dela está no código".** Os PRs 525, 529 e 533 levaram três histórias (US2, US3, US8). Também ficou aberta, em *Falta código*, a lacuna da mensagem de reenvio, que o 533 fechou.
+- **O veredito era um diário** (*"Em 02/11… Em 15/10, nada mudou…"*), e não um estado.
+- **A Maturidade mostrava números de duas datas,** apresentados como *"contra os de 30/10"*.
+- **Duas contradições internas:**
+  - a seção dos e-mails dizia *"além do código de acesso, cinco situações"*, mas o guardião (`test_situacoes_de_mensagem.py`) conta o código como uma das cinco;
+  - *Para quem for atualizar* dizia que só um teste lê esta pasta, e são dois.
+- **A tabela de revisões estava fora de ordem** (05/11 e 06/11 depois de 13/11).
+
+### O que mudou
+
+O Início foi reescrito como a visão do produto, mantendo as âncoras antigas:
+
+- `#inicio`, `#fluxo-geral`, `#fundamentos`, `#recursos-disponiveis`, `#estado-atual` e `#perspectivas` continuam valendo;
+- entraram `#proposta`, `#publicos`, `#principios`, `#jornadas`, `#governanca`, `#transparencia` e `#referencias`;
+- o Início deixou de ter contagens: elas ficam só na Maturidade.
+
+Fora do Início:
+
+- a 156 passou a Parcial, com o que entrou e o que falta (18 de 54 tarefas), e a frase da área do candidato que ainda dizia *"Resultado registrado: … — {fundamento}"* foi acertada;
+- a lacuna da mensagem de reenvio foi para *O que já fechou*;
+- as contagens da Maturidade foram refeitas pelo método da página;
+  - o método reproduz em `a3e23b1f` todos os números publicados em 04/11, menos as pastas de spec (120, e a página dizia 114);
+  - hoje são 162 pastas, 59 append-only, 91 gatilhos em 36 migrations sobre 73 tabelas, 118 migrations, 24 módulos, 580 arquivos Python, 259 templates, 1 220 + 25 arquivos de teste e 180 + 42 rotas;
+- o veredito foi reescrito como estado presente;
+- o mapa em texto ganhou a unidade, os documentos da convocação e a formalização, e a tabela de conceitos ganhou Unidade, Documento da convocação e Entrega à formalização;
+- *Sobre esta documentação* ganhou o papel do Início e *Quando a visão precisa mudar*: três perguntas ao fechar uma entrega;
+- a tabela de revisões foi posta em ordem;
+- o título da aba, que o roteador (`assets/app.js`) reescreve a cada página, passou a dizer *GPS · Gestão de Processos Seletivos*.
+
+**Preservado:** todo o conteúdo de referência (Aprender a operar e Consultar), *O que ainda precisa evoluir*, a auditoria de consistência, os selos e o método.
+
+### Como os fatos foram conferidos
+
+Os fatos novos do Início foram conferidos no código por duas leituras paralelas:
+
+- a navegação, a Lista, a página do Processo, o Centro de Controle, Minhas atividades, as conferências e as publicações;
+- o portal, os e-mails, a identidade, os papéis, as integrações e as contagens.
+
+As 156, 158, 161, 123 e 144 B/C foram procuradas pelas FRs e pelos textos. Delas, só a 156 tem código.
+
+**Não verificado:**
+
+- a suíte não rodou: só os guardiões que leem esta página;
+- nenhuma tela foi percorrida;
+- a repartição dos 91 gatilhos por espécie não foi refeita.
