@@ -164,7 +164,7 @@
         (camada && pg !== ordem[0] ? "<span>›</span>" + camada : "") +
         (pg !== ordem[0] ? "<span>›</span><strong>" + tituloDe(pg) + "</strong>" : "");
     }
-    document.title = (pg === ordem[0] ? "" : tituloDe(pg) + " · ") + "Visão do Sistema — Processos Seletivos e Editais";
+    document.title = (pg === ordem[0] ? "" : tituloDe(pg) + " · ") + "Visão do Sistema — GPS · Gestão de Processos Seletivos";
     /* âncora dentro de <details> fechado: abre, senão a rolagem cai em lugar nenhum */
     var d = alvo.closest("details");
     while (d) {
