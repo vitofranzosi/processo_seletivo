@@ -113,6 +113,31 @@ def pagina_dos_documentos(gestao, servidor, edital, convocacao):
     expect(gestao.get_by_role("heading", name="Documentos da convocação")).to_be_visible()
 
 
+def _recarregar_ate_a_marca(gestao, item_id, tentativas=10):
+    """Recarrega a página até o cartão trazer "aberto por você", e devolve o cartão.
+
+    **A abertura é gravada depois do último byte** (`entregar_e_registrar_ao_fim`, 157, FR-6544): o
+    corpo inteiro chega ao teste antes de o servidor retomar o gerador e gravar a consulta.
+    Recarregar logo em seguida mostrava, de vez em quando, o cartão sem a marca — a jornada falhava
+    no CI e passava ao repetir. A espera é pelo registro, e não por tempo: cada volta recarrega e
+    dá meio segundo para a marca aparecer, e a última deixa a falha subir com a mensagem do
+    Playwright.
+    """
+    for tentativa in range(tentativas):
+        gestao.reload()
+        cartao = gestao.locator(f"#item-{item_id}")
+        # Exato: desde a 157, a ajuda recolhida do formulário explica a marca com as mesmas
+        # palavras (UX-652), e a busca por trecho a acharia escondida.
+        marca = cartao.get_by_text("aberto por você", exact=True).last
+        try:
+            expect(marca).to_be_visible(timeout=500)
+            return cartao
+        except AssertionError:
+            if tentativa == tentativas - 1:
+                raise
+    return cartao
+
+
 def abrir_e_conferir(gestao, item_id, resultado, motivo=""):
     """Abre a versão vigente — a abertura que o "conforme" exige — e registra a conferência."""
     cartao = gestao.locator(f"#item-{item_id}")
@@ -120,11 +145,7 @@ def abrir_e_conferir(gestao, item_id, resultado, motivo=""):
         endereco = cartao.get_by_role("link", name="Abrir").last.get_attribute("href")
         resposta = gestao.context.request.get(gestao.url.split("/gestao/")[0] + endereco)
         assert resposta.ok and resposta.body().startswith(b"%PDF")
-        gestao.reload()
-        cartao = gestao.locator(f"#item-{item_id}")
-        # Exato: desde a 157, a ajuda recolhida do formulário explica a marca com as mesmas
-        # palavras (UX-652), e a busca por trecho a acharia escondida.
-        expect(cartao.get_by_text("aberto por você", exact=True).last).to_be_visible()
+        cartao = _recarregar_ate_a_marca(gestao, item_id)
     fechado = cartao.locator("details.como-preencher:not([open]) > summary").filter(
         has_text=re.compile("Conferir a versão|Registrar outra conferência|Conferir este documento")
     )
