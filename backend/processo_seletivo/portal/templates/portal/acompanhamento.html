@@ -23,7 +23,7 @@ As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausên
   <h3>Por quê</h3>
   <ul class="porque">
     {% for linha in situacao.porque %}
-    <li>{{ linha.texto }}{% if linha.link %} <a href="{{ linha.link }}">{{ linha.link_rotulo }}</a>{% endif %}</li>
+    <li>{{ linha.texto }}{% if linha.link %} <a href="{{ linha.link }}">{{ linha.link_rotulo }}</a>{% endif %}{% if linha.fundamento %}{% include "portal/_fundamento_do_ato.html" with rotulo=linha.rotulo_do_fundamento texto=linha.fundamento %}{% endif %}</li>
     {% endfor %}
   </ul>
   <h3>O que fazer</h3>

@@ -21,7 +21,7 @@ class Command(ComandoDeTreinamento):
             help="repita o código do cenário (por exemplo C07) para autorizar a restauração",
         )
 
-    def executar(self, *, escreve, unidade, cenario, confirmar, autoridade, **_):
+    def executar(self, *, escreve, unidade, cenario, confirmar, autoridade, dias_atras, **_):
         if len(cenario) != 1:
             raise CommandError("Restaure um cenário por vez: informe exatamente um --cenario.")
         codigo = cenario[0].strip().upper()
@@ -36,6 +36,11 @@ class Command(ComandoDeTreinamento):
             for mudanca in plano["mudancas"]:
                 self.stdout.write(f"    {mudanca}")
         self.stdout.write(f"  Será criada a rodada {plano['rodada_nova']}, no estado inicial.")
+        if dias_atras:
+            self.stdout.write(
+                f"  Os atos dela serão datados de {dias_atras} dia(s) atrás; o cancelamento da "
+                "rodada anterior é de agora."
+            )
         for edital in plano["a_cancelar"]:
             self.stdout.write(
                 f"  Será cancelado o Edital {edital.number}/{edital.year} ({edital.status})."
@@ -64,7 +69,11 @@ class Command(ComandoDeTreinamento):
                 f"Recusado: confirme a restauração repetindo o código, com --confirmar {codigo}."
             )
         anterior, novo = servico.restaurar(
-            plano, unidade, saida=self.stdout, autoridade=autoridade or None
+            plano,
+            unidade,
+            saida=self.stdout,
+            autoridade=autoridade or None,
+            dias_atras=dias_atras,
         )
         self.stdout.write(
             self.style.SUCCESS(

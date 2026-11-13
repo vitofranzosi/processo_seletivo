@@ -42,6 +42,8 @@ DA_115 = [
     PORTAL / "acompanhamento.html",
     RAIZ / "portal/obrigacoes.py",
     RAIZ / "portal/situacao.py",
+    # A `156` (FR-6413): a frase do aceite diz o que o registro não é, e nada além.
+    RAIZ / "portal/desfecho.py",
     # A `121` (FR-3892): a chamada, com a confirmação do envio — que diz "o arquivo aguarda", e
     # nunca aceito, aprovado nem atendido (FR-3870) — e os modelos da mensagem.
     PORTAL / "_chamada_da_convocacao.html",

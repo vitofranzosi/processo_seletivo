@@ -66,7 +66,7 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
 {% include "portal/_chamada_da_convocacao.html" %}
 <section class="dados-da-convocacao" aria-label="Dados da convocação">
   <dl class="meta">
-    <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
+    <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada, {{ convocacao.get_especie_display|lower }}</dd>
     {% include "portal/_comunicacao_da_convocacao.html" %}
     {% if convocacao.vencimento and not prazo_correndo %}
     <dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd>
@@ -80,7 +80,10 @@ do prazo, e a correcao dita nele. A frase "Voce foi convocada(o)" saiu, porque o
   {% endif %}
 
   {% if desfecho %}
-  <p class="ajuda">Resultado registrado: {{ rotulo_do_desfecho }} — {{ desfecho.fundamento }}</p>
+  {% comment %}As mesmas duas camadas da chamada com documento (156, FR-6400).{% endcomment %}
+  <p class="ajuda">Resultado registrado: {{ rotulo_do_desfecho }}</p>
+  <p>{{ frase_do_desfecho }}</p>
+  {% include "portal/_fundamento_do_ato.html" with rotulo=rotulo_do_fundamento texto=fundamento_do_registro %}
   {% if aceite %}<p>{{ aceite }}</p>{% endif %}
   {% else %}
   <h2>O que fazer</h2>

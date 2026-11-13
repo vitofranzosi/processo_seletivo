@@ -211,6 +211,35 @@ As datas de cada cenário contam do dia da carga. Os que têm prazo correndo val
 Os demais não dependem do calendário. Antes de uma sessão de treinamento, rode a verificação e
 restaure o que ela apontar.
 
+## Montar o cenário como se fosse de dias atrás
+
+O C10 e os que seguem o mesmo caminho (C11, C12, C15, C16, C17) nascem com o resultado **preliminar**
+divulgado na hora da carga, e a janela recursal dele é de 5 dias corridos. Enquanto ela corre, o GPS
+recusa divulgar o definitivo, declarar vaga não preenchida e encerrar o Edital — como recusaria num
+certame real. Para exercitar esses atos no dia da carga, monte o cenário atrasado:
+
+```bash
+uv run python manage.py restaurar_cenario_de_treinamento --cenario C10 --banco processo_seletivo --confirmar C10 --dias-atras 6
+```
+
+O `carregar` aceita a mesma opção. O cenário é montado pelos mesmos comandos, com as mesmas
+aferições: só o instante dos atos é outro, e as telas mostram essas datas. **Use 6 ou mais**: a
+janela exclui o dia da divulgação e fecha às 23h59 do quinto dia, de modo que com 5 ela ainda está
+aberta.
+
+O que saber antes:
+
+- **Só a rodada nova é atrasada.** O cancelamento da rodada anterior é datado de agora.
+- **A validade conta do instante atrasado.** O C11 montado há 6 dias vale 24, e não 30: o prazo da
+  convocação dele também começou há 6 dias.
+- **O atraso que venceria o cenário é recusado**, sem gravar nada: o C08 vale 5 dias, e há 6 a
+  janela em que o candidato recorre já nasceria fechada. Na carga do catálogo inteiro com
+  `--dias-atras 6`, ele sai como `FALHOU` e os outros são criados; carregue-o depois, sem a opção.
+- **A autoridade precisa ter sido vigente naquele dia.** Se ela foi cadastrada depois, a montagem é
+  recusada e diz a data; use um atraso menor ou escolha outra com `--autoridade`.
+- **O que você fizer hoje é de hoje.** Um ato novo que abra prazo — outro resultado divulgado, uma
+  convocação com vencimento — conta do instante real, e o que depender dele espera.
+
 ## O correio da homologação
 
 Os candidatos fictícios têm e-mail em `treinamento.exemplo.test`, que não entrega a ninguém. O

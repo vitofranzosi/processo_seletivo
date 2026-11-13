@@ -18,7 +18,7 @@ pessoa achar que sao dois estados. As mesmas proibicoes continuam valendo: nada 
 <section class="painel convocacao-da-inscricao" aria-labelledby="convocacao-da-inscricao">
   <h2 id="convocacao-da-inscricao">Convocação</h2>
   <dl class="campos">
-    <dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd>
+    <dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada, {{ convocacao.get_especie_display|lower }}</dd>
     {% include "portal/_comunicacao_da_convocacao.html" %}
     {% comment %}
     **O vencimento como dado do ato, e nao como prazo** (118, FR-3747, FR-3749). O prazo, quando

@@ -18,12 +18,16 @@ que deixam o histórico inteiro, e tiram o Processo antigo da aba "Em andamento"
 
 import traceback
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import transaction
 from django.test.utils import override_settings
 from django.utils import timezone
 
+from processo_seletivo.processos.management.commands.seed_demo import (
+    _relogio_atrasado as relogio_atrasado,
+)
 from processo_seletivo.processos.models import Edital, ProcessoSeletivo
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.treinamento import ambiente
@@ -340,8 +344,58 @@ def _correio_inerte():
     return override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 
 
-def montar(cenario, unidade, *, rodada, autoridade_id, saida=None, por="linha de comando"):
-    """Uma rodada nova do cenário, inteira ou nenhuma, com o manifesto na mesma transação."""
+def _recusar_atraso_que_nao_cabe(cenario, unidade, autoridade_id, dias_atras):
+    """O que o relógio atrasado não pode produzir, dito antes de montar qualquer coisa.
+
+    **Estado inicial que nasce vencido**: a validade do cenário conta do instante da montagem, e
+    com o relógio atrasado esse instante é o atrasado — um C08 montado há seis dias nasce com a
+    janela recursal de cinco já fechada, e o exercício dele é recorrer.
+
+    **Autoridade que ainda não era vigente**: os atos são assinados no instante atrasado, e a
+    autoridade cadastrada depois dele não podia assiná-los. A publicação recusaria no meio da
+    montagem, com uma frase sobre vigência que não diz que a causa é o atraso.
+    """
+    from processo_seletivo.shared.tempo import ZONA
+    from processo_seletivo.unidades.application.selectors import autoridades_vigentes
+
+    if dias_atras < 0:
+        raise Recusa("--dias-atras não aceita número negativo: o gerador não monta no futuro.")
+    if not dias_atras:
+        return
+    if cenario.validade_dias is not None and dias_atras >= cenario.validade_dias:
+        raise Recusa(
+            f"{cenario.codigo}: o estado inicial vale {cenario.validade_dias} dia(s), e montado "
+            f"há {dias_atras} ele nasceria vencido. Use um atraso menor, ou nenhum."
+        )
+    naquele_dia = (timezone.now() - timedelta(days=dias_atras)).astimezone(ZONA).date()
+    if not any(
+        str(autoridade.pk) == str(autoridade_id)
+        for autoridade in autoridades_vigentes(unidade, naquele_dia)
+    ):
+        raise Recusa(
+            f"{cenario.codigo}: a autoridade que assina os atos não era vigente em "
+            f"{naquele_dia:%d/%m/%Y}, {dias_atras} dia(s) atrás. Use um atraso menor, ou escolha "
+            "com --autoridade uma que já fosse vigente naquele dia."
+        )
+
+
+def montar(
+    cenario, unidade, *, rodada, autoridade_id, saida=None, por="linha de comando", dias_atras=0
+):
+    """Uma rodada nova do cenário, inteira ou nenhuma, com o manifesto na mesma transação.
+
+    `dias_atras` monta o cenário como se ele tivesse ocorrido há N dias, pelo mesmo relógio do
+    `seed_demo`: os comandos e as aferições são os de sempre, e só o instante é outro. Serve para
+    que o que depende de prazo já decorrido — o definitivo depois da janela recursal, a vaga não
+    preenchida, o encerramento — possa ser exercitado no dia da carga. **O manifesto leva o
+    instante atrasado**: a validade do estado inicial conta de quando os atos ocorreram.
+    """
+    _recusar_atraso_que_nao_cabe(cenario, unidade, autoridade_id, dias_atras)
+    with relogio_atrasado(dias_atras):
+        return _montar(cenario, unidade, rodada, autoridade_id, saida, por, dias_atras)
+
+
+def _montar(cenario, unidade, rodada, autoridade_id, saida, por, dias_atras):
     conflitos = conflitos_de_montagem(cenario, unidade, rodada, ano_local())
     if conflitos:
         raise Recusa(f"{cenario.codigo}: " + " ".join(conflitos))
@@ -367,11 +421,20 @@ def montar(cenario, unidade, *, rodada, autoridade_id, saida=None, por="linha de
             retrato=retratar(processo),
             banco=ambiente.banco_conectado(),
             criado_em=timezone.now(),
-            criado_por=por,
+            criado_por=f"{por}, há {dias_atras} dia(s)" if dias_atras else por,
         )
 
 
-def carregar(codigos, unidade, *, saida=None, erros=None, por="linha de comando", autoridade=None):
+def carregar(
+    codigos,
+    unidade,
+    *,
+    saida=None,
+    erros=None,
+    por="linha de comando",
+    autoridade=None,
+    dias_atras=0,
+):
     """Cria só os cenários que não existem; relata e pula os demais (FR-4611).
 
     **A recusa do domínio e o defeito do gerador saem diferentes.** Os dois desfazem o cenário e
@@ -396,6 +459,7 @@ def carregar(codigos, unidade, *, saida=None, erros=None, por="linha de comando"
                 autoridade_id=autoridade_id,
                 saida=saida,
                 por=por,
+                dias_atras=dias_atras,
             )
         except (DomainError, Recusa) as erro:
             resultados.append((cenario, "FALHOU", [_frase(erro)]))
@@ -477,7 +541,7 @@ def _editais_a_cancelar(processo, *, travar=False):
     return list(editais.order_by("id"))
 
 
-def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=None):
+def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=None, dias_atras=0):
     """A rodada nova e o cancelamento da anterior, na mesma transação (FR-4624, FR-4625).
 
     **Recebe o plano que o comando mostrou, e não o refaz.** O que muda entre mostrar e gravar é
@@ -489,6 +553,8 @@ def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=
 
     cenario, anterior = plano["cenario"], plano["manifesto"]
     autoridade_id = autoridade_vigente(unidade, autoridade)
+    # **Só a rodada nova nasce atrasada.** O cancelamento da anterior é ato de agora: datado de
+    # dias atrás, ele precederia o que a equipe fez nela ontem.
     with _correio_inerte(), transaction.atomic():
         # A anterior sai de PRONTO **antes** de a nova nascer: a constraint de uma rodada em uso por
         # cenário recusaria as duas juntas — e é ela que garante que nunca convivam. O filtro por
@@ -511,6 +577,7 @@ def restaurar(plano, unidade, *, saida=None, por="linha de comando", autoridade=
             autoridade_id=autoridade_id,
             saida=saida,
             por=por,
+            dias_atras=dias_atras,
         )
         CenarioDeTreinamento.objects.filter(pk=anterior.pk).update(substituido_por=novo)
         gestor = ator(GESTAO, unidade)

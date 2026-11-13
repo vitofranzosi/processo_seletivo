@@ -38,6 +38,15 @@ class ComandoDeTreinamento(BaseCommand):
                 ),
             )
             parser.add_argument(
+                "--dias-atras",
+                type=int,
+                default=0,
+                help=(
+                    "monta o cenário como se ele tivesse ocorrido há N dias; serve para que o "
+                    "prazo recursal de cinco dias já nasça encerrado (N de 6 em diante)"
+                ),
+            )
+            parser.add_argument(
                 "--dry-run",
                 action="store_true",
                 help="mostra o que seria feito, sem gravar nada",

@@ -30,6 +30,7 @@ from django.urls import reverse
 from django.utils import formats, timezone
 
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+from processo_seletivo.portal import desfecho as frases_do_desfecho
 from processo_seletivo.portal import obrigacoes as obrigacoes_da_convocacao
 from processo_seletivo.portal.leitura import _chave_da_lista
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
@@ -146,6 +147,10 @@ class Linha:
     texto: str
     link: str = ""
     link_rotulo: str = ""
+    # O fundamento do ato, que o template recolhe sob a frase simples (156, FR-6400): só a linha
+    # do desfecho o tem.
+    fundamento: str = ""
+    rotulo_do_fundamento: str = ""
 
 
 @dataclass(frozen=True)
@@ -249,8 +254,12 @@ def situacao_da_inscricao(
             f"DESFECHO_{desfecho.especie}",
             DESFECHOS.get(desfecho.especie, desfecho.get_especie_display()),
             porque=(
+                # **Duas camadas** (FR-1172, revista pela `156`): a frase simples da espécie, e o
+                # fundamento gravado recolhido sob ela, palavra por palavra (FR-6400, FR-6401).
                 Linha(
-                    f"Registrado em {_data(desfecho.registrado_em)}: {desfecho.fundamento.strip()}"
+                    frases_do_desfecho.do_desfecho(desfecho, convocacao),
+                    fundamento=frases_do_desfecho.fundamento_do_registro(desfecho),
+                    rotulo_do_fundamento=frases_do_desfecho.FUNDAMENTO_DO_REGISTRO,
                 ),
                 _linha_da_convocacao(convocacao, perfil, cartoes),
                 *em_analise,
@@ -493,11 +502,12 @@ def _situacao(codigo, rotulo=None, *, porque, acao):
 
 
 def frase_do_aceite(desfecho):
-    """*"Este registro não é matrícula, bolsa nem contrato…"*, no aceite e na regularização.
+    """O que vem depois da frase simples, no aceite e na regularização.
 
     **Os dois desfechos que incluem na ocupação, em toda convocação** (FR-3750, D-013 da `118`): o
-    aceite sem documento é o mesmo ato. É a frase que a User Story 2 da `115` prometia e que não
-    existia em tela nenhuma.
+    aceite sem documento é o mesmo ato. *"Este registro não é matrícula, bolsa nem contrato"* — a
+    frase que a User Story 2 da `115` prometia — está desde a `156` na frase simples da espécie
+    (FR-6406), no porquê; aqui fica só o que vem depois dela.
     """
     if desfecho is not None and desfecho.especie in convocacao_nomes.DESFECHOS_QUE_INCLUEM:
         return obrigacoes_da_convocacao.ACEITE

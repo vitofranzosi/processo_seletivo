@@ -448,6 +448,13 @@ details.como-converter summary, details.envio-de-novo summary{cursor:pointer;pad
 details.como-converter ul{margin:.35rem 0 .5rem;padding-left:1.25rem;font-size:.9375rem;
   color:var(--texto-fraco)}
 details.como-converter li{margin-bottom:.4rem}
+/* O fundamento do ato sob a frase simples (156, FR-6400, UX-621): fechado por padrão, e o texto
+   gravado quebra a linha em vez de estourar a 375 px. */
+details.fundamento-do-ato{margin:.35rem 0 0}
+details.fundamento-do-ato summary{cursor:pointer;padding:.4rem 0;width:fit-content;
+  color:var(--verde-texto);font-size:.9375rem}
+details.fundamento-do-ato p{margin:.25rem 0 0;font-size:.9375rem;color:var(--texto-fraco);
+  overflow-wrap:anywhere}
 .obrigatorio{color:var(--vermelho);margin-left:.15rem}
 /* A marca é redundante com a cor da borda, de propósito: quem não distingue as duas lê o mesmo
    estado no símbolo e no texto da contagem (WCAG 1.4.1). As regras destes elementos estão mais

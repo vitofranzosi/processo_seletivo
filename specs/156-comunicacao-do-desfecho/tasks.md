@@ -20,29 +20,34 @@ traz os seus. Caminhos relativos a `backend/`.
 
 ## Fase 1 — Preparação
 
-- [ ] T001 Conferir na `main` a revisão da 156 (#488) e partir dela; anotar o estado da `152`, da `154` e
+- [x] T001 Conferir na `main` a revisão da 156 (#488) e partir dela; anotar o estado da `152`, da `154` e
   da `150` (PRs e branches) no rascunho do PR — R-015
-- [ ] T002 [P] Acrescentar `portal/desfecho.py` às listas literais das varreduras
+  *(13/11: a revisão #488, a `152` #489/#520, a `154` #497 e o #499 estão na `main` em `761914c1`, de onde esta implementação parte.)*
+- [x] T002 [P] Acrescentar `portal/desfecho.py` às listas literais das varreduras
   (`tests/test_vocabulario_da_convocacao.py`, `tests/test_vocabulario_dos_documentos_da_convocacao.py`,
   `tests/test_vocabulario_do_requerimento.py`) e `avisos/domain/desfecho.py` a
   `tests/test_vocabulario_do_aviso.py` (`DA_066`) — R-001, FR-6403
+  *(13/11: só a parte do portal — `portal/desfecho.py` nas três, e `_fundamento_do_ato.html` na da convocação. `avisos/domain/desfecho.py` entra em `DA_066` com a T044, que o cria.)*
 
 ---
 
 ## Fase 2 — Fundação (bloqueia as histórias)
 
-- [ ] T003 Criar `processo_seletivo/portal/desfecho.py` com a assinatura das funções puras
+- [x] T003 Criar `processo_seletivo/portal/desfecho.py` com a assinatura das funções puras
   (`frase_do_desfecho`, `frase_da_convocacao`, `proximo_passo`, `caminho_para_recorrer`) e os textos
   das FR-6406, FR-6407, FR-6442; sem banco nem relógio — R-001
-- [ ] T004 [P] Criar `portal/templates/portal/_fundamento_do_ato.html` (`<details class="fundamento-do-ato">`
+  *(13/11: `frase_do_desfecho`, `do_desfecho` e `fundamento_do_registro`, com as FR-6406 e FR-6407. `frase_da_convocacao` (FR-6442) espera a T023, e `proximo_passo` e `caminho_para_recorrer` a T016 e a T017: sem quem os chame, seriam código morto.)*
+- [x] T004 [P] Criar `portal/templates/portal/_fundamento_do_ato.html` (`<details class="fundamento-do-ato">`
   com `<summary>` parametrizado) e a regra `.fundamento-do-ato` em `portal/static/portal/portal.css` —
   FR-6400, UX-621, R-002
-- [ ] T005 [P] Acrescentar `desfechos__atestado` ao `prefetch` de `vigentes_por_inscricao`
+- [x] T005 [P] Acrescentar `desfechos__atestado` ao `prefetch` de `vigentes_por_inscricao`
   (`convocacao/application/selectors.py`), para a frase da inércia sem consulta — R-002
-- [ ] T006 Testes de unidade de `portal/desfecho.py`: uma frase por espécie de desfecho e de convocação;
+  *(13/11: por `Prefetch` com `select_related`, para não somar consulta.)*
+- [x] T006 Testes de unidade de `portal/desfecho.py`: uma frase por espécie de desfecho e de convocação;
   nenhuma com os termos da FR-6403, com *"homologa"*, *"dentro das vagas"* ou *"matrícula"* como
   próximo passo; no máximo duas frases antes do próximo passo (`tests/unit/portal/test_frases_do_desfecho.py`)
   — FR-6406, FR-6407, FR-6408, FR-6442, UX-620
+  *(13/11: sem o próximo passo, que é da T018.)*
 
 ---
 
@@ -51,29 +56,32 @@ traz os seus. Caminhos relativos a `backend/`.
 **Teste independente**: as sete espécies na tela da convocação e no acompanhamento, com a frase simples
 e o fundamento recolhido; nenhum termo técnico fora dele.
 
-- [ ] T007 [US2] `portal/situacao.py`: o porquê do desfecho vira a frase simples, e o fundamento vai a um
+- [x] T007 [US2] `portal/situacao.py`: o porquê do desfecho vira a frase simples, e o fundamento vai a um
   campo novo de `Linha` para o template recolher; `situacao_da_inscricao` continua sem consulta —
   FR-6400, FR-6401, FR-6402, FR-1172 da `063` revista
-- [ ] T008 [US2] `portal/templates/portal/acompanhamento.html`: o porquê com `_fundamento_do_ato.html` —
+- [x] T008 [US2] `portal/templates/portal/acompanhamento.html`: o porquê com `_fundamento_do_ato.html` —
   FR-6400
-- [ ] T009 [US2] `portal/templates/portal/_chamada_da_convocacao.html` (ramo decidido) e
+- [x] T009 [US2] `portal/templates/portal/_chamada_da_convocacao.html` (ramo decidido) e
   `convocacao.html` (sem documento): *"Resultado registrado: ‹rótulo›"*, a frase simples e o
   fundamento recolhido, no lugar de *"Registrado em …: ‹fundamento›"* — FR-6400, FR-6405, FR-6406
-- [ ] T010 [US2] `portal/views.py` (`convocacao`): passar o vencimento, a espécie do atestado e o que a
+- [x] T010 [US2] `portal/views.py` (`convocacao`): passar o vencimento, a espécie do atestado e o que a
   frase pede às funções de `desfecho.py` — FR-6406, FR-6407
-- [ ] T011 [US2] *"Chamada: 1ª chamada, para vaga inicial"* no lugar de *"Espécie: …"* em `convocacao.html`,
+- [x] T011 [US2] *"Chamada: 1ª chamada, para vaga inicial"* no lugar de *"Espécie: …"* em `convocacao.html`,
   `_convocacao_da_inscricao.html` e `_obrigacoes_da_convocacao.html`; e o rótulo da FR-1172 na lista
   "Minhas inscrições" (`views._item_da_lista`) — FR-6403, FR-6405, R-005
+  *(13/11: e, até a T017, `obrigacoes.ACEITE` fica só com *"Os próximos passos são os que o Edital indica."* — o que o registro não é passou para a frase simples, e repeti-lo na mesma tela era dizer duas vezes.)*
 - [ ] T012 [US2] Indeferimento: o caminho para a seção de recursos quando o plano do documento a mostra
   (FR-6414) — **fazer depois da T016** (US1), que dá a leitura da seção
-- [ ] T013 [US2] Ajustar os testes que asseriam a forma antiga (`tests/unit/portal/test_situacao_da_inscricao.py`,
+- [x] T013 [US2] Ajustar os testes que asseriam a forma antiga (`tests/unit/portal/test_situacao_da_inscricao.py`,
   `tests/interface/test_portal_convocacao.py` SC-1150, `tests/interface/test_portal_jornada_consolidada.py`,
   `tests/interface/test_portal_caminho_da_convocacao.py`) e acrescentar um caso por espécie
-- [ ] T014 [US2] Varredura nova `tests/test_vocabulario_do_desfecho.py`: renderizar o portal nas sete
+- [x] T014 [US2] Varredura nova `tests/test_vocabulario_do_desfecho.py`: renderizar o portal nas sete
   espécies e nas três de convocação, tirar o conteúdo dos `<details>` e reprovar os termos da FR-6403
   — SC-2120
-- [ ] T015 [US2] Orçamento de consultas: `TestCusto` da `063` e os custos de
+  *(13/11: as sete espécies, nas duas telas e nos dois ramos da convocação. As três espécies de convocação esperam a T023, que esbarra na FR-3740 da `118` — o bloco "Sobre esta convocação" visível e sem `details` —, que a `156` não reviu: o conflito está no PR.)*
+- [x] T015 [US2] Orçamento de consultas: `TestCusto` da `063` e os custos de
   `test_portal_jornada_consolidada.py` sem consulta nova por item — R-002
+  *(13/11: `TestCusto` da `063` e os custos da jornada consolidada passam sem mudança.)*
 
 ---
 

@@ -67,6 +67,9 @@ DA_019 = [
     # desfecho —, e as frases moram no módulo, e não no template.
     RAIZ / "portal/situacao.py",
     PORTAL / "acompanhamento.html",
+    # A `156`: a frase simples de cada desfecho e o fundamento recolhido sob ela.
+    RAIZ / "portal/desfecho.py",
+    PORTAL / "_fundamento_do_ato.html",
     # A `118`: os cinco blocos da convocação. **A projeção, `portal/obrigacoes.py`, não entra**, e
     # pela razão que `test_vocabulario_dos_documentos_da_convocacao.py` registra: ali "Recebido em"
     # é sobre o **arquivo**, que o sistema recebeu, e não sobre a mensagem. Ela está na varredura

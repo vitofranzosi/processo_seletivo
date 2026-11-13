@@ -44,8 +44,13 @@ def test_a_pagina_nao_oferece_nenhum_controle_de_avaliacao(pagina):
     regras de outras telas, e a `010` acrescentou ali uma que menciona CPF — a marca de
     coincidência na listagem do que chegou. Afirmar sobre a página toda mediria o CSS, e um
     comentário de folha de estilo não é controle de avaliação.
+
+    Sem o token CSRF também: são 64 caracteres sorteados, e `CPF` — ou `Nota`, ou `Apto` — cai neles
+    por acaso, de vez em quando (12/11, no CI da `main`: `…bPCPFxrk…`). O token não é conteúdo da
+    tela, e a falha parecia do produto.
     """
     corpo = re.sub(r"<style>.*?</style>", "", pagina.content.decode(), flags=re.S)
+    corpo = re.sub(r"<input[^>]*csrfmiddlewaretoken[^>]*>", "", corpo)
 
     for proibido in PROIBIDOS:
         assert proibido not in corpo, proibido
