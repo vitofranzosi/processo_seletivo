@@ -390,3 +390,20 @@ Entraram na `main`, que chegou a `60f9ff24`, as implementações da 147, 148, 14
 - em que grupo do Centro de Controle aparece a Ação *Publicações das inscrições*;
 - a contagem de 83 gatilhos e 67 tabelas no resumo do provisionamento é de quando as append-only eram 53; não foi recontada;
 - as specs 149 e 159 ainda dizem *Em implementação*, a 134 ainda diz *sem merge* e o `tasks.md` da 160 deixa T002, T036 e T037 sem marca, embora mergeadas.
+
+## Acréscimo de 13/11: a vitrine separa em andamento de encerrado, e pagina (PRs 524 e 526)
+
+O PR 524 entrou na `main` (`e815aeb5`) com a paginação das encerradas e a ordem da mais recente para a mais antiga. O PR 526, onde este acréscimo viaja, sobre a `main` em `26748113`, separa o grupo em dois. Nenhum dos dois tem spec: foram pedidos como correção e polimento da vitrine.
+
+- **Novo trecho:** `#vitrine-em-andamento-e-paginas`, no passo *1 · Descoberta* da jornada do candidato — os cinco grupos, a regra do desfecho, a etiqueta, a ordem de cada grupo e a paginação.
+- **Corrigido:** a lista dos grupos, que dizia quatro e nomeava *Inscrições encerradas*; a linha *Situação* da página pública do Edital, que não dizia a etiqueta; o parágrafo do cartão, que ganhou o pé alinhado e o corte do título.
+- **Lacuna registrada:** *Seleções encerradas* só enche quando a gestão encerra o Edital por ato; e a mudança contraria a 024 (quatro grupos, FR-146) e a 047 (o desfecho não seria um quinto, FR-763) sem spec nova.
+
+**Como foi conferido:** rótulos lidos no código (`portal/leitura.py`: `GRUPOS`, `MARCA_EM_ANDAMENTO`, `estado_na_vitrine`; `vitrine.html`, `_paginacao.html`, `_consulta.html`); a tela percorrida no navegador em 390 e 1280 px, num banco de demonstração com 6 seleções abertas, 27 em andamento e 1 encerrada.
+
+**Não verificado:**
+
+- a suíte inteira não rodou; rodaram `tests/unit`, o portal, a interface, os contratos, a aceitação, o kit e as publicações contra PostgreSQL (13 201 passando, 2 pulados);
+- quantos Editais reais têm o ato de encerramento — é o que decide o tamanho do grupo *Em andamento*;
+- os números de *Maturidade* não foram recontados;
+- a volta da página do Edital abre a página certa da vitrine, mas no topo, sem a âncora da lista.
