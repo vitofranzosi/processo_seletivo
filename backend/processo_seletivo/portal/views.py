@@ -89,6 +89,7 @@ from processo_seletivo.inscricoes.domain.titularidade import exigir_titularidade
 from processo_seletivo.inscricoes.infrastructure import comprovante_pdf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import assistente as assistente_do_edital
+from processo_seletivo.portal import desfecho as desfecho_em_frases
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura, obrigacoes
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
@@ -1489,7 +1490,11 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None):
         # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
         "fechada": fechada,
         "convocacao_aberta": aberta,
-        "convocacao_concluida": chamada["desfecho"].get_especie_display()
+        # O rótulo do desfecho é o da FR-1172 da `063`, como no acompanhamento e na convocação, e
+        # não a espécie crua (156, FR-6405).
+        "convocacao_concluida": situacao_da_inscricao.DESFECHOS.get(
+            chamada["desfecho"].especie, chamada["desfecho"].get_especie_display()
+        )
         if chamada["desfecho"]
         else "",
         "acao": "Ver convocação"
@@ -2589,6 +2594,10 @@ def convocacao(request, inscricao_id):
                 if desfecho is not None
                 else ""
             ),
+            # **Duas camadas** (156, FR-6400, FR-6406): a frase simples, pelo que a tela já leu —
+            # a espécie, o registro, o vencimento e, na inércia, o atestado do `prefetch` —, e o
+            # fundamento gravado, que o template recolhe.
+            **_desfecho_em_duas_camadas(desfecho, chamada),
             "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
@@ -2598,6 +2607,16 @@ def convocacao(request, inscricao_id):
             "publicacao_no_gps": _publicacao_no_gps(chamada, da_convocacao),
         },
     )
+
+
+def _desfecho_em_duas_camadas(desfecho, chamada):
+    if desfecho is None:
+        return {}
+    return {
+        "frase_do_desfecho": desfecho_em_frases.do_desfecho(desfecho, chamada),
+        "fundamento_do_registro": desfecho_em_frases.fundamento_do_registro(desfecho),
+        "rotulo_do_fundamento": desfecho_em_frases.FUNDAMENTO_DO_REGISTRO,
+    }
 
 
 def _publicacao_no_gps(chamada, da_convocacao):

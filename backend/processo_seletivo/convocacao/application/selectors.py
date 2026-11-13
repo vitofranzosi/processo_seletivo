@@ -16,10 +16,11 @@ corte da `014`; e o estado do prazo é calculado a cada leitura, e não guardado
 
 from dataclasses import dataclass
 
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from processo_seletivo.convocacao.domain import fila, nomes, prazo, vocabulario_do_canal
-from processo_seletivo.convocacao.models import Convocacao
+from processo_seletivo.convocacao.models import Convocacao, DesfechoDaConvocacao
 from processo_seletivo.ocupacao.application import efeitos as efeitos_de_ocupacao
 from processo_seletivo.ocupacao.application import selectors as ocupacao_selectors
 from processo_seletivo.ocupacao.domain import apuracao as calculo
@@ -236,7 +237,14 @@ def vigentes_por_inscricao(inscricao_ids):
         # `118` mede. A anterior entra pelo `JOIN`; as comunicações dela custam uma consulta só
         # quando há alguma anterior, e nenhuma quando nenhuma vigente corrige outra.
         .select_related("convocacao_anterior")
-        .prefetch_related("desfechos", "comunicacoes", "convocacao_anterior__comunicacoes")
+        # O atestado do desfecho vem junto, pelo `JOIN` (156, R-002): a frase simples do
+        # cancelamento por inércia diz o fato atestado, e lê-lo por item — ou numa consulta a mais
+        # — quebraria a mesma contagem fixa.
+        .prefetch_related(
+            Prefetch("desfechos", DesfechoDaConvocacao.objects.select_related("atestado")),
+            "comunicacoes",
+            "convocacao_anterior__comunicacoes",
+        )
         .order_by("-criado_em", "-id")
     )
     # **Só as visíveis ao candidato** (125, FR-3982, FR-1100 da `059` revista): a convocação por

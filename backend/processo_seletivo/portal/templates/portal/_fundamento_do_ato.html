@@ -1,0 +1,10 @@
+{% comment %}
+O fundamento do ato, recolhido sob a frase simples (156, FR-6400, FR-6401, UX-621).
+
+**`details` nativo, e não script**: abre pelo teclado, anuncia aberto ou fechado ao leitor de tela
+e funciona sob a CSP sem `unsafe-inline` (091, 092). Recolhido não quer dizer escondido: o texto
+é o gravado no ato, palavra por palavra, e está a um gesto.
+
+Recebe `rotulo` (o do `summary`) e `texto` (o fundamento, já com a data do registro).
+{% endcomment %}
+<details class="fundamento-do-ato"><summary>{{ rotulo }}</summary><p>{{ texto }}</p></details>

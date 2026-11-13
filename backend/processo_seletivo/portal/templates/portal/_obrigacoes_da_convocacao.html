@@ -105,8 +105,7 @@ palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
   `dt` e `dd` é o que o HTML admite dentro de `dl`.
   {% endcomment %}
   <dl class="campos dados-do-ato-da-convocacao">
-    <div><dt>Espécie</dt><dd>{{ convocacao.get_especie_display }}</dd></div>
-    <div><dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada</dd></div>
+    <div><dt>Chamada</dt><dd>{{ convocacao.chamada }}ª chamada, {{ convocacao.get_especie_display|lower }}</dd></div>
     {% if enviada_em %}<div>{% include "portal/_comunicacao_da_convocacao.html" %}</div>{% endif %}
     {% if substituida %}<div class="dado-longo"><dt>Convocação substituída</dt><dd>{{ substituida }}</dd></div>{% endif %}
     {% if convocacao.vencimento %}<div><dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd></div>{% endif %}

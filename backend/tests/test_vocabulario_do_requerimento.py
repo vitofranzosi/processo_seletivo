@@ -52,6 +52,8 @@ DA_029 = [
     # enviado —, e é ali que "não enviado" poderia escorregar para um juízo.
     RAIZ / "portal/obrigacoes.py",
     PORTAL / "_obrigacoes_da_convocacao.html",
+    # A `156`: as frases dos desfechos, onde "homologa" seria o atalho de quem resume o aceite.
+    RAIZ / "portal/desfecho.py",
     PORTAL / "_requerimento_nas_obrigacoes.html",
 ]
 
