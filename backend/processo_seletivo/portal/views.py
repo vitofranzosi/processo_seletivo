@@ -224,17 +224,6 @@ def _perfil(perfil, conteudo):
     }
 
 
-def _por_lista(cadastro):
-    """`3 na ampla concorrência, 1 na lista PcD e 1 na lista PPI` — o número de cada lista."""
-    partes = [
-        f"{lista.numero} na ampla concorrência"
-        if lista.lista_id is None
-        else f"{lista.numero} na lista {lista.nome}"
-        for lista in cadastro.por_lista
-    ]
-    return ", ".join(partes[:-1]) + f" e {partes[-1]}"
-
-
 def _oferta(vagas, tipo_de_reserva, perfil):
     """O que está sendo oferecido, na leitura de quem decide (024, FR-136, D-007).
 
@@ -268,7 +257,10 @@ def _oferta(vagas, tipo_de_reserva, perfil):
         )
         detalhe = f"até {numero} classificado{plural}{em_cada}, para convocação futura"
     elif tipo_de_reserva == "LIMITED" and cadastro.por_lista:
-        detalhe = f"até {_por_lista(cadastro)}, para convocação futura"
+        detalhe = (
+            f"até {cadastro_de_reserva.frase_das_listas(cadastro.por_lista)}, "
+            "para convocação futura"
+        )
     else:
         detalhe = "sem limite declarado, para convocação futura"
     return {"titulo": "Cadastro reserva", "detalhe": detalhe}

@@ -89,3 +89,26 @@ def test_a_revisao_diz_o_cadastro_pela_regra_unica(montado, esperado):
 def test_a_nota_do_legado_e_nota_e_nao_alerta(tela):
     corpo = (TEMPLATES / tela).read_text()
     assert '{% if nota_do_cadastro %}<p class="nota">{{ nota_do_cadastro }}</p>{% endif %}' in corpo
+
+
+def test_a_recusa_devolve_a_nota_do_perfil_gravado(monkeypatch):
+    """A nota vem do corte **salvo**, que o formulário da etapa não traz (`_reexibir_perfis`)."""
+    from processo_seletivo.interface import forms, views
+
+    gravada = {"frase": "do corte gravado", "listas": [], "resumo": "limitado: até 3"}
+    monkeypatch.setattr(
+        forms, "perfis_do_edital", lambda edital: [{"id": "p-gravado", "cadastro": gravada}]
+    )
+    (lido,) = forms.ler_perfis(
+        {
+            "perfil-0-id": "p-gravado",
+            "perfil-0-code": "P",
+            "perfil-0-name": "Perfil",
+            "perfil-0-immediateVacancies": "-1",
+            "perfil-0-reserveType": "LIMITED",
+        }
+    )
+    (cartao,) = views._reexibir_perfis([lido], edital=object())
+    assert cartao["cadastro"] == gravada
+    (sem_edital,) = views._reexibir_perfis([lido])
+    assert sem_edital["cadastro"]["resumo"] == "limitado"

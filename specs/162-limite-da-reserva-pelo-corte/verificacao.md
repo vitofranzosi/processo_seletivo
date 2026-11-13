@@ -82,3 +82,21 @@ tokens (sem o grupo `assistente`), a recusa por vendor e o E2E contra a Caixa.
 A medição anterior, antes das últimas correções de fixture, deu 19553 passando e 7 falhas, todas da
 mesma causa — a Retificação dos testes do portal levava o número do Docente a zero, que a FR-6951
 recusa; a fixture ganhou folga.
+
+## Code review (13/11)
+
+Oito achados; sete corrigidos, um registrado:
+
+| Achado | Desfecho |
+|---|---|
+| O limitado com continuação só era recusado na publicação, e o corte **nasce** por Retificação (`PODE_PASSAR_A_EXISTIR`) | corrigido: vale também na Retificação, fora do legado (FR-6933 e T-004 revistas) |
+| O assistente dizia "limitado a None" no limitado sem corte | corrigido: "não declarado", como antes |
+| O portal dizia "1 pessoas" na frase por lista | corrigido |
+| A frase das listas estava escrita em quatro lugares | corrigido: `cadastro_de_reserva.frase_das_listas` |
+| O nome do marco em frase estava refeito em três lugares | corrigido: `cadastro_de_reserva.nome_do_marco` |
+| A coerência do cadastro era chamada de dentro da do quadro de vagas | corrigido: `_coerencia_dos_cadastros`, direto em `validate_for_publication` |
+| O ramo da nota do Perfil gravado na recusa não tinha teste | corrigido: `test_a_recusa_devolve_a_nota_do_perfil_gravado` |
+| `do_perfil` recalculado várias vezes por Perfil na composição do PDF | registrado: a recomputação redundante de `marcos_que_convocam` saiu de `frases_do_corte`; passar um `Cadastro` pelos seis pontos de chamada custaria mais do que os microssegundos que poupa |
+
+Depois das correções: `ruff check` e `ruff format --check` limpos; `pytest tests` contra PostgreSQL
+com **19564 passando, 24 pulados, sem falha** (567s).

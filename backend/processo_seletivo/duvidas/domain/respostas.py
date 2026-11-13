@@ -227,7 +227,8 @@ def _p03(contexto, parametros, pergunta, canal):
             rotulos.em_palavras(rotulos.RESERVA, reserva),
         )
     )
-    limite = None
+    # Sem número legível — o limitado sem corte —, a explicação diz "não declarado", como dizia.
+    limite = leitura.numero_legivel(None)
     if reserva == "LIMITED":
         # O número é o da regra única (162, FR-6946). O legado cita o campo que publicou; o
         # derivado cita o excedente do corte do marco que convoca, que é de onde ele vem.

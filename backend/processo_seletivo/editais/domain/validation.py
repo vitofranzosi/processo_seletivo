@@ -1727,6 +1727,7 @@ def validate_for_publication(
     findings.extend(_anexo_citado_sem_rotulo(snapshot, ato=ato))
     findings.extend(_secao_universal_vazia(snapshot, ato=ato))
     findings.extend(_coerencia_do_quadro_de_vagas(snapshot, ato=ato))
+    findings.extend(_coerencia_dos_cadastros(snapshot, ato=ato))
     findings.extend(_caractere_sem_grafia(snapshot))
     findings.extend(_numeracao_e_remissoes(snapshot, ato=ato))
     findings.extend(_conferencia_do_recurso(snapshot))
@@ -3469,7 +3470,6 @@ def _coerencia_do_quadro_de_vagas(
         base = _caminho_da_entidade("profiles", perfil, posicao)
         findings.extend(_reserva_convocada_fora(perfil, base=base, ato=ato))
         findings.extend(_reserva_com_linhas_reservadas(perfil, base=base, ato=ato))
-        findings.extend(_coerencia_do_cadastro(perfil, base=base, ato=ato))
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
             # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
@@ -3753,6 +3753,16 @@ def _reserva_com_linhas_reservadas(perfil, *, base, ato) -> list[ValidationFindi
             f"{base}/vacancyTable",
         )
     ]
+
+
+def _coerencia_dos_cadastros(snapshot, *, ato) -> list[ValidationFinding]:
+    """A coerência do cadastro de cada Perfil, chamada por `validate_for_publication` (162)."""
+    findings = []
+    for posicao, perfil in enumerate(snapshot.get("profiles") or []):
+        if isinstance(perfil, dict):
+            base = _caminho_da_entidade("profiles", perfil, posicao)
+            findings.extend(_coerencia_do_cadastro(perfil, base=base, ato=ato))
+    return findings
 
 
 def _coerencia_do_cadastro(perfil, *, base, ato) -> list[ValidationFinding]:

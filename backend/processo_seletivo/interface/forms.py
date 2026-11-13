@@ -1100,7 +1100,7 @@ def cadastro_para_o_cartao(perfil_do_conteudo):
     marco = cadastro.marco_que_convoca
     if not cadastro.por_lista:
         return {"frase": "", "listas": [], "resumo": cadastro.resumo_limitado()}
-    nome = f"o marco “{marco.nome}”" if marco.nome else "o marco que convoca deste Perfil"
+    nome = cadastro_de_reserva.nome_do_marco(marco)
     unico = cadastro.numero_unico
     if unico is not None:
         sufixo = " em cada lista de concorrência" if cadastro.com_modalidade else ""

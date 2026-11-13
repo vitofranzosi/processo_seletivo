@@ -60,7 +60,7 @@ do_perfil(perfil) -> Cadastro
 
 | Invariante | Requisito | Quando |
 |---|---|---|
-| `LIMITED` não legado ⇒ nenhum marco que convoca admite continuação | FR-6933 | publicação |
+| `LIMITED` não legado ⇒ nenhum marco que convoca admite continuação | FR-6933 | publicação e Retificação |
 | `UNLIMITED` com corte no marco que convoca ⇒ todos admitem continuação | FR-6934 | publicação |
 | `LIMITED` não legado ⇒ ao menos um marco que convoca com corte | FR-6935 | publicação |
 | `LIMITED` não legado ⇒ `numero > 0` em toda lista | FR-6936, FR-6951 | publicação e Retificação |

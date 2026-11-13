@@ -65,7 +65,7 @@ def test_a_frase_do_acompanhamento_por_lista():
         vagas=4, quadro=quadro, modalidades=modalidades, marcos=[marco(corte=regra(alvo=3))]
     )
     assert situacao.frase_da_reserva(montado) == (
-        "O Edital prevê cadastro reserva de até 1 pessoas na ampla concorrência, 2 na lista "
+        "O Edital prevê cadastro reserva de até 1 pessoa na ampla concorrência, 2 na lista "
         "Pessoas com deficiência e 2 na lista Pretos, pardos e indígenas deste Perfil."
     )
 
@@ -119,3 +119,15 @@ def test_a_explicacao_do_assistente_diz_o_numero_sem_o_ate():
     pergunta = SimpleNamespace(acompanha=())
     rascunho = respostas._p03(contexto, SimpleNamespace(perfil=montado), pergunta, None)
     assert "O cadastro de reserva é limitado a 3." in rascunho.explicacao
+
+
+def test_o_assistente_sem_numero_diz_nao_declarado():
+    """Limitado sem corte no marco que convoca: a explicação não interpola `None`."""
+    montado = perfil(marcos=[marco()])
+    contexto = SimpleNamespace(
+        conteudo={"profiles": [montado]}, instante=None, desfecho=None, pagina_publica=None
+    )
+    pergunta = SimpleNamespace(acompanha=())
+    rascunho = respostas._p03(contexto, SimpleNamespace(perfil=montado), pergunta, None)
+    assert "None" not in rascunho.explicacao
+    assert "limitado a não declarado" in rascunho.explicacao

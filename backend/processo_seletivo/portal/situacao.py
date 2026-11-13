@@ -475,19 +475,10 @@ def frase_da_reserva(perfil):
             )
         return f"O Edital prevê cadastro reserva de até {limite} {pessoas} para este Perfil."
     if tipo == "LIMITED" and cadastro.por_lista and not cadastro.legado:
-        partes = [
-            f"{lista.numero} na ampla concorrência"
-            if lista.lista_id is None
-            else f"{lista.numero} na lista {lista.nome}"
-            for lista in cadastro.por_lista
-        ]
-        primeira = partes[0].replace(" na ", " pessoas na ", 1)
-        resto = [primeira, *partes[1:]]
-        return (
-            "O Edital prevê cadastro reserva de até "
-            + ", ".join(resto[:-1])
-            + f" e {resto[-1]} deste Perfil."
+        listas = cadastro_de_reserva.frase_das_listas(
+            cadastro.por_lista, unidade=lambda n: "pessoa" if n == 1 else "pessoas"
         )
+        return f"O Edital prevê cadastro reserva de até {listas} deste Perfil."
     if tipo == "UNLIMITED":
         return "O Edital prevê cadastro reserva para este Perfil, sem limite de pessoas."
     if tipo == "LIMITED":

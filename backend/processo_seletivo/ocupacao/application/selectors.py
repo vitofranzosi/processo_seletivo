@@ -782,11 +782,5 @@ def nota_do_cadastro_legado(conteudo, perfil_id):
             " em cada lista de concorrência" if cadastro.com_modalidade else ""
         )
     else:
-        partes = [
-            f"{lista.numero} na ampla concorrência"
-            if lista.lista_id is None
-            else f"{lista.numero} na lista {lista.nome}"
-            for lista in cadastro.por_lista
-        ]
-        alcance = "até " + ", ".join(partes[:-1]) + f" e {partes[-1]}, além das vagas"
+        alcance = f"até {cadastro_de_reserva.frase_das_listas(cadastro.por_lista)}, além das vagas"
     return f"{inicio}: a convocação alcança quem o corte alcança — {alcance}."

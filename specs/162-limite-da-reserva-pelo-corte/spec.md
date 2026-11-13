@@ -306,7 +306,8 @@ Os que mudam comportamento viraram requisito (`FR-6938`, `FR-6939`, `FR-6940`, `
 #### A coerência entre a espécie e o corte
 
 - **FR-6933**: A publicação MUST ser recusada quando um Perfil com cadastro limitado tiver o marco
-  que convoca com continuação admitida.
+  que convoca com continuação admitida; a Retificação de Edital publicado depois desta feature
+  também, porque o corte pode nascer por ela.
 - **FR-6934**: A publicação MUST ser recusada quando um Perfil com cadastro ilimitado tiver o marco
   que convoca com corte sem continuação admitida.
 - **FR-6935**: A publicação MUST ser recusada quando um Perfil com cadastro limitado tiver o marco

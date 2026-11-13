@@ -80,16 +80,18 @@ mostra.
 
 | Código | Requisito | Ato | Perfis alcançados |
 |---|---|---|---|
-| `reserve_limited_with_continuation` | FR-6933 | publicação | `LIMITED` não legado |
+| `reserve_limited_with_continuation` | FR-6933 | publicação e Retificação | `LIMITED` não legado |
 | `reserve_unlimited_without_continuation` | FR-6934 | publicação | `UNLIMITED` com corte no marco que convoca |
 | `reserve_limited_without_cut` | FR-6935 | publicação | `LIMITED` não legado |
 | `reserve_limited_to_nobody` | FR-6936, FR-6951 | publicação e Retificação | `LIMITED` não legado |
 | `reserve_limited_divergent_milestones` | FR-6939 | publicação e Retificação | `LIMITED` não legado |
 
 **Por quê o recorte.** A espécie, a continuação e a Etapa governada não se retificam
-(`mutabilidade.py`), e por isso as três primeiras não podem passar a valer depois da publicação; o
-alvo e o excedente se retificam, e por isso as duas últimas valem também na Retificação, como pede a
-FR-6951. É o recorte que a `027` registrou ao lado de `ATO_DE_PUBLICACAO`: uma exigência impeditiva
+(`mutabilidade.py`); o alvo e o excedente se retificam, e por isso o zero e a divergência valem também
+na Retificação, como pede a FR-6951. *Revisto no code review de 13/11*: o corte inteiro **nasce** por
+Retificação (`PODE_PASSAR_A_EXISTIR`), e um marco que convoca pode passar a cortar com continuação —
+por isso o limitado com continuação também se confere na Retificação. O ilimitado sem continuação e o
+limitado sem corte continuam só na publicação. É o recorte que a `027` registrou ao lado de `ATO_DE_PUBLICACAO`: uma exigência impeditiva
 sem ele bloquearia toda Retificação do acervo. Para o `UNLIMITED` não há marca de legado (T-002), e
 por isso a FR-6934 só vale na publicação, o que já satisfaz a FR-6948.
 

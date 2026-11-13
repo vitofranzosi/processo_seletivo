@@ -643,7 +643,7 @@ def advertencias_do_numero_digitado(edital, snapshot):
             continue
         rotulo = perfil.get("code") or perfil.get("name") or ""
         marco = cadastro.marco_que_convoca
-        nome = f"o marco “{marco.nome}”" if marco and marco.nome else "o marco que convoca"
+        nome = cadastro_de_reserva.nome_do_marco(marco)
         if cadastro.por_lista:
             publicado = f"{cadastro.descricao_curta().removeprefix('Limitado: ')}"
             depois = (

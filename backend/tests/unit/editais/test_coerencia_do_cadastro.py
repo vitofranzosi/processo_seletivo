@@ -138,9 +138,10 @@ def test_par_coerente_nao_e_recusado(montado):
 # --- O recorte pelo ato (T-004, FR-6948, FR-6951) -----------------------------------------------
 
 
-def test_na_retificacao_so_o_zero_e_a_divergencia():
+def test_na_retificacao_a_continuacao_o_zero_e_a_divergencia():
+    """FR-6933 e FR-6951: o corte nasce por Retificação, e pode nascer com continuação."""
     continuacao = perfil(marcos=[marco(corte=regra(excedente=3, continuacao="ALLOWED"))])
-    assert codigos(continuacao, na_publicacao=False) == []
+    assert codigos(continuacao, na_publicacao=False) == [cadastro.LIMITADO_COM_CONTINUACAO]
     ilimitado = perfil(especie="UNLIMITED", marcos=[marco(corte=regra(alvo=3))])
     assert codigos(ilimitado, na_publicacao=False) == []
     assert codigos(perfil(marcos=[marco()]), na_publicacao=False) == []
@@ -180,11 +181,31 @@ def test_validate_for_publication_recusa_com_o_caminho_do_perfil(ato):
     ]
 
 
-def test_validate_for_publication_nao_confere_continuacao_na_retificacao():
-    montado = perfil(marcos=[marco(corte=regra(excedente=3, continuacao="ALLOWED"))])
+def test_validate_for_publication_nao_confere_o_ilimitado_na_retificacao():
+    """O ilimitado não tem marca de legado: na Retificação, o acervo não pode ser recusado."""
+    montado = perfil(especie="UNLIMITED", marcos=[marco(corte=regra(alvo=3))])
     publicacao = {i.code for i in validate_for_publication(_snapshot(montado))}
     retificacao = {
         i.code for i in validate_for_publication(_snapshot(montado), ato=ATO_DE_RETIFICACAO)
     }
-    assert cadastro.LIMITADO_COM_CONTINUACAO in publicacao
-    assert cadastro.LIMITADO_COM_CONTINUACAO not in retificacao
+    assert cadastro.ILIMITADO_SEM_CONTINUACAO in publicacao
+    assert cadastro.ILIMITADO_SEM_CONTINUACAO not in retificacao
+
+
+def test_o_corte_que_nasce_por_retificacao_com_continuacao_e_recusado():
+    """FR-6933: um segundo marco que convoca passa a cortar, com continuação, por Retificação."""
+    montado = perfil(
+        marcos=[
+            marco("m1", corte=regra(excedente=3)),
+            marco(
+                "m2",
+                nome="Outra",
+                etapas=("x",),
+                corte=regra(excedente=3, continuacao="ALLOWED"),
+            ),
+        ]
+    )
+    retificacao = {
+        i.code for i in validate_for_publication(_snapshot(montado), ato=ATO_DE_RETIFICACAO)
+    }
+    assert cadastro.LIMITADO_COM_CONTINUACAO in retificacao

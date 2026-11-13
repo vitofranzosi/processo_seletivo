@@ -217,6 +217,25 @@ def do_perfil(perfil) -> Cadastro:
     )
 
 
+def frase_das_listas(por_lista, *, numero=str, unidade=None):
+    """`3 na ampla concorrência, 1 na lista PcD e 1 na lista PPI` — o número de cada lista.
+
+    **Uma redação só** para o documento, o portal e a nota da condução (FR-6930). `numero` formata o
+    número (o documento o escreve por extenso); `unidade`, quando dada, vem depois do primeiro
+    número, no singular ou no plural dele ("1 pessoa", "2 classificados").
+    """
+    partes = []
+    for indice, lista in enumerate(por_lista):
+        quantos = numero(lista.numero)
+        if indice == 0 and unidade is not None:
+            quantos = f"{quantos} {unidade(lista.numero)}"
+        onde = "na ampla concorrência" if lista.lista_id is None else f"na lista {lista.nome}"
+        partes.append(f"{quantos} {onde}")
+    if len(partes) == 1:
+        return partes[0]
+    return ", ".join(partes[:-1]) + f" e {partes[-1]}"
+
+
 LIMITADO_COM_CONTINUACAO = "reserve_limited_with_continuation"
 ILIMITADO_SEM_CONTINUACAO = "reserve_unlimited_without_continuation"
 LIMITADO_SEM_CORTE = "reserve_limited_without_cut"
@@ -224,7 +243,7 @@ LIMITADO_A_NINGUEM = "reserve_limited_to_nobody"
 LIMITADO_COM_MARCOS_DIVERGENTES = "reserve_limited_divergent_milestones"
 
 
-def _do_marco(marco):
+def nome_do_marco(marco):
     """`o marco “Classificação final”` — pelo nome entre aspas, sem supor o gênero dele.
 
     O nome é do Edital: "Classificação final" e "Sorteio público" convivem, e "a Sorteio público"
@@ -244,11 +263,12 @@ def _na_lista(cadastro, lista):
 def incoerencias(cadastro, *, rotulo, na_publicacao):
     """`[(codigo, frase)]` — o que impede publicar este cadastro com este corte (FR-6933 a 6939).
 
-    **Recortadas pelo ato** (T-004). A espécie, a continuação e a Etapa governada não se retificam
-    (`mutabilidade.py`), e por isso as três primeiras só se conferem na publicação; o alvo e o
-    excedente se retificam, e o zero e a divergência valem também na Retificação (FR-6951). O
-    legado não é conferido: ele publicou o número digitado, e a Retificação dele não pode passar a
-    ser recusada por uma regra que não existia (FR-6948).
+    **Recortadas pelo ato** (T-004). O ilimitado sem continuação e o limitado sem corte só se
+    conferem na publicação: a espécie não se retifica, e o ilimitado não tem marca de legado — a
+    Retificação do acervo seria recusada por uma regra que ele não conheceu. O limitado com
+    continuação, o zero e a divergência valem também na Retificação, porque o corte nasce e o alvo
+    e o excedente mudam por ela (FR-6951). O legado não é conferido: ele publicou o número
+    digitado (FR-6948).
 
     **O vocabulário é o do documento** (UX-726): "cadastro de reserva", "continuação", "corte".
     """
@@ -261,9 +281,9 @@ def incoerencias(cadastro, *, rotulo, na_publicacao):
                     (
                         ILIMITADO_SEM_CONTINUACAO,
                         f"{perfil} declara cadastro de reserva sem limite, e o corte d"
-                        f"{_do_marco(marco)} não admite chamar além da faixa: o cadastro pararia "
-                        "nos primeiros que ela alcança. Admita a continuação no corte d"
-                        f"{_do_marco(marco)}, ou declare o cadastro de reserva limitado.",
+                        f"{nome_do_marco(marco)} não admite chamar além da faixa: o cadastro "
+                        "pararia nos primeiros que ela alcança. Admita a continuação no corte d"
+                        f"{nome_do_marco(marco)}, ou declare o cadastro de reserva limitado.",
                     )
                 )
         return achados
@@ -274,12 +294,12 @@ def incoerencias(cadastro, *, rotulo, na_publicacao):
         if not com_corte:
             marco = cadastro.marco_que_convoca
             onde = (
-                f"{_do_marco(marco)} não tem regra de corte"
+                f"{nome_do_marco(marco)} não tem regra de corte"
                 if marco
                 else "nenhum marco de classificação deste Perfil convoca"
             )
             final = (
-                f"Declare o corte d{_do_marco(marco)}"
+                f"Declare o corte d{nome_do_marco(marco)}"
                 if marco
                 else "Declare um marco de classificação com corte"
             )
@@ -291,17 +311,20 @@ def incoerencias(cadastro, *, rotulo, na_publicacao):
                 )
             )
             return achados
-        for marco in com_corte:
-            if marco.continuacao:
-                achados.append(
-                    (
-                        LIMITADO_COM_CONTINUACAO,
-                        f"{perfil} declara cadastro de reserva limitado, e {_do_marco(marco)} "
-                        "admite chamar candidatos além da faixa: o cadastro não teria limite. "
-                        f"Retire a continuação do corte d{_do_marco(marco)}, ou declare o cadastro "
-                        "de reserva sem limite.",
-                    )
+    # **A continuação também na Retificação** (FR-6933): a espécie e a continuação de um corte que
+    # existe não se retificam, mas o corte **nasce** por Retificação (`PODE_PASSAR_A_EXISTIR`), e um
+    # marco que convoca pode passar a cortar com continuação. O legado já saiu acima.
+    for marco in com_corte:
+        if marco.continuacao:
+            achados.append(
+                (
+                    LIMITADO_COM_CONTINUACAO,
+                    f"{perfil} declara cadastro de reserva limitado, e {nome_do_marco(marco)} "
+                    "admite chamar candidatos além da faixa: o cadastro não teria limite. "
+                    f"Retire a continuação do corte d{nome_do_marco(marco)}, ou declare o cadastro "
+                    "de reserva sem limite.",
                 )
+            )
     for marco in com_corte:
         for lista in marco.listas:
             if lista.numero <= 0:
@@ -309,7 +332,7 @@ def incoerencias(cadastro, *, rotulo, na_publicacao):
                     (
                         LIMITADO_A_NINGUEM,
                         f"{perfil} declara cadastro de reserva limitado, e o corte d"
-                        f"{_do_marco(marco)} não alcança ninguém além das vagas"
+                        f"{nome_do_marco(marco)} não alcança ninguém além das vagas"
                         f"{_na_lista(cadastro, lista)}: o cadastro seria de zero classificados. "
                         "Aumente o alvo ou o excedente do corte, ou declare que não há cadastro "
                         "de reserva.",
@@ -323,10 +346,10 @@ def incoerencias(cadastro, *, rotulo, na_publicacao):
                     (
                         LIMITADO_COM_MARCOS_DIVERGENTES,
                         f"{perfil} declara cadastro de reserva limitado, e os cortes d"
-                        f"{_do_marco(primeiro)} e d{_do_marco(outro)} dão números diferentes"
-                        f"{_na_lista(cadastro, lista)} ({lista.numero} e {comparada.numero}): o "
-                        "documento não teria um número para dizer. Iguale o alvo e o excedente "
-                        "dos dois cortes.",
+                        f"{nome_do_marco(primeiro)} e d{nome_do_marco(outro)} dão números "
+                        f"diferentes{_na_lista(cadastro, lista)} "
+                        f"({lista.numero} e {comparada.numero}): o documento não teria um "
+                        "número para dizer. Iguale o alvo e o excedente dos dois cortes.",
                     )
                 )
     return achados
@@ -348,5 +371,7 @@ __all__ = [
     "NAO_HA",
     "NOME_DA_LINHA_GERAL",
     "do_perfil",
+    "frase_das_listas",
     "marcos_que_convocam",
+    "nome_do_marco",
 ]

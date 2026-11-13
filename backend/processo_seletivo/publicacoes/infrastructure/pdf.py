@@ -2030,8 +2030,7 @@ def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil
     if cadastro is not None and cadastro.legado:
         cadastro = None
     convoca = cadastro is not None and any(
-        str(item.get("id")) == str(marco.get("id"))
-        for item in cadastro_de_reserva.marcos_que_convocam(perfil)
+        item.marco_id == str(marco.get("id")) for item in cadastro.marcos
     )
     if convoca and cadastro.so_de_reserva:
         return _corte_do_cadastro(marco, regra, cadastro, etapas, com_reservadas=com_reservadas)
@@ -2424,12 +2423,11 @@ def _numeros_do_cadastro(cadastro):
     if unico is not None:
         onde = " em cada lista de concorrência" if cadastro.com_modalidade else " por Perfil"
         return f"{_classificados(unico)}{onde}"
-    partes = []
-    for indice, lista in enumerate(cadastro.por_lista):
-        quantos = _classificados(lista.numero) if indice == 0 else _numero_por_extenso(lista.numero)
-        onde = "na ampla concorrência" if lista.lista_id is None else f"na lista {lista.nome}"
-        partes.append(f"{quantos} {onde}")
-    return ", ".join(partes[:-1]) + f" e {partes[-1]}"
+    return cadastro_de_reserva.frase_das_listas(
+        cadastro.por_lista,
+        numero=_numero_por_extenso,
+        unidade=lambda n: "classificado" if n == 1 else "classificados",
+    )
 
 
 def _igual_em_todos(perfis, chave):
