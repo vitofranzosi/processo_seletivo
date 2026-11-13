@@ -4695,8 +4695,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <li>A trilha grava a permissão usada, e não o papel.</li>
         <li>A jornada com três pessoas reais (SC-978) espera o usuário. <span class="selo selo-parc">Parcial</span></li>
         <li>Com duas ou mais em curso, o título da tela Retificar sai <em>“Retificaçãoões”</em>: o plural do
-          <em>template</em> acrescenta o sufixo ao singular. Ver <a href="#abertas-desde-21-10">Abertas desde
-          21/10</a>.</li>
+          <em>template</em> acrescenta o sufixo ao singular. Ver <a href="#evolucoes-codigo">Polimento que se vê na tela</a>.</li>
       </ul>
     </div>
 
@@ -7572,7 +7571,7 @@ Depois das Etapas consolidadas:
         reserva, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um
         empate na última vaga da ampla — mantido por decisão de 20/10. A prévia do sorteio (098) entrou do
         mesmo modo: o roteiro com elaboradores (SC-925, SC-926) espera o relato do usuário. Ver
-        <a href="#abertas-desde-19-10">Abertas desde 19/10</a> e <a href="#abertas-desde-21-10">desde 21/10</a>.
+        <a href="#evolucoes-validacao">Validação com pessoas</a> e <a href="#evolucoes-decisoes">Decisões que só o usuário toma</a>.
         <span class="selo selo-parc">Parcial</span>
       </p>
     </div>
@@ -14411,8 +14410,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <span class="camada camada-produto">Estado do produto</span>
     <h1>O que ainda precisa evoluir</h1>
     <p class="lead">
-      As lacunas de produto que continuam abertas, as que fecharam desde 20/09 e as decisões que só o
-      usuário pode tomar. Nada aqui é ideia inventada: cada item tem evidência no código ou registro no
+      As lacunas de produto que continuam abertas, separadas por quem pode fechá-las — o código, uma
+      decisão, uma validação com pessoas ou um terceiro —, e o que já fechou. Refeita em 13/11 item a item
+      contra a <code>main</code>. Nada aqui é ideia inventada: cada item tem evidência no código ou registro no
       repositório.
     </p>
   </header>
@@ -14425,343 +14425,295 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <p>
         A priorização é de quem governa o produto. O repositório registra a regra que a sustenta:
         <strong>achado vira registro, não escopo</strong> — um defeito encontrado no meio de uma entrega
-        é escrito, e não corrigido de passagem, a menos que contrarie requisito já escrito.
+        é escrito, e não corrigido de passagem, a menos que contrarie requisito já escrito. Os quatro
+        grupos abaixo separam os itens por <em>quem pode fechá-los</em>, e não por urgência. A única
+        ordem que a evidência impõe é a do que <strong>bloqueia a produção</strong>, dito em cada item.
       </p>
     </div>
+
+    <h3 id="evolucoes-placar">O placar de 13/11</h3>
     <p>
-      O registro completo, com 160 unidades rastreadas até o código, está em
-      <code>doc/auditoria-de-consolidacao-2026-09-26.md</code>. Das 69 abertas, só duas são lacunas
-      reais de grupo A — o cadastro de reserva, fora do piloto por decisão, e a autenticação, que
-      depende do Ifes. As demais são evolução relevante (35) ou polimento (45, contando as sobras de
-      unidades fechadas).
+      Esta página foi refeita em 13/11 contra a <code>main</code> (<code>95904252</code>). Cada item que ela
+      listava até então foi conferido de novo no código, nas specs e no histórico — 186 itens —, e os que
+      fecharam saíram das listas. O placar anterior (<em>160 unidades, 69 abertas, só duas de grupo A</em>)
+      era de 28/09 e envelheceu: o cadastro de reserva deixou de ser lacuna de grupo A quando a 097 voltou
+      à opção A da DP-05. O registro completo, com os arquivos e as linhas, está em
+      <code>doc/auditoria-de-consolidacao-2026-09-26.md</code> (a base), em
+      <code>doc/auditoria-consolidacao-gps-2026-11-13/inventario.md</code> (as specs) e nas fichas desta revisão.
+    </p>
+    <div class="rolagem"><table>
+      <thead><tr><th>Situação em 13/11</th><th class="centro">Itens</th><th>O que quer dizer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Resolvido</strong></td><td class="centro">29</td><td>Fechou desde que a lista foi escrita. Saiu dos grupos abaixo e está em <a href="#evolucoes-resolvidas">O que já fechou</a></td></tr>
+        <tr><td><strong>Parcial</strong></td><td class="centro">20</td><td>Entrou parte; o que resta está dito no item, no grupo de quem o fecha</td></tr>
+        <tr><td><strong>Aberto, no código</strong></td><td class="centro">69</td><td>Falta fazer, e é trabalho de quem escreve o software: grupo 1</td></tr>
+        <tr><td><strong>Decisão, validação ou terceiros</strong></td><td class="centro">68</td><td>Nada no código fecha: grupos 2, 3 e 4</td></tr>
+      </tbody>
+    </table></div>
+    <p class="miudo">
+      Conferência por leitura do código, das specs e do histórico: a suíte não foi rodada e as telas não
+      foram percorridas. Onde a leitura não bastou, o item diz <em>“não verificado”</em>.
     </p>
 
-    <h3 id="evolucoes-revistas">Lacunas antigas, revistas</h3>
-    <p>As lacunas que esta documentação listava em 20/09, e o que aconteceu com cada uma.</p>
+    <h3 id="evolucoes-codigo">Grupo 1 — Falta código</h3>
+    <p>O que a equipe de desenvolvimento pode fechar sem esperar ninguém, ou fechará quando o Ifes responder.</p>
 
-    <h4>Resolvidas</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Lacuna</th><th>O que aconteceu</th><th>Evidência</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Retificação não acrescenta Modalidade</strong></td><td>Spec 048 (26/09): acrescenta qualquer Modalidade, inclusive cota, com a linha do quadro no mesmo ato; também critério de desempate, janela recursal, corte e reversão</td><td><code>interface/retificacao.py</code> (<code>NOVA_MODALIDADE</code>, <code>NOVO_CRITERIO</code>)</td></tr>
-        <tr><td><strong>Sentido do desempate não é retificável</strong></td><td>Por outro caminho: o sentido não se edita, mas o critério se remove e outro, com o sentido certo, se acrescenta no mesmo ato. Pela API, trocá-lo substituindo o objeto é recusado</td><td><code>CAMPOS_CRITERIO</code> só com a ordem; <code>NOVO_CRITERIO</code> com o tipo; <code>publicacoes/domain/changes.py</code> (<code>recusar_troca_de_campo_nao_retificavel</code>)</td></tr>
-        <tr><td><strong><code>schedule.status</code> não derivado</strong></td><td>Spec 045 (26/09): a fase do Evento é derivada das datas; <code>CANCELADO</code> é a única declaração; o sinal falso saiu do painel</td><td><code>editais/domain/fase_do_evento.py</code></td></tr>
-        <tr><td><strong>Teto de inscrições não publicado</strong></td><td>28/09: impresso no documento, declarável na composição, dito no portal antes de o candidato preencher outra inscrição, recusado abaixo de 1 na Retificação</td><td><code>publicacoes/infrastructure/pdf.py</code> (<code>teto_de_inscricoes</code>); <code>portal/templates/portal/selecao.html</code></td></tr>
-        <tr><td><strong>Prazo recursal ausente da página pública do resultado</strong></td><td>Spec 047 (26/09): a página diz o prazo que a interposição aplica</td><td><code>recursos/application/selectors.py</code> (<code>janela_da_publicacao_divulgada</code>)</td></tr>
-        <tr><td><strong>Marco sem regra de corte publicava com aviso</strong> (<code>D-G1</code>)</td><td>Spec 046 (26/09): impeditivo, por Perfil</td><td><code>editais/domain/validation.py</code> (<code>_perfil_sem_corte</code>)</td></tr>
-        <tr><td><strong>Os defeitos do painel</strong> — ausência absoluta, recurso invisível até admitido, link sem guarda, sinal sem a quem pedir, contador com eliminados</td><td>Spec 045 (26/09) e PR corretivo do mesmo dia</td><td><code>interface/supervisao.py</code> (<code>frase_de_ausencia</code>, <code>ESPECIES</code>)</td></tr>
-        <tr><td><strong>Nenhum papel vê o Processo inteiro, e nada avisa que a vista é parcial</strong></td><td>A frase de ausência passou a ser relativa ao alcance do leitor</td><td><em>“Nenhuma condição de atenção entre as que você acompanha neste Processo.”</em></td></tr>
-        <tr><td><strong>Numeração romana dos anexos</strong></td><td>28/09: a Revisão avisa o anexo citado sem rótulo correspondente</td><td>registro pré-piloto de 28/09</td></tr>
-        <tr><td><strong>Teste instável: CPF no corpo × token CSRF</strong></td><td>28/09: o token é retirado antes de afirmar</td><td><code>tests/integration/identidade/test_adicionar_credencial.py</code></td></tr>
-        <tr><td><strong>README declara 31 tabelas</strong></td><td>O README deixou de fixar o número; um teste confere a tabela de incrementos</td><td><code>tests/test_readme_acompanha_o_codigo.py</code></td></tr>
-        <tr><td><strong>O candidato não chega à convocação nem ao requerimento pedido nela</strong></td><td>Spec 059 (06/10): <span class="rotulo-ui">Ver convocação</span> em Minhas inscrições; a seção Convocação e o chamado do Requerimento no acompanhamento</td><td><code>portal/templates/portal/inscricoes.html</code>; <code>_chamado_do_requerimento.html</code></td></tr>
-        <tr><td><strong>O prazo contra Resultado de Etapa não aparece no acompanhamento</strong></td><td>Spec 063 (09/10): o topo diz <em>“Se você discordar de {Etapa}, pode recorrer até …”</em></td><td><code>portal/situacao.py</code></td></tr>
-        <tr><td><strong>O corte emitido depois do recurso nasce obsoleto</strong></td><td>Spec 061 (06/10): a pergunta do reingresso exclui o sucessor que a ordem lida já cita</td><td><code>classificacao/application/corte.py</code> (<code>_reingressou</code>)</td></tr>
-        <tr><td><strong>Casas decimais e arredondamento pedidos num marco de sorteio</strong></td><td>Spec 067 (09/10): sob sorteio declarado, nem pedidos, nem gravados, nem impressos</td><td><code>editais/domain/validation.py</code>; <code>interface/forms.py</code></td></tr>
-        <tr><td><strong>O candidato não recebe aviso de resultado</strong></td><td>Spec 066 (09/10): aviso complementar por gesto, de resultado e de chamada por publicação; a chave fica desligada em produção até a LGPD</td><td><code>avisos/</code>; <code>tests/test_situacoes_de_mensagem.py</code></td></tr>
-        <tr><td><strong>Custo de consulta num Processo grande</strong></td><td>Medido em 28/09: linear, ~7 consultas por Edital + 3 por Etapa. Otimizar é decisão, não lacuna</td><td><code>doc/validacao-de-unidades-pre-piloto-2026-09-28.md</code></td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Parcialmente resolvidas</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Lacuna</th><th>O que aconteceu</th><th>O que falta</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Leitura múltipla não consolida</strong></td><td>Spec 046: a Etapa com duas avaliações por inscrição não se publica quando o resultado dela é necessário (aviso quando não é). A Ocorrência numa Etapa assim não trava mais a seguinte (28/09)</td><td>A <strong>regra de combinação</strong> das avaliações — decidido esperar um Edital real de dupla leitura</td></tr>
-        <tr><td><strong>Ampla concorrência: três nomes para duas coisas</strong></td><td>27/09: o recorte nulo é a forma canônica, oferecido na inscrição e nomeado na gestão</td><td>A Modalidade de ampla declarada continua possível e sem vagas; a validação ainda pede ao Perfil só de cotas que aponte uma ampla</td></tr>
-        <tr><td><strong>Percentuais de cota não confrontados entre linhas</strong> (<code>AX-7</code>)</td><td>A Revisão mostra a divergência entre Perfis, e as tabelas de conjunto os põem lado a lado</td><td>Nenhuma validação compara percentual ou desempate de Modalidades de mesmo código</td></tr>
-        <tr><td><strong>Fatos e marcos declarados uma vez e gravados N vezes</strong> (<code>AX-11</code>)</td><td>Spec 051: <span class="rotulo-ui">Aplicar a todos</span> materializa o valor em todos os Perfis, com prévia — sem campo no Edital</td><td>O documento já imprime uma vez o que sai idêntico (064, 068). Nada confere que as cópias continuam iguais: a que diverge não se junta, sem aviso; e corrigir uma vírgula numa Retificação ainda é editar N cartões</td></tr>
-        <tr><td><strong>Documentos exigidos fundem categorias</strong> (<code>AX-10</code>)</td><td>Spec 044: exigência por código de Modalidade em todos os Perfis, e a lista pedida é gravada no envio</td><td>O seletor de Modalidade de cada documento continua uma lista longa (“Modalidade de um Perfil”), sem agrupamento por Perfil</td></tr>
-        <tr><td><strong>Seções do documento</strong> (<code>AX-3</code>)</td><td>Spec 054 (30/09): catálogo de 22 seções, sem redação padrão; a vazia não sai (<code>editais/domain/secoes.py</code>)</td><td>Tabela, numeração automática e negrito no texto da seção. O subitem transcrito com número de outra seção impede desde a 065, e a remissão sem destino é avisada</td></tr>
-        <tr><td><strong>O resultado publicado não diz de qual lista é</strong></td><td>O portal diz a lista em toda parte: página do Edital (062), página da publicação, acompanhamento (063)</td><td>O histórico <span class="rotulo-ui">Resultados divulgados</span> da gestão não tem coluna de lista, e a prévia de publicação não nomeia o recorte</td></tr>
-        <tr><td><strong>Quem assina, e como</strong> (DP-20)</td><td>Spec 060: o nome e o ato de nomeação viraram dado que o Gestor cadastra, com vigência</td><td>Cadastrar as autoridades do Cefor antes da primeira publicação real; como o ato é assinado continua com o Cefor</td></tr>
-        <tr><td><strong>“Qual Edital precisa de atenção?”</strong></td><td>O recurso é agregado por Edital</td><td>Os demais sinais continuam lista plana</td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Ainda válidas</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Lacuna</th><th>Situação</th><th>Evidência</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Autenticação institucional real</strong></td><td>A única condicionante de saída do piloto que resta, e a razão de o sistema não estar em produção: sem o seletor de desenvolvimento, a gestão responde <code>503</code>. Desde 31/10 a gestão está pronta para ela (106, 107, 110): falta escrever o adaptador do provedor escolhido e o portão do diretório, que <code>doc/ativacao-do-sso-institucional.md</code> descreve. A resposta de 28/08 foi o LDAP do Ifes (spec 002, T056 aberta). O adaptador é do software; o provedor é do Ifes. LDAP direto ou SSO na frente decide se o método será um formulário na página de acesso ou um botão (A6 do estudo de 16/10)</td><td><code>seguranca/api/authentication.py</code>: <em>“Adaptador provisório: token de desenvolvimento”</em></td></tr>
-        <tr><td><strong>Fronteira 403 × 404 em três portas</strong> (<code>D-G2</code>)</td><td>Decisão mantida; execução mandada para a preparação de produção (28/09)</td><td><code>interface/views.py</code>: <code>raise Http404</code> em <code>criar_edital</code>, <code>reaproveitar</code>, <code>supervisao</code></td></tr>
-        <tr><td><strong>Avisos de composição fora da Atenção</strong></td><td>Deliberado até decidir a fronteira</td><td><code>interface/supervisao.py</code> (<code>ESPECIES</code>)</td></tr>
-        <tr><td><strong>Identificadores internos na tela de quem julga</strong></td><td>UUIDs crus na proveniência do recurso</td><td><code>interface/templates/interface/recurso.html</code></td></tr>
-        <tr><td><strong>Três renderizações do mesmo prazo</strong></td><td>“Faltam 19 dias” × “2 semanas, 5 dias” × só a data</td><td><code>supervisao.html</code> (<code>timeuntil</code>)</td></tr>
-        <tr><td><strong>Exportação sem população recarrega sem mensagem</strong></td><td>A tela volta igual, sem dizer que falta a escolha</td><td><code>interface/views.py</code>, <code>exportar_matriculas</code></td></tr>
-        <tr><td><strong>Alocação e distribuição sem Perfil nem polo</strong></td><td>Com 7 polos, a comissão inteira alcança os sete; nenhuma comissão local recebe só o que é dela</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> e <code>alocacoes.html</code> sem “Perfil”</td></tr>
-        <tr><td><strong>Integração com o Registro Acadêmico</strong></td><td>A exportação nunca foi importada no destino. É do setor dono do destino</td><td><code>matriculas/domain/colunas.py</code> (34 colunas)</td></tr>
-        <tr><td><strong>Polo como eixo próprio; Curso, Área e Campus</strong> (<code>AX-5</code>, <code>AX-6</code>)</td><td>O Edital multipolo real já existe na amostra (140/2025, 28/2026) — a ressalva “não abstrair antes de tê-lo na mão” deixou de valer, e a pergunta continua aberta</td><td><code>editais/models/perfis.py</code></td></tr>
-        <tr><td><strong>Ficha de avaliação por curso, barema</strong> (<code>AX-4</code>)</td><td>Feito em parte pela 146: o barema por Etapa, de critérios independentes. Continua aberta a ficha que varia por curso (<code>DP-10</code>)</td><td><code>avaliacoes/domain/barema.py</code> · <code>editais/models/etapas.py</code></td></tr>
-        <tr><td><strong>Submodalidades de PPI/PPIQ</strong> (<code>AX-15</code>)</td><td>Excluídas por decisão da spec 044</td><td>—</td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Superadas por decisão</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Lacuna</th><th>O que decidiu</th><th>Onde</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Recurso sem anexo de prova</strong></td><td>A interposição não aceita anexos na primeira versão: admitir prova nova é questão normativa que nenhum Edital lido declarou. A prova que o recurso cita costuma ser documento da inscrição, e chega ao julgador pelo <a href="#recursos">ato de instrução</a></td><td>Spec 018 (decisão D-011); DP-09 recomenda manter</td></tr>
-        <tr><td><strong>Prática do sorteio nos Editais</strong> (<code>D-G3</code>)</td><td>O produto só aceita fonte do vocabulário fechado, e a fonte de demonstração não existe em produção. Declará-la nos Editais é ato do Cefor</td><td>Spec 046</td></tr>
-        <tr><td><strong>Caminho do topo sem link na lista de Processos e em Minhas atividades</strong></td><td>Fica assim até haver autenticação (D-001 da 081, respondida em 18/10)</td><td>Spec 088</td></tr>
-        <tr><td><strong>O caminho do topo na impressão</strong></td><td>Sai no papel; a barra e <span class="rotulo-ui">Trocar identidade</span>, não (D-002 da 081, respondida em 18/10)</td><td>Spec 088</td></tr>
-      </tbody>
-    </table></div>
-
-    <h3 id="evolucoes-novas">Lacunas novas</h3>
-    <p>
-      Encontradas depois de 20/09, e comprovadas no código de hoje — não só em documento.
-    </p>
-
-    <h4>Jornada interrompida</h4>
-    <div class="aviso aviso-lacuna">
-      <span class="titulo">Lacuna, em parte: Edital só de cadastro de reserva convoca só pela ampla</span>
-      <p>
-        O produto aceita, publica, classifica e divulga um Edital sem vagas imediatas. Decidido em 26/09
-        que essa família ficava <strong>fora do piloto</strong>; em 21/10, a 097 voltou à opção A da DP-05:
-        a <a href="#vaga-acrescida">vaga acrescida</a> depois da publicação, registrada na ocupação, faz a
-        convocação chamar o cadastro. Ela vale só na ampla de Perfil cujo quadro tem só a linha geral e que
-        não declara reversão. Os Editais de bolsista, que repartem o cadastro entre Modalidades, ficam para
-        spec própria, e a Revisão avisa que a convocação deles será feita fora do sistema. Na mesma família,
-        o Perfil só de reserva com uma única cota ainda põe todo inscrito nela.
-      </p>
-      <p class="miudo"><strong>Evidência:</strong> <code>convocacao/application/convocar.py</code>
-        (<code>_recusar_por_deficit</code>); <code>ocupacao/application/acrescimo.py</code>
-        (<code>impedimento</code>); avisos <code>reserve_only_convocation_external</code> e
-        <code>reserve_only_with_reserved_lines</code> em <code>editais/domain/validation.py</code>. Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a>.</p>
-    </div>
-    <div class="aviso aviso-lacuna">
-      <span class="titulo">Lacuna: a reavaliação determinada existe, e a tela não conduz a ela</span>
-      <p>
-        O recurso decidido diz <em>“Sucessor — Nenhum”</em> sem o próximo passo, e a organização da
-        Etapa não conta a reavaliação pendente nem a oferece como filtro. O caminho funciona; só quem o
-        conhece o encontra.
-      </p>
-    </div>
-
-    <h4>Encontradas desde 30/09</h4>
-    <div class="aviso aviso-lacuna">
-      <span class="titulo">Lacuna: a reabilitação de quem foi eliminado antes da última Etapa do marco não alcança o corte</span>
-      <p>
-        A pessoa reabilitada não estava entre os participantes da ordem. A ordem acusa <em>participantes
-        alterados</em>, mas o corte só fica obsoleto depois que a ordem sucessora é emitida — e, nessa
-        janela, a Etapa governada segue recebendo trabalho sob a faixa antiga. Confirmado em 07/10 por
-        teste; separado da 061 por decisão do usuário, com três saídas propostas.
-      </p>
-      <p class="miudo"><strong>Evidência:</strong> <code>doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md</code>;
-        <code>tests/integration/classificacao/test_corte_reabilitado_antes_do_marco.py</code>.</p>
-    </div>
-    <ul>
-      <li><strong>Duas grafias para o mesmo desfecho no portal</strong> (eram três até a 118). A lista diz <em>“Convocação: Aceite”</em>; a tela da convocação e o acompanhamento dizem <em>“Vaga aceita”</em>. A 063 e a 118 deixaram a lista de fora, por decisão.</li>
-      <li><strong>O reenvio da convocação sugere prazo novo.</strong> <em>“Comunicação enviada em”</em> mostra só o último envio, e a mensagem de reenvio diz <em>“contado do envio desta mensagem”</em> (<code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code>).</li>
-      <li><strong>O acompanhamento cresce três consultas por publicação</strong>: 23 com uma, 38 com seis (063, A-1). Nenhum requisito limita o custo.</li>
-      <li><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong>, e por isso não tem aviso; a 066 declara que não encerra a demanda do setor.</li>
-      <li><strong>A marca do Cefor fora do documento</strong> fechou com a 109 (31/10): telas, e-mails e página da seleção dizem a unidade de cada ato. Continua verdade que o seletor de identidade só oferece o escopo <code>cefor</code> (<code>doc/pendencias-da-060.md</code>).</li>
-      <li><strong>O documento oficial, depois da auditoria de 08/10.</strong> Fechados ED-01 a ED-04, ED-11 e ED-12; a 069 tratou a linguagem das frases geradas (ED-05), a navegação (ED-08), a parte imediata de ED-07 — título, idioma, marcadores, nome do arquivo — e a fonte embutida (ED-14). Seguem abertos, entre outros, o PDF marcado para leitor de tela (o resto de ED-07), o quadro de alterações no consolidado (ED-06), o endereço do certame (ED-09) e a forma de convocação na margem (ED-15). Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada (<code>doc/auditoria-edital-pdf-2026-10-08.md</code>).</li>
-      <li><strong>O limite do cadastro de reserva</strong> — o que <em>“limitado em N”</em> significa, a outra metade da DP-05 — segue sem regra que o execute, e o Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em>. A convocação do cadastro entrou em parte, com a 097 (RC-58).</li>
-    </ul>
-
-    <h4>Abertas desde 10/10</h4>
-    <p>As entregas de 12 a 14/10 entraram com validação humana pendente, registrada nas próprias specs:</p>
-    <ul>
-      <li><strong>As frases novas do Edital em linguagem simples</strong> (069, SC-517) — o resumo, a frase dos suplentes, as remissões e a convocação <em>“por publicação”</em> sem dizer onde — esperam a aprovação do responsável pelo produto antes do primeiro Edital real (<code>specs/069-edital-linguagem-simples/demonstracao/equivalencia.md</code>).</li>
-      <li><strong>A jornada pública</strong> (072) se declara <em>“não validada nem pronta para publicação”</em>: o percurso com cinco pessoas de fora do projeto, no celular (SC-605), tem roteiro e não foi feito; o texto de finalidade de nome e CPF (FR-1627) espera quem responde pela proteção de dados. Custo registrado: o resumo da oferta empurra o primeiro <span class="rotulo-ui">Inscrever-se nesta vaga</span> cerca de 200 px para baixo — o caminho até a vaga passa a ser o atalho do resumo —, e a 320 px o resumo não cabe inteiro na primeira tela (<code>specs/072-jornada-publica-do-portal/verificacao.md</code>).</li>
-      <li><strong>As respostas prontas do assistente</strong> (070) esperam a revisão com o setor (T046). A conferência contra quinze Editais reais do Cefor mostrou a detecção do canal de atendimento errando em quatro deles e respondendo <em>“Fontes divergentes”</em> em 9 dos 14 que têm canal.</li>
-      <li><strong>O piloto do assistente</strong> (071) espera o serviço local para a verificação, a rodada com revisão humana e as medições (T058 a T060), e a sessão com o setor (T065).</li>
-      <li><strong>A versão consolidada de uma Retificação não lista a publicação original entre as aplicadas</strong>, e a Retificação de vigência futura troca a versão vigente na fronteira, sem ato novo. A 070 contorna as duas na leitura e acusa, como ponto para revisão, quando o documento oferecido como <span class="rotulo-ui">Ler o Edital completo (PDF)</span> não contém uma Retificação publicada depois dele.</li>
-    </ul>
-
-    <h4>Abertas desde 15/10</h4>
-    <p>As entregas de 15 a 18/10 entraram, também elas, com validação humana pendente:</p>
-    <ul>
-      <li><strong>O redesenho da gestão</strong> (075 a 092) — a página de acesso, a barra lateral, o caminho no topo e a ordem nova das telas — não foi validado com a equipe; cada spec registra que a validação, recomendada desde a 075, continua pendente. O símbolo da coluna institucional da página de acesso é marcador de lugar: a marca oficial do Ifes depende do manual de identidade visual da Rede Federal.</li>
-      <li><strong>LDAP direto ou SSO na frente</strong> segue sem decisão — a 106 preparou a gestão para os dois, mas não escolheu —, e muda o método da página de acesso de botão para formulário (A6 do estudo de 16/10).</li>
-      <li><strong>Configurar e verificar a implantação</strong> (073) está escrito e testado contra o guia, com validação operacional pendente: a sessão conduzida com uma pessoa da TI em homologação (SC-620, SC-623) e a comprovação do Ollama contra o serviço local. A release do guia não instala a biblioteca do tokenizer, e a correção é decisão do usuário, entre três opções (<code>doc/achado-release-sem-o-grupo-do-assistente.md</code>).</li>
-      <li><strong>O assistente na página da seleção</strong> (074) é só local, e a pergunta livre com o modelo real espera o responsável pelo produto (T013).</li>
-      <li><strong>Atos que não se desfazem saem de botão comum, sem conferência.</strong> <span class="rotulo-ui">Realizar o sorteio desta lista</span>, <span class="rotulo-ui">Fixar os N participantes desta lista</span>, <span class="rotulo-ui">Apurar a ocupação deste recorte</span>, <span class="rotulo-ui">Registrar desfecho</span> e a faixa seguinte pelo déficit da ocupação têm o desenho de ação principal; só a emissão da ordem, pela conferência, e a anulação do sorteio têm o desenho de perigo. Rever isso é decisão de governança (084, <code>research.md</code>).</li>
-      <li><strong>A tela de recusa não diz de onde a pessoa veio</strong>: oferece só <span class="rotulo-ui">Voltar aos Processos Seletivos</span> (085). No caminho do topo, o Ato de classificação aparece pelo identificador de 36 caracteres (084), e o nível do marco não diz o Perfil, embora dois marcos de Perfis diferentes costumem ter o mesmo nome (083).</li>
-      <li><strong>Três auditorias, um título.</strong> A Trilha da avaliação e a Auditoria da comissão dizem <em>“Trilha de auditoria”</em> no título, enquanto o caminho no topo diz <span class="rotulo-ui">Trilha da avaliação</span> e <span class="rotulo-ui">Auditoria da comissão</span> (080).</li>
-      <li><strong>Duas grafias para trocar de identidade</strong>: <span class="rotulo-ui">Trocar identidade</span> no topo das telas e <span class="rotulo-ui">Trocar de identidade</span> na página de acesso; e a lista de Processos ainda diz que a identidade foi escolhida <em>“acima”</em>, quando ela está no pé da barra. Os assuntos dos e-mails do portal dizem <em>“Seleções”</em> com a unidade da implantação (109), e não o nome novo do produto.</li>
-    </ul>
-
-    <h4 id="abertas-desde-19-10">Abertas desde 19/10</h4>
-    <p>As entregas de 20 e 21/10 entraram com o que segue registrado nas próprias specs:</p>
-    <ul>
-      <li><strong>A <a href="#previa-da-classificacao">prévia da classificação</a> não foi validada com quem elabora.</strong> O roteiro da 094 (T039, para SC-840, SC-848 e SC-851) e o da 095 (SC-870) pedem ao menos cinco elaboradores na interface real, e só fecham com o relato do usuário. Na 095, a conferência da rastreabilidade e do roteiro do <code>quickstart</code> (T032) também está aberta — a rastreabilidade ainda diz que os arquivos de teste não existem —, e a extensão do protótipo (T030) não foi feita, por decisão.</li>
-      <li><strong>Três pontos em que a prévia por recorte difere da própria spec</strong>, e vale o código: ao abrir, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um empate na última vaga da ampla (mantido em 20/10); trocar de recorte não recalcula <span class="rotulo-ui">O que mudou com a sua alteração</span>; e o rótulo da ampla diz <em>“(linha geral do quadro), todos os candidatos”</em>. As cinco perguntas que a 094 deixou ao produto — entre elas o termo <em>“avançar”</em> e se a fronteira das vagas merece declaração — seguem sem resposta, e a reversão por esgotamento aparece como o comportamento atual, pendente de decisão.</li>
-      <li><strong>O <code>CR</code> do documento</strong> (096): o cadastro limitado em 0 também sai <code>CR</code>; o assistente de dúvidas lê o <code>0</code> publicado e pode responder <em>“0 vagas”</em>; e o texto do portal foi conferido só no navegador, sem teste automático. A prévia do documento passou a reservar o espaço do fecho com a autoridade mais alta da unidade: se outra assinar o ato, a paginação da prévia pode divergir da publicada.</li>
-      <li><strong>A <a href="#vaga-acrescida">vaga acrescida</a></strong> (097) alcança só a ampla de Perfil cujo quadro tem só a linha geral: os Editais de bolsista, que repartem o cadastro entre Modalidades, ficam para spec própria. Nenhum prazo final de convocação foi declarado, e a verificação não percorreu pela tela a Revisão nem o não atendimento depois do acréscimo.</li>
-    </ul>
-
-    <h4 id="abertas-desde-21-10">Abertas desde 21/10</h4>
-    <p>As entregas de 21 a 30/10 entraram com o que segue registrado nas próprias specs, ou encontrado nesta revisão:</p>
-    <ul>
-      <li><strong>Validações com pessoas, todas à espera do usuário</strong>: a <a href="#previa-do-sorteio">prévia do sorteio</a> com elaboradores (SC-925, SC-926); o <a href="#relatorio-do-edital">relatório do Edital</a> (SC-932) e o <a href="#relatorio-consolidado">consolidado</a> (SC-945) com destinatários reais; a <a href="#agenda">Agenda</a> numa sessão observada (SC-948); a <a href="#sorteio-viavel">extração inviável</a> com quem conduz (SC-958); a <a href="#retificacao-em-curso">jornada da Retificação</a> (SC-978) e as <a href="#acoes-disponiveis">Ações disponíveis</a> (SC-990) com três pessoas cada.</li>
-      <li><strong>A lista reservada vazia não é sorteada nem apurada</strong>, e por isso não reverte, nem “por saldo”: achado pela equivalência da 098 e registrado em <code>doc/achado-reservada-vazia-nao-reverte.md</code>, não decidido.</li>
-      <li><strong>Decisões que as specs deixaram ao usuário</strong>: o limiar de 5 inscrições dos relatórios (pede o encarregado de dados); leitura dos relatórios pelo Auditor, um papel de Direção e o consolidado para a presidência; quem “elaborou” a Retificação, para a segregação (AUD-RET-05); se o botão <span class="rotulo-ui">Realizar o sorteio</span> deve sumir diante de relação condenada.</li>
-      <li><strong>O relatório consolidado não tem autorização de produção</strong>, embora esteja na <code>main</code>.</li>
-      <li><strong>“Retificaçãoões”</strong>: com duas ou mais Retificações em curso, o título da tela Retificar acrescenta o plural ao singular (<code>retificar.html</code>, linha 27). Encontrado na revisão de 30/10; em 02/11, continua.</li>
-      <li><strong>As specs não acompanharam o merge</strong>: a 100, a 101 e a 102 ainda dizem <code>Draft</code>; a 099, a 103 e a 104, que o merge não foi feito ou não foi autorizado; a 099 e a 100 dizem <em>“Baixar PDF”</em>, e a tela diz <span class="rotulo-ui">Emitir e baixar PDF</span>; a 104 diz <em>“Mostrar as outras N”</em>, e a tela, <em>“Mostrar os outros N”</em>.</li>
-    </ul>
-
-    <h4 id="abertas-desde-30-10">Abertas desde 30/10</h4>
-    <p>As entregas de 30/10 a 02/11 entraram com o que segue registrado nas próprias specs e pareceres, ou encontrado nesta revisão:</p>
-    <ul>
-      <li><strong>O provedor institucional</strong>: provedor, protocolo e portão do diretório em aberto; a busca de pessoa não chegou à comissão, onde o membro ainda é texto livre; os históricos mostram <code>pessoa-&lt;uuid&gt;</code> onde o nome não se resolve; a API continua fechada (<code>doc/ativacao-do-sso-institucional.md</code>).</li>
-      <li><strong>Validações e decisões com o usuário</strong>: a validação funcional das unidades (SC-1048) e cinco perguntas da 110; quem audita o nível institucional, as sessões na trilha e o Gestor lendo a <a href="#trilha-da-unidade">trilha da unidade</a> (108); sete perguntas de governança da 109; um papel de Direção e a segregação mais estrita (emenda à FR-021).</li>
-      <li><strong>O papel Comunicação não deve ser atribuído antes da 112</strong>, e o código não impede: o seletor de demonstração o oferece e <span class="rotulo-ui">Acessos da unidade</span> o concede. A 112 está especificada e planejada, com quatro pendências que bloqueiam o merge.</li>
-      <li><strong>O <a href="#kit-de-divulgacao">Kit</a></strong>: a peça espera a aprovação da comunicação (SC-1054) e a chave de produção; os templates da 119 esperam a liberação em produção e a homologação no servidor, e cinco das sete famílias não existem; o endereço público precisa ser declarado.</li>
-      <li><strong>O <a href="#encerramento-seguro">encerramento</a></strong>: o efeito jurídico do cancelamento sobre recurso e convocação pendentes; a janela de impasse entre encerrar e publicar uma Retificação ao mesmo tempo; e o que o encerramento do Processo impede (C-7).</li>
-      <li><strong>O teto por origem do portal</strong> ficou em 30 pedidos por hora, com orientação aos polos; a trava concorrente por origem e o sal do resumo da origem estão registrados, e não tomados. A proteção da identidade do candidato no banco (A-03) espera a política de retenção.</li>
-      <li><strong>Os 58 links desta página para o repositório quebram dentro da gestão.</strong> Caminhos como <code>../../backend/…</code> e <code>../../specs/…</code> funcionam com a página aberta do disco; servida em <code>/gestao/documentacao/</code> (105), eles resolvem fora dela e respondem 404. Encontrado nesta revisão; não corrigido.</li>
-      <li><strong>As specs não acompanharam o merge</strong>: a 105 a 109 dizem <em>“merge não autorizado”</em>; a 110 e a 111 se dizem só especificadas; a 113 diz <code>Draft</code>.</li>
-    </ul>
-
-    <h4 id="abertas-desde-02-11">Abertas desde 02/11</h4>
-    <p>As entregas de 02 a 04/11 entraram com o que segue registrado nas próprias specs e pareceres, ou encontrado nesta revisão:</p>
-    <ul>
-      <li><strong>O <a href="#desempate-por-outra-etapa">desempate por outra Etapa</a></strong> (114): se o candidato vê e pode recorrer da nota que só desempata (D-005), e o empate na fronteira de um corte que governa a própria Etapa do desempate (D-007).</li>
-      <li><strong>Os <a href="#documentos-da-convocacao">documentos da convocação</a></strong> (115): quem só confere não tem porta na interface; se o auditor abre o arquivo (D-015); a tela de uma convocação sem lista (pendência 11, <a href="#lista-no-gesto-de-titulares">correção da 115</a>); a validação humana da SC-1378 e as decisões P-3 e P-4 da <a href="#condicao-de-exigencia">131</a>; guarda e destinação (QI-4) e varredura de PDF (MAT-08), adiadas; recurso contra o indeferimento (QI-6); uma chamada real conduzida. O aviso de pendência por e-mail (QI-7) saiu na <a href="#aviso-de-pendencia">134</a>, com a validação de LGPD e de SPF/DKIM pendente.</li>
-      <li><strong>O <a href="#sorteio-conferencia">concurso conferido na Caixa</a></strong> (116): a regra de substituição não dispara contra a Caixa real, e o achado pede spec própria; a leitura das três mensagens por quem opera espera um roteiro com a comissão.</li>
-      <li><strong>A <a href="#formalizacao">formalização</a></strong> (117): a tela de Acessos da unidade, que a demonstração não alcança (a presidência designa pelo Edital); a capacidade na VM (H01), uma exportação real (H02) e o aviso de privacidade (H03); o documento do recurso responde 409 sem o evento de arquivo indisponível.</li>
-      <li><strong>O <a href="#convocado-no-portal">convocado no portal</a></strong> (118) e o <a href="#requerimento-processo-encerrado">Requerimento com o Processo encerrado</a> (029): se a atualização do Requerimento pedido na inscrição também fecha com o Processo final; o teste com candidatos reais; a nota de pendência em <span class="rotulo-ui">Minhas inscrições</span>; com a escrita fechada, a página não mostra os campos do rascunho.</li>
-      <li><strong>As <a href="#kit-familias-e-formatos">famílias do Kit</a></strong> (119): cinco das sete famílias; a liberação em produção; a homologação no servidor; e o nome de arquivo dos downloads, que não distingue post, story e banner.</li>
-      <li><strong>As specs não acompanharam o merge</strong>: a 114, a 116 e a 118 dizem <code>Draft</code>, e a 119 diz <em>“Não implementada”</em>, embora os incrementos 1 e 2 estejam na <code>main</code>.</li>
-    </ul>
-
-    <h4>Configuração sem consumidor</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Campo</th><th>Onde é gravado</th><th>O que acontece</th><th class="centro">Selo</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Cadastro Reserva limitado em N</strong> (<code>reserveLimit</code>)</td><td>Perfil, na composição</td><td>Sai no documento; nenhuma regra de ocupação, classificação ou convocação o aplica</td><td class="centro"><span class="selo selo-nop">Implementado, não operacionalizado</span></td></tr>
-        <tr><td><code>callRules</code>, <code>calculation</code>, <code>distribution</code> da regra normativa</td><td>Modalidade, pela API e pelo reuso; a composição preserva o valor sem mostrá-lo</td><td>Publicados, não retificáveis, sem tela e sem leitor. A ordem de 27/09 manda deixar de pedir o que ficar sem consumidor</td><td class="centro"><span class="selo selo-nop">Implementado, não operacionalizado</span></td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Interface ausente para comportamento existente</h4>
-    <ul>
-      <li><strong>Cancelar um Evento do Cronograma</strong> só pela API administrativa. O efeito existe e é forte: o período de inscrições cancelado não recebe inscrição, e publicar com ele é impedido. Ver <a href="#cronograma">Cronograma</a>.</li>
-      <li><strong>Reapontar uma Retificação para a versão vigente</strong>, depois de um conflito, só pela API. Editar a devolvida passou a ter tela na 103. Ver <a href="#retificacao-lacunas">O que ainda falta</a>.</li>
-      <li><strong>Suceder uma convocação ou um desfecho, com motivo</strong>: a aplicação faz, nenhuma tela oferece — um vencimento digitado errado, ou a inércia de quem já aceitou, não se registram pela interface. Ver <a href="#convocacao">Convocação</a>.</li>
-    </ul>
-
-    <h4>O que a tela diz e não é o vigente</h4>
-    <div class="rolagem"><table>
-      <thead><tr><th>Onde</th><th>O que acontece</th><th>Evidência</th></tr></thead>
-      <tbody>
-        <tr><td>Revisão de um Edital publicado</td><td>Diz <span class="rotulo-ui">O que falta para submeter</span> e <span class="rotulo-ui">Nada pendente — o Edital pode ser submetido.</span>; a conferência abaixo é a vigente desde 15/10</td><td><code>compor_revisao.html</code>, linhas 17 a 23</td></tr>
-        <tr><td>Apuração de ocupação</td><td>Uma Retificação da reversão não a torna obsoleta: ela continua “vigente” com um número calculado sob outra norma</td><td><code>ocupacao/application/selectors.py</code> (<code>causas_de_obsolescencia</code>, cinco causas, nenhuma de reversão)</td></tr>
-        <tr><td>Prévia da divulgação</td><td>Não diz a data-limite do recurso nem qual versão do Edital fundamenta a janela</td><td>registro pré-piloto de 28/09</td></tr>
-        <tr><td>Inscrição depois de uma Retificação que dá Modalidade única ao Perfil</td><td>O envio grava a Modalidade sem a pessoa escolher, e os documentos da cota não são conferidos contra ela (a confirmar por percurso)</td><td><code>inscricoes/application/submissao.py</code></td></tr>
-      </tbody>
-    </table></div>
-
-    <h4>Integridade pela porta da API</h4>
+    <h4>Bloqueia a produção</h4>
     <div class="aviso aviso-risco">
+      <span class="titulo">Autenticação institucional: o adaptador não existe</span>
       <p>
-        A Retificação pela API recusa trocar campo não retificável substituindo o objeto inteiro. O
-        <strong>estrutural</strong> e o <strong>derivado</strong> ainda passam por essa porta: o código do
-        Perfil — que é a identidade que o <span class="rotulo-ui">Aplicar a todos</span> usa para casar
-        destinos —, o código do marco, a ordem e o status do Evento. A tela não usa essa porta; por isso
-        o destino registrado é a preparação de produção.
+        Fora dos testes, a gestão só abre pelo seletor de identidade, que a configuração de produção recusa;
+        sem ele a página de acesso responde <code>503</code>. A gestão está pronta para o provedor desde
+        31/10 (106, 107, 110), mas <code>seguranca/api/authentication.py</code> ainda diz <em>“Adaptador
+        provisório: token de desenvolvimento”</em>, e não há no código adaptador LDAP, OIDC ou SAML — só os
+        auxiliares de estado de <code>seguranca/autenticacao.py</code>. O código só começa quando o Ifes
+        escolher o provedor, o protocolo e o portão do diretório (<a href="#evolucoes-externo">grupo 4</a>);
+        <code>doc/ativacao-do-sso-institucional.md</code> descreve o que o adaptador precisa fazer.
       </p>
-      <p class="miudo"><strong>Evidência:</strong> <code>publicacoes/domain/colecoes.py</code>
-        (<code>NAO_RETIFICAVEIS_POR_ELEMENTO</code> cobre só o não retificável).</p>
     </div>
+    <div class="aviso aviso-risco">
+      <span class="titulo">O papel Comunicação pode ser atribuído, e a spec 112 que o torna seguro não começou</span>
+      <p>
+        O papel existe em <code>interface/identidade.py</code> com a permissão <code>material:gerar</code>, e o
+        comentário ao lado diz que ele <em>“não se atribui a ninguém”</em> antes da 112. Nada no código o impede:
+        o seletor de demonstração o oferece e <span class="rotulo-ui">Acessos da unidade</span> o concede. A 112
+        (<code>specs/112-leitura-do-nao-publicado/</code>) está com 0 de 35 tarefas feitas, e o risco que ela fecha
+        é o de quem só divulga ler rascunho e Retificação em curso. As quatro pendências de produto da spec
+        (P-1 a P-4) bloqueiam o merge e são <a href="#evolucoes-decisoes">decisão do usuário</a>.
+      </p>
+    </div>
+
+    <h4>Atrapalha quem opera</h4>
+    <p>Não impede a operação do piloto, mas custa conferência manual, um passo por fora ou um erro possível.</p>
+    <div class="rolagem"><table>
+      <thead><tr><th>O quê</th><th>O que acontece</th><th>Evidência</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A apuração da ocupação não fica obsoleta com a Retificação da reversão</strong></td><td>Ela continua <em>vigente</em>, com um número calculado sob outra norma, num ato que decide vaga. Raro: exige retificar a reversão depois de apurar</td><td><code>ocupacao/application/selectors.py</code> (<code>causas_de_obsolescencia</code>: <strong>sete</strong> causas — ordem sucedida, corte, quadro retificado, movimento, efeito, acréscimo e declaração —, nenhuma de reversão; <code>_quadro_retificado</code> compara só a linha do quadro)</td></tr>
+        <tr><td><strong>O desfecho da convocação não tem sucessão pela tela</strong></td><td>A convocação já se corrige com motivo (120). O desfecho não: <span class="rotulo-ui">Registrar desfecho</span> só aparece enquanto não há desfecho, e a inércia de quem já aceitou, ou um desfecho errado, não se registra pela interface</td><td><code>convocacao/models.py</code> (a sucessão existe no modelo); <code>convocacao.html</code></td></tr>
+        <tr><td><strong>Atos que não se desfazem saem de botão comum</strong></td><td>A 152 pôs conferência e desenho de perigo no corte e na chamada individual. Seguem como ação principal, sem conferência: <span class="rotulo-ui">Realizar o sorteio desta lista</span>, <span class="rotulo-ui">Fixar os N participantes</span>, <span class="rotulo-ui">Apurar a ocupação</span>, <span class="rotulo-ui">Registrar desfecho</span> e <span class="rotulo-ui">Pedir a faixa seguinte</span>; só a anulação do sorteio é perigo. A história 2 da 152 — a ciência do prazo antes de um ato que o conta — não foi entregue: o predicado existe sem uso</td><td><code>sorteio.html</code>, <code>ocupacao.html</code>, <code>convocacao.html</code>; <code>specs/152-*/</code>. Rever isso é decisão de governança (084)</td></tr>
+        <tr><td><strong>O limite do cadastro de reserva não é aplicado</strong></td><td><em>“Limitado em N”</em> (<code>reserveLimit</code>) sai no documento e na tela, e nenhuma regra de ocupação, classificação ou convocação o lê. O Perfil só de reserva ainda imprime o corte <em>“os 10 primeiros”</em></td><td>lido só em exibição (<code>interface/relatorio_do_edital.py</code>, <code>portal/situacao.py</code>); <code>publicacoes/infrastructure/pdf.py</code></td></tr>
+        <tr><td><strong>A vaga de cota sem concorrente só tem a entrega mínima</strong></td><td>A 155 registra a vaga <em>não preenchida</em> pelo ato manual. A lista reservada vazia ser sorteada, apurada e reverter (FR-6328 a FR-6333) é a <em>próxima entrega</em>, e a reversão por saldo (D-015 da 155) está aberta. O inventário de 13/11 dá a 155 como incompleta</td><td><code>ocupacao/application/destinacao.py</code>; <code>doc/achado-reservada-vazia-nao-reverte.md</code></td></tr>
+        <tr><td><strong>A mensagem de reenvio da convocação sugere prazo novo</strong></td><td>Ela diz <em>“contado do envio desta mensagem”</em> para um prazo que é data fixa, num ato cujo efeito é perder a vaga. A 156 prevê o ajuste e está como <em>Previsto</em></td><td><code>convocacao/templates/convocacao/mensagem/inicial.txt</code>, <code>inicial.html</code>, <code>correcao.txt</code>, <code>correcao.html</code>; <code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code></td></tr>
+        <tr><td><strong>Alocação de avaliação e distribuição sem Perfil nem polo</strong></td><td>A conferência documental ganhou o Perfil (115). A alocação à Etapa e a distribuição não: com 7 polos, a comissão inteira alcança os sete, e nenhuma comissão local recebe só o que é dela (DP-11)</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> sem <em>“Perfil”</em></td></tr>
+        <tr><td><strong>O resultado publicado não diz de qual lista é, na gestão</strong></td><td>O portal diz em toda parte. O histórico <span class="rotulo-ui">Resultados divulgados</span> não tem coluna de lista, e a prévia de publicação não nomeia o recorte: com vários recortes por marco, quem publica não vê qual lista confirma</td><td><code>publicacoes_do_marco.html</code>; <code>previa_de_publicacao.html</code></td></tr>
+        <tr><td><strong>A reabilitação antes do marco alcança o corte só pelo Centro</strong></td><td>A 141 faz o Centro esperar a avaliação do reabilitado antes de oferecer a ordem e o corte. O serviço não mudou: fora do Centro a janela permanece, e o teste ainda prende o achado. A escolha entre as três saídas é do usuário (<a href="#evolucoes-decisoes">grupo 2</a>)</td><td><code>classificacao/application/corte.py</code> (<code>_reingressou</code>); <code>interface/andamento.py</code>; <code>doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md</code></td></tr>
+        <tr><td><strong>Cadastro de reserva: só a ampla com linha geral</strong></td><td>A 097 faz a convocação chamar o cadastro, e só na ampla de Perfil cujo quadro tem só a linha geral. Os Editais de bolsista, que repartem o cadastro entre Modalidades, não têm spec, e a Revisão avisa que a convocação será feita fora do sistema. O Perfil só de reserva com uma única cota ainda põe todo inscrito nela</td><td><code>ocupacao/application/acrescimo.py</code>; <code>editais/domain/validation.py</code> (<code>reserve_only_convocation_external</code>); <code>inscricoes/application/rascunho.py</code>, <code>portal/views.py</code> (<code>_modalidade_unica</code>). Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a></td></tr>
+        <tr><td><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong></td><td>Por isso não tem aviso: o aviso só aponta ato publicado, e a 066 declara que isso não encerra a demanda do setor. O que o ato seria também é decisão do setor</td><td>nenhuma spec de 105 a 161 a trata; <code>specs/066-avisos-complementares/spec.md</code></td></tr>
+        <tr><td><strong>Cronograma e janela recursal podem dizer datas diferentes</strong></td><td>O Evento <em>“prazo para recurso”</em> é texto livre, e nada o liga ao marco que abre a janela. A Revisão os põe lado a lado, sem afirmar que correspondem (decidido: depois do piloto)</td><td><code>editais/domain/validation.py</code>; <code>interface/revisao.py</code></td></tr>
+        <tr><td><strong>O membro da comissão ainda é texto livre</strong></td><td>A busca de pessoa da gestão de acessos não chegou à comissão: com os identificadores opacos do provedor real, digitar o do membro é erro esperado</td><td><code>interface/forms.py</code>; <code>interface/views.py</code> (<code>identity_subject</code> digitado)</td></tr>
+        <tr><td><strong>Os downloads do Kit têm o mesmo nome</strong></td><td>Post, story e banner do mesmo Edital baixam como <code>kit-{numero}-{ano}.{ext}</code>; quem divulga confunde as três peças</td><td><code>interface/kit_de_divulgacao.py</code></td></tr>
+        <tr><td><strong>Reapontar uma Retificação depois de conflito, e cancelar um Evento do Cronograma, só pela API</strong></td><td>Sem a tela, só criando outra Retificação (o primeiro) ou chamando a API administrativa (o segundo)</td><td><code>publicacoes/application/retificacoes.py</code>; <code>interface/forms.py</code>. Ver <a href="#retificacao-lacunas">O que ainda falta</a> e <a href="#cronograma">Cronograma</a></td></tr>
+        <tr><td><strong>O documento oficial: o que a auditoria de 08/10 deixou</strong></td><td>O PDF não é marcado para leitor de tela (resto de ED-07, FR-1388) e não traz o endereço do certame (ED-09, que esbarra em FR-027a e é decisão do usuário). O quadro de alterações no consolidado (ED-06) e a forma de convocação na margem (ED-15) são polimento. Na Retificação, uma <em>“Tabela N”</em> renumerada não é acusada: não verificado hoje</td><td><code>publicacoes/infrastructure/pdf.py</code> (<em>“sem /StructTreeRoot”</em>); <code>doc/auditoria-edital-pdf-2026-10-08.md</code></td></tr>
+        <tr><td><strong>A regra de substituição não avança contra a Caixa real</strong></td><td>O HTTP 500 da Caixa é tratado como falha de acesso. Só morde se a Caixa adiar um concurso declarado; a 116 pede spec própria</td><td><code>sorteios/infrastructure/fontes/loteria_federal.py</code>; <code>doc/achado-cadeia-de-substituicao-inexecutavel-contra-a-caixa.md</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h4>Polimento que se vê na tela</h4>
+    <ul>
+      <li><strong>“Retificaçãoões”</strong>: com duas ou mais Retificações em curso, o título da tela Retificar acrescenta o plural ao singular (<code>retificar.html</code>, linha 27). Encontrado em 30/10; continua em 13/11. A correção é de uma linha.</li>
+      <li><strong>Os 58 links desta página para o repositório quebram dentro da gestão.</strong> Caminhos como <code>../../backend/…</code> funcionam com a página aberta do disco; servida em <code>/gestao/documentacao/</code> (105), resolvem fora dela e respondem 404, porque <code>interface/documentacao.py</code> serve só cinco arquivos, por lista literal. São 53 para <code>backend/</code>, 3 para <code>specs/</code>, mais <code>AGENTS.md</code> e <code>.specify</code>.</li>
+      <li><strong>Identificadores crus na tela de quem julga e no caminho do topo</strong>: o recurso imprime o identificador do objeto, do ato vigente e da versão (<code>recurso.html</code>), e o Ato de classificação aparece pelo identificador de 36 caracteres (<code>ato_ordenacao.html</code>).</li>
+      <li><strong>A tela de recusa não diz de onde a pessoa veio</strong>: oferece só <span class="rotulo-ui">Voltar aos Processos Seletivos</span> (<code>recusa.html</code>; a origem só entra nos casos de envio acima do limite e de CSRF).</li>
+      <li><strong>Três renderizações do mesmo prazo</strong>: <em>“Faltam 19 dias”</em> no portal, <em>“2 semanas, 5 dias”</em> no painel e só a data nas demais (<code>supervisao.html</code>, <code>portal/_periodo.html</code>).</li>
+      <li><strong>Exportação sem população recarrega a tela sem mensagem</strong> (<code>interface/views.py</code>, <code>exportar_matriculas</code>).</li>
+      <li><strong>Três auditorias, um título</strong>: a Trilha da avaliação e a Auditoria da comissão dizem <em>“Trilha de auditoria”</em> no título da página, e o caminho no topo diz outra coisa (<code>auditoria.html</code>).</li>
+      <li><strong>Duas grafias para trocar de identidade</strong> (<em>Trocar identidade</em> na barra, <em>Trocar de identidade</em> na página de acesso), a lista de Processos que diz que a identidade foi escolhida <em>“acima”</em> quando está no pé da barra, e <em>“Mostrar as outras N”</em> numa tela e <em>“os outros N”</em> noutra (<code>_acoes_disponiveis.html</code>, <code>processo_detalhe.html</code>). Os assuntos dos e-mails dizem <em>“Seleções”</em> e a unidade, e não o nome novo do produto — só importa quando a chave de avisos for ligada em produção.</li>
+      <li><strong>A Revisão de um Edital publicado</strong> ainda diz <span class="rotulo-ui">O que falta para submeter</span> e <span class="rotulo-ui">Nada pendente — o Edital pode ser submetido.</span>; a conferência abaixo é a vigente (<code>compor_revisao.html</code>). A <strong>prévia da divulgação</strong> não diz a data-limite do recurso nem qual versão do Edital fundamenta a janela.</li>
+      <li><strong>A hora do Evento</strong> é obrigatória, e meia-noite sai <em>“às 00h”</em> no documento (<code>publicacoes/infrastructure/humano.py</code>).</li>
+      <li><strong>O <code>CR</code> do documento</strong> (096): o cadastro limitado em 0 também sai <code>CR</code> (<code>pdf.py</code>), e o assistente de dúvidas imprime o <code>immediateVacancies</code> publicado sem testar o <code>CR</code>, podendo responder <em>“0 vagas”</em> (<code>duvidas/domain/respostas.py</code>). A prévia do documento reserva o espaço do fecho com a autoridade mais alta da unidade: se outra assinar o ato, a paginação da prévia pode divergir da publicada.</li>
+      <li><strong>A prévia da classificação</strong> (094, 095): ao abrir, as reservadas aparecem <em>“Não avaliada”</em>, porque a população estável planta um empate na última vaga da ampla (mantido em 20/10); o rótulo da ampla diz <em>“(linha geral do quadro), todos os candidatos”</em>; e trocar de recorte, pela spec, não recalcula <span class="rotulo-ui">O que mudou com a sua alteração</span> — não verificado pela tela. A rastreabilidade da 095 ainda diz que os arquivos de teste não existem, e eles existem (<code>tests/interface/test_previa_por_recorte.py</code>).</li>
+      <li><strong>Em <span class="rotulo-ui">Minhas inscrições</span></strong> não há a nota de pendência do Requerimento (118, X1): o candidato só a vê no acompanhamento (<code>portal/inscricoes.html</code>).</li>
+      <li><strong>O documento do recurso responde 409 sem o evento de arquivo indisponível</strong> na trilha, ao contrário das outras três telas que servem arquivo (<code>interface/views.py</code>). A correção é de uma linha, mas a trilha é decisão do usuário (FR-3705).</li>
+      <li><strong>A tela de uma convocação sem lista</strong> (pendência 11 da 115) só existe em registro legado e diz <em>“sem exigência”</em>.</li>
+    </ul>
+
+    <h4>Registrado, sem impacto hoje</h4>
+    <div class="rolagem"><table>
+      <thead><tr><th>O quê</th><th>Por que não pesa agora</th><th>Evidência</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Fronteira 403 × 404 em três portas</strong> (D-G2, DP-07)</td><td>Decidida, com execução mandada para a preparação de produção; o 404 só aparece a quem digita a URL, e a oferta já não aparece. O comentário no código hoje <em>defende</em> o 404</td><td><code>interface/views.py</code>: <code>raise Http404</code> em <code>criar_edital</code>, <code>reaproveitar</code>, <code>supervisao</code></td></tr>
+        <tr><td><strong>A Retificação pela API aceita trocar campo estrutural ou derivado</strong> substituindo o objeto inteiro: o código do Perfil (identidade do <span class="rotulo-ui">Aplicar a todos</span>), o do marco, a ordem e o status do Evento</td><td>A tela não usa essa porta e a API está fechada até o provedor; vira exigência na preparação de produção</td><td><code>publicacoes/domain/colecoes.py</code> (<code>NAO_RETIFICAVEIS_POR_ELEMENTO</code> cobre só o não retificável)</td></tr>
+        <tr><td><strong>Configuração sem consumidor</strong>: <code>callRules</code>, <code>calculation</code>, <code>distribution</code> da regra normativa</td><td>Publicados, não retificáveis, sem tela e sem leitor; a ordem de 27/09 manda deixar de pedir o que ficar sem consumidor</td><td><code>interface/revisao.py</code> (<code>_SEM_CONSUMIDOR</code>); <code>editais/domain/mutabilidade.py</code></td></tr>
+        <tr><td><strong>O acompanhamento cresce três consultas por publicação</strong></td><td>Piloto pequeno e nenhum requisito de custo. Número atual: não verificado (23 com uma publicação e 38 com seis, na medição da 063)</td><td><code>recursos/application/interpor.py</code> (<code>_janelas_pertinentes</code>)</td></tr>
+        <tr><td><strong>A Retificação consolidada não lista a publicação original</strong> entre as aplicadas, e a de vigência futura troca a versão na fronteira sem ato novo</td><td>A 070 contorna as duas na leitura e acusa o ponto para revisão</td><td><code>publicacoes/application/retificacoes.py</code>; <code>doc/achado-documento-ligado-nao-contem-a-versao-vigente.md</code></td></tr>
+        <tr><td><strong>O seletor de demonstração só oferece o escopo <code>cefor</code></strong></td><td>Só a demonstração tem seletor; produção não</td><td><code>interface/identidade.py</code> (<code>ESCOPO_PADRAO</code>)</td></tr>
+        <tr><td><strong>O teto por origem do portal</strong>: trava concorrente e sal do resumo da origem</td><td>Registrados, não tomados; o teto de 30 por hora já vale</td><td><code>identidade/application/desafio.py</code> (<code>sha256(origem)</code> sem sal; sem <code>select_for_update</code> no contador)</td></tr>
+        <tr><td><strong>Inscrição depois de uma Retificação que dá Modalidade única ao Perfil</strong></td><td>O rascunho assume a única Modalidade e a lista exigida é gravada contra ela, o que sugere que os documentos da cota passam a ser pedidos. <strong>Não verificado por percurso nem por teste</strong></td><td><code>inscricoes/application/rascunho.py</code>; <code>submissao.py</code></td></tr>
+        <tr><td><strong>O que o encerramento do Processo impede</strong> (C-7)</td><td>A 130 faz o <span class="rotulo-ui">Encerrar Processo</span> advertir as providências em aberto; <em>impedir</em> segue registro fora de spec</td><td><code>specs/113-*/spec.md</code></td></tr>
+        <tr><td><strong>A heurística de canal do assistente</strong> erra em quatro de quinze Editais reais, e responde <em>“Fontes divergentes”</em> em 9 dos 14 que têm canal</td><td>O assistente é só piloto e local; a emenda de R-011 também espera o setor</td><td><code>duvidas/domain/canal.py</code></td></tr>
+        <tr><td><strong>A release do guia não instala o grupo <code>assistente</code></strong> (o tokenizer)</td><td>Só morde se ligarem o piloto numa máquina construída pelo guia; a correção é decisão do usuário entre três opções</td><td><code>doc/achado-release-sem-o-grupo-do-assistente.md</code></td></tr>
+      </tbody>
+    </table></div>
 
     <h4>Operação manual inevitável, hoje</h4>
     <div class="rolagem"><table>
       <thead><tr><th>O quê</th><th>Por quê</th></tr></thead>
       <tbody>
         <tr><td>Somar fora o barema que não é de critérios independentes e digitar o total</td><td>O barema da 146 só pontua critério a critério; “só o maior título” e o teto por expectativa do candidato não têm representação</td></tr>
-        <tr><td>Verificar a autodeclaração (heteroidentificação) fora</td><td>Não há Etapa aplicável só a quem declarou a Modalidade, nem comissão própria</td></tr>
-        <tr><td>Conferir que o Cronograma e a janela recursal dizem a mesma data</td><td>O Evento “prazo para recurso” é texto livre; nada o liga ao marco que abre a janela (decidido: depois do piloto). Desde a 067, a Revisão os põe lado a lado, sem afirmar que correspondem</td></tr>
-        <tr><td>Declarar a hora real do Evento, e não <code>00:00</code></td><td>A hora é obrigatória, e meia-noite sai “às 00h” no documento (decidido: rever com a spec do documento)</td></tr>
+        <tr><td>Verificar a autodeclaração (heteroidentificação) fora</td><td>Não há Etapa aplicável só a quem declarou a Modalidade, nem comissão própria. A família está fora do alvo (DP-10), e o 28/2026 a tem</td></tr>
         <tr><td>Conferir a prévia contra o Edital original na homologação</td><td>Decidido em 28/09: o setor redige fora e transcreve</td></tr>
-        <tr><td>Assinar o ato</td><td>Como o ato é assinado no piloto depende do Cefor; o nome e o ato de nomeação de quem assina se cadastram em <span class="rotulo-ui">Autoridades da unidade</span>, antes da primeira publicação real</td></tr>
         <tr><td>Avisar os convocados para heteroidentificação, entrevista ou títulos</td><td>Essas convocações não têm ato no sistema, e o aviso só aponta ato publicado (066)</td></tr>
-        <tr><td>Publicar nos sítios do Ifes/Cefor; transmitir o sorteio; importar no Registro Acadêmico</td><td>São sistemas fora deste</td></tr>
-        <tr><td>Contar prazos em dias úteis</td><td>A janela conta dias corridos; o operador digita a data</td></tr>
+        <tr><td>Publicar nos sítios do Ifes/Cefor; transmitir o sorteio; importar no Registro Acadêmico</td><td>São sistemas fora deste (a 148 e a 149 só registram a publicação feita fora)</td></tr>
+        <tr><td>Contar prazos em dias úteis</td><td>A janela conta dias corridos; o operador digita a data (R-004)</td></tr>
         <tr><td>Comunicar o cancelamento de um Edital</td><td>O cancelamento gera ato e trilha, e nenhuma Publicação (decidido: agora não)</td></tr>
       </tbody>
     </table></div>
 
-    <h4>Divergências entre código e documentação</h4>
-    <ul>
-      <li>67 das 114 especificações dizem <code>Status: Draft</code>, inclusive as implementadas (DP-12) — entre elas a 069, a 070, a 071, a 072, a 097, a 100, a 101, a 102 e a 113; a 099, a 103 e a 104 dizem que o merge não foi feito ou não foi autorizado. Das 074 à 096, nenhuma diz <code>Draft</code>, mas dezoito — da 077 à 093, e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>, a 076 diz <em>“Em emenda”</em>, e a 094 diz <em>“Especificada”</em>, com a <em>“implementação não iniciada”</em>; todas estão na <code>main</code>.</li>
-      <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
-      <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
-      <li><code>doc/achado-suite-em-sqlite.md</code> nomeia uma causa; são três (o <code>CLAUDE.md</code> as reparte).</li>
-      <li>Um critério da spec 008 pede o Processo na primeira página do documento, e o renderizador nunca o imprimiu — o que é o certo para os Editais reais.</li>
-      <li>A spec 046 lista um consumidor do Resultado que o código torna inalcançável.</li>
-      <li>Os rótulos da Retificação têm três grafias (gestão, portal, prévia do <span class="rotulo-ui">Aplicar a todos</span>), sem guardião que as compare.</li>
-      <li>Uma falha intermitente na suíte (<code>no_effective_version</code> ao preparar um caso de <code>test_documento.py</code>), vista uma vez em 29/09, sem causa confirmada.</li>
-    </ul>
-
     <h4>Ambiguidade conceitual</h4>
+    <p>Não é lacuna de código: é o que quem lê a gestão confunde, e a distinção continua vigente.</p>
     <div class="aviso aviso-confunda"><span class="titulo">Não confunda</span>
       <h4>Ampla concorrência sem Modalidade ≠ Modalidade de ampla declarada</h4>
       <div class="par">
         <div><strong>Ampla sem Modalidade (recorte nulo)</strong><p>É onde a quantidade da ampla mora — a linha geral do quadro — e é o que a classificação, o sorteio e a ocupação ordenam. A inscrição a oferece quando o Perfil tem vaga na linha geral.</p></div>
-        <div><strong>Modalidade declarada como ampla</strong><p>Uma Modalidade como outra qualquer, sem vagas próprias. O sistema a aceita, e o sorteio lhe oferece um recorte que não alimenta a ocupação.</p></div>
+        <div><strong>Modalidade declarada como ampla</strong><p>Uma Modalidade como outra qualquer, sem vagas próprias. O sistema a aceita, e o sorteio lhe oferece um recorte que não alimenta a ocupação. A validação só adverte quando ela tem linha própria, e adverte (sem recusar) o Perfil que declara cotas sem apontar a ampla.</p></div>
       </div>
       <p class="par-rodape">Para a ampla, não declare Modalidade: declare vagas na linha geral do quadro. Ver <a href="#modalidades">Modalidades</a> e <a href="#quadro-de-vagas">Quadro de vagas</a>.</p>
     </div>
     <ul>
-      <li><strong>Perfil × polo × curso.</strong> Um eixo só carrega o que os Editais reais separam.</li>
+      <li><strong>Perfil × polo × curso.</strong> Um eixo só carrega o que os Editais reais separam. O Edital multipolo real já existe na amostra (140/2025, 28/2026), e a pergunta de abstrair o polo continua aberta (AX-5, AX-6).</li>
       <li><strong>“Etapa”</strong> é passo do assistente de composição e é Etapa de avaliação; as rotas de trabalho evitam a palavra por isso.</li>
-      <li><strong>Resultado por recorte × “Resultado preliminar” do Edital.</strong> O sistema publica um documento por recorte; o Edital real publica um (DP-15).</li>
+      <li><strong>Resultado por recorte × “Resultado preliminar” do Edital.</strong> O sistema publica um documento por recorte; o Edital real publica um (DP-15). As 148 e 149 criaram atos novos por Edital, sem tocar o Resultado por recorte.</li>
     </ul>
 
-    <h3 id="evolucoes-decisoes">Decisões pendentes</h3>
+    <h3 id="evolucoes-decisoes">Grupo 2 — Decisões que só o usuário toma</h3>
     <p>
-      Perguntas que só o usuário decide. Cada uma tem opções e recomendação em
-      <code>doc/decisoes-pendentes-da-consolidacao.md</code>; nenhuma spec que dependa delas começa antes.
+      Nenhuma spec que dependa delas começa antes. As DP-NN têm opções e recomendação em
+      <code>doc/decisoes-pendentes-da-consolidacao.md</code>; as demais estão na spec que as levantou.
     </p>
     <div class="rolagem"><table>
       <thead><tr><th>Decisão</th><th>A pergunta</th><th>O que falta</th></tr></thead>
       <tbody>
-        <tr><td><strong>DP-07</strong></td><td>As três recusas em <code>404</code> passam a <code>403</code>?</td><td>Decidido <em>quando</em> (com a preparação de produção); não executado</td></tr>
-        <tr><td><strong>DP-08</strong> (itens 1 e 3)</td><td>A spec 039 (catálogo de Modalidades no Edital) está encerrada? Para onde vai o alcance da Etapa por Perfil ou Modalidade?</td><td>Registrar o encerramento; o alcance espera a DP-10. (O item 2, a Modalidade por Retificação, foi feito pela 048)</td></tr>
-        <tr><td><strong>DP-09</strong></td><td>A proibição de prova nova no recurso continua?</td><td>Recomendação “manter”, sem decisão registrada</td></tr>
-        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo — títulos com barema (a 146 construiu o de critérios independentes; o por Perfil e o exclusivo continuam abertos), cota racial com heteroidentificação, cascata de grupos, submodalidades?</td><td>Decidir por família, com o Edital na mão</td></tr>
-        <tr><td><strong>DP-11</strong></td><td>A comissão local enxerga só o seu Perfil ou polo?</td><td>Recomendação: coluna e filtro de Perfil já, recorte de autorização depois — nada feito</td></tr>
-        <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta</td></tr>
-        <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; “só se o setor precisar”</td></tr>
-        <tr><td><strong>DP-18</strong></td><td>Quem faz o teste operacional com o setor, e quando?</td><td>O roteiro e um ensaio existem; o teste com uma pessoa do setor não</td></tr>
-        <tr><td><strong>DP-20</strong> (parte)</td><td>Como o ato é assinado no piloto</td><td>Resposta do Cefor. O nome de quem assina deixou de ser decisão: é cadastro, desde a 060. O resto da DP-20 foi executado pela 054</td></tr>
-        <tr><td><strong>Avisos em produção</strong> (066)</td><td>Qual a base legal do uso do e-mail para aviso, quanto tempo fica a lista de destinatários, e qual o limite da conta de correio institucional?</td><td>Validação do encarregado de dados; só então se liga <code>AVISOS_AOS_CANDIDATOS</code></td></tr>
-        <tr><td><strong>Reabilitado antes do marco</strong> (061)</td><td>Estender a pergunta do reingresso, delegá-la à ordem, ou manter e dizer?</td><td>Escolha entre as três saídas do achado</td></tr>
-        <tr><td><strong>Frases novas do Edital</strong> (069)</td><td>As frases que a redação 2 acrescenta, listadas na conferência de equivalência, podem ir ao primeiro Edital real?</td><td>Aprovação do responsável pelo produto (SC-517)</td></tr>
-        <tr><td><strong>Validação da jornada pública</strong> (072)</td><td>O texto de finalidade de nome e CPF está completo e correto? O percurso com cinco pessoas confirma a jornada?</td><td>Quem responde pela proteção de dados (FR-1627); o percurso com pessoas (SC-605)</td></tr>
-        <tr><td><strong>Prévia da classificação</strong> (094, 095)</td><td>Quem elabora entende, pela prévia, o que a regra do marco faz com as vagas e as cotas? E as cinco perguntas da 094: o rótulo de <em>“A faixa para no alvo”</em>, o referente de <em>“esse número”</em> no documento, a fronteira das vagas, suplentes × cadastro de reserva e o termo <em>“avançar”</em></td><td>O roteiro com ao menos cinco elaboradores (T039; SC-870), e a decisão do usuário</td></tr>
-        <tr><td><strong>Respostas prontas do assistente</strong> (070)</td><td>A tabela de pertinência, os termos de dúvida e as formas da explicação servem ao setor?</td><td>Revisão com o setor de seleção (T046)</td></tr>
-        <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Todas registradas na spec 063 para decisão</td></tr>
+        <tr><td><strong>DP-07</strong></td><td>As três recusas em <code>404</code> passam a <code>403</code>?</td><td>Decidido <em>quando</em> (com a preparação de produção); não executado, e nenhum commit a cita</td></tr>
+        <tr><td><strong>DP-08</strong> (itens 1 e 3)</td><td>A spec 039 (catálogo de Modalidades no Edital) está encerrada? Para onde vai o alcance da Etapa por Perfil ou Modalidade?</td><td>Item 1: registrar o encerramento (a 039 segue <code>Draft</code>, e o inventário de 13/11 a dá como bloqueada por decisão sua). Item 3: espera a DP-10, e a 146 manda o barema por Perfil esperar o alcance</td></tr>
+        <tr><td><strong>DP-09</strong></td><td>A proibição de prova nova no recurso continua?</td><td>Recomendação “manter”, sem decisão registrada depois de 26/09. O recurso não aceita anexo (spec 018, D-011)</td></tr>
+        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo? Hoje há o barema de critérios independentes (146); seguem fora o barema exclusivo ou por Perfil, a cota racial com heteroidentificação, a cascata de grupos e as submodalidades de PPI/PPIQ (AX-15, excluídas pela 044)</td><td>Decidir por família, com o Edital na mão. A 158, de cascata entre cotas, está em <code>Draft</code>, sem plano nem código, com as perguntas P-1 a P-8</td></tr>
+        <tr><td><strong>DP-11</strong></td><td>A comissão local enxerga só o seu Perfil ou polo?</td><td>A resposta mudou só na conferência documental (115). Falta, na distribuição e na alocação de avaliação, a coluna e o filtro de Perfil — recomendação da DP-11 — ou o recorte de autorização</td></tr>
+        <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta. O #530 (13/11) corrigiu 35 linhas à mão, sem decidir e sem guardião do campo; ver <a href="#evolucoes-higiene">Divergências entre código e documentação</a></td></tr>
+        <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; <em>“só se o setor precisar”</em></td></tr>
+        <tr><td><strong>DP-18</strong></td><td>Quem faz o teste operacional com o setor, e quando?</td><td>O roteiro (<code>doc/roteiro-teste-operacional-assistido-28-2026.md</code>) e um ensaio existem; os cenários de treinamento da 134 o preparam, mas nenhum registro de sessão feita</td></tr>
+        <tr><td><strong>112, P-1 a P-4</strong></td><td>As quatro pendências de produto da leitura do não publicado</td><td>Bloqueiam o merge da 112, e com ela o papel Comunicação (<a href="#evolucoes-codigo">grupo 1</a>)</td></tr>
+        <tr><td><strong>D-015 da 155</strong></td><td>A reversão por saldo quando a lista reservada está vazia</td><td>Aberta; a lista vazia (FR-6328 a FR-6333) espera a decisão</td></tr>
+        <tr><td><strong>Reabilitado antes do marco</strong> (061)</td><td>Estender a pergunta do reingresso, delegá-la à ordem, ou manter e dizer?</td><td>Escolha entre as três saídas do achado. Na prática, a 141 já adotou a terceira dentro do Centro, sem decisão registrada</td></tr>
+        <tr><td><strong>Prévia da classificação</strong> (094)</td><td>As cinco perguntas — o rótulo de <em>“A faixa para no alvo”</em>, o referente de <em>“esse número”</em> no documento, a fronteira das vagas, suplentes × cadastro de reserva e o termo <em>“avançar”</em> — e a reversão por esgotamento, hoje <em>“comportamento atual, pendente”</em></td><td>Respostas do usuário</td></tr>
+        <tr><td><strong>Sorteio e relatórios</strong></td><td>O botão <span class="rotulo-ui">Realizar o sorteio</span> deve sumir diante de relação condenada? A leitura dos relatórios pelo Auditor, um papel de Direção e o consolidado para a presidência? O relatório consolidado precisa de autorização de produção, embora esteja na <code>main</code>?</td><td>Não decididas (099, 100; <code>sorteio.html</code> diz <em>“não foi decidido”</em>)</td></tr>
+        <tr><td><strong>Retificação</strong> (103)</td><td>Quem <em>“elaborou”</em> a Retificação, para a segregação (AUD-RET-05)?</td><td>Decisão do usuário</td></tr>
+        <tr><td><strong>Gestão de acessos</strong> (108, 109, 110)</td><td>Quem audita o nível institucional, as sessões na trilha, o Gestor lendo a <a href="#trilha-da-unidade">trilha da unidade</a>, sete perguntas de governança da 109, cinco da 110, um papel de Direção e a segregação mais estrita (emenda à FR-021)</td><td>Decisão do usuário e da equipe</td></tr>
+        <tr><td><strong>Desempate por outra Etapa</strong> (114)</td><td>D-005: o candidato vê e pode recorrer da nota que só desempata? D-007: o empate na fronteira de um corte que governa a própria Etapa do desempate</td><td>Decisões de regra: a 114 está implementada</td></tr>
+        <tr><td><strong>Documentos da convocação</strong> (115, 131)</td><td>D-015 da 115: o auditor abre o arquivo? QI-6: recurso contra o indeferimento? QI-4 (guarda e destinação) e MAT-08 (varredura de PDF), adiados em 04/11; P-3 e P-4 da 131</td><td>Decisão do usuário; QI-4 e MAT-08 pedem também o institucional e a TI</td></tr>
+        <tr><td><strong>Requerimento com o Processo encerrado</strong> (118, 029)</td><td>A atualização do Requerimento pedido na inscrição também fecha com o Processo final? (A parte da convocação fechou.)</td><td><code>doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md</code></td></tr>
+        <tr><td><strong>Prazo final da convocação da vaga acrescida</strong> (097, D-005)</td><td>Quem declara o prazo final: o sistema ou a equipe?</td><td>A spec diz que é da equipe; nenhum prazo foi declarado</td></tr>
+        <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Registradas na spec 063. A 117 e a 118 reafirmam que o sistema não diz <em>“matriculado”</em> (L-3); L-2 e L-4 a L-7: não conferi uma a uma</td></tr>
+        <tr><td><strong>Leitura múltipla</strong> (046, DP-06 opção C)</td><td>A regra de combinação das avaliações de uma Etapa com dupla leitura</td><td>Decidido esperar um Edital real de dupla leitura; hoje a Etapa não se consolida e não publica quando o resultado é necessário</td></tr>
+        <tr><td><strong>Ficha de avaliação por curso</strong> (AX-4) e <strong>polo como eixo próprio</strong> (AX-5, AX-6)</td><td>O que o barema varia por curso; se Polo, Curso, Área e Campus viram entidades</td><td>Pergunta de produto, junto da DP-10; hoje só há <code>locality</code> em texto livre no Perfil</td></tr>
+        <tr><td><strong>Avisos de composição fora da Atenção</strong></td><td>Onde passa a fronteira entre o painel de Atenção e os avisos de composição</td><td>Deliberado até decidir (<code>interface/supervisao.py</code>, <code>ESPECIES</code>)</td></tr>
+        <tr><td><strong>Superadas por decisão, e mantidas</strong></td><td>O recurso sem anexo de prova (DP-09); a prática do sorteio nos Editais (D-G3); o caminho do topo sem link na lista e em Minhas atividades, e o que sai na impressão (088)</td><td>Executadas como decididas; o que resta de D-G3 é ato do Cefor</td></tr>
       </tbody>
     </table></div>
-    <p class="miudo">
-      Decididas e executadas desde 26/09: DP-01 a DP-06 (painel, reserva fora do piloto, dupla leitura),
-      DP-08 item 2, DP-13 (<a href="#heranca">aplicar a todos</a>), DP-14 (ampla na inscrição), DP-16
-      (não atendimento em lote), DP-17 (automação explícita na Constituição), DP-19 (campos definitivos na
-      Revisão) e DP-21 (limite de campos da composição). A DP-05 foi revista em 21/10 pela 097, que voltou à opção A
-      — a vaga acrescida depois da publicação — para a ampla de Perfil sem Modalidade.
+
+    <h3 id="evolucoes-validacao">Grupo 3 — Validação com pessoas</h3>
+    <p>
+      Entregas que entraram com a validação humana registrada na própria spec como pendente. Nada no
+      repositório as fecha: só o relato de quem foi observado, ou a aprovação de quem responde pelo produto.
     </p>
+    <div class="rolagem"><table>
+      <thead><tr><th>A validação</th><th>Quem</th><th>Registro</th></tr></thead>
+      <tbody>
+        <tr><td><strong>As frases novas do Edital em linguagem simples</strong> — o resumo, a frase dos suplentes, as remissões e a convocação <em>“por publicação”</em></td><td>Aprovação do responsável pelo produto, antes do primeiro Edital real</td><td>069, SC-517; <code>demonstracao/equivalencia.md</code></td></tr>
+        <tr><td><strong>A jornada pública</strong>: o percurso com cinco pessoas de fora, no celular</td><td>Equipe e produto; o texto de finalidade de nome e CPF (FR-1627) é do <a href="#evolucoes-externo">encarregado de dados</a></td><td>072, SC-605; <code>verificacao.md</code> diz <em>“não validada”</em>. Custo registrado: o resumo da oferta empurra o primeiro <span class="rotulo-ui">Inscrever-se nesta vaga</span> cerca de 200 px para baixo, e a 320 px não cabe inteiro na primeira tela</td></tr>
+        <tr><td><strong>As respostas prontas do assistente</strong>: a tabela de pertinência, os termos de dúvida e as formas da explicação</td><td>Setor de seleção</td><td>070, T046</td></tr>
+        <tr><td><strong>O piloto do assistente</strong>: verificação, rodada com revisão humana, medições e a sessão com o setor</td><td>Depende do serviço local e do setor</td><td>071, T058 a T060 e T065</td></tr>
+        <tr><td><strong>Configurar e verificar a implantação</strong>: a sessão conduzida com uma pessoa da TI em homologação e a prova do Ollama contra o serviço local</td><td>TI</td><td>073, SC-620 e SC-623</td></tr>
+        <tr><td><strong>O assistente na página da seleção</strong>, só local: a pergunta livre com o modelo real</td><td>Responsável pelo produto</td><td>074, T013; <code>production.py</code> recusa subir com a chave ligada</td></tr>
+        <tr><td><strong>O redesenho da gestão</strong> (075 a 092): a página de acesso, a barra lateral, o caminho no topo e a ordem nova das telas</td><td>Equipe</td><td>cada spec registra a validação, recomendada desde a 075, como pendente</td></tr>
+        <tr><td><strong>A prévia da classificação</strong> com elaboradores (ao menos cinco), na interface real</td><td>Usuário e elaboradores</td><td>094, T039 (SC-840, SC-848, SC-851); 095, SC-870. A extensão do protótipo (T030) não foi feita, por decisão de 20/10</td></tr>
+        <tr><td><strong>A prévia do sorteio</strong> com elaboradores</td><td>Usuário e elaboradores</td><td>098, SC-925 e SC-926</td></tr>
+        <tr><td><strong>O relatório do Edital e o consolidado</strong> com destinatários reais</td><td>Usuário e destinatários</td><td>099, SC-932; 100, SC-945</td></tr>
+        <tr><td><strong>A Agenda</strong> numa sessão observada</td><td>Usuário e quem conduz</td><td>101, SC-948</td></tr>
+        <tr><td><strong>A extração inviável do sorteio</strong>, com quem conduz</td><td>Usuário e quem conduz</td><td>102, SC-958</td></tr>
+        <tr><td><strong>A jornada da Retificação</strong> e as <strong>Ações disponíveis</strong>, com três pessoas cada</td><td>Usuário e três pessoas</td><td>103, SC-978; 104, SC-990</td></tr>
+        <tr><td><strong>O cadastro de unidades</strong>: a validação funcional</td><td>Usuário e equipe</td><td>110, SC-1048</td></tr>
+        <tr><td><strong>A peça do Kit</strong>, pela comunicação</td><td>Comunicação</td><td>111, SC-1054 (T033 a T035)</td></tr>
+        <tr><td><strong>Os documentos da convocação</strong>: a validação humana e uma chamada real conduzida</td><td>Usuário, encarregado de dados e Cefor</td><td>115, SC-1378</td></tr>
+        <tr><td><strong>As três mensagens do concurso conferido na Caixa</strong>, lidas por quem opera</td><td>Comissão, com um roteiro</td><td>116</td></tr>
+        <tr><td><strong>O convocado no portal</strong>, com candidatos reais</td><td>Cefor e candidatos</td><td>118, X5</td></tr>
+        <tr><td><strong>Um cenário percorrido só com o guia</strong>, sem ajuda técnica</td><td>Uma pessoa da comissão</td><td>134, SC-1456</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="evolucoes-externo">Grupo 4 — Depende de fora</h3>
+    <p>O que o software não resolve: a resposta é de outra instituição, de outro setor ou de quem responde pela lei.</p>
+    <div class="rolagem"><table>
+      <thead><tr><th>De quem</th><th>O que falta</th><th class="centro">Bloqueia a produção?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Ifes (TI e a instituição)</strong></td><td>Escolher o provedor, o protocolo e o portão do diretório. A resposta de 28/08 foi o LDAP do Ifes (spec 002, T056 aberta); LDAP direto ou SSO na frente decide se o método é um formulário na página de acesso ou um botão (A6 do estudo de 16/10). A API continua fechada em produção até lá. O símbolo da página de acesso é marcador de lugar: a marca oficial depende do manual de identidade visual da Rede Federal</td><td class="centro"><strong>Sim</strong></td></tr>
+        <tr><td><strong>Cefor</strong></td><td>Cadastrar as autoridades reais em <span class="rotulo-ui">Autoridades da unidade</span> e dizer como o ato é assinado (DP-20). A tela existe desde a 060, e sem autoridade vigente o Edital não tem fecho (o ponto exato da recusa: não lido hoje). Também é do Cefor declarar a fonte do sorteio nos Editais (D-G3) e orientar os polos sobre o teto de 30 pedidos por hora</td><td class="centro"><strong>Sim</strong> (as autoridades)</td></tr>
+        <tr><td><strong>Encarregado de dados</strong></td><td>A base legal do uso do e-mail para aviso, quanto tempo fica a lista de destinatários e o limite da conta de correio (066): só então se liga <code>AVISOS_AOS_CANDIDATOS</code>, desligada por padrão em <code>config/settings/base.py</code> — o <code>production.py</code> não a recusa ligada. O limiar de 5 inscrições dos relatórios; o texto de finalidade de nome e CPF (072, FR-1627); a política de retenção da identidade do candidato (A-03 está no banco; a retenção, B-2, não); o aviso de privacidade da formalização (117, H03); a validação de LGPD e de SPF/DKIM do aviso de pendência (134)</td><td class="centro"><strong>Sim</strong>, para ligar os avisos</td></tr>
+        <tr><td><strong>Jurídico do Ifes</strong></td><td>O efeito do cancelamento de um Edital sobre recurso e convocação pendentes (113)</td><td class="centro">Não</td></tr>
+        <tr><td><strong>TI do Ifes</strong></td><td>A capacidade na VM para a formalização (117, H01); o serviço local do assistente; a varredura de PDF (MAT-08)</td><td class="centro">Não</td></tr>
+        <tr><td><strong>Setor do Registro Acadêmico</strong></td><td>Importar a exportação de matrículas (34 colunas), que nunca foi importada no destino; uma exportação real (117, H02)</td><td class="centro">Não</td></tr>
+        <tr><td><strong>Comunicação e operação</strong></td><td>A chave de produção do Kit (<code>KIT_DE_DIVULGACAO_PECA</code>, desligada por padrão), a dos templates (<code>KIT_DE_DIVULGACAO_TEMPLATES</code>, vazia por padrão), a homologação no servidor (119, T044 e T056) e o endereço público a declarar (111, P-9): o endereço hoje é deduzido da requisição, e host local não gera link nem peça</td><td class="centro">Não, e o Kit também espera a <a href="#evolucoes-codigo">112</a></td></tr>
+        <tr><td><strong>Quem opera o Edital</strong></td><td>Assinar o ato; publicar nos sítios; transmitir o sorteio. São atos fora do sistema</td><td class="centro">Não</td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="evolucoes-resolvidas">O que já fechou</h3>
+    <p>
+      Itens que esta página listava como pendentes e que a conferência de 13/11 encontrou resolvidos.
+      Ficam aqui só para o leitor que os conhecia: saíram dos grupos acima.
+    </p>
+    <div class="rolagem"><table>
+      <thead><tr><th>O que era</th><th>Como fechou</th><th>Evidência</th></tr></thead>
+      <tbody>
+        <tr><td>Retificação não acrescentava Modalidade; o sentido do desempate não era retificável</td><td>048 (26/09): acrescenta qualquer Modalidade, com a linha do quadro, e o critério se remove e outro se acrescenta no mesmo ato</td><td><code>interface/retificacao.py</code> (<code>NOVA_MODALIDADE</code>, <code>NOVO_CRITERIO</code>)</td></tr>
+        <tr><td><code>schedule.status</code> não derivado; defeitos e vista parcial do painel</td><td>045 (26/09): a fase do Evento é derivada, <code>CANCELADO</code> é a única declaração, e a frase de ausência é relativa ao alcance do leitor</td><td><code>editais/domain/fase_do_evento.py</code>; <code>interface/supervisao.py</code></td></tr>
+        <tr><td>Teto de inscrições não publicado; prazo recursal fora da página do resultado; marco sem regra de corte</td><td>Impresso e dito no portal; a página diz o prazo (047); o marco sem regra de corte é impeditivo (046)</td><td><code>publicacoes/infrastructure/pdf.py</code>; <code>recursos/application/selectors.py</code>; <code>editais/domain/validation.py</code></td></tr>
+        <tr><td>Numeração romana dos anexos; casas decimais sob sorteio</td><td>A Revisão avisa o anexo citado sem rótulo; sob sorteio declarado, as casas não são pedidas nem gravadas nem impressas (067)</td><td><code>editais/domain/validation.py</code>; <code>interface/forms.py</code></td></tr>
+        <tr><td>O candidato não chegava à convocação, ao requerimento pedido nela, nem ao prazo contra o Resultado de Etapa</td><td>059 e 063: <em>Ver convocação</em>, a seção Convocação e o topo do acompanhamento dizendo <em>“Se você discordar de {Etapa}, pode recorrer até …”</em></td><td><code>portal/templates/portal/inscricoes.html</code>; <code>portal/situacao.py</code></td></tr>
+        <tr><td>O corte emitido depois do recurso nascia obsoleto</td><td>061 (06/10): a pergunta do reingresso exclui o sucessor que a ordem lida já cita</td><td><code>classificacao/application/corte.py</code></td></tr>
+        <tr><td>O candidato não recebia aviso de resultado</td><td>066: aviso por gesto, de resultado e de chamada por publicação; a chave fica desligada por padrão (ver o <a href="#evolucoes-externo">grupo 4</a>)</td><td><code>avisos/</code></td></tr>
+        <tr><td>Custo de consulta num Processo grande</td><td>Medido em 28/09: linear, ~7 consultas por Edital + 3 por Etapa. Otimizar é decisão, não lacuna</td><td><code>doc/validacao-de-unidades-pre-piloto-2026-09-28.md</code></td></tr>
+        <tr><td>Teste instável (CPF × token CSRF); README declarava 31 tabelas</td><td>O token é retirado antes de afirmar; o README deixou de fixar o número e um teste confere a tabela de incrementos</td><td><code>tests/integration/identidade/test_adicionar_credencial.py</code>; <code>tests/test_readme_acompanha_o_codigo.py</code></td></tr>
+        <tr><td>“Qual Edital precisa de atenção?”: o recurso era agregado e o resto, lista plana</td><td>147: <em>“Precisa de atenção (N em M Editais)”</em>, agrupado por Edital, com o centro de controle (136, 138) e Minhas atividades (160)</td><td><code>interface/templates/interface/processo_detalhe.html</code></td></tr>
+        <tr><td>Duas grafias para o desfecho no portal (<em>“Aceite”</em> e <em>“Vaga aceita”</em>)</td><td>156 (FR-6405): a lista usa o mesmo rótulo</td><td><code>portal/views.py</code>; <code>portal/situacao.py</code></td></tr>
+        <tr><td>O texto do portal para o <code>CR</code> só conferido no navegador</td><td>Testes automáticos (FR-2414 a FR-2416)</td><td><code>tests/integration/portal/test_detalhe_selecao.py</code></td></tr>
+        <tr><td><code>pessoa-&lt;uuid&gt;</code> nos históricos</td><td>107, incremento 2: a tag <code>nome_de_pessoa</code> em 30 templates; só cai no identificador se a pessoa não resolve. O <code>doc/ativacao-do-sso-institucional.md</code> §3 está desatualizado ao dizer o contrário</td><td><code>interface/templatetags/interface_extras.py</code></td></tr>
+        <tr><td>“Cinco das sete famílias do Kit não existem”</td><td>Hoje são oito (institucional, pós lato sensu, FIC, aperfeiçoamento, Libras, UAB, TMD e internos)</td><td><code>interface/kit_familias/__init__.py</code></td></tr>
+        <tr><td>A janela de impasse entre encerrar e publicar uma Retificação; a proteção da identidade do candidato no banco (A-03)</td><td>113 (31 de 31 tarefas, com as travas do Processo e do Edital); gatilho em inscrição enviada e documento (#357)</td><td><code>specs/113-*/</code>; <code>inscricoes/migrations/0007_imutabilidade_da_enviada.py</code></td></tr>
+        <tr><td>Suceder uma convocação, com motivo</td><td>120 (#385): correção com motivo e <em>“Corrigida em…”</em>. O desfecho segue sem tela (grupo 1)</td><td><code>convocacao.html</code></td></tr>
+        <tr><td>Aviso de pendência por e-mail (QI-7); a marca do Cefor fora do documento</td><td>134 (#435); 109 (31/10): telas, e-mails e página da seleção dizem a unidade de cada ato</td><td><code>portal/templates/portal/base.html</code>; <code>identidade/application/mensagem.py</code></td></tr>
+        <tr><td>Um critério da 008 pedia o Processo na primeira página</td><td>Emendado pela 054 (FR-998): <em>“sem o Processo”</em>, o certo para os Editais reais</td><td><code>specs/008-composicao-institucional/spec.md</code></td></tr>
+        <tr><td>Decididas e executadas desde 26/09</td><td>DP-01 a DP-06, DP-08 item 2, DP-13 (<a href="#heranca">aplicar a todos</a>), DP-14 (ampla na inscrição), DP-16 (não atendimento em lote), DP-17 (automação explícita na Constituição 1.2.0), DP-19 (campos definitivos na Revisão) e DP-21 (limite de 13.000 campos da composição). A DP-05 foi revista em 21/10 pela 097, que voltou à opção A — a vaga acrescida depois da publicação</td><td><code>.specify/memory/constitution.md</code>; <code>config/settings/base.py</code>; <code>compor_revisao.html</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h3 id="evolucoes-higiene">Divergências entre código e documentação</h3>
+    <ul>
+      <li><strong>O campo <code>Status</code> das specs.</strong> Das 162 pastas, 159 têm a linha, e <strong>73 começam com <code>Draft</code></strong> (eram 67 de 114 na revisão anterior), inclusive as implementadas — entre elas a 069, 070, 071, 072, 097, 100, 101, 102, 113, 114, 116 e 118. O #530 (13/11) corrigiu 35 linhas à mão e guardou a antiga como <em>“Status anterior”</em>, sem decidir a DP-12: nada guarda o campo, o guardião do README só confere a existência da pasta na tabela de incrementos, e o <code>spec-template.md</code> ainda nasce <code>Draft</code>. A 103, a 104 e as 105 a 109 ainda dizem <em>“merge não autorizado”</em>; a 099 diz <em>“PR aberto, merge é do usuário”</em>; a 076 diz <em>“Em emenda”</em>. <strong>Dezesseis</strong> specs — da 077 à 087, a 089, a 091 a 093 e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>. Todas as conferidas estão na <code>main</code>.</li>
+      <li>A 099 e a 100 dizem <em>“Baixar PDF”</em>, e a tela diz <span class="rotulo-ui">Emitir e baixar PDF</span>; a 104 diz <em>“Mostrar as outras N”</em>, e uma tela diz <em>“os outros N”</em>.</li>
+      <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
+      <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
+      <li><code>doc/achado-suite-em-sqlite.md</code> nomeia uma causa; são três (o <code>CLAUDE.md</code> as reparte).</li>
+      <li>A spec 046 lista um consumidor do Resultado que o código torna inalcançável (FR-746: a habilitação do método comum, que <code>validate_common_draw_method</code> recusa).</li>
+      <li>Os rótulos da Retificação têm três grafias (gestão, portal, prévia do <span class="rotulo-ui">Aplicar a todos</span>), sem guardião que as compare: não reli as três telas hoje.</li>
+      <li>Uma falha intermitente na suíte (<code>no_effective_version</code> ao preparar um caso de <code>test_documento.py</code>), vista uma vez em 29/09, sem causa confirmada e sem novo registro.</li>
+    </ul>
 
     <h3 id="evolucoes-nao-fazer">O que o repositório registra que <em>não</em> se deve fazer</h3>
+    <p class="miudo">Conferido em 13/11: nenhuma regra foi contrariada. Duas têm tensão, dita abaixo.</p>
     <div class="aviso aviso-nota">
       <span class="titulo">Registrado, com a razão</span>
       <ul>
         <li>Não acrescentar <code>scheduleEventId</code> e <code>status</code> aos campos da Retificação. A fase já é derivada; o contrato está certo ao chamá-los de estrutural e derivado.</li>
         <li>Não trocar <code>404</code> por <code>403</code> em bloco: quatro das recusas em <code>404</code> protegem vínculo enumerável e estão certas.</li>
-        <li>Não silenciar os sinais do painel para limpá-lo, nem juntar a ele os avisos de composição sem decidir a fronteira: são naturezas diferentes.</li>
-        <li>Não modelar responsável individual: o que falta é a capacidade a pedir, e o produto já sabe dizê-la. A presidência vem do vínculo, e a equipe inicial acumula papéis.</li>
-        <li>Não criar submodalidade, cascata ou heteroidentificação, nem estender o barema a critérios exclusivos ou por Perfil, antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma.</li>
+        <li>Não silenciar os sinais do painel para limpá-lo, nem juntar a ele os avisos de composição sem decidir a fronteira: são naturezas diferentes. O Centro de Controle (136, 138) é superfície nova, e esta conferência não o leu contra a regra.</li>
+        <li>Não modelar responsável individual: o que falta é a capacidade a pedir, e o produto já sabe dizê-la. A presidência vem do vínculo, e a equipe inicial acumula papéis. <strong>Tensão:</strong> a 115 aloca pessoa à conferência por Perfil e a 117 designa pessoa à formalização, mas como base de permissão; a 161 adia a <em>responsabilidade por frente</em> para uma terceira entrega, <em>“só com evidência da comissão real”</em>.</li>
+        <li>Não criar submodalidade, cascata ou heteroidentificação, nem estender o barema a critérios exclusivos ou por Perfil, antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma. <strong>Tensão:</strong> a 158 é spec de cascata entre cotas (<code>Draft</code>) e recomenda compor os subgrupos como Modalidades distintas, sem estrutura nova — sinal de que a família entrou em pauta.</li>
         <li>Não mover a Modalidade para o Edital: ela continua sendo do Perfil (decisão de 25/09).</li>
         <li>Não tratar <span class="rotulo-ui">Aplicar a todos</span> como herança: é materialização. Herdar no conteúdo publicado faria uma Retificação do padrão alterar N Perfis sem dizer.</li>
         <li>Não reduzir a validação por haver padrões: a Retificação, a API e as exceções continuam produzindo qualquer configuração.</li>
         <li>Não apagar campo sem consumidor do esquema: deixar de pedi-lo basta, porque os Editais publicados guardam o valor.</li>
         <li>Não fazer carga retroativa de Edital já executado: o impedimento “inscrições encerradas” é correto.</li>
-        <li>Não tratar teste verde como fluxo compreensível: os defeitos do painel passavam por toda a suíte, e só a segregação de papéis os expôs.</li>
+        <li>Não tratar teste verde como fluxo compreensível: os defeitos do painel passavam por toda a suíte, e só a segregação de papéis os expôs. Os testes de navegador (107, 110, 153) a seguem.</li>
       </ul>
     </div>
   </section>
@@ -14884,6 +14836,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>d184fcee</code>, 144 (A)</td><td>O incremento A da 144, a <a href="#cronograma-pdf-ordem-previa">visibilidade do Evento no PDF</a>, descrito como entregue; a ordenação por data e a prévia seguem como <em>Previsto</em>. Corrigidas as seções que listavam os campos do passo Cronograma e a linha da Retificação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>11/11/2026</td><td><code>main</code> em <code>04797399</code>, 145 e 146</td><td>O sorteio no cartão da vaga (145) e o <a href="#barema-da-etapa">barema da Etapa</a> (146, incrementos A, B e C), descritos como entregues; a Mesa, o recurso, o portal, a Retificação, a Revisão e o PDF ganharam o que a 146 mudou. Corrigidas as frases que diziam que o barema não existe. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>60f9ff24</code>, 147 a 161</td><td>A <a href="#pagina-do-processo">página do Processo</a> reorganizada (147); <a href="#minhas-atividades">Minhas atividades</a> (160, implementada) e <a href="#quem-faz-o-que">“Quem faz o quê”</a> (161, só especificada); a <a href="#publicacao-das-inscricoes">publicação das inscrições</a> (148) e a <a href="#publicacao-das-convocacoes">das convocações, e o gesto único de convocar e publicar</a> (149 e 159); o <a href="#envio-de-varios-documentos">envio de vários documentos</a> (150), a <a href="#convocacao-depois-do-envio">convocação depois do envio</a> (154, US1 e US3) e a <a href="#conferencia-com-o-documento-a-vista">conferência com o documento à vista</a> (157); a <a href="#conferencia-nos-atos-irreversiveis">prevenção nos atos irreversíveis</a> (152, parcial), a <a href="#passagem-ao-setor">passagem ao setor</a> (153) e a <a href="#vaga-sem-ocupante">vaga reservada sem ocupante</a> (155, entrega mínima); o <a href="#desfecho-comunicado">desfecho comunicado</a> (156) e a <a href="#passagem-entre-cotas">passagem entre cotas</a> (158) como Previstos. A designação pela presidência (117, D-025) e os cenários C16 e C17 (134) entraram em <a href="#formalizacao">formalização</a> e <a href="#cenarios-de-treinamento">cenários</a>. Corrigidas as frases que tratavam “Minhas Etapas”, a página do Processo antiga, o botão da faixa seguinte e a contagem de tabelas append-only (59). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>13/11/2026</td><td><code>main</code> em <code>95904252</code></td><td>A seção <a href="#pg-evolucoes">O que ainda precisa evoluir</a> refeita: 186 itens conferidos de novo no código, nas specs e no histórico, separados em <a href="#evolucoes-codigo">falta código</a>, <a href="#evolucoes-decisoes">decisão do usuário</a>, <a href="#evolucoes-validacao">validação com pessoas</a> e <a href="#evolucoes-externo">depende de fora</a>, com <a href="#evolucoes-resolvidas">o que já fechou</a> à parte. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td>PRs 524 e 526, sobre a <code>main</code> em <code>26748113</code></td><td>A <a href="#vitrine-em-andamento-e-paginas">vitrine</a> separa <em>Em andamento</em> de <em>Seleções encerradas</em> pelo desfecho, ordena cada grupo pelo que importa a quem lê e mostra de dez em dez o que já fechou as inscrições; a etiqueta <em>“Em andamento”</em> chega também à página do Edital. Sem spec própria. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
