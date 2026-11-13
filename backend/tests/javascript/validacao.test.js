@@ -16,7 +16,7 @@ const SCRIPT = path.join(
 );
 
 const PERFIL = { code: "P1", name: "Perfil", immediateVacancies: "1", reserveType: "NONE",
-                 reserveLimit: "", modalidades: "" };
+                 modalidades: "" };
 const EVENTO = { type: "INSCRICAO", description: "Inscrições", startAt: "2026-09-01T09:00",
                  endAt: "" };
 
@@ -52,41 +52,17 @@ function validar(formulario) {
   return formulario;
 }
 
-test("reserva limitada sem limite fica inválida e bloqueia o envio", () => {
-  const form = validar(comPerfis({ reserveType: "LIMITED", reserveLimit: "" }));
+test("reserva limitada é aceita sem número: ele vem do corte (162)", () => {
+  const form = validar(comPerfis({ reserveType: "LIMITED" }));
 
-  assert.equal(form.mensagemDe("reserveLimit"), "Cadastro Reserva limitado exige um limite.");
-  assert.equal(form.invalidoEmAria("reserveLimit"), "true");
-  assert.equal(form.checkValidity(), false);
-  assert.equal(form.disparar("submit").impedido, true);
-});
-
-test("reserva limitada com limite é aceita", () => {
-  const form = validar(comPerfis({ reserveType: "LIMITED", reserveLimit: "10" }));
-
-  assert.equal(form.mensagemDe("reserveLimit"), "");
-  assert.equal(form.invalidoEmAria("reserveLimit"), null);
   assert.equal(form.checkValidity(), true);
+  assert.equal(form.disparar("submit").impedido, false);
 });
 
-test("reserva inexistente com limite preenchido é recusada e diz o que fazer", () => {
-  const form = validar(comPerfis({ reserveType: "NONE", reserveLimit: "5" }));
-
-  assert.match(form.mensagemDe("reserveLimit"), /inexistente não admite limite/);
-  assert.match(form.mensagemDe("reserveLimit"), /Apague o valor ou mude o tipo/);
-});
-
-test("reserva ilimitada sem limite é aceita", () => {
-  const form = validar(comPerfis({ reserveType: "UNLIMITED", reserveLimit: "" }));
-
-  assert.equal(form.mensagemDe("reserveLimit"), "");
-  assert.equal(form.checkValidity(), true);
-});
-
-test("reserva ilimitada com limite preenchido é recusada", () => {
-  const form = validar(comPerfis({ reserveType: "UNLIMITED", reserveLimit: "5" }));
-
-  assert.match(form.mensagemDe("reserveLimit"), /ilimitado não admite limite/);
+test("nenhuma espécie de reserva pede número", () => {
+  for (const especie of ["NONE", "LIMITED", "UNLIMITED"]) {
+    assert.equal(validar(comPerfis({ reserveType: especie })).checkValidity(), true, especie);
+  }
 });
 
 test("vagas negativas são recusadas", () => {
@@ -141,14 +117,14 @@ test("evento pontual, sem término, é aceito", () => {
 });
 
 test("corrigir o campo limpa a mensagem e a marcação ARIA", () => {
-  const form = validar(comPerfis({ reserveType: "LIMITED", reserveLimit: "" }));
+  const form = validar(comPerfis({ immediateVacancies: "-1" }));
   assert.equal(form.checkValidity(), false);
 
-  form.elements.find((campo) => campo.name.endsWith("-reserveLimit")).value = "3";
+  form.elements.find((campo) => campo.name.endsWith("-immediateVacancies")).value = "3";
   form.disparar("input");
 
-  assert.equal(form.mensagemDe("reserveLimit"), "");
-  assert.equal(form.invalidoEmAria("reserveLimit"), null);
+  assert.equal(form.mensagemDe("immediateVacancies"), "");
+  assert.equal(form.invalidoEmAria("immediateVacancies"), null);
   assert.equal(form.checkValidity(), true);
   assert.equal(form.disparar("submit").impedido, false);
 });
@@ -159,10 +135,12 @@ test("linha inserida já inválida é pega no envio, mesmo sem nenhum `input`", 
   const form = comPerfis({});
   montar({ formulario: form });
   carregar(SCRIPT);
-  form.linhas.push(linha("perfil", 1, perfil({ reserveType: "LIMITED", reserveLimit: "" })));
+  form.linhas.push(linha("perfil", 1, perfil({ immediateVacancies: "-1" })));
 
   assert.equal(form.disparar("submit").impedido, true);
   // `mensagemDe` acha o primeiro campo com o sufixo; a linha inválida é a segunda.
-  const limiteDaLinhaNova = form.elements.find((campo) => campo.name === "perfil-1-reserveLimit");
-  assert.equal(limiteDaLinhaNova.validationMessage, "Cadastro Reserva limitado exige um limite.");
+  const vagasDaLinhaNova = form.elements.find(
+    (campo) => campo.name === "perfil-1-immediateVacancies"
+  );
+  assert.equal(vagasDaLinhaNova.validationMessage, "Vagas imediatas não podem ser negativas.");
 });

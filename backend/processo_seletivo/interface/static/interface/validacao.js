@@ -39,38 +39,6 @@
     return [].slice.call(formulario.querySelectorAll("fieldset.linha." + classe));
   }
 
-  /* `NONE` e `UNLIMITED` não admitem limite; `LIMITED` exige um não negativo. É a dependência
-     condicional que a pessoa mais erra: escolhe o tipo e esquece o campo ao lado.
-
-     O tipo é um grupo de rádios com o mesmo `name`, e por isso o `:checked`. Sem ele,
-     `querySelector` devolve o primeiro rádio, que é sempre `NONE`: o limite digitado era recusado
-     como "inexistente não admite limite", o limite vazio o servidor recusava, e "limitado" ficava
-     inalcançável — quem insistia escolhia "ilimitado", e o Edital publicava o oposto do que dizia. */
-  function reservaDoPerfil(linha) {
-    var tipo = texto(linha.querySelector('[name$="-reserveType"]:checked')) || "NONE";
-    var limite = campo(linha, "reserveLimit");
-    if (!limite) return;
-    var valor = texto(limite);
-    if (tipo === "LIMITED") {
-      if (valor === "") {
-        marcar(limite, "Cadastro Reserva limitado exige um limite.");
-      } else if (Number(valor) < 0) {
-        marcar(limite, "O limite do Cadastro Reserva não pode ser negativo.");
-      } else {
-        marcar(limite, "");
-      }
-      return;
-    }
-    marcar(
-      limite,
-      valor === ""
-        ? ""
-        : tipo === "NONE"
-          ? "Cadastro Reserva inexistente não admite limite. Apague o valor ou mude o tipo."
-          : "Cadastro Reserva ilimitado não admite limite. Apague o valor ou mude o tipo."
-    );
-  }
-
   function vagasDoPerfil(linha) {
     var vagas = campo(linha, "immediateVacancies");
     var valor = texto(vagas);
@@ -133,7 +101,6 @@
   function validar() {
     var perfis = linhas("perfil");
     perfis.forEach(function (linha) {
-      reservaDoPerfil(linha);
       vagasDoPerfil(linha);
       modalidadesDoPerfil(linha);
     });

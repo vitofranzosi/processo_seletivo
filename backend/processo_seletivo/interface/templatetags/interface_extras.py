@@ -95,7 +95,7 @@ def recusa_de(recusas, prefixo, indice, campo, sub=None):
     """A mensagem de recusa daquele controle, ou vazio.
 
     Existe como tag, e não como filtro, porque o `id` do controle é composto de três partes —
-    `perfil-3-reserveLimit` — e `{% include ... with alvo="perfil-{{ indice }}-..." %}` não
+    `perfil-3-immediateVacancies` — e `{% include ... with alvo="perfil-{{ indice }}-..." %}` não
     interpola: dentro de uma tag, `{{ }}` é texto literal, e o alvo nunca casaria.
 
     `sub` é a quarta parte, e existe para as coleções aninhadas no Perfil, cujo controle se chama

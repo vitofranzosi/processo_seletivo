@@ -35,7 +35,12 @@ from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from processo_seletivo.seguranca.domain import Actor
 from tests.fixtures.anexos import criar_anexo
 from tests.fixtures.edital import actor_headers
-from tests.fixtures.legado import antes_da_116
+from tests.fixtures.legado import (
+    antes_da_116,
+    antes_da_162,
+    devolver_o_numero_digitado,
+    sem_o_numero_digitado,
+)
 from tests.fixtures.publicacao import create_retification, levar_a_publicacao, publish_retification
 
 PASTA = Path(__file__).resolve().parent / "corpus_070"
@@ -222,15 +227,25 @@ def publicar_do_corpus(
     # (FR-3623). O corpus é republicado como foi publicado — sem a forma e sem a conferência do
     # concurso, que não existiam —, e não reescrito: há caso que compara o republicado com ele. As
     # Retificações também são do acervo, e por isso ficam dentro.
-    with pytest.MonkeyPatch.context() as antes_da_069, antes_da_116():
+    #
+    # **E antes da `162`**: o cadastro limitado do acervo traz o número digitado, que a gravação de
+    # hoje recusa, e o 01/2026 tem um ilimitado sem continuação. O número volta à linha antes da
+    # submissão, e o conteúdo o publica como publicava (`antes_da_162`).
+    rascunho, digitados = sem_o_numero_digitado(rascunho_do_conteudo(original, deslocamento))
+
+    def antes_de_submeter(edital):
+        teto_e_requerimento(edital)
+        devolver_o_numero_digitado(edital, digitados)
+
+    with pytest.MonkeyPatch.context() as antes_da_069, antes_da_116(), antes_da_162():
         if not catalogo_vigente:
             antes_da_069.setattr(secoes, "CATALOGO", secoes.CATALOGO_DA_054)
             antes_da_069.setattr(validation, "CATALOGO", secoes.CATALOGO_DA_054)
         edital = levar_a_publicacao(
             api_client,
             edital,
-            draft=rascunho_do_conteudo(original, deslocamento),
-            antes_de_submeter=teto_e_requerimento,
+            draft=rascunho,
+            antes_de_submeter=antes_de_submeter,
             chave=f"{chave}-publicacao",
         )
 

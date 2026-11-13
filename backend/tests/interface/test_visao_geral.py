@@ -15,6 +15,7 @@ from django.utils import timezone
 from processo_seletivo.inscricoes.models import Inscricao
 from tests.fixtures.edital import identidade_do_marco, marco_minimo
 from tests.fixtures.publicacao import encerrar_inscricoes, publish_original
+from tests.fixtures.snapshot import com_cadastro
 from tests.fixtures.supervisao import (
     perfil_de,
     publicar_no_processo,
@@ -305,6 +306,7 @@ def test_sc213_o_edital_misto_declara_a_populacao_da_razao(
         "reserveType": "UNLIMITED",
         "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(6)))],
     }
+    com_cadastro(so_reserva, "UNLIMITED")  # 162: o ilimitado continua além da faixa
     draft["profiles"] = [com_vaga, so_reserva]
     misto = publicar_no_processo(
         api_client,
@@ -497,6 +499,7 @@ def test_t023b_com_varios_perfis_a_marca_nomeia_quantos_de_quantos(
         "reserveType": "UNLIMITED",
         "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(9)))],
     }
+    com_cadastro(so_reserva, "UNLIMITED")  # 162: o ilimitado continua além da faixa
     draft["profiles"] = [com_vaga, so_reserva]
     varios = publicar_no_processo(
         api_client,
@@ -605,7 +608,6 @@ def test_t009b_as_tres_especies_de_reserva_se_distinguem_na_identidade(
         "code": "LIM",
         "name": "Reserva limitada",
         "reserveType": "LIMITED",
-        "reserveLimit": 12,
         "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(8)))],
     }
     ilimitada = {
@@ -616,6 +618,9 @@ def test_t009b_as_tres_especies_de_reserva_se_distinguem_na_identidade(
         "reserveType": "UNLIMITED",
         "classificationMilestones": [marco_minimo(identidade_do_marco(perfil_de(9)))],
     }
+    # O cadastro coerente com o corte (162): o número 12 sai do excedente, e o ilimitado continua.
+    com_cadastro(limitada, "LIMITED", 12)
+    com_cadastro(ilimitada, "UNLIMITED")
     draft["profiles"] = [sem, limitada, ilimitada]
     com_reserva = publicar_no_processo(
         api_client,

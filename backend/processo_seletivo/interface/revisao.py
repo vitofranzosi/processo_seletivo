@@ -24,8 +24,8 @@ elabora; o que este módulo garante é que nenhuma delas fique de fora.
 import re
 from datetime import datetime
 
+from processo_seletivo.editais.domain import cadastro_de_reserva, quadro
 from processo_seletivo.editais.domain import marcos as regras_do_marco
-from processo_seletivo.editais.domain import quadro
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.documentos import denominacao_do_codigo
 from processo_seletivo.editais.domain.mutabilidade import RAIZ
@@ -94,11 +94,9 @@ def _perfil(perfil, snapshot):
         # Ler os dois juntos é o que torna a divergência visível no único momento em que corrigi-la
         # ainda é barato — depois da publicação, a mesma informação custa uma Retificação.
         _vagas_e_quadro(perfil),
-        Rotulada(
-            "Cadastro Reserva",
-            RESERVA.get(perfil.get("reserveType"), "—")
-            + (f" em {perfil['reserveLimit']}" if perfil.get("reserveLimit") is not None else ""),
-        ),
+        # O texto curto da gestão, pela regra única (162, FR-6930): no limitado, o número vem do
+        # corte do marco que convoca, e a Revisão o diz antes da publicação.
+        Rotulada("Cadastro Reserva", cadastro_de_reserva.do_perfil(perfil).descricao_curta()),
     ]
     if perfil.get("locality"):
         linhas.append(Rotulada("Localidade", perfil["locality"]))
@@ -645,6 +643,7 @@ def _leitura_do_marco(marco, perfil, snapshot):
             etapas,
             sem_cadastro=sem_cadastro_de_reserva(snapshot),
             com_reservadas=tem_lista_reservada(snapshot, perfil),
+            perfil=perfil,
         )
         pares.append(
             (

@@ -75,8 +75,11 @@ def rascunho_rico():
                 "description": "Perfil da oferta anterior",
                 "requirements": ["Graduação"],
                 "immediateVacancies": 40,
+                # Limitado, e o número vem do corte (162): o excedente de 60 dá ao cadastro 22
+                # além das 40 vagas — e ainda 12 depois da Retificação que as leva a 50 —, e a cópia
+                # o carrega com o marco.
                 "reserveType": "LIMITED",
-                "reserveLimit": 10,
+                "reserveLimit": None,
                 "locality": "Vitória",
                 "duties": "Produzir material",
                 "workload": "40h",
@@ -157,7 +160,7 @@ def rascunho_rico():
                         "cutRule": {
                             "targetKind": "FIXED",
                             "targetCount": 2,
-                            "surplusCount": 1,
+                            "surplusCount": 60,
                             "tieOutcome": "STRICT",
                             "governedStage": ETAPA,
                             "continuation": "NONE",
@@ -321,7 +324,8 @@ def test_a_copia_traz_as_colecoes_da_origem(destino, origem, elaborador):
     perfil = copiado.perfis.get()
     assert perfil.code == "P1"
     assert perfil.immediate_vacancies == 40
-    assert perfil.reserve_limit == 10
+    # O número digitado não viaja desde a `162` (FR-6931): o do destino vem do corte copiado.
+    assert (perfil.reserve_type, perfil.reserve_limit) == ("LIMITED", None)
     assert perfil.modalidades.count() == 1
     assert perfil.modalidades.get().regra_normativa.foundation == "Lei 12.990/2014"
     assert perfil.fatos.count() == 1

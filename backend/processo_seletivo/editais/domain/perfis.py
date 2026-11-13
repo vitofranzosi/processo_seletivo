@@ -197,9 +197,14 @@ def validate_profile(profile: dict, *, modalidades_do_edital: set[str] | None = 
             campo="reserveLimit",
             identidade=profile.get("id", ""),
         )
-    if reserve_type == "LIMITED" and (reserve_limit is None or reserve_limit < 0):
+    # **O número do limitado não se digita** (162, FR-6931, T-003). Ele vem do corte do marco que
+    # convoca, e um número digitado ao lado seria a segunda fonte que o documento contradizia —
+    # "até 6" e "os 10 primeiros" no mesmo Perfil. A recusa vale para todo caminho que grava: a
+    # tela não envia mais o campo, e a API e o assistente de elaboração ouvem de onde ele vem.
+    if reserve_type == "LIMITED" and reserve_limit is not None:
         raise ProfileValidationError(
-            "Cadastro Reserva limitado exige limite não negativo.",
+            "O número do cadastro de reserva limitado não se digita: ele vem do corte do marco "
+            "que convoca deste Perfil.",
             campo="reserveLimit",
             identidade=profile.get("id", ""),
         )

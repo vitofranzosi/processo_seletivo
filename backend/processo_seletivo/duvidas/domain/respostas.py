@@ -43,6 +43,7 @@ from processo_seletivo.duvidas.domain.estruturas import (
     ValorFuturo,
 )
 from processo_seletivo.duvidas.domain.origem import origens
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain.documentos import (
     NA_CONVOCACAO,
     NAO_SE_APLICA,
@@ -226,11 +227,38 @@ def _p03(contexto, parametros, pergunta, canal):
             rotulos.em_palavras(rotulos.RESERVA, reserva),
         )
     )
-    limite = leitura.numero_legivel(perfil.get("reserveLimit"))
+    # Sem número legível — o limitado sem corte —, a explicação diz "não declarado", como dizia.
+    limite = leitura.numero_legivel(None)
     if reserva == "LIMITED":
-        cartoes.append(
-            leitura.dado(onde, f"{base}/reserveLimit", "Limite do cadastro de reserva", limite)
-        )
+        # O número é o da regra única (162, FR-6946). O legado cita o campo que publicou; o
+        # derivado cita o excedente do corte do marco que convoca, que é de onde ele vem.
+        cadastro = cadastro_de_reserva.do_perfil(perfil)
+        if cadastro.legado:
+            cartoes.append(
+                leitura.dado(
+                    onde,
+                    f"{base}/reserveLimit",
+                    "Limite do cadastro de reserva",
+                    leitura.numero_legivel(cadastro.publicado),
+                )
+            )
+            limite = leitura.numero_legivel(cadastro.publicado)
+        elif (marco := cadastro.marco_que_convoca) is not None and cadastro.por_lista:
+            cartoes.append(
+                leitura.dado(
+                    onde,
+                    f"{base}/classificationMilestones/id={marco.marco_id}/cutRule/surplusCount",
+                    "Limite do cadastro de reserva",
+                    cadastro.descricao_curta().removeprefix("Limitado: "),
+                )
+            )
+            # A explicação diz "limitado a {limite}": o número, e não o "até" do cartão.
+            if (unico := cadastro.numero_unico) is not None:
+                limite = leitura.numero_legivel(unico) + (
+                    " em cada lista de concorrência" if cadastro.com_modalidade else ""
+                )
+            else:
+                limite = ", ".join(f"{lista.numero} {lista.codigo}" for lista in cadastro.por_lista)
     reversao = (perfil.get("vacancyReversion") or {}).get("kind")
     if reversao:
         cartoes.append(

@@ -22,7 +22,7 @@ function cartao(extra = {}) {
     denominacao: "Professor de Informática",
     localidade: "Vitória",
     vagas: "40",
-    reserva: { valor: "LIMITED", resumo: "limitado", limite: "6" },
+    reserva: { valor: "LIMITED", resumo: "limitado: até 6" },
     convocacao: "por publicação",
     modalidades: [
       { codigo: "AC", percentual: "" },
@@ -39,7 +39,7 @@ test("a linha diz o Perfil com as frases da tela", () => {
     codigo: "P03",
     perfil: "Professor de Informática · Vitória",
     vagas: "40",
-    reserva: "limitado a 6",
+    reserva: "limitado: até 6",
     modalidades: "AC · PPI 25%",
     convocacao: "por publicação",
     situacao: "sem pendência",
@@ -54,9 +54,13 @@ test("o Perfil sem código ainda aparece, e se edita", () => {
   assert.equal(linha.vagas, "0");
 });
 
-test("o limite só acompanha a reserva limitada", () => {
+test("a reserva é o resumo que o servidor escreveu, e nenhum campo de número", () => {
+  // Desde a 162 o número do limitado vem do corte, e o servidor o escreve no `data-resumo` da
+  // opção. Um `limite` que ainda chegasse no cartão não entra na linha.
+  const comCampoAntigo = { valor: "LIMITED", resumo: "limitado: até 3", limite: "6" };
   const ilimitada = { valor: "UNLIMITED", resumo: "ilimitado", limite: "6" };
 
+  assert.equal(regras.resumo(cartao({ reserva: comCampoAntigo })).reserva, "limitado: até 3");
   assert.equal(regras.resumo(cartao({ reserva: ilimitada })).reserva, "ilimitado");
 });
 

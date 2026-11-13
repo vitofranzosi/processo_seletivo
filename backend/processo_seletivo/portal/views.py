@@ -37,6 +37,7 @@ from processo_seletivo.divulgacao.application.selectors import (
     publicacao_por_id as publicacao_de_resultado,
 )
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain.documentos import (
     NA_CONVOCACAO,
     NA_INSCRICAO,
@@ -214,7 +215,7 @@ def _perfil(perfil, conteudo):
         "atribuicoes": (perfil.get("duties") or "").strip(),
         "carga_horaria": (perfil.get("workload") or "").strip(),
         "remuneracao": (perfil.get("compensation") or "").strip(),
-        "oferta": _oferta(vagas, perfil.get("reserveType"), perfil.get("reserveLimit")),
+        "oferta": _oferta(vagas, perfil.get("reserveType"), perfil),
         # A ampla sem Modalidade entra na lista pelo mesmo critério que a inscrição a oferece
         # (FR-039): anunciar só a cota diria ao não-cotista que a vaga não é para ele.
         "modalidades": [
@@ -223,7 +224,7 @@ def _perfil(perfil, conteudo):
     }
 
 
-def _oferta(vagas, tipo_de_reserva, limite_da_reserva):
+def _oferta(vagas, tipo_de_reserva, perfil):
     """O que está sendo oferecido, na leitura de quem decide (024, FR-136, D-007).
 
     Um Perfil com zero vagas imediatas e cadastro reserva é oportunidade legítima e frequente — e a
@@ -243,9 +244,23 @@ def _oferta(vagas, tipo_de_reserva, limite_da_reserva):
     # `is not None`, e não veracidade: o domínio aceita `reserveLimit = 0` — `perfis.py` só recusa
     # limite **negativo** —, e zero é limite declarado. Testado por veracidade, ele caía no ramo do
     # ilimitado e a tela dizia "sem limite declarado" sobre um Edital que declarou o limite.
-    if tipo_de_reserva == "LIMITED" and limite_da_reserva is not None:
-        plural = "" if limite_da_reserva == 1 else "s"
-        detalhe = f"até {limite_da_reserva} classificado{plural}, para convocação futura"
+    # **O número é o da regra única** (162, FR-6945): o digitado no Perfil publicado antes, e o do
+    # corte nos demais — por lista, quando o Perfil tem Modalidade.
+    cadastro = cadastro_de_reserva.do_perfil(perfil)
+    numero = cadastro.numero_mostrado()
+    if tipo_de_reserva == "LIMITED" and numero is not None:
+        plural = "" if numero == 1 else "s"
+        em_cada = (
+            " em cada lista de concorrência"
+            if cadastro.com_modalidade and not cadastro.legado
+            else ""
+        )
+        detalhe = f"até {numero} classificado{plural}{em_cada}, para convocação futura"
+    elif tipo_de_reserva == "LIMITED" and cadastro.por_lista:
+        detalhe = (
+            f"até {cadastro_de_reserva.frase_das_listas(cadastro.por_lista)}, "
+            "para convocação futura"
+        )
     else:
         detalhe = "sem limite declarado, para convocação futura"
     return {"titulo": "Cadastro reserva", "detalhe": detalhe}

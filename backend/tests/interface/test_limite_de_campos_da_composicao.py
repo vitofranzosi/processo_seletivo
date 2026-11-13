@@ -122,7 +122,7 @@ def _perfil(i):
         "requirements": ["Mestrado na área", "Experiência docente de dois anos"],
         "immediateVacancies": 10,
         "reserveType": "LIMITED",
-        "reserveLimit": 20,
+        "reserveLimit": None,
         "locality": f"Campus {i}",
         "competitionModalities": [
             {"id": ampla, "code": "AC", "name": "Ampla concorrência"},

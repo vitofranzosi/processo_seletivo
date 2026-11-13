@@ -140,7 +140,8 @@ PERFIL_COMPLETO = {
     "requirements": ["Curso técnico em Informática"],
     "immediateVacancies": 2,
     "reserveType": "LIMITED",
-    "reserveLimit": 5,
+    # O número do limitado vem do corte desde a `162` (FR-6931): o rascunho não o carrega.
+    "reserveLimit": None,
     "locality": "Campus Vitória",
     "duties": "Manutenção dos laboratórios.",
     "workload": "40h semanais",
@@ -512,7 +513,6 @@ def _perfil_como_a_tela_o_envia():
         "perfil-0-requirements": PERFIL_COMPLETO["requirements"][0],
         "perfil-0-immediateVacancies": "2",
         "perfil-0-reserveType": "LIMITED",
-        "perfil-0-reserveLimit": "5",
         "perfil-0-locality": PERFIL_COMPLETO["locality"],
         "perfil-0-duties": PERFIL_COMPLETO["duties"],
         "perfil-0-workload": PERFIL_COMPLETO["workload"],

@@ -737,3 +737,50 @@ __all__ = [
     "ocupacao_do_recorte",
     "ocupantes_da_ampla",
 ]
+
+
+# --- A nota do cadastro legado (162) --------------------------------------------------------------
+
+
+def nota_do_cadastro_legado(conteudo, perfil_id):
+    """A frase da FR-6947 para o Perfil publicado antes da `162` com número digitado, ou `None`.
+
+    **O Edital continua dizendo o número que publicou**, e a publicação é imutável; o que se corrige
+    é o que a condução sabe. Sem a nota, quem convoca leria "limitado em 6" e pararia no sexto, ou
+    esperaria que o sistema parasse — e quem o sistema alcança é quem o corte alcança. A frase sai
+    também quando os dois números coincidem (FR-6949): o sistema continua não aplicando o publicado.
+    """
+    from processo_seletivo.editais.domain import cadastro_de_reserva
+
+    perfil = next(
+        (
+            item
+            for item in (conteudo or {}).get("profiles") or []
+            if isinstance(item, dict) and str(item.get("id")) == str(perfil_id)
+        ),
+        None,
+    )
+    if perfil is None:
+        return None
+    cadastro = cadastro_de_reserva.do_perfil(perfil)
+    if not cadastro.legado:
+        return None
+    inicio = (
+        f"O Edital publicou cadastro de reserva limitado em {cadastro.publicado}. O sistema não "
+        "aplica esse número"
+    )
+    if not cadastro.por_lista:
+        return f"{inicio}, e nenhum marco que convoca deste Perfil declara corte."
+    if cadastro.alcance_cresce:
+        return (
+            f"{inicio}: a convocação alcança quem o corte alcança, e a faixa cresce pela faixa "
+            "seguinte do corte, na ordem."
+        )
+    unico = cadastro.numero_unico
+    if unico is not None:
+        alcance = f"até {unico} classificados além das vagas" + (
+            " em cada lista de concorrência" if cadastro.com_modalidade else ""
+        )
+    else:
+        alcance = f"até {cadastro_de_reserva.frase_das_listas(cadastro.por_lista)}, além das vagas"
+    return f"{inicio}: a convocação alcança quem o corte alcança — {alcance}."

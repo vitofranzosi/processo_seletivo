@@ -95,8 +95,7 @@ campos já é o digitado.
   </div>
   {% comment %}
   Quantas vagas agora, e o que acontece depois delas — as duas metades da mesma pergunta, e por isso
-  na mesma linha. O limite continua dentro da opção que o pede: `validate_profile` recusa limite na
-  reserva inexistente e na ilimitada, e o exige na limitada.
+  na mesma linha. Debaixo da opção limitada, a nota diz de onde vem o número: do corte (162).
 
   As três viraram opções, e não continuaram num `select`, porque um `select` não tem onde aninhar o
   campo que a escolha pede. O rótulo de cada uma vem de `forms.RESERVA`, num lugar só.
@@ -118,24 +117,20 @@ campos já é o digitado.
       <p class="opcao">
         <input type="radio" id="perfil-{{ indice }}-reserveType-{{ valor }}"
                name="perfil-{{ indice }}-reserveType" value="{{ valor }}"
-               data-resumo="{% if valor == "LIMITED" %}limitado{% elif valor == "UNLIMITED" %}ilimitado{% else %}não há{% endif %}"
+               data-resumo="{% if valor == "LIMITED" %}{{ perfil.cadastro.resumo|default:"limitado" }}{% elif valor == "UNLIMITED" %}ilimitado{% else %}não há{% endif %}"
+               {% if valor == "LIMITED" %}aria-describedby="cadastro-perfil-{{ indice }}"{% endif %}
                {% if perfil.reserveType == valor or not perfil.reserveType and valor == "NONE" %}checked{% endif %}>
         <label for="perfil-{{ indice }}-reserveType-{{ valor }}">{{ rotulo }}</label>
       </p>
       {% if valor == "LIMITED" %}
+      {% comment %}
+      O número do limitado não se digita desde a `162` (FR-6931, FR-6932): ele vem do corte do marco
+      que convoca, e a nota diz o que o corte já salvo produz. É do Perfil, e não explicação que se
+      repete entre cartões — por isso nota, e não a explicação comum da etapa.
+      {% endcomment %}
       <div class="campos dependentes so-limitada">
-        <p class="campo curto">
-          <label for="perfil-{{ indice }}-reserveLimit">Limite da reserva</label>
-          {% recusa_de recusas "perfil" indice "reserveLimit" as recusado %}
-          <input type="number" min="0" id="perfil-{{ indice }}-reserveLimit"
-                 name="perfil-{{ indice }}-reserveLimit" value="{{ perfil.reserveLimit|default:'' }}"
-                 placeholder="ex.: 6"
-                 aria-describedby="ajuda-reserva-{{ indice }}{% if recusado %} recusa-perfil-{{ indice }}-reserveLimit{% endif %}"
-                 {% if recusado %}aria-invalid="true"{% endif %}>
-          {% if recusado %}<span class="recusa" role="alert" id="recusa-perfil-{{ indice }}-reserveLimit">{{ recusado }}</span>{% endif %}
-          <span class="oculto" id="ajuda-reserva-{{ indice }}">Quantas pessoas o cadastro comporta.
-            O Edital publica "cadastro reserva limitado em 6".</span>
-        </p>
+        <p class="nota" id="cadastro-perfil-{{ indice }}">{{ perfil.cadastro.frase|default:"O número vem do corte do marco que convoca deste Perfil, na etapa Classificação." }}{% if perfil.cadastro.listas %}
+          {% for lista in perfil.cadastro.listas %}<br>{{ lista }}{% endfor %}{% endif %}</p>
       </div>
       {% endif %}
       {% endfor %}

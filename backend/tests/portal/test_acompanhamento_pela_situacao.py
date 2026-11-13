@@ -35,6 +35,7 @@ from tests.fixtures.convocacao import montar_cenario_da_convocacao
 from tests.fixtures.divulgacao import entrar_como_titular
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.publicacao import publish_original
+from tests.fixtures.snapshot import com_cadastro
 from tests.fixtures.sorteio import LISTA_PCD, LISTA_PPI, MARCO, marco_com_metodo
 from tests.interface.test_portal_caminho_da_convocacao import (
     comunicar,
@@ -129,7 +130,8 @@ def _publicar_edital(api_client, manager_headers, process_payload, *, reserva, d
     marco_com_metodo(rascunho, perfil_id=PROFILE_ID, etapa_id=rascunho["stages"][1]["id"])
     for perfil in rascunho["profiles"]:
         if str(perfil["id"]) == str(PROFILE_ID):
-            perfil["reserveType"], perfil["reserveLimit"] = reserva
+            # O número do limitado vem do corte desde a `162`: o excedente que o dá (FR-6929).
+            com_cadastro(perfil, *reserva)
             if dois_marcos:
                 # O banco recusa ato de marco que a versão não declara; o segundo é cópia do
                 # primeiro, com identidade e nome próprios.

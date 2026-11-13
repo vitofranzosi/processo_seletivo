@@ -17,17 +17,18 @@ referência volta a ser caminho. Quem elabora um Edital tem um problema administ
 problema de representação (FR-019).
 """
 
+import copy
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
-from processo_seletivo.editais.domain import mutabilidade
+from processo_seletivo.editais.domain import cadastro_de_reserva, mutabilidade
 from processo_seletivo.editais.domain import secoes as catalogo
 from processo_seletivo.editais.domain.marcos import declara_sorteio
 from processo_seletivo.editais.domain.validation import vazio_e_ausencia
 from processo_seletivo.interface.forms import opcoes_do_metodo
 from processo_seletivo.interface.templatetags.interface_extras import contagem
-from processo_seletivo.publicacoes.domain.changes import ABSENT, resolve_path
+from processo_seletivo.publicacoes.domain.changes import ABSENT, apply_change, resolve_path
 from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
 
@@ -618,7 +619,8 @@ NOVO_PERFIL = [
     ("workload", "Carga horária", TEXTO),
     ("compensation", "Remuneração", TEXTO),
     ("immediateVacancies", "Vagas imediatas", INTEIRO),
-    ("reserveLimit", "Limite do Cadastro Reserva", INTEIRO),
+    # Sem o limite (162, T-003): o Perfil acrescentado nasce sem cadastro de reserva, e "não há"
+    # não admite número. O campo que ele oferecia publicava um Perfil incoerente.
     ("requirements", "Requisitos", LISTA),
 ]
 # Uma linha do quadro acrescentada por Retificação (025, FR-171). **Sem ela, nenhum Edital já
@@ -840,6 +842,18 @@ ROTULO_DO_VAZIO = {
     # diz só que ele não recorta **por código** — os outros dois campos podem estar recortando.
     "documentRequirements": {"modalityCode": "Não recorta por código"},
 }
+
+
+def _campos_do_perfil(perfil):
+    """`CAMPOS_PERFIL`, com o limite do cadastro só no Perfil legado (162, FR-6948, FR-6950).
+
+    O Perfil publicado antes da `162` traz o número digitado, e ele continua retificável como era.
+    Nos demais, o número vem do corte do marco que convoca, e se retifica pelo alvo e pelo excedente
+    dele: um campo de número aqui seria a segunda fonte que a `162` removeu.
+    """
+    if cadastro_de_reserva.do_perfil(perfil).legado:
+        return CAMPOS_PERFIL
+    return [campo for campo in CAMPOS_PERFIL if campo[0] != "reserveLimit"]
 
 
 def _grupo(
@@ -1371,7 +1385,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 # "este Edital não reverte", e nada nasce enquanto ele fica ali. Até a 048 o campo
                 # só aparecia com o objeto declarado, e o Perfil publicado sem reversão não tinha
                 # como declará-la pela tela (G16-001).
-                CAMPOS_PERFIL + CAMPOS_DA_REVERSAO,
+                _campos_do_perfil(perfil) + CAMPOS_DA_REVERSAO,
                 tipo="Perfil",
                 nome=nome_do_perfil,
                 # **Sem isto o seletor nasce vazio**, e um campo de referência sem opção não
@@ -2098,7 +2112,7 @@ def _perfil_completo(valores):
         "requirements": valores.get("requirements") or [],
         "immediateVacancies": valores.get("immediateVacancies") or 0,
         "reserveType": "NONE",
-        "reserveLimit": valores.get("reserveLimit"),
+        "reserveLimit": None,
         "locality": valores.get("locality") or "",
         # Os três **precisam** estar aqui, ainda que vazios: a forma tem de ser a que
         # `edital_snapshot` produz, e um Perfil acrescentado por Retificação sem estas chaves seria
@@ -2590,4 +2604,48 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 }
             )
 
+    resumo.extend(_cadastro_retificado(conteudo, alteracoes))
     return alteracoes, resumo
+
+
+def _cadastro_retificado(conteudo, alteracoes):
+    """A linha derivada "Cadastro de reserva", quando o corte mudou o número (162, FR-6950).
+
+    **O número não é campo**, e por isso nenhuma alteração o nomeia: quem retifica o excedente de 3
+    para 5 precisa ler, na conferência, que o cadastro do Perfil passa de "até 3" a "até 5". O
+    conteúdo retificado é o vigente com as alterações aplicadas numa cópia; a que não se aplica é
+    a publicação quem recusa, com a mensagem dela, e aqui só não produz linha.
+    """
+    if not alteracoes:
+        return []
+    depois = copy.deepcopy(conteudo)
+    for alteracao in alteracoes:
+        try:
+            apply_change(depois, alteracao)
+        except (ValueError, KeyError, TypeError):
+            return []
+    finais = {
+        str(perfil.get("id")): perfil
+        for perfil in depois.get("profiles") or []
+        if isinstance(perfil, dict)
+    }
+    linhas = []
+    for perfil in conteudo.get("profiles") or []:
+        if not isinstance(perfil, dict) or str(perfil.get("id")) not in finais:
+            continue
+        antes = cadastro_de_reserva.do_perfil(perfil)
+        if antes.especie != cadastro_de_reserva.LIMITADO or antes.legado:
+            continue
+        novo = cadastro_de_reserva.do_perfil(finais[str(perfil.get("id"))])
+        if antes.descricao_curta() == novo.descricao_curta():
+            continue
+        nome = f"{perfil.get('code', '')} — {perfil.get('name', '')}".strip(" —")
+        linhas.append(
+            {
+                "grupo": f"Perfil {nome}",
+                "rotulo": "Cadastro de reserva",
+                "antes": antes.descricao_curta(),
+                "depois": novo.descricao_curta(),
+            }
+        )
+    return linhas

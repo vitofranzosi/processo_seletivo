@@ -8,6 +8,7 @@ from django.urls import reverse
 from processo_seletivo.processos.models import Edital
 from tests.fixtures.edital import actor_headers
 from tests.fixtures.selecao import publicar_selecao, rascunho_de_selecao
+from tests.fixtures.snapshot import com_cadastro
 from tests.interface.folha import folha_aplicada
 
 
@@ -370,18 +371,17 @@ def test_o_convite_anuncia_a_identificacao_antes_de_ser_acionado(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.integration
-def test_reserva_limitada_em_zero_nao_e_anunciada_como_sem_limite(
+def test_reserva_limitada_e_anunciada_com_o_numero_do_corte(
     client, api_client, manager_headers, process_payload
 ):
-    """FR-136 — limite declarado como zero **é** limite declarado.
+    """FR-136 e, desde a `162`, FR-6945 — o número que a tela anuncia é o que o corte alcança.
 
-    O domínio aceita `reserveLimit: 0`: `perfis.py` recusa apenas limite negativo. Testado por
-    veracidade em vez de por presença, o zero caía no ramo do ilimitado e a tela dizia "sem limite
-    declarado" sobre um Edital que declarou o limite — afirmação sobre o ato, feita pela tela.
+    Até a `162` este caso publicava "limitado em 0", que o domínio aceitava; o número passou a vir
+    do corte, e o cadastro limitado a ninguém deixou de ser publicável (FR-6936). O que continua
+    valendo é o que o caso existia para prender: o limitado nunca é anunciado como sem limite.
     """
     rascunho = rascunho_de_selecao()
-    rascunho["profiles"][1]["reserveType"] = "LIMITED"
-    rascunho["profiles"][1]["reserveLimit"] = 0
+    com_cadastro(rascunho["profiles"][1], "LIMITED", 4)
     edital = publicar_selecao(api_client, manager_headers, process_payload, rascunho=rascunho)
 
     corpo = client.get(reverse("portal:selecao", args=[edital.id])).content.decode()
@@ -389,7 +389,7 @@ def test_reserva_limitada_em_zero_nao_e_anunciada_como_sem_limite(
     corpo = corpo[corpo.index('id="vagas-titulo"') :]
     segunda_vaga = corpo[corpo.index("Técnico de Laboratório") :]
 
-    assert "até 0 classificados" in segunda_vaga
+    assert "até 4 classificados" in segunda_vaga
     assert "sem limite declarado" not in segunda_vaga
 
 

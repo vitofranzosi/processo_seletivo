@@ -660,3 +660,45 @@ def perfil_mutilado(identificador):
         "immediateVacancies": 1,
         "reserveType": "NONE",
     }
+
+
+def com_cadastro(perfil, especie, numero=None):
+    """O Perfil com o cadastro de reserva coerente com o corte do marco que convoca (162, T002).
+
+    **Desde a `162` o número do limitado não se digita**: ele é o que o corte alcança além das
+    vagas, e a publicação recusa a espécie incoerente com a continuação (FR-6933, FR-6934). As
+    fixtures que escreviam `reserveLimit: 6` ao lado do corte mínimo — alvo 1, sem continuação —
+    passaram a publicar o par que a feature recusa. Este é o lugar único que as torna coerentes:
+
+    - **limitado**: sem continuação, e o excedente que faz o número da linha geral dar `numero`
+      (a conta da T-006: alvo fixo + excedente − vagas; no alvo do quadro, o excedente). Sem
+      `numero`, o corte fica como está, salvo se der zero — aí ganha o excedente mínimo;
+    - **ilimitado**: com continuação admitida;
+    - em ambos, `reserveLimit` sai `None`.
+
+    Muda o Perfil no lugar e o devolve, para servir dentro de literais de rascunho.
+    """
+    from processo_seletivo.editais.domain.cadastro_de_reserva import marcos_que_convocam
+
+    perfil["reserveType"] = especie
+    perfil["reserveLimit"] = None
+    linhas = perfil.get("vacancyTable") or []
+    geral = next((linha for linha in linhas if not linha.get("modalityId")), None)
+    vagas = (geral or {}).get("immediateVacancies", perfil.get("immediateVacancies") or 0) or 0
+    for marco in marcos_que_convocam(perfil):
+        regra = marco.get("cutRule")
+        if not isinstance(regra, dict):
+            continue
+        if especie == "UNLIMITED":
+            regra["continuation"] = "ALLOWED"
+        elif especie == "LIMITED":
+            regra["continuation"] = "NONE"
+            fixo = regra.get("targetKind") == "FIXED"
+            alvo = int(regra.get("targetCount") or 0) if fixo else vagas
+            excedente = int(regra.get("surplusCount") or 0)
+            if numero is not None:
+                regra["surplusCount"] = max(numero + vagas - alvo, 0)
+            elif alvo + excedente - vagas <= 0:
+                # Sem número pedido, o corte do cenário fica como está — só não pode dar zero.
+                regra["surplusCount"] = vagas - alvo + 1
+    return perfil

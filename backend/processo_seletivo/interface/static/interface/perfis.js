@@ -32,10 +32,9 @@
       codigo: dados.codigo || "sem código",
       perfil: [dados.denominacao, dados.localidade].filter(Boolean).join(" · "),
       vagas: dados.vagas === "" || dados.vagas == null ? "0" : String(dados.vagas),
-      reserva:
-        reserva.valor === "LIMITED" && reserva.limite
-          ? reserva.resumo + " a " + reserva.limite
-          : reserva.resumo || "",
+      // O número do limitado vem do corte desde a 162, e o servidor já o escreve no `data-resumo`
+      // da opção ("limitado: até 3"): a linha lê a mesma regra que o documento, e não um campo.
+      reserva: reserva.resumo || "",
       modalidades: modalidades.length
         ? modalidades
             .map(function (m) {
@@ -91,7 +90,6 @@
       reserva: {
         valor: marcada ? marcada.value : "",
         resumo: marcada ? marcada.dataset.resumo || "" : "",
-        limite: valor(cartao, "reserveLimit"),
       },
       convocacao: forma
         ? forma.getAttribute("data-resumo-" + (forma.value || "nenhuma").toLowerCase()) || ""

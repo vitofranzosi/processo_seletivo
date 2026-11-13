@@ -91,8 +91,12 @@ def perfis(numero, *, janela_recursal="declarada"):
             "description": "Docência em Informática no ensino técnico e superior.",
             "requirements": ["Mestrado em Computação ou área afim"],
             "immediateVacancies": 2,
+            # **Limitado, e o número vem do corte** (162, FR-6929). Até a `162` este Perfil dizia
+            # "limitado em 6" ao lado de um corte — alvo de 2 e excedente de 1, em cada lista —
+            # que alcança dois classificados além da vaga de cada uma, e o documento se
+            # contradizia. O "até 2 em cada lista" que ele imprime agora é o que a convocação
+            # alcança.
             "reserveType": "LIMITED",
-            "reserveLimit": 6,
             "locality": "Campus Serra",
             # **Como a convocação é comunicada** (051, FR-943). O marco deste Perfil corta, e quem
             # corta sem declarar a forma deixou de ser publicável: a demonstração convocaria e a
@@ -247,7 +251,10 @@ def perfis(numero, *, janela_recursal="declarada"):
                         "surplusCount": 0,
                         "tieOutcome": "ADMITS_SURPLUS",
                         "governedStage": "NONE",
-                        "continuation": "NONE",
+                        # **Com continuação** (162, FR-6934): o cadastro deste Perfil é sem
+                        # limite, e um corte que parasse nos 3 primeiros diria o contrário no
+                        # mesmo documento.
+                        "continuation": "ALLOWED",
                     },
                 }
             ],
