@@ -9,6 +9,9 @@ Diz "enviamos", e nunca que a pessoa recebeu (FR-288a da 019). Sem o motivo da c
 A PRIMEIRA LINHA É O ASSUNTO. O envio a separa do corpo. Ele mora aqui, e não no código, para que o
 resumo do modelo gravado na comunicação (FR-3889) identifique também o assunto que saiu.
 
+O prazo diz só a data, como na inicial (FR-6428 e D-014 da 156): "contado do envio desta
+mensagem" sugeria prazo novo a cada reenvio.
+
 Este arquivo e o correcao.html dizem as mesmas frases: o texto puro contém tudo o que o HTML diz
 (FR-3882), e o teste da SC-1159 confere frase a frase. Mudou uma frase aqui? Mude lá também.
 
@@ -28,7 +31,7 @@ Esta mensagem substitui a que enviamos em {{ citada_enviada.data }}, às {{ cita
 {% if variante == "documento_e_requerimento" %}Esta convocação pede documentos e o Requerimento de Matrícula.
 Você envia tudo pela sua área do candidato.{% elif variante == "so_documento" %}Esta convocação pede documentos, que você envia pela sua área do candidato.{% elif variante == "so_requerimento" %}Esta convocação pede o Requerimento de Matrícula, que você preenche pela sua área do candidato.{% else %}Siga as instruções do Edital dentro do prazo. As instruções estão na sua área do candidato.{% endif %}
 
-{% if prazo %}Prazo válido para atender: até {{ prazo.por_extenso }}, contado do envio desta mensagem.{% else %}O prazo para atender é o que o Edital publica.{% endif %}
+{% if prazo %}Prazo válido para atender: até {{ prazo.por_extenso }}.{% else %}O prazo para atender é o que o Edital publica.{% endif %}
 
 Acessar minha convocação:
 {{ link }}

@@ -4,6 +4,11 @@ A mensagem inicial de convocação, em texto puro (121, FR-3882 a FR-3888).
 A PRIMEIRA LINHA É O ASSUNTO. O envio a separa do corpo. Ele mora aqui, e não no código, para que o
 resumo do modelo gravado na comunicação (FR-3889) identifique também o assunto que saiu.
 
+O prazo diz só a data (FR-6428 e D-014 da 156). Antes da 156 ele dizia também "contado do
+envio desta mensagem": inexato já na primeira mensagem, porque o prazo é a data informada no ato e o
+envio só o põe em curso; e enganoso no reenvio, que parecia dar prazo novo a quem perde a vaga se
+perder a data (doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md).
+
 Este arquivo e o inicial.html dizem as mesmas frases: o texto puro contém tudo o que o HTML diz
 (FR-3882), e o teste da SC-1159 confere frase a frase. Mudou uma frase aqui? Mude lá também.
 
@@ -20,7 +25,7 @@ Você foi convocado no {{ edital }}
 {% if variante == "documento_e_requerimento" %}Esta convocação pede documentos e o Requerimento de Matrícula.
 Você envia tudo pela sua área do candidato.{% elif variante == "so_documento" %}Esta convocação pede documentos, que você envia pela sua área do candidato.{% elif variante == "so_requerimento" %}Esta convocação pede o Requerimento de Matrícula, que você preenche pela sua área do candidato.{% else %}Siga as instruções do Edital dentro do prazo. As instruções estão na sua área do candidato.{% endif %}
 
-{% if prazo %}Prazo para atender: até {{ prazo.por_extenso }}, contado do envio desta mensagem.{% else %}O prazo para atender é o que o Edital publica.{% endif %}
+{% if prazo %}Prazo para atender: até {{ prazo.por_extenso }}.{% else %}O prazo para atender é o que o Edital publica.{% endif %}
 
 Acessar minha convocação:
 {{ link }}

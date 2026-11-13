@@ -137,10 +137,12 @@ matrícula.
 
 ## Fase 7 — US8: o e-mail da convocação diz o prazo como ele é (P2)
 
-- [ ] T025 [P] [US8] `convocacao/templates/convocacao/mensagem/{inicial,correcao}.{txt,html}`: o prazo sem
+- [x] T025 [P] [US8] `convocacao/templates/convocacao/mensagem/{inicial,correcao}.{txt,html}`: o prazo sem
   *"contado do envio desta mensagem"* — FR-6428, D-014
-- [ ] T026 [US8] Ajustar `tests/unit/convocacao/test_mensagem.py` e
+  *(13/11: no HTML, o parágrafo da cláusula sai e o ponto final entra dentro do negrito — a SC-1159 compara frase a frase, e `</strong>.` viraria "até ‹data› .".)*
+- [x] T026 [US8] Ajustar `tests/unit/convocacao/test_mensagem.py` e
   `tests/integration/convocacao/test_mensagem_da_convocacao.py` (SC-1159 continua frase a frase) — SC-2128
+  *(13/11: também `test_reenvio_nao_reinicia_prazo.py`, que compara a linha do prazo das duas mensagens e passa a compará-la inteira — cortava na primeira vírgula, logo depois do dia da semana.)*
 
 ---
 
