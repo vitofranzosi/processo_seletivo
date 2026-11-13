@@ -372,3 +372,21 @@ Entraram na `main`, que chegou a `04797399`, a 145 (#459) e a 146 inteira: a spe
 - nenhuma tela foi percorrida; a jornada do barema no navegador está registrada em `specs/146-barema-da-etapa/capturas/jornada/`;
 - ficam abertos a medida de tempo da Mesa com o barema, a confirmação com a CPS/Cefor de que os títulos de cada Edital se pontuam independentemente (P-1), e as sete questões da spec;
 - as seções `#cronograma-pdf-ordem-previa` (144, B e C) e as demais pendências anteriores não mudaram.
+
+## Acréscimo de 13/11: as specs 147 a 161
+
+Entraram na `main`, que chegou a `60f9ff24`, as implementações da 147, 148, 149, 150, 152 (parcial), 153, 154 (parcial), 155 (entrega mínima), 157, 159 e 160, as specs 156, 158 e 161, a designação pela presidência (117, D-025) e as frentes de trabalho dos cenários (134). Leitura das specs, dos corpos dos PRs e do código, em quatro frentes que escreveram fichas de fatos (gestão e treino; publicações; a convocação do candidato e da conferência; atos irreversíveis, vaga sem ocupante e passagem ao setor); os rótulos são os dos templates.
+
+- **Novas seções:** `#pagina-do-processo` (147, reescreve o h3 que descrevia a página antiga), `#minhas-atividades` (160) e `#quem-faz-o-que` (161, Previsto), `#publicacao-das-inscricoes` (148), `#publicacao-das-convocacoes` (149 e 159), `#conferencia-nos-atos-irreversiveis` (152, Parcial), `#conferencia-com-o-documento-a-vista` (157), `#envio-de-varios-documentos` (150), `#convocacao-depois-do-envio` (154, Parcial), `#desfecho-comunicado` (156, Previsto), `#passagem-ao-setor` (153), `#vaga-sem-ocupante` (155, Parcial) e `#passagem-entre-cotas` (158, Previsto).
+- **Corrigido:** o rótulo *Minhas Etapas*, que virou *Minhas atividades* em 21 pontos (a descrição histórica de 16/10 ficou); a página do Processo antiga e o botão *Novo Edital neste Processo*; a tabela *por publicação — não publica*, os rótulos do botão de convocar e as frases do aviso de pendência; a lacuna do botão *Pedir a faixa seguinte* (corrigida pelo #477); a frase de *Sair* do portal; a designação para a formalização (a presidência também designa, D-025) e a frase de que a demonstração não a alcança; os cenários (17, não 15, com C16 e C17 e a exceção ao “o gerador não cria papel”); e a contagem de tabelas append-only (53 para 59).
+- **Previsto, e dito como previsto:** a frase de conclusão da 154 (US2), a ciência do prazo da 152 (história 2), tudo o que a 155 deixou de fora (a destinação por ato próprio, a reversão por saldo — bloqueada pela D-015) e, inteiras, a 156, a 158 e a 161.
+- **README:** as linhas de 147, 149, 150, 152, 153, 154, 155, 157, 158, 159, 160 e 161 passaram a dizer o que foi mergeado e o número do PR; as de 150, 152, 154 e 157 estavam defasadas em relação ao código.
+
+**Não verificado:**
+
+- a suíte inteira não rodou; rodaram os guardiões que leem `specs/` e `doc/`, e a Visão passou pela conferência de ids, links e tags;
+- nenhuma tela foi percorrida; a validação humana de 149, 150, 157, 159 e 160 (SC-1805, SC-2149 a SC-2151, SC-2159, SC-2281) segue aberta;
+- o seletor de demonstração oferece a presidência sem os cenários? a designação pela presidência vem do vínculo com a comissão, e não de um papel do seletor;
+- em que grupo do Centro de Controle aparece a Ação *Publicações das inscrições*;
+- a contagem de 83 gatilhos e 67 tabelas no resumo do provisionamento é de quando as append-only eram 53; não foi recontada;
+- as specs 149 e 159 ainda dizem *Em implementação*, a 134 ainda diz *sem merge* e o `tasks.md` da 160 deixa T002, T036 e T037 sem marca, embora mergeadas.
