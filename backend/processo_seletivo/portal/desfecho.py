@@ -21,8 +21,9 @@ from django.utils import formats, timezone
 
 from processo_seletivo.convocacao.domain import nomes
 
-#: O rótulo sob o qual o fundamento do desfecho fica recolhido (FR-6400).
+#: Os rótulos sob os quais o fundamento fica recolhido (FR-6400): o do desfecho e o da convocação.
 FUNDAMENTO_DO_REGISTRO = "Fundamento do registro"
+FUNDAMENTO_DA_CONVOCACAO = "Fundamento da convocação"
 
 ENCERRADA = "Esta convocação está encerrada para você."
 NAO_E_MATRICULA = "Este registro não é matrícula, bolsa nem contrato."
@@ -77,6 +78,27 @@ def frase_do_desfecho(especie, *, registrado_em, fim_do_prazo=None, atestado="")
     return ""
 
 
+def frase_da_convocacao(especie, *, lista=""):
+    """Por que a pessoa foi chamada, pela espécie da convocação (FR-6442), ou vazio.
+
+    **Nunca *"dentro das vagas"***, que a UX-158 da `063` proíbe porque se lê como aprovação: a
+    frase diz o motivo da chamada, e não que a vaga é da pessoa. Sem o nome da lista — a Modalidade
+    que uma Retificação tirou do Perfil —, a frase fala da lista da pessoa, sem inventar nome.
+    """
+    da_lista = f"da lista {lista}" if lista else "da sua lista"
+    if especie == nomes.VAGA_INICIAL:
+        return f"Você foi chamado para uma das vagas {da_lista}, pela sua posição na classificação."
+    if especie == nomes.SUPLENCIA:
+        return (
+            f"Você foi chamado porque uma vaga {da_lista} ficou livre e você é a próxima pessoa na "
+            "classificação."
+        )
+    if especie == nomes.PARA_REGULARIZAR:
+        na_lista = f"na lista {lista}" if lista else "na sua lista"
+        return f"Você foi chamado para regularizar a sua situação {na_lista}, porque há vaga."
+    return ""
+
+
 def do_desfecho(desfecho, convocacao):
     """A frase de um desfecho lido, com a convocação a que ele pertence.
 
@@ -104,9 +126,11 @@ def _data(instante):
 __all__ = [
     "ENCERRADA",
     "FATO_ATESTADO",
+    "FUNDAMENTO_DA_CONVOCACAO",
     "FUNDAMENTO_DO_REGISTRO",
     "NAO_E_MATRICULA",
     "do_desfecho",
+    "frase_da_convocacao",
     "frase_do_desfecho",
     "fundamento_do_registro",
 ]

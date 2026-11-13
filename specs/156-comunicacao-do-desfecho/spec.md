@@ -371,6 +371,7 @@ o despacho não tem o que enviar (FR-6430, FR-6437 e FR-6438). O envio fica impl
 | `063` | FR-1172 | o porquê do desfecho em duas camadas: a frase simples e o fundamento recolhido, com a data |
 | `063` | FR-1177 | acréscimo, sobre a redação da `154`: a frase simples de desfecho registrado descreve o ato, e não é frase de consequência |
 | `118` | FR-3750 | a segunda frase do aceite dá lugar ao próximo passo pelo Edital publicado e ao contato |
+| `118` | FR-3740 | *(acrescida em 2026-11-13)* o fundamento da convocação em duas camadas, e a espécie dita na linha da chamada |
 | `121` | FR-3883 | o prazo da mensagem inicial sem *"contado do envio desta mensagem"*, e o atendimento omitido sem canal |
 | `125` | FR-3993 | a prévia mostra as duas camadas, como o portal as mostrará |
 | `050` | FR-878 | o lote do não atendimento deixa de fora quem tem pedido de desistência pendente |
@@ -1036,10 +1037,16 @@ A mensagem da convocação e a da correção dizem *"Prazo para atender: até �
 
 #### J. As revisões
 
-- **FR-6441** *(revista em 2026-11-11, pelas decisões do usuário — a redação anterior está ao fim desta alínea)*:
+- **FR-6441** *(revista em 2026-11-11 e em 2026-11-13, pelas decisões do usuário — as redações anteriores estão ao fim desta alínea)*:
   As revisões que esta spec impõe MUST estar escritas nas specs de origem, com a redação
   anterior preservada, e vigorar com a implementação desta: a FR-084 da `010`; a FR-1172 e a FR-1177
-  da `063`; a FR-3750 da `118`; a FR-3883 da `121`; a FR-3993 da `125`; e a FR-878 da `050`.
+  da `063`; a FR-3740 e a FR-3750 da `118`; a FR-3883 da `121`; a FR-3993 da `125`; e a FR-878 da `050`.
+
+  > **Redação de 11/11/2026, preservada:** a mesma, sem a FR-3740 da `118`.
+  >
+  > *Por que mudou:* a FR-3740 da `118` exigia o bloco *"Sobre esta convocação"* sem `details`, com o
+  > fundamento — o oposto da FR-6400 para o fundamento da convocação. O conflito apareceu na
+  > implementação (PR #525), e o usuário decidiu rever a FR-3740 em 13/11/2026.
 
   > **Redação anterior, de 11/11/2026 (PR #485), preservada:**
   > As revisões que esta spec impõe — a FR-084 da `010`, a FR-1172 e a FR-1177 da `063`, a

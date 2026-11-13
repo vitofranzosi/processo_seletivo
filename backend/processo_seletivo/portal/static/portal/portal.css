@@ -1255,7 +1255,7 @@ ul.anexos-publicados .formato{font-weight:400;opacity:.75}
   display:list-item;padding:.6rem 0;font-weight:600;font-size:.875rem;
   text-decoration:underline;text-underline-offset:3px}
 .efeito-do-reenvio{margin:.25rem 0 0;font-size:.9375rem;max-width:var(--leitura)}
-/* Os dados do ato em grade de pares (FR-3740: visíveis, sem `details`). As frases tomam a linha. */
+/* Os dados do ato em grade de pares (FR-3740: visíveis; só o fundamento recolhido, 156). As frases tomam a linha. */
 dl.dados-do-ato-da-convocacao{grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr));gap:.75rem 1.5rem;
   margin:0}
 .dados-do-ato-da-convocacao>div{min-width:0}

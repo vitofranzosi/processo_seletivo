@@ -2616,6 +2616,7 @@ def convocacao(request, inscricao_id):
             # a espécie, o registro, o vencimento e, na inércia, o atestado do `prefetch` —, e o
             # fundamento gravado, que o template recolhe.
             **_desfecho_em_duas_camadas(desfecho, chamada),
+            **_convocacao_em_duas_camadas(chamada, versao),
             "aceite": situacao_da_inscricao.frase_do_aceite(desfecho),
             "consequencia": situacao_da_inscricao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO,
             "atendimento": atendimento,
@@ -2634,6 +2635,22 @@ def _desfecho_em_duas_camadas(desfecho, chamada):
         "frase_do_desfecho": desfecho_em_frases.do_desfecho(desfecho, chamada),
         "fundamento_do_registro": desfecho_em_frases.fundamento_do_registro(desfecho),
         "rotulo_do_fundamento": desfecho_em_frases.FUNDAMENTO_DO_REGISTRO,
+    }
+
+
+def _convocacao_em_duas_camadas(chamada, versao):
+    """Por que a pessoa foi chamada, e o fundamento do ato recolhido (156, FR-6442; FR-3740 da
+    `118`, revista).
+
+    O nome da lista sai do Perfil no conteúdo que a tela já leu, sem consulta (`D-003` da `063`).
+    """
+    if chamada is None:
+        return {}
+    perfil = _perfil_do_conteudo(versao.content, chamada.perfil_id)
+    lista = situacao_da_inscricao.nome_da_lista_da_convocacao(chamada, perfil, [])
+    return {
+        "frase_da_convocacao": desfecho_em_frases.frase_da_convocacao(chamada.especie, lista=lista),
+        "rotulo_do_fundamento_da_convocacao": desfecho_em_frases.FUNDAMENTO_DA_CONVOCACAO,
     }
 
 

@@ -101,7 +101,8 @@ palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
   {% comment %}
   Em grade de pares, e não numa coluna de rótulos e valores: os seis dados curtos ficam lado a lado
   em tela larga, e o fundamento e a substituída, que são frases, tomam a linha inteira. Tudo
-  visível, sem `details` — é o ato que a pessoa tem direito de ler (FR-3740). O `div` que agrupa
+  visível — é o ato que a pessoa tem direito de ler (FR-3740) —, e só o texto do fundamento fica
+  recolhido, sob a frase que diz por que a pessoa foi chamada (156). O `div` que agrupa
   `dt` e `dd` é o que o HTML admite dentro de `dl`.
   {% endcomment %}
   <dl class="campos dados-do-ato-da-convocacao">
@@ -109,7 +110,8 @@ palavra continua dizendo tudo: o texto é o mesmo "Rótulo: N" de antes.
     {% if enviada_em %}<div>{% include "portal/_comunicacao_da_convocacao.html" %}</div>{% endif %}
     {% if substituida %}<div class="dado-longo"><dt>Convocação substituída</dt><dd>{{ substituida }}</dd></div>{% endif %}
     {% if convocacao.vencimento %}<div><dt>Vencimento registrado</dt><dd>{{ convocacao.vencimento|data_e_hora_do_prazo }}, {{ canal_da_comunicacao.contado_de }}</dd></div>{% endif %}
-    <div class="dado-longo"><dt>Fundamento</dt><dd>{{ convocacao.fundamento }}</dd></div>
+    {% comment %}O fundamento em duas camadas (156, FR-6400, FR-6442; FR-3740 da 118, revista): o resto do bloco continua aberto.{% endcomment %}
+    <div class="dado-longo"><dt>Fundamento</dt><dd>{{ frase_da_convocacao }}{% include "portal/_fundamento_do_ato.html" with rotulo=rotulo_do_fundamento_da_convocacao texto=convocacao.fundamento %}</dd></div>
     <div><dt>Atendimento</dt><dd>{% include "portal/_atendimento.html" %}</dd></div>
   </dl>
 </section>

@@ -155,3 +155,43 @@ def test_do_desfecho_le_o_vencimento_da_convocacao_e_o_atestado_so_na_inercia():
         atestado=SimpleNamespace(especie=nomes.ATESTADO_NAO_ACESSO_AO_AMBIENTE),
     )
     assert desfecho.do_desfecho(inercia, convocacao) == ESPERADAS[nomes.INERCIA]
+
+
+# --- A convocação sem desfecho (FR-6442; FR-3740 da `118`, revista) -----------------------------
+
+DA_CONVOCACAO = {
+    nomes.VAGA_INICIAL: (
+        "Você foi chamado para uma das vagas da lista Ampla concorrência, pela sua posição na "
+        "classificação."
+    ),
+    nomes.SUPLENCIA: (
+        "Você foi chamado porque uma vaga da lista Ampla concorrência ficou livre e você é a "
+        "próxima pessoa na classificação."
+    ),
+    nomes.PARA_REGULARIZAR: (
+        "Você foi chamado para regularizar a sua situação na lista Ampla concorrência, porque há "
+        "vaga."
+    ),
+}
+
+
+@pytest.mark.parametrize("especie", nomes.ESPECIES_DE_CONVOCACAO)
+def test_cada_especie_de_convocacao_tem_a_frase_da_fr_6442(especie):
+    assert (
+        desfecho.frase_da_convocacao(especie, lista="Ampla concorrência")
+        == (DA_CONVOCACAO[especie])
+    )
+
+
+@pytest.mark.parametrize("especie", nomes.ESPECIES_DE_CONVOCACAO)
+def test_a_frase_da_convocacao_nao_usa_o_vocabulario_do_ato_nem_promete_vaga(especie):
+    """FR-6403, e *"dentro das vagas"*, que a UX-158 da `063` proíbe (FR-6442)."""
+    texto = desfecho.frase_da_convocacao(especie, lista="Ampla concorrência").lower()
+    assert [t for t in (*DO_ATO, "dentro das vagas", "vaga garantid") if t in texto] == []
+
+
+def test_sem_o_nome_da_lista_a_frase_nao_inventa_nome():
+    assert desfecho.frase_da_convocacao(nomes.SUPLENCIA, lista="").startswith(
+        "Você foi chamado porque uma vaga da sua lista ficou livre"
+    )
+    assert "na sua lista" in desfecho.frase_da_convocacao(nomes.PARA_REGULARIZAR)

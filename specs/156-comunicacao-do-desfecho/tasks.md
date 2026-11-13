@@ -36,7 +36,7 @@ traz os seus. Caminhos relativos a `backend/`.
 - [x] T003 Criar `processo_seletivo/portal/desfecho.py` com a assinatura das funções puras
   (`frase_do_desfecho`, `frase_da_convocacao`, `proximo_passo`, `caminho_para_recorrer`) e os textos
   das FR-6406, FR-6407, FR-6442; sem banco nem relógio — R-001
-  *(13/11: `frase_do_desfecho`, `do_desfecho` e `fundamento_do_registro`, com as FR-6406 e FR-6407. `frase_da_convocacao` (FR-6442) espera a T023, e `proximo_passo` e `caminho_para_recorrer` a T016 e a T017: sem quem os chame, seriam código morto.)*
+  *(13/11: `frase_do_desfecho`, `do_desfecho` e `fundamento_do_registro`, com as FR-6406 e FR-6407. `frase_da_convocacao` (FR-6442) entrou com a T023; `proximo_passo` e `caminho_para_recorrer` esperam a T016 e a T017: sem quem os chame, seriam código morto.)*
 - [x] T004 [P] Criar `portal/templates/portal/_fundamento_do_ato.html` (`<details class="fundamento-do-ato">`
   com `<summary>` parametrizado) e a regra `.fundamento-do-ato` em `portal/static/portal/portal.css` —
   FR-6400, UX-621, R-002
@@ -78,7 +78,7 @@ e o fundamento recolhido; nenhum termo técnico fora dele.
 - [x] T014 [US2] Varredura nova `tests/test_vocabulario_do_desfecho.py`: renderizar o portal nas sete
   espécies e nas três de convocação, tirar o conteúdo dos `<details>` e reprovar os termos da FR-6403
   — SC-2120
-  *(13/11: as sete espécies, nas duas telas e nos dois ramos da convocação. As três espécies de convocação esperam a T023, que esbarra na FR-3740 da `118` — o bloco "Sobre esta convocação" visível e sem `details` —, que a `156` não reviu: o conflito está no PR.)*
+  *(13/11: as sete espécies, nas duas telas e nos dois ramos da convocação, e as três espécies de convocação, com a T023.)*
 - [x] T015 [US2] Orçamento de consultas: `TestCusto` da `063` e os custos de
   `test_portal_jornada_consolidada.py` sem consulta nova por item — R-002
   *(13/11: `TestCusto` da `063` e os custos da jornada consolidada passam sem mudança.)*
@@ -126,10 +126,12 @@ matrícula.
 
 ## Fase 6 — US3: a convocação aberta diz por que a pessoa foi chamada (P2)
 
-- [ ] T023 [US3] `convocacao.html` e `_obrigacoes_da_convocacao.html`: a frase da FR-6442 antes do
+- [x] T023 [US3] `convocacao.html` e `_obrigacoes_da_convocacao.html`: a frase da FR-6442 antes do
   fundamento da convocação, recolhido sob *"Fundamento da convocação"*, com o nome da lista lido sem
   consulta nova — FR-6400, FR-6442
-- [ ] T024 [US3] Testes por espécie de convocação, com o complemento dentro do recolhido — US3
+  *(13/11: feita antes da US2 terminar, porque o fundamento da convocação é o primeiro exemplo do achado 18 e a SC-2120 o varre. Esbarrava na FR-3740 da `118` — o bloco "Sobre esta convocação" sem `details` —, que o usuário decidiu rever pela `156` em 13/11: a revisão está na `118`, e a FR-6441 e o quadro das revisões a listam.)*
+- [x] T024 [US3] Testes por espécie de convocação, com o complemento dentro do recolhido — US3
+  *(13/11: as três frases em `test_frases_do_desfecho.py`; na tela, as três espécies com o fundamento derivado da `050` só dentro do recolhido, em `test_vocabulario_do_desfecho.py`.)*
 
 ---
 
