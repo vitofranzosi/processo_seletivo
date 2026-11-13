@@ -286,6 +286,17 @@ def test_c_quem_elabora_ve_o_rascunho_ao_abrir_retificar_e_continua(edital, vige
     assert "Continuar a elaboração" in tela
 
 
+def test_c_com_duas_em_curso_o_titulo_diz_o_plural_e_nao_o_acrescenta_ao_singular(edital, vigente):
+    """O `pluralize:"ões"` sobre "Retificação" dizia "Retificaçãoões" (30/10 a 13/11)."""
+    criar_pela_navegacao(sessao(*ANA), edital, vigente, vagas="9")
+    criar_pela_navegacao(sessao(*ANA), edital, vigente, vagas="7")
+
+    tela = sessao(*ANA).get(reverse("interface:retificar", args=[edital.id])).content.decode()
+
+    assert "Este Edital já tem 2 Retificações em curso" in tela
+    assert "Retificaçãoões" not in tela
+
+
 # ---------------------------------------------------------------------------------------------
 # D — segregação de funções e vários papéis
 # ---------------------------------------------------------------------------------------------

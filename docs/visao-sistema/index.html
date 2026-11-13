@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Visão do Sistema — Processos Seletivos e Editais</title>
-<meta name="description" content="Manual conceitual, tutorial de onboarding, referência de configuração e fotografia do estado atual do sistema de Processos Seletivos e Editais do Cefor/Ifes, reconstruídos do código.">
+<title>Visão do Sistema — GPS · Gestão de Processos Seletivos</title>
+<meta name="description" content="Visão do produto, manual conceitual, tutorial de onboarding, referência de configuração e fotografia do estado atual do GPS — Gestão de Processos Seletivos do Cefor/Ifes, reconstruídos do código.">
 <link rel="icon" href="assets/icone.svg">
 <link rel="stylesheet" href="assets/style.css">
 <script src="assets/iniciar.js"></script>
@@ -18,7 +18,7 @@
 <aside class="lateral">
   <a class="marca" href="#pg-inicio">
     <strong>Visão do Sistema</strong>
-    <span>Processos Seletivos e Editais · Cefor/Ifes</span>
+    <span>GPS · Gestão de Processos Seletivos · Cefor/Ifes</span>
   </a>
 
   <div class="busca">
@@ -88,12 +88,13 @@
 <nav class="trilha-nav" aria-label="Você está em"></nav>
 <article class="pagina" id="pg-inicio" data-camada="entender" data-titulo="Início">
 <section id="inicio">
-  <p class="trilha">Documentação funcional · reconstruída do código em 20/09/2026 · revista contra o código em 29/09/2026 · spec 054 acrescentada em 30/09/2026 · specs 055–068 acrescentadas em 10/10/2026 · specs 069–072 acrescentadas em 15/10/2026 · specs 073–092 acrescentadas em 19/10/2026 · specs 093–097 em 21/10/2026 · specs 098–104 em 30/10/2026 · specs 105–113 e as correções da auditoria de prontidão em 02/11/2026</p>
-  <h1>Sistema de Processos Seletivos e Editais</h1>
+  <p class="trilha">Visão do produto · consolidada em 13/11/2026 contra a <code>main</code> em <code>214c8cd7</code> · o histórico das revisões está em <a href="#pg-sobre">Sobre esta documentação</a></p>
+  <h1>GPS — Gestão de Processos Seletivos</h1>
   <p class="lead">
-    Do Edital ao Registro Acadêmico: como um processo seletivo é montado, conduzido e concluído neste
-    sistema — os conceitos, as decisões que o operador toma, o que o sistema calcula por ele, e o que,
-    hoje, ainda não se conecta.
+    O GPS é o sistema em que o Cefor/Ifes prepara, publica, conduz e conclui os seus processos
+    seletivos — do Edital à chamada dos aprovados e à entrega dos documentos deles —, com uma
+    regra que atravessa tudo: o que foi publicado não se reescreve, e cada decisão fica registrada
+    com quem a tomou, quando e sob qual norma.
   </p>
 
   <div class="portas">
@@ -126,139 +127,366 @@
       cita a norma que valia naquele instante e <strong>nunca muda</strong>. Quando algo precisa ser
       corrigido, não se reescreve o ato — cria-se um <strong>sucessor</strong> que o cita e diz por quê.
       Tudo o que parece “estado” na tela — quem é titular, quem é suplente, quem está na faixa, quantas
-      vagas faltam — é derivado da leitura dos atos a cada consulta.
+      vagas faltam, o que falta fazer — é derivado da leitura dos atos a cada consulta.
     </p>
   </div>
-
 </section>
-<section id="fluxo-geral">
-  <h2>Fluxo geral</h2>
-  <p>Um processo seletivo atravessa três fases. As caixas cheias são <strong>atos</strong> (alguém confirma e o sistema grava para sempre); as tracejadas acontecem só quando o Edital as declara.</p>
 
-  <h3>1 · Preparar a norma <span class="miudo">— quem elabora, homologa e publica</span></h3>
+<section id="proposta">
+  <h2>Por que o GPS existe</h2>
+  <p>
+    Um processo seletivo do Cefor — curso FIC, pós-graduação, aperfeiçoamento, Libras, bolsistas e
+    tutores da UAB, seleções internas — é um ato administrativo com efeito sobre direitos. Conduzido em
+    documento de texto, planilha e e-mail, ele depende da memória de quem o opera: o número de vagas
+    de uma cota é recalculado à mão, a ordem de classificação é refeita quando um recurso é deferido,
+    a pergunta “por que fulano não foi chamado?” exige reconstruir meses de troca de mensagens, e o
+    candidato só sabe o que alguém lembrou de publicar.
+  </p>
+  <p>O GPS responde a isso com cinco apostas, que valem para todas as famílias de seleção:</p>
+  <ol>
+    <li><strong>A norma é dado, e o documento sai dela.</strong> O Edital é composto em telas —
+      Perfis de Vaga, vagas, cotas, cronograma, Etapas, regras de classificação — e o PDF oficial é
+      gerado dessa mesma configuração. O que se publica é o que o sistema aplica; a divergência entre
+      as duas coisas impede a publicação. Desde 28/09 o PDF do sistema é o Edital oficial (<a href="#publicacao">ver</a>).</li>
+    <li><strong>O cálculo é do sistema; a decisão é de uma pessoa.</strong> Quadro de vagas,
+      desempate, corte, ocupação, sorteio, prazos e situações são calculados e mostrados antes da
+      confirmação. Avaliar, deferir, convocar, publicar e registrar um desfecho continuam sendo atos de
+      alguém, com nome e motivo (<a href="#decisao-humana">regra, sugestão e decisão humana</a>).</li>
+    <li><strong>Tudo pode ser reconstituído.</strong> Publicações, resultados, ordens, cortes,
+      convocações e desfechos ficam em registros que nem a aplicação consegue alterar; uma correção é um
+      ato sucessor. Meses depois, é possível dizer por que uma pessoa chegou aonde chegou.</li>
+    <li><strong>A operação é conduzida, e não memorizada.</strong> Cada Edital publicado tem um
+      Centro de Controle que diz em que fase está, o que falta e de quem é a próxima ação; cada pessoa
+      tem Minhas atividades; os atos que não se desfazem passam, em sua maioria, por uma conferência
+      que mostra o alcance antes de gravar.</li>
+    <li><strong>O candidato vê o que lhe diz respeito.</strong> Inscrição sem senha, comprovante com
+      protocolo, acompanhamento que diz a situação, o porquê e o que fazer, resultado, recurso,
+      convocação e envio de documentos — tudo no mesmo portal, e a verificação do sorteio aberta a
+      qualquer pessoa.</li>
+  </ol>
+  <p class="miudo">
+    Não há um “tipo de Processo” no sistema: o que distingue uma seleção de alunos de uma de bolsistas
+    é o que o Edital declara (<a href="#familias">Famílias de Processo</a>). Quais famílias entram
+    no alvo do produto é decisão pendente (DP-10).
+  </p>
+</section>
+
+<section id="publicos">
+  <h2>Quem usa o GPS, e para quê</h2>
+  <p>
+    Os papéis descrevem funções, não pessoas: a operação prevista é de uma equipe pequena acumulando
+    papéis, e o sistema impede só as acumulações que a norma proíbe (<a href="#papeis">os papéis</a>,
+    <a href="#matriz-permissoes">a matriz</a>).
+  </p>
+  <div class="rolagem"><table>
+    <thead><tr><th>Quem</th><th>O que faz no GPS</th><th>Onde trabalha</th></tr></thead>
+    <tbody>
+      <tr><td>Candidato</td><td>Descobre a seleção, inscreve-se, envia documentos, acompanha a situação, recorre, responde à convocação</td><td>Portal público (<code>/selecoes/</code>), com acesso por código no e-mail</td></tr>
+      <tr><td>Público em geral</td><td>Consulta Editais, Retificações, listas, resultados e convocações publicados; confere o sorteio</td><td>Portal público, sem identificação</td></tr>
+      <tr><td>Quem elabora, homologa e publica</td><td>Compõe o Edital e as Retificações; uma segunda pessoa homologa; publica-se o Edital, o resultado e as listas. Quem escreve não conclui sozinho</td><td>Gestão: composição do Edital e o rito</td></tr>
+      <tr><td>Gestor da unidade</td><td>Cria Processos e Editais, forma a comissão, encerra, acompanha o conjunto da unidade e relata à direção</td><td>Gestão: Lista, página do Processo, Visão Geral, Agenda, relatórios</td></tr>
+      <tr><td>Comissão — presidência e membros</td><td>Avalia inscrições nas Etapas, consolida, ordena, corta, apura vagas, convoca e confere documentos. Presidir e integrar são vínculos com o Processo, e não papéis</td><td>Gestão: Centro de Controle, Minhas atividades, Mesa</td></tr>
+      <tr><td>Julgador de recursos</td><td>Admite e decide recursos, fora da cadeia de quem avaliou e divulgou</td><td>Gestão: recursos do Edital</td></tr>
+      <tr><td>Formalização (setor)</td><td>Recebe, para os Editais em que foi designada, os documentos dos aptos e os exporta</td><td>Gestão: Formalização</td></tr>
+      <tr><td>Exportador de matrículas</td><td>Gera o arquivo para o Registro Acadêmico</td><td>Gestão: exportação do Edital</td></tr>
+      <tr><td>Comunicação</td><td>Gera textos e peças de divulgação de um Edital publicado</td><td>Gestão: Kit de divulgação</td></tr>
+      <tr><td>Auditor</td><td>Lê a trilha e o trabalho, sem agir</td><td>Gestão: Trilha da unidade e as consultas</td></tr>
+      <tr><td>Administração de acessos e de unidades</td><td>Concede e revoga papéis na unidade, com motivo e sem autoconcessão; suspende pessoas; o Administrador institucional cadastra as unidades</td><td>Gestão: Acessos da unidade, Administração de acessos, Unidades</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="principios">
+  <h2>Princípios de produto</h2>
+  <p>
+    Os princípios abaixo não são aspiração: cada um está escrito na
+    <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/.specify/memory/constitution.md">Constituição</a>
+    e cobrado por teste ou pelo banco. É por eles que se decide o que entra no produto e como.
+  </p>
+  <dl>
+    <dt>Publicação imutável, correção por sucessão</dt>
+    <dd>O publicado não se edita; corrige-se por Retificação, com vigência própria. Atos da
+      seleção têm sucessores, e nada normativo é excluído (<a href="#retificacao">Retificação</a>,
+      <a href="#pg-estados">estados</a>).</dd>
+    <dt>Uma fonte para cada informação</dt>
+    <dd>Telas, PDF, relatórios e portal derivam da mesma configuração; nada é mantido à mão em dois
+      lugares.</dd>
+    <dt>Automação que mostra o que faz</dt>
+    <dd>O que o sistema infere, deriva ou faz em lote mostra a origem e o alcance antes da
+      confirmação — a prévia “nada foi gravado” antes de publicar, cortar, convocar ou aplicar a todos
+      (<a href="#conferencia-nos-atos-irreversiveis">conferências</a>).</dd>
+    <dt>Negar por padrão, com segregação de funções</dt>
+    <dd>Toda operação exige permissão explícita e escopo de unidade; quem elabora não publica
+      sozinho, e quem julga recurso fica fora da cadeia que avaliou
+      (<a href="#pg-permissoes">quem pode fazer o quê</a>).</dd>
+    <dt>Rastreabilidade inviolável</dt>
+    <dd>Atos e trilha ficam em tabelas que nem a aplicação consegue alterar, em duas camadas
+      independentes (<a href="#auditoria">segurança e auditoria</a>).</dd>
+    <dt>A ausência dita, e não presumida</dt>
+    <dd>O sistema diz “ainda não apurado”, “nenhuma inscrição declarou esta lista”, “o que esta
+      página não cobre” — em vez de mostrar zero ou silêncio.</dd>
+    <dt>A recusa diz a quem pedir</dt>
+    <dd>Quando alguém não pode praticar um ato, a tela nomeia a capacidade e o ato que faltam, e não
+      só “acesso negado”.</dd>
+    <dt>Jornada completa e simples</dt>
+    <dd>Uma capacidade só conta quando o ator a alcança pela tela, do começo ao fim; a solução mais
+      simples que preserve as garantias vence.</dd>
+  </dl>
+</section>
+
+<section id="fluxo-geral">
+  <h2>O ciclo de vida de um Edital</h2>
+  <p>Um processo seletivo atravessa quatro fases. As caixas cheias são <strong>atos</strong> (alguém confirma e o sistema grava para sempre); as tracejadas acontecem só quando o Edital as declara.</p>
+
+  <h3>1 · Preparar e publicar a norma <span class="miudo">— quem elabora, homologa e publica</span></h3>
   <ol class="fluxo">
-    <li>Processo + Edital<small>nascem juntos</small></li>
+    <li>Processo + Edital<small>nascem juntos, numa unidade</small></li>
     <li>Perfis de Vaga<small>vagas, cotas, reservas</small></li>
     <li>Cronograma</li>
-    <li>Etapas de Avaliação</li>
+    <li>Etapas de Avaliação<small>com ou sem barema</small></li>
     <li>Marcos de classificação<small>ordem, corte, recurso, sorteio</small></li>
     <li>Inscrição<small>período, documentos, requerimento</small></li>
     <li class="ato">Submeter → Homologar → Publicar<small>irreversível; depois, só Retificação</small></li>
   </ol>
 
-  <h3>2 · Receber e avaliar <span class="miudo">— candidatos, comissão</span></h3>
+  <h3>2 · Receber as inscrições <span class="miudo">— candidatos, quem publica</span></h3>
   <ol class="fluxo">
     <li class="pub">Inscrições<small>no portal, sem senha</small></li>
+    <li>Comprovante<small>protocolo, PDF e e-mail</small></li>
+    <li class="opc">Publicar as inscrições<small>recebidas, preliminar, homologação</small></li>
+  </ol>
+
+  <h3>3 · Avaliar e decidir <span class="miudo">— comissão, quem publica, julgador</span></h3>
+  <ol class="fluxo">
     <li>Comissão e alocação<small>quem atua em qual Etapa</small></li>
     <li>Distribuição<small>quem avalia qual inscrição</small></li>
     <li class="etapa">Avaliação<small>nota ou decisão</small></li>
     <li class="ato">Consolidação<small>Resultado da Etapa</small></li>
-    <li class="opc">Corte<small>quem segue para a Etapa seguinte</small></li>
-  </ol>
-
-  <h3>3 · Decidir e concluir <span class="miudo">— comissão, quem publica, julgador</span></h3>
-  <ol class="fluxo">
     <li class="ato">Ordenar<small>por nota ou por sorteio, por recorte</small></li>
     <li class="pub">Publicar resultado<small>preliminar ou definitivo</small></li>
     <li class="opc">Recursos<small>dentro da janela</small></li>
-    <li class="ato">Cortar e apurar vagas</li>
+    <li class="ato">Cortar<small>quem segue, para a Etapa seguinte ou para a vaga</small></li>
+  </ol>
+
+  <h3>4 · Convocar e concluir <span class="miudo">— comissão, formalização, Registro Acadêmico</span></h3>
+  <ol class="fluxo">
+    <li class="ato">Apurar vagas</li>
     <li class="ato">Convocar<small>titulares num ato; suplência</small></li>
-    <li class="opc">Requerimento de Matrícula</li>
-    <li class="opc">Exportação ao Registro Acadêmico</li>
+    <li class="opc">Publicar as convocações</li>
+    <li class="opc">Documentos da convocação<small>envio e conferência</small></li>
+    <li class="ato">Desfecho<small>aceite, não atendimento, indeferimento…</small></li>
+    <li class="opc">Entrega à formalização</li>
+    <li class="opc">Requerimento e exportação<small>ao Registro Acadêmico</small></li>
+    <li class="ato">Encerrar o Edital</li>
   </ol>
   <p class="miudo">Da ordenação em diante tudo acontece <a href="#g-recorte">por recorte</a> — a ampla concorrência e cada cota de cada Perfil têm ordem, faixa, vagas e fila próprias. O mapa completo, com as relações, está em <a href="#pg-pecas">Como as peças se encaixam</a>.</p>
-
 </section>
+
 <section id="fundamentos">
   <h2>Conceitos fundamentais</h2>
-  <p>Doze palavras que aparecem em toda tela. Cada cartão leva à ficha completa.</p>
+  <p>Catorze palavras que aparecem em toda tela. Cada cartão leva à ficha completa.</p>
   <div class="cartoes">
+    <a class="cartao" href="#cadastro-de-unidades"><span class="etiqueta">A instituição</span><h4>Unidade</h4><p>A quem pertencem o Processo, os acessos e o cabeçalho de cada ato.</p></a>
     <a class="cartao" href="#pg-edital"><span class="etiqueta">O certame</span><h4>Processo Seletivo</h4><p>Reúne um ou mais Editais e é dono da comissão.</p></a>
     <a class="cartao" href="#pg-edital"><span class="etiqueta">A norma</span><h4>Edital</h4><p>Tudo o que decide direitos. Publicado, só muda por Retificação.</p></a>
     <a class="cartao" href="#perfis"><span class="etiqueta">A oferta</span><h4>Perfil de Vaga</h4><p>Aquilo a que se concorre: um curso num campus, um cargo num polo.</p></a>
     <a class="cartao" href="#modalidades"><span class="etiqueta">A concorrência</span><h4>Modalidade</h4><p>Uma cota declarada no Perfil. A ampla concorrência é a “lista sem lista”.</p></a>
     <a class="cartao" href="#quadro-de-vagas"><span class="etiqueta">Os números</span><h4>Quadro de vagas</h4><p>Quantas vagas cabem em cada lista do Perfil. O percentual só sugere.</p></a>
+    <a class="cartao" href="#jornada"><span class="etiqueta">A participação</span><h4>Inscrição</h4><p>Uma pessoa num Perfil, numa lista, com protocolo. A titularidade é dela.</p></a>
     <a class="cartao" href="#etapas"><span class="etiqueta">A análise</span><h4>Etapa de Avaliação</h4><p>Um trabalho de análise do Edital inteiro: com nota ou com decisão.</p></a>
     <a class="cartao" href="#consolidacao"><span class="etiqueta">A consequência</span><h4>Resultado da Etapa</h4><p>Habilitada ou eliminada, com motivo — nasce da consolidação.</p></a>
     <a class="cartao" href="#classificacao"><span class="etiqueta">A ordem</span><h4>Marco classificatório</h4><p>A regra, no Perfil, de como e quando uma ordem se forma.</p></a>
     <a class="cartao" href="#ato"><span class="etiqueta">O ato</span><h4>Ato de ordenação</h4><p>A ordem emitida de um recorte, congelada, com todas as posições.</p></a>
     <a class="cartao" href="#corte"><span class="etiqueta">A faixa</span><h4>Corte</h4><p>Quantos da ordem seguem adiante — para a Etapa seguinte ou para a vaga.</p></a>
     <a class="cartao" href="#ocupacao"><span class="etiqueta">As vagas</span><h4>Apuração de ocupação</h4><p>Publicadas, efetivas, ocupadas — e quantas faltam.</p></a>
-    <a class="cartao" href="#convocacao"><span class="etiqueta">A chamada</span><h4>Convocação</h4><p>Chamar alguém da fila, com prazo; o desfecho mexe nas vagas.</p></a>
+    <a class="cartao" href="#convocacao"><span class="etiqueta">A chamada</span><h4>Convocação</h4><p>Chamar alguém da fila, com prazo e documentos; o desfecho mexe nas vagas.</p></a>
   </div>
-
 </section>
+
+<section id="jornadas">
+  <h2>As jornadas principais</h2>
+  <p>
+    O GPS tem dois canais, com sessões separadas: a <strong>gestão</strong>, onde a instituição
+    trabalha, e o <strong>portal</strong>, onde candidato e público consultam e participam. Cada ato
+    praticado na gestão aparece no portal como situação do candidato ou como publicação — nunca
+    como texto escrito à mão.
+  </p>
+
+  <h3>Na gestão: da lista ao ato, e de volta</h3>
+  <ol>
+    <li><strong>Processos Seletivos</strong> — a página inicial da gestão. Abre pelo que a pessoa pode
+      fazer agora (<a href="#acoes-disponiveis">Ações disponíveis para você</a>: atos de Edital e de
+      Retificação, recursos e avaliações) e, abaixo, os Processos da unidade, em
+      “Em andamento” por padrão, com busca e páginas.</li>
+    <li><strong>A página do Processo</strong> — o que fazer agora, o que precisa de atenção, os
+      próximos marcos e os Editais agrupados por situação (<a href="#pagina-do-processo">ver</a>).</li>
+    <li><strong>O Edital em preparo</strong> — a composição em nove passos, com a validação que diz o
+      que impede a publicação, a prévia do documento e da classificação, e o rito de submeter,
+      homologar e publicar (<a href="#composicao">ver</a>).</li>
+    <li><strong>O Edital publicado: o Centro de Controle</strong> — a página do Edital passa a dizer em
+      que fase a seleção está, o que falta, o que é seu e o que é de outro papel, e onde cada lista
+      está. É só de leitura: cada providência leva ao lugar do ato na tela de destino, que autoriza,
+      confere e grava, e de lá há o caminho de volta ao Centro (<a href="#centro-de-controle">ver</a>).</li>
+    <li><strong>Minhas atividades</strong> — o que é da pessoa entre Editais: os atos da presidência,
+      as conferências e as avaliações das Etapas a que está alocada, com a mesma regra do Centro
+      (<a href="#minhas-atividades">ver</a>).</li>
+    <li><strong>Acompanhar o conjunto</strong> — Visão Geral institucional, Agenda dos Editais,
+      relatório do Edital e consolidado da unidade, para quem acompanha e relata
+      (<a href="#pg-escala">ver</a>).</li>
+  </ol>
+
+  <h3>No portal: da vitrine ao desfecho</h3>
+  <ol>
+    <li><strong>Descobrir</strong> — a vitrine separa inscrições abertas, próximas, em andamento e
+      encerradas; a página da seleção diz o que vale hoje, as vagas, o cronograma, os documentos e o
+      que já foi publicado (<a href="#jornada">ver</a>).</li>
+    <li><strong>Inscrever-se</strong> — código no e-mail, sem senha; rascunho que se retoma;
+      documentos em PDF por requisito aplicável; envio conferido de novo no servidor; comprovante
+      com protocolo (<a href="#area-do-candidato">ver</a>).</li>
+    <li><strong>Acompanhar</strong> — a situação, o porquê e o que fazer, o resultado publicado e o
+      prazo de recurso; o recurso tem protocolo próprio (<a href="#recursos">ver</a>).</li>
+    <li><strong>Ser convocado</strong> — a convocação com prazo, os documentos que faltam e os que
+      estão com a comissão, o envio de vários de uma vez, o Requerimento de Matrícula quando o Edital o
+      pede, e o desfecho dito em frase simples, com o fundamento recolhido
+      (<a href="#documentos-da-convocacao">ver</a>).</li>
+  </ol>
+</section>
+
 <section id="recursos-disponiveis">
-  <h2>Recursos disponíveis</h2>
+  <h2>Capacidades centrais</h2>
+  <p>
+    Agrupadas pela fase em que servem. O selo diz o que existe: <span class="selo selo-impl">Implementado</span>
+    é alcançável pela tela, do começo ao fim; <span class="selo selo-parc">Parcial</span> funciona para
+    parte dos casos ou espera validação. O que é só especificado está em <a href="#estado-atual">Onde o GPS está</a>.
+  </p>
+  <h3>Preparar a norma</h3>
   <div class="cartoes">
     <a class="cartao" href="#composicao"><span class="etiqueta">Configurar <span class="selo selo-impl">Implementado</span></span><h4>Composição do Edital</h4><p>Nove passos em ordem de dependência, validação que diz o que impede a publicação, prévia do documento oficial e da classificação — inclusive do sorteio, com semente fictícia.</p></a>
-    <a class="cartao" href="#heranca"><span class="etiqueta">Configurar em escala <span class="selo selo-impl">Implementado</span></span><h4>Duplicar e aplicar a todos</h4><p>Duplicar um Perfil; aplicar Modalidade, forma de convocação, reversão ou marco aos demais Perfis, com prévia.</p></a>
-    <a class="cartao" href="#retificacao"><span class="etiqueta">Corrigir <span class="selo selo-impl">Implementado</span></span><h4>Retificação</h4><p>Altera, acrescenta e remove sobre o publicado, campo a campo, com vigência e rito próprios.</p></a>
-    <a class="cartao" href="#jornada"><span class="etiqueta">Participar <span class="selo selo-impl">Implementado</span></span><h4>Portal do candidato</h4><p>Acesso por código no e-mail, rascunho, documentos, protocolo, acompanhamento, recurso.</p></a>
-    <a class="cartao" href="#mesa"><span class="etiqueta">Avaliar <span class="selo selo-impl">Implementado</span></span><h4>Comissão e Mesa</h4><p>Alocação por Etapa, distribuição com rodízio proposto, avaliação, impedimento, consolidação em lote.</p></a>
-    <a class="cartao" href="#sorteio"><span class="etiqueta">Ordenar <span class="selo selo-impl">Implementado</span></span><h4>Classificação e sorteio</h4><p>Ordem por nota com desempates publicados, ou sorteio público verificável por terceiros.</p></a>
+    <a class="cartao" href="#heranca"><span class="etiqueta">Configurar em escala <span class="selo selo-impl">Implementado</span></span><h4>Duplicar, aplicar a todos e partir de um anterior</h4><p>Duplicar um Perfil; aplicar Modalidade, forma de convocação, reversão ou marco aos demais Perfis, com prévia; criar o Edital a partir de outro.</p></a>
+    <a class="cartao" href="#publicacao"><span class="etiqueta">Publicar <span class="selo selo-impl">Implementado</span></span><h4>Rito e documento oficial</h4><p>Submeter, homologar e publicar com segregação; o PDF gerado da configuração, em linguagem simples, com Autoridade Signatária e unidade.</p></a>
+    <a class="cartao" href="#retificacao"><span class="etiqueta">Corrigir <span class="selo selo-impl">Implementado</span></span><h4>Retificação</h4><p>Altera, acrescenta e remove sobre o publicado, campo a campo, com vigência e rito próprios, e o “O que mudou” público.</p></a>
+  </div>
+  <h3>Receber, avaliar e decidir</h3>
+  <div class="cartoes">
+    <a class="cartao" href="#jornada"><span class="etiqueta">Participar <span class="selo selo-impl">Implementado</span></span><h4>Portal do candidato</h4><p>Acesso por código no e-mail, rascunho, documentos, protocolo, acompanhamento, recurso, convocação.</p></a>
+    <a class="cartao" href="#publicacao-das-inscricoes"><span class="etiqueta">Publicar <span class="selo selo-impl">Implementado</span></span><h4>Publicação das inscrições</h4><p>Inscrições recebidas, resultado preliminar e homologação, cada uma um ato público com prévia.</p></a>
+    <a class="cartao" href="#mesa"><span class="etiqueta">Avaliar <span class="selo selo-impl">Implementado</span></span><h4>Comissão e Mesa</h4><p>Alocação por Etapa, distribuição com rodízio proposto, avaliação com barema, impedimento, consolidação em lote.</p></a>
+    <a class="cartao" href="#sorteio"><span class="etiqueta">Ordenar <span class="selo selo-impl">Implementado</span></span><h4>Classificação e sorteio</h4><p>Ordem por nota com desempates publicados, ou sorteio público sobre a Loteria Federal, verificável por qualquer pessoa.</p></a>
     <a class="cartao" href="#operar-por-marco"><span class="etiqueta">Conduzir <span class="selo selo-impl">Implementado</span></span><h4>Operar por marco</h4><p>Ordenar, cortar, apurar e publicar todos os recortes de um marco num gesto conferido.</p></a>
-    <a class="cartao" href="#convocacao"><span class="etiqueta">Concluir <span class="selo selo-impl">Implementado</span></span><h4>Convocação em fluxo</h4><p>Convocar titulares num ato, registrar vencidos em lote, apuração seguinte automática.</p></a>
-    <a class="cartao" href="#painel"><span class="etiqueta">Acompanhar <span class="selo selo-impl">Implementado</span></span><h4>Painel e visão institucional</h4><p>Pulso de inscrições, condições de atenção por papel, visão de todos os Editais por Perfil.</p></a>
-    <a class="cartao" href="#acoes-disponiveis"><span class="etiqueta">Trabalhar <span class="selo selo-impl">Implementado</span></span><h4>Ações disponíveis e Agenda</h4><p>A Lista abre pelo que cabe a quem lê — Edital, Retificação, recurso, avaliação —, e a Agenda põe os cronogramas da unidade num mês.</p></a>
-    <a class="cartao" href="#relatorio-do-edital"><span class="etiqueta">Relatar <span class="selo selo-impl">Implementado</span></span><h4>Relatórios do Edital e da unidade</h4><p>Página e PDF para quem não opera o sistema: o que saiu e o que falta de um Edital, e a soma de um conjunto. Cada emissão fica na trilha.</p></a>
-    <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-impl">Implementado</span></span><h4>Avisos aos candidatos</h4><p>Um e-mail que aponta o resultado ou a chamada publicada, por gesto de uma pessoa; desligado em produção até a LGPD.</p></a>
-    <a class="cartao" href="#publicacao"><span class="etiqueta">Publicar <span class="selo selo-impl">Implementado</span></span><h4>Edital em linguagem simples</h4><p>O documento do Edital novo com resumo, sumário e seções organizadas pelas perguntas do candidato (069); as frases novas aguardam aprovação antes do primeiro Edital real.</p></a>
-    <a class="cartao" href="#entrar-e-navegar"><span class="etiqueta">Entrar <span class="selo selo-impl">Implementado</span></span><h4>Porta e navegação da gestão</h4><p>Página de acesso, barra lateral com só o que cada papel abre, e o caminho no topo de cada tela. Pronta para a conta institucional; fora dos testes, a entrada ainda é a de demonstração.</p></a>
-    <a class="cartao" href="#gestao-de-acessos"><span class="etiqueta">Administrar <span class="selo selo-impl">Implementado</span></span><h4>Acessos e unidades</h4><p>Conceder e revogar papéis por unidade, com motivo e sem autoconcessão; suspender pessoas; cadastrar unidades. Tudo na trilha.</p></a>
-    <a class="cartao" href="#kit-de-divulgacao"><span class="etiqueta">Divulgar <span class="selo selo-parc">Parcial</span></span><h4>Kit de divulgação</h4><p>Textos prontos, peças por família e formato e o pacote .zip, tirados do Edital publicado, com aviso quando uma Retificação os torna antigos. A peça espera a comunicação.</p></a>
-    <a class="cartao" href="#assistente-do-edital"><span class="etiqueta">Tirar dúvidas <span class="selo selo-parc">Parcial</span></span><h4>Assistente de dúvidas, só interno</h4><p>Respostas prontas sobre o Edital publicado e um piloto com modelo de linguagem, na gestão e para participantes escolhidos. Na máquina de desenvolvimento, uma chave abre o painel na página pública da seleção (074); a produção recusa subir com ela, e nenhum candidato real o vê.</p></a>
+    <a class="cartao" href="#resultados"><span class="etiqueta">Divulgar e contestar <span class="selo selo-impl">Implementado</span></span><h4>Resultados e recursos</h4><p>Preliminar e definitivo por recorte, janela recursal, admissibilidade, impedimento e Resultado sucessor.</p></a>
   </div>
-
+  <h3>Convocar e concluir</h3>
+  <div class="cartoes">
+    <a class="cartao" href="#convocacao"><span class="etiqueta">Chamar <span class="selo selo-impl">Implementado</span></span><h4>Convocação em fluxo</h4><p>Titulares num ato conferido, suplência, correção com motivo, vencidos em lote, apuração seguinte automática, publicação das convocações no GPS.</p></a>
+    <a class="cartao" href="#documentos-da-convocacao"><span class="etiqueta">Conferir <span class="selo selo-impl">Implementado</span></span><h4>Documentos da convocação</h4><p>A lista do que cada convocado apresenta, o envio pelo portal e a conferência item a item com o documento à vista.</p></a>
+    <a class="cartao" href="#formalizacao"><span class="etiqueta">Entregar <span class="selo selo-parc">Parcial</span></span><h4>Entrega à formalização</h4><p>O setor designado recebe e exporta os documentos dos aptos de um Edital.</p></a>
+    <a class="cartao" href="#registro-academico"><span class="etiqueta">Matricular <span class="selo selo-parc">Parcial</span></span><h4>Requerimento e exportação</h4><p>O Requerimento de Matrícula no portal e a planilha para o Registro Acadêmico, que diz o que não sabe.</p></a>
+    <a class="cartao" href="#encerramento-seguro"><span class="etiqueta">Encerrar <span class="selo selo-impl">Implementado</span></span><h4>Encerramento seguro</h4><p>Encerrar o Edital e o Processo só quando a conclusão é regular, e advertir o que ainda está em aberto.</p></a>
+  </div>
+  <h3>Conduzir, acompanhar e comunicar</h3>
+  <div class="cartoes">
+    <a class="cartao" href="#centro-de-controle"><span class="etiqueta">Orientar <span class="selo selo-impl">Implementado</span></span><h4>Centro de Controle e Minhas atividades</h4><p>A fase, o que falta e de quem é a próxima ação, por Edital e por pessoa; cada providência leva à tela do ato.</p></a>
+    <a class="cartao" href="#conferencia-nos-atos-irreversiveis"><span class="etiqueta">Prevenir <span class="selo selo-parc">Parcial</span></span><h4>Conferências antes do irreversível</h4><p>Prévia do alcance antes de publicar, ordenar, cortar e convocar; o desfecho oferece só o que cabe; o texto que chega ao candidato é conferido antes do envio.</p></a>
+    <a class="cartao" href="#painel"><span class="etiqueta">Acompanhar <span class="selo selo-impl">Implementado</span></span><h4>Painel, Visão Geral e Agenda</h4><p>Pulso de inscrições e sinais de atenção por Processo, panorama da unidade por Perfil, cronogramas num mês.</p></a>
+    <a class="cartao" href="#relatorio-do-edital"><span class="etiqueta">Relatar <span class="selo selo-impl">Implementado</span></span><h4>Relatórios do Edital e da unidade</h4><p>Página e PDF para quem não opera o sistema. O consolidado da unidade é parcial.</p></a>
+    <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-parc">Parcial</span></span><h4>E-mails aos candidatos</h4><p>Código de acesso, comprovante e convocação por mensagem sempre; avisos de resultado, de chamada e de pendência documental desligados em produção até a validação de LGPD.</p></a>
+    <a class="cartao" href="#kit-de-divulgacao"><span class="etiqueta">Divulgar <span class="selo selo-parc">Parcial</span></span><h4>Kit de divulgação</h4><p>Textos prontos, peças por família e formato e o pacote .zip, tirados do Edital publicado. A peça espera a comunicação.</p></a>
+    <a class="cartao" href="#cenarios-de-treinamento"><span class="etiqueta">Treinar <span class="selo selo-impl">Implementado</span></span><h4>Cenários de treinamento</h4><p>Editais fictícios parados em fases diferentes, para treinar a equipe e homologar, fora de produção.</p></a>
+    <a class="cartao" href="#assistente-do-edital"><span class="etiqueta">Tirar dúvidas <span class="selo selo-parc">Parcial</span></span><h4>Assistente de dúvidas, só interno</h4><p>Respostas prontas sobre o Edital publicado e um piloto com modelo de linguagem, para participantes escolhidos. Nenhum candidato real o vê.</p></a>
+  </div>
 </section>
+
+<section id="governanca">
+  <h2>Governança e operação institucional</h2>
+  <p>
+    O GPS é um sistema de várias unidades. A <strong>unidade</strong> é cadastrada pela aplicação, pelo
+    Administrador institucional, com motivo e trilha; cada Processo nasce numa unidade, e cada ato e
+    cada documento dizem a unidade que o praticou. Uma pessoa pode atuar em mais de uma unidade e
+    escolhe em qual está trabalhando (<a href="#cadastro-de-unidades">unidades</a>).
+  </p>
+  <ul>
+    <li><strong>Acessos por unidade, pela tela.</strong> Os papéis são concedidos e revogados na
+      unidade por quem administra acessos, com motivo, sem autoconcessão, e valem a cada ação; uma
+      pessoa pode ser suspensa. Só o Administrador institucional nasce por comando de implantação
+      (<a href="#gestao-de-acessos">ver</a>).</li>
+    <li><strong>Da unidade ao Edital.</strong> A unidade cuida dos papéis — elaborar, homologar,
+      publicar, gerir, julgar, exportar, comunicar, formalizar, auditar. O Processo tem a sua
+      comissão, com presidência e membros alocados por Etapa; a Formalização é designada por Edital. O
+      que se pode fazer num Edital é a soma do que o papel permite com o vínculo que a pessoa tem com
+      aquele Processo.</li>
+    <li><strong>Controle.</strong> Toda operação sensível vai à trilha, com ator, ato e motivo; a
+      Trilha da unidade a mostra ao Auditor. Atos em lote continuam sendo atos de uma pessoa
+      (<a href="#trilha-da-unidade">ver</a>).</li>
+  </ul>
+  <div class="aviso aviso-lacuna">
+    <span class="titulo">O que a governança ainda não tem</span>
+    <p>Não há papel de direção ou coordenação: o panorama institucional foi para o Gestor. A
+      autenticação institucional real não existe — a gestão está pronta para recebê-la, mas o provedor
+      do Ifes não foi integrado (<a href="#estado-atual">ver abaixo</a>).</p>
+  </div>
+</section>
+
+<section id="transparencia">
+  <h2>O candidato e a transparência pública</h2>
+  <p>
+    O portal é o outro lado de cada ato. O candidato não precisa de senha nem de cadastro prévio:
+    entra pelo código enviado ao e-mail, e a titularidade sobre a inscrição é o que o autoriza.
+    O endereço nunca carrega dado pessoal.
+  </p>
+  <ul>
+    <li><strong>Situação antes da evidência.</strong> O acompanhamento abre por um rótulo — convocado,
+      aguardando chamada, eliminado, vaga aceita —, o porquê e o que fazer; o fundamento normativo fica
+      recolhido abaixo da frase simples.</li>
+    <li><strong>A lista pública e a situação individual são coisas separadas.</strong> A lista nomeia
+      só quem recebeu posição; quem não recebeu vê a própria situação dentro da própria inscrição
+      (<a href="#resultados">ver</a>).</li>
+    <li><strong>O que é público é verificável.</strong> Editais, Retificações com o “O que mudou”,
+      listas de inscrições, resultados e convocações ficam publicados com documento; o sorteio tem
+      página de verificação e manifesto que qualquer pessoa confere, inclusive fora do sistema
+      (<a href="#sorteio-verificacao">ver</a>).</li>
+    <li><strong>O sistema escreve ao candidato em cinco situações</strong>, e duas delas — os avisos
+      de resultado e de chamada, e o de pendência documental — ficam desligadas em produção até a
+      validação de LGPD (<a href="#area-do-candidato">ver</a>).</li>
+  </ul>
+</section>
+
 <section id="estado-atual">
-  <h2>Estado atual do sistema</h2>
-  <div class="numeros">
-    <div><b>114</b><span>pastas em <code>specs/</code> (001 a 113)</span></div>
-    <div><b>22</b><span>módulos de domínio</span></div>
-    <div><b>53</b><span>tabelas append-only, em duas camadas</span></div>
-    <div><b>83</b><span>gatilhos de banco</span></div>
-    <div><b>166 + 38</b><span>rotas na gestão e no portal</span></div>
-    <div><b>14 638</b><span>testes passando contra PostgreSQL, na medição de 02/11</span></div>
-  </div>
-  <div class="aviso aviso-nota">
-    <span class="titulo">Em uma frase</span>
-    <p>O certame corre inteiro pela interface para as famílias do piloto — ampla concorrência com cotas,
-    sorteio, classificação por nota e análise documental. O que separa o piloto da operação
-    institucional é a <strong>autenticação real</strong> — a gestão está preparada para ela desde 31/10,
-    com pessoas, acessos por unidade concedidos pela tela e unidades cadastradas pela aplicação (106 a
-    110), mas o adaptador do provedor do Ifes não existe, e fora dos testes só se entra pelo seletor de
-    demonstração — e o <strong>caminho de produção</strong>. Detalhes em
-    <a href="#pg-hoje">Onde o sistema está hoje</a>; o que falta, em
-    <a href="#pg-evolucoes">O que ainda precisa evoluir</a>.</p>
-  </div>
+  <h2>Onde o GPS está</h2>
   <div class="aviso aviso-risco">
     <span class="titulo">O sistema não está em produção</span>
-    <p>Tudo o que esta documentação descreve roda em ambiente de desenvolvimento ou de demonstração.
-    Sem o seletor de identidade — que a configuração de produção recusa —, a página de acesso da gestão
-    responde <code>503</code>, <em>“Autenticação institucional não configurada”</em>, o portal não oferece
-    a <span class="rotulo-ui">Área de gestão</span>, e ninguém cria, publica ou
-    conduz um Edital. A autenticação institucional respondida em 28/08 foi o LDAP do Ifes; desde 31/10 a
-    gestão está pronta para recebê-la (106), mas o provedor e o protocolo continuam em aberto e o
-    adaptador real não foi escrito; também não há política de retenção e descarte de dados pessoais. São os dois
-    bloqueadores que <code>doc/implantacao-em-producao-ubuntu.md</code> declara no §1. O assistente de
-    dúvidas sobre o Edital (070, 071) é validação interna e piloto, e não está aberto ao público: a 074 o
-    leva à página da seleção só no desenvolvimento local, por uma chave que a configuração de produção
-    recusa. Ver
-    <a href="#maturidade">Maturidade</a>.</p>
+    <p>Tudo o que esta documentação descreve roda em ambiente de desenvolvimento, de demonstração ou
+      de treinamento. A gestão está preparada para a conta institucional desde 31/10 (106 a 110), mas
+      o adaptador do provedor do Ifes não existe: fora dos testes, só se entra pelo seletor de
+      demonstração, que a configuração de produção recusa. Sem ele a página de acesso responde
+      <code>503</code>, <em>“Autenticação institucional não configurada”</em>. Também falta a política
+      de retenção e descarte de dados pessoais. São os dois bloqueadores do §1 de
+      <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/doc/implantacao-em-producao-ubuntu.md">implantação em produção</a>;
+      o que falta para ligar a autenticação está em
+      <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/doc/ativacao-do-sso-institucional.md">ativação do SSO institucional</a>.</p>
   </div>
-
+  <div class="rolagem"><table>
+    <thead><tr><th>Situação</th><th>O que entra aqui</th></tr></thead>
+    <tbody>
+      <tr><td><span class="selo selo-impl">Implementado</span></td><td>O certame inteiro pela interface, para as famílias do piloto — ampla concorrência com cotas, sorteio, classificação por nota com barema e análise documental: composição, rito, Retificação, inscrição, avaliação, classificação, sorteio verificável, resultado, recurso, convocação com documentos e conferência, publicação de inscrições e de convocações, encerramento; Centro de Controle, Minhas atividades, gestão de acessos e de unidades, trilha.</td></tr>
+      <tr><td><span class="selo selo-parc">Parcial</span></td><td>Cadastro de reserva (o limite não é aplicado), Requerimento de Matrícula e exportação ao Registro Acadêmico (sem validação no sistema de destino), entrega à formalização, conferências nos atos irreversíveis (152), a convocação depois do envio (154), a vaga reservada sem ocupante (155, entrega mínima), a comunicação do desfecho (156: frase simples e fundamento no portal; sem pedido de desistência nem aviso por e-mail), consolidado da unidade, Kit de divulgação, assistente de dúvidas (interno).</td></tr>
+      <tr><td><span class="selo selo-prev">Previsto</span></td><td>Só especificado, sem código: a passagem da vaga entre cotas (158), “Quem faz o quê neste Edital” (161), o MVP de UX da Retificação (123), ordenar o cronograma por data e a prévia compacta (144, B e C), e o que a 112 decide sobre quem lê o que ainda não foi publicado.</td></tr>
+      <tr><td>Esperando pessoas</td><td>Decisões de produto e institucionais, validação com operadores e candidatos, e o que depende do Ifes — listados em <a href="#pg-evolucoes">O que ainda precisa evoluir</a>.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="miudo">A maturidade domínio a domínio e as contagens medidas estão em <a href="#maturidade">Onde o sistema está hoje</a>.</p>
 </section>
+
 <section id="perspectivas">
   <h2>Navegação por perspectiva</h2>
   <h3>Eu sou…</h3>
   <div class="cartoes">
     <a class="cartao" href="#pg-candidato"><h4>Candidato</h4><p>O que eu vejo, quando, e o que cada situação significa.</p></a>
     <a class="cartao" href="#pg-montar"><h4>Quem elabora o Edital</h4><p>Montar Perfis, vagas, cronograma, Etapas e marcos; o que fica bloqueado depois de publicar.</p></a>
-    <a class="cartao" href="#comissao"><h4>Presidente da comissão</h4><p>Compor a comissão, alocar, distribuir, consolidar, ordenar, cortar, convocar.</p></a>
-    <a class="cartao" href="#mesa"><h4>Membro / avaliador</h4><p>Onde meu trabalho aparece, o que posso ver e quando a avaliação termina.</p></a>
+    <a class="cartao" href="#centro-de-controle"><h4>Presidente da comissão</h4><p>O Centro de Controle de cada Edital: compor a comissão, alocar, distribuir, consolidar, ordenar, cortar, convocar e conferir.</p></a>
+    <a class="cartao" href="#minhas-atividades"><h4>Membro / avaliador</h4><p>Minhas atividades e a Mesa: onde meu trabalho aparece e quando a avaliação termina.</p></a>
     <a class="cartao" href="#pg-escala"><h4>Gestor</h4><p>Criar Processo e Edital, acompanhar pelo painel, pela visão institucional e pela Agenda, e relatar à direção.</p></a>
     <a class="cartao" href="#recursos"><h4>Julgador de recursos</h4><p>Admissibilidade, mérito, impedimento e o Resultado sucessor.</p></a>
+    <a class="cartao" href="#formalizacao"><h4>Formalização</h4><p>Os Editais em que fui designado, os documentos dos aptos e a exportação.</p></a>
     <a class="cartao" href="#registro-academico"><h4>Registro Acadêmico</h4><p>O que chega, em que formato, e o que o sistema declara que não sabe.</p></a>
     <a class="cartao" href="#gestao-de-acessos"><h4>Quem administra acessos</h4><p>Conceder e revogar papéis na unidade, suspender pessoas, cadastrar unidades — e o que ninguém faz por si mesmo.</p></a>
     <a class="cartao" href="#kit-de-divulgacao"><h4>Comunicação</h4><p>Os textos, as peças por formato e o pacote de um Edital publicado, e quando o material exportado ficou antigo.</p></a>
@@ -273,13 +501,32 @@
     <a class="cartao" href="#progressao"><p>Como alguém avança de uma Etapa para outra</p></a>
     <a class="cartao" href="#classificacao"><p>O que é um Marco Classificatório</p></a>
     <a class="cartao" href="#pg-impacto"><p>O que acontece se eu mudar uma configuração</p></a>
-    <a class="cartao" href="#acoes-disponiveis"><p>O que me cabe fazer agora</p></a>
+    <a class="cartao" href="#minhas-atividades"><p>O que me cabe fazer agora</p></a>
     <a class="cartao" href="#relatorio-do-edital"><p>Como relatar um Edital a quem não opera o sistema</p></a>
     <a class="cartao" href="#encerramento-seguro"><p>Quando posso encerrar um Edital</p></a>
     <a class="cartao" href="#pg-catalogo"><p>Se o sistema suporta o meu cenário</p></a>
     <a class="cartao" href="#assistente-do-edital"><p>Se o candidato já tira dúvidas com um assistente (ainda não; só no desenvolvimento local)</p></a>
     <a class="cartao" href="#pg-evolucoes"><p>O que ainda não funciona</p></a>
   </div>
+</section>
+
+<section id="referencias">
+  <h2>Referências</h2>
+  <p>Esta página é a visão de conjunto. O detalhe mora em outro lugar, e não se repete aqui:</p>
+  <dl>
+    <dt>Autoridade de domínio</dt>
+    <dd>A <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/.specify/memory/constitution.md">Constituição</a> — em conflito com esta documentação, ela prevalece.</dd>
+    <dt>O requisito de cada entrega</dt>
+    <dd>As pastas de <a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/specs">specs/</a>, com spec, plano e tarefas, e a tabela de incrementos do <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/README.md">README</a>, que diz o estado de cada uma.</dd>
+    <dt>Implantação e operação</dt>
+    <dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/doc/implantacao-em-producao-ubuntu.md">Implantação em produção</a>, <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/doc/ativacao-do-sso-institucional.md">ativação do SSO institucional</a> e os <a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/doc/cenarios-de-treinamento">cenários de treinamento</a>.</dd>
+    <dt>Aprender os conceitos com exemplos</dt>
+    <dd><a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/doc/gps-por-dentro">GPS por Dentro</a> — guia interativo com oito candidatos fictícios, sem integração com o sistema.</dd>
+    <dt>Estado das frentes de trabalho</dt>
+    <dd>A <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/doc/auditoria-consolidacao-gps-2026-11-13/README.md">auditoria de consolidação de 13/11</a> e as decisões pendentes em <a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/doc">doc/</a>.</dd>
+    <dt>Quem desenvolve</dt>
+    <dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/AGENTS.md">AGENTS.md</a>, com as armadilhas que não se descobrem lendo o código.</dd>
+  </dl>
 </section>
 <nav class="pag-nav"></nav>
 </article>
@@ -763,7 +1010,9 @@
     </div>
 
     <h3>O mesmo mapa, em texto</h3>
-<pre class="arte">PROCESSO SELETIVO ─── COMISSÃO (presidente, membros)
+<pre class="arte">UNIDADE ── acessos (papéis concedidos na unidade) · Autoridades Signatárias
+   │
+PROCESSO SELETIVO ─── COMISSÃO (presidente, membros)
    │                        └── ALOCAÇÃO por Edital × Etapa ── ATRIBUIÇÃO por inscrição
    └── EDITAL ── Publicação / Retificação ──► Versão Consolidada (a norma que vale)
          │
@@ -784,7 +1033,10 @@ INSCRIÇÃO (candidato × Perfil × lista)
                                             └──► APURAÇÃO ──► CONVOCAÇÃO ──► DESFECHO
                                                      ▲                          │
                                                      └──── efeito de ocupação ◄─┘
-                                                                   └──► REQUERIMENTO ──► EXPORTAÇÃO</pre>
+
+   em cada CONVOCAÇÃO: DOCUMENTOS (envio no portal ──► CONFERÊNCIA) ──► DESFECHO
+                        ├──► REQUERIMENTO ──► EXPORTAÇÃO ao Registro Acadêmico
+                        └──► ENTREGA À FORMALIZAÇÃO (setor designado, para os aptos)</pre>
 
     <div class="aviso aviso-chave">
       <span class="titulo">Três coisas que o mapa ensina</span>
@@ -905,6 +1157,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
     <div class="rolagem"><table>
       <thead><tr><th>Conceito</th><th>O que é</th><th>Ciclo de vida</th><th>Selo</th></tr></thead>
       <tbody>
+        <tr><td><a href="#cadastro-de-unidades">Unidade</a></td><td>A parte da instituição que conduz Processos; dona dos acessos e das Autoridades Signatárias, e dita em cada ato.</td><td>Cadastrada pela aplicação, com motivo; ativa ou inativa</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td><a href="#estrutura">Processo Seletivo</a></td><td>O certame. Contém Editais e é dono da comissão.</td><td>Em elaboração → Ativo → Encerrado / Cancelado</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td><a href="#estrutura">Edital</a></td><td>O instrumento normativo.</td><td>Em elaboração → Em revisão → Homologado → Publicado → Encerrado / Cancelado</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td><a href="#publicacao">Publicação</a></td><td>Ato irreversível que torna uma revisão do Edital pública e imutável, com documento PDF.</td><td>Nasce e não muda</td><td><span class="selo selo-impl">Implementado</span></td></tr>
@@ -920,6 +1173,8 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td><a href="#corte">Corte</a></td><td>A faixa que segue adiante.</td><td>Sucessão (geração) e continuação</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td><a href="#ocupacao">Apuração de ocupação</a></td><td>Publicadas, efetivas e ocupadas de um recorte.</td><td>Sucessão; obsolescência derivada</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         <tr><td><a href="#convocacao">Convocação</a></td><td>Chamada de uma pessoa, com prazo e desfecho.</td><td>Prazo derivado; um desfecho vigente</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+        <tr><td><a href="#documentos-da-convocacao">Documento da convocação</a></td><td>O que o convocado apresenta, e a conferência de cada item pela comissão.</td><td>Apresentação e conferência gravadas como atos; situação derivada</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+        <tr><td><a href="#formalizacao">Entrega à formalização</a></td><td>A passagem dos documentos dos aptos ao setor designado para o Edital.</td><td>Designação e exportação gravadas como atos</td><td><span class="selo selo-parc">Parcial</span></td></tr>
       </tbody>
     </table></div>
   </section>
@@ -4695,8 +4950,6 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           (AUD-RET-05, decisão do usuário).</li>
         <li>A trilha grava a permissão usada, e não o papel.</li>
         <li>A jornada com três pessoas reais (SC-978) espera o usuário. <span class="selo selo-parc">Parcial</span></li>
-        <li>Com duas ou mais em curso, o título da tela Retificar sai <em>“Retificaçãoões”</em>: o plural do
-          <em>template</em> acrescenta o sufixo ao singular. Ver <a href="#evolucoes-codigo">Polimento que se vê na tela</a>.</li>
       </ul>
     </div>
 
@@ -9405,15 +9658,18 @@ FILA        = chamáveis
       até …”</em> (063). Ver <a href="#area-do-candidato">Área do candidato</a>.
     </p>
 
-    <div class="aviso aviso-lacuna"><span class="titulo">Parcial: a gestão não diz de qual lista é</span>
+    <div class="aviso aviso-nota"><span class="titulo">A gestão também diz de qual lista é</span>
       <p>
         Até 06/10, nenhuma superfície fora do PDF nomeava o recorte, e o cotista via dois blocos com o
         mesmo título. Hoje o portal diz a lista em toda parte: a página do Edital nomeia o link pela lista
         (062), a página da publicação a põe no título e na aba, inclusive <em>“Ampla concorrência”</em>, e
-        o acompanhamento tem um cartão por lista (063). <strong>Na gestão, não:</strong> o histórico
-        <span class="rotulo-ui">Resultados divulgados</span> do marco mistura as listas numa tabela sem
-        coluna de lista, e a prévia <span class="rotulo-ui">Publicar resultado</span> não nomeia o recorte.
-        <span class="selo selo-parc">Parcial</span>
+        o acompanhamento tem um cartão por lista (063). <strong>Na gestão, desde 13/11 (#534):</strong> a
+        prévia <span class="rotulo-ui">Publicar resultado</span> traz <em>“Lista de concorrência: …”</em> no
+        título e na legenda, e o histórico <span class="rotulo-ui">Resultados divulgados</span> do marco ganhou
+        a coluna <span class="rotulo-ui">Lista</span>, com o nome gravado nos bytes de cada publicação. A
+        frase <em>“Este marco ainda não pode ser publicado como definitivo”</em> continua dizendo <em>marco</em>,
+        de propósito: o recurso pendente, a reavaliação e a providência travam todas as listas.
+        <span class="selo selo-impl">Implementado</span>
       </p>
     </div>
     <div class="aviso aviso-lacuna"><span class="titulo">Lacuna: corte e faixa não são divulgados</span>
@@ -9789,12 +10045,12 @@ Em paralelo, se o Edital pede:
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Convocar e as recusas</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/convocar.py">convocacao/application/convocar.py</a></dd>
-      <dt>A leitura do recorte</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/selectors.py">application/selectors.py</a></dd>
-      <dt>A fila, pura</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/fila.py">domain/fila.py</a></dd>
-      <dt>Espécie e fundamento derivados</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/especie.py">domain/especie.py</a> · <a href="../../backend/processo_seletivo/convocacao/domain/fundamento.py">domain/fundamento.py</a></dd>
-      <dt>Vocabulário e códigos de recusa</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/nomes.py">domain/nomes.py</a></dd>
-      <dt>Os sete modelos append-only (três da 115: item da lista, apresentação e conferência)</dt><dd><a href="../../backend/processo_seletivo/convocacao/models.py">convocacao/models.py</a></dd>
+      <dt>Convocar e as recusas</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/convocar.py">convocacao/application/convocar.py</a></dd>
+      <dt>A leitura do recorte</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/selectors.py">application/selectors.py</a></dd>
+      <dt>A fila, pura</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/fila.py">domain/fila.py</a></dd>
+      <dt>Espécie e fundamento derivados</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/especie.py">domain/especie.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/fundamento.py">domain/fundamento.py</a></dd>
+      <dt>Vocabulário e códigos de recusa</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/nomes.py">domain/nomes.py</a></dd>
+      <dt>Os sete modelos append-only (três da 115: item da lista, apresentação e conferência)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/models.py">convocacao/models.py</a></dd>
     </dl></div></details>
   </section>
 
@@ -9971,11 +10227,11 @@ Em paralelo, se o Edital pede:
     </p>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Os três gestos e a chamada individual</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/fluxo.py">convocacao/application/fluxo.py</a></dd>
-      <dt>O alcance e a assinatura</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/alcance.py">domain/alcance.py</a></dd>
-      <dt>A comunicação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">application/comunicar.py</a></dd>
+      <dt>Os três gestos e a chamada individual</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/fluxo.py">convocacao/application/fluxo.py</a></dd>
+      <dt>O alcance e a assinatura</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/alcance.py">domain/alcance.py</a></dd>
+      <dt>A comunicação</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/comunicar.py">application/comunicar.py</a></dd>
       <dt>A tela</dt><dd><code>interface/templates/interface/convocacao.html</code> · <code>interface/views.py</code> (<code>convocacao</code>, <code>convocar_titulares_view</code>, <code>emitir_pendentes_view</code>) · <code>interface/conducao_da_convocacao.py</code> (o passo de cada chamada, o índice e a situação do aviso, desde a <a href="#convocacao-pelas-perguntas">143</a>)</dd>
-      <dt>A correção (120)</dt><dd><code>convocacao/application/convocar.py</code> (a convocação nomeada e a assinatura conferidas sob a trava) · <code>convocacao/application/fluxo.py</code> (a prévia e o impedimento) · <code>_correcao_da_convocacao.html</code> · <code>static/interface/correcao-da-convocacao.js</code> (estende, antecipa ou mantém) · <code>tests/navegador/test_jornada_da_correcao_da_convocacao.py</code> · <a href="../../specs/120-correcao-da-convocacao-pela-gestao/spec.md">spec 120</a></dd>
+      <dt>A correção (120)</dt><dd><code>convocacao/application/convocar.py</code> (a convocação nomeada e a assinatura conferidas sob a trava) · <code>convocacao/application/fluxo.py</code> (a prévia e o impedimento) · <code>_correcao_da_convocacao.html</code> · <code>static/interface/correcao-da-convocacao.js</code> (estende, antecipa ou mantém) · <code>tests/navegador/test_jornada_da_correcao_da_convocacao.py</code> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/specs/120-correcao-da-convocacao-pela-gestao/spec.md">spec 120</a></dd>
     </dl></div></details>
 
     <h3 id="conferencia-antes-de-convocar">Convocar os titulares passa sempre por uma conferência (140) <span class="selo selo-impl">Implementado</span></h3>
@@ -10644,9 +10900,9 @@ Em paralelo, se o Edital pede:
     </ul>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Desfechar e a apuração seguinte</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/desfechar.py">convocacao/application/desfechar.py</a></dd>
-      <dt>Atestar</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/atestar.py">application/atestar.py</a></dd>
-      <dt>O prazo</dt><dd><a href="../../backend/processo_seletivo/convocacao/domain/prazo.py">domain/prazo.py</a></dd>
+      <dt>Desfechar e a apuração seguinte</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/desfechar.py">convocacao/application/desfechar.py</a></dd>
+      <dt>Atestar</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/atestar.py">application/atestar.py</a></dd>
+      <dt>O prazo</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/domain/prazo.py">domain/prazo.py</a></dd>
       <dt>Histórico do recorte</dt><dd><code>interface/templates/interface/convocacao_historico.html</code> (mostra os identificadores da apuração e da ordem citadas)</dd>
     </dl></div></details>
   </section>
@@ -10771,13 +11027,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </ul>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Disponibilidade (a política)</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/disponibilidade.py">requerimentos/domain/disponibilidade.py</a></dd>
-      <dt>A metade que a submissão da inscrição alcança</dt><dd><a href="../../backend/processo_seletivo/requerimentos/application/exigencia.py">application/exigencia.py</a></dd>
-      <dt>Abrir, copiar, gravar, enviar, suceder</dt><dd><a href="../../backend/processo_seletivo/requerimentos/application/preencher.py">application/preencher.py</a></dd>
-      <dt>Declaração, saneamento e conferência</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/declaracao.py">domain/declaracao.py</a></dd>
-      <dt>Porta do endereço e base de CEP</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/endereco.py">domain/endereco.py</a> · <a href="../../backend/processo_seletivo/requerimentos/infrastructure/referencia_local.py">infrastructure/referencia_local.py</a> · comando <code>carregar_ceps</code></dd>
-      <dt>Vocabulário fechado</dt><dd><a href="../../backend/processo_seletivo/requerimentos/domain/nomes.py">domain/nomes.py</a></dd>
-      <dt>Declaração do momento, no Edital</dt><dd><a href="../../backend/processo_seletivo/editais/application/requerimento.py">editais/application/requerimento.py</a> · <code>compor_inscricao.html</code></dd>
+      <dt>Disponibilidade (a política)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/disponibilidade.py">requerimentos/domain/disponibilidade.py</a></dd>
+      <dt>A metade que a submissão da inscrição alcança</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/application/exigencia.py">application/exigencia.py</a></dd>
+      <dt>Abrir, copiar, gravar, enviar, suceder</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/application/preencher.py">application/preencher.py</a></dd>
+      <dt>Declaração, saneamento e conferência</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/declaracao.py">domain/declaracao.py</a></dd>
+      <dt>Porta do endereço e base de CEP</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/endereco.py">domain/endereco.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/infrastructure/referencia_local.py">infrastructure/referencia_local.py</a> · comando <code>carregar_ceps</code></dd>
+      <dt>Vocabulário fechado</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/requerimentos/domain/nomes.py">domain/nomes.py</a></dd>
+      <dt>Declaração do momento, no Edital</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/editais/application/requerimento.py">editais/application/requerimento.py</a> · <code>compor_inscricao.html</code></dd>
     </dl></div></details>
   </section>
 
@@ -10894,13 +11150,13 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <p>A da versão que a convocação citou. Ler a norma de hoje faria uma Retificação mudar, em silêncio, o arquivo de quem já foi chamado.</p></div></details>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Quem entra no arquivo</dt><dd><a href="../../backend/processo_seletivo/matriculas/application/populacao.py">matriculas/application/populacao.py</a></dd>
-      <dt>As 34 colunas — uma função por coluna</dt><dd><a href="../../backend/processo_seletivo/matriculas/domain/colunas.py">domain/colunas.py</a> · <a href="../../backend/processo_seletivo/matriculas/domain/flexao.py">domain/flexao.py</a></dd>
-      <dt>O conceito de lacuna</dt><dd><a href="../../backend/processo_seletivo/matriculas/domain/lacuna.py">domain/lacuna.py</a></dd>
-      <dt>Compor, gerar e registrar</dt><dd><a href="../../backend/processo_seletivo/matriculas/application/exportar.py">application/exportar.py</a> · <code>matriculas/models.py</code> (<code>GeracaoDeArquivo</code>)</dd>
-      <dt>A planilha, construída e nunca copiada</dt><dd><a href="../../backend/processo_seletivo/matriculas/infrastructure/planilha.py">infrastructure/planilha.py</a></dd>
+      <dt>Quem entra no arquivo</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/application/populacao.py">matriculas/application/populacao.py</a></dd>
+      <dt>As 34 colunas — uma função por coluna</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/colunas.py">domain/colunas.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/flexao.py">domain/flexao.py</a></dd>
+      <dt>O conceito de lacuna</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/domain/lacuna.py">domain/lacuna.py</a></dd>
+      <dt>Compor, gerar e registrar</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/application/exportar.py">application/exportar.py</a> · <code>matriculas/models.py</code> (<code>GeracaoDeArquivo</code>)</dd>
+      <dt>A planilha, construída e nunca copiada</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/matriculas/infrastructure/planilha.py">infrastructure/planilha.py</a></dd>
       <dt>Papel próprio</dt><dd><code>interface/identidade.py</code> (<code>exportador</code>) · <code>interface/acoes.py</code></dd>
-      <dt>Contrato de saída</dt><dd><a href="../../specs/029-requerimento-de-matricula/contrato-de-saida.md">specs/029-…/contrato-de-saida.md</a> · <a href="../../specs/031-exportacao-de-matriculas/contracts/">specs/031-…/contracts/</a></dd>
+      <dt>Contrato de saída</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/specs/029-requerimento-de-matricula/contrato-de-saida.md">specs/029-…/contrato-de-saida.md</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/tree/main/specs/031-exportacao-de-matriculas/contracts">specs/031-…/contracts/</a></dd>
     </dl></div></details>
   </section>
 
@@ -11153,14 +11409,14 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Rotas do portal</dt><dd><a href="../../backend/processo_seletivo/portal/urls.py">portal/urls.py</a></dd>
-      <dt>Vitrine, página do Edital, situação pública</dt><dd><a href="../../backend/processo_seletivo/portal/views.py">portal/views.py</a> (<code>vitrine</code>, <code>selecao</code>) · <a href="../../backend/processo_seletivo/portal/leitura.py">portal/leitura.py</a></dd>
-      <dt>Rascunho, retomada e preenchimento</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/rascunho.py">inscricoes/application/rascunho.py</a></dd>
-      <dt>As conferências do envio</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/submissao.py">inscricoes/application/submissao.py</a></dd>
-      <dt>A lista exigida gravada no envio</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/lista_exigida.py">inscricoes/application/lista_exigida.py</a> · <code>inscricoes/models.py</code> (<code>ItemDaListaExigida</code>)</dd>
-      <dt>Protocolo e autenticidade do comprovante</dt><dd><a href="../../backend/processo_seletivo/inscricoes/domain/protocolo.py">domain/protocolo.py</a> · <a href="../../backend/processo_seletivo/inscricoes/domain/autenticidade.py">domain/autenticidade.py</a></dd>
-      <dt>Titularidade</dt><dd><a href="../../backend/processo_seletivo/inscricoes/domain/titularidade.py">domain/titularidade.py</a></dd>
-      <dt>Entrega mediada de documento</dt><dd><a href="../../backend/processo_seletivo/portal/arquivos.py">portal/arquivos.py</a> · <a href="../../backend/processo_seletivo/inscricoes/storage.py">inscricoes/storage.py</a> · <code>shared/arquivos.py</code></dd>
+      <dt>Rotas do portal</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/urls.py">portal/urls.py</a></dd>
+      <dt>Vitrine, página do Edital, situação pública</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/views.py">portal/views.py</a> (<code>vitrine</code>, <code>selecao</code>) · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/leitura.py">portal/leitura.py</a></dd>
+      <dt>Rascunho, retomada e preenchimento</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/rascunho.py">inscricoes/application/rascunho.py</a></dd>
+      <dt>As conferências do envio</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/submissao.py">inscricoes/application/submissao.py</a></dd>
+      <dt>A lista exigida gravada no envio</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/lista_exigida.py">inscricoes/application/lista_exigida.py</a> · <code>inscricoes/models.py</code> (<code>ItemDaListaExigida</code>)</dd>
+      <dt>Protocolo e autenticidade do comprovante</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/protocolo.py">domain/protocolo.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/autenticidade.py">domain/autenticidade.py</a></dd>
+      <dt>Titularidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/domain/titularidade.py">domain/titularidade.py</a></dd>
+      <dt>Entrega mediada de documento</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/arquivos.py">portal/arquivos.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/storage.py">inscricoes/storage.py</a> · <code>shared/arquivos.py</code></dd>
       <dt>Convocação do candidato</dt><dd><code>portal/views.py</code> (<code>convocacao</code>) · <code>portal/templates/portal/convocacao.html</code></dd>
     </dl></div></details>
   </section>
@@ -11263,12 +11519,24 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       A 154 revê requisitos das <code>063</code>, <code>115</code>, <code>118</code>, <code>121</code> e <code>143</code>, com a redação anterior preservada no arquivo de cada uma. Faltam o fechamento (rastreabilidade, README, capturas finais) e a suíte final.
     </p>
 
-    <h3 id="desfecho-comunicado">O desfecho comunicado ao candidato (156) <span class="selo selo-prev">Previsto</span></h3>
+    <h3 id="desfecho-comunicado">O desfecho comunicado ao candidato (156) <span class="selo selo-parc">Parcial</span></h3>
     <p>
-      Só especificada e planejada (54 tarefas, nenhuma feita): <strong>nada dela está no código</strong>. A tela continua com <em>“Resultado registrado: ‹rótulo›”</em>, <em>“Registrado em ‹data›: ‹fundamento›”</em>
-      e a frase do aceite, e a mensagem de convocação continua dizendo que o prazo é <em>“contado do envio desta mensagem”</em>. O que a 156 pretende: cada desfecho em duas camadas (a frase simples por espécie e o
-      fundamento recolhido); o aceite e a regularização apontando a seção aplicável do Edital publicado, ou mandando consultá-lo, sem presumir matrícula nem inventar próximo passo; o indeferimento apontando a seção de recursos;
-      o contato do canal da unidade; a desistência pedida pelo portal, com protocolo, cancelável até o desfecho, que a comissão homologa ao registrar a desistência expressa; e um aviso do desfecho por e-mail atrás de uma chave própria.
+      Três das oito histórias entraram (13/11, PRs 525, 529 e 533). <strong>O desfecho em duas camadas</strong>: o
+      acompanhamento e a convocação dizem uma frase simples por espécie — <em>“A comissão registrou o resultado da sua
+      convocação em ‹data›. Este registro não é matrícula, bolsa nem contrato.”</em>, ou, no não atendimento, que o prazo
+      terminou sem que a convocação fosse atendida —, e o fundamento gravado no ato fica logo abaixo, palavra por palavra,
+      recolhido em <span class="rotulo-ui">Fundamento do registro</span>. A frase é derivada a cada leitura e nunca se grava.
+      <strong>Por que a pessoa foi chamada</strong>: a convocação aberta diz, por espécie, se ela foi chamada pela posição,
+      porque uma vaga ficou livre ou para regularizar, com o <span class="rotulo-ui">Fundamento da convocação</span>
+      recolhido. <strong>O prazo da mensagem é a data</strong>: o e-mail da convocação e o da correção deixaram de dizer
+      <em>“contado do envio desta mensagem”</em>, que no reenvio parecia dar prazo novo a quem estava para perder a vaga.
+    </p>
+    <p>
+      Continuam só especificados: o aceite e a regularização apontando a seção aplicável do Edital publicado; o contato do
+      canal da unidade; a desistência pedida pelo portal, com protocolo, e a comissão que a homologa; e o aviso do desfecho
+      por e-mail, atrás de chave própria — hoje o desfecho não gera mensagem nenhuma. Ver
+      <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/specs/156-comunicacao-do-desfecho/tasks.md">as tarefas da 156</a>
+      (18 de 54 feitas). <span class="selo selo-parc">Parcial</span>
     </p>
 
     <h3 id="convocacao-pelo-link">O link leva à convocação, e o e-mail diz o que fazer <span class="selo selo-impl">Implementado</span></h3>
@@ -11428,11 +11696,11 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Modelos da identidade</dt><dd><a href="../../backend/processo_seletivo/identidade/models.py">identidade/models.py</a></dd>
-      <dt>Desafio de acesso, tetos e consumo atômico</dt><dd><a href="../../backend/processo_seletivo/identidade/application/desafio.py">application/desafio.py</a> · <code>domain/codigo.py</code></dd>
-      <dt>A quem o endereço pertence</dt><dd><a href="../../backend/processo_seletivo/identidade/application/associacao.py">application/associacao.py</a></dd>
-      <dt>Forma canônica do e-mail</dt><dd><a href="../../backend/processo_seletivo/identidade/domain/enderecos.py">domain/enderecos.py</a></dd>
-      <dt>Identidade na sessão do portal</dt><dd><a href="../../backend/processo_seletivo/portal/identidade.py">portal/identidade.py</a></dd>
+      <dt>Modelos da identidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/models.py">identidade/models.py</a></dd>
+      <dt>Desafio de acesso, tetos e consumo atômico</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/desafio.py">application/desafio.py</a> · <code>domain/codigo.py</code></dd>
+      <dt>A quem o endereço pertence</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/associacao.py">application/associacao.py</a></dd>
+      <dt>Forma canônica do e-mail</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/domain/enderecos.py">domain/enderecos.py</a></dd>
+      <dt>Identidade na sessão do portal</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/portal/identidade.py">portal/identidade.py</a></dd>
     </dl></div></details>
   </section>
 
@@ -11455,7 +11723,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <li>O parecer de quem o avaliou, só o dele, no resultado desfavorável, enquanto cabe contestar.</li>
           <li>A própria posição em cada lista do resultado divulgado (<em>“Nº lugar”</em> ou <em>“Sem posição nesta lista”</em>) e a lista pública, com o prazo de recurso.</li>
           <li>Os documentos que enviou, o que era facultativo, o comprovante e o código de verificação.</li>
-          <li>A própria convocação — espécie, fundamento, vencimento, <em>“Comunicação enviada em”</em> e, depois, <em>“Resultado registrado: {Vaga aceita…} — {fundamento}”</em>; o prazo num formato só, <em>“O prazo ainda não começou a correr: ele conta a partir do envio da comunicação.”</em> e, vencido, <em>“O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão.”</em>; com documentos, o que falta, o que está com a comissão e o motivo de cada pendência, sem o nome de quem conferiu (<a href="#convocado-no-portal">118</a>) — por <span class="rotulo-ui">Ver convocação</span>.</li>
+          <li>A própria convocação — espécie, fundamento, vencimento, <em>“Comunicação enviada em”</em> e, depois, <em>“Resultado registrado: {Vaga aceita…}”</em>, a frase simples do desfecho e o fundamento recolhido (156); o prazo num formato só, <em>“O prazo ainda não começou a correr: ele conta a partir do envio da comunicação.”</em> e, vencido, <em>“O fim do prazo não decide nada sozinho: quem registra o resultado é a comissão.”</em>; com documentos, o que falta, o que está com a comissão e o motivo de cada pendência, sem o nome de quem conferiu (<a href="#convocado-no-portal">118</a>) — por <span class="rotulo-ui">Ver convocação</span>.</li>
           <li>O próprio requerimento, enviado e anterior.</li>
           <li><strong>Não vê:</strong> “titular”, “suplente”, “classificado”, “aprovado”, “dentro das vagas”, “lista de espera”, a posição na fila de chamada, os números da ocupação, o atestado de fato externo, parecer ou nota de terceiros.</li>
         </ul>
@@ -11494,7 +11762,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
 
     <h3>Os e-mails que o sistema envia</h3>
     <p>
-      Além do código de acesso, o sistema envia mensagem em exatamente cinco situações, e uma varredura
+      O sistema envia mensagem em exatamente cinco situações — o código de acesso, com o aviso de mudança de credencial, é a primeira —, e uma varredura
       na suíte reprova qualquer envio num módulo não declarado — a próxima não entra calada. A quarta
       entrou em 09/10 com a 066, revisando a regra da área do candidato (FR-084 da <code>010</code>): o
       <strong>aviso complementar</strong>, vinculado a ato oficial já publicado e sem efeito sobre prazo,
@@ -11525,9 +11793,9 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
     </div>
 
     <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
-      <dt>Código e aviso de mudança</dt><dd><a href="../../backend/processo_seletivo/identidade/application/mensagem.py">identidade/application/mensagem.py</a></dd>
-      <dt>Confirmação de inscrição</dt><dd><a href="../../backend/processo_seletivo/inscricoes/application/mensagem.py">inscricoes/application/mensagem.py</a></dd>
-      <dt>Convocação</dt><dd><a href="../../backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
+      <dt>Código e aviso de mudança</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/identidade/application/mensagem.py">identidade/application/mensagem.py</a></dd>
+      <dt>Confirmação de inscrição</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/inscricoes/application/mensagem.py">inscricoes/application/mensagem.py</a></dd>
+      <dt>Convocação</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
       <dt>Aviso de pendência documental</dt><dd><code>avisos/application/pendencias.py</code> · <code>avisos/domain/pendencia.py</code> · <code>avisos/migrations/0002_origem_pendencia.py</code></dd>
       <dt>Aviso complementar</dt><dd><code>avisos/application/despacho.py</code> · <code>avisos/domain/modelos_iniciais.py</code> · <code>interface/avisos.py</code></dd>
       <dt>A varredura das cinco situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code></dd>
@@ -12581,7 +12849,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
       <p><strong>Exemplo:</strong> o valor que a inscrição congelou no envio (<code>ValorDeFato</code>) estava na lista e não tinha gatilho — uma camada só. Desde 26/09 tem gatilho e recusa no modelo.</p>
       <details><summary>Em detalhes</summary>
         <p>
-          Os 83 gatilhos estão em 33 migrations e cobrem 67 tabelas — contagem de quando as append-only eram 53; hoje são 59, e o total de gatilhos não foi recontado —: as 53 append-only (a posição na
+          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 13/11), com 59 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
           ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e catorze
           que não são append-only mas travam o que ficou final ou não se exclui — o artefato de anexo
           congelado, a alteração normativa e a Retificação finais, o Requerimento de Matrícula enviado,
@@ -12785,19 +13053,19 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <summary>Onde isso mora no código</summary>
       <div class="evidencia-corpo">
         <dl>
-          <dt>Política de papéis e append-only</dt><dd><a href="../../backend/processo_seletivo/seguranca/papeis.py">seguranca/papeis.py</a> (é a <strong>única</strong> fonte da política)</dd>
+          <dt>Política de papéis e append-only</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/seguranca/papeis.py">seguranca/papeis.py</a> (é a <strong>única</strong> fonte da política)</dd>
           <dt>Comando de provisionamento</dt><dd><code>manage.py provisionar_papeis</code></dd>
-          <dt>Trilha e idempotência</dt><dd><a href="../../backend/processo_seletivo/auditoria/models.py">auditoria/models.py</a> (inclui <code>detalhe</code>) · <a href="../../backend/processo_seletivo/shared/idempotency.py">shared/idempotency.py</a></dd>
-          <dt>Controle otimista e Problem Details</dt><dd><a href="../../backend/processo_seletivo/shared/concurrency.py">shared/concurrency.py</a> · <a href="../../backend/processo_seletivo/shared/api/problems.py">shared/api/problems.py</a></dd>
-          <dt>Integridade dos arquivos</dt><dd><a href="../../backend/processo_seletivo/shared/arquivos.py">shared/arquivos.py</a> (<code>resumo</code>, SHA-256)</dd>
-          <dt>Serialização canônica (a base de todo resumo)</dt><dd><a href="../../backend/processo_seletivo/shared/canonical.py">shared/canonical.py</a></dd>
+          <dt>Trilha e idempotência</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/auditoria/models.py">auditoria/models.py</a> (inclui <code>detalhe</code>) · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/idempotency.py">shared/idempotency.py</a></dd>
+          <dt>Controle otimista e Problem Details</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/concurrency.py">shared/concurrency.py</a> · <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/api/problems.py">shared/api/problems.py</a></dd>
+          <dt>Integridade dos arquivos</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/arquivos.py">shared/arquivos.py</a> (<code>resumo</code>, SHA-256)</dd>
+          <dt>Serialização canônica (a base de todo resumo)</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/canonical.py">shared/canonical.py</a></dd>
           <dt>Limite de campos</dt><dd><code>config/settings/base.py</code> (<code>DATA_UPLOAD_MAX_NUMBER_FIELDS</code>) · <code>interface/erros.py</code></dd>
           <dt>Política de segurança de conteúdo</dt><dd><code>shared/politica_de_conteudo.py</code> (o primeiro do <code>MIDDLEWARE</code>, em <code>config/settings/base.py</code>)</dd>
           <dt>Barreiras de produção</dt><dd><code>config/settings/production.py</code> — seletor, identidade demo do portal, fonte de demonstração do sorteio, o assistente na página pública da seleção (074), <code>API_AUTHENTICATION_CLASSES</code></dd>
           <dt>Autenticação provisória</dt><dd><code>seguranca/api/authentication.py</code></dd>
           <dt>E-mails</dt><dd><code>identidade/application/mensagem.py</code> · <code>inscricoes/application/mensagem.py</code> · <code>convocacao/application/comunicar.py</code> · <code>avisos/application/despacho.py</code></dd>
           <dt>Ações em lote explícitas</dt><dd><code>.specify/memory/constitution.md</code> (versão 1.2.0, 28/09)</dd>
-          <dt>Observabilidade</dt><dd><a href="../../backend/processo_seletivo/shared/observability.py">shared/observability.py</a> (logs em JSON, recusas de domínio) · <code>/health</code>, <code>/readiness</code>, <code>/metrics</code></dd>
+          <dt>Observabilidade</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/shared/observability.py">shared/observability.py</a> (logs em JSON, recusas de domínio) · <code>/health</code>, <code>/readiness</code>, <code>/metrics</code></dd>
         </dl>
       </div>
     </details>
@@ -12944,7 +13212,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#resultados">Prévia assinada antes de publicar</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#resultados">Publicação sucessora no mesmo endereço</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="prev"><td><a href="#resultados">Documento único com todas as listas do marco</a></td><td><span class="selo selo-prev">Previsto</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Decisão pendente.</td></tr>
-<tr data-marca="parc"><td><a href="#resultados">Resultado que diz de qual lista é</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No portal, sim (062, 063); o histórico e a prévia da gestão, não.</td></tr>
+<tr data-marca="impl"><td><a href="#resultados">Resultado que diz de qual lista é</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>No portal (062, 063) e, desde 13/11, no histórico e na prévia da gestão.</td></tr>
 <tr data-marca="lacun"><td><a href="#resultados">Divulgar o corte (faixa) ao público</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#recursos">Recurso com janela, admissibilidade e mérito</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="na"><td><a href="#recursos">Anexo de prova pelo recorrente</a></td><td><span class="selo selo-na">Não se aplica</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Não aceito, por decisão; a comissão instrui.</td></tr>
@@ -13807,11 +14075,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <h1>Onde o sistema está hoje</h1>
     <p class="lead">
       O que está pronto, o que está pela metade e o que falta, domínio a domínio — e o que a
-      confrontação entre código, especificação, interface e documentação encontrou. Lido contra a
-      <code>main</code> de 29/09/2026 (<code>3a53b23a</code>), acrescido da spec 054 contra a de
-      30/09/2026 (<code>86bbf49</code>), das 055 a 068 contra a de 10/10 (<code>0edc0f8d</code>), das
-      069 a 072 contra a de 15/10 (<code>db428b30</code>), das 073 a 092 contra a de 19/10
-      (<code>745f115f</code>) e das 093 a 097 contra a de 21/10 (<code>e869d7a2</code>).
+      confrontação entre código, especificação, interface e documentação encontrou. A tabela de
+      domínios foi escrita contra a <code>main</code> de 29/09/2026 e acrescida a cada revisão, até a de
+      13/11 (<code>60f9ff24</code>); as contagens e o veredito foram refeitos em 13/11/2026, contra a
+      <code>main</code> em <code>214c8cd7</code>. O histórico está em <a href="#pg-sobre">Sobre esta documentação</a>.
     </p>
   </header>
   <div class="nesta-pagina"></div>
@@ -13825,30 +14092,30 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       provedor do Ifes não foi integrado, e não há caminho de produção no ar.
     </p>
 
-    <h3>Os números de hoje, contra os de 30/10</h3>
+    <h3>Os números de 13/11, contra os de 04/11</h3>
     <div class="numeros">
-      <div><b>114</b><span>pastas de especificação (eram 105), até a 113; a 112 só especificada</span></div>
-      <div><b>53</b><span>tabelas append-only (eram 46): o item da lista da chamada, a apresentação e a conferência de documento (115); a definição dos documentos, a designação, a revogação dela e a exportação à formalização (117)</span></div>
-      <div><b>83</b><span>gatilhos de banco (eram 72): seis dos documentos da convocação (115) e cinco da formalização (117)</span></div>
-      <div><b>107</b><span>migrations (eram 102)</span></div>
-      <div><b>23</b><span>módulos de domínio (eram 22): a <code>formalizacao</code> (117)</span></div>
-      <div><b>515</b><span>arquivos Python de aplicação (eram 488)</span></div>
-      <div><b>213</b><span>templates (eram 200): os documentos da convocação (115), a formalização (117), as obrigações do convocado (118) e a conferência na Caixa (116)</span></div>
-      <div><b>1 062</b><span>arquivos de teste Python, + 17 de JavaScript (eram 1 005 + 17)</span></div>
-      <div><b>166</b><span>rotas da gestão (eram 153): três dos documentos da convocação (115), nove da formalização (117) e a conferência na Caixa (116); o portal tem 38 (eram 36), duas da 115</span></div>
+      <div><b>162</b><span>pastas de especificação (eram 120 em 04/11; a página dizia 114, número de 02/11 que não foi recontado), até a 161 — as 133 e 134 em duas pastas cada</span></div>
+      <div><b>59</b><span>tabelas append-only (eram 53): as vagas não preenchidas (155), as publicações das inscrições (148) e das convocações (149), entre outras</span></div>
+      <div><b>91</b><span>gatilhos de banco (eram 83), em 36 migrations, sobre 73 tabelas</span></div>
+      <div><b>118</b><span>migrations (eram 107)</span></div>
+      <div><b>24</b><span>módulos de domínio (eram 23): o <code>treinamento</code> (134)</span></div>
+      <div><b>580</b><span>arquivos Python de aplicação (eram 515)</span></div>
+      <div><b>259</b><span>templates (eram 213)</span></div>
+      <div><b>1 220</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 062 + 17)</span></div>
+      <div><b>180</b><span>rotas da gestão (eram 166); o portal tem 42 (eram 38)</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
-      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code> (001–113 e a revisão 012-013)</dd>
+      <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code></dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 83, em 33 migrations, sobre 67 tabelas</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code>, sem o <code>interface</code>, que ganhou o seu na 089 e não é domínio (o <code>shared</code> não tem)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 135,6 mil linhas (eram 124,6 mil)</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte contra PostgreSQL fecha em 14 638 passando, 14 pulados e nenhuma falha (medido nesta revisão, em 02/11, sobre a <code>main</code> em <code>4dbc5872</code>, com o grupo opcional <code>assistente</code> e sem o <code>navegador</code>, 4 workers, em 569s). Os 14 são 10 pares do vocabulário, a recusa por vendor, o E2E contra a Caixa e os dois arquivos de jornada no navegador (107, 110), que pulam sem o grupo <code>navegador</code>; o CI instala os dois grupos, e lá são 12. A medição anterior, de 21/10, dava 12 775 e 12</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 165,6 mil linhas (eram 135,6 mil)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte não foi rodada nesta revisão. A última medição registrada da suíte inteira contra PostgreSQL é a da 136: 17 698 passando, 12 pulados e nenhuma falha (09/11, com os grupos <code>navegador</code> e <code>assistente</code>). O CI roda em três fatias desde 11/11, e nenhuma delas mede o total</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 21/10, <code>e869d7a2</code>, medida pelo mesmo método — que reproduz ali, sem exceção, os números publicados naquela data; 76 <em>commits</em> desde então, até <code>62824816</code>; a de 30/10, <code>62824816</code>, também reproduz a dela, com 94 <em>commits</em> até <code>4dbc5872</code>; e a de 02/11, <code>4dbc5872</code>, reproduz todos os números dela, com 103 <em>commits</em> até <code>a3e23b1f</code>, a base da revisão de 04/11. A de 19/10, <code>745f115f</code>, a de 15/10, <code>db428b30</code>, e a de 10/10, <code>0edc0f8d</code>, também reproduziam os delas. A de 30/09, <code>86bbf49</code>, reproduzia os dela, exceto os arquivos de teste, contados em 29/09</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 04/11, <code>a3e23b1f</code>, medida em 13/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data — menos as especificações, que davam 120 e a página mantinha em 114. As linhas de base anteriores (21/10, 30/10, 02/11) também reproduziam as suas</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -13973,7 +14240,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#auditoria">Auditoria e imutabilidade</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>59 tabelas em duas camadas independentes (a contagem dos 83 gatilhos é de quando eram 53) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
+            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (13/11) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
             <td>Quem audita o nível institucional é decisão pendente (108, 110)</td>
           </tr>
           <tr>
@@ -14024,38 +14291,35 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h3>O veredito de hoje</h3>
     <div class="aviso aviso-chave">
-      <span class="titulo">Pronto para piloto assistido</span>
+      <span class="titulo">Pronto para piloto assistido; não pronto para produção</span>
       <p>
-        A auditoria de convergência de 20/09 dizia <em>“pronto apenas para piloto controlado”</em> e
-        punha sete condicionantes para sair dele. <strong>Seis estão fechadas</strong>: a frase de
-        ausência passou a ser relativa ao alcance, o recurso aparece desde que chega, o link da
-        Supervisão tem guarda, o sinal sem caminho diz a quem pedir, o Cronograma deixou de
-        encaminhar à Retificação e a fase do Evento é derivada. <strong>Resta a sétima</strong>, a
-        autenticação institucional real. Somou-se a ela, explícita, a falta de caminho de produção.
+        <strong>O produto está completo de ponta a ponta para o piloto.</strong> Um Edital das famílias
+        do piloto é composto, publicado, recebe inscrições, é avaliado, classificado ou sorteado,
+        tem resultado e recurso, convoca, confere documentos e se encerra — tudo pela interface, com
+        o Centro de Controle dizendo a próxima ação e Minhas atividades dizendo o que é de cada pessoa.
+        Das sete condicionantes que a auditoria de convergência de 20/09 punha para sair do “piloto
+        controlado”, seis estão fechadas.
       </p>
       <p>
-        E a decisão de 28/09 mudou o peso de um domínio: se o PDF do sistema é o Edital oficial, o que
+        <strong>O que separa o piloto da produção não é funcionalidade, é implantação.</strong> Resta
+        a sétima condicionante, a autenticação institucional real: a gestão está pronta para ela desde
+        31/10 (106 a 110), mas o provedor do Ifes não foi integrado, e o único método de entrada continua
+        sendo a demonstração. Somam-se a ela a política de retenção de dados pessoais e o caminho de
+        produção, que não está no ar.
+      </p>
+      <p>
+        <strong>Parte do que está pronto espera pessoas, e não código.</strong> Os textos da jornada
+        pública e o texto de finalidade de nome e CPF esperam quem responde pela proteção de dados; os
+        avisos por e-mail ficam desligados em produção pelo mesmo motivo; várias entregas recentes —
+        Minhas atividades, a conferência com o documento à vista, a publicação das convocações —
+        não foram validadas com operadores. E, desde 28/09, o PDF do sistema é o Edital oficial: o que
         ele omite, erra ou inventa passa a ser norma publicada.
-      </p>
-      <p>
-        Em 02/11, a condicionante mudou de forma, e não de estado: a gestão ficou pronta para a
-        autenticação institucional (106 a 110), mas o provedor do Ifes não foi integrado, e <strong>o
-        sistema continua fora de produção</strong>. Em 15/10, nada mudou nessa condicionante: <strong>o
-        sistema não estava em produção</strong>. A
-        gestão responde <code>503</code> sem o seletor de identidade, o LDAP respondido em 28/08 não foi
-        implementado e não há política de retenção. Desde 16/10 a gestão tem porta e navegação (075,
-        076) — a página de acesso e a barra lateral —, e nenhuma delas muda a condicionante, porque o
-        único método de entrada continua sendo a demonstração. O que entrou desde 10/10 — o Edital em linguagem
-        simples, a jornada pública do portal e o assistente de dúvidas — tem validação humana pendente
-        ou é interno: as frases novas da 069 e o percurso e o texto de finalidade da 072 esperam
-        aprovação, e o assistente é piloto, fechado ao candidato — a 074 o abre na página da seleção só
-        na máquina de desenvolvimento.
       </p>
     </div>
     <p>
       A observação metodológica de 20/09 continua valendo como método: um piloto com uma pessoa
       acumulando papéis vê tudo, e por isso não encontra os defeitos que só a segregação de funções
-      expõe. Os quatro defeitos do painel que ela explicava estão corrigidos; o método é o que fica.
+      expõe.
     </p>
 
     <h3>O que o produto faz melhor que a média</h3>
@@ -14533,9 +14797,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>O desfecho da convocação não tem sucessão pela tela</strong></td><td>A convocação já se corrige com motivo (120). O desfecho não: <span class="rotulo-ui">Registrar desfecho</span> só aparece enquanto não há desfecho, e a inércia de quem já aceitou, ou um desfecho errado, não se registra pela interface</td><td><code>convocacao/models.py</code> (a sucessão existe no modelo); <code>convocacao.html</code></td></tr>
         <tr><td><strong>Atos que não se desfazem saem de botão comum</strong></td><td>A 152 pôs conferência e desenho de perigo no corte e na chamada individual. Seguem como ação principal, sem conferência: <span class="rotulo-ui">Realizar o sorteio desta lista</span>, <span class="rotulo-ui">Fixar os N participantes</span>, <span class="rotulo-ui">Apurar a ocupação</span>, <span class="rotulo-ui">Registrar desfecho</span> e <span class="rotulo-ui">Pedir a faixa seguinte</span>; só a anulação do sorteio é perigo. A história 2 da 152 — a ciência do prazo antes de um ato que o conta — não foi entregue: o predicado existe sem uso</td><td><code>sorteio.html</code>, <code>ocupacao.html</code>, <code>convocacao.html</code>; <code>specs/152-*/</code>. Rever isso é decisão de governança (084)</td></tr>
         <tr><td><strong>A vaga de cota sem concorrente só tem a entrega mínima</strong></td><td>A 155 registra a vaga <em>não preenchida</em> pelo ato manual. A lista reservada vazia ser sorteada, apurada e reverter (FR-6328 a FR-6333) é a <em>próxima entrega</em>, e a reversão por saldo (D-015 da 155) está aberta. O inventário de 13/11 dá a 155 como incompleta</td><td><code>ocupacao/application/destinacao.py</code>; <code>doc/achado-reservada-vazia-nao-reverte.md</code></td></tr>
-        <tr><td><strong>A mensagem de reenvio da convocação sugere prazo novo</strong></td><td>Ela diz <em>“contado do envio desta mensagem”</em> para um prazo que é data fixa, num ato cujo efeito é perder a vaga. A 156 prevê o ajuste e está como <em>Previsto</em></td><td><code>convocacao/templates/convocacao/mensagem/inicial.txt</code>, <code>inicial.html</code>, <code>correcao.txt</code>, <code>correcao.html</code>; <code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code></td></tr>
+        <tr><td><strong>O cartão da convocação mostra só o último envio</strong></td><td>O <em>“Comunicação enviada em”</em> da gestão e do portal esconde, depois de um reenvio, quando a primeira mensagem saiu — a informação que importa quando o Edital conta o prazo a partir do recebimento do e-mail. As frases do portal que dizem <em>“contado do envio da comunicação”</em> (FR-3998 da 125) ficaram fora da 156 de propósito. Nenhuma spec cobre isto. A mensagem em si já diz só a data (#533)</td><td><code>interface/templates/interface/convocacao.html</code>; <code>portal/templates/portal/_convocacao_da_inscricao.html</code>; <code>doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md</code> (a segunda oportunidade)</td></tr>
         <tr><td><strong>Alocação de avaliação e distribuição sem Perfil nem polo</strong></td><td>A conferência documental ganhou o Perfil (115). A alocação à Etapa e a distribuição não: com 7 polos, a comissão inteira alcança os sete, e nenhuma comissão local recebe só o que é dela (DP-11)</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> sem <em>“Perfil”</em></td></tr>
-        <tr><td><strong>O resultado publicado não diz de qual lista é, na gestão</strong></td><td>O portal diz em toda parte. O histórico <span class="rotulo-ui">Resultados divulgados</span> não tem coluna de lista, e a prévia de publicação não nomeia o recorte: com vários recortes por marco, quem publica não vê qual lista confirma</td><td><code>publicacoes_do_marco.html</code>; <code>previa_de_publicacao.html</code></td></tr>
         <tr><td><strong>A reabilitação antes do marco alcança o corte só pelo Centro</strong></td><td>A 141 faz o Centro esperar a avaliação do reabilitado antes de oferecer a ordem e o corte. O serviço não mudou: fora do Centro a janela permanece, e o teste ainda prende o achado. A escolha entre as três saídas é do usuário (<a href="#evolucoes-decisoes">grupo 2</a>)</td><td><code>classificacao/application/corte.py</code> (<code>_reingressou</code>); <code>interface/andamento.py</code>; <code>doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md</code></td></tr>
         <tr><td><strong>Cadastro de reserva: só a ampla com linha geral</strong></td><td>A 097 faz a convocação chamar o cadastro, e só na ampla de Perfil cujo quadro tem só a linha geral. Os Editais de bolsista, que repartem o cadastro entre Modalidades, não têm spec, e a Revisão avisa que a convocação será feita fora do sistema. O Perfil só de reserva com uma única cota ainda põe todo inscrito nela</td><td><code>ocupacao/application/acrescimo.py</code>; <code>editais/domain/validation.py</code> (<code>reserve_only_convocation_external</code>); <code>inscricoes/application/rascunho.py</code>, <code>portal/views.py</code> (<code>_modalidade_unica</code>). Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a></td></tr>
         <tr><td><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong></td><td>Por isso não tem aviso: o aviso só aponta ato publicado, e a 066 declara que isso não encerra a demanda do setor. O que o ato seria também é decisão do setor</td><td>nenhuma spec de 105 a 161 a trata; <code>specs/066-avisos-complementares/spec.md</code></td></tr>
@@ -14550,8 +14813,6 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h4>Polimento que se vê na tela</h4>
     <ul>
-      <li><strong>“Retificaçãoões”</strong>: com duas ou mais Retificações em curso, o título da tela Retificar acrescenta o plural ao singular (<code>retificar.html</code>, linha 27). Encontrado em 30/10; continua em 13/11. A correção é de uma linha.</li>
-      <li><strong>Os 58 links desta página para o repositório quebram dentro da gestão.</strong> Caminhos como <code>../../backend/…</code> funcionam com a página aberta do disco; servida em <code>/gestao/documentacao/</code> (105), resolvem fora dela e respondem 404, porque <code>interface/documentacao.py</code> serve só cinco arquivos, por lista literal. São 53 para <code>backend/</code>, 3 para <code>specs/</code>, mais <code>AGENTS.md</code> e <code>.specify</code>.</li>
       <li><strong>Identificadores crus na tela de quem julga e no caminho do topo</strong>: o recurso imprime o identificador do objeto, do ato vigente e da versão (<code>recurso.html</code>), e o Ato de classificação aparece pelo identificador de 36 caracteres (<code>ato_ordenacao.html</code>).</li>
       <li><strong>A tela de recusa não diz de onde a pessoa veio</strong>: oferece só <span class="rotulo-ui">Voltar aos Processos Seletivos</span> (<code>recusa.html</code>; a origem só entra nos casos de envio acima do limite e de CSRF).</li>
       <li><strong>Três renderizações do mesmo prazo</strong>: <em>“Faltam 19 dias”</em> no portal, <em>“2 semanas, 5 dias”</em> no painel e só a data nas demais (<code>supervisao.html</code>, <code>portal/_periodo.html</code>).</li>
@@ -14699,7 +14960,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <h3 id="evolucoes-resolvidas">O que já fechou</h3>
     <p>
       Itens que esta página listava como pendentes e que a conferência de 13/11 encontrou resolvidos.
-      Ficam aqui só para o leitor que os conhecia: saíram dos grupos acima.
+      Ficam aqui só para o leitor que os conhecia: saíram dos grupos acima. As três linhas antes da última —
+      o título das Retificações, os links para o repositório e a mensagem de reenvio — fecharam depois da
+      conferência, no mesmo dia, e não entram no placar.
     </p>
     <div class="rolagem"><table>
       <thead><tr><th>O que era</th><th>Como fechou</th><th>Evidência</th></tr></thead>
@@ -14723,6 +14986,10 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Suceder uma convocação, com motivo</td><td>120 (#385): correção com motivo e <em>“Corrigida em…”</em>. O desfecho segue sem tela (grupo 1)</td><td><code>convocacao.html</code></td></tr>
         <tr><td>Aviso de pendência por e-mail (QI-7); a marca do Cefor fora do documento</td><td>134 (#435); 109 (31/10): telas, e-mails e página da seleção dizem a unidade de cada ato</td><td><code>portal/templates/portal/base.html</code>; <code>identidade/application/mensagem.py</code></td></tr>
         <tr><td>Um critério da 008 pedia o Processo na primeira página</td><td>Emendado pela 054 (FR-998): <em>“sem o Processo”</em>, o certo para os Editais reais</td><td><code>specs/008-composicao-institucional/spec.md</code></td></tr>
+        <tr><td>O título <em>“Retificaçãoões”</em> com duas ou mais Retificações em curso (desde 30/10)</td><td>13/11: o plural troca a palavra inteira, e um teste abre a tela com duas em curso. A revisão achou o mesmo defeito em <code>_perfis_do_edital.html</code> (<em>“pertencem”</em> no singular), e uma varredura dos templates recusa os dois</td><td><code>interface/templates/interface/retificar.html</code>; <code>tests/test_plural_dos_templates.py</code></td></tr>
+        <tr><td>Os 59 links desta página para o repositório (<code>../../backend/…</code>) respondiam 404 dentro da gestão (105)</td><td>13/11: apontam para o repositório no GitHub, e valem do disco e de <code>/gestao/documentacao/</code>; um guardião recusa link relativo que saia da pasta servida, e outro, o que aponte para arquivo que não existe</td><td><code>tests/interface/test_documentacao_do_sistema.py</code></td></tr>
+        <tr><td>A mensagem de reenvio da convocação sugeria prazo novo (<em>“contado do envio desta mensagem”</em>)</td><td>156 (13/11, PR 533): a mensagem diz só a data do prazo, na convocação e na correção</td><td><code>convocacao/templates/convocacao/mensagem/inicial.txt</code>, <code>correcao.txt</code></td></tr>
+        <tr><td>O resultado publicado não dizia, na gestão, de qual lista é</td><td>13/11 (#534): a prévia traz <em>“Lista de concorrência: …”</em> e o histórico ganhou a coluna <span class="rotulo-ui">Lista</span>, com o nome gravado em cada publicação; <code>historico_do_marco</code> não mudou</td><td><code>previa_de_publicacao.html</code>; <code>publicacoes_do_marco.html</code>; <code>tests/interface/test_publicar_sorteio_por_lista.py</code></td></tr>
         <tr><td>Decididas e executadas desde 26/09</td><td>DP-01 a DP-06, DP-08 item 2, DP-13 (<a href="#heranca">aplicar a todos</a>), DP-14 (ampla na inscrição), DP-16 (não atendimento em lote), DP-17 (automação explícita na Constituição 1.2.0), DP-19 (campos definitivos na Revisão) e DP-21 (limite de 13.000 campos da composição). A DP-05 foi revista em 21/10 pela 097, que voltou à opção A — a vaga acrescida depois da publicação</td><td><code>.specify/memory/constitution.md</code>; <code>config/settings/base.py</code>; <code>compor_revisao.html</code></td></tr>
       </tbody>
     </table></div>
@@ -14774,8 +15041,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <section id="como-ler">
     <h2>Como ler este documento</h2>
     <p>
-      A organização segue o <strong>modelo mental do certame</strong>, não a árvore do software, e
-      tem três camadas, porque são três as perguntas de quem chega:
+      A página <a href="#pg-inicio">Início</a> é a <strong>visão do produto</strong>: por que o GPS existe,
+      quem o usa, os princípios, o ciclo de vida, as jornadas, as capacidades centrais, a governança e
+      onde o sistema está. Ela se lê sozinha, em poucos minutos, e é o que muda menos. O resto é
+      manual e referência: a organização segue o <strong>modelo mental do certame</strong>, não a
+      árvore do software, e tem três camadas, porque são três as perguntas de quem chega:
     </p>
     <div class="rolagem">
       <table>
@@ -14869,9 +15139,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>30/10/2026</td><td><code>main</code> em <code>62824816</code>, specs 098–104</td><td>As sete specs mergeadas entre 21 e 30/10 descritas como entregues: a <a href="#previa-do-sorteio">prévia do sorteio</a>, com semente fictícia (098); o <a href="#relatorio-do-edital">relatório do Edital</a> (099) e o <a href="#relatorio-consolidado">consolidado da unidade</a> (100); a <a href="#agenda">Agenda dos Editais</a> (101); a <a href="#sorteio-viavel">extração inviável</a>, impedida na publicação (102, com o PR 335); a <a href="#retificacao-em-curso">Retificação em curso</a> pela navegação comum (103); e as <a href="#acoes-disponiveis">Ações disponíveis para você</a> (104). Registro no mesmo arquivo.</td></tr>
           <tr><td>02/11/2026</td><td><code>main</code> em <code>4dbc5872</code>, specs 105–113 e as correções da auditoria de prontidão</td><td>As specs e correções mergeadas entre 30/10 e 02/11 descritas como entregues: esta página <a href="#pg-sobre">dentro da gestão</a> (105); a <a href="#entrar-institucional">entrada institucional</a>, a <a href="#gestao-de-acessos">gestão de acessos</a> e o <a href="#cadastro-de-unidades">cadastro de unidades</a> (106, 107, 109, 110); a <a href="#trilha-da-unidade">trilha da unidade</a> (108); o <a href="#kit-de-divulgacao">Kit de divulgação</a> (111, A e B); o <a href="#encerramento-seguro">encerramento seguro</a> (113); e as correções A-01 a A-12, que fecharam cinco lacunas desta página. A 112 é citada só como especificada. Registro em <code>docs/visao-sistema/CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>04/11/2026</td><td><code>main</code> em <code>a3e23b1f</code>, specs 114–119 e a correção da 029</td><td>As specs mergeadas entre 02 e 04/11 descritas como entregues: o <a href="#desempate-por-outra-etapa">desempate pela nota de uma Etapa que o marco não soma</a> (114); os <a href="#documentos-da-convocacao">documentos e a conferência na convocação</a> (115); o <a href="#sorteio-conferencia">concurso conferido na Caixa</a> antes do compromisso (116); a <a href="#formalizacao">entrega documental ao setor da formalização</a> (117); o <a href="#convocado-no-portal">convocado no portal</a> (118); o <a href="#kit-pacote">pacote do Kit</a> (111, C) e as <a href="#kit-familias-e-formatos">famílias e formatos da peça</a> (119, incrementos 1 e 2); e o <a href="#requerimento-processo-encerrado">Requerimento fechado com o Processo encerrado</a> (029). Contagens recontadas: 53 tabelas append-only, 83 gatilhos, 107 migrations, 166 + 38 rotas, dez papéis de operação.</td></tr>
+          <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>06/11/2026</td><td><code>main</code> em <code>22a722af</code>, spec 125</td><td><a href="#convocacao-segue-o-canal">A convocação segue o canal</a> (125): a convocação por publicação só aparece ao candidato depois do registro, o texto digitado que chega a ele passa por <em>Conferir o texto</em>, e a palavra da comunicação segue a forma. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
-          <tr><td>10/11/2026</td><td>PR da spec 138, sobre a <code>main</code> em <code>daba322f</code></td><td>O <a href="#centro-de-controle">Centro de Controle</a> como página do Edital publicado (136 e 138), com a volta da 139; a 127 remete a ele. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>08/11/2026</td><td><code>main</code> em <code>86cd0ee0</code>, specs 126 a 133 e a correção da 115</td><td>Descritas como entregues: a <a href="#orientacao-p0">orientação depois do ato</a> (126), o <a href="#andamento-da-selecao">Andamento da seleção</a> (127), a <a href="#ordem-sem-resultado">ordem recusada sem resultado</a> (128), a <a href="#lista-de-processos-recortada">Lista de Processos recortada</a> (129), a <a href="#encerrar-processo-adverte">advertência no Encerrar Processo</a> (130), a <a href="#condicao-de-exigencia">condição de exigência</a> (131), os <a href="#ajustes-de-leitura-dos-documentos">ajustes de leitura dos Documentos Exigidos</a> (132), o <a href="#marco-intermediario">marco intermediário</a> (133) e a <a href="#lista-no-gesto-de-titulares">lista de documentos no gesto de titulares</a> (correção da 115). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>10/11/2026</td><td>PR da spec 138, sobre a <code>main</code> em <code>daba322f</code></td><td>O <a href="#centro-de-controle">Centro de Controle</a> como página do Edital publicado (136 e 138), com a volta da 139; a 127 remete a ele. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>daba322f</code>, specs 134 a 141</td><td>Descritas como entregues: o <a href="#aviso-de-pendencia">aviso de pendência documental por e-mail</a> (134, aviso), os <a href="#cenarios-de-treinamento">cenários de treinamento e homologação</a> (134, cenários), as <a href="#correcoes-do-andamento">correções da derivação do andamento</a> (135), o <a href="#centro-de-controle">Centro de Controle do Edital</a> (136), a <a href="#chegada-e-volta">chegada ao lugar do ato e a volta ao Centro</a> (139), a <a href="#conferencia-antes-de-convocar">conferência antes de convocar os titulares</a> (140) e a <a href="#sucessora-espera-o-reabilitado">sucessora que espera o reabilitado</a> (141). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>b202a7c0</code>, specs 142 a 144</td><td>Descritas como entregues: a <a href="#jornada-do-sorteio">tela do sorteio como a jornada de quem o conduz</a> (142) e a <a href="#convocacao-pelas-perguntas">convocação e a conferência documental pelas perguntas de quem conduz</a> (143). A 144, o <a href="#cronograma-pdf-ordem-previa">Cronograma</a> com ocultar do PDF, ordenar por data e prévia, entra como <em>Previsto</em>: só a especificação foi mergeada. Rótulos corrigidos nas seções que citavam os botões do sorteio e a ordem dos avisos da convocação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>10/11/2026</td><td><code>main</code> em <code>d184fcee</code>, 144 (A)</td><td>O incremento A da 144, a <a href="#cronograma-pdf-ordem-previa">visibilidade do Evento no PDF</a>, descrito como entregue; a ordenação por data e a prévia seguem como <em>Previsto</em>. Corrigidas as seções que listavam os campos do passo Cronograma e a linha da Retificação. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
@@ -14879,9 +15151,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>60f9ff24</code>, 147 a 161</td><td>A <a href="#pagina-do-processo">página do Processo</a> reorganizada (147); <a href="#minhas-atividades">Minhas atividades</a> (160, implementada) e <a href="#quem-faz-o-que">“Quem faz o quê”</a> (161, só especificada); a <a href="#publicacao-das-inscricoes">publicação das inscrições</a> (148) e a <a href="#publicacao-das-convocacoes">das convocações, e o gesto único de convocar e publicar</a> (149 e 159); o <a href="#envio-de-varios-documentos">envio de vários documentos</a> (150), a <a href="#convocacao-depois-do-envio">convocação depois do envio</a> (154, US1 e US3) e a <a href="#conferencia-com-o-documento-a-vista">conferência com o documento à vista</a> (157); a <a href="#conferencia-nos-atos-irreversiveis">prevenção nos atos irreversíveis</a> (152, parcial), a <a href="#passagem-ao-setor">passagem ao setor</a> (153) e a <a href="#vaga-sem-ocupante">vaga reservada sem ocupante</a> (155, entrega mínima); o <a href="#desfecho-comunicado">desfecho comunicado</a> (156) e a <a href="#passagem-entre-cotas">passagem entre cotas</a> (158) como Previstos. A designação pela presidência (117, D-025) e os cenários C16 e C17 (134) entraram em <a href="#formalizacao">formalização</a> e <a href="#cenarios-de-treinamento">cenários</a>. Corrigidas as frases que tratavam “Minhas Etapas”, a página do Processo antiga, o botão da faixa seguinte e a contagem de tabelas append-only (59). Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>95904252</code></td><td>A seção <a href="#pg-evolucoes">O que ainda precisa evoluir</a> refeita: 186 itens conferidos de novo no código, nas specs e no histórico, separados em <a href="#evolucoes-codigo">falta código</a>, <a href="#evolucoes-decisoes">decisão do usuário</a>, <a href="#evolucoes-validacao">validação com pessoas</a> e <a href="#evolucoes-externo">depende de fora</a>, com <a href="#evolucoes-resolvidas">o que já fechou</a> à parte. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td>PRs 524 e 526, sobre a <code>main</code> em <code>26748113</code></td><td>A <a href="#vitrine-em-andamento-e-paginas">vitrine</a> separa <em>Em andamento</em> de <em>Seleções encerradas</em> pelo desfecho, ordena cada grupo pelo que importa a quem lê e mostra de dez em dez o que já fechou as inscrições; a etiqueta <em>“Em andamento”</em> chega também à página do Edital. Sem spec própria. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>13/11/2026</td><td><code>main</code> em <code>214c8cd7</code></td><td>Consolidação da visão do produto. A página <a href="#pg-inicio">Início</a> passou a ser a visão do GPS: propósito, públicos, princípios, ciclo de vida, jornadas da gestão e do portal, capacidades por fase, governança multiunidade, transparência, onde o sistema está e referências; o nome do produto, GPS — Gestão de Processos Seletivos, como nas telas. A 156 deixou de ser Previsto (três histórias entraram); a lacuna da mensagem de reenvio fechou; as contagens de <a href="#maturidade">Maturidade</a> foram refeitas e o veredito reescrito como estado presente; o mapa ganhou a unidade, os documentos da convocação e a formalização. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td>PR #537, a 162, sobre a <code>main</code> em <code>84cbeeb5</code></td><td>O <a href="#cadastro-de-reserva">cadastro de reserva</a> reescrito: o número do limitado vem do corte do marco que convoca, a espécie é conferida contra a continuação, o Perfil só de reserva abre pelo cadastro, e o Edital publicado antes diz o número digitado com uma nota na condução. O tutorial (passos 4 e 8, o INF-VIT sem continuação), a Receita 7, as tabelas de configuração, a Retificação, as perguntas e o glossário acompanham; o item <em>“O limite do cadastro de reserva não é aplicado”</em> foi para <a href="#evolucoes-resolvidas">O que já fechou</a>. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
-          <tr><td>06/11/2026</td><td><code>main</code> em <code>a1d3bf26</code>, specs 123 e 124</td><td>O <a href="#retificacao-lacunas">MVP de UX da Retificação</a> (123), especificado e planejado, como <em>Previsto</em>; e <a href="#sorteio-rito">os textos que o operador do sorteio lê</a> (124): a falha de acesso à Caixa pelos motivos da conferência, o 00h00 dito como limite e a ocorrência na ajuda da etapa. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
-          <tr><td>05/11/2026</td><td><code>main</code> em <code>4e6d211f</code>, specs 120, 121 e 122 e os incrementos 3a a 3f da 119</td><td>A <a href="#correcao-da-convocacao">correção da convocação em aberto pelo cartão</a>, que é como se dá mais prazo (120), substitui a lacuna “corrigir uma convocação não tem tela”; as seis famílias que faltavam no <a href="#kit-familias-e-formatos">kit</a>: FIC, Libras, UAB/bolsista, Aperfeiçoamento, Internos e TMD, com a Inter no lugar da Helvetica Neue (P-2); <a href="#convocado-no-portal">a experiência da convocação</a> (121): a tela que abre pelo título e pelo prazo, <a href="#convocacao-pelo-link">o link que passa pelo acesso e o e-mail em HTML</a>, com o modelo gravado em cada envio; e <a href="#recortes-alinhados">os mesmos recortes em toda parte</a> (122), que tira do sorteio o recorte da Modalidade apontada como a ampla e substitui as duas lacunas dessa divergência. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
     </div>
@@ -14927,9 +15198,27 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         arquivo, <code>on…=</code> ou <code>data:</code>. A gestão só serve os arquivos da lista de
         <code>interface/documentacao.py</code>, e o resto responde 404: um arquivo novo em
         <code>assets/</code> pede uma linha ali. <code>tests/interface/test_documentacao_do_sistema.py</code>
-        cobra as duas coisas, e é o único teste que lê esta pasta. O <span class="rotulo-ui">Voltar</span>
+        cobra as duas coisas; além dele, só <code>tests/test_vocabulario_dos_documentos_da_convocacao.py</code> lê esta página, à procura dos nomes antigos do documento reenviado. O <span class="rotulo-ui">Voltar</span>
         do pé da barra é <code>../</code>, que dentro da gestão leva à lista de Processos.</li>
-    </ul>
+        </ul>
+    <h3 id="manter-a-visao">Quando a visão precisa mudar</h3>
+    <p>
+      A visão do produto, na página Início, não acompanha cada entrega: ela muda quando muda o produto.
+      Ao fechar uma entrega, quem a documenta faz três perguntas, e só um “sim” pede edição do Início:
+    </p>
+    <ol>
+      <li><strong>Mudou um conceito?</strong> Uma palavra nova que aparece em toda tela, um conceito que
+        deixou de existir ou passou a significar outra coisa.</li>
+      <li><strong>Mudou uma jornada?</strong> Um caminho novo de ponta a ponta, uma tela que passou a ser a
+        porta de entrada, um papel novo ou um público novo.</li>
+      <li><strong>Mudou o estado de uma capacidade central?</strong> Algo previsto que passou a existir, algo
+        parcial que fechou, ou algo que bloqueava a produção e deixou de bloquear.</li>
+    </ol>
+    <p>
+      O detalhe de cada entrega continua indo à página de referência do assunto, com o selo de realidade.
+      As contagens ficam só em <a href="#maturidade">Maturidade</a>, com a data e o <em>commit</em>, porque
+      envelhecem a cada PR; o Início não carrega número que se reconte.
+    </p>
   </section>
 
   <nav class="pag-nav"></nav>
@@ -14937,8 +15226,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
 
 <footer class="rodape">
-  <p>Visão do Sistema — manual conceitual, tutorial de onboarding, referência de configuração e
-  fotografia do estado do sistema de Processos Seletivos e Editais do Cefor/Ifes.</p>
+  <p>Visão do Sistema — visão do produto, manual conceitual, tutorial de onboarding, referência de
+  configuração e fotografia do estado do GPS — Gestão de Processos Seletivos do Cefor/Ifes.</p>
   <p>Reconstruída por leitura do código-fonte em 20/09/2026 e revista, de novo contra o código, em
   29/09/2026 (<code>main</code> em <code>3a53b23</code>, specs 001 a 053); a spec 054 foi acrescentada
   em 30/09/2026 (<code>main</code> em <code>86bbf49</code>), as 055 a 068 em 10/10/2026
@@ -14946,13 +15235,13 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   (<code>745f115f</code>), as 093 a 097 em 21/10/2026 (<code>e869d7a2</code>), as 098 a 104 em 30/10/2026
   (<code>62824816</code>), as 105 a 113 em 02/11/2026 (<code>4dbc5872</code>), as 114 a 119 em 04/11/2026
   (<code>a3e23b1f</code>), a 120 a 122, com as seis famílias que faltavam da 119, em 05/11/2026
-  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>) a 145 e a 146, em 11/11/2026 (<code>04797399</code>) a 147 a 161, com as implementações da 147, 148, 149, 150, 152 (parcial), 153, 154 (parcial), 155 (entrega mínima), 157, 159 e 160 e as 156, 158 e 161 só como especificação, em 13/11/2026 (<code>60f9ff24</code>), e a 162 no PR #537, sobre <code>84cbeeb5</code>. Onde documentação e código
+  (<code>4e6d211f</code>) a 123 a 125 em 06/11/2026 (<code>22a722af</code>) a 126 a 133, com a correção da 115, em 08/11/2026 (<code>86cd0ee0</code>) a 134 a 141 em 10/11/2026 (<code>daba322f</code>) a 142 a 144, esta só como especificação, e o incremento A da 144, tudo em 10/11/2026 (<code>d184fcee</code>) a 145 e a 146, em 11/11/2026 (<code>04797399</code>) a 147 a 161, com as implementações da 147, 148, 149, 150, 152 (parcial), 153, 154 (parcial), 155 (entrega mínima), 157, 159 e 160 e as 156, 158 e 161 só como especificação, em 13/11/2026 (<code>60f9ff24</code>); a visão do produto foi consolidada em 13/11/2026 (<code>214c8cd7</code>), com a 156 parcialmente implementada, e a 162 no PR #537. Onde documentação e código
   divergem, o comportamento observável no código foi tratado como estado atual, e a divergência foi
   registrada em <a href="#achados">Auditoria de consistência</a>. Os registros das revisões estão em
   <code>docs/visao-sistema/CHANGELOG-2026-09.md</code>, <code>CHANGELOG-2026-10.md</code> e <code>CHANGELOG-2026-11.md</code>.</p>
-  <p>A <a href="../../.specify/memory/constitution.md">Constituição</a> é a autoridade de engenharia e
+  <p>A <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/.specify/memory/constitution.md">Constituição</a> é a autoridade de engenharia e
   domínio; em conflito com qualquer coisa escrita aqui, ela prevalece. As armadilhas de ambiente estão em
-  <a href="../../AGENTS.md">AGENTS.md</a>.</p>
+  <a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/AGENTS.md">AGENTS.md</a>.</p>
 </footer>
 </div>
 </main>

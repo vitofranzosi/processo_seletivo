@@ -214,7 +214,10 @@ class TestAsVariantes:
         assert mensagem.subject.endswith(f"{assunto}{prazo.data_curta}")
         assert "\n" not in mensagem.subject
         assert frase in normalizar(texto) and frase in normalizar(html)
-        assert f"até {prazo.por_extenso}, contado do envio desta mensagem" in texto
+        # FR-6428 da 156: só a data, que o reenvio não muda.
+        assert f"Prazo para atender: até {prazo.por_extenso}." in texto
+        assert f"<strong>até {prazo.por_extenso}.</strong>" in html
+        assert "contado do envio" not in texto and "contado do envio" not in html
         assert not HH_MM.search(texto) and not HH_MM.search(html)
         assert not HH_MM.search(mensagem.subject)
 
@@ -275,7 +278,13 @@ def _assunto_e_titulo_da_correcao(mensagem, edital):
     assert mensagem.subject.startswith(f"Ifes · Convocação corrigida no {numero}: prazo válido até")
     assert f"Sua convocação no {numero} foi corrigida" in texto
     assert f"Sua convocação no {numero} foi corrigida" in html
-    assert "Prazo válido para atender" in texto
+    # FR-6428 da 156: a correção também diz só a data, e a frase termina nela. O prazo é o da
+    # convocação desta mensagem, que a função não recebe: a forma basta, e a data exata é provada
+    # pela inicial, que sai do mesmo `prazo.por_extenso`.
+    assert re.search(
+        r"^Prazo válido para atender: até \S+, \d{2}/\d{2}/\d{4}, às \d{2}h\d{2}\.$", texto, re.M
+    )
+    assert "contado do envio" not in texto and "contado do envio" not in html
     return texto, html
 
 

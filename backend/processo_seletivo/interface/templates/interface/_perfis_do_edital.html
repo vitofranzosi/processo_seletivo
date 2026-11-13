@@ -106,7 +106,7 @@ disputarem o mesmo clique.
       {% if linha.submetidas_sem_perfil or linha.rascunhos_sem_perfil %}
       <p class="sem-perfil-vigente">
         {% if linha.submetidas_sem_perfil %}{{ linha.submetidas_sem_perfil }} inscriç{{ linha.submetidas_sem_perfil|pluralize:"ão,ões" }} submetida{{ linha.submetidas_sem_perfil|pluralize }}{% endif %}{% if linha.submetidas_sem_perfil and linha.rascunhos_sem_perfil %} e {% endif %}{% if linha.rascunhos_sem_perfil %}{{ linha.rascunhos_sem_perfil }} em preenchimento{% endif %}
-        pertence{{ linha.submetidas_sem_perfil|add:linha.rascunhos_sem_perfil|pluralize:"m," }} a Perfis que a versão vigente
+        pertence{{ linha.submetidas_sem_perfil|add:linha.rascunhos_sem_perfil|pluralize:"m" }} a Perfis que a versão vigente
         não tem mais: elas contam no total do Edital e não aparecem acima.</p>
       {% endif %}
     </details>

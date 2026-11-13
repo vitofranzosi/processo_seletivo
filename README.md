@@ -394,7 +394,9 @@ de pendências, o roadmap proposto e as decisões pendentes.
 ## Documentação
 
 **Para quem usa o sistema:** a [Visão do Sistema](docs/visao-sistema/index.html) é o material de uso
-vigente — tutorial, papéis, o que se configura, perguntas frequentes —, revisado por ciclos. Dentro do
+vigente. A página de entrada é a visão do produto — propósito, públicos, princípios, jornadas,
+capacidades e onde o GPS está —; as demais são tutorial, papéis, o que se configura e perguntas
+frequentes, revisadas por ciclos. Dentro do
 sistema, ela abre pelo item "Documentação do Sistema" da barra da gestão, em `/gestao/documentacao/`
 (`105`): servida sob a política de conteúdo, ela não pode ter estilo nem script embutidos, e todo
 arquivo novo que pedir precisa entrar na lista de `interface/documentacao.py`. O manual

@@ -430,6 +430,87 @@ A seção listava o que faltava em 20/09, e crescera por camadas de datas. Em 13
 - o item *"cadastro de reserva limitado em N"* sem regra, e o de a Retificação da reversão ser mesmo uma causa ausente: vêm das fichas da conferência, sem releitura minha;
 - os números do bloco *Estado atual* (pastas, tabelas, gatilhos, rotas) não foram recontados: continuam os da revisão de 02/11.
 
+## Acréscimo de 13/11: dois itens de polimento corrigidos
+
+Dois itens de *Polimento que se vê na tela*, ambos registrados como de correção curta, foram corrigidos e passaram a *O que já fechou*. O placar de 13/11 não mudou: os dois fecharam depois da conferência.
+
+- **“Retificaçãoões”** (desde 30/10). O título da tela Retificar acrescentava `pluralize:"ões"` à palavra no singular. Agora o plural troca a palavra inteira (`retificar.html`). Um teste abre a tela com duas Retificações em curso (`test_jornada_da_retificacao.py`). A nota em *O que a 103 deixou aberto* saiu.
+- **Os links para o repositório** (desde 02/11). Eram 59, e não 58: 54 para `backend/`, 3 para `specs/`, mais `AGENTS.md` e `.specify`. Apontam agora para `https://github.com/vitofranzosi/processo_seletivo` (`blob/main/…`, e `tree/main/…` para a pasta de contratos da 031), e valem tanto com a página aberta do disco quanto em `/gestao/documentacao/`. A lista literal da 105 (D-002) não mudou: servir o repositório pela gestão era justamente o que ela recusa. Um guardião novo (`test_documentacao_do_sistema.py`) recusa link relativo que não seja âncora, o voltar à gestão ou arquivo da lista.
+
+- **Na revisão do PR**, dois acréscimos:
+  - **O mesmo defeito noutra tela.** `_perfis_do_edital.html` tinha `pluralize:"m,"`, o que punha *pertencem* no singular e *pertence* no plural desde que a tela existe. Foi corrigido, e uma varredura nova (`tests/test_plural_dos_templates.py`) recusa nos templates o plural vazio e os sufixos que trocam a terminação (`ões`, `ães`, `is`) colados ao singular.
+  - **Os links conferidos.** Os links apontam para a `main`, e não para o commit que a página descreve. Por isso um guardião confere que cada `blob/main/…` é arquivo e cada `tree/main/…` é pasta na árvore do próprio PR: mover um arquivo citado sem acertar o manual reprova a suíte.
+
+**Não verificado:** a tela dos Perfis com inscrições de Perfil retirado não foi aberta no navegador. A correção foi conferida no filtro do Django.
+
+## Revisão de 13/11: a visão do produto consolidada
+
+Base: `main` em `214c8cd7`. A pergunta desta revisão foi outra: não *"o que entrou desde a última?"*, mas *"um novo integrante entende o GPS lendo esta página?"*.
+
+### O diagnóstico
+
+A página vinha sendo mantida spec a spec, e o conteúdo de referência estava em dia até a 161. O que envelhecia era a camada de entrada.
+
+- **O Início era um portal, e não uma visão.** Tinha a ideia dos atos, o fluxo e doze conceitos. Não dizia por que o sistema existe, para quem, sob quais princípios, nem como a gestão e o portal se ligam.
+- **Os números do Início eram de 02/11:** 114 pastas, 53 append-only, 14 638 testes. Contradiziam a própria página, que noutro lugar dizia 59 tabelas e 17 698 testes.
+- **A trilha do topo parava em 02/11** (105–113).
+- **O nome do produto não era o das telas.** O título, a marca e o rodapé diziam *"Processos Seletivos e Editais"*, e as telas dizem *GPS — Gestão de Processos Seletivos* desde a 075.
+- **O fluxo geral e o mapa paravam no Requerimento.** Faltavam a publicação das inscrições (148), os documentos e a conferência na convocação (115, 157), a entrega à formalização (117), a publicação das convocações (149) e o encerramento. Os cartões de recursos não tinham o Centro de Controle, Minhas atividades nem as conferências.
+- **A 156 estava como Previsto, com "nada dela está no código".** Os PRs 525, 529 e 533 levaram três histórias (US2, US3, US8). Também ficou aberta, em *Falta código*, a lacuna da mensagem de reenvio, que o 533 fechou.
+- **O veredito era um diário** (*"Em 02/11… Em 15/10, nada mudou…"*), e não um estado.
+- **A Maturidade mostrava números de duas datas,** apresentados como *"contra os de 30/10"*.
+- **Duas contradições internas:**
+  - a seção dos e-mails dizia *"além do código de acesso, cinco situações"*, mas o guardião (`test_situacoes_de_mensagem.py`) conta o código como uma das cinco;
+  - *Para quem for atualizar* dizia que só um teste lê esta pasta, e são dois.
+- **A tabela de revisões estava fora de ordem** (05/11 e 06/11 depois de 13/11).
+
+### O que mudou
+
+O Início foi reescrito como a visão do produto, mantendo as âncoras antigas:
+
+- `#inicio`, `#fluxo-geral`, `#fundamentos`, `#recursos-disponiveis`, `#estado-atual` e `#perspectivas` continuam valendo;
+- entraram `#proposta`, `#publicos`, `#principios`, `#jornadas`, `#governanca`, `#transparencia` e `#referencias`;
+- o Início deixou de ter contagens: elas ficam só na Maturidade.
+
+Fora do Início:
+
+- a 156 passou a Parcial, com o que entrou e o que falta (18 de 54 tarefas), e a frase da área do candidato que ainda dizia *"Resultado registrado: … — {fundamento}"* foi acertada;
+- a lacuna da mensagem de reenvio foi para *O que já fechou*;
+- as contagens da Maturidade foram refeitas pelo método da página;
+  - o método reproduz em `a3e23b1f` todos os números publicados em 04/11, menos as pastas de spec (120, e a página dizia 114);
+  - hoje são 162 pastas, 59 append-only, 91 gatilhos em 36 migrations sobre 73 tabelas, 118 migrations, 24 módulos, 580 arquivos Python, 259 templates, 1 220 + 25 arquivos de teste e 180 + 42 rotas;
+- o veredito foi reescrito como estado presente;
+- o mapa em texto ganhou a unidade, os documentos da convocação e a formalização, e a tabela de conceitos ganhou Unidade, Documento da convocação e Entrega à formalização;
+- *Sobre esta documentação* ganhou o papel do Início e *Quando a visão precisa mudar*: três perguntas ao fechar uma entrega;
+- a tabela de revisões foi posta em ordem;
+- o título da aba, que o roteador (`assets/app.js`) reescreve a cada página, passou a dizer *GPS · Gestão de Processos Seletivos*.
+
+**Preservado:** todo o conteúdo de referência (Aprender a operar e Consultar), *O que ainda precisa evoluir*, a auditoria de consistência, os selos e o método.
+
+### Como os fatos foram conferidos
+
+Os fatos novos do Início foram conferidos no código por duas leituras paralelas:
+
+- a navegação, a Lista, a página do Processo, o Centro de Controle, Minhas atividades, as conferências e as publicações;
+- o portal, os e-mails, a identidade, os papéis, as integrações e as contagens.
+
+As 156, 158, 161, 123 e 144 B/C foram procuradas pelas FRs e pelos textos. Delas, só a 156 tem código.
+
+**Não verificado:**
+
+- a suíte não rodou: só os guardiões que leem esta página;
+- nenhuma tela foi percorrida;
+- a repartição dos 91 gatilhos por espécie não foi refeita.
+
+## Acréscimo de 13/11: a lista na gestão (#534) e o resto do reenvio (#533)
+
+O #534 fechou um item de *Atrapalha quem opera*, e a consolidação da Visão (#535) já tinha levado o item da mensagem da convocação (#533) a *O que já fechou*. O placar de 13/11 não mudou: eles fecharam depois da conferência.
+
+- **A lista, na gestão** (#534). A prévia de publicação nomeia a lista e o histórico *Resultados divulgados* ganhou a coluna *Lista*. O aviso da seção *Resultado* e a linha da matriz passaram de *Parcial* a *Implementado*. A frase *"Este marco ainda não pode ser publicado como definitivo"* ficou como estava, de propósito.
+- **O resto do reenvio.** A #535 tirou o item inteiro do grupo 1, mas o achado tem uma segunda oportunidade aberta: o cartão da convocação mostra só o último envio, e as frases do portal que dizem *"contado do envio da comunicação"* (FR-3998 da 125) ficaram fora da 156 de propósito. O item voltou ao grupo 1 com esse resto.
+
+**Não verificado:** as telas não foram abertas, e a suíte não rodou; a leitura é dos corpos dos PRs e do código.
+
 ## Acréscimo de 13/11: a 162, o limite do cadastro de reserva lido do corte
 
 A spec 162 viaja no PR #537, sobre a `main` em `84cbeeb5`, e esta atualização vai junto, no mesmo PR: a página passa a descrever a `main` quando ele for mergeado. O número do cadastro de reserva limitado deixa de ser digitado e passa a ser o que o corte do marco que convoca alcança além das vagas, por lista.

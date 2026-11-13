@@ -13,6 +13,7 @@ continua sendo por código digitado. Um link assim viaja no histórico do navega
 encaminhamento da mensagem e no cabeçalho de origem.
 """
 
+import re
 from datetime import UTC, datetime
 
 import pytest
@@ -91,15 +92,18 @@ class TestOQueAMensagemDiz:
             == "Ifes · Convocação no Edital 77/2026: envie seus documentos até 20/09"
         )
 
-    def test_o_prazo_diz_de_que_referencia_corre(self, caixa):
-        """`UX-038`: um prazo sem referência é uma data solta.
+    def test_o_prazo_diz_so_a_data(self, caixa):
+        """`FR-6428` e `D-014` da `156`: o prazo é a data informada no ato, e o envio só o põe em
+        curso.
 
-        O prazo corre do **envio** (`D-009`), e não do ato de convocar nem do recebimento — e é o
-        envio que a mensagem nomeia, porque é o único instante que o sistema conhece.
+        A mensagem dizia "contado do envio desta mensagem". Lida num reenvio, a cláusula sugeria
+        prazo novo a quem perde a vaga se perder a data — e este teste afirmava a cláusula, em vez
+        de acusá-la (`doc/achado-reenvio-da-convocacao-sugere-prazo-novo.md`).
         """
         mensagem = enviar(caixa)
 
-        assert "contado do envio desta mensagem" in mensagem.body
+        assert re.search(r"^Prazo para atender: até [^\n]+\.$", mensagem.body, re.M)
+        assert "contado do envio" not in mensagem.body
 
     def test_edital_sem_prazo_publicado_nao_ganha_um(self, caixa):
         """Vencimento nulo é "este Edital não publicou prazo", e a mensagem não o inventa."""
@@ -182,7 +186,7 @@ def test_o_prazo_e_dito_no_fuso_de_quem_le(caixa):
     mensagem = enviar(caixa)
     prazo = apresentar(VENCIMENTO, ENVIO, ZoneInfo(settings.TIME_ZONE))
 
-    assert f"até {prazo.por_extenso}, contado do envio desta mensagem" in mensagem.body
+    assert f"Prazo para atender: até {prazo.por_extenso}." in mensagem.body
     assert "2026-09-20T17:00" not in mensagem.body
 
 

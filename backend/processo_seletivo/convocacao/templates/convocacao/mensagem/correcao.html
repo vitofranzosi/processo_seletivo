@@ -12,6 +12,12 @@ prazo e o quadro de segurança usam os atributos de apresentação do próprio H
 **Sem imagem, sem fonte ou folha externa, sem `src=`** (FR-3886): a identificação é texto, e o
 único endereço é o link da convocação, além do canal de atendimento.
 
+O prazo diz só a data, como na inicial (FR-6428 e D-014 da 156): "contado do envio desta
+mensagem" sugeria prazo novo a cada reenvio.
+
+O ponto final fica dentro do negrito: fora dele, a comparação frase a frase da SC-1159 leria
+"até ‹data› ." e não a acharia no texto puro.
+
 Este arquivo e o `correcao.txt` dizem as mesmas frases (FR-3882); o assunto mora na primeira linha
 do texto puro. Mudou uma frase aqui? Mude lá também.
 {% endcomment %}<!doctype html>
@@ -35,8 +41,7 @@ do texto puro. Mudou uma frase aqui? Mude lá também.
 
 <table role="presentation" width="100%" cellpadding="16" cellspacing="0" border="0" bgcolor="#eef3f8">
 <tr><td>{% if prazo %}<p>Prazo válido para atender:</p>
-<p><strong>até {{ prazo.por_extenso }}</strong></p>
-<p>contado do envio desta mensagem.</p>{% else %}<p>O prazo para atender é o que o Edital publica.</p>{% endif %}</td></tr>
+<p><strong>até {{ prazo.por_extenso }}.</strong></p>{% else %}<p>O prazo para atender é o que o Edital publica.</p>{% endif %}</td></tr>
 </table>
 
 <p><a href="{{ link }}"><strong>Acessar minha convocação</strong></a></p>
