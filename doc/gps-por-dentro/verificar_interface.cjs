@@ -4,14 +4,16 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const caminho = require('node:path');
-const html = fs.readFileSync(caminho.join(__dirname, 'index.html'), 'utf8');
+const html = fs.readFileSync(process.argv[2] || caminho.join(__dirname, 'index.html'), 'utf8');
 const dados = JSON.parse(html.match(/<script type="application\/json" id="dados">([\s\S]*?)<\/script>/)[1]);
-const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].slice(1);
+const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].filter(m => !m[0].startsWith('<script type="application/json"'));
 const elementos = {};
 const elemento = id => elementos[id] ||= { innerHTML: '', textContent: '', addEventListener() {}, focus() {} };
 const contexto = vm.createContext({
   document: {
-    getElementById(id) { return id === 'dados' ? { textContent: JSON.stringify(dados) } : elemento(id); },
+    getElementById(id) { if (id === 'dados') return { textContent: JSON.stringify(dados) };
+      if (id === 'anexos') return { textContent: html.match(/<script type="application\/json" id="anexos">([\s\S]*?)<\/script>/)[1] };
+      return elemento(id); },
     querySelector: elemento,
     querySelectorAll() { return []; },
     addEventListener() {},
@@ -54,3 +56,13 @@ for (const alvo of [...html.matchAll(/href="(inventario|roteiro-pedagogico|valid
   assert.ok(fs.existsSync(caminho.join(__dirname, alvo[1]+'.md')), alvo[1]+' ausente');
 }
 console.log(`${estados} estados de demonstração, 17 conceitos, 14 feedbacks, busca e ausência de dependências externas: OK.`);
+
+if (html.includes('id="anexos"')) {
+  const anexos = vm.runInContext('Object.keys(ANEXOS)', contexto);
+  assert.equal(anexos.length, 9);
+  for (const id of anexos) {
+    assert.match(vm.runInContext(`anexo(${JSON.stringify(id)})`, contexto), /Material incorporado/);
+  }
+  assert.doesNotMatch(html, /href="(?:inventario|roteiro-pedagogico|validacao|avaliacao-critica)\.md"/);
+  console.log('9 anexos incorporados e suas rotas: OK.');
+}
