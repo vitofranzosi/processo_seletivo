@@ -4,6 +4,7 @@
 {% block conteudo %}
 <h1>Ocupação de vagas</h1>
 <p class="sub">Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, quantas estão ocupadas e quantas faltam.</p>
+{% if nota_do_cadastro %}<p class="nota">{{ nota_do_cadastro }}</p>{% endif %}
 {% if marco_intermediario %}<p class="aviso" role="note">{{ marco_intermediario.frase }} <a href="{{ marco_intermediario.url }}">Abrir a ocupação da {{ marco_intermediario.nome_do_marco_que_le }}</a>.</p>{% endif %}
 {% comment %}
 Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141). Fora de qualquer

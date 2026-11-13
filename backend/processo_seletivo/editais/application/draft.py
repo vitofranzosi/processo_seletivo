@@ -1,7 +1,10 @@
+import uuid
+
 from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.avaliacoes.domain.formas import Forma
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
 from processo_seletivo.editais.domain.documentos import (
@@ -325,6 +328,16 @@ def replace_draft(
         # gravação que remova a Modalidade e deixe a linha para trás não chega até aqui — e é
         # exatamente isso que a D-008 pede, com a mensagem que separa os dois casos.
         LinhaDoQuadroDeVagas.objects.filter(perfil__edital=edital).delete()
+        # **O número digitado antes da `162` sobrevive à regravação** (FR-6940). A gravação não
+        # aceita mais número no limitado — ele vem do corte —, mas o rascunho salvo antes guarda o
+        # dele, e é ele que a Revisão mostra ao lado do derivado. Regravar o Perfil por outra etapa
+        # o apagaria em silêncio, e a advertência sumiria antes de quem elabora a ler. Ele fica só
+        # enquanto o Perfil continuar limitado; a publicação nunca o leva (`edital_snapshot`).
+        digitados = dict(
+            PerfilVaga.objects.filter(
+                edital=edital, reserve_type="LIMITED", reserve_limit__isnull=False
+            ).values_list("id", "reserve_limit")
+        )
         PerfilVaga.objects.filter(edital=edital).delete()
         for payload in profiles:
             perfil = PerfilVaga.objects.create(
@@ -336,7 +349,11 @@ def replace_draft(
                 requirements=payload.get("requirements", []),
                 immediate_vacancies=payload["immediateVacancies"],
                 reserve_type=payload["reserveType"],
-                reserve_limit=payload.get("reserveLimit"),
+                reserve_limit=(
+                    digitados.get(_uuid_ou_nada(payload["id"]))
+                    if payload["reserveType"] == "LIMITED"
+                    else payload.get("reserveLimit")
+                ),
                 modalidade_ampla_concorrencia=(payload.get("generalCompetitionModalityId") or None),
                 # **Vazio, e não `None`**: a coluna é `CharField` com `default=""`, e escrever nulo
                 # viola o `NOT NULL`. É a mesma grafia de ausência que o resto do modelo usa.
@@ -593,3 +610,59 @@ def replace_draft(
         )
         transaction.on_commit(lambda: None)
         return edital
+
+
+def _uuid_ou_nada(valor):
+    try:
+        return uuid.UUID(str(valor))
+    except (TypeError, ValueError):
+        return None
+
+
+NUMERO_DIGITADO = "reserve_limit_typed_in_draft"
+
+
+def advertencias_do_numero_digitado(edital, snapshot):
+    """O rascunho salvo antes da `162` que ainda guarda o número digitado (FR-6940).
+
+    **Lido das linhas, e não do conteúdo.** O conteúdo composto já não leva o número —
+    `edital_snapshot` o publica `null` —, e é por isso que quem elabora precisa ouvir a troca antes
+    de publicar: o Edital vai dizer o número do corte, e não o que foi digitado. Quando os dois
+    coincidem, não há troca a avisar.
+    """
+    from processo_seletivo.editais.domain.validation import Severity, ValidationFinding
+
+    perfis = {str(p.get("id")): p for p in snapshot.get("profiles") or [] if isinstance(p, dict)}
+    achados = []
+    for linha in edital.perfis.filter(reserve_type="LIMITED", reserve_limit__isnull=False):
+        perfil = perfis.get(str(linha.id))
+        if perfil is None:
+            continue
+        cadastro = cadastro_de_reserva.do_perfil(perfil)
+        if cadastro.numero_unico == linha.reserve_limit:
+            continue
+        rotulo = perfil.get("code") or perfil.get("name") or ""
+        marco = cadastro.marco_que_convoca
+        nome = f"o marco “{marco.nome}”" if marco and marco.nome else "o marco que convoca"
+        if cadastro.por_lista:
+            publicado = f"{cadastro.descricao_curta().removeprefix('Limitado: ')}"
+            depois = (
+                f"O Edital vai publicar {publicado}, que é o que o corte d{nome} alcança além "
+                "das vagas."
+            )
+        else:
+            depois = (
+                "O Edital vai publicar o número que o corte do marco que convoca alcançar além "
+                "das vagas, e esse corte ainda não foi declarado."
+            )
+        achados.append(
+            ValidationFinding(
+                Severity.WARNING,
+                NUMERO_DIGITADO,
+                f"O Perfil '{rotulo}' guardava o cadastro de reserva limitado em "
+                f"{linha.reserve_limit}, digitado antes de o número passar a vir do corte. "
+                f"{depois}",
+                f"/profiles/id={linha.id}/reserveType",
+            )
+        )
+    return achados

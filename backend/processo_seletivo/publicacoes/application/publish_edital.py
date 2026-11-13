@@ -269,7 +269,11 @@ def edital_snapshot(edital: Edital) -> dict:
                 "requirements": profile.requirements,
                 "immediateVacancies": profile.immediate_vacancies,
                 "reserveType": profile.reserve_type,
-                "reserveLimit": profile.reserve_limit,
+                # **Sempre `null`** (162, FR-6940, T-003). O número do limitado vem do corte, e o
+                # rascunho salvo antes da `162` ainda pode guardar o digitado na coluna: publicá-lo
+                # traria de volta a segunda fonte, e a Revisão leria o rascunho como legado. A
+                # coluna fica — nada se exclui —, e a advertência da Revisão é quem a lê.
+                "reserveLimit": None,
                 "locality": profile.locality,
                 # String sempre presente, `""` quando ausente — nunca `null`, nunca chave omitida
                 # (FR-014). É a convenção do próprio objeto: `description` e `locality` acima são

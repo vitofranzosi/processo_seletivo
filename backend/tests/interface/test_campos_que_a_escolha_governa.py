@@ -181,11 +181,14 @@ def test_as_opcoes_nao_usam_mais_a_classe_da_marca_de_filtrar(client, com_etapas
     assert 'class="campo escolha"' not in marco_de(client, com_etapas)
 
 
-def test_o_limite_mora_dentro_da_reserva_que_o_admite(client, elaborando):
+def test_a_origem_do_numero_mora_dentro_da_reserva_que_a_tem(client, elaborando):
+    """Desde a 162 o limitado não pede número: a nota diz que ele vem do corte (FR-6932)."""
     corpo = client.get(reverse("interface:fragmento-perfil"), {"indice": "0"}).content.decode()
 
     limitada = bloco(corpo, "so-limitada")
-    assert 'name="perfil-0-reserveLimit"' in limitada
+    assert 'id="cadastro-perfil-0"' in limitada
+    assert "O número vem do corte do marco que convoca deste Perfil" in limitada
+    assert "reserveLimit" not in corpo
     # E entre a opção que o pede e a que não o admite, na ordem em que se lê.
     assert corpo.index('value="LIMITED"') < corpo.index('class="campos dependentes so-limitada"')
     assert corpo.index('class="campos dependentes so-limitada"') < corpo.index('value="UNLIMITED"')

@@ -331,3 +331,65 @@ def publicar_como_acervo(api_client, manager_headers, process_payload, **kwargs)
 
     with sem_as_regras_da_046():
         return publish_original(api_client, manager_headers, process_payload, **kwargs)
+
+
+def sem_o_numero_digitado(rascunho):
+    """O rascunho sem o número do limitado, e `{id do Perfil: número}` do que ele trazia (162).
+
+    A gravação de hoje recusa o número (FR-6931); o acervo o publicou. Quem reconstitui o acervo
+    grava o rascunho sem ele e devolve o número à linha dentro de `antes_da_162`, antes da
+    submissão.
+    """
+    digitados = {}
+    for perfil in rascunho.get("profiles") or []:
+        if perfil.get("reserveType") == "LIMITED" and perfil.get("reserveLimit") is not None:
+            digitados[str(perfil["id"])] = perfil["reserveLimit"]
+            perfil["reserveLimit"] = None
+    return rascunho, digitados
+
+
+def devolver_o_numero_digitado(edital, digitados):
+    """Escreve na linha do rascunho o número que o acervo publicou — o que a `0028` admite."""
+    from processo_seletivo.editais.models.perfis import PerfilVaga
+
+    for perfil_id, numero in digitados.items():
+        PerfilVaga.objects.filter(edital=edital, id=perfil_id).update(reserve_limit=numero)
+
+
+@contextmanager
+def antes_da_162():
+    """A publicação do acervo anterior à `162`: o número digitado no conteúdo, sem a coerência nova.
+
+    **Só para reconstituir o acervo**, como `antes_da_116`. O corpus da `070` é de Editais
+    publicados antes da `162` — o 01/2026 com "limitado em 6" e um ilimitado sem continuação, o
+    92/2026 com "limitado em 15" ao lado de corte com continuação —, e republicá-lo pelo caminho
+    real exige a composição e a conferência **daquele** dia: o conteúdo lia a coluna, e a espécie
+    não era confrontada com o corte. Fora daqui, o acervo não se fabrica (FR-6944, FR-6948).
+    """
+    from processo_seletivo.publicacoes.application import publish_edital
+
+    original = publish_edital.edital_snapshot
+
+    def como_antes(edital):
+        from processo_seletivo.editais.models.perfis import PerfilVaga
+
+        conteudo = original(edital)
+        digitados = {
+            str(ident): numero
+            for ident, numero in PerfilVaga.objects.filter(edital=edital).values_list(
+                "id", "reserve_limit"
+            )
+        }
+        for perfil in conteudo.get("profiles") or []:
+            if perfil.get("reserveType") == "LIMITED":
+                perfil["reserveLimit"] = digitados.get(str(perfil["id"]))
+        return conteudo
+
+    with (
+        mock.patch.object(publish_edital, "edital_snapshot", como_antes),
+        mock.patch(
+            "processo_seletivo.editais.domain.validation._coerencia_do_cadastro",
+            return_value=[],
+        ),
+    ):
+        yield

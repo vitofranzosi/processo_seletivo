@@ -37,7 +37,6 @@ def perfis(**alteracoes):
         "perfil-0-locality": "Campus Vitória",
         "perfil-0-immediateVacancies": "2",
         "perfil-0-reserveType": "LIMITED",
-        "perfil-0-reserveLimit": "5",
         "perfil-0-requirements": "Ensino médio\nExperiência",
         # As modalidades são linhas próprias, indexadas dentro do índice do Perfil.
         "modalidade-0-0-id": "aaaaaaaa-0000-4000-8000-00000000e031",
@@ -82,7 +81,8 @@ def test_compor_salva_perfis_e_cronograma(client, seletor_ligado, edital):
     perfil = edital.perfis.get()
     assert perfil.code == "TEC-ADM"
     assert perfil.immediate_vacancies == 2
-    assert perfil.reserve_limit == 5
+    # O limitado não guarda número desde a `162`: ele vem do corte do marco que convoca.
+    assert (perfil.reserve_type, perfil.reserve_limit) == ("LIMITED", None)
     assert perfil.requirements == ["Ensino médio", "Experiência"]
     assert sorted(m.code for m in perfil.modalidades.all()) == ["AC", "PCD"]
 
@@ -115,13 +115,17 @@ def test_recusa_do_dominio_e_explicada_sem_perder_o_que_foi_digitado(
 
 @pytest.mark.django_db
 @pytest.mark.integration
-def test_reserva_limitada_sem_limite_e_recusada(client, seletor_ligado, edital):
+def test_reserva_limitada_se_grava_sem_numero_e_o_campo_antigo_nao_grava_nada(
+    client, seletor_ligado, edital
+):
+    """162, FR-6931: o número vem do corte; um campo antigo em cache não grava número nenhum."""
     identificar(client, "ana.elaboradora", ["elaborador"])
-    resposta = client.post(
+    client.post(
         etapa(edital, "perfis"),
-        perfis(**{"perfil-0-reserveType": "LIMITED", "perfil-0-reserveLimit": ""}),
+        perfis(**{"perfil-0-reserveType": "LIMITED", "perfil-0-reserveLimit": "7"}),
     )
-    assert "Cadastro Reserva limitado exige limite" in resposta.content.decode()
+    perfil = edital.perfis.get()
+    assert (perfil.reserve_type, perfil.reserve_limit) == ("LIMITED", None)
 
 
 @pytest.mark.django_db
@@ -305,27 +309,11 @@ def test_a_validacao_da_tela_se_declara_como_nao_sendo_fronteira_de_seguranca():
 def test_o_servidor_recusa_mesmo_sem_a_validacao_da_tela(client, seletor_ligado, edital):
     """FR-026: a tela pode ser burlada; o domínio é quem decide.
 
-    O POST vai direto ao endpoint, como faria qualquer cliente sem JavaScript. As duas regras
-    testadas são as que a tela verifica — e o servidor precisa recusar as duas do mesmo jeito.
+    O POST vai direto ao endpoint, como faria qualquer cliente sem JavaScript. As regras testadas
+    são as que a tela verifica — e o servidor precisa recusar do mesmo jeito. A da reserva limitada
+    sem limite saiu com a `162`: o número do limitado vem do corte, e não se digita.
     """
     identificar(client, "ana.elaboradora", ["elaborador"])
-
-    reserva = client.post(
-        reverse("interface:compor-etapa", args=[edital.id, "perfis"]),
-        {
-            "perfil-0-id": "00000000-0000-0000-0000-000000000801",
-            "perfil-0-code": "P1",
-            "perfil-0-name": "Perfil",
-            "perfil-0-immediateVacancies": "1",
-            "perfil-0-reserveType": "LIMITED",
-            "perfil-0-reserveLimit": "",
-        },
-    )
-
-    assert reserva.status_code == 200
-    # A mensagem exata do domínio, não uma palavra que o próprio formulário já contém.
-    assert "Cadastro Reserva limitado exige limite não negativo." in reserva.content.decode()
-    assert not edital.perfis.exists()
 
     codigos = client.post(
         reverse("interface:compor-etapa", args=[edital.id, "perfis"]),

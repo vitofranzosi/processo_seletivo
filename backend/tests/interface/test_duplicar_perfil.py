@@ -161,9 +161,10 @@ def test_a_recusa_devolve_a_copia_com_os_mesmos_marcos_em_transito(client, com_m
     """É aqui que os marcos sumiriam sem aviso: a tela que devolve o digitado precisa devolvê-los,
     ou a gravação seguinte grava a cópia sem marco nenhum (FR-650)."""
     marcos = _em_transito(com_marco)
-    # O erro está no **outro** Perfil: limitado sem limite.
+    # O erro está no **outro** Perfil: vagas negativas. Era "limitado sem limite" até a `162`,
+    # quando o número do limitado passou a vir do corte e deixou de ser recusa.
     digitado = {
-        **perfis_completos(**{"perfil-0-reserveLimit": ""}),
+        **perfis_completos(**{"perfil-0-immediateVacancies": "-1"}),
         **_copia_no_formulario(marcos),
     }
 
@@ -509,7 +510,7 @@ def test_origem_com_valor_ilegivel_e_recusada_no_dialogo(client, com_marco):
 
 
 def test_origem_com_erro_de_regra_e_copiada_com_o_erro_e_a_gravacao_o_recusa(client, com_marco):
-    formulario = perfis_completos(**{"perfil-0-reserveLimit": ""})
+    formulario = perfis_completos(**{"perfil-0-immediateVacancies": "-1"})
 
     resposta = _duplicar(client, com_marco, formulario)
 
@@ -517,7 +518,7 @@ def test_origem_com_erro_de_regra_e_copiada_com_o_erro_e_a_gravacao_o_recusa(cli
     copia = _campos_do_cartao(resposta.content.decode())
     gravacao = client.post(_etapa(com_marco), {**formulario, **copia})
     assert gravacao.status_code == 200
-    assert "limite" in gravacao.content.decode().lower()
+    assert "não podem ser negativas" in gravacao.content.decode()
 
 
 def test_a_copia_parte_do_digitado_e_os_marcos_do_gravado(client, com_marco):
@@ -768,7 +769,7 @@ def test_a_recusa_devolve_os_fatos_e_a_reversao_digitados(client, com_marco):
     """Achado da `043`, anterior a ela: a tela que devolve o digitado desenhava o cartão sem os
     fatos e com a reversão desmarcada, e a gravação seguinte apagava os dois (R-012)."""
     digitado = perfis_completos(
-        **{"perfil-0-reserveLimit": "", "perfil-0-vacancyReversion": "ON_EXHAUSTION"}
+        **{"perfil-0-immediateVacancies": "-1", "perfil-0-vacancyReversion": "ON_EXHAUSTION"}
     )
 
     corpo = client.post(_etapa(com_marco), digitado).content.decode()
@@ -931,9 +932,7 @@ def test_o_cartao_da_tela_e_o_da_recusa_tem_as_mesmas_chaves(com_marco):
     """A raiz do R-012: dois conversores para o mesmo cartão, mantidos à mão. O que um desenha e o
     outro esquece some na recusa e na cópia. `marcos` é do cartão da Classificação, e não deste."""
     (da_tela,) = forms.perfis_do_edital(com_marco)
-    (lido,) = forms.ler_perfis(
-        {**perfis_completos(), "perfil-0-reserveType": "UNLIMITED", "perfil-0-reserveLimit": ""}
-    )
+    (lido,) = forms.ler_perfis({**perfis_completos(), "perfil-0-reserveType": "UNLIMITED"})
     from processo_seletivo.interface.views import _reexibir_perfis
 
     (da_recusa,) = _reexibir_perfis([lido])

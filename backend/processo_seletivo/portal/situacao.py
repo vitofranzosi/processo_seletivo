@@ -30,6 +30,7 @@ from django.urls import reverse
 from django.utils import formats, timezone
 
 from processo_seletivo.convocacao.domain import nomes as convocacao_nomes
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.portal import desfecho as frases_do_desfecho
 from processo_seletivo.portal import obrigacoes as obrigacoes_da_convocacao
 from processo_seletivo.portal.leitura import _chave_da_lista
@@ -462,10 +463,31 @@ def frase_da_reserva(perfil):
     esta tela não faz.
     """
     tipo = (perfil or {}).get("reserveType")
-    limite = (perfil or {}).get("reserveLimit")
+    # O número é o da regra única (162, FR-6945): o publicado no legado, o do corte nos demais.
+    cadastro = cadastro_de_reserva.do_perfil(perfil or {})
+    limite = cadastro.numero_mostrado()
     if tipo == "LIMITED" and limite:
         pessoas = "pessoa" if limite == 1 else "pessoas"
+        if cadastro.com_modalidade and not cadastro.legado:
+            return (
+                f"O Edital prevê cadastro reserva de até {limite} {pessoas} em cada lista de "
+                "concorrência deste Perfil."
+            )
         return f"O Edital prevê cadastro reserva de até {limite} {pessoas} para este Perfil."
+    if tipo == "LIMITED" and cadastro.por_lista and not cadastro.legado:
+        partes = [
+            f"{lista.numero} na ampla concorrência"
+            if lista.lista_id is None
+            else f"{lista.numero} na lista {lista.nome}"
+            for lista in cadastro.por_lista
+        ]
+        primeira = partes[0].replace(" na ", " pessoas na ", 1)
+        resto = [primeira, *partes[1:]]
+        return (
+            "O Edital prevê cadastro reserva de até "
+            + ", ".join(resto[:-1])
+            + f" e {resto[-1]} deste Perfil."
+        )
     if tipo == "UNLIMITED":
         return "O Edital prevê cadastro reserva para este Perfil, sem limite de pessoas."
     if tipo == "LIMITED":

@@ -12,6 +12,7 @@ de que Perfil e de que lista era a pessoa. A migalha continua; esta linha diz o 
 {% endcomment %}
 {% with lugar=contexto_do_recorte %}<p class="contexto-do-recorte">{{ lugar.edital }}{% if lugar.perfil %} · Perfil <strong>{{ lugar.perfil }}</strong>{% endif %}{% if lugar.marco %} · {{ lugar.marco }}{% endif %}{% if lugar.lista %} · Lista <strong>{{ lugar.lista }}</strong>{% endif %}</p>{% endwith %}
 <p class="sub">Quem a ordem indica para as vagas que faltam, o que cada pessoa respondeu, e quem é a próxima da fila.</p>
+{% if nota_do_cadastro %}<p class="nota">{{ nota_do_cadastro }}</p>{% endif %}
 {% if marco_intermediario %}<p class="aviso" role="note">{{ marco_intermediario.frase }} <a href="{{ marco_intermediario.url }}">Abrir a convocação da {{ marco_intermediario.nome_do_marco_que_le }}</a>.</p>{% endif %}
 {% comment %}
 Os termos do domínio definidos no primeiro uso desta tela (030, FR-424, SC-141). Fora de qualquer

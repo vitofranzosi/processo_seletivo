@@ -10,6 +10,7 @@ from datetime import timedelta
 
 from tests.fixtures.edital import identidade_do_marco, identificador, marco_minimo
 from tests.fixtures.publicacao import publish_original
+from tests.fixtures.snapshot import com_cadastro
 
 PERFIL_DOCENTE = "DOC-INFO"
 PERFIL_TECNICO = "TEC-LAB"
@@ -21,7 +22,7 @@ LINHA_PPP_DO_DOCENTE = identificador(409, 0)
 
 
 def rascunho_de_selecao(seed=0):
-    return {
+    rascunho = {
         "profiles": [
             {
                 "id": identificador(401, seed),
@@ -34,7 +35,6 @@ def rascunho_de_selecao(seed=0):
                 ],
                 "immediateVacancies": 2,
                 "reserveType": "LIMITED",
-                "reserveLimit": 6,
                 "locality": "Campus Serra",
                 "competitionModalities": [
                     {"id": identificador(403, seed), "code": "AC", "name": "Ampla concorrência"},
@@ -111,6 +111,13 @@ def rascunho_de_selecao(seed=0):
             }
         ],
     }
+    # **O cadastro coerente com o corte** (162): o Docente limitado em 20 — o número vem do corte,
+    # que ganha o excedente que o dá em cada lista, com folga para as Retificações dos testes que
+    # levam a linha geral a 8 sem o zerar (FR-6951) —, e o Técnico ilimitado, com continuação.
+    docente, tecnico = rascunho["profiles"]
+    com_cadastro(docente, "LIMITED", 20)
+    com_cadastro(tecnico, "UNLIMITED")
+    return rascunho
 
 
 def publicar_selecao(

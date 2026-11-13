@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.classificacao.domain.faixa import ALVO_FIXO
-from processo_seletivo.editais.domain import duplicacao, quadro, secoes
+from processo_seletivo.editais.domain import cadastro_de_reserva, duplicacao, quadro, secoes
 from processo_seletivo.editais.domain.etapas import soma_das_maximas
 from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
@@ -602,7 +602,6 @@ def ler_perfis(dados):
     for indice in _indices(dados, "perfil"):
         base = f"perfil-{indice}"
         reserva = _texto(dados, f"{base}-reserveType") or "NONE"
-        limite = _texto(dados, f"{base}-reserveLimit")
         perfis.append(
             {
                 "id": _texto(dados, f"{base}-id"),
@@ -634,7 +633,9 @@ def ler_perfis(dados):
                 # amostra são normais, e a `019` recusa convocar sem declaração em vez de escolher.
                 "callForm": _texto(dados, f"{base}-callForm") or None,
                 "reserveType": reserva,
-                "reserveLimit": int(limite) if reserva == "LIMITED" and limite else None,
+                # **O número não se lê do formulário** (162, FR-6931): o limitado o tira do corte
+                # do marco que convoca. Um campo antigo em cache que ainda o envie não grava nada.
+                "reserveLimit": None,
                 "locality": _texto(dados, f"{base}-locality"),
                 "duties": _texto(dados, f"{base}-duties"),
                 "workload": _texto(dados, f"{base}-workload"),
@@ -1054,6 +1055,63 @@ def secoes_persistidas(edital):
     return [{"key": item.key, "content": item.content} for item in edital.secoes.all()]
 
 
+def _perfil_para_o_cadastro(perfil):
+    """O mínimo do conteúdo que a derivação do cadastro lê, montado das linhas já pré-carregadas.
+
+    Na forma de `edital_snapshot`, e sem chamá-lo: compô-lo inteiro custaria as consultas de todas
+    as coleções do Edital para ler três coisas do Perfil. As linhas do quadro saem na ordem dele.
+    """
+    return {
+        "immediateVacancies": perfil.immediate_vacancies,
+        "reserveType": "LIMITED",
+        "reserveLimit": None,
+        "competitionModalities": [
+            {"id": str(m.id), "code": m.code, "name": m.name} for m in perfil.modalidades.all()
+        ],
+        "vacancyTable": [
+            {
+                "id": str(linha.id),
+                "modalityId": str(linha.modalidade_id) if linha.modalidade_id else None,
+                "immediateVacancies": linha.vagas_imediatas,
+            }
+            for linha in sorted(
+                perfil.quadro_de_vagas.all(), key=lambda item: (item.ordem, str(item.id))
+            )
+        ],
+        "classificationMilestones": [
+            {
+                "id": str(marco.id),
+                "name": marco.name,
+                "stages": [str(etapa) for etapa in marco.etapas or []],
+                "cutRule": marco.regra_de_corte,
+            }
+            for marco in perfil.marcos.all()
+        ],
+    }
+
+
+def cadastro_para_o_cartao(perfil_do_conteudo):
+    """A nota e o resumo da opção limitada no cartão do Perfil (162, FR-6932, contrato P).
+
+    Calculados sobre o corte **salvo**, qualquer que seja a espécie marcada agora: quem troca para
+    limitado lê, na mesma hora, o número que o corte já declarado produziria.
+    """
+    cadastro = cadastro_de_reserva.do_perfil({**perfil_do_conteudo, "reserveLimit": None})
+    marco = cadastro.marco_que_convoca
+    if not cadastro.por_lista:
+        return {"frase": "", "listas": [], "resumo": cadastro.resumo_limitado()}
+    nome = f"o marco “{marco.nome}”" if marco.nome else "o marco que convoca deste Perfil"
+    unico = cadastro.numero_unico
+    if unico is not None:
+        sufixo = " em cada lista de concorrência" if cadastro.com_modalidade else ""
+        frase = f"O número vem do corte d{nome}: até {unico} classificados{sufixo}."
+        listas = []
+    else:
+        frase = f"O número vem do corte d{nome}:"
+        listas = [f"{lista.nome}: até {lista.numero}" for lista in cadastro.por_lista]
+    return {"frase": frase, "listas": listas, "resumo": cadastro.resumo_limitado()}
+
+
 def perfis_do_edital(edital):
     """Perfis persistidos, no formato que o formulário renderiza."""
     return [
@@ -1097,6 +1155,7 @@ def perfis_do_edital(edital):
             # dois campos para o mesmo número, um rotulado em português corrente e o outro sem
             # explicação visível.
             "tem_lista_reservada": bool(_listas_reservadas_do_modelo(perfil)),
+            "cadastro": cadastro_para_o_cartao(_perfil_para_o_cadastro(perfil)),
         }
         for perfil in edital.perfis.prefetch_related(
             "modalidades__regra_normativa",
@@ -1295,7 +1354,7 @@ def perfis_persistidos(edital):
             "requirements": perfil.requirements or [],
             "immediateVacancies": perfil.immediate_vacancies,
             "reserveType": perfil.reserve_type,
-            "reserveLimit": perfil.reserve_limit,
+            "reserveLimit": None,  # 162: o rascunho guarda o digitado sozinho (FR-6940)
             # **Travessia 2, e ela vale para este campo tanto quanto para o quadro**: sem esta
             # linha, declarar a ampla concorrência no passo dos Perfis e gravar qualquer etapa
             # seguinte publicaria um Edital que não a declara — e a conferência do alvo derivado
@@ -1394,7 +1453,8 @@ def _o_que_o_cartao_mostra(perfil):
         tuple(linha.strip() for linha in perfil.get("requirements") or [] if linha.strip()),
         perfil.get("immediateVacancies") or 0,
         reserva,
-        perfil.get("reserveLimit") if reserva == "LIMITED" else None,
+        # O número do limitado não é do cartão desde a `162`: vem do corte, e o cartão não o mostra.
+        None,
         texto((perfil.get("vacancyReversion") or {}).get("kind")),
         tuple(
             sorted(

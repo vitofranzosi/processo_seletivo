@@ -44,6 +44,7 @@ from processo_seletivo.divulgacao.models import (
     PublicacaoResultado,
     SituacaoDivulgada,
 )
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.interface import relatorio_trilha, supervisao, visao_geral
@@ -1091,12 +1092,8 @@ def montar(edital, *, agora, enderecos):
 
 
 def _reserva(perfil):
-    especie = perfil.get("reserveType") or "NONE"
-    if especie == "UNLIMITED":
-        return "sem limite"
-    if especie == "LIMITED":
-        return f"até {perfil.get('reserveLimit')}"
-    return "não há"
+    """O cadastro de reserva do Perfil, pela regra única (162, FR-6930): o texto curto da gestão."""
+    return cadastro_de_reserva.do_perfil(perfil).descricao_curta()
 
 
 def _linhas_das_etapas(perfil_id, etapas_do_perfil, por_etapa):

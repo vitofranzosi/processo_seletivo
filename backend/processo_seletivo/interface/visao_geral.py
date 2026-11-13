@@ -22,6 +22,7 @@ from django.utils import timezone
 
 # O quadro do conteúdo vigente mora no domínio desde a 111; a Visão Geral o reexporta para os
 # chamadores de sempre (relatório do Edital, testes da 041).
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain.quadro import QuadroDoEdital, vagas_do_conteudo  # noqa: F401
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
@@ -195,8 +196,13 @@ class Reserva:
         if tipo == "UNLIMITED":
             return cls(RESERVA_ILIMITADA)
         if tipo == "LIMITED":
-            limite = perfil.get("reserveLimit")
-            valido = isinstance(limite, int) and not isinstance(limite, bool) and limite >= 0
+            # O número é o da regra única (162, FR-6930): o digitado no legado, o do corte nos
+            # demais; por lista, o texto curto da gestão ("1 AC, 2 PcD").
+            cadastro = cadastro_de_reserva.do_perfil(perfil)
+            limite = cadastro.numero_mostrado()
+            if limite is None and cadastro.por_lista:
+                limite = ", ".join(f"{lista.numero} {lista.codigo}" for lista in cadastro.por_lista)
+            valido = limite is not None and (not isinstance(limite, int) or limite >= 0)
             # Limitada sem limite legível é conteúdo que o Edital não deveria ter publicado. A
             # tela não inventa o número nem finge que é ilimitada: diz que há reserva e para aí.
             return cls(RESERVA_LIMITADA, limite) if valido else cls(RESERVA_ILIMITADA)

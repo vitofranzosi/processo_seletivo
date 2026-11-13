@@ -108,6 +108,11 @@ def remapear(conteudo, mapa):
     perfis = []
     for perfil in conteudo.get("profiles") or []:
         novo_perfil = {**perfil, "id": trocar(perfil.get("id"), "profiles[].id")}
+        # **O número digitado do cadastro não viaja** (162, FR-6931, T-003). Copiar um Perfil
+        # publicado antes da `162` traria o número para um rascunho que a gravação recusa; o
+        # destino lê o dele do corte, que viaja com o marco.
+        if "reserveLimit" in novo_perfil:
+            novo_perfil["reserveLimit"] = None
         modalidades = []
         for modalidade in perfil.get("competitionModalities") or []:
             nova_modalidade = {

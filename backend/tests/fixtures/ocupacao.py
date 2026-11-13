@@ -10,6 +10,7 @@ publicada não há quantidade a apurar, e a emissão recusa dizendo isso (`FR-24
 
 from tests.fixtures.corte import emitir as emitir_corte_do_cenario
 from tests.fixtures.corte import montar_cenario_do_corte, rascunho
+from tests.fixtures.snapshot import com_cadastro
 
 LINHA_GERAL = "00000000-0000-4000-8000-000000000471"
 LINHA_PPI = "00000000-0000-4000-8000-000000000472"
@@ -56,8 +57,9 @@ def rascunho_com_quadro(
     if reversao is not None:
         perfil["vacancyReversion"] = {"kind": reversao}
     if reserva is not None:
-        perfil["reserveType"] = reserva
-        perfil["reserveLimit"] = 30 if reserva == "LIMITED" else None
+        # O número do limitado vem do corte desde a `162`: `com_cadastro` mantém o corte do cenário
+        # — a faixa é o que os testes da ocupação medem — e dá ao ilimitado a continuação.
+        com_cadastro(perfil, reserva)
     # A forma de comunicar a convocação (019, degrau 15). `None` fica com a do rascunho de base,
     # que a declara desde a `051` (FR-943: quem corta declara como convoca). **`""` é "não
     # declarou"** — o acervo anterior à `019`, que só se publica no instante do acervo.

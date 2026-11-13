@@ -23,6 +23,7 @@ from django.utils import timezone
 
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
+from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import quadro as quadro_do_perfil
 from processo_seletivo.editais.domain import secoes as catalogo
@@ -1971,6 +1972,14 @@ SUPLENTES_SEM_CADASTRO = (
     "Os suplentes são chamados, na ordem, para as vagas deste Edital que não forem preenchidas "
     "pelos primeiros classificados."
 )
+# **A relação que a DP-05 deixava sem resposta** (162, FR-6942, C4). Com o número do cadastro lido
+# do corte, os suplentes do marco que convoca **são** o cadastro de reserva do Perfil, e o documento
+# pode dizê-lo. A frase de quem não tem cadastro fica com o texto de antes — "as vagas deste Edital"
+# —, de propósito: mudá-la mudaria o documento de todo Edital sem cadastro, e ela continua certa.
+SUPLENTES_DO_CADASTRO = (
+    "Os suplentes formam o cadastro de reserva deste Perfil e são chamados, na ordem, para as "
+    "vagas que não forem preenchidas pelos primeiros classificados."
+)
 
 
 def tem_lista_reservada(snapshot, perfil):
@@ -1992,21 +2001,40 @@ def frase_da_continuacao(marco):
     )
 
 
-def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False):
+def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False, perfil=None):
     """K1 a K10 — **a unidade indivisível** (FR-1375, R-009): corte, empate, suplentes, continuação.
 
     O empate fala de "esse número", e a continuação de "além desses": separadas na partilha parcial
     entre o comum e o de um grupo, as frases perderiam o referente — foi o terceiro erro da amostra.
     Por isso saem sempre juntas, e quem agrupa compara a unidade inteira.
 
-    **A explicação dos suplentes só sai sem cadastro de reserva em Perfil nenhum** (K7, FR-1362):
-    com cadastro, como os suplentes e o cadastro se relacionam é a pendência DP-05, e o documento
-    não a explica. `sem_cadastro` é do Edital, e não do Perfil: a frase diz "as vagas deste
-    Edital".
+    **Com o Perfil, a explicação dos suplentes é dele** (162, FR-6942). Até a `162` ela só saía sem
+    cadastro de reserva em Perfil nenhum do Edital (K7, FR-1362), porque como suplentes e cadastro
+    se relacionavam era a pendência DP-05. Decidida — o número do cadastro é o que o corte alcança
+    além das vagas —, o Perfil sem cadastro explica os suplentes como sempre, e o Perfil com
+    cadastro diz que eles **são** o cadastro. `sem_cadastro`, do Edital, só vale para quem chama sem
+    o Perfil.
+
+    **No Perfil só de reserva, o marco que convoca não diz "Seguem no processo"** (FR-6943, C3): não
+    há vaga para a qual seguir. A abertura diz quem compõe o cadastro, com o número dele.
     """
     regra = marco.get("cutRule")
     if not isinstance(regra, dict):
         return []
+    cadastro = cadastro_de_reserva.do_perfil(perfil) if perfil is not None else None
+    # **O Perfil legado compõe a unidade de antes** (FR-6944). Ele publicou o número digitado ao
+    # lado de um corte que não o produz — o cenário B da auditoria é "limitado em 15" com alvo 10, 5
+    # suplentes **e continuação** —, e a abertura nova diria que o cadastro é dos primeiros que a
+    # faixa alcança e, na mesma unidade, que outros podem ser chamados. Recomposto, ele diz o que
+    # dizia.
+    if cadastro is not None and cadastro.legado:
+        cadastro = None
+    convoca = cadastro is not None and any(
+        str(item.get("id")) == str(marco.get("id"))
+        for item in cadastro_de_reserva.marcos_que_convocam(perfil)
+    )
+    if convoca and cadastro.so_de_reserva:
+        return _corte_do_cadastro(marco, regra, cadastro, etapas, com_reservadas=com_reservadas)
     um_so = False
     if regra.get("targetKind") == "FROM_VACANCY_TABLE":
         quantos = (
@@ -2047,8 +2075,61 @@ def frases_do_corte(marco, etapas, *, sem_cadastro, com_reservadas=False):
     if not regras_do_marco.declara_sorteio(marco):
         if empate := EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), ""):
             unidade.append(empate)
-    if com_suplentes and sem_cadastro:
-        unidade.append(SUPLENTES_SEM_CADASTRO)
+    if com_suplentes:
+        if cadastro is None:
+            if sem_cadastro:
+                unidade.append(SUPLENTES_SEM_CADASTRO)
+        elif cadastro.especie == cadastro_de_reserva.NAO_HA:
+            unidade.append(SUPLENTES_SEM_CADASTRO)
+        elif convoca:
+            unidade.append(SUPLENTES_DO_CADASTRO)
+    if continuacao := frase_da_continuacao(marco):
+        unidade.append(continuacao)
+    return unidade
+
+
+def _corte_do_cadastro(marco, regra, cadastro, etapas, *, com_reservadas):
+    """C3 — a unidade do corte do marco que convoca, no Perfil só de reserva (FR-6943).
+
+    As vagas são zero, e por isso o alcance da faixa **é** o número do cadastro (T-006); com zero em
+    toda lista, ele é o mesmo em todas, e "de cada lista" diz isso.
+    """
+    numeros = next(
+        (item.listas for item in cadastro.marcos if item.marco_id == str(marco.get("id"))), ()
+    )
+    alcance = max((lista.numero for lista in numeros), default=0)
+    de_cada = " de cada lista de concorrência" if com_reservadas else ""
+    um_so = False
+    if cadastro.especie == cadastro_de_reserva.LIMITADO:
+        um_so = alcance == 1
+        abertura = (
+            f"Compõe o cadastro de reserva o 1 (um) primeiro classificado{de_cada}."
+            if um_so
+            else (
+                f"Compõem o cadastro de reserva os {_numero_por_extenso(alcance)} primeiros "
+                f"classificados{de_cada}."
+            )
+        )
+    else:
+        abertura = "Compõem o cadastro de reserva todos os classificados, sem limite."
+        if alcance == 1:
+            abertura += f" É chamado primeiro o 1 (um) primeiro{de_cada}."
+        elif alcance > 1:
+            abertura += (
+                f" São chamados primeiro os {_numero_por_extenso(alcance)} primeiros{de_cada}."
+            )
+    governada = regra.get("governedStage")
+    destino = etapas.get(str(governada)) if governada else None
+    if nome := (destino.get("name") if isinstance(destino, dict) else ""):
+        abertura += (
+            f" Ele participa da Etapa {_aspas(nome)}."
+            if um_so
+            else f" Eles participam da Etapa {_aspas(nome)}."
+        )
+    unidade = [abertura]
+    if not regras_do_marco.declara_sorteio(marco):
+        if empate := EMPATE_NO_CORTE_2.get(regra.get("tieOutcome"), ""):
+            unidade.append(empate)
     if continuacao := frase_da_continuacao(marco):
         unidade.append(continuacao)
     return unidade
@@ -2304,15 +2385,51 @@ def texto_do_documento(documento):
 
 
 def frase_do_cadastro(perfil):
-    """P2 — o cadastro de reserva por extenso (FR-1371), com o limite como é."""
-    tipo, limite = perfil.get("reserveType"), perfil.get("reserveLimit")
-    if tipo == "LIMITED" and _inteiro(limite):
-        return f"cadastro de reserva de até {_numero_por_extenso(limite)} classificados por Perfil"
-    if tipo == "UNLIMITED":
+    """P2 — o cadastro de reserva por extenso (FR-1371), com o número do corte (162, C1).
+
+    **O número do limitado vem do corte do marco que convoca** (FR-6929, FR-6941): é o que a faixa
+    alcança além das vagas, por lista de concorrência. O Perfil publicado antes da `162`, com número
+    digitado, imprime o dele, com os mesmos bytes de antes (FR-6944). Sem corte não há número, e a
+    frase não o inventa: esse Perfil não publica (FR-6935).
+    """
+    cadastro = cadastro_de_reserva.do_perfil(perfil)
+    if cadastro.especie == cadastro_de_reserva.ILIMITADO:
         return "cadastro de reserva sem limite de classificados"
-    if tipo == "NONE":
+    if cadastro.especie == cadastro_de_reserva.NAO_HA:
         return "não há cadastro de reserva"
-    return ""
+    if cadastro.especie != cadastro_de_reserva.LIMITADO:
+        return ""
+    if cadastro.legado:
+        return (
+            f"cadastro de reserva de até {_numero_por_extenso(cadastro.publicado)} classificados "
+            "por Perfil"
+        )
+    if not cadastro.por_lista:
+        return ""
+    frase = f"cadastro de reserva de até {_numeros_do_cadastro(cadastro)}"
+    # O empate que admite excedente pode levar a faixa além do número (FR-6938): a unidade do corte
+    # já diz que "passam todos os empatados", e o cadastro não pode afirmar o contrário.
+    if cadastro.admite_empate:
+        frase += ", além dos empatados na última posição"
+    return frase
+
+
+def _classificados(numero):
+    return f"{_numero_por_extenso(numero)} {'classificado' if numero == 1 else 'classificados'}"
+
+
+def _numeros_do_cadastro(cadastro):
+    """`3 (três) classificados por Perfil`, `… em cada lista de concorrência`, ou um por lista."""
+    unico = cadastro.numero_unico
+    if unico is not None:
+        onde = " em cada lista de concorrência" if cadastro.com_modalidade else " por Perfil"
+        return f"{_classificados(unico)}{onde}"
+    partes = []
+    for indice, lista in enumerate(cadastro.por_lista):
+        quantos = _classificados(lista.numero) if indice == 0 else _numero_por_extenso(lista.numero)
+        onde = "na ampla concorrência" if lista.lista_id is None else f"na lista {lista.nome}"
+        partes.append(f"{quantos} {onde}")
+    return ", ".join(partes[:-1]) + f" e {partes[-1]}"
 
 
 def _igual_em_todos(perfis, chave):
@@ -2596,6 +2713,7 @@ def _marcos_na_redacao_2(
                     etapas,
                     sem_cadastro=sem_cadastro,
                     com_reservadas=tem_lista_reservada(snapshot, perfil),
+                    perfil=perfil,
                 ):
                     with parte():
                         for indice, frase in enumerate(corte):
@@ -3947,10 +4065,26 @@ def _reserva(perfil, *, redacao=REDACAO_VIGENTE):
 
     Na redação 2, pelo efeito (P2): "até 15 (quinze) classificados", e não "limitado em 15".
     """
+    cadastro = cadastro_de_reserva.do_perfil(perfil)
+    derivado = (
+        cadastro.especie == cadastro_de_reserva.LIMITADO
+        and not cadastro.legado
+        and bool(cadastro.por_lista)
+    )
     if redacao != REDACAO_1:
         tipo, limite = perfil.get("reserveType"), perfil.get("reserveLimit")
         if tipo == "LIMITED" and _inteiro(limite):
             return f"até {_numero_por_extenso(limite)} classificados"
+        # O número do corte (162, C2), na célula estreita: um só, ou um por lista pelo código.
+        if derivado and (unico := cadastro.numero_unico) is not None:
+            return f"até {_classificados(unico)}" + (
+                " por lista" if cadastro.com_modalidade else ""
+            )
+        if derivado:
+            return "até " + ", ".join(
+                f"{_numero_por_extenso(lista.numero)} {lista.codigo}"
+                for lista in cadastro.por_lista
+            )
         if tipo == "UNLIMITED":
             return "sem limite de classificados"
         if tipo == "NONE":
@@ -3958,6 +4092,12 @@ def _reserva(perfil, *, redacao=REDACAO_VIGENTE):
     reserva = RESERVA.get(perfil.get("reserveType"), perfil.get("reserveType", ""))
     if perfil.get("reserveLimit") is not None:
         reserva = f"{reserva} em {perfil['reserveLimit']}"
+    elif derivado and (unico := cadastro.numero_unico) is not None:
+        reserva = f"{reserva} em {unico}"
+    elif derivado:
+        reserva = f"{reserva} em " + ", ".join(
+            f"{lista.numero} {lista.codigo}" for lista in cadastro.por_lista
+        )
     return reserva or "—"
 
 

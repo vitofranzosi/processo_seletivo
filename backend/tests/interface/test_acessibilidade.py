@@ -219,8 +219,10 @@ def test_a_recusa_recebe_foco_para_nao_passar_despercebida(client, seletor_ligad
             "perfil-0-id": "aaaaaaaa-0000-4000-8000-0000000000f1",
             "perfil-0-code": "P",
             "perfil-0-name": "Perfil",
-            "perfil-0-immediateVacancies": "1",
-            "perfil-0-reserveType": "LIMITED",  # limitada sem limite: o domínio recusa
+            # Vagas negativas: o domínio recusa. Era a limitada sem limite até a `162`, quando o
+            # número do limitado passou a vir do corte e deixou de ser recusa.
+            "perfil-0-immediateVacancies": "-1",
+            "perfil-0-reserveType": "NONE",
         },
     )
     corpo = resposta.content.decode()
@@ -247,28 +249,28 @@ def test_a_recusa_ancora_no_campo_e_aparece_junto_dele(client, seletor_ligado, e
             "perfil-0-id": perfil,
             "perfil-0-code": "P",
             "perfil-0-name": "Perfil",
-            "perfil-0-immediateVacancies": "1",
-            "perfil-0-reserveType": "LIMITED",  # limitada sem limite: o domínio nomeia reserveLimit
+            # Vagas negativas: o domínio nomeia `immediateVacancies`. Era a limitada sem limite,
+            # que nomeava o campo do número, até a `162` tirá-lo da tela.
+            "perfil-0-immediateVacancies": "-1",
+            "perfil-0-reserveType": "NONE",
         },
     )
     corpo = resposta.content.decode()
 
     # O resumo aponta para o campo.
-    assert 'href="#perfil-0-reserveLimit"' in corpo, "o item do resumo precisa ancorar no campo"
+    assert 'href="#perfil-0-immediateVacancies"' in corpo, "o item do resumo precisa ancorar"
     # E a mensagem aparece junto dele.
-    assert 'id="recusa-perfil-0-reserveLimit"' in corpo, "falta a marca junto do campo"
+    assert 'id="recusa-perfil-0-immediateVacancies"' in corpo, "falta a marca junto do campo"
     assert resposta.context["recusas"] == {
-        "perfil-0-reserveLimit": "Cadastro Reserva limitado exige limite não negativo."
+        "perfil-0-immediateVacancies": "Vagas imediatas não podem ser negativas."
     }
 
     # **O vínculo programático**, que é o que FR-033 pede e o que `role="alert"` não dá: o alerta
     # anuncia a mensagem quando ela aparece, mas quem volta ao controle depois não tem como saber
     # que aquela mensagem lhe pertence.
-    controle = _controle(corpo, "perfil-0-reserveLimit")
+    controle = _controle(corpo, "perfil-0-immediateVacancies")
     assert 'aria-invalid="true"' in controle, controle
-    assert "recusa-perfil-0-reserveLimit" in _descrito_por(controle), controle
-    # E a ajuda que já existia não pode ter sido substituída pela recusa.
-    assert "ajuda-reserva-0" in _descrito_por(controle), controle
+    assert "recusa-perfil-0-immediateVacancies" in _descrito_por(controle), controle
 
 
 @pytest.mark.django_db(transaction=True)

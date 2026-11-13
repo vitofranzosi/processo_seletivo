@@ -30,7 +30,7 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID
 
-from processo_seletivo.editais.domain import marcos
+from processo_seletivo.editais.domain import cadastro_de_reserva, marcos
 from processo_seletivo.editais.domain.calendario import (
     ano_do_evento,
     instante_vencido,
@@ -3469,6 +3469,7 @@ def _coerencia_do_quadro_de_vagas(
         base = _caminho_da_entidade("profiles", perfil, posicao)
         findings.extend(_reserva_convocada_fora(perfil, base=base, ato=ato))
         findings.extend(_reserva_com_linhas_reservadas(perfil, base=base, ato=ato))
+        findings.extend(_coerencia_do_cadastro(perfil, base=base, ato=ato))
         linhas = perfil.get("vacancyTable")
         if not isinstance(linhas, list) or not linhas:
             # **Quadro ausente tem duas leituras, e é o ato que decide qual vale** (027, FR-323).
@@ -3754,6 +3755,27 @@ def _reserva_com_linhas_reservadas(perfil, *, base, ato) -> list[ValidationFindi
     ]
 
 
+def _coerencia_do_cadastro(perfil, *, base, ato) -> list[ValidationFinding]:
+    """A espécie do cadastro contra o corte do marco que convoca (162, FR-6933 a FR-6939).
+
+    **Impeditivas**, porque o par incoerente é contradição no ato legal: "até 6" ao lado de "poderão
+    ser chamados outros" é a frase que motivou a feature. **O recorte pelo ato** mora em
+    `cadastro_de_reserva.incoerencias` (T-004), e o caminho é o da espécie: é na Etapa Perfis que
+    quem elabora troca o limitado pelo ilimitado, se o corte for o certo.
+    """
+    if ato not in (ATO_DE_PUBLICACAO, ATO_DE_RETIFICACAO):
+        return []
+    rotulo = perfil.get("code") or perfil.get("name") or ""
+    return [
+        ValidationFinding(Severity.BLOCKING_ERROR, codigo, frase, f"{base}/reserveType")
+        for codigo, frase in cadastro_de_reserva.incoerencias(
+            cadastro_de_reserva.do_perfil(perfil),
+            rotulo=rotulo,
+            na_publicacao=ato == ATO_DE_PUBLICACAO,
+        )
+    ]
+
+
 def _so_de_reserva(perfil, ato):
     total = perfil.get("immediateVacancies")
     if ato != ATO_DE_PUBLICACAO or isinstance(total, bool) or total != 0:
@@ -3762,25 +3784,19 @@ def _so_de_reserva(perfil, ato):
 
 
 def _alcance_da_faixa(perfil):
-    """A frase do alcance, ou nada quando a faixa pode crescer por continuação (`T-011`)."""
-    alcances = []
-    for marco in perfil.get("classificationMilestones") or []:
-        regra = marco.get("cutRule") if isinstance(marco, dict) else None
-        if not isinstance(regra, dict) or regra.get("continuation") != "NONE":
-            continue
-        excedente = regra.get("surplusCount") or 0
-        if regra.get("targetKind") == "FIXED":
-            alcance = (regra.get("targetCount") or 0) + excedente
-        elif regra.get("targetKind") == "FROM_VACANCY_TABLE":
-            alcance = excedente
-        else:
-            continue
-        if isinstance(alcance, int) and not isinstance(alcance, bool):
-            alcances.append(alcance)
-    if not alcances:
+    """A frase do alcance, ou nada quando a faixa pode crescer por continuação (`T-011`).
+
+    **A conta é a do número do cadastro** (162, T-006): no Perfil só de reserva as vagas são zero, e
+    o que a faixa alcança é o número que o documento imprime. Ler a regra aqui, de novo, faria a
+    advertência e o cadastro divergirem no primeiro corte que um dos dois lesse diferente — e o
+    marco intermediário, que esta função somava, não convoca ninguém (`133`).
+    """
+    cadastro = cadastro_de_reserva.do_perfil(perfil)
+    if not cadastro.por_lista or cadastro.alcance_cresce:
         return ""
+    alcance = max(lista.numero for lista in cadastro.por_lista)
     return (
-        f" Sem continuação admitida no corte, a convocação poderá alcançar até {max(alcances)} "
+        f" Sem continuação admitida no corte, a convocação poderá alcançar até {alcance} "
         "classificados."
     )
 

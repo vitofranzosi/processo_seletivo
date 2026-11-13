@@ -13,7 +13,7 @@ from processo_seletivo.publicacoes.infrastructure import pdf
 from processo_seletivo.publicacoes.models import Publicacao
 from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 from tests.fixtures.publicacao import create_retification, publish_original, publish_retification
-from tests.fixtures.snapshot import PERFIL, rascunho_completo
+from tests.fixtures.snapshot import PERFIL, com_cadastro, rascunho_completo
 from tests.unit.publicacoes.test_pdf import texto_de
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -24,9 +24,12 @@ def _rascunho():
     rascunho = rascunho_completo()
     for perfil in rascunho["profiles"]:
         if perfil["id"] == PERFIL["B"]:
-            perfil.update(immediateVacancies=0, reserveType="LIMITED", reserveLimit=10)
+            perfil.update(immediateVacancies=0)
+            for linha in perfil.get("vacancyTable") or []:
+                linha["immediateVacancies"] = 0
+            com_cadastro(perfil, "LIMITED", 10)
         elif perfil["id"] == PERFIL["C"]:
-            perfil.update(reserveType="LIMITED", reserveLimit=10)
+            com_cadastro(perfil, "LIMITED", 10)
     return rascunho
 
 
@@ -127,3 +130,78 @@ def test_o_documento_ja_publicado_nao_muda(api_client, edital):
     original = Publicacao.objects.get(edital=edital, publication_order=1)
     assert (bytes(original.documento.bytes), original.documento.document_hash) == antes
     assert _vagas_de(_linhas(antes[0]), "P2") == "CR"
+
+
+# --- 162: a Retificação muda o número pelo corte (FR-6948, FR-6950, FR-6951) --------------------
+
+
+def _marco_que_convoca(edital, perfil):
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    (alvo,) = [p for p in vigente["profiles"] if p["id"] == PERFIL[perfil]]
+    return alvo["classificationMilestones"][0]["id"]
+
+
+def test_o_campo_do_limite_so_existe_no_perfil_legado(edital):
+    """FR-6950: o número do limitado não se retifica pelo campo; ele vem do corte."""
+    from processo_seletivo.interface.retificacao import campos_editaveis
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    grupos = campos_editaveis(vigente)
+    caminhos = {campo["caminho"] for grupo in grupos for campo in grupo["campos"]}
+    assert not any(caminho.endswith("/reserveLimit") for caminho in caminhos)
+
+    legado = {**vigente, "profiles": [dict(p) for p in vigente["profiles"]]}
+    for perfil in legado["profiles"]:
+        if perfil["id"] == PERFIL["C"]:
+            perfil["reserveLimit"] = 10
+    caminhos = {campo["caminho"] for grupo in campos_editaveis(legado) for campo in grupo["campos"]}
+    assert f"/profiles/id={PERFIL['C']}/reserveLimit" in caminhos
+
+
+def test_o_perfil_acrescentado_por_retificacao_nao_tem_o_campo():
+    from processo_seletivo.interface.retificacao import NOVO_PERFIL, _perfil_completo
+
+    assert "reserveLimit" not in {chave for chave, _, _ in NOVO_PERFIL}
+    assert _perfil_completo({"reserveLimit": 7})["reserveLimit"] is None
+
+
+def test_retificar_o_excedente_muda_o_numero_e_a_conferencia_o_diz(api_client, edital):
+    """FR-6950, SC-2303: a conferência ganha a linha derivada, e o documento diz o número novo."""
+    from processo_seletivo.interface.retificacao import _cadastro_retificado
+
+    vigente = VersaoConsolidada.objects.filter(edital=edital).latest("materialized_at").content
+    caminho = (
+        f"/profiles/id={PERFIL['C']}/classificationMilestones/id="
+        f"{_marco_que_convoca(edital, 'C')}/cutRule/surplusCount"
+    )
+    alteracao = {"targetPath": caminho, "operation": "REPLACE", "newValue": 12}
+    linhas = _cadastro_retificado(vigente, [alteracao])
+    assert [(linha["rotulo"], linha["antes"], linha["depois"]) for linha in linhas] == [
+        ("Cadastro de reserva", "Limitado: até 10", "Limitado: até 12")
+    ]
+
+    retificacao = create_retification(api_client, edital, [alteracao], suffix="exc-12")
+    publish_retification(api_client, retificacao, suffix="exc-12")
+    # A frase quebra entre linhas do PDF: confere-se o texto corrido.
+    # O consolidado diz o número novo na unidade do corte do Perfil, com a frase da FR-6942. A frase
+    # "até N" do cadastro só sai na tabela de características, que este Edital não compõe.
+    corrido = " ".join(_linhas(_documento(edital, 2)))
+    assert "mais 12 suplentes" in corrido
+    assert pdf.SUPLENTES_DO_CADASTRO in corrido
+
+
+def test_levar_o_numero_a_zero_e_recusado(api_client, edital):
+    """FR-6951: a Retificação não leva o número derivado a zero."""
+    caminho = (
+        f"/profiles/id={PERFIL['C']}/classificationMilestones/id="
+        f"{_marco_que_convoca(edital, 'C')}/cutRule/surplusCount"
+    )
+    # A recusa vem já na elaboração: o conteúdo que o ato produziria tem o impedimento.
+    problema = create_retification(
+        api_client,
+        edital,
+        [{"targetPath": caminho, "operation": "REPLACE", "newValue": 0}],
+        suffix="exc-0",
+        esperar=422,
+    )
+    assert "o cadastro seria de zero classificados" in problema["detail"]

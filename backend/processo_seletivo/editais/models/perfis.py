@@ -98,10 +98,13 @@ class PerfilVaga(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["edital", "code"], name="uq_perfil_edital_code"),
+            # **O limitado admite os dois** (162, `editais/0028`): nulo, que é todo Perfil gravado
+            # depois da `162` — o número vem do corte —, e o número que o rascunho salvo antes
+            # guarda para a Revisão mostrar (FR-6940). As outras metades continuam.
             models.CheckConstraint(
                 condition=(
                     Q(reserve_type="NONE", reserve_limit__isnull=True)
-                    | Q(reserve_type="LIMITED", reserve_limit__isnull=False)
+                    | Q(reserve_type="LIMITED")
                     | Q(reserve_type="UNLIMITED", reserve_limit__isnull=True)
                 ),
                 name="ck_perfil_reserve_limit_compatible",

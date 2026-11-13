@@ -123,7 +123,10 @@ from processo_seletivo.duvidas.application.perguntar import PERMISSAO as PERMISS
 from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application import teto as teto_command
 from processo_seletivo.editais.application.aplicacao import gravar_aplicacao
-from processo_seletivo.editais.application.draft import replace_draft
+from processo_seletivo.editais.application.draft import (
+    advertencias_do_numero_digitado,
+    replace_draft,
+)
 from processo_seletivo.editais.application.identificacao import update_edital_identification
 from processo_seletivo.editais.application.reaproveitamento import (
     OPERACAO as OPERACAO_DE_REAPROVEITAMENTO,
@@ -1160,6 +1163,8 @@ def _pendencias(edital, *, agora=None, ator=None, snapshot=None):
     # regra nova de publicação.
     achados = (
         validate_for_publication(snapshot, ato=ATO_DE_PUBLICACAO, agora=agora)
+        # O número digitado antes da `162` só se lê nas linhas do rascunho (FR-6940).
+        + advertencias_do_numero_digitado(edital, snapshot)
         if edital.status in ANTES_DA_PUBLICACAO
         else fatos_do_conteudo_publicado(snapshot)
     )
@@ -1302,8 +1307,8 @@ def _recusa(exc, digitados, etapa):
     """A recusa do domínio, com a âncora do campo quando ele é conhecido (FR-033).
 
     O domínio nomeia o campo e a entidade; a interface sabe em que **linha** aquela entidade foi
-    digitada. Juntando os dois sai o `id` do controle — `perfil-3-reserveLimit` —, que é o que a
-    âncora do resumo e a marcação junto do campo precisam.
+    digitada. Juntando os dois sai o `id` do controle — `perfil-3-immediateVacancies` —, que é o que
+    a âncora do resumo e a marcação junto do campo precisam.
 
     Quando a recusa não pertence a campo nenhum — "o Edital deve possuir ao menos um Perfil" — a
     âncora fica vazia e o resumo a mostra como texto. Apontar um campo qualquer seria pior.
@@ -1841,7 +1846,7 @@ def compor_etapa(request, edital_id, etapa):
         else {}
     )
     perfis = (
-        _reexibir_perfis(digitados)
+        _reexibir_perfis(digitados, edital=edital)
         if etapa == "perfis" and digitados is not None
         else _reexibir_classificacao(edital, digitados)
         if etapa == "classificacao" and digitados is not None
@@ -2190,8 +2195,18 @@ def reaproveitar(request, edital_id):
     )
 
 
-def _reexibir_perfis(perfis):
-    """Após erro, devolve o que a pessoa digitou — nunca o que estava salvo."""
+def _reexibir_perfis(perfis, *, edital=None):
+    """Após erro, devolve o que a pessoa digitou — nunca o que estava salvo.
+
+    **A nota do cadastro é a exceção** (162, FR-6932): o número vem do corte **salvo**, que não está
+    no formulário da etapa. Com o Edital, ela é a do Perfil gravado; sem ele — a cópia que ainda não
+    existe —, a dos marcos que a cópia leva.
+    """
+    gravados = (
+        {perfil["id"]: perfil["cadastro"] for perfil in forms.perfis_do_edital(edital)}
+        if edital is not None
+        else {}
+    )
     return [
         {
             **perfil,
@@ -2218,6 +2233,7 @@ def _reexibir_perfis(perfis):
             # recusa devolveria a cópia sem eles, e a gravação seguinte a gravaria sem marco nenhum
             # — em silêncio, porque Perfil sem marco só é recusado na publicação.
             "marcos_em_transito": _marcos_em_transito(perfil),
+            "cadastro": gravados.get(perfil.get("id")) or forms.cadastro_para_o_cartao(perfil),
         }
         for perfil in perfis
     ]
@@ -8529,6 +8545,13 @@ def corte(request, edital_id, marco_id):
     )
 
 
+def _nota_do_cadastro(edital, perfil_id):
+    """A nota do cadastro legado (162, FR-6947), lida do conteúdo vigente; `None` fora do legado."""
+    from processo_seletivo.ocupacao.application.selectors import nota_do_cadastro_legado
+
+    return nota_do_cadastro_legado(effective_version(edital_id=edital.id).content, perfil_id)
+
+
 @require_http_methods(["GET"])
 def ocupacao(request, edital_id, marco_id):
     """Os quatro números de cada recorte do marco, e o estado de cada um (016, UX-031).
@@ -8575,6 +8598,9 @@ def ocupacao(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "recortes": recortes,
+                # O Perfil publicado antes da `162` com número digitado (FR-6947): a tela diz que o
+                # sistema não o aplica, e quem o corte alcança.
+                "nota_do_cadastro": _nota_do_cadastro(edital, perfil_id),
                 # **Quem pode retificar vê o caminho; quem não pode, vê o encaminhamento** (027,
                 # FR-332). Critério da `026`: um link para quem não elabora Retificação terminaria
                 # numa tela que se anuncia somente leitura, e trocar o beco sem saída por um beco
@@ -9171,6 +9197,7 @@ def convocacao(request, edital_id, marco_id):
                 "edital": edital,
                 "marco_id": marco_id,
                 "lista_id": lista_id,
+                "nota_do_cadastro": _nota_do_cadastro(edital, perfil_id),
                 **_navegacao_do_recorte(
                     edital, marco_id, rota="interface:convocacao", atual=lista_id
                 ),
