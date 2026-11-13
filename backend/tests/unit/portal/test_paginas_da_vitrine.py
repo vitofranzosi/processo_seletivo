@@ -139,12 +139,28 @@ def test_o_desfecho_do_edital_e_o_que_encerra():
         )
 
 
-def test_o_desfecho_do_processo_nao_encerra_o_edital():
+def test_o_edital_de_processo_encerrado_nao_esta_em_andamento():
+    """Enquanto o período corre ele continua recebendo, e fica nas abertas; fechadas as
+    inscrições, não há mais o que correr — "Em andamento" sobre "Processo seletivo encerrado em…"
+    seriam duas coisas ditas da mesma seleção."""
     do_processo = SimpleNamespace(do_edital=False, em=dias(-1), operacao="ENCERRADO")
     terminou = Periodo(ENCERRADO, dias(-30), dias(-5))
 
-    assert leitura.estado_na_vitrine(terminou, do_processo) == leitura.EM_ANDAMENTO
     assert leitura.estado_na_vitrine(Periodo(ABERTO, dias(-3), dias(9)), do_processo) == ABERTO
+    assert leitura.estado_na_vitrine(terminou, do_processo) == ENCERRADO
+    assert leitura.marca_da_selecao(terminou, do_processo) == (ENCERRADO, "Encerrada")
+
+
+def test_sob_o_desfecho_do_processo_o_edital_acabou_no_que_veio_por_ultimo():
+    antes = SimpleNamespace(do_edital=False, em=dias(-40), operacao="ENCERRADO")
+    depois = SimpleNamespace(do_edital=False, em=dias(-2), operacao="ENCERRADO")
+
+    assert leitura.encerrou_em(selecao(1, ENCERRADO, fim=dias(-5), desfecho=antes), AGORA) == (
+        dias(-5)
+    )
+    assert leitura.encerrou_em(selecao(2, ENCERRADO, fim=dias(-5), desfecho=depois), AGORA) == (
+        dias(-2)
+    )
 
 
 def test_o_periodo_cancelado_segue_em_andamento_com_a_marca_propria():
@@ -171,6 +187,14 @@ def test_em_andamento_o_recurso_aberto_vem_antes_e_o_prazo_mais_curto_primeiro()
     ]
 
     assert numeros(leitura.ordenar_por_urgencia(catalogo, AGORA)) == ["3", "2", "4", "1"]
+
+
+def test_em_andamento_o_periodo_cancelado_nao_conta_do_fim_que_nao_valeu():
+    """O fim declarado há meses não aconteceu: o que há é o conteúdo que declarou o cancelamento."""
+    cancelado = selecao(1, leitura.EM_ANDAMENTO, fim=dias(-180), cancelado=True, vigente=-1)
+    parado = em_andamento(2, fim=-30)
+
+    assert numeros(leitura.ordenar_por_urgencia([parado, cancelado], AGORA)) == ["1", "2"]
 
 
 def test_em_andamento_sem_publicacao_conta_do_fim_das_inscricoes():

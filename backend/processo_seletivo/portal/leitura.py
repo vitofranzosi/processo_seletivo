@@ -295,13 +295,20 @@ def estado_na_vitrine(periodo, desfecho):
     ao que acabou. O de Processo encerrado fica onde o período o põe, porque continua recebendo —
     caso que, desde a decisão de 28/09 sobre o RC-118, só existe no Processo encerrado antes dela.
 
-    **O período que terminou, sem desfecho do Edital, é "Em andamento"** — e o período cancelado
+    **O período que terminou, sem desfecho nenhum, é "Em andamento"** — e o período cancelado
     também: o Edital segue publicado, e uma Retificação pode lhe dar outro período. Até aqui os
     dois iam para o mesmo grupo do Edital encerrado, e o histórico escondia o que ainda corre.
+
+    **Sem desfecho nenhum, e não só sem o do Edital.** O Edital de Processo encerrado ou cancelado
+    não corre mais depois que as inscrições fecham: "Em andamento" sobre "Processo seletivo
+    encerrado em…" seriam duas coisas ditas da mesma seleção. Ele vai para o histórico, com a
+    marca do período.
     """
     if desfecho is not None and desfecho.do_edital:
         return ENCERRADO
-    return EM_ANDAMENTO if periodo.estado == ENCERRADO else periodo.estado
+    if periodo.estado == ENCERRADO:
+        return EM_ANDAMENTO if desfecho is None else ENCERRADO
+    return periodo.estado
 
 
 # ---------------------------------------------------------------------------
@@ -494,21 +501,31 @@ def paginar(itens, consulta, ancora):
 # ---------------------------------------------------------------------------
 
 
+def _fechou_em(periodo, agora):
+    """O fim das inscrições que já passou — `None` no período cancelado, que não "encerrou em"
+    data nenhuma, e no que ainda não terminou."""
+    if periodo.fim is not None and periodo.fim <= agora and not periodo.cancelado:
+        return periodo.fim
+    return None
+
+
 def encerrou_em(selecao, agora):
     """Quando o Edital acabou — o instante que ordena o histórico.
 
     O do **ato de desfecho**, que é o fato que o pôs em "Seleções encerradas". Nunca a criação nem a
     publicação do Edital: um Edital publicado há um ano e encerrado ontem é o mais recente do
-    histórico. Sem a data do ato (`Desfecho.em` pode faltar), o fim das inscrições que já passou;
-    sem ele, a vigência do conteúdo — é o que há, e mantém a ordem definida.
+    histórico. Sob o desfecho **do Processo** o Edital continuou recebendo até o fim do período, e
+    acabou no que veio por último. Sem a data do ato (`Desfecho.em` pode faltar), o fim das
+    inscrições; sem ele, a vigência do conteúdo — é o que há, e mantém a ordem definida.
     """
     desfecho = selecao.get("desfecho")
-    if desfecho is not None and desfecho.do_edital and desfecho.em is not None:
-        return desfecho.em
-    periodo = selecao["periodo"]
-    if periodo.fim is not None and periodo.fim <= agora and not periodo.cancelado:
-        return periodo.fim
-    return selecao["vigente_desde"]
+    fechou = _fechou_em(selecao["periodo"], agora)
+    ato = desfecho.em if desfecho is not None else None
+    if ato is not None and (desfecho.do_edital or fechou is None):
+        return ato
+    if ato is not None:
+        return max(ato, fechou)
+    return fechou or selecao["vigente_desde"]
 
 
 def _ordem_do_andamento(selecao, agora):
@@ -520,9 +537,11 @@ def _ordem_do_andamento(selecao, agora):
     """
     resumo = selecao.get("acompanhamento") or {}
     prazo = resumo.get("prazo_unico") or resumo.get("primeiro_prazo")
-    periodo = selecao["periodo"]
-    fechou = periodo.fim if periodo.fim is not None and periodo.fim <= agora else None
-    movimento = resumo.get("mais_recente") or fechou or selecao["vigente_desde"]
+    movimento = (
+        resumo.get("mais_recente")
+        or _fechou_em(selecao["periodo"], agora)
+        or selecao["vigente_desde"]
+    )
     return (
         (0, prazo.timestamp()) if prazo else (1, 0.0),
         -movimento.timestamp(),

@@ -75,6 +75,31 @@ def test_o_que_fechou_as_inscricoes_esta_em_andamento_e_em_paginas(client, um_me
     assert 'rel="next"' not in segunda
 
 
+def test_em_andamento_e_encerradas_sao_uma_sequencia_so(client, um_mes_depois):
+    """A frase antes do primeiro grupo visível, a navegação depois do último — e o grupo sem
+    cartão na página não aparece. O "Cargo 2", que viria primeiro em andamento, foi encerrado por
+    ato: vai para o histórico, depois dos dois que seguem."""
+    from processo_seletivo.processos.models import Edital
+    from tests.integration.portal.test_desfecho_publico import encerrar
+
+    encerrar(Edital.objects.get(number="82"))
+
+    primeira = ver(client)
+    segunda = ver(client, pagina="2")
+
+    assert cargos(primeira) == ["Cargo 3", "Cargo 1"]
+    assert '<h2 class="secao-vitrine">Em andamento</h2>' in primeira
+    assert '<h2 class="secao-vitrine">Seleções encerradas</h2>' not in primeira
+    assert primeira.count('class="paginacao"') == 1
+
+    assert cargos(segunda) == ["Cargo 2"]
+    assert '<h2 class="secao-vitrine">Em andamento</h2>' not in segunda
+    assert segunda.index("Seleções encerradas</h2>") < segunda.index('id="fora-do-prazo"')
+    assert "Mostrando 3 de 3 seleções em andamento ou encerradas" in segunda
+    assert "Edital encerrado" in lista(segunda)
+    assert segunda.count('class="paginacao"') == 1
+
+
 def test_as_abertas_ficam_inteiras_e_sem_navegacao(client, catalogo):
     """Só o histórico se folheia: três abertas num tamanho de página de dois continuam três."""
     corpo = ver(client, pagina="2")
