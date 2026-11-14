@@ -301,11 +301,11 @@
   escolha quando o número é um. As opções usam os rótulos digitados no cartão.
   {% endcomment %}
   <div class="campos dependentes so-decisoria so-colegiada">
-    <fieldset class="opcoes">
+    <fieldset class="opcoes" aria-describedby="ajuda-regra-{{ indice }}">
       <legend>Como a comissão chega ao resultado?</legend>
       {% recusa_de recusas "etapa" indice "deliberationRule" as recusado_regra %}
       {% if recusado_regra %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-deliberationRule">{{ recusado_regra }}</span>{% endif %}
-      <p class="ajuda">Vale quando a Etapa prevê mais de uma avaliação por inscrição. A maioria exige número ímpar de pareceres.</p>
+      <span class="oculto" id="ajuda-regra-{{ indice }}">Vale quando a Etapa prevê mais de uma avaliação por inscrição. A maioria exige número ímpar de pareceres.</span>
       <p class="opcao">
         <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-maioria"
                name="etapa-{{ indice }}-regraDeDeliberacao" value="MAJORITY"

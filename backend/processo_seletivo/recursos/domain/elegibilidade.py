@@ -77,11 +77,13 @@ def impedimento(ator, recurso, *, etapa_id=None):
             return CONSOLIDOU
         # **Todo membro da deliberação**, e não um só (165, FR-7069): o Resultado colegiado é
         # de cada um dos N, e a regra da `018` aplicada a cada um impede todos.
-        if _deliberou(resultado, subject):
+        # As duas perguntas só no Resultado deliberado: é só nele que há pares, e a tela do recurso
+        # tem orçamento de consultas que o de uma avaliação não pode pagar por elas.
+        if resultado.origem == "DELIBERACAO" and _deliberou(resultado, subject):
             return DELIBEROU
         # **E quem tem parecer pendente sobre o par** (165, FR-7069): o às cegas lhe esconde os
         # pareceres alheios, e ele julgaria sem ver o que julga.
-        if _pendente(resultado, subject):
+        if resultado.origem == "DELIBERACAO" and _pendente(resultado, subject):
             return PENDENTE
 
     publicacao = recurso.publicacao_atacada

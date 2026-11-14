@@ -5,9 +5,10 @@ em `df54d2c1`, que tem a correção da revisão de código da `164`
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11. Só a spec: plano e implementação esperam o pedido do usuário. PR só
-de documento, empilhado sobre o da `164` (#543), que está sobre o da `163` (#542). Nenhum dos dois
-tem merge. Revista no mesmo dia pela revisão do PR #545, com seis achados.
+**Status**: Especificada em 14/11, revista pela revisão do PR #545, esclarecida pelo
+`/speckit-clarify` (cinco perguntas) e implementada no mesmo dia pelo fluxo completo do Spec Kit, a
+pedido do usuário: plan, tasks, analyze e implementação, empilhada sobre a `164` (#543), que está
+sobre a `163` (#542). PR sem merge. Pendente só o SC-2356, que é humano.
 
 **Input**: a decisão **P-3** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-4):

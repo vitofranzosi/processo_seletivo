@@ -180,7 +180,9 @@ class ResultadoEtapa(models.Model):
     # **A regra e a contagem da deliberação** (165, FR-7065), presentes só nessa origem. A regra na
     # grafia publicada, como a versão que a contém; a contagem para o motivo, a conferência e a
     # reprodução, e para o gatilho que a confere contra os pareceres ligados (T-006).
-    regra_de_deliberacao = models.CharField(max_length=40, blank=True, default="")
+    # `db_default` além de `default`: quem grava por SQL cru — os testes de imutabilidade, e quem
+    # chegue por fora — não conhece a coluna, e o vazio é o que ela significa fora da deliberação.
+    regra_de_deliberacao = models.CharField(max_length=40, blank=True, default="", db_default="")
     favoraveis = models.PositiveSmallIntegerField(null=True, blank=True)
     desfavoraveis = models.PositiveSmallIntegerField(null=True, blank=True)
 

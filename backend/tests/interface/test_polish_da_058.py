@@ -233,6 +233,7 @@ def _etapa(**numeros):
         rotulo_desfavoravel="",
         efeito_desfavoravel="",
         efeito_da_ausencia="",
+        regra_de_deliberacao="",
         evento_id=None,
         weight=None,
         minimum_score=None,

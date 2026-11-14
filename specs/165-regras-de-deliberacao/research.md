@@ -137,10 +137,14 @@ impedida.
 ## T-008 — A prontidão ganha "aguardando pareceres"
 
 **Decisão.** Em `_estado_do_participante`, na Etapa colegiada: com menos conclusões elegíveis que o
-número previsto, o estado é `AGUARDANDO_PARECERES`, com o motivo "faltam k de N pareceres"; com
-exatamente N, cada uma passa pela incompatibilidade de hoje, e a inscrição está pronta; com mais, o
-`CONCLUSOES_DEMAIS` de hoje. `contagens` ganha `aguardando_pareceres`, e o resumo da Etapa o mostra à
-parte (FR-7079).
+número previsto, o estado continua `NAO_CONSOLIDAVEL`, com o motivo "faltam k de N pareceres"; com
+exatamente N, cada uma passa pela incompatibilidade de hoje, e a inscrição está pronta; com mais, a
+frase de pareceres demais. `contagens` ganha `aguardando_pareceres`, **contida** em
+`nao_consolidaveis`, e a organização da Etapa a mostra ao lado dela (FR-7079).
+
+*Mudado na implementação:* o plano previa um estado novo, `AGUARDANDO_PARECERES`. Um estado novo
+obrigaria toda tela que lê a partição (andamento, Centro, organização) a aprender um nome para a
+mesma pergunta — "por que esta não está pronta?" —, e a contagem à parte cumpre a FR-7079 sem isso.
 
 **Por quê.** Hoje a falta de conclusão é `NAO_CONSOLIDAVEL` com "sem conclusão". Na colegiada, a
 inscrição com dois de três pareceres não está impedida: está a caminho, e a presidência precisa
@@ -230,10 +234,13 @@ página mostrou.
 ## T-015 — A composição mostra a pergunta só na Etapa colegiada
 
 **Decisão.** No cartão da Etapa, um grupo de três rádios, nenhum marcado, com classe `so-decisoria`
-(a folha o esconde na pontuada, como esconde os rótulos) e a classe `so-colegiada`, que o script da
-composição alterna pelo número de avaliações. Sem JavaScript, o grupo aparece na decisória com a
-frase "só vale com mais de uma avaliação por inscrição", e o servidor ignora a escolha quando o número
-é um (T-002). Os rótulos das opções usam os rótulos publicados digitados no cartão (UX-750); sem eles,
+(a folha o esconde na pontuada, como esconde os rótulos) e a classe `so-colegiada`, que a folha
+esconde com o número de avaliações vazio (`:placeholder-shown`), que é uma avaliação. Com o número
+"1" digitado, o grupo aparece com a frase "vale quando a Etapa prevê mais de uma avaliação por
+inscrição", e o servidor ignora a escolha (T-002).
+
+*Mudado na implementação:* o plano previa o script da composição. A folha resolve o caso comum — o
+número vazio — sem script nenhum, e o servidor é quem descarta de fato, como no alcance e no efeito. Os rótulos das opções usam os rótulos publicados digitados no cartão (UX-750); sem eles,
 "favorável" e "desfavorável".
 
 `ler_etapas`, `etapas_do_edital`, `etapas_persistidas`, o serializer e `replace_draft` levam o campo,

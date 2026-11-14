@@ -647,7 +647,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="resultadoetapa",
             name="regra_de_deliberacao",
-            field=models.CharField(blank=True, default="", max_length=40),
+            field=models.CharField(blank=True, db_default="", default="", max_length=40),
         ),
         migrations.AlterField(
             model_name="resultadoetapa",

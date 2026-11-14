@@ -14,7 +14,7 @@ Roteiro de verificação da `165`. As frases esperadas estão em [contracts/](co
 ## 1. A suíte da feature
 
 ```bash
-cd backend && DB_NAME=gps_165 make test-pg PYTEST_ADDOPTS="tests/unit/resultados/test_deliberacao.py tests/integration/resultados/test_consolidacao_deliberada.py tests/integration/avaliacoes/test_parecer_as_cegas.py tests/integration/recursos/test_recurso_da_deliberacao.py tests/integration/publicacoes/test_retificacao_da_deliberacao.py tests/interface/test_composicao_da_deliberacao.py"
+cd backend && DB_NAME=gps_165 make test-pg PYTEST_ADDOPTS="tests/unit/resultados/test_deliberacao.py tests/unit/editais/test_deliberacao_na_publicacao.py tests/integration/resultados/test_consolidacao_deliberada.py tests/integration/resultados/test_gatilhos_da_deliberacao.py tests/integration/avaliacoes/test_parecer_as_cegas.py tests/integration/recursos/test_recurso_da_deliberacao.py tests/integration/publicacoes/test_retificacao_da_deliberacao.py tests/interface/test_composicao_da_deliberacao.py tests/interface/test_conferencia_da_deliberacao.py"
 ```
 
 Esperado: tudo passa. A tabela-verdade cobre três e cinco pareceres sob as três regras (SC-2351).
@@ -23,13 +23,13 @@ Esperado: tudo passa. A tabela-verdade cobre três e cinco pareceres sob as trê
 
 | Cenário | Onde | Resultado esperado |
 |---|---|---|
-| US1, a regra na composição e no documento | `test_composicao_da_deliberacao.py`, `test_deliberacao_no_documento.py` | as três opções sem marca; publicação recusa sem regra e com maioria par; frase no documento |
+| US1, a regra na composição e no documento | `test_composicao_da_deliberacao.py`, `test_deliberacao_na_publicacao.py` | as três opções sem marca; publicação recusa sem regra e com maioria par; frase no documento |
 | US2, às cegas | `test_parecer_as_cegas.py` | quem tem parecer pendente não recebe sentido nem texto alheio por tela, fragmento ou link; exposição barra atribuição e reabertura |
 | US3, a deliberação | `test_consolidacao_deliberada.py` | 2 «Indeferido» × 1 «Deferido» dá os três desfechos da tabela; o Resultado cita os três pareceres e a versão |
-| US4, o candidato | `test_deliberacao_ao_titular.py` | regra, contagem e textos desfavoráveis sem autoria; parte pública sem nada disso |
+| US4, o candidato | `test_recurso_da_deliberacao.py` | regra, contagem e textos desfavoráveis sem autoria; parte pública sem nada disso |
 | US5, o recurso | `test_recurso_da_deliberacao.py` | correção fixada cria o sucessor; reavaliação recusada sem gravar decisão |
 | US6, a Retificação | `test_retificacao_da_deliberacao.py` | troca passa antes do primeiro Resultado e é recusada depois, contando os superados |
-| SC-2350, o acervo | `test_elevacao_de_versao.py` e a recomposição do acervo | mesmo resumo canônico e mesmo documento |
+| SC-2350, o acervo | `test_elevacao_de_versao.py`, `test_composicao_da_deliberacao.py` | mesmo resumo canônico e mesmo documento |
 | SC-2353, uma avaliação | `test_consolidacao.py` (existente) | nada muda |
 
 ## 3. Pelo navegador (opcional)

@@ -90,10 +90,11 @@ Guarda o fato, nunca o conteúdo entregue (FR-7082, FR-054 da `012`).
 
 ```text
 participante
-  ├─ menos de N pareceres elegíveis ──► AGUARDANDO_PARECERES  ("faltam k de N pareceres")
+  ├─ menos de N pareceres elegíveis ──► NAO_CONSOLIDAVEL      ("faltam k de N pareceres",
+  │                                                            contada em aguardando_pareceres)
   ├─ N pareceres, algum incompatível ─► NAO_CONSOLIDAVEL      (frase de hoje)
   ├─ N pareceres compatíveis ─────────► PRONTA
-  └─ mais de N ───────────────────────► NAO_CONSOLIDAVEL      (CONCLUSOES_DEMAIS)
+  └─ mais de N ───────────────────────► NAO_CONSOLIDAVEL      (pareceres demais)
 PRONTA ──(consolidação)──► CONSOLIDADA (Resultado DELIBERACAO + N ParecerDaDeliberacao)
 CONSOLIDADA ──(correção fixada)──► sucessor RECURSO (sem pareceres)
 CONSOLIDADA ──(reavaliação determinada)──✗ recusada antes de gravar
