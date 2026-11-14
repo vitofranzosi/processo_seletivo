@@ -111,7 +111,7 @@ por nome; agendar à mão uma pessoa às 08:15 de 24/11 antes de preencher a man
 
 - [x] T033 [P] Criar `tests/interface/test_vocabulario_da_agenda_da_etapa.py` com a lista literal dos templates da A (e acrescentá-la nas entregas seguintes), no molde de `tests/test_vocabulario_da_convocacao.py`
 - [x] T034 [P] Testes do estreito em `tests/interface/test_agenda_da_etapa_no_estreito.py`: nenhum `style=`, `<style>`, `<script>` ou `on…=` nos templates novos; toda classe com regra; a regra do estreito dentro do `@media` (SC-2397, UX-767)
-- [ ] T035 Jornada no navegador, em 1440 × 900, 1366 × 768 e 375 × 812: configurar o cenário A, resolver a falta pelo atalho, montar, preencher, mover uma pessoa para outro dia; console sem violação de CSP e sem rolagem horizontal no celular; capturas em `specs/167-agendamento-da-etapa/capturas/a/` (SC-2397)
+- [x] T035 Jornada no navegador, em 1440 × 900, 1366 × 768 e 375 × 812: configurar o cenário A, resolver a falta pelo atalho, montar, preencher, mover uma pessoa para outro dia; console sem violação de CSP e sem rolagem horizontal no celular; capturas em `specs/167-agendamento-da-etapa/capturas/a/` (SC-2397)
 - [ ] T036 `cd backend && make lint check` e a suíte inteira com `DB_NAME=gps_167 make test-pg`, uma de cada vez; atualizar a linha da `167` no README e abrir o PR da A
 
 ---

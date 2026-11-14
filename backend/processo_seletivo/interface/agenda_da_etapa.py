@@ -390,6 +390,8 @@ def capacidade(request, edital_id, etapa_id):
         "edital": edital,
         "etapa_id": etapa_id,
         **_simulador(edital, etapa_id, formulario, periodo, leitura.participacao(edital, etapa_id)),
+        "dias": formulario.linhas_de_dia(formulario.configuracao()),
+        "fora_da_area": True,
     }
     resposta = render(request, "interface/_agenda_capacidade.html", contexto)
     if contexto["problemas"]:

@@ -44,7 +44,7 @@
             {% endfor %}
             <button type="submit" class="acao" name="acao" value="acrescentar-janela-{{ dia.indice }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Acrescentar uma janela em {{ dia.rotulo }}">+ janela</button>
           </span>
-          <span class="horarios-do-dia">{{ dia.horarios }} horário{{ dia.horarios|pluralize:"s" }}</span>
+          <span class="horarios-do-dia" id="horarios-do-dia-{{ dia.indice }}">{{ dia.horarios }} horário{{ dia.horarios|pluralize:"s" }}</span>
           {% if dias|length > 1 %}<button type="submit" class="remover-item" name="acao" value="remover-dia-{{ dia.indice }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Remover {{ dia.rotulo }}">×</button>{% else %}<span></span>{% endif %}
         </li>
         {% endfor %}

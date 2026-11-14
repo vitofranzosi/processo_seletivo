@@ -68,6 +68,8 @@ def test_a_capacidade_responde_sem_gravar(presidente, edital_a, etapa_a2, inscri
     assert "16 atendimentos por banca × 1 banca" in corpo
     assert "Acrescentar Ter., 24/11" in corpo and "+32" in corpo
     assert "A Etapa anterior ainda não tem Resultado" in corpo
+    # O número ao lado do dia acompanha a resposta, fora do simulador.
+    assert 'id="horarios-do-dia-0" hx-swap-oob="true">32 horários</span>' in corpo
     assert not AgendaDaEtapa.objects.exists()
 
 

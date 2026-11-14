@@ -39,3 +39,5 @@ destaque (decisão 3). Nada aqui grava: os atalhos devolvem o formulário acresc
 {% endif %}
 {% for frase in capacidade.frases_de_sobra %}<p class="ajuda">{{ frase }}</p>{% endfor %}
 {% if capacidade.frase_da_lista_aberta %}<p class="ajuda lista-aberta">{{ capacidade.frase_da_lista_aberta }}</p>{% endif %}
+{% if fora_da_area %}{% comment %} O número de cada dia mora na linha do dia, fora do simulador: a mesma resposta o
+   atualiza ali, para a linha não mostrar a conta de antes da última tecla. {% endcomment %}{% for dia in dias %}<span class="horarios-do-dia" id="horarios-do-dia-{{ dia.indice }}" hx-swap-oob="true">{{ dia.horarios }} horário{{ dia.horarios|pluralize:"s" }}</span>{% endfor %}{% endif %}
