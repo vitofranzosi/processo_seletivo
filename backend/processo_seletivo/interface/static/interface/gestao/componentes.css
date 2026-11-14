@@ -222,7 +222,7 @@ section h2{margin-bottom:.75rem}
 .dia-do-seletor[aria-current]{background:var(--verde-claro);border-color:var(--verde);color:var(--verde-escuro);font-weight:600}
 .horarios-livres{border:0;padding:0;margin:0 0 .75rem;display:flex;flex-wrap:wrap;gap:.35rem}
 .horarios-livres legend{font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;
-  letter-spacing:.04em;padding:0;margin-bottom:.35rem;width:100%}
+  letter-spacing:.04em;padding:0;margin-bottom:.35rem;width:100%;}
 .opcao-de-horario{position:relative}
 .opcao-de-horario input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
 .opcao-de-horario span{display:inline-block;min-width:3.75rem;text-align:center;padding:.35rem .5rem;
@@ -246,7 +246,7 @@ section h2{margin-bottom:.75rem}
 .horario-atual{margin:0 0 .75rem;font-size:.9375rem}
 .sem-horario-ainda{margin:0 0 .75rem;color:var(--amarelo);font-weight:600;font-size:.875rem}
 .busca-do-painel{margin:0 0 .5rem}
-.busca-do-painel input{width:100%}
+.busca-do-painel input{width:100%;}
 .lista-com-rolagem{max-height:22rem;overflow:auto;border:1px solid var(--borda);border-radius:4px}
 .pessoas-do-painel{list-style:none;margin:0;padding:0}
 .pessoas-do-painel li+li{border-top:1px solid var(--fundo)}

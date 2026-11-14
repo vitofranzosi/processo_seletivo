@@ -10,6 +10,7 @@
 
 /* ------------------------------------------------------------ configurar */
 
+.configuracao{margin:0}
 .configuracao-colunas{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:1.5rem;align-items:start}
 .secao-da-configuracao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1.25rem 1.5rem;margin:0 0 1rem}
@@ -46,8 +47,8 @@
   padding-bottom:.35rem}
 .linha-de-banca{display:grid;grid-template-columns:11rem minmax(0,1fr) 2rem;gap:.75rem;align-items:center;
   padding:.5rem 0;border-bottom:1px solid var(--borda)}
-.linha-de-banca input{width:100%}
-.secao-da-configuracao textarea{width:100%}
+.linha-de-banca input{width:100%;}
+.secao-da-configuracao textarea{width:100%;}
 
 /* O simulador: o veredito primeiro, depois o medidor real, depois a conta. */
 .simulador{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
@@ -115,6 +116,7 @@
 .banca-no-estreito{display:none}
 
 .pergunta-do-painel{margin:0 0 .5rem}
+.alocacao{margin:0}
 .nao-participam{margin-top:1.25rem;border-top:1px solid var(--borda);padding-top:1rem}
 .nao-participam li{padding:.5rem 0}
 .nao-participam p{margin:0 0 .25rem;font-size:.875rem}
