@@ -1805,10 +1805,12 @@ def modalidades_para_o_alcance(edital):
     """
     perfis = list(edital.perfis.order_by("code").prefetch_related("modalidades"))
     por_codigo = {}
+    amplas = set()
     for perfil in perfis:
         rotulo = (perfil.code or perfil.name or "").strip()
         for modalidade in sorted(perfil.modalidades.all(), key=lambda m: m.code):
             if perfil.modalidade_ampla_concorrencia == modalidade.id:
+                amplas.add((modalidade.code or "").strip())
                 continue
             codigo = (modalidade.code or "").strip()
             if not codigo:
@@ -1826,6 +1828,8 @@ def modalidades_para_o_alcance(edital):
     return {
         "codigos": [por_codigo[codigo] for codigo in sorted(por_codigo)],
         "perfis": [(perfil.code or perfil.name or "").strip() for perfil in perfis],
+        # Os códigos que algum Perfil declara como a sua ampla: o cartão os nomeia se marcados.
+        "amplas": sorted(amplas - {""}),
     }
 
 

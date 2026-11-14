@@ -4504,12 +4504,12 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 favoravel = etapa.get("rotuloFavoravel") or "favorável"
                 desfavoravel = etapa.get("rotuloDesfavoravel") or "desfavorável"
                 pares.append(["Resultado", f"{favoravel} ou {desfavoravel}"])
-            # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
-            # E o rótulo humano é que vai para o papel, não a chave do tipo.
             # O alcance (163, FR-6983), pela régua dos pares acima: impresso só quando declarado.
             if alcance_da_etapa.restrita(etapa):
                 nomes = alcance_da_etapa.nomes_do_alcance(snapshot, etapa)
                 pares.append(["Alcance", f"Somente candidatos inscritos em {nomes}"])
+            # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
+            # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))
             if evento:
                 periodo = _instante(evento.get("startAt"))

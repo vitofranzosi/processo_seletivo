@@ -165,7 +165,9 @@ def perfis_sem_alcancado(conteudo, etapa) -> list[str]:
     ]
 
 
-def _enumerar(itens: list[str]) -> str:
+def enumerar(itens) -> str:
+    """ "a, b e c" — a enumeração da tela e do documento, numa grafia só."""
+    itens = list(itens)
     if len(itens) <= 1:
         return "".join(itens)
     return f"{', '.join(itens[:-1])} e {itens[-1]}"
@@ -177,7 +179,7 @@ def nomes_do_alcance(conteudo, etapa) -> str:
     for item in descrever(conteudo, etapa):
         denominacao, codigo = item["denominacao"], item["codigo"]
         nomes.append(denominacao if denominacao == codigo else f"{denominacao} ({codigo})")
-    return _enumerar(nomes)
+    return enumerar(nomes)
 
 
 def frase_do_alcance(conteudo, etapa) -> str:

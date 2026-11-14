@@ -239,7 +239,7 @@
           <input type="checkbox" id="etapa-{{ indice }}-modalityCodes-{{ forloop.counter0 }}"
                  name="etapa-{{ indice }}-modalityCodes" value="{{ opcao.codigo }}"
                  {% if opcao.marcada %}checked{% endif %}>
-          {{ opcao.denominacao }} ({{ opcao.codigo }}){% if opcao.inexistente %} — nenhum Perfil tem mais esta Modalidade{% elif opcao.onde %} — {{ opcao.onde }}{% endif %}
+          {{ opcao.denominacao }} ({{ opcao.codigo }}){% if opcao.ampla %} — é a ampla concorrência, que não restringe Etapa{% elif opcao.inexistente %} — nenhum Perfil tem mais esta Modalidade{% elif opcao.onde %} — {{ opcao.onde }}{% endif %}
         </label>
         {% empty %}
         <p class="aviso">Nenhum Perfil deste Edital tem Modalidade além da ampla concorrência.</p>

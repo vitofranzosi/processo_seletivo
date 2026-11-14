@@ -89,3 +89,12 @@ def test_sem_restrita_por_ultima_a_leitura_e_a_de_antes(cenario):
     assert _universo_do_marco(cenario, [cenario["analise"]]) == {
         i.id for i in cenario["inscricoes"]
     }
+
+
+def test_a_eliminacao_em_etapa_fora_do_marco_vale_para_quem_nenhuma_enumerada_alcanca(cenario):
+    """Marco que enumera só a Heteroidentificação: a ampla e a PCD não são alcançadas por nenhuma
+    enumerada e entram como num marco sem Etapa — mas a da ampla reprovada na Análise, que o marco
+    não enumera, continua fora (D-010, FR-6971). A revisão do PR #542 achou a sobra sem essa regra."""
+    universo = _universo_do_marco(cenario, [cenario["hetero"]])
+
+    assert universo == {i.id for i in cenario["inscricoes"][1:4]}

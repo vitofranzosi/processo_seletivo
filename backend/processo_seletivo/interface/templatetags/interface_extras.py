@@ -8,6 +8,7 @@ from django.http import QueryDict
 from django.utils import timezone
 
 from processo_seletivo.convocacao.domain import vocabulario_dos_documentos
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.interface import andamento
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
@@ -620,13 +621,6 @@ def nome_de_pessoa(context, valor):
     return nomes.get(texto, texto)
 
 
-def _enumerar(itens):
-    itens = list(itens)
-    if len(itens) <= 1:
-        return "".join(itens)
-    return f"{', '.join(itens[:-1])} e {itens[-1]}"
-
-
 @register.simple_tag
 def opcoes_do_alcance(modalidades, etapa):
     """As linhas do grupo "A quem a Etapa se aplica", com o que cada uma diz (163, UX-731).
@@ -643,7 +637,7 @@ def opcoes_do_alcance(modalidades, etapa):
         onde = (
             "todos os Perfis"
             if todos_os_perfis and len(perfis) == len(todos_os_perfis)
-            else _enumerar(perfis)
+            else alcance_da_etapa.enumerar(perfis)
         )
         opcoes.append(
             {
@@ -655,14 +649,18 @@ def opcoes_do_alcance(modalidades, etapa):
             }
         )
     conhecidos = {opcao["codigo"] for opcao in opcoes}
+    amplas = set(modalidades.get("amplas") or [])
     for codigo in sorted(marcados - conhecidos):
+        # A ampla de algum Perfil não está entre as opções, mas existe: dizer que "nenhum Perfil a
+        # tem mais" contradiria a recusa que a publicação vai dar (FR-6968).
         opcoes.append(
             {
                 "codigo": codigo,
                 "denominacao": codigo,
                 "onde": "",
                 "marcada": True,
-                "inexistente": True,
+                "inexistente": codigo not in amplas,
+                "ampla": codigo in amplas,
             }
         )
     alcancados = {
@@ -675,7 +673,9 @@ def opcoes_do_alcance(modalidades, etapa):
     return {
         "restrita": (etapa or {}).get("modalityCodes") is not None,
         "opcoes": opcoes,
-        "sem_alcancado": _enumerar(sem_alcancado) if marcados and alcancados else "",
+        "sem_alcancado": alcance_da_etapa.enumerar(sem_alcancado)
+        if marcados and alcancados
+        else "",
     }
 
 

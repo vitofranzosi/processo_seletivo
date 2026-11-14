@@ -9,7 +9,7 @@ from collections import defaultdict
 from functools import reduce
 from operator import or_
 
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from processo_seletivo.classificacao.domain import universo_classificavel
 from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le, ordenar
@@ -209,6 +209,10 @@ def _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, *, con
     primeira, cada Etapa decide sobre as Modalidades que alcança e que nenhuma posterior decidiu; a
     sobra, que nenhuma enumerada alcança, entra como entraria num marco sem Etapa: a inscrição
     submetida do Perfil. Uma consulta, por disjunção de subconsultas — nenhuma lista materializada.
+
+    **A eliminação nas Etapas que o marco não enumera continua valendo para todos** (D-010,
+    FR-6971). Ler a ampla na Análise não pode esquecer a Entrevista, fora do marco, que veio depois
+    dela e antes da última enumerada: perguntar à última, como antes, a excluía.
     """
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 
@@ -222,7 +226,12 @@ def _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, *, con
     decididas = frozenset()
     for etapa in ordenadas:
         parte = restringir_a_participantes(
-            consulta, edital=edital, etapa_id=etapa["id"], vigentes=vigentes, prefixo=""
+            consulta,
+            edital=edital,
+            etapa_id=etapa["id"],
+            vigentes=vigentes,
+            prefixo="",
+            conteudo=conteudo,
         )
         if decididas:
             parte = parte.exclude(modality_id__in=list(decididas))
@@ -234,7 +243,25 @@ def _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, *, con
     else:
         sobra = consulta.exclude(modality_id__in=list(decididas)) if decididas else consulta
         partes.append(Q(pk__in=sobra.values("pk")))
-    return consulta.filter(reduce(or_, partes))
+    consulta = consulta.filter(reduce(or_, partes))
+    enumeradas_ids = {str(etapa["id"]) for etapa in ordenadas}
+    ultima = (ordenadas[0].get("order") or 0) if ordenadas else 0
+    fora_do_marco = [
+        identidade
+        for identidade, etapa in vigentes.items()
+        if str(identidade) not in enumeradas_ids and (etapa.get("order") or 0) < ultima
+    ]
+    if fora_do_marco:
+        consulta = consulta.filter(
+            ~Exists(
+                ResultadoEtapa.vigentes.filter(
+                    inscricao_id=OuterRef("pk"),
+                    etapa_id__in=fora_do_marco,
+                    consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+                )
+            )
+        )
+    return consulta
 
 
 def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):

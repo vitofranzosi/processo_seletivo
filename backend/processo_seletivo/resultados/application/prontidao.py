@@ -296,7 +296,7 @@ def motivo_de_nao_participar(edital, etapa_id, candidatas):
     aguarda nada e tem posição na ordem (E2E14-008). A diferença é do candidato, e a mensagem é
     onde ela aparece para quem conduz o certame.
     """
-    _casos, proprio = _casos_da_progressao(edital, etapa_id)
+    proprio = _alcance_proprio(edital, etapa_id)
     if proprio is not None:
         alheias = set(
             Inscricao.objects.filter(pk__in=set(candidatas))
@@ -407,7 +407,7 @@ def _dentro_da_faixa(faixas, referencia, perfil, modalidade):
     )
 
 
-def _anteriores_e_gate(edital, etapa_id, vigentes=None):
+def _anteriores_e_gate(edital, etapa_id, vigentes=None, conteudo=None):
     """`(identidades anteriores, casos da exigência, conteúdo lido, alcance da própria Etapa)`.
 
     Uma leitura do conteúdo publicado e, sem Etapa restrita, no máximo uma pergunta de existência.
@@ -417,10 +417,11 @@ def _anteriores_e_gate(edital, etapa_id, vigentes=None):
     # **O conteúdo publicado é lido aqui, e devolvido a quem chamou.** A condição do corte precisa
     # dos marcos que governam a Etapa, e eles saem do mesmo documento de onde saem as Etapas
     # anteriores: lê-lo duas vezes é a consulta a mais que os orçamentos da 011, da 012 e da 015
-    # não têm — e foi o que reprovou três testes de uma vez quando a leitura era separada.
-    conteudo = None
-    if vigentes is None:
+    # não têm — e foi o que reprovou três testes de uma vez quando a leitura era separada. Quem já
+    # o leu o passa, e a Etapa restrita não o relê para saber quem alcança (163).
+    if vigentes is None and conteudo is None:
         conteudo = conteudo_vigente(edital)
+    if vigentes is None:
         vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     casos, proprio = _casos_da_progressao(edital, etapa_id, vigentes, conteudo)
@@ -468,6 +469,20 @@ def _casos_da_progressao(edital, etapa_id, vigentes=None, conteudo=None):
     else:
         casos.append((None, None, excluir))
     return casos, alcance_da_etapa.modalidades_alcancadas(conteudo, corrente)
+
+
+def _alcance_proprio(edital, etapa_id):
+    """Só o alcance desta Etapa, em identidades de Modalidade — sem os casos da progressão.
+
+    A recusa precisa saber quem a Etapa alcança, e não da exigência da anterior: perguntar pelos
+    casos pagaria uma pergunta de existência por Etapa anterior para descartá-las.
+    """
+    conteudo = conteudo_vigente(edital)
+    alvo = _uuid(etapa_id)
+    etapa = next(
+        (item for item in conteudo.get("stages") or [] if _uuid(item.get("id")) == alvo), None
+    )
+    return alcance_da_etapa.modalidades_alcancadas(conteudo, etapa)
 
 
 def _uuid(valor):
@@ -549,7 +564,7 @@ def restringir_a_participantes(
     anterior satisfaz as duas metades separadamente, e sairia do conjunto de uma Etapa em que
     deveria estar. `Exists` amarra Etapa e consequência na mesma linha, que é o que a regra diz.
     """
-    anteriores, casos, lido, proprio = _anteriores_e_gate(edital, etapa_id, vigentes)
+    anteriores, casos, lido, proprio = _anteriores_e_gate(edital, etapa_id, vigentes, conteudo)
     conteudo = conteudo or lido
     referencia = OuterRef(f"{prefixo}_id") if prefixo else OuterRef("pk")
     campo = f"{prefixo}__modality_id" if prefixo else "modality_id"
