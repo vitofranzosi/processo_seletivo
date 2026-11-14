@@ -33,6 +33,7 @@ from processo_seletivo.editais.models.perfis import (
 from processo_seletivo.editais.models.secoes import SecaoEdital
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
+from processo_seletivo.resultados.domain import efeito
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -500,6 +501,10 @@ def replace_draft(
                     # O alcance (163, FR-6960). Chave ausente é "todas as inscrições", e não
                     # apagamento: é a leitura de quem integrava antes do campo existir (D-002).
                     alcance=alcance.normalizar(stage.get("modalityCodes")),
+                    # O efeito do desfecho (164, FR-7000, FR-7004), na grafia publicada; chave
+                    # ausente é "não declarado", que a publicação lê pelo padrão (FR-7001).
+                    efeito_desfavoravel=efeito.para_coluna(stage.get("unfavorableOutcomeEffect")),
+                    efeito_da_ausencia=efeito.para_coluna(stage.get("absenceEffect")),
                 )
                 for stage in stages
             ]

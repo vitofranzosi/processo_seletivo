@@ -152,6 +152,9 @@ class LinhaDaEtapa:
     elimina: bool
     #: Se a Etapa tem algum resultado registrado. Sem nenhum, os números são ausência, e não 0.
     registrada: bool
+    #: As retiradas da reserva, por avaliação e por ausência (164, FR-7025): **à parte** das
+    #: eliminadas, e nunca somadas a elas — quem foi retirado continua no certame.
+    retiradas: int = 0
 
 
 @dataclass(frozen=True)
@@ -1102,11 +1105,13 @@ def _linhas_das_etapas(perfil_id, etapas_do_perfil, por_etapa):
         contagem = por_etapa.get((perfil_id, str(etapa["id"])), Counter())
         habilitadas = contagem["HABILITADA:avaliacao"]
         eliminadas = contagem["ELIMINADA:avaliacao"]
+        retiradas = contagem["RETIRADA_DA_RESERVA:avaliacao"]
         linhas.append(
             LinhaDaEtapa(
                 nome=etapa.get("name") or "",
                 regra=_regra_da_etapa(etapa),
-                avaliadas=habilitadas + eliminadas,
+                avaliadas=habilitadas + eliminadas + retiradas,
+                retiradas=retiradas + contagem["RETIRADA_DA_RESERVA:ocorrencia"],
                 habilitadas=habilitadas + contagem["HABILITADA:ocorrencia"],
                 eliminadas=eliminadas,
                 por_ocorrencia=contagem["ELIMINADA:ocorrencia"],

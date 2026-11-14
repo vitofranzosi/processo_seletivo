@@ -42,6 +42,13 @@ class ResultadoEtapa(models.Model):
     class Consequencia(models.TextChoices):
         HABILITADA = "HABILITADA"
         ELIMINADA = "ELIMINADA"
+        # **A terceira, e ela não é nem uma nem outra** (164, D-003). O desfecho desfavorável numa
+        # Etapa restrita que declara "retira da reserva": a inscrição deixa a lista reservada da
+        # sua Modalidade e continua na ampla. Guardá-la como `ELIMINADA` e ler o efeito no Edital
+        # deixaria o Resultado mentindo por si, e todo leitor que compara com `ELIMINADA`
+        # continuaria eliminando em silêncio — o guardião `test_leitores_da_consequencia.py`
+        # cobra que cada leitor diga o que faz com ela (FR-7018).
+        RETIRADA_DA_RESERVA = "RETIRADA_DA_RESERVA", "Retirada da reserva"
 
     class Origem(models.TextChoices):
         """De onde veio a evidência do desfecho — e **não** o que ele decidiu.
@@ -218,7 +225,7 @@ class ResultadoEtapa(models.Model):
             # append-only isso é pior que em qualquer outro — a consequência inválida entraria uma
             # vez e ficaria, porque nada a corrige depois.
             models.CheckConstraint(
-                condition=Q(consequencia__in=("HABILITADA", "ELIMINADA")),
+                condition=Q(consequencia__in=("HABILITADA", "ELIMINADA", "RETIRADA_DA_RESERVA")),
                 name="ck_resultado_consequencia",
             ),
             models.CheckConstraint(condition=~Q(motivo=""), name="ck_resultado_motivo_presente"),

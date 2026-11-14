@@ -20,6 +20,7 @@ from processo_seletivo.classificacao.domain.combinacao import SEM_PONTUACAO, com
 # gravada pela consolidação passar despercebida.
 ELIMINADA = "ELIMINADA"
 HABILITADA = "HABILITADA"
+RETIRADA_DA_RESERVA = "RETIRADA_DA_RESERVA"
 
 
 def preparar(marco, etapas, inscritos, *, recorte=None):
@@ -61,7 +62,9 @@ def preparar(marco, etapas, inscritos, *, recorte=None):
             "fatos": inscrito["fatos"],
             "resultados": [str(resultado["id"]) for resultado in resultados],
         }
-        eliminacao = _eliminacao_mais_recente(que_decidem_posicao(marco, resultados), etapas)
+        eliminacao = _eliminacao_mais_recente(
+            que_decidem_posicao(marco, resultados), etapas, que_tiram(recorte)
+        )
         if eliminacao is not None:
             sem_posicao.append(
                 {
@@ -132,8 +135,17 @@ def nenhuma_com_resultado(marco, linhas):
     )
 
 
-def _eliminacao_mais_recente(resultados, etapas):
-    eliminadas = [item for item in resultados if item["consequencia"] == ELIMINADA]
+def que_tiram(recorte):
+    """As consequências que tiram a inscrição da ordem deste recorte (164, FR-7012).
+
+    Na lista reservada, a retirada da reserva tira como a eliminação; na ampla (`None`), só a
+    eliminação. A reprodução do ato chama a mesma função, pela razão de `que_decidem_posicao`.
+    """
+    return {ELIMINADA} if recorte is None else {ELIMINADA, RETIRADA_DA_RESERVA}
+
+
+def _eliminacao_mais_recente(resultados, etapas, tiram=frozenset({ELIMINADA})):
+    eliminadas = [item for item in resultados if item["consequencia"] in tiram]
     if not eliminadas:
         return None
     return max(
@@ -153,4 +165,12 @@ def _motivo_da_pontuacao_ausente(enumeradas, pontuacoes, etapas):
     return "Sem pontuação nas Etapas enumeradas: " + ", ".join(faltantes) + "."
 
 
-__all__ = ["ELIMINADA", "HABILITADA", "nenhuma_com_resultado", "preparar", "que_decidem_posicao"]
+__all__ = [
+    "ELIMINADA",
+    "HABILITADA",
+    "RETIRADA_DA_RESERVA",
+    "nenhuma_com_resultado",
+    "preparar",
+    "que_decidem_posicao",
+    "que_tiram",
+]

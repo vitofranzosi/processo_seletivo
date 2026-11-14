@@ -19,6 +19,7 @@ from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
+from processo_seletivo.resultados.domain import efeito
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.decimais import no_campo as _no_campo
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -876,12 +877,28 @@ def ler_etapas(dados):
                 "modalityCodes": _alcance(dados, base),
             }
         )
+        etapas[-1].update(_efeito(dados, base, etapas[-1]))
     return _renumerar(etapas)
 
 
 #: As duas opções do alcance na composição (163, UX-730).
 ALCANCE_TODAS = "TODAS"
 ALCANCE_RESTRITA = "RESTRITA"
+
+
+def _efeito(dados, base, etapa):
+    """Os dois efeitos do desfecho enviados (164, UX-740, UX-741), na grafia publicada.
+
+    **Lidos só na Etapa restrita e eliminatória**, pela razão das marcas do alcance: sem JavaScript
+    o grupo aparece sempre, e uma opção esquecida ali não pode declarar efeito numa Etapa que não o
+    tem. Nas demais, `None` — "não declarado" —, que a publicação grava `null`.
+    """
+    if etapa.get("modalityCodes") is None or not etapa.get("eliminatory"):
+        return {"unfavorableOutcomeEffect": None, "absenceEffect": None}
+    return {
+        "unfavorableOutcomeEffect": _texto(dados, f"{base}-efeitoDesfavoravel") or None,
+        "absenceEffect": _texto(dados, f"{base}-efeitoDaAusencia") or None,
+    }
 
 
 def _alcance(dados, base):
@@ -1736,6 +1753,11 @@ def etapas_do_edital(edital):
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
             # O alcance (163): `None` é "todas as inscrições", e o cartão marca a opção por ele.
             "modalityCodes": None if etapa.alcance is None else list(etapa.alcance),
+            # O efeito do desfecho (164). O vazio do desfavorável é o padrão, e o cartão o marca
+            # como "retira da reserva" (FR-7001); o vazio da ausência é "o mesmo efeito".
+            "unfavorableOutcomeEffect": efeito.da_coluna(etapa.efeito_desfavoravel)
+            or efeito.PUBLICADO[efeito.RETIRA_DA_RESERVA],
+            "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia) or "",
             # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
             "criteria": [
                 {
@@ -1853,6 +1875,10 @@ def etapas_persistidas(edital):
             # O alcance (163), pela mesma razão do barema logo abaixo: gravar outra etapa do
             # assistente sem ele devolveria toda Etapa a "todas as inscrições" em silêncio.
             "modalityCodes": None if etapa.alcance is None else list(etapa.alcance),
+            # O efeito do desfecho (164), pela mesma razão: gravar outra etapa do assistente sem
+            # ele apagaria a escolha de quem elaborou.
+            "unfavorableOutcomeEffect": efeito.da_coluna(etapa.efeito_desfavoravel),
+            "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia),
             # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
             # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
             # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.

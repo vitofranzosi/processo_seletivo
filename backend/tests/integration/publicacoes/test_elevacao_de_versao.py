@@ -490,9 +490,14 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: **E muda com a `163`, também de propósito**: o degrau 22 escreve `modalityCodes: null` em toda
 #: Etapa — "todas as inscrições" —, que é verdade sobre todo Edital publicado antes: toda Etapa
 #: alcançava todas, e nenhuma ganha alcance restrito por elevação (163, D-002, FR-6966).
+#:
+#: **E muda com a `164`, também de propósito**: o degrau 23 escreve `unfavorableOutcomeEffect: null`
+#: e `absenceEffect: null` em toda Etapa — "sem efeito declarado" —, que é verdade sobre todo Edital
+#: publicado antes; e o nulo na Etapa restrita e eliminatória se lê "elimina", que é o que ela
+#: produzia (164, D-002, FR-7005).
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 22,
-    "DEGRAUS": (5, 6, 21, 22),
+    "SCHEMA_VERSION": 23,
+    "DEGRAUS": (5, 6, 21, 22, 23),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),

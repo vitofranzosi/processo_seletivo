@@ -256,6 +256,10 @@ FORMAS = ("PONTUADA", "DECISORIA")
 ROTULO = "A Etapa pontuada não publica rótulos de resultado em "
 NOTA = "A Etapa decisória não publica nota em "
 
+# Os dois efeitos do desfecho, na grafia publicada (164). Literais aqui pela razão das `FORMAS`:
+# este módulo confere a string publicada, e importar o domínio de `resultados` inverteria a direção.
+EFEITOS_PUBLICADOS = ("RESERVE_REMOVAL", "ELIMINATION")
+
 ETAPA_PUBLICADA = (
     Campo("id", str, formato="uuid"),
     Campo("name", str),
@@ -289,6 +293,11 @@ ETAPA_PUBLICADA = (
     # Modalidade. Que ela não seja vazia e que os códigos existam é coerência, e mora em
     # `_coerencia_do_alcance`.
     Campo("modalityCodes", list, admite_nulo=True, tipo_do_item=str),
+    # O efeito do desfecho (164, degrau 23). `null` é "sem efeito declarado" — e, na Etapa restrita
+    # e eliminatória, conteúdo de antes do degrau, lido "elimina". O `None` entre os valores é o do
+    # contrato (`enum` com `null`). Que só essa Etapa o declare é coerência: `_coerencia_do_efeito`.
+    Campo("unfavorableOutcomeEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
+    Campo("absenceEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
 )
 
 # Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
@@ -1604,6 +1613,55 @@ def _coerencia_do_barema(snapshot: dict) -> list[ValidationFinding]:
 BAREMA_INCOERENTE = "stage_criteria_inconsistent"
 
 
+def _coerencia_do_efeito(snapshot: dict) -> list[ValidationFinding]:
+    """Só a Etapa restrita e eliminatória declara efeito do desfecho (164, FR-7002).
+
+    A publicação nunca grava efeito em outra Etapa (`resultados/domain/efeito.publicar`); o achado
+    pega o que chega por Retificação — a Etapa que volta a alcançar todas, ou que deixa de ser
+    eliminatória, com o efeito ainda escrito. "Retira da reserva" nela não teria reserva de onde
+    tirar ninguém, e "elimina" repetiria o caráter com outra palavra.
+    """
+    from processo_seletivo.editais.domain import alcance
+
+    findings = []
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict):
+            continue
+        declarados = [
+            campo
+            for campo in ("unfavorableOutcomeEffect", "absenceEffect")
+            if etapa.get(campo) is not None
+        ]
+        if not declarados:
+            continue
+        nome = _nome(etapa, "name") or "sem nome"
+        invalidos = [c for c in declarados if etapa.get(c) not in EFEITOS_PUBLICADOS]
+        if invalidos:
+            findings.append(
+                _impeditivo(
+                    "efeito_invalido",
+                    f"O efeito do desfecho da Etapa «{nome}» não é um dos previstos.",
+                    f"/stages/id={etapa.get('id', '')}/{invalidos[0]}",
+                )
+            )
+            continue
+        if alcance.restrita(etapa) and etapa.get("eliminatory") is True:
+            continue
+        motivo = (
+            "alcança todas as inscrições" if not alcance.restrita(etapa) else "não é eliminatória"
+        )
+        findings.append(
+            _impeditivo(
+                "efeito_sem_reserva",
+                f"A Etapa «{nome}» declara o efeito do desfecho, mas ela {motivo}. Só a Etapa "
+                "eliminatória restrita a algumas Modalidades declara efeito: só ela tem reserva de "
+                "onde tirar alguém.",
+                f"/stages/id={etapa.get('id', '')}/{declarados[0]}",
+            )
+        )
+    return findings
+
+
 def _coerencia_do_alcance(snapshot: dict) -> list[ValidationFinding]:
     """O que o alcance de cada Etapa aponta, e o papel que ela ocupa (163, FR-6963 a FR-6965).
 
@@ -1857,6 +1915,7 @@ def validate_for_publication(
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_coerencia_do_barema(snapshot))
     findings.extend(_coerencia_do_alcance(snapshot))
+    findings.extend(_coerencia_do_efeito(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))

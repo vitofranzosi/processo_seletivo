@@ -37,13 +37,25 @@ def _montar(gestor, api_client, manager_headers, *, seed, alcance=("PPI",)):
 
 
 def _alcance(cenario, codigos):
-    return [
+    alteracoes = [
         {
             "targetPath": f"/stages/id={cenario['hetero']}/modalityCodes",
             "operation": "REPLACE",
             "newValue": codigos,
         }
     ]
+    if codigos is None:
+        # **Devolver a Etapa a todas leva o efeito junto** (164, FR-7002): a Etapa que alcança todas
+        # não tem reserva de onde tirar ninguém, e a publicação recusa o efeito que sobrasse nela.
+        alteracoes += [
+            {
+                "targetPath": f"/stages/id={cenario['hetero']}/{campo}",
+                "operation": "REPLACE",
+                "newValue": None,
+            }
+            for campo in ("unfavorableOutcomeEffect", "absenceEffect")
+        ]
+    return alteracoes
 
 
 def _participantes_da_hetero(cenario):

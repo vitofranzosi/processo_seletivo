@@ -42,9 +42,15 @@ pytestmark = [pytest.mark.integration, pytest.mark.django_db]
 MODALIDADES = {0: MODALIDADE_PPI, 1: MODALIDADE_PPI, 2: MODALIDADE_PCD, 3: MODALIDADE_PCD}
 
 
-def _montar(gestor, api_client, manager_headers, *, seed, alcance=("PPI",)):
+def _montar(gestor, api_client, manager_headers, *, seed, alcance=("PPI",), efeito=None):
     cenario = montar_com_alcance(
-        gestor, api_client, manager_headers, seed=seed, codigo=str(seed), alcance=alcance
+        gestor,
+        api_client,
+        manager_headers,
+        seed=seed,
+        codigo=str(seed),
+        alcance=alcance,
+        efeito=efeito,
     )
     cenario["inscricoes"] = inscrever(
         cenario["edital"], 6, primeiro=1, modalidades=MODALIDADES, perfil=cenario["perfil"]
@@ -184,8 +190,13 @@ def test_quem_nao_e_alcancado_atravessa_a_etapa_sem_esperar_por_ela(
 
 
 def test_o_desfecho_desfavoravel_tira_so_quem_foi_avaliado(gestor, api_client, manager_headers):
-    """O efeito de hoje (D-010): o `ELIMINADA` da restrita tira a PPI das seguintes, e só ela."""
-    cenario = _montar(gestor, api_client, manager_headers, seed=1636)
+    """O `ELIMINADA` da restrita tira a PPI das seguintes, e só ela.
+
+    Era o efeito de toda Etapa restrita até a `164`; desde ela, é o efeito **declarado** "elimina",
+    e o padrão passou a ser "retira da reserva" (164, FR-7001). O teste declara o efeito para
+    continuar medindo o que mede: que a eliminação alcança só quem foi avaliado.
+    """
+    cenario = _montar(gestor, api_client, manager_headers, seed=1636, efeito="ELIMINATION")
     _habilitar_na_analise(cenario, gestor, seed=1636)
     na_hetero = _na_etapa(cenario, cenario["hetero"])
     ppis = cenario["inscricoes"][:2]

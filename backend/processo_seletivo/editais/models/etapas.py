@@ -7,6 +7,13 @@ from processo_seletivo.avaliacoes.domain.formas import Forma
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.processos.models import Edital
 
+# Os dois efeitos que um Edital escreve para o desfecho desfavorável (164, D-001): o 28/2026 e o
+# 57/2026, 8.10, tiram da reserva; o 57/2026, 8.11, e a Res. CS 61/2019, art. 16, eliminam.
+EFEITOS_DO_DESFECHO = [
+    ("RETIRA_DA_RESERVA", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
+    ("ELIMINA", "É eliminado do processo seletivo"),
+]
+
 
 class EtapaAvaliacao(models.Model):
     """Fase pela qual os candidatos passam.
@@ -62,6 +69,17 @@ class EtapaAvaliacao(models.Model):
     # a `PPI` do C1 e a do C2 têm em comum é o código, como no recorte transversal da `044`. Lista,
     # e não tabela filha, porque nada endereça um item do alcance sozinho (T-001).
     alcance = models.JSONField(null=True, blank=True)
+    # **O efeito do desfecho** (164, FR-7000, FR-7004). Só a Etapa restrita e eliminatória o
+    # declara, e o vazio é "não declarado": no desfavorável, a publicação o lê como "retira da
+    # reserva" (FR-7001); na ausência, como "o mesmo efeito". O padrão é aplicado na publicação, e
+    # não aqui, porque só ali a Etapa é conhecida inteira — alcance e caráter — e um default de
+    # coluna afirmaria um efeito na Etapa que não tem reserva de onde tirar ninguém (T-001).
+    efeito_desfavoravel = models.CharField(
+        max_length=20, blank=True, default="", choices=EFEITOS_DO_DESFECHO
+    )
+    efeito_da_ausencia = models.CharField(
+        max_length=20, blank=True, default="", choices=EFEITOS_DO_DESFECHO
+    )
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(
@@ -102,6 +120,16 @@ class EtapaAvaliacao(models.Model):
             models.CheckConstraint(
                 condition=Q(alcance__isnull=True) | ~Q(alcance=[]),
                 name="ck_etapa_alcance_nao_vazio",
+            ),
+            # Literais, como as demais: o valor fora das escolhas entraria por `bulk_create` ou SQL,
+            # e a publicação o leria como "não declarado" sem que ninguém percebesse.
+            models.CheckConstraint(
+                condition=Q(efeito_desfavoravel__in=("", "RETIRA_DA_RESERVA", "ELIMINA")),
+                name="ck_etapa_efeito_desfavoravel",
+            ),
+            models.CheckConstraint(
+                condition=Q(efeito_da_ausencia__in=("", "RETIRA_DA_RESERVA", "ELIMINA")),
+                name="ck_etapa_efeito_da_ausencia",
             ),
         ]
 

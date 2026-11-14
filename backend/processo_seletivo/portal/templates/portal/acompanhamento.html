@@ -139,7 +139,7 @@ As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
 <section class="resultado-da-etapa" aria-labelledby="etapa-{{ forloop.counter }}">
   <h3 id="etapa-{{ forloop.counter }}">{{ etapa.etapa }}</h3>
   <p class="posicao">
-    <strong>{% if etapa.habilitada %}Habilitada{% else %}Eliminada{% endif %}</strong>
+    <strong>{% if etapa.habilitada %}Habilitada{% elif etapa.retirada %}Deixou de concorrer pela reserva{% else %}Eliminada{% endif %}</strong>
     {% comment %}
     A nota como uma pessoa a escreve. O campo guarda quatro casas porque a norma pode exigi-las, e
     a mesma página mostrava "pontuação 8,0000" na Etapa e "pontuação 8,00" no resultado divulgado —
