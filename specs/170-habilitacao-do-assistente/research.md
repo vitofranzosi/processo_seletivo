@@ -13,15 +13,18 @@ avaliação) já importam dele.
 **Descartado.** Um app novo: seria uma estrutura paralela para uma tabela só. E a tabela de Unidades:
 ela não é append-only, e a habilitação não é dado da unidade.
 
-## R-2 — O estado é o último ato, ordenado por sequência
+## R-2 — O estado é o último ato, pela ordem da frente
 
-**Decisão.** A chave primária é sequencial (`BigAutoField`). O estado de uma frente, e de um Edital
-na página pública, é o ato de maior chave.
+**Decisão.** A chave é UUID, e cada ato tem uma `ordem` dentro da sua frente — o piloto, ou a página
+de um Edital —, alocada sob a trava (R-3) e única por frente, como a `ordem` da `TrocaDoPiloto`. O
+estado é o ato de maior ordem.
 
-**Por quê.** Os atos de uma mesma frente são serializados pela trava (R-3), e por isso a sequência é
-a ordem real. Desempatar pelo instante pediria um segundo critério, e a memória "empate residual
-ordena por UUID" mostra o que acontece quando ele é aleatório. A limpeza dos casos transacionais
-desordena o heap, e por isso a consulta tem `ORDER BY` completo.
+**Por quê.** Os atos de uma frente são serializados pela trava, e por isso a ordem é a real.
+Desempatar pelo instante pediria um segundo critério, que, aleatório, falharia no meio da suíte (a
+limpeza dos casos transacionais desordena o heap). **A chave não é inteira** porque a trilha guarda o
+agregado como UUID, e uma chave inteira viraria `UUID(int=pk)` em silêncio — o defeito que a `108`
+registrou no aviso interrompido. *Revisto na implementação, em 14/11: o plano dizia chave
+sequencial.*
 
 **Descartado.** Uma tabela de estado ao lado do histórico: seriam duas fontes. E um campo
 `vigente`: exigiria UPDATE, que a tabela append-only não admite.

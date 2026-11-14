@@ -174,8 +174,10 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "verificacao_encaminhamento",
         "verificacao_eliminacao_do_video",
     )
-    assert TABELAS_APPEND_ONLY[-22:] == (
-        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166
+    # E a 170, a dos atos de habilitação do assistente, depois das da 166.
+    da_170 = ("duvidas_habilitacao_do_assistente",)
+    assert TABELAS_APPEND_ONLY[-23:] == (
+        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166 + da_170
     )
-    assert len(TABELAS_APPEND_ONLY) == 65
-    assert len(set(TABELAS_APPEND_ONLY)) == 65
+    assert len(TABELAS_APPEND_ONLY) == 66
+    assert len(set(TABELAS_APPEND_ONLY)) == 66

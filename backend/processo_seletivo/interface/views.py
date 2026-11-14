@@ -5701,6 +5701,10 @@ OPERACOES = {
     # O modelo de aviso tem uma operação só para os quatro atos, e a trilha da unidade a nomeia pela
     # situação; esta entrada é a de quem a encontrar fora dela.
     "EXCLUIR_REGISTROS_DO_PILOTO": "Exclusão dos registros do piloto do assistente",
+    # A habilitação do assistente (170): o piloto, no escopo institucional, e a página pública de um
+    # Edital, na trilha da unidade dele.
+    "HABILITAR_ASSISTENTE": "Habilitação do assistente do Edital",
+    "DESABILITAR_ASSISTENTE": "Desabilitação do assistente do Edital",
     "AVISO_MODELO": "Alteração de modelo de aviso",
     "AVISO_CONFIRMAR": "Confirmação de aviso aos candidatos",
     "AVISO_INTERROMPER": "Interrupção de aviso aos candidatos",

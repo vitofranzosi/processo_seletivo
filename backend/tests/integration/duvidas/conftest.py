@@ -2,7 +2,12 @@
 
 import pytest
 
-from tests.fixtures.inferencia import contador_falso, porta_falsa, sem_rede  # noqa: F401
+from tests.fixtures.inferencia import (  # noqa: F401
+    configuracao_completa,
+    contador_falso,
+    porta_falsa,
+    sem_rede,
+)
 
 
 @pytest.fixture(autouse=True)

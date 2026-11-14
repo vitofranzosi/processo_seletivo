@@ -6,7 +6,8 @@ Tabela `duvidas_habilitacao_do_assistente`.
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `id` | inteiro sequencial | a ordem dos atos (R-2) |
+| `id` | UUID | a chave, que a trilha guarda como agregado |
+| `ordem` | inteiro positivo | a ordem do ato **na frente**, alocada sob a trava; única por frente (R-2) |
 | `frente` | texto: `PILOTO` ou `PAGINA_PUBLICA` | — |
 | `edital` | referência a `processos.Edital`, `PROTECT`, opcional | obrigatória com `PAGINA_PUBLICA`, e vazia com `PILOTO` (constraint de banco) |
 | `habilitada` | booleano | `True` habilita, `False` desabilita |
@@ -14,7 +15,8 @@ Tabela `duvidas_habilitacao_do_assistente`.
 | `autor` | texto | o `subject` da pessoa institucional; o nome se resolve como na trilha da `108` |
 | `criado_em` | instante | o do `command_context` |
 
-- **Índice**: `(frente, edital, id)`.
+- **Constraints**: frente e Edital coerentes; ordem positiva; motivo preenchido; ordem única no
+  piloto e por Edital na página pública.
 - **Gatilho**: `habilitacao_do_assistente_append_only`, `BEFORE UPDATE OR DELETE`. Entra em
   `TABELAS_APPEND_ONLY`, e o `M` do provisionamento sobe de 65 para 66 (FR-7527).
 - **Exclusão**: nenhuma. Não há comando que apague atos.

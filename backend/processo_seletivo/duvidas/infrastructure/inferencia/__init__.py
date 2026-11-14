@@ -61,6 +61,47 @@ def parametros_configurados() -> dict:
     }
 
 
+def configuracao_do_servico() -> dict:
+    """O que a configuração do ambiente tem, e o que falta, **sem abrir conexão** (170, FR-7501).
+
+    É a mesma condição que `conversar` e o tokenizer usam para os estados `NAO_CONFIGURADO` e
+    `SEM_TOKENIZER`, reunida num lugar que a página da administração lê (R-6). "Completa" não é
+    "disponível": a conexão se verifica pelo comando da `073`, e a página diz isso (FR-7502).
+
+    A credencial entra só como presença — o valor nunca sai daqui (FR-7500).
+    """
+    from importlib.util import find_spec
+    from pathlib import Path
+
+    servico = settings.ASSISTENTE_SERVICO
+    tokenizer = getattr(settings, "ASSISTENTE_TOKENIZER", "")
+    credencial = bool(getattr(settings, "ASSISTENTE_CREDENCIAL", ""))
+    faltas = []
+    if not servico:
+        faltas.append("servico")
+    elif servico not in (OLLAMA, OPENROUTER):
+        faltas.append("servico_desconhecido")
+    if not settings.ASSISTENTE_ENDERECO:
+        faltas.append("endereco")
+    if not settings.ASSISTENTE_MODELO:
+        faltas.append("modelo")
+    if find_spec("tokenizers") is None:
+        faltas.append("biblioteca_do_tokenizer")
+    if not tokenizer or not Path(tokenizer).is_file():
+        faltas.append("tokenizer")
+    if servico == OPENROUTER and not credencial:
+        faltas.append("credencial")
+    return {
+        "completa": not faltas,
+        "faltas": faltas,
+        "servico": servico,
+        "endereco": settings.ASSISTENTE_ENDERECO,
+        "modelo": settings.ASSISTENTE_MODELO,
+        "tempo_limite": settings.ASSISTENTE_TEMPO_LIMITE_SEGUNDOS,
+        "credencial_presente": credencial,
+    }
+
+
 def externo() -> bool:
     """Se o serviço configurado sai da rede institucional (`FR-1503`)."""
     return settings.ASSISTENTE_SERVICO == OPENROUTER
