@@ -5555,7 +5555,7 @@ def _versao_por_extenso(versao):
 # terceiro valor — o Edital que não pede requerimento é a esmagadora maioria dos casos.
 MOMENTOS_DO_REQUERIMENTO = (
     (nomes_do_requerimento.NA_INSCRICAO, "No ato da inscrição"),
-    (nomes_do_requerimento.NA_CONVOCACAO, "Quando o candidato for convocado"),
+    (nomes_do_requerimento.NA_CONVOCACAO, "Na convocação"),
 )
 
 

@@ -26,7 +26,13 @@ podem dizê-la na redação nova (FR-1397).
 # As redações das frases geradas. A 1 nunca muda: é a que os atos publicados antes da `069` dizem.
 REDACAO_1 = 1
 REDACAO_2 = 2
-REDACAO_VIGENTE = REDACAO_2
+# **A 3 (2026-11-13) nomeia a pessoa sem presumir o gênero** (decisão do usuário, achado 9 da
+# auditoria dos e-mails): "na convocação", e não "quando o candidato for convocado"; "Cada pessoa",
+# "as pessoas classificadas", "de quem se inscreve". O inventário está no contrato de redação da
+# `069`. O Edital publicado com a 1 ou a 2 grava o número em `redacao_do_documento`, e continua se
+# recompondo como foi.
+REDACAO_3 = 3
+REDACAO_VIGENTE = REDACAO_3
 
 # `{alvo}` já vem com o substantivo que o antecede — "Etapa Prova didática", "Meses de
 # experiência" —, porque é o que permite à mesma frase servir ao alvo resolvido e ao ausente sem
@@ -89,6 +95,8 @@ FORMA_DE_CONVOCACAO_POR_REDACAO = {
         FORMA_POR_MENSAGEM_INDIVIDUAL: "por mensagem individual à pessoa convocada",
     },
 }
+# A 3 não muda a forma de convocação: é a da 2.
+FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_3] = FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_2]
 # A forma na redação vigente — a que o documento, o portal e a Revisão dizem agora.
 FORMA_DE_CONVOCACAO_POR_EXTENSO = FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_VIGENTE]
 FORMA_DE_CONVOCACAO_NAO_DECLARADA = "forma de convocação não declarada neste Edital"
@@ -100,6 +108,12 @@ FRASE_DA_CONVOCACAO_2 = {
     FORMA_POR_MENSAGEM_INDIVIDUAL: (
         "A convocação será feita por mensagem individual à pessoa convocada."
     ),
+}
+# A 3 diz de quem é a convocação por publicação sem o masculino genérico; a individual já dizia
+# "à pessoa convocada" (2026-11-13).
+FRASE_DA_CONVOCACAO_3 = {
+    **FRASE_DA_CONVOCACAO_2,
+    FORMA_POR_PUBLICACAO: "A convocação das pessoas classificadas será feita por publicação.",
 }
 
 
@@ -121,7 +135,9 @@ def frase_da_convocacao(forma, *, redacao=REDACAO_VIGENTE):
     if redacao == REDACAO_1:
         extenso = FORMA_DE_CONVOCACAO_POR_REDACAO[REDACAO_1].get(forma)
         return f"A convocação dos classificados será feita {extenso}." if extenso else ""
-    return FRASE_DA_CONVOCACAO_2.get(forma, "")
+    if redacao == REDACAO_2:
+        return FRASE_DA_CONVOCACAO_2.get(forma, "")
+    return FRASE_DA_CONVOCACAO_3.get(forma, "")
 
 
 def por_identificador(itens):

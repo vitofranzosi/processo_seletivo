@@ -21,6 +21,7 @@ from processo_seletivo.publicacoes.domain import vocabulario_da_regra as vocabul
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     REDACAO_1,
     REDACAO_2,
+    REDACAO_3,
     REDACAO_VIGENTE,
     criterio_com_a_ausencia,
     criterio_por_extenso,
@@ -143,9 +144,12 @@ def _snapshot(*marcos, metodo=METODO):
     return {"drawMethod": metodo, "profiles": [perfil], "stages": list(ETAPAS.values())}, perfil
 
 
-def test_a_redacao_vigente_e_a_2():
-    """O que se compõe a partir desta feature usa a redação 2; a 1 continua alcançável (R-004)."""
-    assert (REDACAO_1, REDACAO_2, REDACAO_VIGENTE) == (1, 2, 2)
+def test_a_redacao_vigente_e_a_3():
+    """A 2 veio da `069`; a 3, de 2026-11-13, só troca o momento do Requerimento na convocação.
+
+    A 1 e a 2 continuam alcançáveis (R-004): o Edital publicado com elas se recompõe como foi.
+    """
+    assert (REDACAO_1, REDACAO_2, REDACAO_3, REDACAO_VIGENTE) == (1, 2, 3, 3)
 
 
 # ---------------------------------------------------------------------------
@@ -378,10 +382,11 @@ def test_frases_da_ordem_por_pontuacao_na_ordem_do_contrato():
 # 2. Corte — a unidade indivisível
 # ---------------------------------------------------------------------------
 
-K9 = "Depois, poderão ser chamados outros candidatos, além desses, seguindo a mesma ordem."
+K9 = "Depois, poderão ser chamadas outras pessoas, além dessas, seguindo a mesma ordem."
 K7 = (
-    "Os suplentes são chamados, na ordem, para as vagas deste Edital que não forem preenchidas "
-    "pelos primeiros classificados."
+    "As pessoas suplentes são chamadas, na ordem, para as vagas deste Edital que não forem "
+    "preenchidas "
+    "pelas primeiras pessoas classificadas."
 )
 
 
@@ -401,8 +406,10 @@ def test_k1_alvo_pelo_quadro_de_vagas_com_suplentes():
     )
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=False) == [
-        "Passam para a Etapa “Análise documental” os primeiros classificados de cada lista de "
-        "concorrência, em número igual ao das vagas dessa lista, mais 15 (quinze) suplentes.",
+        "Passam para a Etapa “Análise documental” as primeiras pessoas classificadas de cada "
+        "lista de "
+        "concorrência, em número igual ao das vagas dessa lista, mais 15 (quinze) pessoas "
+        "suplentes.",
         K9,
     ]
     assert pdf._regra_de_corte(marco, ETAPAS) == (
@@ -433,9 +440,11 @@ def test_k2_alvo_fixo_com_suplentes_e_empate_que_admite_excedente():
     )
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=False) == [
-        "Passam para a Etapa “Análise documental” os 10 (dez) primeiros classificados, mais 5 "
-        "(cinco) suplentes.",
-        "Se houver empate na última posição, passam todos os empatados, mesmo que ultrapassem "
+        "Passam para a Etapa “Análise documental” as 10 (dez) primeiras pessoas classificadas, "
+        "mais 5 "
+        "(cinco) pessoas suplentes.",
+        "Se houver empate na última posição, passam todas as pessoas empatadas, mesmo que "
+        "ultrapassem "
         "esse número.",
         K9,
     ]
@@ -446,11 +455,11 @@ def test_k2_alvo_fixo_com_suplentes_e_empate_que_admite_excedente():
 
 
 def test_k3_alvo_de_um_sem_suplentes():
-    """K3 — o singular se preserva: "passa … o 1 (um) primeiro classificado"."""
+    """K3 — o singular se preserva: "passa … a 1 (uma) primeira pessoa classificada"."""
     marco = _marco(cutRule=_corte(targetCount=1))
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True)[0] == (
-        "Passa para a Etapa “Análise documental” o 1 (um) primeiro classificado."
+        "Passa para a Etapa “Análise documental” a 1 (uma) primeira pessoa classificada."
     )
     assert pdf._regra_de_corte(marco, ETAPAS) == (
         "Progride para Análise documental o 1 (um) primeiro desta ordem."
@@ -462,7 +471,7 @@ def test_k4_marco_terminal_nao_nomeia_etapa():
     marco = _marco(cutRule=_corte(targetCount=3, governedStage=None))
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True)[0] == (
-        "Seguem no processo os 3 (três) primeiros classificados."
+        "Seguem no processo as 3 (três) primeiras pessoas classificadas."
     )
     assert pdf._regra_de_corte(marco, ETAPAS) == "Progridem os 3 (três) primeiros desta ordem."
 
@@ -472,9 +481,9 @@ def test_k6_empate_estrito_sob_pontuacao():
     marco = _marco(cutRule=_corte())
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=False) == [
-        "Passam para a Etapa “Análise documental” os 10 (dez) primeiros classificados.",
+        "Passam para a Etapa “Análise documental” as 10 (dez) primeiras pessoas classificadas.",
         "Se houver empate na última posição, esse número não é ultrapassado.",
-        "Não serão chamados candidatos além desses.",
+        "Não serão chamadas pessoas além dessas.",
     ]
     assert pdf._empate_no_corte(marco) == (
         "Havendo empate na última posição, essa quantidade não é excedida."
@@ -486,8 +495,8 @@ def test_k6_sob_sorteio_o_empate_nao_sai():
     marco = _sorteio(cutRule=_corte())
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=False) == [
-        "Passam para a Etapa “Análise documental” os 10 (dez) primeiros classificados.",
-        "Não serão chamados candidatos além desses.",
+        "Passam para a Etapa “Análise documental” as 10 (dez) primeiras pessoas classificadas.",
+        "Não serão chamadas pessoas além dessas.",
     ]
 
 
@@ -527,7 +536,7 @@ def test_k7_sem_suplentes_nao_ha_o_que_explicar():
 def test_k10_continuacao_vedada():
     """K10 — a vedação se preserva."""
     assert pdf.frase_da_continuacao({"cutRule": _corte(continuation="NONE")}) == (
-        "Não serão chamados candidatos além desses."
+        "Não serão chamadas pessoas além dessas."
     )
     assert pdf._continuacao_do_corte({"cutRule": _corte(continuation="NONE")}) == (
         "Não haverá chamada além dos que este corte publicar."
@@ -801,7 +810,7 @@ def test_s_sem_metodo_nao_ha_dados():
 def test_v1_e_v2_reversao():
     """V1 e V2 — o gatilho e o destino se preservam; "a respectiva" vira "a do mesmo código"."""
     assert pdf.frase_da_reversao("ON_EXHAUSTION") == (
-        "Se não houver candidatos aprovados para as vagas reservadas de um código, essas vagas "
+        "Se não houver pessoas aprovadas para as vagas reservadas de um código, essas vagas "
         "passam para a ampla concorrência do mesmo código."
     )
     assert pdf.frase_da_reversao("ON_BALANCE") == (
@@ -819,7 +828,7 @@ def test_v4_e_v5_convocacao():
     """V4 — o lugar da publicação é texto do Elaborador; V5 — o canal se preserva."""
     assert (
         frase_da_convocacao("PUBLICATION")
-        == "A convocação dos classificados será feita por publicação."
+        == "A convocação das pessoas classificadas será feita por publicação."
     )
     assert frase_da_convocacao("INDIVIDUAL_MESSAGE") == (
         "A convocação será feita por mensagem individual à pessoa convocada."
@@ -851,22 +860,22 @@ def test_a_forma_por_extenso_do_portal_e_da_revisao():
     [
         (
             1,
-            "Cada candidato pode enviar apenas 1 (uma) inscrição neste Edital.",
+            "Cada pessoa pode enviar apenas 1 (uma) inscrição neste Edital.",
             "Cada candidato poderá ter apenas 1 inscrição enviada neste Edital.",
         ),
         (
             2,
-            "Cada candidato pode enviar no máximo 2 (duas) inscrições neste Edital.",
+            "Cada pessoa pode enviar no máximo 2 (duas) inscrições neste Edital.",
             "Cada candidato poderá ter no máximo 2 inscrições enviadas neste Edital.",
         ),
         (
             3,
-            "Cada candidato pode enviar no máximo 3 (três) inscrições neste Edital.",
+            "Cada pessoa pode enviar no máximo 3 (três) inscrições neste Edital.",
             "Cada candidato poderá ter no máximo 3 inscrições enviadas neste Edital.",
         ),
         (
             12,
-            "Cada candidato pode enviar no máximo 12 inscrições neste Edital.",
+            "Cada pessoa pode enviar no máximo 12 inscrições neste Edital.",
             "Cada candidato poderá ter no máximo 12 inscrições enviadas neste Edital.",
         ),
     ],
@@ -944,7 +953,7 @@ def test_v11_e_v12_requerimento(momento, redacao_2, redacao_1):
     """V11 e V12 — o momento e a declaração se preservam; a declaração, transcrita inteira."""
     snapshot = {"matriculationRequest": {"moment": momento, "declarationText": "Declaro X.\nE Y."}}
 
-    assert pdf.requerimento_de_matricula(snapshot) == [
+    assert pdf.requerimento_de_matricula(snapshot, redacao=REDACAO_2) == [
         (redacao_2, 0.0),
         ("Declaro X.", pdf.RECUO_DA_DECLARACAO),
         ("E Y.", pdf.RECUO_DA_DECLARACAO),
@@ -953,6 +962,23 @@ def test_v11_e_v12_requerimento(momento, redacao_2, redacao_1):
         (redacao_1, 0.0),
         ("Ao enviá-lo, o candidato declarará:", 0.0),
     ]
+
+
+def test_v12_na_redacao_3_o_momento_nao_presume_o_genero():
+    """Redação 3 (2026-11-13): *"na convocação"*, e não *"quando o candidato for convocado"*."""
+    snapshot = {"matriculationRequest": {"moment": "AT_CALL", "declarationText": "Declaro X."}}
+
+    assert pdf.requerimento_de_matricula(snapshot)[0] == (
+        "O Requerimento de Matrícula é enviado na convocação. Ao enviá-lo, a pessoa declara:",
+        0.0,
+    )
+    assert pdf.requerimento_de_matricula(snapshot, redacao=REDACAO_3) == (
+        pdf.requerimento_de_matricula(snapshot)
+    )
+    no_inscricao = {"matriculationRequest": {"moment": "AT_ENROLLMENT", "declarationText": ""}}
+    assert pdf.requerimento_de_matricula(no_inscricao, redacao=REDACAO_3) == (
+        pdf.requerimento_de_matricula(no_inscricao, redacao=REDACAO_2)
+    ), "a 3 só muda o momento da convocação"
 
 
 def test_v11_sem_declaracao_nao_anuncia_o_que_nao_ha():
@@ -1032,9 +1058,9 @@ def _documentos_snapshot():
 
 
 @pytest.mark.parametrize(
-    ("perfil_id", "modalidade_id", "codigo", "redacao_2", "redacao_1"),
+    ("perfil_id", "modalidade_id", "codigo", "redacao_vigente", "redacao_1"),
     [
-        (None, None, None, "De todos os candidatos:", "De todos os candidatos:"),
+        (None, None, None, "De quem se inscreve:", "De todos os candidatos:"),
         (
             "tp1",
             None,
@@ -1069,7 +1095,7 @@ def _documentos_snapshot():
     ids=["D1", "D2", "D3", "D3-codigo", "D4"],
 )
 def test_d1_a_d4_a_quem_o_documento_e_pedido(
-    perfil_id, modalidade_id, codigo, redacao_2, redacao_1
+    perfil_id, modalidade_id, codigo, redacao_vigente, redacao_1
 ):
     """D1 a D4 — o alcance se preserva: todos, o Perfil, a lista, o Perfil e a lista."""
     snapshot = _documentos_snapshot()
@@ -1077,7 +1103,7 @@ def test_d1_a_d4_a_quem_o_documento_e_pedido(
 
     assert (
         pdf._titulo_do_grupo(perfil_id, modalidade_id, perfis, modalidades, codigo, snapshot)
-        == redacao_2
+        == redacao_vigente
     )
     if redacao_1 is not None:
         assert (
@@ -1105,8 +1131,8 @@ def test_d5_instrucao_do_documento():
     ("tipo", "limite", "redacao_2"),
     [
         ("NONE", None, "não há cadastro de reserva"),
-        ("LIMITED", 15, "cadastro de reserva de até 15 (quinze) classificados por Perfil"),
-        ("UNLIMITED", None, "cadastro de reserva sem limite de classificados"),
+        ("LIMITED", 15, "cadastro de reserva de até 15 (quinze) pessoas classificadas por Perfil"),
+        ("UNLIMITED", None, "cadastro de reserva sem limite de pessoas classificadas"),
     ],
     ids=["P2-nao-ha", "P2-limitado", "P2-ilimitado"],
 )
@@ -1134,7 +1160,7 @@ def test_p1_atributos_iguais_em_todos_os_perfis():
     assert pdf.frase_dos_atributos_comuns(perfis) == (
         "Em todos os Perfis: Tutor presencial — atua no polo de apoio presencial; carga horária de "
         "20 horas semanais; remuneração: bolsa de R$ 1.100,00; cadastro de reserva de até 15 "
-        "(quinze) classificados por Perfil."
+        "(quinze) pessoas classificadas por Perfil."
     )
     perfis[1]["workload"] = "30 horas semanais"
     assert "carga horária" not in pdf.frase_dos_atributos_comuns(perfis)
@@ -1143,7 +1169,7 @@ def test_p1_atributos_iguais_em_todos_os_perfis():
     assert pdf.frase_dos_atributos_comuns(perfis[:1]) == (
         "Perfil TP-01: Tutor presencial — atua no polo de apoio presencial; carga horária de "
         "20 horas semanais; remuneração: bolsa de R$ 1.100,00; cadastro de reserva de até 15 "
-        "(quinze) classificados por Perfil."
+        "(quinze) pessoas classificadas por Perfil."
     )
 
 
@@ -1191,7 +1217,8 @@ def test_o_alvo_fixo_com_reservada_diz_de_cada_lista():
     marco = _marco(cutRule=_corte(targetCount=8))
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=True)[0] == (
-        "Passam para a Etapa “Análise documental” os 8 (oito) primeiros classificados de cada "
+        "Passam para a Etapa “Análise documental” as 8 (oito) primeiras pessoas classificadas de "
+        "cada "
         "lista de concorrência."
     )
 
@@ -1200,7 +1227,8 @@ def test_o_alvo_de_um_com_reservada_diz_de_cada_lista_no_singular():
     marco = _marco(cutRule=_corte(targetCount=1))
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=True)[0] == (
-        "Passa para a Etapa “Análise documental” o 1 (um) primeiro classificado de cada lista de "
+        "Passa para a Etapa “Análise documental” a 1 (uma) primeira pessoa classificada de cada "
+        "lista de "
         "concorrência."
     )
 
@@ -1209,7 +1237,7 @@ def test_o_alvo_fixo_so_com_a_ampla_continua_como_era():
     marco = _marco(cutRule=_corte(targetCount=8))
 
     assert pdf.frases_do_corte(marco, ETAPAS, sem_cadastro=True, com_reservadas=False)[0] == (
-        "Passam para a Etapa “Análise documental” os 8 (oito) primeiros classificados."
+        "Passam para a Etapa “Análise documental” as 8 (oito) primeiras pessoas classificadas."
     )
 
 

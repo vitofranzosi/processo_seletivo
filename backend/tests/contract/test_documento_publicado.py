@@ -46,6 +46,7 @@ from pathlib import Path
 
 import pytest
 
+from processo_seletivo.publicacoes.domain.vocabulario_da_regra import REDACAO_2
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     MARCA_DE_PREVIA,
     MODO_PREVIA,
@@ -89,6 +90,9 @@ def documento(conteudo, content_hash=HASH, *, modo=MODO_PUBLICADO, **kwargs):
     prévia passa para o compositor medir o fecho, e não para imprimi-lo.
     """
     kwargs.setdefault("unidade", UNIDADE)
+    # A redação com que a fixture foi publicada: a 2. A 3 (2026-11-13) muda frases, e o contrato é
+    # que o documento publicado continue se compondo byte a byte com a redação dele.
+    kwargs.setdefault("redacao", REDACAO_2)
     if modo == MODO_PUBLICADO:
         kwargs.setdefault("autoridade", AUTORIDADE)
         kwargs.setdefault("data_do_ato", DATA_DO_ATO)

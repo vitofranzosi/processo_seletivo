@@ -25,7 +25,7 @@ FORMA_DE_CONVOCACAO = {
 
 MOMENTO_DO_REQUERIMENTO = {
     "AT_ENROLLMENT": "no ato da inscrição",
-    "AT_CALL": "quando o candidato for convocado",
+    "AT_CALL": "na convocação",
 }
 
 FORMA_DA_ORDEM = {

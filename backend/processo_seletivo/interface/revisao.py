@@ -1139,7 +1139,8 @@ NAO_MOSTRADOS = {
 # diz nada a quem confere um Edital antes de publicá-lo.
 _QUANDO = {
     nomes_do_requerimento.NA_INSCRICAO: "no ato da inscrição",
-    nomes_do_requerimento.NA_CONVOCACAO: "quando o candidato for convocado",
+    # Como o Edital da redação vigente o diz (redação 3, 2026-11-13).
+    nomes_do_requerimento.NA_CONVOCACAO: "na convocação",
 }
 
 

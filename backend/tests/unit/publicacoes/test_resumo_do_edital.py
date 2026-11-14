@@ -46,9 +46,7 @@ def test_em_b_as_vagas_imediatas_pelos_codigos_e_os_demais_em_cadastro():
         "10 vagas imediatas, nos Perfis TD-ADM e TD-INFO-EDU; os demais formam cadastro de "
         f"reserva (item {item})."
     )
-    assert (
-        resumo["Cadastro de reserva"] == f"até 15 (quinze) classificados por Perfil (item {item})."
-    )
+    assert resumo["Cadastro de reserva"] == f"até 15 (quinze) pessoas por Perfil (item {item})."
 
 
 def test_acima_de_cinco_localidades_so_a_contagem():
@@ -121,9 +119,7 @@ def test_cada_linha_aponta_o_item_certo():
         conteudo = _do_cenario(cenario)
         resumo = _resumo(conteudo)
         assert resumo["Inscrições"].endswith(f"(item {_numero(conteudo, 'Como se inscrever?')}).")
-        assert resumo["Por candidato"].endswith(
-            f"(item {_numero(conteudo, 'Como se inscrever?')})."
-        )
+        assert resumo["Por pessoa"].endswith(f"(item {_numero(conteudo, 'Como se inscrever?')}).")
         assert resumo["Datas"] == f"no Cronograma (item {_numero(conteudo, 'Cronograma')})."
 
 
