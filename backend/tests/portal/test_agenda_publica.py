@@ -118,6 +118,6 @@ def test_o_numero_de_consultas_nao_cresce_com_as_pessoas(client, publicada, insc
     client.get(endereco)
     with CaptureQueriesContext(connection) as consultas:
         client.get(endereco)
-    # Duas leituras: o ato com o Edital, e os vigentes com a inscrição e o ato — e as da moldura.
+    # Três leituras: o ato com o Edital, os vigentes com a inscrição e o ato, e os documentos.
     agenda = [q for q in consultas.captured_queries if "agendamento_" in q["sql"]]
-    assert len(agenda) == 2, [q["sql"] for q in agenda]
+    assert len(agenda) == 3, [q["sql"] for q in agenda]

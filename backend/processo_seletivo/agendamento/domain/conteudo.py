@@ -56,8 +56,14 @@ def compor(
     bancas,
     itens,
     restrita,
+    orientacoes="",
+    veiculo_detalhe="",
+    especie=nomes.PUBLICACAO,
 ):
     """O conteúdo público, como valor que `canonical_bytes` serializa.
+
+    As orientações entram porque são públicas — o que levar, como se portar —, e o documento do ato
+    as imprime; o veículo vem com o detalhe que a confirmação declarou (`D-008`).
 
     `unidade` é `{"cabecalho", "local", "sigla", "nome"}`; `signatario` é `{"nome", "cargo",
     "atoDeNomeacao"}` ou `None` na prévia, que não é ato e não tem quem assine; `bancas` é
@@ -89,7 +95,10 @@ def compor(
             "etapa": etapa,
             "publicadoEm": _instante(publicado_em),
             "signatario": signatario,
+            "especie": especie,
             "veiculo": veiculo,
+            "veiculoDetalhe": veiculo_detalhe,
+            "orientacoes": (orientacoes or "").strip(),
             "forma": forma,
             "duracao": duracao,
             "identificacao": modo,

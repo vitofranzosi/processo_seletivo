@@ -211,6 +211,9 @@ TABELAS_APPEND_ONLY = (
     # Edital pune a ausência. Reescrevê-lo mudaria, sem rastro, quando alguém foi chamado.
     "agendamento_atodaagenda",
     "agendamento_horariopublicado",
+    # E o documento de cada ato (`D-012`): os bytes do PDF como saíram. Um compositor que mudasse
+    # depois não pode mudar o documento publicado, e o banco é quem garante.
+    "agendamento_documentodoatodaagenda",
 )
 
 

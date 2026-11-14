@@ -39,6 +39,7 @@ from processo_seletivo.agendamento.domain.horarios import (
     periodo_por_extenso,
     zona,
 )
+from processo_seletivo.avisos.application.comando import envio_habilitado
 from processo_seletivo.comissoes.application import exigir_base_de_comissao
 from processo_seletivo.editais.domain.alcance import restrita
 from processo_seletivo.shared.canonical import canonical_sha256
@@ -71,6 +72,20 @@ class Conferencia:
     autoridades: list
     assinatura: str
     prontidao: list = field(default_factory=list)
+    # Os avisos (`D-011`): a chave `AVISOS_AOS_CANDIDATOS` é o controle único, e a agenda não tem
+    # chave própria. Ligada, quem receberá — pessoa e protocolo, nunca o e-mail; desligada, a frase.
+    avisos_ligados: bool = False
+    destinatarios: list = field(default_factory=list)
+
+    @property
+    def frase_dos_avisos(self):
+        if not self.avisos_ligados:
+            return recusas.AVISOS_DESLIGADOS
+        return recusas.avisos_que_a_publicacao_criara(len(self.destinatarios))
+
+    @property
+    def botao(self):
+        return recusas.BOTAO_COM_AVISOS if self.avisos_ligados else recusas.BOTAO_SEM_AVISOS
 
     @property
     def pode_publicar(self):
@@ -192,7 +207,18 @@ def itens_publicos(montagem):
     ]
 
 
-def compor_conteudo(edital, etapa, agenda, montagem, *, publicado_em, signatario, veiculo, unidade):
+def compor_conteudo(
+    edital,
+    etapa,
+    agenda,
+    montagem,
+    *,
+    publicado_em,
+    signatario,
+    veiculo,
+    unidade,
+    veiculo_detalhe="",
+):
     """O conteúdo público da agenda, para a prévia e para o ato — a mesma chamada (FR-7222)."""
     return conteudo_.compor(
         unidade=unidade,
@@ -206,6 +232,8 @@ def compor_conteudo(edital, etapa, agenda, montagem, *, publicado_em, signatario
         bancas=[(banca.nome, banca.acesso) for banca in agenda.bancas_em_ordem],
         itens=itens_publicos(montagem),
         restrita=restrita(etapa),
+        orientacoes=agenda.orientacoes,
+        veiculo_detalhe=veiculo_detalhe,
     )
 
 
@@ -288,6 +316,11 @@ def conferencia_sob(edital, etapa_id, agenda, *, agora=None):
         autoridades=autoridades,
         assinatura=_assinatura(agenda, configuracao, montagem),
         prontidao=_prontidao(montagem, configuracao, periodo, agenda, autoridades),
+        avisos_ligados=envio_habilitado(),
+        destinatarios=sorted(
+            ((item.nome, item.protocolo) for item in itens_publicos(montagem)),
+            key=lambda par: (par[0].casefold(), par[1]),
+        ),
     )
 
 

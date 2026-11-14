@@ -29,9 +29,20 @@ def _sql(texto, parametros=()):
         cursor.execute(texto, parametros)
 
 
-@pytest.mark.parametrize("tabela", ["agendamento_atodaagenda", "agendamento_horariopublicado"])
+@pytest.mark.parametrize(
+    "tabela",
+    [
+        "agendamento_atodaagenda",
+        "agendamento_horariopublicado",
+        "agendamento_documentodoatodaagenda",
+    ],
+)
 def test_update_e_delete_recusados_pelo_gatilho(publicada, tabela):
-    alvo = publicada.id if tabela.endswith("atodaagenda") else publicada.horarios.first().id
+    alvo = {
+        "agendamento_atodaagenda": publicada.id,
+        "agendamento_horariopublicado": publicada.horarios.first().id,
+        "agendamento_documentodoatodaagenda": publicada.documento.id,
+    }[tabela]
     with pytest.raises(DatabaseError, match=IMUTAVEL):
         _sql(f"UPDATE {tabela} SET id = id WHERE id = %s", [alvo])
     with pytest.raises(DatabaseError, match=IMUTAVEL):
@@ -40,7 +51,7 @@ def test_update_e_delete_recusados_pelo_gatilho(publicada, tabela):
 
 def test_save_de_linha_existente_e_delete_recusados_pela_classe(publicada):
     horario = publicada.horarios.first()
-    for linha in (publicada, horario):
+    for linha in (publicada, horario, publicada.documento):
         with pytest.raises(TypeError, match="append-only"):
             linha.save()
         with pytest.raises(TypeError, match="append-only"):

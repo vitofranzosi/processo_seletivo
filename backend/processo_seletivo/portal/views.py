@@ -3825,6 +3825,29 @@ def agenda_da_etapa(request, agenda_id):
 
 
 @require_http_methods(["GET"])
+def documento_da_agenda(request, agenda_id, ato_id):
+    """Os bytes gravados no ato da agenda, e nada recomposto (167, FR-7224, SC-2399, `D-012`).
+
+    Ato de outra agenda, ou ato sem documento, responde igual a inexistente: 404.
+    """
+    from processo_seletivo.agendamento.models import DocumentoDoAtoDaAgenda
+
+    documento = (
+        DocumentoDoAtoDaAgenda.objects.filter(ato_id=ato_id, ato__agenda_id=agenda_id)
+        .select_related("ato")
+        .first()
+    )
+    if documento is None:
+        raise Http404
+    resposta = HttpResponse(bytes(documento.bytes), content_type=documento.content_type)
+    resposta["ETag"] = f'"{documento.documento_hash}"'
+    resposta["Content-Disposition"] = (
+        f'attachment; filename="Agenda-{documento.ato.praticado_em:%Y-%m-%d}.pdf"'
+    )
+    return resposta
+
+
+@require_http_methods(["GET"])
 def convocados_em_pdf(request, publicacao_id):
     """Os bytes gravados na publicação, e nada recomposto (149, FR-5710, FR-5718)."""
     from processo_seletivo.convocacao.models import DocumentoDaPublicacaoDeConvocados

@@ -270,3 +270,43 @@ def test_o_horario_publicado_fora_do_periodo_vigente_e_avisado(
         "O Evento da Etapa foi retificado depois da publicação, e 5 horários publicados estão "
         "fora do período vigente. Eles continuam valendo como foram publicados."
     ) in corpo
+
+
+# --- os avisos na conferência (T088, FR-7222, FR-7230, `D-011`) -----------------------------------
+
+
+def test_com_os_avisos_ligados_a_conferencia_diz_quantos_e_quem(
+    presidente, edital_a, etapa_a2, inscritas, completa, settings
+):
+    settings.AVISOS_AOS_CANDIDATOS = True
+
+    corpo = presidente.get(url("agenda-conferir", edital_a, etapa_a2)).content.decode()
+
+    assert (
+        "A publicação criará 5 avisos, um para cada pessoa da agenda. O envio sai pelo despacho "
+        "dos avisos."
+    ) in corpo
+    assert "Quem recebe o aviso (5)" in corpo
+    destinatarios = corpo[corpo.index("Quem recebe o aviso") : corpo.index("</details>")]
+    assert inscritas[0].protocolo in destinatarios
+    assert "@exemplo.br" not in destinatarios
+    assert ">Publicar a agenda e avisar as pessoas</button>" in corpo
+
+
+def test_com_os_avisos_desligados_a_frase_e_o_botao_sem_aviso(
+    presidente, gestor, edital_a, etapa_a2, inscritas, completa, settings
+):
+    settings.AVISOS_AOS_CANDIDATOS = False
+    frase = (
+        "Os avisos por e-mail estão desligados nesta instalação. A agenda vale pela publicação, e "
+        "nenhum aviso será criado."
+    )
+
+    corpo = presidente.get(url("agenda-conferir", edital_a, etapa_a2)).content.decode()
+
+    assert frase in corpo
+    assert "Quem recebe o aviso" not in corpo
+    assert ">Publicar a agenda</button>" in corpo
+    publicar_agenda(gestor, edital_a, etapa_a2)
+    publicada = presidente.get(url("agenda-publicada", edital_a, etapa_a2)).content.decode()
+    assert frase in publicada

@@ -32,7 +32,9 @@ from processo_seletivo.agendamento.domain.horarios import (
 )
 from processo_seletivo.agendamento.domain.nomes import (
     AGENDADO,
+    CANCELAMENTO,
     CONFIGURACAO_SALVA,
+    INCLUSAO,
     PROTOCOLO,
     PUBLICACAO,
     REMARCACAO,
@@ -280,6 +282,13 @@ def dia_valido(texto, dias):
 
 # --- o que foi publicado (entrega B) --------------------------------------------------------------
 
+DOCUMENTOS = {
+    PUBLICACAO: "Documento da publicação",
+    REMARCACAO: "Documento da remarcação",
+    INCLUSAO: "Documento da inclusão",
+    CANCELAMENTO: "Documento do cancelamento",
+}
+
 
 def publicacao(agenda):
     """O ato de publicação da agenda, ou `None`. "Publicada" é existir esta linha (data-model)."""
@@ -481,8 +490,17 @@ def agenda_publica(agenda_id, busca=""):
                 "remarcado_em": item.remarcado_em,
             }
         )
+    # Os documentos dos atos, em ordem — o da publicação primeiro e intacto (`D-012`). Só os que têm
+    # documento gravado; a página não recompõe o que faltasse.
+    documentos = [
+        {"ato": item, "titulo": DOCUMENTOS.get(item.especie, "Documento")}
+        for item in AtoDaAgenda.objects.filter(
+            agenda_id=agenda_id, documento__isnull=False
+        ).order_by("praticado_em", "id")
+    ]
     return {
         "ato": ato,
+        "documentos": documentos,
         "edital": ato.edital,
         "cabecalho": cabecalho,
         "com_nome": com_nome,

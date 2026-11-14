@@ -192,11 +192,13 @@
 .previa-publica{border:1px dashed var(--borda);border-radius:4px;padding:.75rem 1rem;background:var(--fundo);}
 .dia-publico h3{margin:.5rem 0;}
 .horarios-publicos{list-style:none;margin:0 0 .75rem;padding:0;}
-.horarios-publicos li{display:flex;gap:1rem;align-items:baseline;padding:.3rem 0;
-  border-bottom:1px solid var(--borda);flex-wrap:wrap;}
+/* Em grade, como na página pública: hora, pessoa e banca numa linha também a 375 px. */
+.horarios-publicos li{display:grid;grid-template-columns:3.5rem minmax(0,1fr) auto;gap:.25rem .75rem;
+  align-items:baseline;padding:.3rem 0;border-bottom:1px solid var(--borda);}
+.horarios-publicos .quem{overflow-wrap:anywhere;}
 .horarios-publicos .hora{font-variant-numeric:tabular-nums;font-weight:600;min-width:3.5rem;}
 .horarios-publicos .banca{color:var(--texto-fraco);font-size:.875rem;}
-.horarios-publicos .mais{color:var(--texto-fraco);border-bottom:0;}
+.horarios-publicos .mais{display:block;color:var(--texto-fraco);border-bottom:0;}
 .numero-de-inscricao{font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;}
 
 /* O veículo: as duas escolhas, cada uma com o que exige logo abaixo dela. */
@@ -205,6 +207,7 @@
 .opcao-de-veiculo{margin:.75rem 0 .35rem;}
 .veiculo-da-agenda .campo{margin:0 0 .5rem 1.5rem;}
 .veiculo-da-agenda .campos-em-linha{margin-left:1.5rem;}
+.veiculo-da-agenda .campos-em-linha input[type=text]{width:20rem;max-width:100%;}
 
 /* A agenda publicada: um resumo só, e a lista vigente. */
 .resumo-da-publicacao{margin:0 0 1.5rem;}
@@ -212,3 +215,7 @@
 .remarcado{display:inline-block;font-size:.75rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;
   background:var(--amarelo-fundo);color:var(--amarelo);}
 .lista-publicada td{vertical-align:top;}
+/* Quem recebe o aviso, recolhido: pessoa e protocolo, nunca o e-mail (`D-011`). */
+.destinatarios-dos-avisos{margin:0 0 .75rem;}
+.destinatarios-dos-avisos ul{margin:.35rem 0 0;padding-left:1.2rem;max-height:12rem;overflow-y:auto;position:relative;}
+.frase-dos-avisos{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem;}

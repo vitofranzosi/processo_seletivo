@@ -48,11 +48,13 @@ from processo_seletivo.agendamento.domain.horarios import (
 )
 from processo_seletivo.agendamento.domain.preenchimento import ORDEM
 from processo_seletivo.agendamento.domain.recusas import (
+    AVISOS_DESLIGADOS,
     ConfiguracaoRecusada,
     completa,
     fora_do_periodo_vigente,
     nao_participa_mais,
 )
+from processo_seletivo.avisos.application.comando import envio_habilitado
 from processo_seletivo.interface import identidade
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada
@@ -1102,6 +1104,10 @@ def publicada(request, edital_id, etapa_id):
         "agenda": agenda,
         "ato": ato,
         "veiculo_gps": ato.veiculo == nomes.VEICULO_GPS,
+        "tem_documento": hasattr(ato, "documento"),
+        # `D-011`: desligados os avisos, a frase fica no lugar do resumo deles (a C traz o resumo).
+        "avisos_ligados": envio_habilitado(),
+        "frase_dos_avisos": AVISOS_DESLIGADOS,
         "linhas": [
             {
                 "quando": _rotulo_do_vigente(item, varias),

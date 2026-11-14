@@ -37,5 +37,15 @@ com `?busca=` pode ser guardado. Sem tabela, como as demais listas públicas: um
 </section>
 {% endfor %}
 
+{% if documentos %}
+<section class="documentos-da-agenda" aria-labelledby="documentos-titulo">
+  <h2 id="documentos-titulo">Documentos</h2>
+  <ul class="lista-de-documentos-da-agenda">
+    {% for item in documentos %}<li><a class="documento secundaria" href="{% url 'portal:documento-da-agenda' ato.agenda_id item.ato.id %}">{{ item.titulo }} (PDF)<span class="oculto"> — {{ item.ato.praticado_em|date:"d/m/Y" }}</span></a> <span class="meta">{{ item.ato.praticado_em|date:"d/m/Y" }}</span></li>{% endfor %}
+  </ul>
+  {% if documentos|length > 1 %}<p class="meta">A agenda vigente é a publicação com os atos posteriores, que a lista acima já mostra.</p>{% endif %}
+</section>
+{% endif %}
+
 <p class="meta integridade-da-publicacao">Resumo SHA-256 do conteúdo publicado: <code>{{ ato.conteudo_publico_hash }}</code>.</p>
 {% endblock %}

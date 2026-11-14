@@ -299,6 +299,23 @@ ETAPA_SEM_EVENTO = (
 )
 
 
+def avisos_que_a_publicacao_criara(quantos):
+    """O botão e os avisos, com os avisos ligados (`contracts/recusas.md`, `D-011`)."""
+    sujeito = "1 aviso" if quantos == 1 else f"{quantos} avisos"
+    return (
+        f"A publicação criará {sujeito}, um para cada pessoa da agenda. O envio sai pelo despacho "
+        "dos avisos."
+    )
+
+
+AVISOS_DESLIGADOS = (
+    "Os avisos por e-mail estão desligados nesta instalação. A agenda vale pela publicação, e "
+    "nenhum aviso será criado."
+)
+BOTAO_COM_AVISOS = "Publicar a agenda e avisar as pessoas"
+BOTAO_SEM_AVISOS = "Publicar a agenda"
+
+
 def publicacao_impedida(impedimentos):
     return DomainError(
         nomes.PUBLICACAO_IMPEDIDA,

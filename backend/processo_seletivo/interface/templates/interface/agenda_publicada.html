@@ -12,7 +12,7 @@ vigente, lida do append-only, e não do rascunho da montagem (T-016). Os avisos 
 depois da publicação só nomeiam as pessoas.
 {% endcomment %}
 <h1>Agenda publicada</h1>
-<p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. <a href="{% url 'portal:agenda-da-etapa' agenda.id %}">Ver como o público vê</a></p>
+<p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. <a href="{% url 'portal:agenda-da-etapa' agenda.id %}">Ver como o público vê</a>{% if tem_documento %} · <a href="{% url 'portal:documento-da-agenda' agenda.id ato.id %}">Documento da publicação (PDF)</a>{% endif %}</p>
 <div id="mensagem" aria-live="polite">
   {% if mensagem %}<p class="{{ mensagem.tipo }}" role="status" tabindex="-1">{{ mensagem.texto }}</p>{% endif %}
   {% if fora_do_periodo %}<p class="aviso">{{ fora_do_periodo }}</p>{% endif %}
@@ -22,6 +22,8 @@ depois da publicação só nomeiam as pessoas.
   <p><span class="situacao s-PUBLICADO">Publicada</span> em {{ ato.praticado_em|date:"d/m/Y" }} às {{ ato.praticado_em|date:"H:i" }}, assinada por {% if ato.signatario_nome %}{{ ato.signatario_nome }} — {% endif %}{{ ato.signatario_cargo }}.</p>
   <p class="fatos-da-agenda"><span>{{ linhas|length }} horário{{ linhas|length|pluralize:"s" }} publicado{{ linhas|length|pluralize:"s" }}</span><span>{% if veiculo_gps %}Na página pública do GPS ({{ ato.declaracao_do_veiculo }}){% else %}Publicada fora do GPS: {{ ato.publicado_fora_onde }}, em {{ ato.publicado_fora_em|date:"d/m/Y" }}{% endif %}</span></p>
 </div>
+
+{% if not avisos_ligados %}<p class="aviso">{{ frase_dos_avisos }}</p>{% endif %}
 
 {% if entrantes %}
 <section class="consequencias" aria-labelledby="entrantes-titulo">

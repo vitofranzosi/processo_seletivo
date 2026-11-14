@@ -313,3 +313,50 @@ def test_depois_da_publicacao_remover_o_horario_publicado_recusa_e_nomeia(
     assert "para mudar uma pessoa, use Remarcar" in removidos[0].frase
     assert leitura.agenda_da_etapa(edital_a, etapa_a2).revision == revisao
     assert configuracao  # a fixture de partida continua a do cenário
+
+
+# --- quem publica (T089, FR-7255, US3 cenário 11, `D-013`) ----------------------------------------
+
+
+def test_a_presidencia_publica_sem_a_permissao_de_gerir(gestor, edital_a, etapa_a2, inscricoes):
+    """A base da gestão da comissão inclui a presidência: o vínculo, e não um papel novo."""
+    from tests.conftest import ator_institucional
+    from tests.fixtures.comissao import constituir
+
+    constituir(gestor, edital_a.processo, [("maria", "PRESIDENTE")], prefixo="presidencia-167")
+    presidente = ator_institucional("maria")
+    montar_completa(gestor, edital_a, etapa_a2)
+
+    ato = publicar_agenda(presidente, edital_a, etapa_a2)
+
+    # O autor e a autoridade signatária são dados distintos do ato.
+    assert ato.praticado_por == "maria"
+    assert ato.signatario_id == AUTORIDADE_DA_SUITE and ato.signatario_cargo == "Diretora-Geral"
+
+
+def test_quem_nao_tem_o_escopo_do_edital_e_negado_na_confirmacao(
+    gestor, edital_a, etapa_a2, inscricoes
+):
+    """Ainda que tenha a assinatura de uma conferência aberta antes, o servidor nega."""
+    from processo_seletivo.agendamento.application import conferir
+    from tests.conftest import ator_institucional
+
+    montar_completa(gestor, edital_a, etapa_a2)
+    assinatura = conferir.conferencia(actor=gestor, edital=edital_a, etapa_id=etapa_a2).assinatura
+    de_fora = ator_institucional("carlos", "comissao:gerir", escopo="outra")
+
+    with pytest.raises(DomainError) as recusa:
+        publicar_agenda(de_fora, edital_a, etapa_a2, assinatura=assinatura)
+
+    assert recusa.value.status == 404
+    assert not AtoDaAgenda.objects.exists()
+
+
+def test_sem_a_base_da_comissao_nada_se_publica(edital_a, etapa_a2, inscricoes, gestor):
+    from tests.conftest import ator_institucional
+
+    montar_completa(gestor, edital_a, etapa_a2)
+
+    with pytest.raises(DomainError):
+        publicar_agenda(ator_institucional("estranho"), edital_a, etapa_a2, assinatura="x")
+    assert not AtoDaAgenda.objects.exists()

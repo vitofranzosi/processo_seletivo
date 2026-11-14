@@ -1,9 +1,9 @@
-"""Os atos da agenda da Etapa: o ato e o horário publicado de cada pessoa (167, entrega B).
+"""Os atos da agenda da Etapa: o ato, o horário publicado de cada pessoa e o documento (167, B).
 
 **Nascem append-only, nas três camadas**: `save`/`delete` recusam na aplicação, os gatilhos abaixo
 recusam a mutação mesmo de quem tem privilégio, e o papel de runtime não recebe `UPDATE` nem
 `DELETE` — o terceiro vem de `TABELAS_APPEND_ONLY`, e é por isso que o provisionamento precisa rodar
-de novo depois desta migration (o `M` passa de 61 a 63).
+de novo depois desta migration (o `M` passa de 65 a 68).
 
 **O gatilho de coerência confere o que `CHECK` não alcança**, porque atravessa tabelas: o item que
 este substitui é da mesma inscrição e de um ato da mesma agenda; a banca é da agenda do ato; só a
@@ -30,6 +30,10 @@ FOR EACH ROW EXECUTE FUNCTION reject_schedule_act_mutation();
 
 CREATE TRIGGER horario_publicado_append_only
 BEFORE UPDATE OR DELETE ON agendamento_horariopublicado
+FOR EACH ROW EXECUTE FUNCTION reject_schedule_act_mutation();
+
+CREATE TRIGGER documento_do_ato_da_agenda_append_only
+BEFORE UPDATE OR DELETE ON agendamento_documentodoatodaagenda
 FOR EACH ROW EXECUTE FUNCTION reject_schedule_act_mutation();
 
 CREATE OR REPLACE FUNCTION check_published_slot_coherence() RETURNS trigger AS $$
@@ -80,6 +84,8 @@ FOR EACH ROW EXECUTE FUNCTION check_published_slot_coherence();
 DESPROTEGER = """
 DROP TRIGGER IF EXISTS horario_publicado_coerente ON agendamento_horariopublicado;
 DROP FUNCTION IF EXISTS check_published_slot_coherence();
+DROP TRIGGER IF EXISTS documento_do_ato_da_agenda_append_only
+    ON agendamento_documentodoatodaagenda;
 DROP TRIGGER IF EXISTS horario_publicado_append_only ON agendamento_horariopublicado;
 DROP TRIGGER IF EXISTS ato_da_agenda_append_only ON agendamento_atodaagenda;
 DROP FUNCTION IF EXISTS reject_schedule_act_mutation();
@@ -176,6 +182,31 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+        ),
+        migrations.CreateModel(
+            name="DocumentoDoAtoDaAgenda",
+            fields=[
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("bytes", models.BinaryField()),
+                ("content_type", models.CharField(default="application/pdf", max_length=100)),
+                ("documento_hash", models.CharField(max_length=64)),
+                (
+                    "ato",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="documento",
+                        to="agendamento.atodaagenda",
+                    ),
+                ),
+            ],
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="HorarioPublicado",

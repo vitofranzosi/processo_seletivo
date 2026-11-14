@@ -25,9 +25,12 @@ passaria nos testes, que conectam como superusuário. A linha da agenda é opera
 em `Contexto.repetido`; outra chave, depois da primeira, encontra o ato sob a trava. Nenhum dos dois
 grava nada — e, quando os avisos chegarem na entrega C, nenhum dos dois avisa de novo.
 
-Os avisos são da entrega C: aqui `HorarioPublicado.aviso` nasce nulo.
+**O documento é gravado na mesma transação** (`D-012`), como o da relação de convocados: os bytes do
+PDF como saíram, que a página serve sem recompor. Os avisos são da entrega C: aqui
+`HorarioPublicado.aviso` nasce nulo.
 """
 
+import hashlib
 from datetime import date
 
 from django.db import IntegrityError, transaction
@@ -35,7 +38,11 @@ from django.db import IntegrityError, transaction
 from processo_seletivo.agendamento.application import leitura
 from processo_seletivo.agendamento.application.conferir import compor_conteudo, conferencia_sob
 from processo_seletivo.agendamento.domain import nomes, recusas
-from processo_seletivo.agendamento.models import AtoDaAgenda, HorarioPublicado
+from processo_seletivo.agendamento.models import (
+    AtoDaAgenda,
+    DocumentoDoAtoDaAgenda,
+    HorarioPublicado,
+)
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.processos.models import Edital
@@ -97,6 +104,16 @@ def _contexto(edital, autoridade_id, agora):
         if recusa.code in RECUSAS_DA_AUTORIDADE:
             raise recusas.autoridade_invalida() from recusa
         raise
+
+
+def _gravar_documento(ato, conteudo):
+    """O documento oficial, dos mesmos bytes que a página lê, gravado uma vez (`D-012`)."""
+    from processo_seletivo.agendamento.infrastructure.documento import render_agenda_pdf
+
+    arquivo = render_agenda_pdf(conteudo)
+    DocumentoDoAtoDaAgenda.objects.create(
+        ato=ato, bytes=arquivo, documento_hash=hashlib.sha256(arquivo).hexdigest()
+    )
 
 
 def _declarado(ato):
@@ -169,6 +186,9 @@ def publicar(
                 "atoDeNomeacao": assinante.ato_de_nomeacao,
             },
             veiculo=veiculo,
+            veiculo_detalhe=declaracao
+            if veiculo == nomes.VEICULO_GPS
+            else f"{onde}, em {quando:%d/%m/%Y}",
             unidade={
                 "cabecalho": list(contexto.unidade.cabecalho),
                 "local": contexto.unidade.local,
@@ -224,6 +244,7 @@ def publicar(
             )
             for item in sorted(agendados, key=lambda i: (i.inicio, i.banca.ordem))
         )
+        _gravar_documento(ato, conteudo)
         revisao_anterior = agenda.revision
         agenda.revision += 1
         agenda.atualizada_por = actor.subject

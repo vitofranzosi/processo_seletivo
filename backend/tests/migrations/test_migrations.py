@@ -211,12 +211,13 @@ TRIGGERS_POR_APP = {
         "documento_da_publicacao_de_convocados_append_only",
         "convocacao_publicada_coerente",
     ),
-    # Os atos da agenda da Etapa (167, entrega B). As duas de imutabilidade são **absolutas**: o
+    # Os atos da agenda da Etapa (167, entrega B). As três de imutabilidade são **absolutas**: o
     # horário que muda é ato novo, que substitui o anterior sem apagá-lo. A terceira confere que o
     # substituído é da mesma inscrição e da mesma agenda, e que a banca é da agenda do ato.
     "agendamento": (
         "ato_da_agenda_append_only",
         "horario_publicado_append_only",
+        "documento_do_ato_da_agenda_append_only",
         "horario_publicado_coerente",
     ),
 }

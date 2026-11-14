@@ -121,3 +121,24 @@ def test_o_numero_de_consultas_da_agenda_e_fixo(client, gestor, edital_a, etapa_
     # As agendas do Edital, as publicações delas e o vigente desta inscrição.
     agenda = [q for q in consultas.captured_queries if "agendamento_" in q["sql"]]
     assert len(agenda) == 3, [q["sql"] for q in agenda]
+
+
+def test_um_cartao_por_etapa(client, gestor, edital_a, etapa_a1, etapa_a2, inscricoes):
+    """T090: `horarios_da_inscricao` é a fonte única do horário, e cada Etapa tem um bloco só.
+
+    A `168` ainda não está na base; quando entrar, o bloco da Etapa restrita que ela trata vai para
+    o degrau dela, e este teste continua prendendo "um cartão por Etapa" na inscrição.
+    """
+    configurar.salvar(
+        actor=gestor,
+        edital=edital_a,
+        etapa_id=etapa_a1,
+        configuracao=configuracao(dias=((date(2026, 9, 1), ((time(8), time(9)),)),)),
+    )
+    montar_completa(gestor, edital_a, etapa_a2)
+    publicar_agenda(gestor, edital_a, etapa_a2)
+
+    corpo = _area(client, inscricoes[0])
+
+    assert corpo.count('class="painel horario-da-etapa"') == 2
+    assert corpo.count("Seu horário: Prova didática") == 1

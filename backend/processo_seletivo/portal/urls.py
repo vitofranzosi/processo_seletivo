@@ -174,6 +174,12 @@ urlpatterns = [
     # agenda**, e não do ato: a agenda publica uma vez, e as remarcações depois aparecem no mesmo
     # lugar, marcadas. Não colide com `<uuid:edital_id>/`: `agendas` não casa com `uuid`.
     path("agendas/<uuid:agenda_id>/", views.agenda_da_etapa, name="agenda-da-etapa"),
+    # O documento de cada ato da agenda (`D-012`): os bytes gravados no ato, e nada recomposto.
+    path(
+        "agendas/<uuid:agenda_id>/atos/<uuid:ato_id>/documento.pdf",
+        views.documento_da_agenda,
+        name="documento-da-agenda",
+    ),
     path(
         "convocacoes/<uuid:publicacao_id>/documento.pdf",
         views.convocados_em_pdf,

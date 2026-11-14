@@ -1437,3 +1437,8 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .horario-da-etapa h3{font-size:1rem;margin:1rem 0 .25rem}
 .orientacoes-do-horario{max-width:var(--leitura)}
 .remarcacao{margin-bottom:1rem}
+/* Os documentos dos atos da agenda (167, `D-012`): um por linha, o da publicação primeiro. */
+.documentos-da-agenda{margin:0 0 1.5rem;max-width:var(--leitura)}
+.lista-de-documentos-da-agenda{list-style:none;margin:0;padding:0}
+.lista-de-documentos-da-agenda li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline;margin:0 0 .5rem}
+.lista-de-documentos-da-agenda .documento{margin-top:0}

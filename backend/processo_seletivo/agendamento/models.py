@@ -376,3 +376,22 @@ class HorarioPublicado(_AppendOnly):
 
     def __str__(self):
         return f"{self.situacao} {self.inscricao_id} em {self.inicio}"
+
+
+class DocumentoDoAtoDaAgenda(_AppendOnly):
+    """Os bytes do documento oficial de um ato, gerados uma vez, na transação dele (`D-012`).
+
+    O molde de `DocumentoDaPublicacaoDeConvocados` (`149`): tabela própria, para a ausência de
+    documento ser a ausência de linha, e o resumo como integridade. **O que se preserva são os bytes
+    como saíram**: um compositor que mude depois não muda o documento que já foi publicado — a
+    página serve o gravado, e nunca recompõe.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    ato = models.OneToOneField(AtoDaAgenda, on_delete=models.PROTECT, related_name="documento")
+    bytes = models.BinaryField()
+    content_type = models.CharField(max_length=100, default="application/pdf")
+    documento_hash = models.CharField(max_length=64)
+
+    def __str__(self):
+        return f"documento do ato {self.ato_id}"
