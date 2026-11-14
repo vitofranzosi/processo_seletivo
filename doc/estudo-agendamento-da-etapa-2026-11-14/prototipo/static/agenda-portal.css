@@ -1,0 +1,22 @@
+/* Protótipo do agendamento — peças novas do portal. O resto é `portal/portal.css`, sem cópia. */
+.prototipo-faixa{margin:0 0 1rem;padding:.5rem .75rem;border:1px dashed var(--texto-fraco);
+  border-radius:4px;font-size:.8125rem;color:var(--texto-fraco);max-width:none}
+.busca-na-agenda input{width:100%;max-width:24rem}
+.dia-publico{background:var(--branco);border:1px solid var(--borda);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem}
+.dia-publico h3{margin:0 0 .5rem;font-size:1.05rem}
+.horarios-publicos{list-style:none;margin:0;padding:0}
+.horarios-publicos li{display:grid;grid-template-columns:4rem minmax(0,1fr) auto;gap:.25rem .75rem;align-items:baseline;
+  padding:.45rem 0;border-top:1px solid var(--borda)}
+.horarios-publicos li:first-child{border-top:0}
+.horarios-publicos .hora{font-weight:700;font-variant-numeric:tabular-nums}
+.horarios-publicos .inscricao,.horarios-publicos .inscricao-so{font-variant-numeric:tabular-nums}
+.horarios-publicos .inscricao{display:block;font-size:.8125rem;color:var(--texto-fraco)}
+.horarios-publicos .banca{font-size:.8125rem;color:var(--texto-fraco)}
+.remarcado{grid-column:2 / -1;justify-self:start;font-size:.75rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;
+  background:var(--amarelo-fundo);color:var(--amarelo)}
+.quando-grande{font-size:1.35rem;margin:.25rem 0 .75rem}
+.horario-da-etapa h3{font-size:1rem;margin:1rem 0 .25rem}
+.remarcacao{margin-bottom:1rem}
+
+/* `hidden` perde para o `display` de cima; a busca precisa dele. */
+.horarios-publicos li[hidden],.dia-publico[hidden]{display:none}

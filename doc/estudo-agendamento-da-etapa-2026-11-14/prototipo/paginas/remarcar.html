@@ -1,0 +1,35 @@
+<!--
+titulo: Remarcar uma pessoa
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <a href="publicada.html">Agenda publicada</a> › <span aria-current="page">Remarcar</span>
+moldura: gestao
+folhas: interface/grupos/aviso.css interface/telas/convocacao-conferir.css
+-->
+<h1 id="titulo-da-remarcacao">Remarcar uma pessoa</h1>
+<p class="sub"><span data-texto="etapa"></span>. A agenda das outras pessoas não muda.</p>
+
+<form id="form-remarcar" class="remarcacao" novalidate>
+  <div id="erros"></div>
+  <section class="consequencias" aria-labelledby="quem-titulo">
+    <h2 id="quem-titulo">Quem</h2>
+    <dl class="fatos-da-operacao" id="quem"></dl>
+  </section>
+  <section class="consequencias" aria-labelledby="novo-titulo">
+    <h2 id="novo-titulo">Novo horário</h2>
+    <div id="sem-livres"></div>
+    <p class="campo"><label for="novo">Horário livre <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="novo" name="novo" required aria-required="true"></select>
+      <span class="ajuda">Só aparecem horários livres. Se outra pessoa da comissão ocupar o mesmo horário antes de você confirmar, a remarcação é recusada e a lista se atualiza.</span></p>
+    <p class="campo"><label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <textarea id="motivo" name="motivo" rows="2" required aria-required="true" aria-describedby="ajuda-motivo" placeholder="por exemplo, falha de conexão comprovada, conforme o item 6.9.9 do Edital"></textarea>
+      <span class="ajuda" id="ajuda-motivo">Fica na trilha, com o seu nome. Não aparece para o candidato nem na página pública.</span></p>
+  </section>
+  <section class="consequencias irreversivel" aria-labelledby="efeito-titulo">
+    <h2 id="efeito-titulo">Ao confirmar</h2>
+    <ul>
+      <li>A página pública e a área da pessoa passam a mostrar o horário novo, com a marca "remarcado em", e o anterior fica no histórico.</li>
+      <li>Só esta pessoa recebe um aviso por e-mail.</li>
+      <li>O horário anterior fica livre para outra pessoa.</li>
+    </ul>
+  </section>
+  <p class="salvar"><button type="submit" class="botao perigoso" id="botao-remarcar">Remarcar e avisar esta pessoa</button> <a class="acao" href="publicada.html">Cancelar e voltar</a></p>
+</form>
