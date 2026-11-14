@@ -4,10 +4,10 @@
 
 **Created**: 2026-11-14
 
-**Status**: Draft. Só a spec, sem plano nem código. Revista em 14/11 depois da revisão do usuário no PR
-#543: o horizonte de leitura por marco ficou explícito, a Retificação passou a ser impedida desde o
-primeiro Resultado desfavorável, e a Q-1 foi fechada pelo usuário, com o contrato recursal completado.
-Nenhuma pergunta aberta.
+**Status**: Especificada em 14/11, revista no mesmo dia pela revisão do usuário no PR #543, e
+implementada pelo fluxo completo do Spec Kit, a pedido do usuário: plan, tasks, analyze e
+implementação, empilhada sobre a `163` (PR #542). PR sem merge. Pendentes: a jornada do candidato
+no navegador, o SC-2336 (humano) e o caso de integração da FR-7013 (ver `rastreabilidade.md`).
 
 **Input**: a decisão **P-2** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-2):

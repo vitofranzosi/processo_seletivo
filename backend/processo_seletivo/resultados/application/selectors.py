@@ -41,6 +41,23 @@ def habilitadas_em(*, edital, etapa_id):
     )
 
 
+def desfavoraveis_registrados(*, edital, etapa_id):
+    """Quantos Resultados desfavoráveis a Etapa já registrou, superados inclusive (164, FR-7020).
+
+    É a pergunta do histórico, e não do efeito: o impedimento de retificar o efeito do desfecho
+    conta o que foi praticado sob ele, e o desfavorável superado por recurso foi. Por isso
+    `objects`, que é o que este módulo admite para o histórico do par.
+    """
+    return ResultadoEtapa.objects.filter(
+        edital=edital,
+        etapa_id=etapa_id,
+        consequencia__in=(
+            ResultadoEtapa.Consequencia.ELIMINADA,
+            ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+        ),
+    ).count()
+
+
 def seguem_de(*, edital, etapa_id):
     """Identidades com Resultado que deixa seguir: habilitada ou retirada da reserva (164).
 
@@ -308,6 +325,9 @@ def resultados_visiveis(inscricao):
             "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
             "consequencia": resultado.consequencia,
             "habilitada": resultado.consequencia == ResultadoEtapa.Consequencia.HABILITADA,
+            # A retirada da reserva não é habilitação nem eliminação (164, FR-7024): quem a lê no
+            # acompanhamento não pode dizer "Eliminado" a quem continua na ampla.
+            "retirada": resultado.consequencia == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
             "motivo": resultado.motivo,
             # Só quando a forma a tiver: a Etapa decisória não produz número, e a Ocorrência não
             # produz grandeza nenhuma. Inventar um zero afirmaria o que ninguém mediu.

@@ -48,7 +48,7 @@ class ResultadoEtapa(models.Model):
         # deixaria o Resultado mentindo por si, e todo leitor que compara com `ELIMINADA`
         # continuaria eliminando em silêncio — o guardião `test_leitores_da_consequencia.py`
         # cobra que cada leitor diga o que faz com ela (FR-7018).
-        RETIRADA_DA_RESERVA = "RETIRADA_DA_RESERVA"
+        RETIRADA_DA_RESERVA = "RETIRADA_DA_RESERVA", "Retirada da reserva"
 
     class Origem(models.TextChoices):
         """De onde veio a evidência do desfecho — e **não** o que ele decidiu.

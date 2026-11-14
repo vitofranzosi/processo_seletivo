@@ -11,7 +11,7 @@ aberta. A base é a branch da `163` (`claude/163-alcance-da-etapa`).
 
 ## Phase 1: Setup
 
-- [ ] T001 Conferir o ambiente da worktree (CLAUDE.md, *Subir o ambiente*):
+- [x] T001 Conferir o ambiente da worktree (CLAUDE.md, *Subir o ambiente*):
   - `uv sync --extra dev`;
   - `DB_NAME` próprio;
   - PostgreSQL com o par `TEST_DB_ENGINE` e `DB_USER`;
@@ -19,33 +19,33 @@ aberta. A base é a branch da `163` (`claude/163-alcance-da-etapa`).
 
 ## Phase 2: Foundational (bloqueia todas as histórias)
 
-- [ ] T002 Acrescentar `efeito_desfavoravel` e `efeito_da_ausencia` a `EtapaAvaliacao`, com
+- [x] T002 Acrescentar `efeito_desfavoravel` e `efeito_da_ausencia` a `EtapaAvaliacao`, com
   `choices`, `default=""`, as duas `CheckConstraint` e o comentário do porquê, em
   `processo_seletivo/editais/models/etapas.py` (data-model; FR-7000, FR-7004).
-- [ ] T003 Acrescentar `Consequencia.RETIRADA_DA_RESERVA` e ampliar `ck_resultado_consequencia` em
+- [x] T003 Acrescentar `Consequencia.RETIRADA_DA_RESERVA` e ampliar `ck_resultado_consequencia` em
   `processo_seletivo/resultados/models.py`. Ampliar `ck_decisao_consequencia` em
   `processo_seletivo/recursos/models.py`.
-- [ ] T004 Gerar as três migrations e atualizar a contagem por app do guardião da `022`:
+- [x] T004 Gerar as três migrations e atualizar a contagem por app do guardião da `022`:
   - `processo_seletivo/editais/migrations/0030_efeito_do_desfecho.py`;
   - `processo_seletivo/resultados/migrations/0007_retirada_da_reserva.py`;
   - `processo_seletivo/recursos/migrations/0004_retirada_da_reserva.py`.
-- [ ] T005 [P] Criar `processo_seletivo/resultados/domain/efeito.py` (research T-003): `efeito_desfavoravel`,
+- [x] T005 [P] Criar `processo_seletivo/resultados/domain/efeito.py` (research T-003): `efeito_desfavoravel`,
   `efeito_da_ausencia`, `consequencia_do_efeito`, `GRAVIDADE`, `mais_grave`, `desfavoravel`,
   `frase_do_efeito` e `frase_da_reserva`.
-- [ ] T006 [P] Testes de unidade de `efeito.py` em `tests/unit/resultados/test_efeito_do_desfecho.py`:
+- [x] T006 [P] Testes de unidade de `efeito.py` em `tests/unit/resultados/test_efeito_do_desfecho.py`:
   - acervo nulo lido como elimina (FR-7001, D-002);
   - Etapa para todas e Etapa não eliminatória sem efeito (FR-7002);
   - ausência "o mesmo" (FR-7004);
   - gravidade;
   - as quatro frases do contrato.
-- [ ] T007 Subir o degrau do conteúdo publicado:
+- [x] T007 Subir o degrau do conteúdo publicado:
   - `SCHEMA_VERSION = 23` em `processo_seletivo/shared/canonical.py`;
   - `DEGRAUS[23]` em `processo_seletivo/publicacoes/domain/elevacao.py`;
   - os dois campos em `_stages` de `processo_seletivo/publicacoes/application/publish_edital.py`,
     com o valor explícito só na Etapa restrita e eliminatória (research T-002).
-- [ ] T008 (FR-7006) Os dois campos como `retificavel()` em `processo_seletivo/editais/domain/mutabilidade.py`,
+- [x] T008 (FR-7006) Os dois campos como `retificavel()` em `processo_seletivo/editais/domain/mutabilidade.py`,
   e no Edital máximo da fixture do guardião de mutabilidade.
-- [ ] T009 Ajustar os testes que fixam a versão 22 e confirmar que o acervo de fixture recompõe o
+- [x] T009 Ajustar os testes que fixam a versão 22 e confirmar que o acervo de fixture recompõe o
   mesmo resumo e o mesmo documento (SC-2330).
 
 **Checkpoint**: os campos existem, viajam no conteúdo publicado, a consequência nova é aceita pelo
@@ -56,28 +56,28 @@ banco e o acervo não muda.
 **Goal**: declarar, validar, publicar e ler o efeito. **Independent test**: compor e publicar o
 Edital da spec; conferir o conteúdo, a Revisão e o documento.
 
-- [ ] T010 [P] [US1] Testes em `tests/integration/editais/test_publicacao_do_efeito.py`:
+- [x] T010 [P] [US1] Testes em `tests/integration/editais/test_publicacao_do_efeito.py`:
   - o padrão gravado na Etapa restrita e eliminatória (FR-7001);
   - `efeito_sem_reserva` na Etapa para todas e na não eliminatória (FR-7002);
   - o valor inválido recusado na gravação;
   - `null` nas Etapas sem declaração (FR-7005).
-- [ ] T011 [US1] Receber, conferir e gravar os dois campos:
+- [x] T011 [US1] Receber, conferir e gravar os dois campos:
   - `validate_stage` em `processo_seletivo/editais/domain/etapas.py`;
   - gravação e leitura no rascunho em `processo_seletivo/editais/application/draft.py`;
   - os campos em `processo_seletivo/editais/api/serializers.py`.
-- [ ] T012 [US1] O achado `efeito_sem_reserva` em `processo_seletivo/editais/domain/validation.py`
+- [x] T012 [US1] O achado `efeito_sem_reserva` em `processo_seletivo/editais/domain/validation.py`
   (contrato `recusas.md`).
-- [ ] T013 [P] [US1] O efeito na cópia do Edital em `processo_seletivo/editais/domain/reaproveitamento.py`.
-- [ ] T014 [US1] A composição (UX-740, UX-741):
+- [x] T013 [P] [US1] O efeito na cópia do Edital em `processo_seletivo/editais/domain/reaproveitamento.py`.
+- [x] T014 [US1] A composição (UX-740, UX-741):
   - o grupo do efeito no formulário e no template (`processo_seletivo/interface/forms.py`,
     `templates/interface/_etapa.html`);
   - mostrá-lo e escondê-lo em `static/interface/alcance.js`;
   - as regras na folha da tela.
-- [ ] T015 [US1] A frase do efeito (FR-7023):
+- [x] T015 [US1] A frase do efeito (FR-7023):
   - no documento, nas três redações, em `processo_seletivo/publicacoes/infrastructure/pdf.py`;
   - na Revisão (`processo_seletivo/interface/revisao.py`);
   - na página pública (`processo_seletivo/publicacoes/infrastructure/apresentacao.py`).
-- [ ] T016 [P] [US1] Testes de interface e de documento em `tests/interface/test_composicao_do_efeito.py`:
+- [x] T016 [P] [US1] Testes de interface e de documento em `tests/interface/test_composicao_do_efeito.py`:
   - o grupo só na Etapa restrita e eliminatória, sem estilo inline;
   - a frase no PDF;
   - nenhum texto novo na Etapa sem declaração.
@@ -88,21 +88,23 @@ Edital da spec; conferir o conteúdo, a Revisão e o documento.
 um `PPI` desfavorável e conferir a ordem dos dois recortes, a participação na Análise documental, a
 ocupação e a fila.
 
-- [ ] T017 [P] [US2] Testes em `tests/integration/resultados/test_retirada_da_reserva.py`:
+- [x] T017 [P] [US2] Testes em `tests/integration/resultados/test_retirada_da_reserva.py`:
   - consolidação com cada efeito (FR-7007), e o motivo com a reserva (FR-7008);
   - a Regra 2 aceita a retirada (FR-7011);
-  - a faixa só pela ampla (FR-7013);
+  - a faixa só pela ampla (FR-7013): **sem caso de integração**. O corte exige um ato de ordenação
+    sobre um marco que enumere Etapa, e o cenário da `163` é de sorteio. Fica registrado em
+    `rastreabilidade.md`;
   - elimina igual a hoje (SC-2332);
   - a eliminação posterior prevalece;
   - um efeito por Etapa, qualquer que seja o motivo da avaliação (FR-7003).
-- [ ] T018 [US2] A regra da consequência e o motivo:
+- [x] T018 [US2] A regra da consequência e o motivo:
   - `regra.consequencia` lê o efeito em `processo_seletivo/resultados/domain/regra.py`;
   - a consolidação completa o motivo com a reserva da inscrição em
     `processo_seletivo/resultados/application/consolidacao.py`.
-- [ ] T019 [US2] A progressão e a faixa em `processo_seletivo/resultados/application/prontidao.py`:
+- [x] T019 [US2] A progressão e a faixa em `processo_seletivo/resultados/application/prontidao.py`:
   - a Regra 2 com `consequencia__in` nas três funções;
   - `_dentro_da_faixa` com a retirada anterior (research T-006, T-007).
-- [ ] T020 [P] [US2] Testes em `tests/integration/classificacao/test_ordem_com_retirada.py`:
+- [x] T020 [P] [US2] Testes em `tests/integration/classificacao/test_ordem_com_retirada.py`:
   - Etapa anterior à última enumerada, fora do universo reservado;
   - Etapa na última enumerada, sem posição na reservada;
   - Etapa posterior, sem efeito;
@@ -112,22 +114,22 @@ ocupação e a fila.
   - a Etapa restrita a `PPI` e `PcD`, cada inscrição só na sua (FR-7010);
   - a parte pública da ordem reservada sem a inscrição e sem o motivo, e a individual com ele
     (FR-7017).
-- [ ] T021 [US2] A ordem:
+- [x] T021 [US2] A ordem:
   - o universo reservado sem a retirada anterior em `processo_seletivo/classificacao/application/calculo.py`
     (inclusive `listas_sem_concorrente`);
   - o sem posição por retirada em `processo_seletivo/classificacao/domain/universo_classificavel.py`;
   - a mesma regra em `processo_seletivo/classificacao/application/reproducao.py`.
-- [ ] T022 [P] [US2] Testes em `tests/integration/ocupacao/test_ocupacao_com_retirada.py`:
+- [x] T022 [P] [US2] Testes em `tests/integration/ocupacao/test_ocupacao_com_retirada.py`:
   - habilitada pela ampla e não contada na reserva (FR-7014);
   - a fila da reserva não a oferece;
   - a situação da vaga da `155`;
   - o horizonte, com a retirada posterior sem efeito (FR-7027);
   - a faixa não reabre (FR-7015).
-- [ ] T023 [US2] A subtração da reserva em `habilitadas_pelo_corte`, em
+- [x] T023 [US2] A subtração da reserva em `habilitadas_pelo_corte`, em
   `processo_seletivo/ocupacao/application/selectors.py` (research T-009).
-- [ ] T024 [P] [US2] Testes em `tests/integration/sorteios/test_relacao_com_retirada.py`: a relação da
+- [x] T024 [P] [US2] Testes em `tests/integration/sorteios/test_relacao_com_retirada.py`: a relação da
   reserva sem a retirada, a da ampla com ela, e sem Etapa de habilitação nada muda (FR-7030).
-- [ ] T025 [US2] O sorteio: `lista_id` em `processo_seletivo/sorteios/application/habilitacao.py`,
+- [x] T025 [US2] O sorteio: `lista_id` em `processo_seletivo/sorteios/application/habilitacao.py`,
   passada por `relacao.py` e `previa.py` (research T-010).
 
 ## Phase 5: User Story 3 — O candidato entende que perdeu a reserva (P1)
@@ -135,12 +137,12 @@ ocupação e a fila.
 **Goal**: o acompanhamento sem "Eliminado" para a retirada. **Independent test**: abrir o
 acompanhamento de Maria sob cada efeito.
 
-- [ ] T026 [P] [US3] Testes em `tests/unit/portal/test_situacao_com_retirada.py`:
+- [x] T026 [P] [US3] Testes em `tests/unit/portal/test_situacao_com_retirada.py`:
   - a retirada não é eliminação;
   - a linha da reserva perdida;
   - o cartão da lista reservada;
   - a eliminação continua "Eliminado" (FR-7024, UX-742).
-- [ ] T027 [US3] O que o acompanhamento recebe e mostra:
+- [x] T027 [US3] O que o acompanhamento recebe e mostra:
   - `"retirada"` em `resultados_das_etapas`, em `processo_seletivo/resultados/application/selectors.py`;
   - a precedência e a linha em `processo_seletivo/portal/situacao.py`;
   - o cartão em `portal/templates/portal/acompanhamento.html` e na folha do portal.
@@ -150,14 +152,14 @@ acompanhamento de Maria sob cada efeito.
 **Goal**: recurso contra retirada, e a gravidade na vedação de piora. **Independent test**: deferir
 contra retirada; reavaliar contra ausência.
 
-- [ ] T028 [P] [US4] Testes em `tests/integration/recursos/test_recurso_da_retirada.py`:
+- [x] T028 [P] [US4] Testes em `tests/integration/recursos/test_recurso_da_retirada.py`:
   - deferido devolve à reserva (FR-7019);
   - a retirada não vira eliminação (FR-7028);
   - a ausência que elimina vira retirada pela reavaliação (FR-7029);
   - a retirada por ausência não vira eliminação;
   - a correção contra Ocorrência habilita;
   - o deferimento torna obsoleta a ordem emitida que leu a retirada (FR-7016).
-- [ ] T029 [US4] A gravidade em `piora` (`processo_seletivo/recursos/domain/pejus.py`), com o
+- [x] T029 [US4] A gravidade em `piora` (`processo_seletivo/recursos/domain/pejus.py`), com o
   docstring revisto. Conferir que a consolidação em cumprimento de reavaliação herda a regra.
 
 ## Phase 7: User Story 5 — A Retificação do efeito não muda a regra no meio do caminho (P2)
@@ -165,7 +167,7 @@ contra retirada; reavaliar contra ausência.
 **Goal**: o impedimento histórico. **Independent test**: retificar antes e depois do primeiro
 desfavorável, e depois de todos superados.
 
-- [ ] T030 [P] [US5] Testes em `tests/integration/publicacoes/test_retificacao_do_efeito.py`:
+- [x] T030 [P] [US5] Testes em `tests/integration/publicacoes/test_retificacao_do_efeito.py`:
   - passa sem desfavorável;
   - recusada com desfavorável vigente;
   - recusada com todos superados (FR-7020, SC-2334);
@@ -173,10 +175,10 @@ desfavorável, e depois de todos superados.
   - a ampliação do alcance passa (FR-7021);
   - a consolidação depois da gravação da Retificação faz a publicação dela ser recusada, e o
     Resultado leva o efeito vigente no ato (FR-7022).
-- [ ] T031 [US5] `_recusar_efeito_mudado_apos_desfavoravel` em
+- [x] T031 [US5] `_recusar_efeito_mudado_apos_desfavoravel` em
   `processo_seletivo/publicacoes/application/retificacoes.py`, na gravação e na publicação (research
   T-012). Registrar a exceção nomeada de `objects` em `tests/test_vigencia_do_resultado.py`.
-- [ ] T032 [US5] Os dois campos em `CAMPOS_ETAPA` (`processo_seletivo/interface/retificacao.py`) e o
+- [x] T032 [US5] Os dois campos em `CAMPOS_ETAPA` (`processo_seletivo/interface/retificacao.py`) e o
   teste de contrato que os guarda.
 
 ## Phase 8: User Story 6 — O ausente segue o efeito que o Edital declarou para a ausência (P2)
@@ -184,17 +186,17 @@ desfavorável, e depois de todos superados.
 **Goal**: a Ocorrência aplica o efeito da ausência. **Independent test**: efeitos diferentes, uma
 ausência e um desfavorável.
 
-- [ ] T033 [P] [US6] Testes no mesmo `tests/integration/resultados/test_retirada_da_reserva.py`:
+- [x] T033 [P] [US6] Testes no mesmo `tests/integration/resultados/test_retirada_da_reserva.py`:
   - a ausência com "o mesmo";
   - a ausência que elimina com o desfavorável que retira;
   - o desfavorável nunca aplica o efeito da ausência (FR-7009).
-- [ ] T034 [US6] O efeito da ausência e o motivo em `processo_seletivo/resultados/application/ocorrencia.py`.
+- [x] T034 [US6] O efeito da ausência e o motivo em `processo_seletivo/resultados/application/ocorrencia.py`.
 
 ## Phase 9: Polish & Cross-Cutting
 
-- [ ] T035 O guardião da FR-7018 em `tests/test_leitores_da_consequencia.py`, com o inventário
+- [x] T035 O guardião da FR-7018 em `tests/test_leitores_da_consequencia.py`, com o inventário
   classificado (research T-016, SC-2335).
-- [ ] T036 [P] A gestão (FR-7025, UX-743):
+- [x] T036 [P] A gestão (FR-7025, UX-743):
   - retiradas à parte no relatório do Edital (`processo_seletivo/interface/relatorio_do_edital.py`);
   - rótulo e filtro em `templates/interface/resultados.html`;
   - contagem na confirmação da consolidação (`templates/interface/consolidacao_confirmar.html`, a view em
@@ -202,13 +204,13 @@ ausência e um desfavorável.
   - rótulo na conferência da ordem.
   
   Os testes vão em `tests/interface/test_telas_da_retirada.py`.
-- [ ] T037 [P] O vocabulário: os textos novos na varredura de vocabulário, se a tela entrar na lista
+- [x] T037 [P] O vocabulário: os textos novos na varredura de vocabulário, se a tela entrar na lista
   literal.
-- [ ] T038 Escrever `specs/164-efeito-do-desfecho-por-lista/rastreabilidade.md`, ligando cada FR, SC,
+- [x] T038 Escrever `specs/164-efeito-do-desfecho-por-lista/rastreabilidade.md`, ligando cada FR, SC,
   UX e caso-limite a teste.
-- [ ] T039 Atualizar o README (linha da `164`) e a contagem `N de M` no CLAUDE.md, se mudar (não
+- [x] T039 Atualizar o README (linha da `164`) e a contagem `N de M` no CLAUDE.md, se mudar (não
   deve mudar).
-- [ ] T040 Verificar: `make lint check test-pg` com `DB_NAME` próprio. A equivalência da prévia
+- [x] T040 Verificar: `make lint check test-pg` com `DB_NAME` próprio. A equivalência da prévia
   (FR-7026) é guardada pelos testes de equivalência que já existem, que precisam continuar verdes.
 - [ ] T041 Fazer a jornada do candidato no navegador (quickstart, *Pela interface*), pelo canal do
   candidato.

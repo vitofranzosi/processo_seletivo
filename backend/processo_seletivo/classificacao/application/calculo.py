@@ -19,6 +19,7 @@ from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
 from processo_seletivo.resultados.application.selectors import conteudos_das_versoes
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -65,7 +66,9 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # própria consulta, junto do resto: filtrar em memória depois de ler leria o Perfil inteiro por
     # recorte, e o projeto tem orçamento de consulta verificado por teste.
     if recorte is not None:
-        consulta = consulta.filter(modality_id=recorte)
+        consulta = _sem_retirada_anterior(
+            consulta.filter(modality_id=recorte), etapas, etapa_do_marco
+        )
     inscricoes = list(
         consulta.order_by("id").values("id", "protocolo", "nome", "identity_subject", "modality_id")
     )
@@ -167,6 +170,38 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         "sem_posicao": sem_posicao,
         "universo": _resumo_do_universo(edital, perfil, marco, versao, inscricoes, resultados),
     }
+
+
+def _sem_retirada_anterior(consulta, etapas, etapa_do_marco):
+    """O universo de uma lista **reservada**, sem quem uma Etapa anterior retirou da reserva (164).
+
+    É o par exato do que a eliminação faz em todas as listas (FR-7012): retirada antes da última
+    Etapa que o marco enumera, a inscrição sai do universo da lista reservada, como a eliminada sai
+    de todos; retirada **na** última enumerada, ela fica e sai sem posição, pela mão de
+    `universo_classificavel.preparar`. A ampla nunca passa por aqui: ali a retirada não produz
+    efeito nenhum.
+
+    **Só as anteriores que podem retirar entram na subconsulta**, e sem nenhuma a consulta volta
+    intacta: em todo Edital sem Etapa restrita e eliminatória que retire, a ordem é a de antes,
+    sem `EXISTS` a mais.
+    """
+    limite = etapa_do_marco.get("order") or 0
+    que_retiram = [
+        etapa["id"]
+        for etapa in etapas.values()
+        if (etapa.get("order") or 0) < limite and efeito_do_desfecho.pode_retirar(etapa)
+    ]
+    if not que_retiram:
+        return consulta
+    return consulta.exclude(
+        Exists(
+            ResultadoEtapa.vigentes.filter(
+                inscricao_id=OuterRef("pk"),
+                etapa_id__in=que_retiram,
+                consequencia=ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+            )
+        )
+    )
 
 
 def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None, enumeradas=()):
@@ -300,15 +335,21 @@ def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
     }
     if not reservadas:
         return set()
+    # A pergunta é das listas reservadas, e por isso o universo é o delas: sem quem uma Etapa
+    # anterior retirou da reserva (164, FR-7012). A lista que só tinha retirados está vazia.
     concorrem = {
         str(modalidade)
-        for modalidade in _universo(
-            edital,
-            perfil,
+        for modalidade in _sem_retirada_anterior(
+            _universo(
+                edital,
+                perfil,
+                etapas,
+                etapa_do_marco,
+                conteudo=conteudo,
+                enumeradas=[str(item) for item in marco.get("stages") or []],
+            ),
             etapas,
             etapa_do_marco,
-            conteudo=conteudo,
-            enumeradas=[str(item) for item in marco.get("stages") or []],
         )
         .order_by()
         .values_list("modality_id", flat=True)

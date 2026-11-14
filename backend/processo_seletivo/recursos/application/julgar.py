@@ -46,6 +46,7 @@ from processo_seletivo.recursos.domain.consequencia import derivar
 from processo_seletivo.recursos.domain.pejus import MENSAGEM as PIORARIA
 from processo_seletivo.recursos.domain.pejus import PIORA, piora
 from processo_seletivo.recursos.models import DecisaoRecurso
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -146,6 +147,11 @@ def julgar(
         efeito, motivo_da_regra, conclusao = _conclusao(
             peca, versao, especie, etapa_id, pontuacao, sentido, criterios
         )
+        if efeito == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA:
+            # O motivo diz a reserva perdida e a ampla mantida (164, FR-7008), como na consolidação.
+            motivo_da_regra = efeito_do_desfecho.motivo_com_a_reserva(
+                motivo_da_regra, versao.content, peca.inscricao.modality_id
+            )
         _recusar_se_piora(especie, protegido, efeito, conclusao)
 
         decisao = _gravar(

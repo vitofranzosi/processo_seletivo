@@ -6894,8 +6894,8 @@ def consolidar_resultados(request, edital_id, etapa_id):
                     # Centenas de linhas não se conferem uma a uma: o total por consequência é
                     # o que a presidência compara com o que esperava da Etapa, antes de descer
                     # à tabela. Sai do mesmo plano que o ato relê, e não de uma contagem à parte.
-                    "por_consequencia": sorted(
-                        Counter(item.efeito for item in consolidaveis).items()
+                    "por_consequencia": _por_consequencia(
+                        Counter(item.efeito for item in consolidaveis)
                     ),
                     "chave_idempotencia": chave,
                 },
@@ -13718,3 +13718,21 @@ def autoridades(request):
         },
         status=status,
     )
+
+
+# Os nomes das consequências na confirmação da consolidação, no singular e no plural (164, UX-743).
+# "retirada da reserva" não se pluraliza pelo filtro do template, que poria o "s" no fim.
+NOMES_DAS_CONSEQUENCIAS = {
+    "HABILITADA": ("habilitada", "habilitadas"),
+    "RETIRADA_DA_RESERVA": ("retirada da reserva", "retiradas da reserva"),
+    "ELIMINADA": ("eliminada", "eliminadas"),
+}
+
+
+def _por_consequencia(contagem):
+    """ "3 habilitadas, 1 retirada da reserva" — a presidência vê o efeito antes de confirmar."""
+    return [
+        f"{contagem[chave]} {NOMES_DAS_CONSEQUENCIAS[chave][0 if contagem[chave] == 1 else 1]}"
+        for chave in NOMES_DAS_CONSEQUENCIAS
+        if contagem.get(chave)
+    ]

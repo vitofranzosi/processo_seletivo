@@ -231,6 +231,8 @@ def _etapa(**numeros):
         forma="PONTUADA",
         rotulo_favoravel="",
         rotulo_desfavoravel="",
+        efeito_desfavoravel="",
+        efeito_da_ausencia="",
         evento_id=None,
         weight=None,
         minimum_score=None,

@@ -26,7 +26,11 @@ from processo_seletivo.publicacoes.application.selectors import effective_versio
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.canonical import canonical_sha256
 from processo_seletivo.sorteios.application import conferencia
-from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa, nome_da_etapa
+from processo_seletivo.sorteios.application.habilitacao import (
+    habilitadas_na_etapa,
+    nome_da_etapa,
+    para_o_recorte,
+)
 from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
 from processo_seletivo.sorteios.domain import projecao
@@ -293,7 +297,14 @@ def _projetar(edital, versao, perfil_id, marco_id, lista_id):
         projecao.elegiveis(
             inscricoes,
             lista_id=lista_id,
-            habilitadas=_habilitadas(edital, versao, perfil_id, marco_id),
+            habilitadas=para_o_recorte(
+                edital,
+                dominio_do_metodo.metodo_declarado(
+                    versao.content, perfil_id=perfil_id, marco_id=marco_id
+                ),
+                _habilitadas(edital, versao, perfil_id, marco_id),
+                lista_id,
+            ),
         )
     )
 

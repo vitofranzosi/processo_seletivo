@@ -537,9 +537,69 @@ def habilitadas_pelo_corte(*, edital, corte, progrediram):
     apuração não conta — ou o inverso.
     """
     if corte is not None and corte.etapa_governada_id is None:
-        return set(progrediram)
+        return set(progrediram) - retiradas_da_reserva(edital=edital, corte=corte)
     etapa = corte.etapa_governada_id if corte is not None else None
-    return habilitadas_na_etapa(edital=edital, etapa_id=etapa)
+    return habilitadas_na_etapa(edital=edital, etapa_id=etapa) - retiradas_da_reserva(
+        edital=edital, corte=corte
+    )
+
+
+def retiradas_da_reserva(*, edital, corte):
+    """Quem a lista **reservada** deste corte não conta, por retirada até o horizonte (164).
+
+    O horizonte do marco é a Etapa que o corte governa; sem ela, a última que o marco enumera
+    (FR-7014, FR-7027). A inscrição retirada antes dele continua na faixa e pode ter sido habilitada
+    na Etapa governada pela faixa da **ampla** — e então a pergunta de cima a contaria na reserva
+    também. Tirá-la daqui, e não da sequência, é o tratamento que a eliminada na Etapa governada já
+    recebe: ela fica no lugar da faixa, não ocupa e não é chamada, e a faixa não se reabre
+    (FR-7015).
+
+    **Um dono só**, pela razão de `habilitadas_pelo_corte`: a apuração, a situação da vaga, o
+    acréscimo e a fila perguntam todos por ela. Na ampla e sem corte, conjunto vazio sem consulta;
+    na reservada, uma consulta, e o conteúdo só é lido quando há retirada a situar.
+    """
+    if corte is None or corte.lista_id is None:
+        return set()
+    linhas = list(
+        ResultadoEtapa.vigentes.filter(
+            edital=edital,
+            consequencia=ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+            inscricao__profile_id=corte.perfil_id,
+            inscricao__modality_id=corte.lista_id,
+        ).values_list("inscricao_id", "etapa_id")
+    )
+    if not linhas:
+        return set()
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+
+    conteudo = conteudo_vigente(edital)
+    ordem = {
+        str(etapa.get("id")): etapa.get("order") or 0 for etapa in conteudo.get("stages") or []
+    }
+    horizonte = _ordem_do_horizonte(conteudo, corte, ordem)
+    return {
+        inscricao
+        for inscricao, etapa in linhas
+        if str(etapa) in ordem and ordem[str(etapa)] < horizonte
+    }
+
+
+def _ordem_do_horizonte(conteudo, corte, ordem):
+    """A `order` a partir da qual a retirada não alcança mais as listas do marco (FR-7027).
+
+    Governando Etapa, a dela: a retirada **antes** dela conta. Sem Etapa governada, a da última
+    enumerada **mais um**: a retirada **nela** também conta, porque a ordem do marco já a leu.
+    """
+    if corte.etapa_governada_id is not None:
+        return ordem.get(str(corte.etapa_governada_id), 0)
+    for perfil in conteudo.get("profiles") or []:
+        if str(perfil.get("id")) != str(corte.perfil_id):
+            continue
+        for marco in perfil.get("classificationMilestones") or []:
+            if str(marco.get("id")) == str(corte.marco_id):
+                enumeradas = [ordem.get(str(item), 0) for item in marco.get("stages") or []]
+                return (max(enumeradas) if enumeradas else 0) + 1
+    return 0
 
 
 def _quantidade(linha):
@@ -731,6 +791,7 @@ __all__ = [
     "progrediram_em_ordem",
     "habilitadas_na_etapa",
     "habilitadas_pelo_corte",
+    "retiradas_da_reserva",
     "historico_do_recorte",
     "movimentos_lidos_por",
     "nao_preenchidas_do_recorte",

@@ -16,7 +16,10 @@ from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa
+from processo_seletivo.sorteios.application.habilitacao import (
+    habilitadas_na_etapa,
+    para_o_recorte,
+)
 from processo_seletivo.sorteios.application.selectors import relacao_vigente
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
 from processo_seletivo.sorteios.domain import projecao, substituicao, viabilidade
@@ -306,7 +309,11 @@ def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitada
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     projetados = projecao.numerar(
-        projecao.elegiveis(submetidas, lista_id=lista_id, habilitadas=habilitadas)
+        projecao.elegiveis(
+            submetidas,
+            lista_id=lista_id,
+            habilitadas=para_o_recorte(edital, metodo, habilitadas, lista_id),
+        )
     )
     # **O sorteio é do recorte, e não da relação vigente.** Lê-lo de `vigente.sorteios` funcionava
     # até alguém publicar a relação nova: dali em diante a vigente é a sucessora, que ainda não tem

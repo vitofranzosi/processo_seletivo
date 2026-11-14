@@ -41,20 +41,23 @@ A Etapa sem declaração não ganha texto (SC-2330).
 
 - Por avaliação: *"a avaliação concluiu «rótulo»; deixa de concorrer pela reserva «Modalidade» e
   continua na ampla concorrência"*.
-- Por ausência: *"não compareceu: «motivo da presidência»; deixa de concorrer pela reserva
-  «Modalidade» e continua na ampla concorrência"*.
+- Por ausência: *"«motivo da presidência»; deixa de concorrer pela reserva «Modalidade» e continua
+  na ampla concorrência"*. O motivo da presidência é o fundamento, e ela diz a ausência nele.
 
 ## Acompanhamento do candidato (FR-7024, UX-742)
 
-- A retirada não entra nas *eliminações*. O degrau segue a classificação.
-- Linha no *porquê*: *"Na etapa «Etapa», o resultado foi «rótulo». Você deixou de concorrer pela
-  reserva «Modalidade» e continua concorrendo pela ampla concorrência."*
-- Cartão da lista reservada sem posição por retirada: *"Você deixou de concorrer por esta lista."*,
-  seguido do motivo.
+- A retirada não entra nas *eliminações*. O degrau segue a classificação, ou o anterior a ela.
+- Linha no *porquê*, em todo degrau abaixo da eliminação: *"Na etapa «Etapa», você deixou de
+  concorrer pela reserva de vagas e continua concorrendo pela ampla concorrência."*, seguida do
+  motivo gravado (FR-7008), que traz o rótulo do desfecho e o nome da reserva.
+- O cartão da lista reservada mostra *"sem posição"*, com o mesmo motivo. Ele é a projeção individual
+  que a publicação da ordem já grava: o motivo diz a reserva perdida, e nenhuma coluna nova foi
+  preciso criar.
 
 ## Gestão (FR-7025, UX-743)
 
 - **Lista de Resultados da Etapa**: rótulo *"Retirada da reserva"* e filtro próprio.
 - **Confirmação da consolidação**: *"«h» habilitadas, «r» retiradas da reserva, «e» eliminadas"*.
-- **Relatório do Edital**: linha *"Retiradas da reserva"* à parte das eliminadas, por avaliação e por
-  ausência.
+- **Relatório do Edital**: na célula das eliminadas, *"«e»; «r» retiradas da reserva"*, por avaliação
+  e por ausência somadas. A célula só muda quando há retirada, e por isso o relatório de todo Edital
+  sem ela sai como antes.

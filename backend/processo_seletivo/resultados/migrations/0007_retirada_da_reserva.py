@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 choices=[
                     ("HABILITADA", "Habilitada"),
                     ("ELIMINADA", "Eliminada"),
-                    ("RETIRADA_DA_RESERVA", "Retirada Da Reserva"),
+                    ("RETIRADA_DA_RESERVA", "Retirada da reserva"),
                 ],
                 max_length=20,
             ),
