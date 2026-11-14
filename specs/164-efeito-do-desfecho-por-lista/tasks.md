@@ -91,9 +91,7 @@ ocupação e a fila.
 - [x] T017 [P] [US2] Testes em `tests/integration/resultados/test_retirada_da_reserva.py`:
   - consolidação com cada efeito (FR-7007), e o motivo com a reserva (FR-7008);
   - a Regra 2 aceita a retirada (FR-7011);
-  - a faixa só pela ampla (FR-7013): **sem caso de integração**. O corte exige um ato de ordenação
-    sobre um marco que enumere Etapa, e o cenário da `163` é de sorteio. Fica registrado em
-    `rastreabilidade.md`;
+  - a faixa só pela ampla (FR-7013): coberta pela T047, com cenário próprio de corte;
   - elimina igual a hoje (SC-2332);
   - a eliminação posterior prevalece;
   - um efeito por Etapa, qualquer que seja o motivo da avaliação (FR-7003).
@@ -276,3 +274,15 @@ O que se viu:
   da publicação, depois dela, o recurso e o acompanhamento pelo canal do candidato.
 - [x] T046 Refazer a jornada no navegador: a linha da reserva perdida no topo, e o cartão da
   Heteroidentificação com "Deixou de concorrer pela reserva" e o motivo.
+
+## Phase 11: O caso de integração da FR-7013
+
+- [x] T047 [US2] O teste em `tests/integration/resultados/test_faixa_com_retirada.py`:
+  - **Cenário.** Um marco que enumera a Análise documental, com corte de alvo 1 por lista que governa
+    a Prova; a Heteroidentificação fica no meio. Maria (`PPI`) está só na faixa da `PPI`.
+  - **Retirada:** ela não participa da Prova.
+  - **Confirmada:** participa.
+- [x] T048 [US2] `fora_do_corte` passa as Etapas que retiram a `_dentro_da_faixa`, como a participação
+  (`processo_seletivo/resultados/application/prontidao.py`). Sem isso, a recusa e as telas diriam
+  que a retirada não está fora do corte enquanto a participação a excluía. Foi o teste da T047 que
+  achou a divergência.

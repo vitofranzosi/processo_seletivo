@@ -267,12 +267,20 @@ def fora_do_corte(edital, etapa_id, candidatas):
     Conjunto **vazio** quando nenhuma regra publicada governa esta Etapa: sem corte não há ninguém
     fora dele, e é isso que preserva o comportamento de todo Edital anterior à feature.
     """
-    faixas = faixas_que_governam(edital, etapa_id)
+    conteudo = conteudo_vigente(edital)
+    faixas = faixas_que_governam(edital, etapa_id, conteudo=conteudo)
+    vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     return set(
         Inscricao.objects.filter(pk__in=candidatas)
         .exclude(
             _dentro_da_faixa(
-                faixas, OuterRef("pk"), OuterRef("profile_id"), OuterRef("modality_id")
+                faixas,
+                OuterRef("pk"),
+                OuterRef("profile_id"),
+                OuterRef("modality_id"),
+                # A mesma condição da participação (164, FR-7013): sem ela, a recusa diria que a
+                # retirada não está fora do corte, e a participação a excluiria sem motivo.
+                _que_retiram(vigentes, etapa_id),
             )
         )
         .values_list("pk", flat=True)

@@ -15,6 +15,7 @@ arquivos de teste são:
 - **IF** — `tests/integration/publicacoes/test_retificacao_do_efeito.py`
 - **GL** — `tests/test_leitores_da_consequencia.py`, o guardião da FR-7018
 - **IV** — `tests/integration/portal/test_retirada_visivel_ao_titular.py`
+- **IA** — `tests/integration/resultados/test_faixa_com_retirada.py`
 - **G** — os guardiões que o campo novo atravessou:
   - `tests/contract/test_forma_publicada.py`;
   - `tests/contract/test_retificacoes_api.py`;
@@ -44,7 +45,7 @@ arquivos de teste são:
 | FR-7010 | `calculo._sem_retirada_anterior` filtra pela Modalidade da lista | IL `test_retirada_antes_da_ultima_enumerada_sai_so_da_reservada` |
 | FR-7011 | `prontidao.py` (`SEGUEM`, `seguem_de`) | IR `test_a_retirada_segue_para_a_etapa_seguinte`, `test_o_efeito_declarado_elimina_como_antes`; US `test_retirada_e_depois_eliminada_e_eliminado` |
 | FR-7012 | `calculo._sem_retirada_anterior`, `universo_classificavel.que_tiram`, `reproducao.py` | IL `test_retirada_antes_da_ultima_enumerada_sai_so_da_reservada`, `test_retirada_na_ultima_enumerada_fica_sem_posicao_so_na_reservada`, `test_retirada_depois_da_ultima_enumerada_nao_muda_a_ordem` |
-| FR-7013 | `prontidao._dentro_da_faixa` (`retiram`) | **sem caso de integração**: o corte exige um ato de ordenação emitido sobre um marco que enumere Etapa, e o cenário da `163` é de sorteio. Fica pendente, e a condição é a mesma subconsulta que a FR-7014 exercita |
+| FR-7013 | `prontidao._dentro_da_faixa` (`retiram`), na participação e em `fora_do_corte` | IA `test_a_retirada_nao_entra_na_etapa_governada_pela_faixa_reservada`, `test_confirmada_ela_entra_pela_faixa_reservada` |
 | FR-7014 | `ocupacao/application/selectors.retiradas_da_reserva` em `habilitadas_pelo_corte` | IL `test_a_reserva_nao_conta_a_retirada_ate_o_horizonte`, `test_a_ampla_conta_a_retirada_como_qualquer_inscricao` |
 | FR-7015 | *por construção*: a subtração é do conjunto de habilitadas, e não da sequência da faixa | IL `test_a_reserva_nao_conta_a_retirada_ate_o_horizonte` |
 | FR-7016 | *por construção*: a superação muda o universo gravado no ato, e a obsolescência de hoje o compara | IF `test_o_desfavoravel_superado_continua_travando` (a superação da retirada) |

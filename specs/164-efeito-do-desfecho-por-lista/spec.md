@@ -6,9 +6,9 @@
 
 **Status**: Especificada em 14/11, revista no mesmo dia pela revisão do usuário no PR #543, e
 implementada pelo fluxo completo do Spec Kit, a pedido do usuário: plan, tasks, analyze e
-implementação, empilhada sobre a `163` (PR #542). PR sem merge. Pendentes: a jornada do candidato
-no navegador foi feita em 14/11 e expôs o achado da visibilidade (ver *Achados*); pendentes o
-SC-2336 (humano) e o caso de integração da FR-7013 (ver `rastreabilidade.md`).
+implementação, empilhada sobre a `163` (PR #542). PR sem merge. A jornada do candidato no navegador
+foi feita em 14/11; ela expôs o achado da visibilidade, que o usuário decidiu antecipar aqui (D-012).
+Pendente só o SC-2336, que é humano.
 
 **Input**: a decisão **P-2** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-2):
