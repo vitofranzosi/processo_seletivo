@@ -82,11 +82,20 @@ Nenhuma área nova. A verificação entra onde cada pessoa já trabalha.
 Do usuário e das instâncias do Ifes. O detalhe e os fatos de cada uma estão no
 [diagnóstico, §7](01-diagnostico.md#7-lacunas-e-dúvidas-normativas).
 
-**Para começar a camada A:**
-- **P-1**: aceitar a L-2, a Etapa por Modalidade. Decide a família "heteroidentificação" da DP-10.
-- **P-2**: o "não confirmada" fica na ampla ou elimina? A recomendação é declarar no Edital, com
-  padrão "fica na ampla".
-- **P-3**: qual das três leituras de deliberação vale. Pede consulta à CPVA sobre o art. 15, III, b.
+### Decisões
+
+Tomadas pelo usuário em 13/11/2026. Elas destravam a camada A e decidem a família
+"heteroidentificação" da DP-10.
+- **P-1: sim.** A Etapa ganha alcance por Modalidade (L-2).
+- **P-2:** o Edital declara o efeito do desfecho desfavorável, com "sai da reserva e fica na ampla"
+  como padrão. "Elimina" continua possível.
+- **P-3:** o GPS oferece as três regras, e o Edital escolhe uma:
+  - confirma por maioria;
+  - confirma só por unanimidade;
+  - recusa só por unanimidade.
+
+  Qual delas os Editais do Ifes usarão ainda é pergunta à CPVA, e ela não bloqueia a
+  implementação.
 
 **Para a camada B existir fora do desenvolvimento:**
 - **P-0**: o ato que autoriza o vídeo. Alteração da Res. 61 pelo CS, protocolo da CPVA e Edital.
@@ -106,5 +115,8 @@ Edital 28/2026 ainda a justifica pela pandemia. Registrado para a CPVA, e não t
 
 1. **Fechar a entrega 0**: preencher a [matriz](poc/README.md#matriz-de-navegadores) com câmera
    real no Chrome, no Firefox, no Android e no iOS.
-2. Com P-1 a P-3 decididas, a camada A vira specs pelo `/speckit-specify`, uma por sessão. Ela vale
-   mesmo que o vídeo nunca seja autorizado.
+2. Com P-1 a P-3 decididas, a camada A vira specs pelo `/speckit-specify`, uma por sessão. A
+   primeira é a do alcance da Etapa por Modalidade. Ela vale mesmo que o vídeo nunca seja
+   autorizado.
+3. A consulta à CPVA, com as perguntas P-0, P-3 (qual leitura os Editais usarão), P-10 e P-12, corre
+   em paralelo.
