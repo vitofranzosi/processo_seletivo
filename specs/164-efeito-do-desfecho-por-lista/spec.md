@@ -7,7 +7,8 @@
 **Status**: Especificada em 14/11, revista no mesmo dia pela revisão do usuário no PR #543, e
 implementada pelo fluxo completo do Spec Kit, a pedido do usuário: plan, tasks, analyze e
 implementação, empilhada sobre a `163` (PR #542). PR sem merge. Pendentes: a jornada do candidato
-no navegador, o SC-2336 (humano) e o caso de integração da FR-7013 (ver `rastreabilidade.md`).
+no navegador foi feita em 14/11 e expôs o achado da visibilidade (ver *Achados*); pendentes o
+SC-2336 (humano) e o caso de integração da FR-7013 (ver `rastreabilidade.md`).
 
 **Input**: a decisão **P-2** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-2):
@@ -409,9 +410,14 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   valendo para tudo o que ela simula (FR-7026).
 - **Painéis e relatórios.** O relatório do Edital conta as eliminadas por avaliação e por Ocorrência. A
   retirada **não** entra nessa conta. É contada à parte (FR-7025).
-- **A Etapa que nenhum marco enumera.** Ela não é visível nem recorrível para o titular, e a `163`
-  deixou isso para a spec da R-8. A retirada nela também fica invisível até lá: o candidato não acha
-  o cartão da reserva, e não lê o porquê. Fica registrado como risco (FR-7024).
+- **A Etapa que nenhum marco enumera — e é toda Etapa restrita.** O marco só enumera Etapa
+  classificatória, e a `163` impede a Etapa restrita classificatória. Logo, a Etapa restrita nunca é
+  enumerada, e o seu Resultado nunca é visível nem recorrível para o titular até a spec da R-8. A
+  jornada de 14/11 o confirmou: a candidata retirada lê "1º lugar" na ampla e nada sobre a reserva,
+  sem cartão da lista reservada, porque saiu do universo dela, e sem a linha da FR-7024. Ver
+  *Achados* (FR-7024).
+- **A retirada na última Etapa enumerada.** Pela mesma razão, não acontece hoje: a Etapa restrita
+  nunca é enumerada. A FR-7012 a descreve para a spec que vier a admitir a combinação.
 
 ## Requirements *(mandatory)*
 
@@ -684,6 +690,12 @@ compará-las por essa ordem.
   enumera. Uma Etapa depois do horizonte não alcança a ordem, a ocupação nem a convocação daquele
   marco. A eliminação de hoje também não alcança. A heteroidentificação *"dos sorteados dentro do número de
   vagas"* do 57/2026 vem depois do sorteio, e cairia aí. É decisão do usuário se e como ela entra.
+- **O candidato retirado não fica sabendo** (jornada de 14/11). A Etapa restrita nunca é enumerada
+  por marco, e por isso o Resultado dela não é visível ao titular, nem a linha da FR-7024. Ele também
+  não tem cartão da lista reservada, porque saiu do universo dela. O que ele lê é a posição na
+  ampla, e nada que explique a reserva perdida, nem de onde recorrer. Com "elimina", o efeito de
+  hoje, o silêncio é o mesmo. A correção é da R-8, a visibilidade e a recorribilidade da Etapa fora
+  de marco, ou uma decisão de antecipá-la para a retirada. **É do usuário**.
 - **O efeito por motivo.** O 28/2026 distingue o indeferido por fenótipo, que vai para a ampla, dos
   demais motivos do 6.9.14, sobre os quais silencia. O 57/2026 contradiz a si mesmo sobre o ausente,
   no 8.10 e no 8.11. As duas leituras são perguntas à CPVA, ao lado da P-3. Se a resposta for "por

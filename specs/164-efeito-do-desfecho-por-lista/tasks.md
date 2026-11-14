@@ -212,7 +212,7 @@ ausência e um desfavorável.
   deve mudar).
 - [x] T040 Verificar: `make lint check test-pg` com `DB_NAME` próprio. A equivalência da prévia
   (FR-7026) é guardada pelos testes de equivalência que já existem, que precisam continuar verdes.
-- [ ] T041 Fazer a jornada do candidato no navegador (quickstart, *Pela interface*), pelo canal do
+- [x] T041 Fazer a jornada do candidato no navegador (quickstart, *Pela interface*), pelo canal do
   candidato.
 
 ## Dependencies & Execution Order
@@ -243,3 +243,20 @@ ausência e um desfavorável.
   - D: US3 e T036.
 - **Uma suíte inteira por vez.** Enquanto trabalha, rode o diretório que a mudança toca, e a suíte
   inteira só no fim (CLAUDE.md).
+
+## Jornada de 14/11 (T041)
+
+Banco próprio (`ps164dev`), cenário montado pelos helpers dos testes num shell:
+- Edital com a Heteroidentificação restrita a `PPI` e o marco por pontuação enumerando a Prova;
+- Maria (`PPI`) retirada, Ana (`PPI`) confirmada, Bia da ampla;
+- as ordens da ampla e da `PPI` emitidas e publicadas.
+
+O que se viu:
+- **Ordem da ampla:** Maria em 1º, Ana em 2º, Bia em 3º.
+- **Ordem da `PPI`:** só Ana; Maria saiu do universo dela.
+- **Acompanhamento de Maria, no navegador:** *"Aguardando resultado definitivo"*, *"Ampla
+  concorrência: 1º lugar"*, nenhum *"Eliminado"*.
+- **Também nenhuma palavra sobre a reserva perdida.** A Etapa restrita nunca é enumerada por
+  marco (o marco só enumera Etapa classificatória, e a `163` impede a restrita classificatória),
+  então o Resultado dela não é visível ao titular. Registrado em *Achados* da spec, para decisão
+  do usuário.
