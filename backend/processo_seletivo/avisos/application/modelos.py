@@ -12,7 +12,7 @@ from django.db import IntegrityError, transaction
 
 from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.avisos.domain.mensagem import validar_texto
-from processo_seletivo.avisos.domain.modelos_iniciais import MODELOS_INICIAIS
+from processo_seletivo.avisos.domain.modelos_iniciais import MODELO_DO_PASSO, MODELOS_INICIAIS
 from processo_seletivo.avisos.domain.variaveis import validar
 from processo_seletivo.avisos.models import ModeloDeAviso
 from processo_seletivo.shared.api.problems import DomainError
@@ -204,7 +204,7 @@ def mudar_situacao(*, actor, modelo_id, ativo, correlation_id="interface-modelos
 
 
 def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlation_id, razao):
-    """Os três modelos iniciais de **uma** unidade que nunca os teve, com o autor recebido (110).
+    """Os modelos iniciais que **uma** unidade nunca teve, com o autor recebido (110; 168, T-005).
 
     Chamada dentro da transação de quem chama, e com a unidade já travada por ele. A implantação a
     chama para cada unidade com o ator `implantacao`; o cadastro pela tela, com a pessoa que
@@ -213,10 +213,16 @@ def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlatio
     """
     from processo_seletivo.auditoria.application import record_event
 
-    if ModeloDeAviso.objects.filter(institution_scope=unidade_codigo, modelo_inicial=True).exists():
-        return 0
+    do_escopo = ModeloDeAviso.objects.filter(institution_scope=unidade_codigo, modelo_inicial=True)
+    a_criar = []
+    # Os três de `D-008`: nenhum, se a unidade já teve algum deles.
+    if not do_escopo.filter(chave_inicial="").exists():
+        a_criar += [(*modelo, "") for modelo in MODELOS_INICIAIS]
+    # O do passo (168, T-005): pela marca própria, e por isso também na unidade que já tem os três.
+    if not do_escopo.filter(chave_inicial=nomes.CHAVE_DO_MODELO_DO_PASSO).exists():
+        a_criar.append((*MODELO_DO_PASSO, nomes.CHAVE_DO_MODELO_DO_PASSO))
     criados = 0
-    for nome, assunto, corpo in MODELOS_INICIAIS:
+    for nome, assunto, corpo, chave in a_criar:
         if ModeloDeAviso.objects.filter(
             institution_scope=unidade_codigo, nome__iexact=nome
         ).exists():
@@ -229,6 +235,7 @@ def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlatio
             assunto=assunto,
             corpo=corpo,
             modelo_inicial=True,
+            chave_inicial=chave,
             criado_por=actor.subject,
             criado_em=now,
         )
@@ -249,7 +256,10 @@ def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlatio
 
 
 def garantir_modelos_iniciais(*, correlation_id="semear-unidades"):
-    """Cria os três modelos iniciais em cada unidade que **nunca** teve modelo inicial (`R-012`).
+    """Cria os modelos iniciais que cada unidade **nunca** teve (`R-012`; 168, T-005).
+
+    Os três de `D-008` nascem na unidade que nunca teve nenhum deles; o do passo, pela marca
+    própria, nasce também na unidade que já tem os três — uma vez, e nunca mais.
 
     **Só insere.** Não relê, não atualiza e não sobrescreve texto: a unidade que editou ou inativou
     os três continua com os dela, porque a conferência é pela marca `modelo_inicial`, e modelo nunca

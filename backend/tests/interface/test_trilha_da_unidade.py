@@ -187,7 +187,7 @@ def test_os_modelos_aparecem_pelo_nome_e_sem_o_texto(client):
     corpo = client.get(URL).content.decode()
     itens = _itens(corpo)
 
-    assert len(itens) == 6
+    assert len(itens) == 7  # os três da `066` e o do passo da `168` (FR-7320)
     assert "Inativação de modelo de aviso" in itens[0]
     assert "Edição de modelo de aviso" in itens[1]
     assert "Criação de modelo de aviso" in itens[2]
@@ -455,7 +455,7 @@ def test_cada_assunto_mostra_so_os_seus_atos_e_o_filtro_continua_na_paginacao(cl
     _auditor(client)
 
     so_modelos = client.get(URL + "?assunto=modelos").content.decode()
-    assert len(_itens(so_modelos)) == 3
+    assert len(_itens(so_modelos)) == 4  # os três da `066` e o do passo da `168` (FR-7320)
     assert "Cadastro de autoridade" not in _lista(so_modelos)
     assert '<option value="modelos" selected>' in so_modelos
     assert "Limpar" in so_modelos
@@ -467,13 +467,14 @@ def test_cada_assunto_mostra_so_os_seus_atos_e_o_filtro_continua_na_paginacao(cl
     assert len(_itens(segunda)) == 1
     assert "Criação de modelo de aviso" not in _lista(segunda)
 
-    # Sem filtro, os vinte e um cadastros vêm antes dos três modelos, e a segunda página os mostra.
+    # Sem filtro, os vinte e um cadastros vêm antes dos quatro modelos, e a segunda página os
+    # mostra.
     todos = client.get(URL).content.decode()
     assert len(_itens(todos)) == 20
     seguinte = re.search(r'href="(\?[^"]*cursor=[^"]+)"', todos).group(1).replace("&amp;", "&")
     resto = client.get(URL + seguinte).content.decode()
     assert "Cadastro de autoridade" in _lista(resto)
-    assert _lista(resto).count("Criação de modelo de aviso") == 3
+    assert _lista(resto).count("Criação de modelo de aviso") == 4
 
 
 def test_filtro_sem_atos_e_filtro_desconhecido(client):
@@ -484,7 +485,7 @@ def test_filtro_sem_atos_e_filtro_desconhecido(client):
     assert "Nenhum ato corresponde ao filtro." in vazio
 
     desconhecido = client.get(URL + "?assunto=xyz").content.decode()
-    assert len(_itens(desconhecido)) == 3
+    assert len(_itens(desconhecido)) == 4
     assert "selected" not in desconhecido.split('<select id="assunto"')[1].split("</select>")[0]
 
 

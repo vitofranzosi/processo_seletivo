@@ -176,7 +176,8 @@ def test_o_comando_diz_que_semeou_e_cria_os_modelos(tmp_path):
     """FR-3305, e a linha que o guia ensina a ler (D-004)."""
     linhas, _ = _comando("semear_unidades", "--arquivo", _arquivo(tmp_path, _declarado()))
 
-    assert linhas == ["Unidades: 1 semeadas.", "Modelos de aviso: 3 criados."]
+    # Os três da `066` e o do passo da `168` (FR-7320).
+    assert linhas == ["Unidades: 1 semeadas.", "Modelos de aviso: 4 criados."]
 
 
 # --- Registro preenchido -------------------------------------------------------------------------
@@ -263,9 +264,9 @@ def test_os_modelos_iniciais_sao_garantidos_uma_vez():
     primeira, _ = _comando("semear_unidades")
     segunda, _ = _comando("semear_unidades")
 
-    assert primeira[1] == "Modelos de aviso: 3 criados."
+    assert primeira[1] == "Modelos de aviso: 4 criados."
     assert segunda[1] == "Modelos de aviso: 0 criados."
-    assert ModeloDeAviso.objects.filter(institution_scope="cefor", modelo_inicial=True).count() == 3
+    assert ModeloDeAviso.objects.filter(institution_scope="cefor", modelo_inicial=True).count() == 4
 
 
 # --- O apelido e os roteiros ---------------------------------------------------------------------

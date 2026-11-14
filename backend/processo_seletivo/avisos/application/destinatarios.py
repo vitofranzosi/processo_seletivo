@@ -53,6 +53,9 @@ class Universo:
     datas_retificadas: list = field(default_factory=list)
     data_da_publicacao: object = None
     ja_avisado: bool = False
+    # O aviso do passo cita a Etapa (168, T-004), e o período dela vai à variável do texto.
+    etapa_id: object = None
+    periodo: tuple = (None, None)
 
     @property
     def retificadora(self):
@@ -287,6 +290,99 @@ def universo_da_chamada(*, edital, marco_id, lista_id, comunicacao_id, agora):
     )
 
 
+# --- O passo de uma Etapa restrita (168) -----------------------------------------------------
+
+
+def _etapa_restrita(edital, etapa_id):
+    """`(conteúdo vigente, Etapa)` da Etapa restrita publicada, ou recusa como ato inexistente."""
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+    from processo_seletivo.editais.domain import alcance
+
+    conteudo = conteudo_vigente(edital) or {}
+    etapa = next(
+        (e for e in conteudo.get("stages") or [] if str(e.get("id")) == str(etapa_id)), None
+    )
+    if etapa is None or not alcance.restrita(etapa):
+        raise DomainError(
+            nomes.AVISO_SEM_ATO,
+            "Esta etapa não é restrita a algumas listas: não há passo a avisar.",
+            404,
+        )
+    return conteudo, etapa
+
+
+def avisadas_do_passo(edital, etapa_id):
+    """As inscrições que algum primeiro aviso do passo daquela Etapa já citou, em qualquer estado.
+
+    **Interrompido e expirado também contam**, como no resultado (data-model §3 da `066`): o aviso
+    existiu, e avisar de novo a mesma pessoa é reenvio justificado, e não primeiro aviso.
+    """
+    from processo_seletivo.avisos.models import DestinatarioDoAviso
+
+    return set(
+        DestinatarioDoAviso.objects.filter(
+            aviso__edital=edital,
+            aviso__origem=nomes.PASSO,
+            aviso__etapa_id=etapa_id,
+            aviso__motivo=nomes.PRIMEIRO_AVISO,
+        ).values_list("inscricao_id", flat=True)
+    )
+
+
+def sem_resultado_que_participam(edital, etapa, conteudo):
+    """As inscrições que participam da Etapa e ainda não têm Resultado nela (FR-7318).
+
+    Pelo panorama da Etapa, o mesmo que a distribuição e o Centro leem: o universo do aviso é o
+    das pendências, e os dois números não podem divergir (FR-7328).
+    """
+    from processo_seletivo.resultados.application.prontidao import panorama_da_etapa
+
+    panorama = panorama_da_etapa(edital=edital, etapa=etapa, conteudo=conteudo)
+    return [i for i in panorama["participantes"] if i not in panorama["resultados"]]
+
+
+def universo_do_passo(*, edital, etapa_id, reenvio=False):
+    """O universo do aviso do passo (168, FR-7318; research T-004).
+
+    **Primeiro aviso**: quem participa da Etapa, sem Resultado nela, e que nenhum aviso do passo
+    citou — a Etapa que ganhou participante depois do primeiro aviso avisa só a ele. **Reenvio
+    justificado** (`reenvio=True`): todos os que participam e não têm Resultado.
+    """
+    from processo_seletivo.classificacao.domain.nomes import edital_por_extenso
+    from processo_seletivo.editais.domain.cronograma import periodo_da_etapa
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    conteudo, etapa = _etapa_restrita(edital, etapa_id)
+    pendentes = sem_resultado_que_participam(edital, etapa, conteudo)
+    avisadas = avisadas_do_passo(edital, etapa["id"])
+    escolhidas = pendentes if reenvio else [i for i in pendentes if i not in avisadas]
+    inscricoes = list(
+        Inscricao.objects.filter(id__in=escolhidas).order_by("protocolo", "id")
+        if escolhidas
+        else []
+    )
+    enderecos = enderecos_das_inscricoes(inscricoes)
+    return Universo(
+        origem=nomes.PASSO,
+        edital=edital,
+        perfil_id=None,
+        marco_id=None,
+        etapa_id=etapa["id"],
+        linhas=[
+            Linha(inscricao, nomes.ELEGIVEL, enderecos.get(inscricao.id, ""))
+            for inscricao in inscricoes
+        ],
+        cabecalho={
+            "processo": edital.processo.title,
+            "edital": edital_por_extenso(conteudo, edital),
+            "perfil": "",
+            "etapa": etapa.get("name") or "",
+        },
+        periodo=periodo_da_etapa(conteudo, etapa),
+        ja_avisado=bool(avisadas),
+    )
+
+
 def elegibilidade_da_convocacao(convocacao, *, agora):
     """A convocação segue em curso? Lido dos seletores da `019`, sem reescrever regra (`D-003`).
 
@@ -352,7 +448,13 @@ def universo_do_reenvio(anterior, *, motivo, agora):
         item.publicacao
         for item in anterior.publicacoes.select_related("publicacao__publicacao_anterior")
     ]
-    if publicacoes:
+    periodo = (None, None)
+    if anterior.origem == nomes.PASSO:
+        # O ato citado é a Etapa do anterior, relida na versão vigente: o reenvio termina de
+        # entregar o aviso daquele passo, e o período dito é o de hoje (168).
+        passo = universo_do_passo(edital=anterior.edital, etapa_id=anterior.etapa_id, reenvio=True)
+        cabecalho, data, periodo = passo.cabecalho, None, passo.periodo
+    elif publicacoes:
         cabecalho = cabecalho_de(publicacoes[0])
         data = max(p.publicado_em for p in publicacoes)
     else:
@@ -380,6 +482,8 @@ def universo_do_reenvio(anterior, *, motivo, agora):
         ],
         data_da_publicacao=data,
         ja_avisado=True,
+        etapa_id=anterior.etapa_id,
+        periodo=periodo,
     )
 
 
@@ -427,6 +531,7 @@ __all__ = [
     "ja_avisadas",
     "naturezas_pendentes",
     "universo_da_chamada",
+    "universo_do_passo",
     "universo_do_resultado",
     "vigentes_da_natureza",
 ]

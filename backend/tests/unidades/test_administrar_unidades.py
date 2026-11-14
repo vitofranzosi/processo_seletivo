@@ -149,7 +149,7 @@ def test_os_modelos_iniciais_nascem_uma_vez_com_a_pessoa_como_autora():
     _registrar()
 
     modelos = ModeloDeAviso.objects.filter(institution_scope="serra", modelo_inicial=True)
-    assert modelos.count() == 3
+    assert modelos.count() == 4  # os três da `066` e o do passo da `168`
     assert set(modelos.values_list("criado_por", flat=True)) == {ADMINISTRADORA.subject}
     autores = set(
         RegistroAuditoria.objects.filter(
@@ -213,7 +213,7 @@ def test_dois_cadastros_do_mesmo_codigo_gravam_um():
 
     assert resultados.count("codigo_ja_registrado") == 1, resultados
     assert Unidade.objects.filter(codigo="serra").count() == 1
-    assert ModeloDeAviso.objects.filter(institution_scope="serra").count() == 3
+    assert ModeloDeAviso.objects.filter(institution_scope="serra").count() == 4
 
 
 def test_reitoria_e_unidade_como_as_outras_sem_leitura_dos_campi(api_client, manager_headers):

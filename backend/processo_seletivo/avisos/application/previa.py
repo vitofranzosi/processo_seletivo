@@ -23,6 +23,7 @@ def assinatura(universo, *, motivo=nomes.PRIMEIRO_AVISO):
             "origem": universo.origem,
             "motivo": motivo,
             "marco": str(universo.marco_id),
+            "etapa": str(universo.etapa_id) if universo.etapa_id else None,
             "lista": str(universo.lista_id) if universo.lista_id else None,
             "natureza": universo.natureza,
             "referencia": universo.referencia,
@@ -59,9 +60,29 @@ def valores(universo, *, enderecos):
             resultado["link_da_publicacao"] = enderecos.get("publicacao", {}).get(
                 str(universo.publicacoes[0].id), ""
             )
+    elif universo.origem == nomes.PASSO:
+        # O nome publicado da Etapa e o período dela; nunca a Modalidade (168, FR-7319).
+        resultado["etapa"] = cabecalho.get("etapa", "")
+        resultado["periodo_da_etapa"] = periodo_por_extenso(*universo.periodo)
     else:
         resultado["referencia_da_publicacao"] = universo.referencia
     return resultado
+
+
+def periodo_por_extenso(inicio, fim):
+    """ ", de 01/12/2026 a 05/12/2026", ou vazio: o modelo o põe logo depois do nome da etapa."""
+    from django.utils import formats, timezone
+
+    def data(instante):
+        return formats.date_format(timezone.localtime(instante), "d/m/Y")
+
+    if inicio and fim:
+        return f", de {data(inicio)} a {data(fim)}"
+    if fim:
+        return f", até {data(fim)}"
+    if inicio:
+        return f", a partir de {data(inicio)}"
+    return ""
 
 
 def destino(universo, valores_):
@@ -145,4 +166,12 @@ def compor(
     return previa
 
 
-__all__ = ["NATUREZA_POR_EXTENSO", "assinatura", "compor", "congelar", "destino", "valores"]
+__all__ = [
+    "NATUREZA_POR_EXTENSO",
+    "assinatura",
+    "compor",
+    "congelar",
+    "destino",
+    "periodo_por_extenso",
+    "valores",
+]

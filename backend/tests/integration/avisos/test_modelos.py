@@ -34,10 +34,11 @@ PRESIDENCIA = ator_institucional("presidenta")
 
 @pytest.mark.django_db
 def test_os_tres_iniciais_nascem_ativos_na_primeira_sincronizacao():
-    assert garantir_modelos_iniciais() == 3
+    # Os três da `066` e o do passo da `168` (FR-7320).
+    assert garantir_modelos_iniciais() == 4
 
     iniciais = ModeloDeAviso.objects.filter(institution_scope="cefor", modelo_inicial=True)
-    assert iniciais.count() == 3
+    assert iniciais.count() == 4
     assert all(modelo.ativo for modelo in iniciais)
 
 
@@ -48,7 +49,7 @@ def test_inativados_continuam_inativos_e_nada_se_recria():
         mudar_situacao(actor=PUBLICADORA, modelo_id=modelo.id, ativo=False)
 
     assert garantir_modelos_iniciais() == 0
-    assert ModeloDeAviso.objects.filter(modelo_inicial=True).count() == 3
+    assert ModeloDeAviso.objects.filter(modelo_inicial=True).count() == 4
     assert not ModeloDeAviso.objects.filter(modelo_inicial=True, ativo=True).exists()
 
 
@@ -91,7 +92,7 @@ def test_duas_sincronizacoes_ao_mesmo_tempo_nao_duplicam():
         thread.join()
 
     assert erros == []
-    assert ModeloDeAviso.objects.filter(modelo_inicial=True).count() == 3
+    assert ModeloDeAviso.objects.filter(modelo_inicial=True).count() == 4
 
 
 @pytest.mark.django_db

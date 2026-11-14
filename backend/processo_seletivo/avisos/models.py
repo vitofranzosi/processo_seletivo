@@ -61,6 +61,9 @@ class ModeloDeAviso(models.Model):
     # A marca dos três de `D-008`. **Nunca muda**, e é ela que torna a criação idempotente: a
     # unidade que já teve modelo inicial não ganha outro, ainda que tenha inativado os três.
     modelo_inicial = models.BooleanField(default=False)
+    # A marca do modelo inicial que nasceu **depois** dos três, e por isso precisa de guarda própria
+    # (168, T-005): o do aviso do passo. Vazia nos três de `D-008` e em todo modelo da unidade.
+    chave_inicial = models.CharField(max_length=16, blank=True, default="")
     criado_por = models.CharField(max_length=255)
     criado_em = models.DateTimeField()
     alterado_por = models.CharField(max_length=255, blank=True, default="")
@@ -103,8 +106,11 @@ class Aviso(_AppendOnly):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="reenvios"
     )
     justificativa = models.TextField(blank=True, default="")
-    perfil_id = models.UUIDField()
-    marco_id = models.UUIDField()
+    # Nulos só no aviso do passo, que cita a Etapa (168, T-004); o CHECK da origem os exige nas
+    # outras três.
+    perfil_id = models.UUIDField(null=True, blank=True)
+    marco_id = models.UUIDField(null=True, blank=True)
+    etapa_id = models.UUIDField(null=True, blank=True)
     lista_id = models.UUIDField(null=True, blank=True)
     natureza = models.CharField(
         max_length=16, choices=_escolhas(nomes.NATUREZAS), blank=True, default=""
@@ -132,15 +138,26 @@ class Aviso(_AppendOnly):
             # **Cada origem cita o seu ato, e só ele.** O resultado tem natureza e não tem
             # referência; a chamada tem a referência declarada e não tem natureza. A pendência
             # (134) não tem nenhuma das duas: o ato que ela aponta é a convocação do destinatário.
+            # As três citam o marco e o Perfil. O passo (168) cita só a Etapa.
             models.CheckConstraint(
                 condition=(
-                    Q(
-                        origem=nomes.RESULTADO,
-                        natureza__in=nomes.NATUREZAS,
-                        referencia_da_publicacao="",
+                    (
+                        Q(
+                            origem=nomes.RESULTADO,
+                            natureza__in=nomes.NATUREZAS,
+                            referencia_da_publicacao="",
+                        )
+                        | (Q(origem=nomes.CHAMADA, natureza="") & ~Q(referencia_da_publicacao=""))
+                        | Q(origem=nomes.PENDENCIA, natureza="", referencia_da_publicacao="")
                     )
-                    | (Q(origem=nomes.CHAMADA, natureza="") & ~Q(referencia_da_publicacao=""))
-                    | Q(origem=nomes.PENDENCIA, natureza="", referencia_da_publicacao="")
+                    & Q(perfil_id__isnull=False, marco_id__isnull=False, etapa_id__isnull=True)
+                )
+                | Q(
+                    origem=nomes.PASSO,
+                    natureza="",
+                    referencia_da_publicacao="",
+                    marco_id__isnull=True,
+                    etapa_id__isnull=False,
                 ),
                 name="ck_aviso_ato_da_origem",
             ),
@@ -156,6 +173,7 @@ class Aviso(_AppendOnly):
         ]
         indexes = [
             models.Index(fields=["edital", "marco_id"], name="ix_aviso_edital_marco"),
+            models.Index(fields=["edital", "etapa_id"], name="ix_aviso_edital_etapa"),
             models.Index(fields=["solicitado_em"], name="ix_aviso_solicitado_em"),
         ]
 

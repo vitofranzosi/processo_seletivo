@@ -20,6 +20,8 @@
   <h2 id="titulo-ato">O ato citado</h2>
   {% if aviso.origem == "CHAMADA" %}
   <p>Chamada publicada em <strong>{{ aviso.referencia_da_publicacao }}</strong>.</p>
+  {% elif aviso.origem == "PASSO" %}
+  <p>O passo de uma etapa restrita a algumas listas, avisado pelo Centro de Controle. O aviso não é a etapa e não muda prazo nem situação de ninguém.</p>
   {% elif aviso.origem == "PENDENCIA" %}
   <p>Pendência documental da convocação, avisada pela tela de condução. O aviso não é a convocação e não altera o prazo.</p>
   {% else %}
