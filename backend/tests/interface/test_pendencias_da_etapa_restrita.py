@@ -99,10 +99,10 @@ def test_os_pareceres_que_faltam_por_membro_sem_sentido(no_periodo, gestor):
     concluir_pareceres(no_periodo, maria, {"ana": "DESFAVORAVEL", "bruno": "FAVORAVEL"})
     concluir_pareceres(no_periodo, joao, {"ana": "FAVORAVEL"})
     (avaliar,) = _por_natureza(_da_etapa(no_periodo), a.AVALIAR)
-    assert avaliar.nota == "faltam: carla 2, bruno 1"
+    assert avaliar.ato == "Avaliar 2 inscrições distribuídas; faltam 3 pareceres: carla 2, bruno 1"
     assert avaliar.ate is not None
     for sentido in ("favor", "desfavor", "deferid", "indeferid"):
-        assert sentido not in avaliar.nota.lower()
+        assert sentido not in avaliar.ato.lower()
     # A mesma conta da Mesa: Atribuição ativa de participante, menos a concluída.
     assert pendentes_por_membro(
         edital=no_periodo["edital"],
@@ -140,7 +140,7 @@ def test_quem_nao_conduz_nao_ve_de_quem_falta(no_periodo, gestor):
     distribuir_na_hetero(no_periodo, gestor, no_periodo["inscricoes"], chave="hetero-6820-b")
     ana = ator_institucional("ana")
     andamento = a.do_edital(no_periodo["edital"], ana)
-    assert not [p for p in andamento.providencias if (p.nota or "").startswith("faltam:")]
+    assert not [p for p in andamento.providencias if "faltam" in p.ato]
     assert not [p for p in andamento.providencias if p.natureza == a.AVISAR]
 
 

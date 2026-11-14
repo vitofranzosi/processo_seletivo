@@ -632,6 +632,13 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 - **A-7 — O degrau para toda Etapa com período** (Q-3): a mesma leitura serviria a qualquer Etapa que
   peça a presença do candidato. Fica para decisão do usuário.
 - **A-8 — A linha de avaliar não tinha prazo** em Etapa nenhuma. Esta spec o põe em todas (Q-5, D-006).
+- **A-9 — A matriz por lista do Centro e a Etapa restrita** (visto no navegador, no C18, em 14/11): a
+  linha da ampla concorrência mostra a Etapa restrita com o estado do Perfil inteiro ("Pendente ·
+  0 de 4 consolidadas"), embora a Etapa não alcance ninguém daquela lista. A célula é da `127` e da
+  `163`, e esta spec não a muda.
+- **A-10 — A nota de uma providência não aparece em "Com outros papéis"** (visto no navegador): o
+  Centro mostra ali só o ato. Por isso os pareceres que faltam por membro entraram no texto do ato, e
+  não na nota.
 
 ## Decisões
 

@@ -49,7 +49,7 @@ O corpo não contém "cota", "reserva", "modalidade", "lista", "ppi" nem "hetero
 
 | Célula | Natureza | De quem | Ato | Leva a |
 |---|---|---|---|---|
-| Pareceres que faltam | AVALIAR (dos outros) | avaliadores | "Avaliar N inscrições"; nota à presidência: "faltam: Bruno 2, Carla 2"; até {fim} | Mesa / distribuição |
+| Pareceres que faltam | AVALIAR (dos outros) | avaliadores | "Avaliar N inscrições distribuídas; faltam M pareceres: Bruno 2, Carla 2" (os nomes só para quem conduz); até {fim} | Mesa / distribuição |
 | Aviso não dado | AVISAR (nova) | quem conduz | "Avisar N inscrições sobre {etapa}" | confirmação do aviso do passo |
 | Período vencido | DISTRIBUIR | quem conduz | "Registrar a ausência ou os pareceres de N inscrições"; nota: "o período terminou em {fim}" | distribuição |
 | A encaminhar (vídeo) | CONSOLIDAR | quem conduz | "Encaminhar N inscrições à entrevista ao vivo" | conferência da consolidação |

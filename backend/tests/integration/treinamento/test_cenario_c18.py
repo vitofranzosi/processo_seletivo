@@ -51,7 +51,7 @@ def test_o_centro_da_presidencia_tem_as_pendencias_da_etapa_restrita(c18):
         for p in _da_verificacao(edital, ator_institucional(k.PRESIDENCIA))
         if p.natureza == a.AVALIAR
     ]
-    assert avaliar.nota.startswith("faltam: ")
+    assert "; faltam 3 pareceres: " in avaliar.ato
     assert avaliar.ate is not None
 
 

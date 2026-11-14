@@ -86,7 +86,7 @@ encaminhar.
 
 - [x] T028 `CLAUDE.md` (a quarta linha dos modelos de aviso), `README.md`, se ele conta modelos ou cenários, e o roteiro dos cenários em `doc/cenarios-de-treinamento/`
 - [ ] T029 `make lint check` e os diretórios tocados contra PostgreSQL; depois a suíte inteira, sozinha no cluster
-- [ ] T030 Percurso do `quickstart.md` §3 no navegador do painel, com capturas a 1280 px e a 375 px e o console sem violação de CSP (SC-2416 fica com o usuário)
+- [x] T030 Percurso do `quickstart.md` §3 no navegador do painel, com capturas a 1280 px e a 375 px e o console sem violação de CSP (SC-2416 fica com o usuário)
 - [x] T031 `rastreabilidade.md` com cada FR-, SC- e UX- apontando o teste que o prova
 
 ## Dependencies

@@ -460,20 +460,25 @@ def situacoes_da_etapa(f):
     if a_avaliar - minhas > 0:
         # **De quem são os pareceres que faltam** (168, FR-7321): na Etapa restrita, para quem
         # conduz, o nome e a contagem de cada membro — nunca o sentido.
+        # No **ato**, e não na nota: a linha "Com outros papéis" do Centro mostra só o ato, e a
+        # presidência lia "avaliar 2 inscrições" sem saber de quem (visto no navegador, no C18).
         faltam = f.get("faltam_por_membro") or ()
+        de_quem = ""
+        if faltam:
+            total = sum(quantas for _, quantas in faltam)
+            de_quem = f"; faltam {_n(total, 'parecer', 'pareceres')}: " + ", ".join(
+                f"{nome} {quantas}" for nome, quantas in faltam
+            )
         providencias.append(
             _c(
                 PENDENTE,
                 natureza=AVALIAR,
                 ato="Avaliar "
-                + _n(a_avaliar - minhas, "inscrição distribuída", "inscrições distribuídas"),
+                + _n(a_avaliar - minhas, "inscrição distribuída", "inscrições distribuídas")
+                + de_quem,
                 responsavel=AVALIA,
                 contagem=a_avaliar - minhas,
-                nota=(
-                    "faltam: " + ", ".join(f"{nome} {quantas}" for nome, quantas in faltam)
-                    if faltam
-                    else nota
-                ),
+                nota=nota,
                 ate=f.get("fim"),
             )
         )
