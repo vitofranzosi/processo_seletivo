@@ -107,3 +107,9 @@ paralelo entre si.
 
 O MVP é a US1: o degrau sozinho já resolve a lacuna principal. Depois vêm US2, US3, US4 e US5, cada uma
 com os testes do seu diretório verdes antes da seguinte. A suíte inteira roda uma vez, no fim.
+
+## Phase 10: Convergence
+
+- [x] T032 Traduzir o nome do membro sem rótulo pelo nome legível da pessoa institucional em `processo_seletivo/avaliacoes/application/selectors.py` (`pendentes_por_membro`), sem consulta a mais para a demonstração, per FR-7321 (partial)
+- [x] T033 Registrar em `research.md` (T-003) que o degrau com vídeo diz as duas formas no texto e leva à página da `166`, que tem os dois botões, per FR-7312 (partial)
+- [ ] T034 Rodar a suíte inteira pelo CI das três fatias, já que o cluster local estava ocupado por outras duas suítes, per T029 (partial)

@@ -103,8 +103,25 @@ def pendentes_por_membro(*, edital, etapa_id, participantes):
         .values("membro__display_label", "membro__identity_subject")
         .annotate(total=Count("id"))
     )
+    linhas = list(linhas)
+    # **O nome, e não `pessoa-<uuid>`** (107, FR-3150): sem rótulo, o membro institucional sai pelo
+    # nome legível, numa consulta só; o da demonstração não tem o prefixo, e não custa nada.
+    from processo_seletivo.seguranca.application.acessos import nomes_dos_autores
+    from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
+
+    institucionais = [
+        linha["membro__identity_subject"]
+        for linha in linhas
+        if not linha["membro__display_label"]
+        and linha["membro__identity_subject"].startswith(PREFIXO_DO_IDENTIFICADOR)
+    ]
+    nomes = nomes_dos_autores(institucionais) if institucionais else {}
     pares = [
-        (linha["membro__display_label"] or linha["membro__identity_subject"], linha["total"])
+        (
+            linha["membro__display_label"]
+            or nomes.get(linha["membro__identity_subject"], linha["membro__identity_subject"]),
+            linha["total"],
+        )
         for linha in linhas
     ]
     return sorted(pares, key=lambda par: (-par[1], par[0]))

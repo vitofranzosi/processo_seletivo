@@ -201,3 +201,25 @@ def test_com_o_video_quem_ele_nao_confirmou_espera_o_encaminhamento(
             "interface:encaminhar-ao-vivo", args=[cenario["edital"].id, cenario["hetero"]]
         )
         assert not [p for p in da_etapa if p.ato.startswith("Consolidar")]
+
+
+def test_o_membro_institucional_sai_pelo_nome(no_periodo, gestor):
+    """FR-7321, UX-793: nunca `pessoa-<uuid>` na contagem por membro."""
+    from django.contrib.auth import get_user_model
+
+    from processo_seletivo.avaliacoes.models import Atribuicao
+    from processo_seletivo.comissoes.models import MembroComissao
+
+    distribuir_na_hetero(no_periodo, gestor, no_periodo["inscricoes"], chave="hetero-6820-d")
+    carla = MembroComissao.objects.get(processo=no_periodo["processo"], identity_subject="carla")
+    subject = "pessoa-00000000-0000-4000-8000-000000006820"
+    get_user_model().objects.create(username=subject, first_name="Carla Souza")
+    MembroComissao.objects.filter(pk=carla.pk).update(identity_subject=subject, display_label="")
+    pares = pendentes_por_membro(
+        edital=no_periodo["edital"],
+        etapa_id=no_periodo["hetero"],
+        participantes=[i.id for i in no_periodo["inscricoes"]],
+    )
+    assert ("Carla Souza", 2) in pares
+    assert not [nome for nome, _ in pares if nome.startswith("pessoa-")]
+    assert Atribuicao.objects.filter(membro=carla).exists()

@@ -55,6 +55,12 @@ O campo `prazo` **não** é usado: o template o escreve como "Prazo desta convoc
 **Descartado.** Um template novo para o degrau (a situação já tem o seu) e a âncora
 `#documentos-titulo`, que só existe quando houve Retificação ou anexos.
 
+**Com o vídeo** (FR-7312): o degrau diz as duas formas no texto, com o mesmo peso ("Você pode gravar
+um vídeo curto ou fazer a entrevista ao vivo. As duas formas valem igual."), e leva por "Ver como
+funciona" à página da `166`, onde estão os dois botões. Dois botões no degrau seriam um segundo lugar
+de escolha para a mesma coisa, e "Prefiro entrevista ao vivo" não grava nada (não escolher já é o ao
+vivo, pela `166`).
+
 ## T-004 — A origem `PASSO` cita a Etapa, e não um marco
 
 **Decisão.** Na migration `avisos/0003_origem_passo`:
