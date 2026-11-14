@@ -50,9 +50,11 @@ foi conferido contra o requisito que o resolve:
 | Retificação da regra antes de qualquer Resultado | FR-7073, FR-7074 |
 | Retificação da regra ou do número depois do primeiro Resultado | FR-7073, D-008 |
 | Presidência ou auditoria que também é membro | FR-7056 |
+| Leu como presidência e recebeu atribuição depois | FR-7082, D-010 |
+| Concluiu, leu como presidência, e o parecer é reaberto | FR-7083 |
 | A conferência da consolidação | FR-7056, FR-7067 |
 | A reabertura | FR-7058 |
-| O membro que leu antes de concluir | FR-7056, FR-7057 |
+| O membro que leu antes de concluir | FR-7056, FR-7057, FR-7082 |
 | Às cegas não é anonimização do candidato | FR-7059 |
 | A trilha | FR-7060 |
 | O não comparecimento | FR-7064 |
@@ -82,6 +84,11 @@ foi conferido contra o requisito que o resolve:
   a contagem e o texto de cada parecer desfavorável, sem autoria, nas condições da `036`. Revistos a US4
   (seis cenários), a FR-7066 (motivo sem texto de parecer), as FR-7076 e FR-7077, a FR-7081 (a autoridade
   recursal vê tudo), a D-009, e acrescido o UX-754 (orientação de preenchimento).
+- **Iteração 5, `/speckit-clarify`.** Pergunta 3 respondida pelo usuário (opção A): a restrição é do
+  servidor, alcança a revelação indireta e vale por inscrição × Etapa. A FR-7056 foi reescrita, a US2
+  ganhou quatro cenários (6 a 9), o SC-2352 passou a cobrir link direto, exportação e resposta do
+  servidor, e o caso "leu como presidência e recebeu atribuição depois", que o usuário pediu para
+  fechar, virou a exposição: FR-7082, FR-7083, a entidade nova e a D-010.
 - **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
   usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
 - **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"

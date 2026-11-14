@@ -100,7 +100,8 @@ que ele produz.**
 ### Session 2026-11-14 (decisões desta spec, abertas à revisão do usuário)
 
 As decisões D-001 a D-009 são as que a redação exigiu, e cada uma registra a alternativa descartada.
-Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-3 lhe deu.
+Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-3 lhe deu. A D-010 veio
+do `/speckit-clarify`, abaixo.
 
 ### Session 2026-11-14 (/speckit-clarify)
 
@@ -123,6 +124,17 @@ Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-
   quando o próprio texto identifica alguém, e por isso a orientação de preenchimento o considera,
   preservando o original; e a restrição é só da apresentação ao candidato, sem reduzir o que a
   autoridade recursal vê (FR-7066, FR-7076, FR-7077, FR-7081, UX-754, D-009).
+- Q: Quando a mesma pessoa é presidência ou auditoria da Etapa e também membro do painel, como o
+  sistema impede que ela leia os pareceres dos colegas antes de dar o dela? → A: **Enquanto ela tiver
+  parecer pendente sobre uma inscrição naquela Etapa, nem as telas nem as respostas do servidor lhe
+  entregam o sentido ou o texto dos pareceres dos colegas, qualquer que seja o papel acumulado, e a
+  interface explica o motivo.** A proteção é do servidor, e não só do HTML: link direto, detalhe,
+  exportação e resposta consumida por tela a respeitam. Ficam ocultas também contagens por sentido,
+  prévias do desfecho e resumos que permitam deduzir os pareceres alheios. O escopo é inscrição ×
+  Etapa: a presidência continua gerindo e consolidando as outras inscrições prontas, e a que espera o
+  parecer dela já não está pronta, o que dispensa um bloqueio geral. **E o caminho inverso fica fechado**:
+  quem já recebeu o sentido ou o texto de parecer de outro membro sobre a inscrição não pode receber
+  atribuição nela, nem ter o próprio parecer reaberto (FR-7056, FR-7082, FR-7083, D-010).
 
 ### Session 2026-11-14 (revisão do PR #545, pedida pelo usuário)
 
@@ -216,6 +228,19 @@ pareceres dos outros membros sobre aquela inscrição.
    conclusões como hoje.
 5. **Given** a presidência reabre o parecer de Ana sobre Maria, **When** Ana volta à Mesa, **Then** ela
    está de novo na condição de quem tem parecer pendente, e nenhuma tela lhe mostra o dos outros.
+6. **Given** Bruno com parecer pendente sobre Maria, **When** ele pede por link direto o detalhe da
+   conclusão de Ana ou a exportação das conclusões da Etapa, **Then** a resposta do servidor não traz o
+   sentido nem o texto dos pareceres de Ana e de Carla sobre Maria, nem uma contagem por sentido que
+   os revele.
+7. **Given** Bruno, presidência, com parecer pendente sobre Maria e nenhum sobre João, **When** João está
+   pronto, **Then** Bruno vê os pareceres de João e o consolida normalmente.
+8. **Given** Carla, auditora sem atribuição, que abriu as conclusões preservadas e leu os pareceres de
+   Ana e de Bruno sobre Maria, **When** a presidência tenta atribuir Maria a Carla na Heteroidentificação,
+   **Then** a distribuição recusa, e a mensagem diz que Carla já teve acesso aos pareceres dos colegas
+   sobre essa inscrição.
+9. **Given** Ana com parecer concluído sobre Maria, que depois leu como presidência os de Bruno e de
+   Carla, **When** a presidência tenta reabrir o parecer de Ana, **Then** a reabertura é recusada, e a
+   tela oferece a inativação da Atribuição por ato nomeado e a atribuição a outro membro.
 
 ---
 
@@ -397,15 +422,23 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **Retificação da regra ou do número de avaliações depois do primeiro Resultado.** Recusada, ainda que
   todos os Resultados tenham sido superados (FR-7073, D-008).
 - **A presidência ou a auditoria que também é membro.** Enquanto ela tiver parecer pendente sobre uma
-  inscrição, as telas da gestão lhe escondem o sentido e o texto dos outros pareceres sobre aquela
-  inscrição (FR-7056).
+  inscrição, o servidor lhe nega o sentido e o texto dos outros pareceres sobre aquela inscrição, por
+  qualquer caminho, e também a contagem por sentido que os revele. As outras inscrições seguem como
+  hoje, e ela consolida as prontas (FR-7056).
+- **Leu como presidência e recebeu atribuição depois.** A restrição pela pendência não cobre esse
+  caminho, porque quando ela leu não havia pendência. A leitura fica registrada como exposição, e a
+  distribuição recusa atribuir a inscrição a quem foi exposto (FR-7082, D-010).
+- **Concluiu, leu como presidência, e o parecer é reaberto.** A reabertura a devolveria à pendência já
+  sabendo o que os colegas decidiram. Ela é recusada, e a correção sai pela substituição de quem avalia
+  (FR-7083).
 - **A conferência da consolidação.** Só alcança inscrições prontas, isto é, com os N pareceres. Quem as
   confere não tem pendência sobre elas, salvo a de outra inscrição, que não aparece ali (FR-7056,
   FR-7067).
 - **A reabertura.** O parecer reaberto pela presidência volta a ser pendente, e o membro volta a não ver
   os dos outros. A reabertura de parecer que já fundamentou Resultado segue a regra de hoje (FR-7058).
-- **O membro que leu antes de concluir.** Não acontece pelo sistema: nenhuma tela lhe mostra o parecer
-  dos outros enquanto o seu está pendente (FR-7056, FR-7057).
+- **O membro que leu antes de concluir.** Não acontece pelo sistema: nada lhe entrega o parecer dos
+  outros enquanto o seu está pendente, e quem já o recebeu não chega a ter parecer pendente sobre
+  aquela inscrição (FR-7056, FR-7057, FR-7082).
 - **Às cegas não é anonimização do candidato.** A Mesa continua mostrando o nome e os dados da
   inscrição, pela FR-030 da `012` (FR-7059).
 - **A trilha.** Registra que cada parecer foi concluído e por quem, e nunca o sentido ou o texto. O
@@ -461,16 +494,37 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 #### O parecer às cegas
 
 - **FR-7056**: Enquanto uma pessoa tiver **parecer pendente** sobre uma inscrição numa Etapa, isto é,
-  Atribuição ativa sem conclusão vigente, nenhuma tela, consulta ou exportação DEVE lhe mostrar o
-  **sentido** nem o **texto** dos pareceres de outros membros sobre aquela inscrição naquela Etapa.
-  Isso DEVE valer também para as telas da gestão (prontidão, conclusões preservadas, consolidação,
-  julgamento), quando quem as abre é também membro com parecer pendente. A tela DEVE dizer que o
-  conteúdo está oculto porque a pessoa ainda tem parecer pendente sobre a inscrição.
+  Atribuição ativa sem conclusão vigente, o sistema NÃO DEVE lhe entregar o **sentido** nem o **texto**
+  dos pareceres de outros membros sobre aquela inscrição naquela Etapa, qualquer que seja o papel que
+  ela acumula:
+  - a restrição DEVE ser aplicada **no servidor**, e não só na tela. Ela DEVE valer para toda página,
+    link direto, detalhe, exportação e resposta consumida por tela, inclusive as da gestão (prontidão,
+    conclusões preservadas, consolidação, julgamento);
+  - ela DEVE alcançar a **revelação indireta**: contagem por sentido, prévia do desfecho e resumo que
+    permitam deduzir o sentido de um parecer alheio sobre aquela inscrição DEVEM ficar ocultos para ela.
+    O número de pareceres concluídos e o que falta, sem sentido, PODEM aparecer na gestão;
+  - o escopo DEVE ser **inscrição × Etapa**. As outras inscrições, e as outras Etapas, aparecem a ela
+    como hoje, e a presidência DEVE poder gerir e consolidar as inscrições prontas, sem bloqueio geral.
+    A inscrição que espera o parecer dela não está pronta, pela FR-7062.
+
+  A tela DEVE dizer que o conteúdo está oculto porque a pessoa ainda tem parecer pendente sobre a
+  inscrição.
 - **FR-7057**: Na **Mesa**, o membro NÃO DEVE ver os pareceres dos outros membros, nem a existência nem
   a situação deles, antes ou depois de concluir o seu (D-004).
 - **FR-7058**: O parecer **reaberto** pela presidência, pela FR-036 da `012`, DEVE devolver o membro à
   condição de parecer pendente, e a FR-7056 DEVE voltar a valer para ele. A reabertura de parecer que
-  já fundamentou Resultado DEVE seguir a regra que vale hoje para a avaliação consolidada.
+  já fundamentou Resultado DEVE seguir a regra que vale hoje para a avaliação consolidada, e a de
+  parecer cujo autor já foi exposto segue a FR-7083.
+- **FR-7082**: O sistema DEVE guardar, por pessoa, inscrição e Etapa, o fato de ter **entregado** a uma
+  pessoa o sentido ou o texto de parecer de outro membro sobre aquela inscrição: a **exposição**. Ela
+  DEVE ser registrada em toda entrega que a FR-7056 controla, e só pelo fato, sem o conteúdo entregue
+  (FR-054 da `012`). A distribuição DEVE **recusar** atribuir a inscrição, naquela Etapa, a pessoa já
+  exposta, com mensagem que diga por quê, e a recusa DEVE valer também para a redistribuição depois de
+  um impedimento (D-010).
+- **FR-7083**: A **reabertura** de parecer cujo autor foi exposto aos pareceres dos colegas sobre aquela
+  inscrição depois de concluir DEVE ser recusada, com mensagem que diga por quê. O caminho para corrigir
+  o parecer, nesse caso, DEVE ser o de hoje para substituir quem avalia: a inativação da Atribuição por
+  ato nomeado, com motivo, pela FR-092 da `012`, e a atribuição a outro membro não exposto.
 - **FR-7059**: O parecer às cegas é **entre pares**, e NÃO DEVE esconder do membro a identidade do
   candidato. A Mesa DEVE continuar mostrando os dados da FR-030 da `012`.
 - **FR-7060**: A trilha DEVE continuar sem o conteúdo do parecer, pela FR-054 da `012`: o evento de
@@ -627,6 +681,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   avaliação por inscrição. É norma publicada, retificável até o primeiro Resultado por avaliação, e o
   número de avaliações dela passa a ter a mesma restrição.
 - **Avaliação (parecer)**: não muda. O que muda é quem a vê enquanto a de outro membro está pendente.
+- **Exposição**: o fato de o sistema ter entregado a uma pessoa o sentido ou o texto de parecer de outro
+  membro sobre uma inscrição numa Etapa. Guarda a pessoa, a inscrição, a Etapa e o instante, nunca o
+  conteúdo. Impede a atribuição e a reabertura (FR-7082, FR-7083).
 - **Resultado da Etapa**: o Resultado por avaliação passa a poder ter como fonte **vários** pareceres,
   com a regra, a contagem e a versão cuja regra aplicou, e a invariante de proveniência da `013` é
   revista pela FR-7065. As consequências são as de hoje.
@@ -642,9 +699,11 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **SC-2351**: Para três e para cinco pareceres, em **todas** as combinações de sentidos, sob cada uma
   das três regras, o desfecho da consolidação, o da conferência e o da reprodução do ato coincidem com a
   tabela da FR-7050 em **100%** dos casos.
-- **SC-2352**: Num percurso de **toda** tela e consulta que mostra conclusões de uma Etapa, com um ator
-  que tem parecer pendente sobre uma inscrição, **zero** mostram o sentido ou o texto de outro parecer
-  sobre ela.
+- **SC-2352**: Num percurso de **toda** tela, link direto, exportação e resposta do servidor que mostra
+  conclusões de uma Etapa, com um ator que tem parecer pendente sobre uma inscrição e acumula os papéis de
+  presidência e de auditoria, **zero** entregam o sentido, o texto ou uma contagem por sentido de outro
+  parecer sobre ela, e **100%** das tentativas de atribuir a inscrição a uma pessoa já exposta são
+  recusadas.
 - **SC-2353**: No Edital com uma avaliação por inscrição, a consolidação produz Resultados **idênticos**
   aos que o sistema de antes desta feature produz para o mesmo cenário.
 - **SC-2354**: **100%** das Retificações que mudariam a regra ou o número de avaliações de Etapa decisória
@@ -828,3 +887,22 @@ Quatro condições acompanham a decisão:
   escreveu para o candidato ler, sem necessidade demonstrada nesta entrega;
 - **só o desfecho e a regra**, que deixaria o titular sem ter contra o que recorrer;
 - **os textos com autoria**, que expõe o membro e não ajuda o recurso.
+
+### D-010 — A exposição impede a atribuição e a reabertura
+
+Pedido pelo usuário em 14/11, no `/speckit-clarify`, ao responder a pergunta 3: o caso precisava ser
+fechado. A forma de fechá-lo é desta spec, aberta à revisão. A restrição pela pendência protege quem ainda vai
+avaliar, e não cobre dois caminhos em que a leitura vem antes da pendência: a presidência que lê os
+pareceres e recebe a atribuição depois, numa redistribuição; e o membro que conclui, lê como presidência
+e tem o parecer reaberto. Nos dois, a pessoa avaliaria sabendo o que os colegas decidiram, e a spec
+prometeria uma independência que o fluxo deixa contornar.
+
+O fato que decide é a **entrega**, e não o papel: quem recebeu o sentido ou o texto está exposto, e quem
+só tem a permissão de ver não está. Por isso o sistema registra a entrega, e não infere de quem poderia
+ter visto. O registro guarda o fato, sem o conteúdo, como a trilha da `012`.
+
+*Descartados:*
+- **proibir o acúmulo de papéis no painel**, que a equipe pequena não comporta;
+- **recusar atribuir a quem tem papel de gestão na Etapa**, que barraria também quem nunca abriu as
+  telas, e é a mesma proibição com outro nome;
+- **confiar no termo de sigilo**, que é necessário e não é verificável.
