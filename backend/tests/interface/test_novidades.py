@@ -285,6 +285,19 @@ def test_a_linha_do_tempo_agrupa_por_mes_da_mais_recente(client, seletor_ligado,
 
 
 @pytest.mark.django_db
+def test_o_exemplo_aparece_como_na_pratica(client, seletor_ligado, notas):
+    """FR-7427, UX-806: a cena concreta logo abaixo do resumo."""
+    notas(_nota("x", "2026-11-12", exemplo="Você abre o Edital 12/2026 e vê o que falta."))
+    identificar(client, "gustavo.gestor", ["gestor"])
+    cartao = _pagina(client).split('<li class="novidade" id="x">')[1].split("</li>")[0]
+    assert (
+        '<p class="exemplo-da-novidade"><strong>Na prática:</strong> '
+        "Você abre o Edital 12/2026 e vê o que falta.</p>"
+    ) in cartao
+    assert cartao.index("Resumo de x.") < cartao.index("Na prática")
+
+
+@pytest.mark.django_db
 def test_o_filtro_por_categoria_conta_e_guarda_a_escolha(client, seletor_ligado, notas):
     """US4, FR-7405."""
     notas(*TRES)

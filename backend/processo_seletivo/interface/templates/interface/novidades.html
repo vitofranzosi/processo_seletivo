@@ -44,6 +44,7 @@ mais" leva à seção da Documentação do Sistema em vez de repeti-la.
       <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time></p>
       <h3>{{ nota.titulo }}</h3>
       <p>{{ nota.resumo }}</p>
+      {% if nota.exemplo %}<p class="exemplo-da-novidade"><strong>Na prática:</strong> {{ nota.exemplo }}</p>{% endif %}
       {% if nota.beneficio %}<p class="beneficio-da-novidade"><strong>Para que serve:</strong> {{ nota.beneficio }}</p>{% endif %}
       {% if nota.onde or nota.passos %}
       <details class="como-usar">

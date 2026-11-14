@@ -18,76 +18,98 @@
 id = "etapa-por-modalidade-e-deliberacao"
 data = 2026-11-14
 categoria = "novidade"
-titulo = "Etapa só para algumas Modalidades, e decidida por pareceres da comissão"
+titulo = "Conduza a verificação da autodeclaração inteira no GPS"
 resumo = """
-A Etapa pode alcançar só as inscrições de algumas Modalidades — como a verificação da autodeclaração
-—, e quem não é alcançado a atravessa. A Etapa restrita declara o efeito do resultado desfavorável:
-por padrão, a pessoa deixa de concorrer pela reserva e continua na ampla. E a Etapa com mais de uma
-avaliação por inscrição declara a regra de deliberação — maioria ou unanimidade —, com cada parecer
-dado às cegas.
+Uma Etapa pode valer só para algumas Modalidades, e a comissão decide por maioria ou unanimidade, cada
+parecer dado sem ver o dos colegas. A banca trabalha no GPS, e a regra sai publicada no Edital.
 """
-beneficio = "A verificação feita por banca passa a ser conduzida e registrada no GPS, com a regra publicada no Edital."
-onde = "Na composição do Edital, no cartão da Etapa: a quem ela se aplica e como a comissão chega ao resultado."
+exemplo = """
+No Edital 20/2026, a verificação vale só para quem concorre às vagas reservadas, e os demais seguem
+direto. Três pessoas da banca dão parecer, vale a maioria, e quem não for confirmado deixa a reserva,
+mas continua na ampla concorrência.
+"""
+onde = "Na composição do Edital, no cartão da Etapa."
 documentacao = "deliberacao"
 prs = [542, 543, 545]
 specs = ["163", "164", "165"]
 
 [[nota]]
+id = "pequenas-melhorias-10-a-14-de-novembro"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "Pequenas melhorias na convocação e na conferência"
+resumo = """
+O motivo de uma recusa aparece no próprio cartão do documento, a vaga que reabre já diz quem é a
+próxima pessoa da fila, e quem já enviou tudo lê "Acompanhe sua convocação" em vez de um novo
+chamado. Vários textos da convocação ficaram mais diretos.
+"""
+prs = [465, 467, 468, 473, 477, 499, 497, 514]
+specs = ["115", "154"]
+
+[[nota]]
+id = "pequenas-melhorias-no-edital-e-nos-e-mails-10-a-14-de-novembro"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "Pequenas melhorias no Edital, nos e-mails e nas páginas"
+resumo = """
+Os e-mails do GPS saem todos no mesmo formato, com a unidade e a assinatura dela. O Edital gerado diz
+"pessoa" onde dizia "candidato". A página do Processo diz no topo em que situação ele está, o sorteio
+fica no cartão de cada vaga, e os links da Documentação voltaram a funcionar.
+"""
+prs = [539, 540, 466, 459, 532]
+specs = ["147", "145", "105"]
+
+[[nota]]
 id = "vitrine-em-andamento-e-encerradas"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "Página pública das seleções: em andamento e encerradas, separadas"
+titulo = "Candidatos acham na hora as seleções que ainda estão em curso"
 resumo = """
-O Edital que fechou as inscrições mas ainda segue — com resultado a publicar, recurso aberto ou
-convocação — aparece em "Em andamento". Só o Edital encerrado vai para "Seleções encerradas", que
-agora se apresenta em páginas, da mais recente para a mais antiga.
+Na página pública, o Edital que fechou as inscrições mas ainda tem resultado, recurso ou convocação
+pela frente fica em "Em andamento". Só o Edital encerrado vai para "Seleções encerradas", agora em
+páginas, da mais recente para a mais antiga.
 """
-beneficio = "O candidato encontra a seleção que ainda está em curso sem confundi-la com as que já terminaram."
+exemplo = """
+As inscrições do Edital 15/2026 fecharam na sexta, mas o prazo de recurso está aberto. Quem procura a
+seleção na segunda a encontra em "Em andamento", e não misturada às que já terminaram.
+"""
 documentacao = "vitrine-em-andamento-e-paginas"
 prs = [524, 526]
 specs = []
 
 [[nota]]
-id = "desfecho-explicado-ao-candidato"
+id = "convocado-entende-a-convocacao"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "O candidato entende o resultado da convocação"
+titulo = "O convocado entende o que fazer e o resultado, sem perguntar"
 resumo = """
-Na área do candidato, o registro do desfecho da convocação passa a vir numa frase simples, com o
-fundamento escrito pela comissão logo abaixo, recolhido. A convocação aberta diz por que a pessoa foi
-chamada, e a mensagem da convocação passa a dizer a data final do prazo, sem a expressão "contado do
-envio desta mensagem", que no reenvio parecia abrir prazo novo.
+A área do candidato mostra numa leitura só o que falta, o que está com a comissão e o prazo, com o dia
+da semana e quanto falta. O resultado vem numa frase simples, com o fundamento da comissão logo
+abaixo. Menos dúvidas chegando à comissão.
 """
-beneficio = "Menos dúvidas e contatos com a comissão sobre o que o registro significa e até quando vale o prazo."
-documentacao = "desfecho-comunicado"
-prs = [525, 529, 533]
-specs = ["156"]
-
-[[nota]]
-id = "convocacao-depois-do-envio"
-data = 2026-11-13
-categoria = "melhoria"
-titulo = "Quem já enviou tudo não é mais tratado como recém-convocado"
-resumo = """
-Na área do candidato, a convocação só diz "Você foi convocado!" e adverte sobre o não atendimento
-enquanto houver algo a fazer. Sem providência pendente, o título passa a "Acompanhe sua convocação".
-O documento reenviado passou a ter um nome só, o mesmo na gestão e na área do candidato.
+exemplo = """
+Um convocado do Edital 05/2026 entra e lê que o prazo vai até sexta-feira, 20/11, e quanto falta. O
+link "Ver o que preciso fazer" leva à lista. E o e-mail da convocação traz a data final, sem parecer
+prazo novo quando é reenviado.
 """
-documentacao = "convocacao-depois-do-envio"
-prs = [497, 514]
-specs = ["154"]
+documentacao = "convocado-no-portal"
+prs = [384, 404, 498, 505, 527, 525, 529, 533]
+specs = ["118", "121", "156"]
 
 [[nota]]
 id = "envio-de-varios-documentos"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "O candidato envia vários documentos de uma vez, sem perder a escolha"
+titulo = "Candidato envia todos os documentos de uma vez, sem perder nada"
 resumo = """
-Antes, enviar um documento recarregava a página e descartava os arquivos já escolhidos nos outros. Agora
-cada documento pedido tem o seu seletor, e um botão único no fim da lista envia todos. O mesmo arquivo
-escolhido para dois documentos é avisado no próprio cartão.
+Cada documento pedido tem o seu seletor de arquivo, e um botão no fim da lista envia todos juntos.
+Antes, enviar um recarregava a página e descartava os outros já escolhidos. Menos reenvio e menos
+documento faltando por engano.
 """
-beneficio = "Menos reenvios e menos documentos faltando por engano do candidato."
+exemplo = """
+Uma convocada escolhe o RG, o histórico e o comprovante de residência e clica em "Enviar documentos".
+Se escolheu o mesmo PDF para dois deles, o próprio cartão avisa.
+"""
 documentacao = "envio-de-varios-documentos"
 prs = [496, 509, 516]
 specs = ["150"]
@@ -96,45 +118,33 @@ specs = ["150"]
 id = "prevencao-nos-atos-irreversiveis"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "Conferência antes dos atos da convocação que não se desfazem"
+titulo = "Veja o efeito antes dos passos da convocação que não se desfazem"
 resumo = """
-Chamar uma pessoa da fila, chamar para regularizar e emitir o corte passam por uma página "Confira
-antes de…", que mostra o efeito antes do clique. O registro do desfecho oferece só as opções que cabem
-naquele momento e diz por que as outras ainda não cabem. O atalho de indeferimento por documento só
-aparece quando há pendência que o justifique.
+Chamar a próxima pessoa da fila, chamar para regularizar e emitir o corte passam por uma página
+"Confira antes de…", que mostra o que vai acontecer. E o registro do resultado só oferece as opções
+que cabem naquele momento. O erro é evitado onde não há volta.
 """
-beneficio = "Evita o ato errado justamente onde não há como voltar atrás."
-onde = "Na convocação de cada lista e na tela do corte."
+exemplo = """
+Você vai chamar a próxima pessoa da fila no Edital 08/2026. Antes do clique final, a página de
+conferência mostra o efeito da chamada; se algo estiver errado, você volta sem ter feito nada.
+"""
 documentacao = "conferencia-nos-atos-irreversiveis"
 prs = [489, 502, 520]
 specs = ["152"]
 
 [[nota]]
-id = "documentacao-com-links-e-titulo-corrigidos"
-data = 2026-11-13
-categoria = "correcao"
-titulo = "Links da Documentação do Sistema e título da tela Retificar"
-resumo = """
-Os links da Documentação do Sistema que levavam a uma página inexistente quando ela era aberta dentro da
-gestão foram corrigidos. A tela Retificar deixou de exibir o título "Retificaçãoões".
-"""
-destino = "interface:documentacao"
-prs = [532]
-specs = ["105"]
-
-[[nota]]
 id = "formalizacao-na-jornada-do-edital"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "A passagem dos aptos ao setor de formalização aparece na jornada do Edital"
+titulo = "Nenhum apto esquecido entre a convocação e a matrícula"
 resumo = """
-Com pessoas aptas para formalização, a jornada guiada do Edital passou a dizer o que falta para o setor
-receber os documentos: definir os documentos que vão ao setor, designar quem os recebe e exportá-los.
-Cada providência aparece para o papel que a pratica, e a presidência do Processo também pode designar
-quem recebe.
+Com pessoas aptas, a página do Edital diz o que falta para o setor de formalização receber os
+documentos: escolher quais vão, designar quem recebe e exportar. Cada passo aparece para quem o faz.
 """
-beneficio = "Nenhuma pessoa apta fica esquecida entre a convocação e a matrícula."
-onde = "Na página do Edital, no bloco Disponibilizar ao setor, e em O que fazer agora."
+exemplo = """
+Doze pessoas ficaram aptas no Edital 05/2026. Em "O que fazer agora", a presidência lê que falta
+designar quem recebe os documentos no setor; feito isso, a exportação aparece para quem cuida dela.
+"""
 documentacao = "passagem-ao-setor"
 prs = [486, 501, 515]
 specs = ["153", "117"]
@@ -143,79 +153,50 @@ specs = ["153", "117"]
 id = "limite-do-cadastro-pelo-corte"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "O limite do cadastro de reserva sai do corte, e não de um número digitado"
+titulo = "O tamanho do cadastro de reserva sai do corte, sem conta à mão"
 resumo = """
-O número do cadastro de reserva limitado deixa de ser digitado: o GPS o calcula, por lista de
-concorrência, a partir do corte do marco que convoca. A publicação recusa a combinação incoerente, e o
-documento deixa de dizer números que se contradizem.
+Você não digita mais o número do cadastro de reserva limitado: o GPS o calcula, por lista de
+concorrência, a partir do corte (quantas pessoas a convocação alcança). Assim o Edital não traz
+números que se contradizem.
+"""
+exemplo = """
+No Edital 08/2026, o Perfil tem 2 vagas e o corte prevê 3 suplentes. O Edital passa a dizer, sozinho,
+que o cadastro de reserva é de até 3 pessoas.
 """
 documentacao = "cadastro-de-reserva"
 prs = [537]
 specs = ["162"]
 
 [[nota]]
-id = "emails-com-moldura-institucional"
-data = 2026-11-13
-categoria = "melhoria"
-titulo = "Os e-mails do GPS com uma apresentação institucional comum"
-resumo = """
-Todas as mensagens que o GPS envia saem com o mesmo formato: cabeçalho com a instituição e a unidade,
-no máximo um botão de ação, um destaque conforme a situação e a assinatura da unidade, também em texto
-puro. Quem recebe, quando recebe e os prazos não mudaram.
-"""
-prs = [539]
-specs = []
-
-[[nota]]
-id = "edital-sem-masculino-generico"
-data = 2026-11-13
-categoria = "melhoria"
-titulo = "O texto do Edital sem o masculino genérico"
-resumo = """
-O Edital gerado pelo GPS passa a dizer "pessoa" onde dizia "candidato" ou "classificado": "Cada pessoa
-pode enviar…", "as 10 (dez) primeiras pessoas classificadas". O Edital já publicado não muda.
-"""
-prs = [540]
-specs = []
-
-[[nota]]
 id = "lista-do-resultado-publicado"
 data = 2026-11-13
 categoria = "melhoria"
-titulo = "A gestão diz de qual lista é cada resultado publicado"
+titulo = "Saiba de qual lista é o resultado antes de publicá-lo"
 resumo = """
-A prévia da publicação do resultado mostra "Lista de concorrência" antes da confirmação, e a tela dos
-resultados divulgados nomeia a lista de cada publicação. Num marco com cotas, a publicação da ampla e a
-de cada reserva deixam de parecer iguais.
+A prévia da publicação do resultado mostra a lista de concorrência antes de você confirmar, e a tela
+dos resultados divulgados nomeia a lista de cada publicação. Com cotas, a ampla e cada reserva deixam
+de parecer iguais.
 """
-beneficio = "Menos risco de publicar, de forma irreversível, o resultado da lista errada."
+exemplo = """
+No Edital 11/2026, com vagas reservadas, você vai publicar o resultado da ampla concorrência. A prévia
+diz qual é a lista antes do botão de confirmar, e cada publicação aparece com o nome dela.
+"""
 prs = [534]
 specs = []
-
-[[nota]]
-id = "jornada-do-convocado-no-portal"
-data = 2026-11-13
-categoria = "melhoria"
-titulo = "A convocação na área do candidato, numa leitura só"
-resumo = """
-A área do candidato conta a convocação de uma vez: o que falta, o que está com a comissão e o prazo,
-com o dia da semana e quanto falta, e um link "Ver o que preciso fazer". A entrada ficou num cartão
-centrado e diz, antes do botão, que não precisa de senha nem de cadastro.
-"""
-beneficio = "O convocado sabe o que fazer sem precisar perguntar à comissão."
-documentacao = "convocado-no-portal"
-prs = [384, 404, 498, 505, 527]
-specs = ["118", "121"]
 
 [[nota]]
 id = "cenarios-de-treinamento"
 data = 2026-11-13
 categoria = "novidade"
-titulo = "Cenários de treinamento para a equipe"
+titulo = "Treine a equipe com 17 seleções fictícias, já em andamento"
 resumo = """
-Dezessete Processos fictícios, parados em etapas diferentes do certame — da elaboração à formalização
-—, para treinar e homologar sem montar um Edital do zero. A equipe técnica os prepara no ambiente de
-treinamento, e eles podem ser restaurados ao ponto de partida.
+Dezessete Processos fictícios, parados em fases diferentes, da elaboração à formalização, deixam a
+equipe treinar sem montar um Edital do zero. A equipe técnica os prepara no ambiente de treinamento e
+pode devolvê-los ao ponto de partida.
+"""
+exemplo = """
+Uma servidora nova na comissão pratica a conferência de documentos num Processo fictício já na fase
+da convocação. Terminado o treino, a equipe técnica restaura o cenário para a próxima turma.
 """
 documentacao = "cenarios-de-treinamento"
 requer_configuracao = "CENARIOS_DE_TREINAMENTO"
@@ -226,15 +207,17 @@ specs = ["134"]
 id = "minhas-atividades"
 data = 2026-11-12
 categoria = "novidade"
-titulo = "Minhas atividades: o que é seu, em todos os Editais"
+titulo = "Tudo o que é seu, em todos os Editais, numa página só"
 resumo = """
-"Minhas Etapas" passou a se chamar "Minhas atividades" e reúne, numa página, o que é seu nos Editais das
-comissões que você integra: em "Para fazer agora", os atos de condução de quem preside, a conferência
-documental de quem está alocado e as avaliações pendentes; em "Em espera nos seus Editais", o que
-aguarda outra coisa, dito pelo que é.
+"Minhas atividades" (antes, Minhas Etapas) reúne o que é seu nos Editais das comissões que você
+integra: o que fazer agora e o que está em espera. Você deixa de abrir Edital por Edital para
+descobrir o que falta.
 """
-beneficio = "A presidência deixa de abrir Edital por Edital para descobrir o que falta fazer."
-onde = "Na barra lateral, em Minhas atividades. O endereço é o mesmo de antes."
+exemplo = """
+Na segunda de manhã, você abre Minhas atividades e vê, em "Para fazer agora", uma conferência de
+documentos no Edital 03/2026 e duas avaliações no 07/2026. O que depende de outra coisa fica em "Em
+espera nos seus Editais".
+"""
 destino = "interface:minhas-etapas"
 documentacao = "minhas-atividades"
 prs = [506, 508, 511, 512]
@@ -244,19 +227,17 @@ specs = ["160"]
 id = "convocar-e-publicar-no-gps"
 data = 2026-11-12
 categoria = "novidade"
-titulo = "Publicar as convocações no próprio GPS"
+titulo = "Publique a lista de convocados direto do GPS, com PDF oficial"
 resumo = """
-A comissão publica as convocações no GPS: um ato numerado por Edital, com página pública, documento
-oficial em PDF e a seção Convocações na página da seleção. Na convocação por publicação, a publicação
-é a convocação, e o prazo corre dela. Convocar e publicar podem ser feitos num gesto só.
+A comissão publica as convocações no GPS, com número por Edital, página pública, PDF oficial e a seção
+Convocações na página da seleção. Na convocação por publicação, o prazo corre da publicação, e dá para
+convocar e publicar de uma vez.
 """
-beneficio = "Dispensa a publicação manual da lista de convocados fora do sistema e mantém prazo e registro coerentes."
+exemplo = """
+Na terça, você escolhe as vagas e as listas do Edital 09/2026, confere na prévia quem será convocado,
+escolhe quem assina e publica. O PDF sai pronto, e a lista aparece na página da seleção.
+"""
 onde = "Na página do Edital, em Publicação das convocações."
-passos = [
-  "Escolha as vagas e as listas que entram na publicação.",
-  "Confira a prévia: quem será convocado e quem só aparece como divulgação.",
-  "Escolha a autoridade signatária e publique.",
-]
 documentacao = "publicacao-das-convocacoes"
 prs = [470, 503, 504]
 specs = ["149", "159"]
@@ -265,14 +246,16 @@ specs = ["149", "159"]
 id = "conferencia-com-o-documento-a-vista"
 data = 2026-11-12
 categoria = "melhoria"
-titulo = "Conferir documentos com o arquivo ao lado do formulário"
+titulo = "Confira o documento com o PDF aberto ao lado do formulário"
 resumo = """
-Na página dos documentos da convocação, "Abrir" põe o PDF ao lado do formulário de conferência, em
-telas largas, sem alternar entre abas. Em telas estreitas, o arquivo continua abrindo em outra aba, e
-na volta a página oferece retomar a conferência do documento com o que já estava marcado.
+Em telas largas, "Abrir" põe o PDF ao lado do formulário de conferência, sem trocar de aba. Em telas
+estreitas, ele abre em outra aba e, na volta, a página oferece retomar a conferência com o que você já
+tinha marcado.
 """
-beneficio = "Conferência mais rápida e com menos risco de julgar o documento errado."
-onde = "Em cada convocação, na página Documentos da convocação."
+exemplo = """
+No computador da comissão, você clica em "Abrir" no histórico escolar de um convocado: o PDF aparece
+ao lado, e você marca a conferência olhando para ele, sem perder o lugar.
+"""
 documentacao = "conferencia-com-o-documento-a-vista"
 prs = [494]
 specs = ["157"]
@@ -281,13 +264,16 @@ specs = ["157"]
 id = "vaga-reservada-sem-ocupante"
 data = 2026-11-12
 categoria = "novidade"
-titulo = "Vaga reservada sem quem a ocupe: dita na tela, e declarável"
+titulo = "Saiba quando uma vaga reservada não tem mais quem a ocupe"
 resumo = """
-Quando ninguém mais na ordem de uma lista reservada pode ocupar a vaga, a Ocupação, a página do Edital
-e a Convocação passam a dizer isso com as mesmas palavras, e a comissão pode registrar a declaração de
-vaga não preenchida.
+Quando ninguém mais na fila de uma lista reservada pode ocupar a vaga, a página do Edital, a Ocupação
+e a Convocação dizem isso com as mesmas palavras. E a comissão pode declarar a vaga não preenchida, sem
+precisar deduzir a situação.
 """
-beneficio = "A situação da vaga deixa de ser descoberta por dedução."
+exemplo = """
+No Edital 14/2026, a última pessoa da lista reservada a pessoas com deficiência desistiu. A tela diz
+que não há mais quem ocupe aquela vaga, e você usa "Declarar a vaga não preenchida".
+"""
 documentacao = "vaga-sem-ocupante"
 prs = [495]
 specs = ["155"]
@@ -296,79 +282,57 @@ specs = ["155"]
 id = "publicacao-das-inscricoes"
 data = 2026-11-12
 categoria = "novidade"
-titulo = "Publicar as inscrições: recebidas, resultado preliminar e homologação"
+titulo = "Publique as inscrições recebidas, o preliminar e a homologação"
 resumo = """
-O GPS publica a relação das inscrições em três atos opcionais: a relação das inscrições recebidas,
-depois do fim do período; o resultado preliminar da análise, que abre o prazo de recurso; e a
-homologação. Cada um tem prévia, autoridade signatária e PDF oficial, e a relação se organiza por lista
-de concorrência.
+O GPS publica a relação das inscrições recebidas, o resultado preliminar da análise, que abre o prazo
+de recurso, e a homologação. Cada uma é opcional, tem prévia, assinatura e PDF oficial, e se organiza
+por lista de concorrência. Sem montar listas à mão.
 """
-beneficio = "A publicação das inscrições sai do mesmo lugar em que a análise foi feita, sem montar listas à mão."
+exemplo = """
+Encerradas as inscrições do Edital 10/2026 na quinta, você publica a relação das recebidas na sexta.
+Terminada a análise, publica o resultado preliminar, e o prazo de recurso começa a correr.
+"""
 onde = "Na página do Edital, em Publicações das inscrições."
 documentacao = "publicacao-das-inscricoes"
 prs = [469, 507, 510]
 specs = ["148"]
 
 [[nota]]
-id = "ajustes-de-leitura-na-convocacao"
-data = 2026-11-12
-categoria = "melhoria"
-titulo = "Ajustes de leitura na convocação, na conferência e no corte"
-resumo = """
-Um conjunto de ajustes nas telas da convocação, da conferência dos documentos e do corte: a recusa da
-conferência aparece no cartão do documento, a vaga reaberta diz quem é a próxima da fila, e os textos
-da jornada final foram revistos.
-"""
-prs = [465, 467, 468, 473, 477, 499]
-specs = ["115"]
-
-[[nota]]
 id = "barema-da-etapa"
 data = 2026-11-11
 categoria = "novidade"
-titulo = "Barema da Etapa: pontuar critério a critério"
+titulo = "Pontue a ficha de títulos item a item, e o GPS soma"
 resumo = """
-A Etapa pontuada pode publicar a sua lista de critérios de avaliação, com a pontuação máxima de cada
-um. Com o barema publicado, quem avalia pontua critério a critério na Mesa e o sistema calcula o total.
-Sem barema, tudo continua como antes.
+A Etapa pontuada pode publicar seu barema: a lista de critérios, com a pontuação máxima de cada um.
+Quem avalia pontua critério a critério, e o GPS calcula o total. Acaba a planilha paralela, e a nota
+fica fácil de conferir.
 """
-beneficio = "Acaba a planilha paralela para somar a ficha de títulos, e o total fica conferível."
-onde = "Na composição do Edital, no cartão da Etapa pontuada, seção Barema."
+exemplo = """
+No Edital 06/2026, a ficha tem "Especialização: até 10 pontos" e "Experiência docente: até 20
+pontos". O avaliador lança 10 e 15, e o total de 25 aparece sozinho.
+"""
 passos = [
-  "No cartão da Etapa, use Acrescentar critério para cada item da ficha.",
+  "No cartão da Etapa pontuada, use Acrescentar critério para cada item da ficha.",
   "Publique o Edital: o barema sai no documento.",
-  "Na Mesa, a avaliação passa a pedir a pontuação de cada critério.",
+  "Na avaliação, cada critério ganha a sua pontuação.",
 ]
 documentacao = "barema-da-etapa"
 prs = [461, 462, 463]
 specs = ["146"]
 
 [[nota]]
-id = "pagina-do-processo"
-data = 2026-11-11
-categoria = "melhoria"
-titulo = "Página do Processo Seletivo reorganizada"
-resumo = """
-A página do Processo diz no topo em que situação ele está e onde está o conjunto dos Editais, e logo
-abaixo o que você pode fazer nele, lido do que você pode fazer em cada Edital.
-"""
-onde = "Em Processos Seletivos, ao abrir um Processo."
-documentacao = "pagina-do-processo"
-prs = [466]
-specs = ["147"]
-
-[[nota]]
 id = "centro-de-controle-do-edital"
 data = 2026-11-10
 categoria = "novidade"
-titulo = "Centro de Controle: a página do Edital publicado"
+titulo = "Veja em segundos o que falta em cada Edital"
 resumo = """
-A página de um Edital publicado ou encerrado passou a ser o Centro de Controle: em que fase o Edital
-está, as providências em aberto e de quem é cada uma (com a marca SUA no que é seu), e o andamento da
-seleção. Cada providência leva à tela do ato, e depois do ato a tela volta ao Centro.
+A página do Edital publicado mostra em que fase ele está, o que ainda precisa ser feito e quem faz
+cada coisa — o que é seu vem marcado. Acabou a caça por menus para descobrir o próximo passo.
 """
-beneficio = "Você identifica em segundos o que falta no Edital e por onde começar."
-onde = "Em Processos Seletivos, ao abrir um Edital publicado."
+exemplo = """
+Você abre o Edital 12/2026 e lê "Convocar os titulares", com a marca SUA. Um clique leva à tela da
+convocação; feito o trabalho, você volta ao Edital.
+"""
 documentacao = "centro-de-controle"
 prs = [415, 416, 417, 441, 443, 447, 451]
 specs = ["127", "135", "136", "138", "139"]
@@ -377,41 +341,34 @@ specs = ["127", "135", "136", "138", "139"]
 id = "jornada-do-sorteio"
 data = 2026-11-10
 categoria = "melhoria"
-titulo = "A tela do sorteio segue os passos de quem o conduz"
+titulo = "Conduza o sorteio passo a passo, sem pular nenhum"
 resumo = """
-A tela do sorteio foi reorganizada em passos: fixar os participantes de cada lista, obter a semente
-pública e realizar o sorteio. Os detalhes do método ficam recolhidos, e a ordem sorteada aparece na
-própria tela.
+A tela do sorteio segue a ordem de quem o conduz: fixar os participantes de cada lista, obter o número
+público da Loteria Federal e sortear. Os detalhes do método ficam recolhidos, e a ordem sorteada
+aparece ali mesmo. Menos rolagem e menos risco no dia.
 """
-beneficio = "Menos rolagem e menos risco de pular um passo no dia do sorteio."
+exemplo = """
+No dia do sorteio do Edital 04/2026, você fixa os participantes de cada lista, obtém o número da
+Loteria Federal e sorteia. A ordem sorteada aparece na mesma tela, sem ir à página pública.
+"""
 documentacao = "jornada-do-sorteio"
 prs = [410, 452]
 specs = ["142"]
 
 [[nota]]
-id = "sorteio-no-cartao-da-vaga"
-data = 2026-11-10
-categoria = "melhoria"
-titulo = "Na página pública do Edital, o sorteio de cada vaga fica no cartão dela"
-resumo = """
-Quem vai participar de cada sorteio, com que número, e depois como o sorteio foi feito, aparecem no
-cartão da própria vaga, e não mais em blocos separados longe dela.
-"""
-documentacao = "sorteio-no-cartao-da-vaga"
-prs = [459]
-specs = ["145"]
-
-[[nota]]
 id = "convocacao-pelas-perguntas-de-quem-conduz"
 data = 2026-11-10
 categoria = "melhoria"
-titulo = "A convocação de cada lista começa pelo que fazer agora"
+titulo = "Abra a convocação e veja primeiro o trabalho do dia"
 resumo = """
-A tela da convocação de uma lista abre com o resumo "Neste recorte, agora": quantos titulares falta
-convocar, quantos aguardam resposta, quantos têm documento a conferir, e assim por diante, cada linha
-levando ao lugar certo. Convocar os titulares passa sempre por uma conferência antes do envio.
+A convocação de cada lista começa por um resumo do que fazer agora: quantos titulares falta convocar,
+quantos aguardam resposta, quantos têm documento a conferir, cada linha levando ao lugar certo. E
+nenhuma mensagem aos titulares sai sem você conferi-la antes.
 """
-beneficio = "O trabalho do dia aparece primeiro, e nenhuma comunicação sai sem que alguém a tenha lido."
+exemplo = """
+Você abre a convocação da ampla concorrência do Edital 02/2026 e lê: 3 titulares a convocar, 5
+aguardando resposta, 2 com documento a conferir. Um clique na última linha leva direto à conferência.
+"""
 documentacao = "convocacao-pelas-perguntas"
 prs = [448, 453]
 specs = ["140", "143"]
@@ -420,11 +377,15 @@ specs = ["140", "143"]
 id = "sucessora-espera-o-reabilitado"
 data = 2026-11-10
 categoria = "correcao"
-titulo = "A nova ordem espera a avaliação de quem o recurso reabilitou"
+titulo = "Resolvido: quem volta por recurso não fica de fora da nova ordem"
 resumo = """
-Quando um recurso deferido devolve alguém à disputa e ainda falta avaliá-lo numa Etapa, o sistema
-deixou de oferecer a ordem sucessora e o corte antes dessa avaliação. Antes, era possível emitir atos
-que deixavam a pessoa de fora.
+Quando um recurso deferido devolve alguém à disputa e ainda falta avaliá-lo numa Etapa, o GPS só
+oferece a nova ordem de classificação e o corte depois dessa avaliação. Antes, dava para emiti-los
+deixando a pessoa de fora.
+"""
+exemplo = """
+Um candidato do Edital 13/2026 tem o recurso deferido e volta à disputa, mas ainda falta a
+entrevista. Enquanto ela não for registrada, a nova ordem não aparece para ser emitida.
 """
 documentacao = "sucessora-espera-o-reabilitado"
 prs = [449]
@@ -434,12 +395,15 @@ specs = ["141"]
 id = "evento-oculto-no-pdf"
 data = 2026-11-10
 categoria = "melhoria"
-titulo = "Ocultar um Evento do Cronograma no PDF"
+titulo = "Guarde datas internas no Cronograma sem publicá-las no PDF"
 resumo = """
-No cartão do Evento, o botão "Ocultar do PDF" tira o Evento da tabela do Cronograma do documento. Assim
-dá para registrar uma data interna de que o sistema precisa sem publicá-la.
+No cartão de cada Evento do Cronograma, o botão "Ocultar do PDF" tira o Evento da tabela do
+documento. Você registra uma data de que o GPS precisa sem que ela apareça no Edital publicado.
 """
-onde = "Na composição do Edital, etapa Cronograma, nas ações de cada Evento."
+exemplo = """
+O Edital 16/2026 precisa de uma data interna no Cronograma, que não interessa ao candidato. Você a
+oculta do PDF, e o documento sai só com as datas públicas.
+"""
 documentacao = "cronograma-pdf-ordem-previa"
 prs = [456, 457]
 specs = ["144"]
@@ -448,54 +412,49 @@ specs = ["144"]
 id = "aviso-de-pendencia-documental"
 data = 2026-11-09
 categoria = "novidade"
-titulo = "Avisar por e-mail quem tem documento pendente"
+titulo = "Avise por e-mail quem está com documento pendente"
 resumo = """
-A comissão pode avisar por e-mail as pessoas convocadas que têm documento pendente. A mensagem diz quais
-documentos precisam de atenção, e o motivo fica na área do candidato.
+A comissão pode avisar por e-mail as pessoas convocadas que têm documento pendente. A mensagem diz
+quais documentos precisam de atenção, e o motivo fica na área do candidato. A pessoa fica sabendo
+antes de o prazo vencer.
 """
-beneficio = "O candidato fica sabendo da pendência antes de o prazo vencer."
-onde = "Na convocação de cada lista, em Acompanhar e conferir: Avisar as pessoas com documento pendente."
+exemplo = """
+Faltam três dias para o prazo do Edital 12/2026 e quatro convocados estão com documento pendente. Na
+convocação, você usa "Avisar as pessoas com documento pendente", e cada um recebe o que precisa
+corrigir.
+"""
 documentacao = "aviso-de-pendencia"
 requer_configuracao = "AVISOS_AOS_CANDIDATOS"
 prs = [435]
 specs = ["134"]
 
 [[nota]]
-id = "classificacao-sem-pagina-de-erro"
+id = "pequenas-melhorias-na-criacao-e-na-classificacao-1-a-9-de-novembro"
 data = 2026-11-09
-categoria = "correcao"
-titulo = "Salvar a Classificação de um Edital criado a partir de outro não dá mais erro"
+categoria = "melhoria"
+titulo = "Pequenas melhorias na criação do Edital e na classificação"
 resumo = """
-Salvar o rascunho da etapa Classificação de um Edital criado a partir de outro, com sorteio ainda sem a
-data da extração, levava a uma página de erro. A tela passou a abrir normalmente.
+Criar um Edital a partir de outro leva o teto de inscrições e o Requerimento de Matrícula, e salvar a
+Classificação dele não dá mais erro. "O que fazer agora" aponta o passo certo, e a ordem de
+classificação sem nenhum resultado é recusada, com o motivo.
 """
-prs = [437]
-specs = []
-
-[[nota]]
-id = "orientacao-aponta-o-ato-certo"
-data = 2026-11-08
-categoria = "correcao"
-titulo = "A orientação depois da publicação aponta o ato certo"
-resumo = """
-Em Editais com mais de um marco de classificação, "O que fazer agora" apontava o ato errado em alguns
-pontos, e algumas telas, logo depois de um ato, destacavam a sucessão dele como próximo passo. As duas
-orientações foram corrigidas.
-"""
-documentacao = "marco-intermediario"
-prs = [414, 432]
-specs = ["126", "133"]
+prs = [360, 437, 414, 432, 419]
+specs = ["126", "133", "128"]
 
 [[nota]]
 id = "lista-de-processos-com-abas-e-busca"
 data = 2026-11-07
 categoria = "melhoria"
-titulo = "Lista de Processos com abas, busca e páginas"
+titulo = "Ache o Processo que procura com abas, busca e páginas"
 resumo = """
-A lista de Processos Seletivos abre em "Em andamento", com as abas Encerrados, Cancelados e Todos, uma
-busca e 20 Processos por página. A faixa "Ações disponíveis para você" fica no topo.
+A lista de Processos Seletivos abre em "Em andamento", com abas para Encerrados, Cancelados e Todos,
+uma busca e 20 Processos por página. Os Processos em curso deixam de se perder entre os que já
+terminaram.
 """
-beneficio = "Os Processos em curso deixam de se perder entre os encerrados."
+exemplo = """
+Você abre a lista e vê só os Processos em andamento. Precisa de um do ano passado? Uma busca o
+encontra, sem rolar por dezenas de telas.
+"""
 destino = "interface:lista"
 documentacao = "lista-de-processos-recortada"
 prs = [422]
@@ -505,10 +464,14 @@ specs = ["129"]
 id = "lista-no-gesto-de-titulares"
 data = 2026-11-07
 categoria = "correcao"
-titulo = "Convocar os titulares de uma vez grava a lista de documentos"
+titulo = "Resolvido: convocar todos os titulares leva a lista de documentos"
 resumo = """
-Convocar todos os titulares num único ato criava as convocações sem a lista de documentos, e o aceite
-podia passar sem documento algum. A lista passou a ser gravada, e o aceite não passa sem ela.
+Convocar todos os titulares de uma vez criava convocações sem a lista de documentos, e o aceite podia
+passar sem documento algum. Agora a lista vai junto, e o aceite não passa sem ela.
+"""
+exemplo = """
+Você convoca os 30 titulares do Edital 01/2026 de uma vez: cada convocação já sai com a lista dos
+documentos pedidos.
 """
 documentacao = "lista-no-gesto-de-titulares"
 prs = [425]
@@ -518,67 +481,63 @@ specs = ["115"]
 id = "nao-se-aplica-com-fundamento"
 data = 2026-11-07
 categoria = "melhoria"
-titulo = 'Não se aplica só onde o Edital publicou a condição do documento'
+titulo = "Documento obrigatório só é dispensado com motivo publicado"
 resumo = """
-Na conferência dos documentos da convocação, "Não se aplica" passa a existir só nos documentos cuja
-condição de exigência o Edital publicou, pede um motivo com conteúdo e aparece no aceite, que pede
-ciência de cada caso.
+Na conferência dos documentos da convocação, "Não se aplica" só aparece nos documentos cuja condição
+de exigência o Edital publicou, e pede um motivo de verdade. Na hora do aceite, cada dispensa aparece
+para a sua ciência.
 """
-beneficio = "Um documento obrigatório não é mais dispensado sem fundamento publicado."
+exemplo = """
+O Edital 07/2026 pede a certidão de casamento só de quem é casado. Para um convocado solteiro, você
+marca "Não se aplica" e escreve o motivo; no aceite, a dispensa aparece para você confirmar.
+"""
 documentacao = "condicao-de-exigencia"
 prs = [426]
 specs = ["131"]
 
 [[nota]]
-id = "documentos-exigidos-mais-claros"
+id = "pequenas-melhorias-nos-documentos-e-no-acesso-1-a-9-de-novembro"
 data = 2026-11-07
 categoria = "melhoria"
-titulo = "Documentos Exigidos mais fáceis de ler"
+titulo = "Pequenas melhorias nos documentos, no encerramento e no acesso"
 resumo = """
-A Revisão do Edital separa os documentos exigidos na inscrição e na convocação. A composição em modo
-somente leitura passou a ser de fato somente leitura, sem terminar em "Não foi possível salvar". E a
-página pública conta só os documentos obrigatórios a todos.
+A Revisão do Edital separa os documentos exigidos na inscrição e na convocação. Com o Processo
+encerrado, o Requerimento de Matrícula não aceita mais mudança, e o Edital encerrado não se retifica.
+E quem esbarra no limite de códigos da rede lê quanto esperar.
 """
-documentacao = "ajustes-de-leitura-dos-documentos"
-prs = [429]
-specs = ["132"]
+prs = [429, 358, 381, 363]
+specs = ["132", "029"]
 
 [[nota]]
-id = "encerrar-processo-adverte"
+id = "encerrar-sabendo-o-que-esta-em-aberto"
 data = 2026-11-06
 categoria = "melhoria"
-titulo = "Encerrar o Processo avisa o que ainda está em aberto nos Editais"
+titulo = "Encerre Edital e Processo sabendo o que ainda está em aberto"
 resumo = """
-A confirmação de Encerrar Processo passou a listar o que está em aberto nos Editais dele, como pessoas
-aptas cujos documentos ainda não foram disponibilizados ao setor. É um aviso, e não um impedimento.
+Encerrar o Edital só fica disponível quando nada impede, como prazo de recurso correndo ou recurso por
+julgar. Encerrar o Processo avisa o que segue aberto nos Editais. Você vê o que será interrompido
+antes de confirmar.
 """
-beneficio = "Encerrar corta convocações e envios de documentos; agora se vê o que será cortado antes."
-documentacao = "encerrar-processo-adverte"
-prs = [421]
-specs = ["130"]
-
-[[nota]]
-id = "ordem-sem-resultado-recusada"
-data = 2026-11-06
-categoria = "correcao"
-titulo = "A ordem por pontuação sem nenhum resultado é recusada"
-resumo = """
-Emitir a ordem de classificação antes de haver qualquer resultado gerava um ato que já nascia
-desatualizado. O sistema passou a recusar esse caso e dizer o motivo.
+exemplo = """
+Você vai encerrar o Edital 03/2026, mas há um recurso por julgar: a confirmação o mostra e não oferece
+o botão. Julgado o recurso, o botão aparece.
 """
-documentacao = "ordem-sem-resultado"
-prs = [419]
-specs = ["128"]
+documentacao = "encerramento-seguro"
+prs = [362, 421]
+specs = ["113", "130"]
 
 [[nota]]
 id = "convocacao-segue-o-canal"
 data = 2026-11-06
 categoria = "correcao"
-titulo = "A convocação por publicação só aparece ao candidato depois de publicada"
+titulo = "Resolvido: convocação visível ao candidato antes da publicação"
 resumo = """
-A convocação feita por publicação aparecia na área do candidato antes de a publicação ser registrada.
-Agora ela só aparece depois. E os campos de texto que chegam ao candidato avisam "Este texto será
-mostrado ao candidato." e mostram a prévia.
+Quando você convoca por publicação, o candidato só vê a convocação depois que a publicação é
+registrada. E todo texto que você escreve para o candidato avisa que ele vai lê-lo e mostra a prévia.
+"""
+exemplo = """
+Você prepara a convocação na sexta e publica na segunda: até segunda, nada aparece na área do
+candidato.
 """
 documentacao = "convocacao-segue-o-canal"
 prs = [411]
@@ -588,14 +547,16 @@ specs = ["125"]
 id = "correcao-da-convocacao"
 data = 2026-11-05
 categoria = "novidade"
-titulo = "Corrigir uma convocação em aberto e dar mais prazo"
+titulo = "Dê mais prazo a um convocado sem sair do sistema"
 resumo = """
-Cada chamada em aberto com vencimento passou a ter "Corrigir esta convocação", para quem pode convocar.
-É o jeito de dar mais prazo a quem foi convocado. A correção mantém número de chamada, documentos e
-envios, e a convocação corrigida continua no histórico, com o motivo.
+Cada chamada em aberto com prazo tem "Corrigir esta convocação", para quem pode convocar: é assim que
+se prorroga. Número da chamada, documentos e envios ficam como estavam, e a versão anterior continua
+no histórico, com o motivo.
 """
-beneficio = "Prorrogar prazo deixa de exigir solução fora do sistema."
-onde = "Na convocação de cada lista, no cartão da chamada."
+exemplo = """
+Um convocado do Edital 05/2026 pede mais prazo porque um documento atrasou no cartório. Você usa
+"Corrigir esta convocação", estende a data e escreve o motivo; o que ele já tinha enviado continua lá.
+"""
 documentacao = "correcao-da-convocacao"
 prs = [385]
 specs = ["120"]
@@ -604,14 +565,17 @@ specs = ["120"]
 id = "kit-de-divulgacao"
 data = 2026-11-05
 categoria = "novidade"
-titulo = "Kit de divulgação do Edital"
+titulo = "Divulgue o Edital com textos e peças prontos, sem redigitar nada"
 resumo = """
-O Edital publicado tem um kit de divulgação montado a partir da versão vigente: a ficha com as
-informações oficiais, os textos para site, redes e mensagens e as peças visuais em formatos de post,
-story e banner, por família de curso, num pacote para baixar.
+O Edital publicado ganha um kit de divulgação: ficha com as informações oficiais, textos para site,
+redes e mensagens, e peças em post, story e banner por família de curso, num pacote para baixar.
+Datas e vagas saem iguais às publicadas.
 """
-beneficio = "Divulgar sem redigitar datas e vagas, e sem risco de divulgar informação diferente da publicada."
-onde = "Na página do Edital, em Kit de divulgação. Fica disponível depois da publicação."
+exemplo = """
+Na quarta, quem divulga baixa o kit do Edital 18/2026 e posta o story no mesmo dia, com as datas e as
+vagas exatamente como estão no Edital.
+"""
+onde = "Na página do Edital, em Kit de divulgação, depois da publicação."
 documentacao = "kit-de-divulgacao"
 prs = [361, 364, 377, 382, 383, 386, 387, 389, 391, 392, 393]
 specs = ["111", "119"]
@@ -620,11 +584,15 @@ specs = ["111", "119"]
 id = "mesmas-listas-em-toda-parte"
 data = 2026-11-05
 categoria = "correcao"
-titulo = "As mesmas listas no sorteio, na divulgação, na ocupação e na Supervisão"
+titulo = "Resolvido: as mesmas listas no sorteio, na divulgação e no relatório"
 resumo = """
-O sorteio, a divulgação, a ocupação, a Supervisão e o relatório do Edital passaram a usar as mesmas
-listas de concorrência: a ampla primeiro e as reservas na ordem do Perfil. A Modalidade que o Perfil
-aponta como a ampla deixou de ganhar sorteio e publicação próprios.
+O sorteio, a divulgação, a ocupação, a Supervisão e o relatório do Edital usam as mesmas listas de
+concorrência, com a ampla primeiro e as reservas na ordem do Perfil. A ampla deixou de ganhar um
+sorteio e uma publicação a mais.
+"""
+exemplo = """
+No Edital 19/2026, as listas do sorteio são as mesmas, na mesma ordem, que aparecem no relatório e
+na Supervisão.
 """
 documentacao = "recortes-alinhados"
 prs = [398]
@@ -634,14 +602,16 @@ specs = ["122"]
 id = "documentos-na-convocacao-e-formalizacao"
 data = 2026-11-04
 categoria = "novidade"
-titulo = "Documentos na convocação e entrega ao setor de formalização"
+titulo = "Receba, confira e entregue os documentos dos convocados no GPS"
 resumo = """
-A convocação pode pedir documentos: o candidato os envia pela área do candidato, e a comissão os
-confere no GPS. Depois, os documentos de quem ficou apto são disponibilizados ao setor que formaliza o
-vínculo, como o Registro Acadêmico, sem planilha nem e-mail com anexos.
+A convocação pode pedir documentos: o candidato os envia pela área dele, e a comissão confere no GPS.
+Os de quem ficou apto vão ao setor que formaliza o vínculo, como o Registro Acadêmico, sem planilha
+nem e-mail com anexo.
 """
-beneficio = "O documento chega uma vez, é conferido num lugar só e segue ao setor sem retrabalho."
-onde = "Na convocação de cada lista; o setor usa a seção Formalização da barra."
+exemplo = """
+Uma convocada do Edital 02/2026 envia o RG e o histórico no sábado. Na segunda, a comissão confere,
+e o Registro Acadêmico encontra os documentos na seção Formalização.
+"""
 destino = "interface:formalizacao"
 documentacao = "formalizacao"
 prs = [369, 373]
@@ -651,82 +621,36 @@ specs = ["115", "117"]
 id = "concurso-conferido-na-caixa"
 data = 2026-11-04
 categoria = "melhoria"
-titulo = "O concurso da Loteria Federal é conferido antes de publicar"
+titulo = "Concurso da Loteria Federal errado aparece antes de publicar"
 resumo = """
-Ao submeter, publicar ou retificar um Edital com sorteio, e ao fixar os participantes, o GPS confere na
-Caixa se o concurso declarado já foi realizado, e recusa o concurso que já passou.
+Ao submeter, publicar ou retificar um Edital com sorteio, e ao fixar os participantes, o GPS confere
+na Caixa se o concurso informado já aconteceu, e recusa o que já passou. O erro de digitação aparece
+na publicação, e não no dia do sorteio.
 """
-beneficio = "Um número de concurso digitado errado é descoberto na publicação, e não no dia do sorteio."
+exemplo = """
+Você digita no Edital 21/2026 um concurso que já foi sorteado na semana passada. Ao publicar, o GPS
+recusa e avisa, e você corrige o número na hora.
+"""
 documentacao = "sorteio-conferencia"
 prs = [372]
 specs = ["116"]
 
 [[nota]]
-id = "estado-final-fecha-requerimento-e-retificacao"
-data = 2026-11-04
-categoria = "correcao"
-titulo = "Processo encerrado fecha o Requerimento; Edital encerrado não se retifica"
-resumo = """
-Com o Processo encerrado ou cancelado, o Requerimento de Matrícula pedido na convocação deixa de aceitar
-escrita, como os documentos já deixavam. E a Retificação de um Edital encerrado ou cancelado passou a
-ser recusada.
-"""
-documentacao = "requerimento-processo-encerrado"
-prs = [358, 381]
-specs = ["029"]
-
-[[nota]]
 id = "desempate-por-etapa-nao-somada"
 data = 2026-11-02
 categoria = "correcao"
-titulo = "Desempate pela nota de uma Etapa que não entra na soma"
+titulo = "Resolvido: desempate pela nota de uma Etapa que não entra na soma"
 resumo = """
-O critério "Maior pontuação numa Etapa" não separava ninguém quando a Etapa citada não fazia parte da
-soma da nota final. O cálculo passou a ler essa nota só para desempatar.
+O critério "Maior pontuação numa Etapa" não desempatava ninguém quando a Etapa escolhida não entrava
+na nota final. Agora o GPS lê essa nota só para desempatar.
+"""
+exemplo = """
+No Edital 09/2026, a nota final soma prova e títulos, e o desempate é pela entrevista. Dois candidatos
+com 78 pontos passam a ficar na ordem da nota da entrevista.
 """
 documentacao = "desempate-por-outra-etapa"
 prs = [365]
 specs = ["114"]
-
-[[nota]]
-id = "encerramento-seguro-do-edital"
-data = 2026-11-01
-categoria = "melhoria"
-titulo = "Encerrar o Edital confere o que ainda está em aberto"
-resumo = """
-Antes, encerrar o Edital só fechava as inscrições. Agora a confirmação mostra o que impediria uma
-conclusão regular — período de inscrições ou prazo de recurso ainda correndo, recurso por julgar,
-Retificação a meio caminho — e só oferece o botão quando nada disso existe. O que continua depois do
-encerramento é dito como aviso.
-"""
-documentacao = "encerramento-seguro"
-prs = [362]
-specs = ["113"]
-
-[[nota]]
-id = "reaproveitamento-leva-teto-e-requerimento"
-data = 2026-11-01
-categoria = "correcao"
-titulo = "Criar a partir de um Edital anterior leva o teto e o Requerimento"
-resumo = """
-Ao criar um Edital a partir de outro, o teto de inscrições e o Requerimento de Matrícula da origem
-passaram a ser copiados, como o restante da configuração.
-"""
-documentacao = "reaproveitar"
-prs = [360]
-specs = []
-
-[[nota]]
-id = "limite-de-codigos-por-rede"
-data = 2026-11-01
-categoria = "correcao"
-titulo = "O candidato entende quando o pedido de código esbarra no limite da rede"
-resumo = """
-Quando muitos candidatos pedem o código de acesso da mesma rede — um polo, um laboratório —, quem passa
-do limite lê o que houve e quanto tempo esperar, em vez de uma orientação que não correspondia ao caso.
-"""
-prs = [363]
-specs = []
 
 # ---- outubro de 2026 -----------------------------------------------------------------------------
 
@@ -734,10 +658,14 @@ specs = []
 id = "cadastro-de-unidades"
 data = 2026-10-31
 categoria = "novidade"
-titulo = "Cadastro de unidades pela aplicação"
+titulo = "Cadastre e mantenha as unidades pela própria tela"
 resumo = """
-O registro de Unidades passou a ser administrado pela tela Unidades: cadastrar, alterar, desativar e
-reativar, com a conferência de como o cabeçalho sai no documento oficial.
+Na tela Unidades, você cadastra, altera, desativa e reativa uma unidade, e confere antes como o
+cabeçalho dela vai sair no documento oficial. O nome errado no topo do Edital deixa de ser surpresa.
+"""
+exemplo = """
+O campus mudou de nome? Você abre Unidades, corrige o nome, informa o motivo e já vê o cabeçalho
+como vai sair nos próximos Editais.
 """
 destino = "interface:unidades"
 documentacao = "cadastro-de-unidades"
@@ -749,10 +677,15 @@ specs = ["110"]
 id = "trilha-da-unidade"
 data = 2026-10-31
 categoria = "novidade"
-titulo = "Trilha da unidade: os atos administrativos, para quem audita"
+titulo = "Saiba quem mudou o quê na unidade, quando e por quê"
 resumo = """
-A seção Trilha da unidade mostra os atos administrativos da unidade, do mais recente para o mais
-antigo, com filtro por assunto: quando, o quê, por quem, o antes e o depois e o motivo.
+A Trilha da unidade lista cada mudança administrativa, da mais recente para a mais antiga: quando,
+o quê, quem fez, como era antes e depois, e o motivo. Para quem audita, a resposta fica a um filtro
+de distância.
+"""
+exemplo = """
+Na auditoria de quinta, perguntam quem trocou a autoridade que assina os Editais. Você filtra a
+Trilha da unidade pelo assunto Autoridades e lê quem fez, quando, o que havia antes e o motivo.
 """
 destino = "interface:trilha-da-unidade"
 documentacao = "trilha-da-unidade"
@@ -764,10 +697,14 @@ specs = ["108"]
 id = "acessos-da-unidade"
 data = 2026-10-30
 categoria = "novidade"
-titulo = "Acessos da unidade concedidos pela interface"
+titulo = "Dê e retire acessos à unidade pela própria tela"
 resumo = """
-Quem administra acessos concede e revoga, pela interface, o acesso de cada pessoa à unidade e os seus
-papéis, sempre com motivo. Nada se apaga: o histórico de cada vínculo fica registrado.
+Em Acessos da unidade, você concede a cada pessoa o acesso e os papéis dela, e os revoga, sempre
+com um motivo. Nada se apaga: fica o histórico de quem teve cada acesso, e quando.
+"""
+exemplo = """
+Uma servidora entra na comissão do Edital 08/2026: você clica em Conceder acesso, escolhe o papel e
+escreve o motivo. Quando ela sai, você revoga, e o histórico guarda os dois momentos.
 """
 destino = "interface:acessos"
 documentacao = "gestao-de-acessos"
@@ -779,11 +716,15 @@ specs = ["107"]
 id = "agenda-dos-editais"
 data = 2026-10-30
 categoria = "novidade"
-titulo = "Agenda dos Editais"
+titulo = "Veja as datas de todos os Editais da unidade num calendário só"
 resumo = """
-Os cronogramas publicados de todos os Editais da unidade, num mês e numa lista de próximos marcos.
+A Agenda junta os cronogramas publicados de todos os Editais da unidade, num calendário do mês e
+numa lista das próximas datas. Antes de marcar uma data, você vê onde elas já se acumulam.
 """
-beneficio = "Quem coordena vários certames vê onde os marcos se acumulam antes de marcar uma data."
+exemplo = """
+Você vai marcar a prova do Edital 15/2026 e abre a Agenda: a semana de 23/11 já tem dois resultados
+de outros Editais. Você escolhe a semana seguinte e evita sobrecarregar a comissão.
+"""
 destino = "interface:agenda"
 documentacao = "agenda"
 prs = [336]
@@ -793,13 +734,16 @@ specs = ["101"]
 id = "retificacao-em-curso-encontravel"
 data = 2026-10-30
 categoria = "melhoria"
-titulo = "A Retificação em curso aparece onde se procura"
+titulo = "Encontre a Retificação que está esperando por você"
 resumo = """
-A página do Edital lista as Retificações em curso, com a situação e quem age a seguir. A lista de
-Processos marca o Edital que tem Retificação esperando alguém, e a tela Retificar avisa quando já existe
-uma em andamento.
+A página do Edital lista as Retificações em andamento, em que ponto estão e quem age a seguir, e a
+lista de Processos marca o Edital que espera alguém. Quem homologa acha na hora a Retificação que um
+colega submeteu.
 """
-beneficio = "Quem homologa encontra a Retificação que outra pessoa submeteu."
+exemplo = """
+Um colega submeteu na terça a Retificação do Edital 09/2026. Na quarta, você vê a marca na lista de
+Processos, abre o Edital e lê "Uma Retificação deste Edital aguarda você".
+"""
 documentacao = "retificacao-em-curso"
 prs = [339, 340]
 specs = ["103", "104"]
@@ -808,10 +752,14 @@ specs = ["103", "104"]
 id = "documentacao-do-sistema-na-gestao"
 data = 2026-10-30
 categoria = "novidade"
-titulo = "Documentação do Sistema dentro da gestão"
+titulo = "Tire suas dúvidas sobre o sistema sem sair da gestão"
 resumo = """
-A descrição completa do sistema, seção por seção, abre pela barra lateral, em Documentação do Sistema.
-Os links "Saiba mais" desta página levam a ela.
+A Documentação do Sistema abre pela barra lateral e explica cada parte do GPS, seção por seção. Os
+links "Saiba mais" desta página levam direto ao trecho que interessa.
+"""
+exemplo = """
+Ficou em dúvida sobre a Agenda? Na nota dela, aqui em Novidades, o "Saiba mais" abre a seção da
+Agenda na Documentação do Sistema.
 """
 destino = "interface:documentacao"
 prs = [344]
@@ -821,11 +769,16 @@ specs = ["105"]
 id = "sorteio-viavel-desde-a-publicacao"
 data = 2026-10-30
 categoria = "correcao"
-titulo = "O Edital não publica um sorteio que seria recusado"
+titulo = "Resolvido: sorteio com data impossível só aparecia no dia do sorteio"
 resumo = """
-Um Edital que marcava a extração da Loteria para o mesmo dia do fim das inscrições era publicado, e o
-sorteio só era recusado no dia do certame. A publicação passou a impedir esse caso, e o sistema avisa
-antes de fixar os participantes.
+Se o Edital marca a extração da Loteria para o mesmo dia do fim das inscrições, ele não é mais
+publicado, e você fica sabendo na hora. Antes, o problema só aparecia no dia do sorteio, com o Edital
+já publicado.
+"""
+exemplo = """
+As inscrições do Edital 20/2026 terminam numa quarta, e a extração da Loteria está marcada para a
+mesma quarta. Ao tentar publicar, o GPS recusa e diz o que corrigir: você muda a data antes de o
+Edital sair.
 """
 documentacao = "sorteio-viavel"
 prs = [337]
@@ -835,10 +788,14 @@ specs = ["102"]
 id = "relatorio-consolidado"
 data = 2026-10-25
 categoria = "novidade"
-titulo = "Relatório consolidado da unidade"
+titulo = "Um balanço de vários Editais num documento só"
 resumo = """
-O balanço de um conjunto de Editais num documento só: por período de publicação, por ano do número do
-Edital ou escolhendo um a um, até 60 Editais.
+O Relatório consolidado reúne até 60 Editais da unidade: por período de publicação, por ano do
+Edital ou escolhendo um a um. Para prestar contas de um semestre inteiro, basta um PDF.
+"""
+exemplo = """
+Fim de semestre: na Visão Geral, você abre Relatório consolidado, escolhe os Editais publicados de
+julho a dezembro e clica em Emitir e baixar PDF.
 """
 onde = "Na Visão Geral, em Relatório consolidado."
 destino = "interface:visao-geral"
@@ -850,10 +807,14 @@ specs = ["100"]
 id = "relatorio-do-edital"
 data = 2026-10-25
 categoria = "novidade"
-titulo = "Relatório do Edital, em página e em PDF"
+titulo = "Conte como vai o Edital em uma página, ou em PDF"
 resumo = """
-Para quem responde pela seleção sem operar o sistema, uma página e um PDF que dizem, de um Edital
-publicado, o que saiu e o que falta, com um anexo técnico.
+O Relatório do Edital diz, de um Edital publicado, o que já saiu e o que ainda falta. Serve para quem
+responde pela seleção sem operar o sistema: você manda o PDF e não precisa explicar nada.
+"""
+exemplo = """
+A direção pede notícias do Edital 07/2026. Na página do Edital, você abre Relatório do Edital: os
+principais números, os resultados por perfil de vaga e os pontos de atenção, prontos para enviar em PDF.
 """
 onde = "Na página do Edital, em Relatório do Edital."
 documentacao = "relatorio-do-edital"
@@ -861,29 +822,39 @@ prs = [330, 332, 333]
 specs = ["099"]
 
 [[nota]]
-id = "previa-do-sorteio"
+id = "simule-antes-de-publicar"
 data = 2026-10-21
 categoria = "novidade"
-titulo = "Simular o sorteio antes de publicar"
+titulo = "Teste a classificação e o sorteio antes de publicar o Edital"
 resumo = """
-O marco por sorteio tem o botão Simular sorteio, que roda o algoritmo oficial sobre inscritos
-fictícios, com uma semente inventada e identificada como fictícia. Nada é gravado.
+Na etapa Classificação, você simula a regra do Edital — ordem, empates, corte e vagas ocupadas — ou
+o sorteio, com o mesmo cálculo oficial e candidatos fictícios. Você vê o problema da regra antes do
+candidato.
 """
-onde = "Na composição do Edital, etapa Classificação, no cartão do marco por sorteio."
-documentacao = "previa-do-sorteio"
-prs = [327, 328]
-specs = ["098"]
+exemplo = """
+Você definiu o desempate do Edital 11/2026. Clica em Simular classificação, vê dois candidatos
+fictícios empatados e confere quem fica à frente. Nada é gravado nem vai para o documento.
+"""
+onde = "Na composição do Edital, etapa Classificação: Simular classificação ou Simular sorteio."
+documentacao = "previa-da-classificacao"
+prs = [317, 319, 320, 321, 327, 328]
+specs = ["094", "095", "098"]
 
 [[nota]]
 id = "vaga-acrescida"
 data = 2026-10-21
 categoria = "novidade"
-titulo = "Vaga acrescida depois da publicação"
+titulo = "Surgiu vaga depois de publicar? Chame a reserva sem Retificação"
 resumo = """
-Uma vaga que surge depois de publicado o Edital, como a matrícula não efetivada em outro Edital, entra
-pela Ocupação, com origem e motivo, e permite convocar do cadastro de reserva sem Retificação.
+Quando aparece uma vaga depois da publicação — uma matrícula que não se efetivou em outro Edital,
+por exemplo —, você a registra na Ocupação, com origem e motivo. E chama o cadastro de reserva sem
+precisar retificar o Edital.
 """
-onde = "Na Ocupação, no bloco da ampla concorrência: Vagas acrescidas e Conferir o acréscimo."
+exemplo = """
+Uma matrícula não se efetivou no Edital 04/2026 e liberou vaga para o 05/2026. Na Ocupação do 05,
+você preenche Vagas acrescidas, diz de onde a vaga veio e por quê, e clica em Conferir o acréscimo.
+"""
+onde = "Na Ocupação, no bloco da ampla concorrência."
 documentacao = "vaga-acrescida"
 prs = [324]
 specs = ["097"]
@@ -892,39 +863,32 @@ specs = ["097"]
 id = "cadastro-de-reserva-como-cr"
 data = 2026-10-21
 categoria = "melhoria"
-titulo = "Cadastro de reserva sem vaga imediata sai como CR no PDF"
+titulo = "Perfil só de cadastro de reserva sai como CR no PDF do Edital"
 resumo = """
-O Perfil de cadastro de reserva sem vaga imediata sai no documento do Edital como "CR", com a nota
-"CR: cadastro de reserva.", como a equipe já escrevia à mão.
+O Perfil que forma só cadastro de reserva, sem vaga imediata, sai no PDF como "CR", com a nota "CR:
+cadastro de reserva.". É o jeito que a equipe já escrevia à mão.
+"""
+exemplo = """
+O Edital 13/2026 abre só cadastro de reserva para um dos polos. No PDF, esse polo aparece com CR e a
+legenda logo abaixo, como a comissão costumava escrever.
 """
 documentacao = "cadastro-de-reserva"
 prs = [323]
 specs = ["096"]
 
 [[nota]]
-id = "previa-da-classificacao"
-data = 2026-10-20
-categoria = "novidade"
-titulo = "Simular a classificação antes de publicar"
-resumo = """
-Quem elabora o Edital vê o que a regra do marco faria antes de publicá-la — a ordem, os empates, o
-corte e a ocupação das vagas —, calculado pelo mesmo motor do certame sobre candidatos fictícios. Nada
-é gravado nem sai no documento.
-"""
-onde = "Na composição do Edital, etapa Classificação: Simular classificação."
-documentacao = "previa-da-classificacao"
-prs = [317, 319, 320, 321]
-specs = ["094", "095"]
-
-[[nota]]
 id = "nova-moldura-da-gestao"
 data = 2026-10-18
 categoria = "melhoria"
-titulo = "Nova barra lateral e cabeçalho da gestão"
+titulo = "Ache cada tela pela nova barra lateral da gestão"
 resumo = """
-A gestão ganhou uma barra lateral com as seções que cada pessoa alcança, agrupadas em Trabalho, Unidade
-e Ajuda, que se recolhe para dar espaço às telas largas, e um cabeçalho que diz onde você está. As telas
-de uso diário, de quem elabora e da presidência foram refeitas sobre essa moldura.
+A barra lateral mostra só as seções que você usa, agrupadas em Trabalho, Unidade e Ajuda, e se
+recolhe para dar espaço às telas largas. O cabeçalho diz onde você está, e as telas do dia a dia
+foram refeitas nesse formato.
+"""
+exemplo = """
+Diante de uma tabela larga, você recolhe a barra e ganha a largura da página. O cabeçalho continua
+dizendo onde você está, e um clique abre a barra de novo.
 """
 documentacao = "barra-da-gestao"
 prs = [291, 292, 293, 294, 297, 298, 299, 300, 301, 302, 303, 304, 305, 307]
@@ -934,14 +898,16 @@ specs = ["076", "077", "078", "079", "080", "084", "085", "087"]
 id = "entrada-da-gestao"
 data = 2026-10-16
 categoria = "melhoria"
-titulo = "Uma página de acesso à gestão, e a volta ao endereço que você abriu"
+titulo = "O link que um colega mandou abre a tela certa, mesmo antes de entrar"
 resumo = """
-A gestão ganhou uma página de acesso própria, "Bem-vindo à gestão", com o método de entrada que o
-ambiente oferece. Quem abre o link de um Edital ou de outra tela sem estar identificado volta a ela
-depois de entrar, em vez de cair sempre na lista de Processos. O produto passou a se chamar GPS —
-Gestão de Processos Seletivos.
+Se você abre o link de um Edital sem ter entrado, passa pela página "Bem-vindo à gestão" e volta
+direto a ele, em vez de cair na lista de Processos. E o sistema ganhou nome: GPS — Gestão de
+Processos Seletivos.
 """
-beneficio = "Um link enviado por um colega leva direto ao lugar certo, mesmo antes de entrar."
+exemplo = """
+Um colega manda no chat o link da convocação do Edital 03/2026. Você clica, entra na gestão e já
+está na convocação, sem procurar o Edital de novo.
+"""
 documentacao = "entrar"
 prs = [288]
 specs = ["075"]
@@ -950,29 +916,34 @@ specs = ["075"]
 id = "revisao-do-edital-publicado-vigente"
 data = 2026-10-15
 categoria = "correcao"
-titulo = "A Revisão do Edital publicado mostra o conteúdo que vale hoje"
+titulo = "Resolvido: a Revisão mostra o Edital como ele vale hoje"
 resumo = """
-Num Edital publicado e depois retificado, a Revisão mostrava as vagas e as datas do dia da
-publicação. Agora ela traz "O conteúdo vigente" e diz desde quando ele vale. Também deixaram de
-acontecer, na composição: as caixas "Eliminatória" e "Classificatória" sumirem no Safari, na etapa
-Etapas de Avaliação, e salvar a etapa Perfis de Vaga apagar a descrição de uma Modalidade.
+Num Edital publicado e depois retificado, a Revisão trazia as vagas e as datas do dia da publicação.
+Agora ela mostra "O conteúdo vigente" e desde quando ele vale; e salvar os Perfis de Vaga não apaga
+mais a descrição de uma Modalidade.
+"""
+exemplo = """
+O Edital 02/2026 foi retificado para adiar a prova. Ao abrir a Revisão, você vê a data nova, e não a
+antiga, com a indicação de desde quando esse conteúdo vale.
 """
 documentacao = "composicao"
-prs = [253, 285]
+prs = [285]
 specs = []
 
 [[nota]]
 id = "jornada-publica-do-portal"
 data = 2026-10-14
 categoria = "melhoria"
-titulo = "Página pública das seleções mais fácil de percorrer, do cartão à inscrição"
+titulo = "Candidatos acham a vaga certa e chegam à inscrição com menos voltas"
 resumo = """
-Na página pública, cada cartão leva o título do Edital, a oferta por cargo ou curso e o lugar
-("Onde:"), e a busca também encontra pelo lugar. A página de cada seleção abre com "O que esta
-seleção oferece" e o atalho "Ver vagas e inscrever-se". As telas de acesso dizem para qual vaga a
-pessoa está se inscrevendo, e a do código lembra de olhar a caixa de spam.
+Na página pública, cada seleção mostra o Edital, o cargo ou curso e o lugar, e a busca encontra
+também pelo lugar. A seleção abre com o que ela oferece e o atalho "Ver vagas e inscrever-se": menos
+dúvidas chegam à comissão.
 """
-beneficio = "O candidato chega à vaga certa com menos voltas e menos dúvidas à comissão."
+exemplo = """
+Uma candidata busca pela cidade dela e acha o curso no campus de lá. Na hora de entrar, a tela
+lembra para qual vaga ela se inscreve, e a do código avisa para olhar a caixa de spam.
+"""
 documentacao = "jornada"
 prs = [277]
 specs = ["072"]
@@ -981,12 +952,15 @@ specs = ["072"]
 id = "piloto-do-assistente-do-edital"
 data = 2026-10-14
 categoria = "novidade"
-titulo = "Piloto do assistente do Edital: perguntas livres, com resposta conferida"
+titulo = "Piloto: pergunte o que quiser sobre o Edital ao assistente"
 resumo = """
-Quem participa do piloto conversa com o assistente sobre um Edital publicado. Um modelo de linguagem
-responde a partir da versão vigente, e o GPS confere cada resposta antes de mostrá-la: a que cita o
-que o Edital não diz não aparece. As respostas podem conter erros e devem ser conferidas nas fontes, e
-nada desta tela chega aos candidatos.
+Quem participa do piloto conversa com o assistente sobre um Edital publicado, e o GPS confere cada
+resposta no texto vigente antes de mostrá-la. Ainda assim, confira nas fontes; nada disso chega aos
+candidatos.
+"""
+exemplo = """
+Você pergunta se quem tem curso técnico pode se inscrever no Edital 06/2026. A resposta vem apoiada
+no texto do Edital; se citasse algo que não está lá, nem apareceria.
 """
 onde = "Na página do Edital publicado, em Conversar com o assistente (piloto)."
 documentacao = "assistente-do-edital"
@@ -999,13 +973,15 @@ specs = ["071"]
 id = "respostas-do-assistente-de-duvidas"
 data = 2026-10-13
 categoria = "novidade"
-titulo = "Conferir o que o assistente de dúvidas responderia sobre o Edital"
+titulo = "Confira o que o assistente de dúvidas responderia, antes do público"
 resumo = """
-Na página do Edital publicado, "Ver as respostas do assistente de dúvidas (validação interna)" mostra
-as respostas prontas a doze perguntas frequentes — prazo de inscrição, vagas, recurso —, tiradas da
-versão vigente, sem modelo de linguagem. Cada resposta separa o texto do Edital, o dado e a
-explicação, e leva ao ato que fixou cada valor. A tela lista os pontos a revisar antes de abrir o
-assistente ao público; nada dela é visto por candidatos.
+Na página do Edital publicado, você vê as respostas prontas a doze perguntas frequentes — prazo,
+vagas, recurso —, tiradas do Edital vigente e com a origem de cada valor. Você revisa tudo antes de o
+assistente chegar aos candidatos.
+"""
+exemplo = """
+No Edital 10/2026, você abre "Ver as respostas do assistente de dúvidas (validação interna)", lê a
+resposta sobre o prazo de inscrição e segue o link até o documento que fixou esse prazo.
 """
 documentacao = "assistente-do-edital"
 prs = [274]
@@ -1015,13 +991,14 @@ specs = ["070"]
 id = "edital-em-linguagem-simples"
 data = 2026-10-12
 categoria = "melhoria"
-titulo = "O Edital em PDF em linguagem simples, organizado pelas perguntas do candidato"
+titulo = "O Edital em PDF agora responde às perguntas do candidato"
 resumo = """
-O Edital novo sai organizado pelas perguntas de quem se inscreve — "Quem pode se inscrever?", "Como
-será a seleção?" —, com o "Resumo deste Edital" e um "Sumário" com a página de cada seção. As frases
-que o GPS escreve ficaram mais simples, sem rótulos internos. O arquivo tem fonte própria, marcadores
-de seção e o número do Edital no nome. A Retificação de um Edital publicado antes mantém a forma
-original.
+O Edital novo sai organizado pelas perguntas de quem se inscreve, como "Quem pode se inscrever?", com
+um resumo e um sumário com a página de cada seção. As frases que o GPS escreve ficaram mais simples.
+"""
+exemplo = """
+Um candidato abre o PDF do Edital 14/2026, lê o "Resumo deste Edital" e vai pelo "Sumário" direto à
+página de "Como será a seleção?". O arquivo baixado já traz o número do Edital no nome.
 """
 documentacao = "perguntas-operar"
 prs = [275]
@@ -1031,15 +1008,17 @@ specs = ["069"]
 id = "avisos-aos-candidatos"
 data = 2026-10-09
 categoria = "novidade"
-titulo = "Avisar os candidatos por e-mail de um resultado ou de uma chamada publicada"
+titulo = "Avise por e-mail os candidatos de um resultado ou de uma convocação"
 resumo = """
-Depois de publicar um resultado, a retificação dele ou uma chamada por publicação, a comissão pode
-avisar por e-mail quem o ato alcançou — os destinatários saem do próprio ato, e ninguém os acrescenta
-nem tira. A prévia mostra a mensagem como sai e quantas pessoas a recebem, e o aviso não muda prazo,
-situação nem direito. Os textos vêm dos Modelos de aviso da unidade, e cada aviso tem histórico,
-interrupção e reenvio.
+Publicado um resultado ou uma convocação, você avisa por e-mail exatamente quem ela alcança: a lista
+sai da própria publicação. A prévia mostra a mensagem e quantas pessoas a recebem, e o aviso não muda
+prazo nem direito.
 """
-onde = "Na página do Edital, em Avisos aos candidatos; a chamada publicada, na tela da convocação."
+exemplo = """
+Publicado o resultado do Edital 01/2026, você abre Avisos aos candidatos, vê na prévia a mensagem e
+que 148 pessoas vão recebê-la, e confirma. O texto parte dos Modelos de aviso da unidade.
+"""
+onde = "Na página do Edital, em Avisos aos candidatos; a convocação publicada, na tela da convocação."
 destino = "interface:modelos-de-aviso"
 documentacao = "resultados"
 requer_configuracao = "AVISOS_AOS_CANDIDATOS"
@@ -1050,15 +1029,16 @@ specs = ["066"]
 id = "situacao-do-candidato"
 data = 2026-10-09
 categoria = "melhoria"
-titulo = "O candidato vê a própria situação e chega à convocação pela lista de inscrições"
+titulo = "O candidato entende onde está e acha a convocação sem perguntar"
 resumo = """
-Na área do candidato, o acompanhamento abre por "Sua situação" — como "Aguardando chamada",
-"Convocado" ou "Vaga aceita" —, com o porquê e o que fazer, e cada lista de concorrência tem cartão
-próprio com a posição oficial. Em "Minhas inscrições", a inscrição com convocação aberta mostra
-"Convocação aberta" e leva a "Ver convocação", de onde se chega ao Requerimento de Matrícula quando o
-Edital o pede na convocação.
+Na área do candidato, o acompanhamento abre por "Sua situação", como "Aguardando chamada" ou
+"Convocado", com o porquê e o que fazer. Quem tem convocação aberta vê o aviso em "Minhas inscrições"
+e um atalho até ela.
 """
-beneficio = "Quem foi chamado encontra a convocação, e quem está em duas listas entende as duas posições."
+exemplo = """
+Uma candidata concorre na ampla concorrência e nas cotas e vê dois cartões, cada um com a posição
+dela. Convocada, ela encontra "Convocação aberta" em Minhas inscrições e clica em "Ver convocação".
+"""
 documentacao = "jornada"
 prs = [251, 263]
 specs = ["059", "063"]
@@ -1067,12 +1047,15 @@ specs = ["059", "063"]
 id = "texto-do-edital-conferido"
 data = 2026-10-09
 categoria = "melhoria"
-titulo = "Antes de publicar, o GPS confere a numeração e os caracteres do texto do Edital"
+titulo = "Numeração trocada no texto do Edital é pega antes de publicar"
 resumo = """
-Texto colado do original com número de outra seção — um "3.1" dentro da seção 4 — impede a submissão
-e a publicação, e a etapa Conteúdo e a Revisão dizem a seção, o parágrafo e o trecho. Remissão que
-aponta para mais de um item, para nenhum ou para o lugar errado vira aviso. E o caractere que o
-documento oficial não imprime, que antes saía como "?", passou a ser recusado com o nome dele.
+Se você cola do original um "3.1" dentro da seção 4, o GPS impede a publicação e aponta a seção e o
+trecho. Remissão a item errado vira aviso, e o caractere que o PDF não imprime é recusado pelo nome,
+em vez de sair como "?".
+"""
+exemplo = """
+Você copia do Edital do ano passado o texto da seção 4, que ainda começa por 3.1. A etapa Conteúdo
+aponta o parágrafo exato, e você corrige antes que o erro chegue ao documento oficial.
 """
 documentacao = "composicao-validacao"
 prs = [265, 266]
@@ -1082,12 +1065,15 @@ specs = ["065"]
 id = "normas-do-edital-em-pdf"
 data = 2026-10-09
 categoria = "correcao"
-titulo = "O Edital em PDF diz de qual resultado se recorre e deixa de imprimir quadro vazio"
+titulo = "Resolvido: o PDF agora diz de qual resultado o candidato recorre"
 resumo = """
-A frase de recurso de cada marco passou a nomear o resultado de que se recorre, e a Revisão avisa
-"Prazos de recurso a conferir", com os prazos dos marcos ao lado dos Eventos de recurso do
-Cronograma. Sob sorteio, o arredondamento da nota deixou de ser pedido e impresso. E o Perfil sem vaga
-imediata deixou de sair com quadro de zeros e frase de reversão.
+A frase sobre recurso passou a nomear o resultado de que se recorre, e a Revisão avisa quando os
+prazos do texto e os do Cronograma merecem conferência. E o PDF parou de imprimir quadro de zeros e
+arredondamento de nota onde não cabem.
+"""
+exemplo = """
+No Edital 16/2026, o candidato lê no PDF que o recurso é contra o resultado da prova escrita, e não
+fica em dúvida entre as etapas. Antes de publicar, a Revisão mostra "Prazos de recurso a conferir".
 """
 documentacao = "c-cronograma"
 prs = [268]
@@ -1097,45 +1083,50 @@ specs = ["067"]
 id = "o-que-se-repete-sai-uma-vez"
 data = 2026-10-09
 categoria = "melhoria"
-titulo = "No Edital de vários Perfis, o que se repete sai uma vez no PDF"
+titulo = "Edital com vários polos sem o mesmo texto repetido dez vezes"
 resumo = """
-Com dois ou mais Perfis, o documento junta o que era igual: as vagas numa tabela "Vagas por lista de
-concorrência", as Modalidades em tabelas por grupo de Perfis, a reversão e a convocação uma vez, e as
-atribuições, os requisitos e as regras idênticos em subseções comuns depois do último Perfil, a que
-cada Perfil remete. O Edital de um Perfil só sai como antes, e nenhum documento publicado muda.
+Com dois ou mais Perfis, o PDF junta o que é igual: as vagas numa tabela só, e atribuições,
+requisitos e regras idênticos numa parte comum. O Edital fica mais fácil de ler, e o de um Perfil só
+sai como antes.
 """
-beneficio = "Um Edital com dez polos deixa de repetir o mesmo texto dez vezes."
+exemplo = """
+O Edital 18/2026 tem dez polos com as mesmas atribuições. Em vez de dez cópias, o PDF traz a tabela
+"Vagas por lista de concorrência" e uma parte comum, a que cada polo remete.
+"""
 documentacao = "c-publicacao"
 prs = [264, 270]
 specs = ["064", "068"]
 
 [[nota]]
-id = "grafico-de-submissoes-por-dia"
+id = "pequenas-melhorias-1-a-15-de-outubro"
 data = 2026-10-09
 categoria = "melhoria"
-titulo = "O gráfico Submissões por dia diz quando e quanto"
+titulo = "Pequenas melhorias no gráfico de inscrições e na composição"
 resumo = """
-Na página do Processo e na Supervisão, o gráfico das inscrições enviadas por dia ganhou escala, com o
-pico no topo, e datas no eixo; passar o mouse numa barra mostra o dia e o valor. Um período curto
-deixou de virar um bloco da largura da página.
+O gráfico Submissões por dia ganhou escala e datas, e mostra o dia e o número ao passar o mouse. E,
+no Safari, as caixas Eliminatória e Classificatória voltaram a aparecer na etapa Etapas de Avaliação.
+"""
+exemplo = """
+Num período de inscrições de três dias, o gráfico deixa de virar um bloco da largura da página: são
+três barras, com as datas embaixo.
 """
 documentacao = "pagina-do-processo"
-prs = [252]
+prs = [252, 253]
 specs = []
 
 [[nota]]
 id = "resultados-por-perfil-etapa-e-lista"
 data = 2026-10-07
 categoria = "melhoria"
-titulo = "Na página pública do Edital, os resultados por Perfil, etapa e lista"
+titulo = "Na página pública, cada resultado diz de que vaga e de que lista é"
 resumo = """
-O bloco "Resultados divulgados" segue a forma da seção Vagas: cada Perfil, cada etapa e, em cada
-linha, o nome da lista de concorrência, com a natureza e a data da publicação; as publicações
-anteriores ficam recolhidas por etapa. Abaixo, "Participou deste processo seletivo?" leva o candidato
-à própria situação. A página de cada publicação diz no título de qual lista é, também a da ampla
-concorrência.
+Os "Resultados divulgados" seguem a forma da seção Vagas: por Perfil, por etapa e com o nome da lista
+de concorrência em cada linha. Ninguém confunde o resultado das cotas com o da ampla concorrência.
 """
-beneficio = "Num marco com cotas, ninguém confunde a publicação de uma lista com a de outra."
+exemplo = """
+Um candidato às vagas para pessoas com deficiência abre o Edital 05/2026 e acha, no Perfil dele, a
+linha da lista dele. Mais abaixo, "Participou deste processo seletivo?" o leva à própria situação.
+"""
 documentacao = "pagina-publica-do-edital"
 prs = [255, 260, 262]
 specs = ["062"]
@@ -1144,11 +1135,14 @@ specs = ["062"]
 id = "corte-depois-do-recurso"
 data = 2026-10-07
 categoria = "correcao"
-titulo = "O corte emitido depois de um recurso deferido não nasce mais desatualizado"
+titulo = "Resolvido: recurso deferido não trava mais a publicação do resultado"
 resumo = """
-Depois de um recurso deferido, o corte emitido sobre a ordem sucessora já nascia desatualizado, e o
-seguinte também: a Etapa governada e a publicação ficavam travadas sem saída. Agora o corte que já
-considera o recurso nasce em dia, e só o recurso deferido depois dele o desatualiza.
+Depois de um recurso deferido, o novo corte — a linha que separa quem segue de quem fica de fora — já
+nascia desatualizado, e a publicação travava. Agora o corte que considera o recurso nasce em dia.
+"""
+exemplo = """
+A comissão defere um recurso no Edital 09/2026, refaz a classificação e emite o novo corte. Ele já
+considera o recurso, e você segue para a publicação do resultado.
 """
 documentacao = "corte"
 prs = [257]
@@ -1158,20 +1152,20 @@ specs = ["061"]
 id = "autoridades-da-unidade"
 data = 2026-10-06
 categoria = "novidade"
-titulo = "Autoridades da unidade: quem assina os atos, com cargo e ato de nomeação"
+titulo = "Escolha de uma lista quem assina, e o documento sai completo"
 resumo = """
-O Gestor cadastra em Autoridades da unidade quem pode assinar os atos — cargo, nome, ato de nomeação
-e vigência —, e quem publica o Edital, a Retificação ou o resultado escolhe entre as vigentes. O
-documento oficial sai com o cabeçalho da unidade do Edital e termina com o local, a data por extenso e
-a autoridade responsável. A autoridade se corrige só antes do primeiro uso e se encerra sem mudar o
-que já foi assinado.
+Em Autoridades da unidade, o Gestor cadastra quem pode assinar — cargo, nome, nomeação e vigência —,
+e quem publica escolhe entre as vigentes. O documento sai com o cabeçalho da unidade, o local, a data
+por extenso e quem assina.
+"""
+exemplo = """
+Ao publicar o resultado do Edital 12/2026, você escolhe quem assina entre as autoridades cadastradas
+da unidade. O PDF termina com o local, a data por extenso, o nome e o cargo de quem assinou.
 """
 destino = "interface:autoridades"
 documentacao = "publicacao"
 prs = [233, 254]
 specs = ["054", "060"]
-
-# ---- sem nota ------------------------------------------------------------------------
 
 # ---- setembro de 2026 ----------------------------------------------------------------------------
 
@@ -1179,15 +1173,17 @@ specs = ["054", "060"]
 id = "vista-do-conjunto-em-perfis-e-classificacao"
 data = 2026-09-29
 categoria = "melhoria"
-titulo = "Perfis e Classificação abrem pela tabela do conjunto, com um Perfil à vista por vez"
+titulo = "Edital com muitos Perfis: veja todos numa tabela e edite um por vez"
 resumo = """
-Com dois ou mais Perfis, as etapas Perfis e Classificação da composição abrem com uma tabela do
-conjunto — vagas, Modalidades, convocação e situação; na Classificação, os marcos de cada Perfil — e
-mostram um Perfil por vez, com "← Anterior", "Próximo →" e "Voltar à lista". Trocar de Perfil não
-perde nada do que foi digitado. E um Edital com dezenas de Perfis passou a caber num envio só.
+Com dois ou mais Perfis, as etapas Perfis e Classificação abrem numa tabela com as vagas, as
+Modalidades e a convocação de cada um, e você edita um Perfil por vez. Trocar de Perfil não perde o
+que foi digitado, e um Edital com dezenas deles se grava de uma vez.
 """
-beneficio = "Um Edital de muitos polos deixa de ser uma página de milhares de pixels de cartões."
-onde = "Na composição do Edital, etapas Perfis e Classificação."
+exemplo = """
+No Edital 08/2026, com 20 Perfis, um por polo, você confere na tabela as vagas de todos, abre o
+Perfil do polo de Colatina,
+ajusta o que precisa e segue com "Próximo →" para o seguinte — sem rolar uma página sem fim.
+"""
 documentacao = "perfis-tabela"
 prs = [229, 230, 232]
 specs = ["052", "053"]
@@ -1196,15 +1192,16 @@ specs = ["052", "053"]
 id = "aplicar-aos-demais-perfis"
 data = 2026-09-29
 categoria = "novidade"
-titulo = "Declarar uma vez e aplicar aos demais Perfis"
+titulo = "Preencha uma vez e aplique a todos os Perfis do Edital"
 resumo = """
-O cartão da Modalidade e o do marco têm "Aplicar aos demais Perfis", e a forma de convocação e a
-reversão se declaram uma vez para todos os Perfis. Antes de gravar, a prévia mostra o efeito em cada
-Perfil — o que nasce, o que é substituído e o que fica de fora, com o motivo —, e dá para desmarcar o
-Perfil que diverge de propósito. Na Retificação, o mesmo gesto corrige todos os Perfis num ato só.
+Com "Aplicar aos demais Perfis", a Modalidade ou a regra de classificação que você declarou num Perfil
+vai para os outros, e uma prévia mostra o efeito em cada um antes de gravar. Acaba a repetição Perfil
+a Perfil — e, na Retificação, um erro se corrige em todos de uma vez.
 """
-beneficio = "Acaba a repetição Perfil a Perfil, e um erro se corrige uma vez, e não N vezes."
-onde = "Na composição do Edital, etapas Perfis e Classificação; e na tela Retificar."
+exemplo = """
+Você cria a cota PPI no Perfil do polo de Serra e clica "Aplicar aos demais Perfis". A prévia lista
+os 12 Perfis que vão recebê-la; você desmarca o do polo de Vitória, que tem regra própria, e grava.
+"""
 documentacao = "padroes"
 prs = [226, 231]
 specs = ["051"]
@@ -1213,15 +1210,16 @@ specs = ["051"]
 id = "teto-de-inscricoes-na-composicao-e-no-portal"
 data = 2026-09-29
 categoria = "melhoria"
-titulo = "O teto de inscrições por candidato se declara na composição e aparece ao candidato"
+titulo = "Limite de inscrições por candidato, à vista de quem se inscreve"
 resumo = """
-A etapa Inscrição ganhou o campo "Inscrições por candidato neste Edital"; vazio, não há limite. A
-página da seleção e a revisão da inscrição dizem o teto, e quem já o atingiu lê "Limite atingido" em
-vez de ser convidado a começar outra inscrição que não poderia enviar. A Retificação recusa teto
-menor que 1.
+Na etapa Inscrição, você informa quantas inscrições cada candidato pode fazer no Edital; em branco,
+não há limite. O candidato vê a regra antes de começar, e quem já chegou ao limite lê "Limite
+atingido" em vez de preencher uma inscrição que não poderia enviar.
 """
-beneficio = "O candidato descobre a regra antes de preencher, e não na recusa do envio."
-onde = "Na composição do Edital, etapa Inscrição, seção Período."
+exemplo = """
+O Edital 15/2026 permite 2 inscrições por candidato. Quando a candidata Joana envia a segunda, a
+página da seleção passa a dizer "Limite atingido" e não a convida a começar uma terceira.
+"""
 documentacao = "c-teto"
 prs = [224, 225, 227]
 specs = []
@@ -1230,15 +1228,16 @@ specs = []
 id = "conduzir-o-marco-inteiro"
 data = 2026-09-28
 categoria = "novidade"
-titulo = "Conduzir o marco inteiro: ordem, corte, apuração e publicação em todos os recortes"
+titulo = "Ordene e publique o resultado de todas as listas de uma vez"
 resumo = """
-Cada marco tem a tela de condução, com uma tabela de recortes que diz, para ordem, corte, apuração e
-publicação, o que está feito, obsoleto, por fazer ou não se aplica. Dali, "Ordenar o marco",
-"Publicar o resultado do marco" e os demais gestos praticam a operação em todos os recortes de uma
-vez, depois de uma conferência que diz o que será feito, o que fica de fora e o que está impedido.
+Cada classificação do Edital ganhou uma tela que mostra, Perfil a Perfil e lista a lista, o que já foi
+feito e o que falta: ordem, corte e publicação. Dali, um só clique faz a operação em todas as listas,
+depois de uma conferência do que será feito e do que fica de fora.
 """
-beneficio = "Um Edital com dezenas de recortes deixa de exigir uma tela por recorte em cada operação."
-onde = "Na página do Edital, em conduzir o marco."
+exemplo = """
+O Edital 20/2026 tem 15 Perfis, um por polo, cada um com ampla e cotas. Em vez de abrir 45 telas, você confere a
+tabela, clica para publicar o resultado e vê quais listas entram e quais ainda estão impedidas.
+"""
 documentacao = "operar-por-marco"
 prs = [223]
 specs = ["049"]
@@ -1247,15 +1246,16 @@ specs = ["049"]
 id = "convocacao-como-fluxo"
 data = 2026-09-28
 categoria = "novidade"
-titulo = "Convocar os titulares num ato só e registrar os vencidos de uma vez"
+titulo = "Convoque todos os titulares de uma lista com um clique"
 resumo = """
-Na convocação de cada lista, "Convocar os titulares num ato só" chama, na ordem da fila, quem a
-apuração indica, e a comunicação de cada pessoa sai no mesmo ato. "Registrar o não atendimento das
-N" fecha de uma vez as convocações vencidas sem resposta, e a apuração seguinte sai com o desfecho
-quando possível. A tela diz em que recorte se está e leva aos demais recortes do marco.
+Na convocação de cada lista, "Convocar os titulares num ato só" chama quem está na vez, na ordem da
+fila, e envia a comunicação de cada um. E as convocações vencidas sem resposta se registram todas de
+uma vez, sem um formulário por pessoa.
 """
-beneficio = "A primeira chamada deixa de ser um formulário por pessoa."
-onde = "Na convocação de cada lista."
+exemplo = """
+A lista da ampla do Edital 09/2026 tem 30 vagas. Na segunda, você convoca os 30 titulares de uma vez;
+na semana seguinte, registra num clique os 4 que não responderam no prazo.
+"""
 documentacao = "convocacao-fluxo"
 prs = [204, 222]
 specs = ["050"]
@@ -1264,13 +1264,15 @@ specs = ["050"]
 id = "correcoes-antes-do-piloto"
 data = 2026-09-28
 categoria = "correcao"
-titulo = "Período cancelado, encerramento do Processo e Mesa: correções antes do piloto"
+titulo = "Resolvido: período de inscrições cancelado ainda aceitava inscrições"
 resumo = """
-O período de inscrições declarado cancelado deixou de receber inscrições: a gestão e a página pública
-dizem "Período de inscrições cancelado", e a publicação nesse estado é impedida. Encerrar o Processo
-passou a exigir que cada Edital dele esteja encerrado ou cancelado. A Mesa deixou de oferecer
-"Concluir avaliação" a quem já tem Resultado na Etapa, e a Retificação que encurta o prazo de recurso
-não alcança o resultado já divulgado.
+Com o período cancelado, a gestão e a página da seleção dizem "Período de inscrições cancelado", e
+ninguém mais se inscreve. E mais: o Processo só se encerra com todos os seus Editais encerrados ou
+cancelados, e a Mesa não oferece mais concluir a avaliação de quem já tem resultado.
+"""
+exemplo = """
+O período do Edital 11/2026 foi cancelado na quarta. Quem abre a página da seleção na quinta lê
+"Período de inscrições cancelado", e não um convite para se inscrever.
 """
 prs = [220, 221]
 specs = []
@@ -1279,42 +1281,47 @@ specs = []
 id = "portal-diz-prazo-de-inscricao-encerrado"
 data = 2026-09-28
 categoria = "correcao"
-titulo = "O candidato sabe que o prazo acabou antes de tentar enviar"
+titulo = "Resolvido: candidato tentava enviar inscrição com o prazo encerrado"
 resumo = """
-Em "Minhas inscrições", o rascunho de um Edital com período encerrado diz "Inscrições encerradas em
-…" e oferece "Consultar inscrição" no lugar de continuar. O rascunho e a revisão avisam no alto e
-deixam de oferecer o envio. A página da seleção passou a ter como título o do Edital, e não o do
-Processo.
+Em "Minhas inscrições", o rascunho de um Edital com prazo vencido diz "Inscrições encerradas em …" e
+não oferece mais o envio. O candidato sabe na hora que o prazo acabou, sem preencher à toa — e a
+página da seleção passou a ter o título do Edital.
+"""
+exemplo = """
+As inscrições do Edital 07/2026 fecharam na sexta. No sábado, quem deixou um rascunho abre "Minhas
+inscrições", lê "Inscrições encerradas em" com a data e só pode consultar o que preencheu.
 """
 prs = [215]
 specs = []
 
 [[nota]]
-id = "restaurar-o-digitado-sem-perder-modalidades"
+id = "pequenas-melhorias-25-a-28-de-setembro"
 data = 2026-09-28
-categoria = "correcao"
-titulo = "Restaurar o que foi digitado na composição traz as Modalidades de volta"
+categoria = "melhoria"
+titulo = "Pequenas melhorias na composição, na Mesa e no Edital em PDF"
 resumo = """
-Ao voltar a uma etapa com alterações não salvas, "Restaurar o que eu havia digitado" devolvia o Perfil
-sem as Modalidades, e a perda era gravada por cima da cópia guardada. Agora a lista inteira volta,
-inclusive o que foi acrescentado antes de sair da etapa.
+Na Mesa, cada documento traz a instrução do Edital; as tabelas do PDF não cortam mais números nem
+datas, e cada Perfil acha os seus documentos; o cartão da classificação mostra primeiro o essencial; e
+"Restaurar o que eu havia digitado" devolve também as Modalidades.
 """
-prs = [216, 218]
-specs = []
+documentacao = "marco"
+prs = [115, 124, 162, 164, 167, 216, 218]
+specs = ["030"]
 
 [[nota]]
 id = "revisao-e-documento-dizem-a-classificacao"
 data = 2026-09-28
 categoria = "melhoria"
-titulo = "A Revisão e o documento dizem a Classificação inteira"
+titulo = "Confira na Revisão como a classificação será publicada"
 resumo = """
-A Revisão ganhou o bloco Classificação, com os marcos de cada Perfil nas mesmas frases do documento,
-e diz em que um grupo de marcos diverge do mais comum. O documento passou a imprimir o corte
-completo: o empate no corte, a continuação e quem participa do sorteio. E a relação do sorteio só se
-congela depois do fim das inscrições, e a tela diz até quando esperar.
+A Revisão do Edital ganhou o bloco Classificação, com as mesmas frases que vão para o documento, e
+aponta onde um grupo de Perfis difere dos demais. Você confere a regra inteira — inclusive o empate no
+corte e o sorteio — antes de publicar, quando ainda dá para corrigir.
 """
-beneficio = "O que vai ser publicado sobre a classificação se confere antes do ato irreversível."
-onde = "Na composição do Edital, etapa Revisão, em O que será congelado na submissão."
+exemplo = """
+No Edital 14/2026, a Revisão mostra a regra de classificação que 18 Perfis seguem e destaca os 2
+Perfis em que ela é diferente. Você confere isso antes de publicar, e não depois.
+"""
 prs = [210, 211]
 specs = []
 
@@ -1322,45 +1329,53 @@ specs = []
 id = "ampla-concorrencia-na-inscricao"
 data = 2026-09-27
 categoria = "melhoria"
-titulo = "A inscrição oferece a ampla concorrência, e a gestão a nomeia e a filtra"
+titulo = "Quem não é cotista agora escolhe a ampla concorrência na inscrição"
 resumo = """
-No Perfil que declara cotas e tem vaga na linha geral, a inscrição oferece "Ampla concorrência" à
-frente das cotas: quem não é cotista deixa de ser tratado como cotista. O detalhe da inscrição e a
-Mesa nomeiam a ampla, e Inscrições recebidas a conta e a filtra, com o filtro de concorrência dizendo
-de qual Perfil é cada Modalidade.
+Nos Perfis com cotas e vagas gerais, a inscrição oferece "Ampla concorrência" antes das cotas, e quem
+não é cotista deixa de ser tratado como cotista. A comissão vê a ampla no detalhe da inscrição e na
+Mesa, e a conta e filtra em Inscrições recebidas.
 """
-beneficio = "O não cotista tem o que escolher, e a comissão o encontra na consulta."
+exemplo = """
+Paulo não se declara cotista. Na inscrição para o Edital 05/2026, ele marca "Ampla concorrência"; na
+gestão, o filtro de Inscrições recebidas encontra todos os que concorrem pela ampla.
+"""
 documentacao = "ampla-concorrencia"
 prs = [172, 202, 205]
 specs = []
 
 [[nota]]
-id = "consolidar-todas-as-prontas"
+id = "conferir-e-consolidar-de-uma-vez"
 data = 2026-09-27
 categoria = "melhoria"
-titulo = "Consolidar todas as inscrições prontas da Etapa numa confirmação"
+titulo = "Confira antes de fechar o resultado, e feche todas as prontas juntas"
 resumo = """
-A tela da Etapa oferece "Consolidar as N prontas", que leva à conferência de todas as inscrições
-prontas, e não só das da página. A conferência mostra quantas serão habilitadas e quantas eliminadas,
-e o ato consolida exatamente o conjunto conferido.
+Fechar o resultado de uma Etapa, emitir a ordem ou retirar avaliações distribuídas passa por uma
+página "Confira antes de…", que mostra o que será gravado. E "Consolidar as N prontas" fecha todas as
+inscrições prontas de uma vez, e não só as da página.
 """
-beneficio = "Seiscentas inscrições prontas deixam de exigir vinte e quatro rodadas de marcar e confirmar."
-onde = "Na distribuição da Etapa."
+exemplo = """
+Na Etapa de análise do Edital 03/2026 há 600 inscrições prontas. Você clica "Consolidar as 600
+prontas", confere quantas serão habilitadas e eliminadas e confirma uma vez só — em vez de 24 rodadas
+de marcar e confirmar.
+"""
 documentacao = "consolidacao"
-prs = [203]
+prs = [120, 203]
 specs = []
 
 [[nota]]
 id = "o-que-mudou-completo"
 data = 2026-09-27
 categoria = "correcao"
-titulo = """O resumo "O que mudou" de cada Retificação passa a mostrar toda alteração"""
+titulo = """Resolvido: "O que mudou" da Retificação mostra todas as alterações"""
 resumo = """
-O resumo público de cada Retificação deixava de fora algumas alterações, como restringir um documento
-a um Perfil ou a uma Modalidade, os campos compostos do marco e a linha do quadro de vagas. Agora todo
-campo que a Retificação pode mudar aparece como linha, com o nome que a tela da Retificação usa.
+O resumo público de cada Retificação deixava de fora algumas mudanças, como um documento restrito a
+um Perfil ou uma linha do quadro de vagas. Agora tudo o que a Retificação pode mudar aparece, com o
+nome da tela — e o candidato vê exatamente o que mudou.
 """
-beneficio = "O candidato vê, na página da seleção, tudo o que a Retificação mudou."
+exemplo = """
+A Retificação do Edital 06/2026 passou a pedir um documento só de quem concorre pela cota PcD. Na
+página da seleção, "O que mudou" mostra essa linha, que antes não aparecia.
+"""
 prs = [185, 201]
 specs = ["024"]
 
@@ -1368,16 +1383,16 @@ specs = ["024"]
 id = "retificacao-que-acrescenta"
 data = 2026-09-26
 categoria = "novidade"
-titulo = "A Retificação acrescenta Modalidade, critério de desempate, corte e prazo de recurso"
+titulo = "Acrescente pela Retificação a cota, o desempate ou o prazo que faltou"
 resumo = """
 Pela tela Retificar, o Edital publicado pode ganhar uma Modalidade num Perfil — inclusive a ampla
-concorrência que faltava —, um critério de desempate, a regra de corte, a janela de recurso e a
-reversão. O critério publicado ao contrário se corrige removendo-o e acrescentando outro no mesmo ato.
-O Evento acrescentado por Retificação, que antes não chegava a ser criado, passou a funcionar, com o
-campo Local.
+concorrência —, um critério de desempate, a regra de corte, o prazo de recurso e um novo evento no
+cronograma. O que faltou na publicação passa a ter conserto pela própria tela.
 """
-beneficio = "O Edital publicado sem a ampla ou com uma regra faltando passa a ter conserto pela interface."
-onde = "Na tela Retificar."
+exemplo = """
+O Edital 04/2026 foi publicado sem a ampla concorrência no Perfil do polo de Aracruz. Você abre
+Retificar, acrescenta a Modalidade a esse Perfil e publica a Retificação.
+"""
 documentacao = "retificacao-alcance"
 prs = [179, 197]
 specs = ["048"]
@@ -1386,206 +1401,143 @@ specs = ["048"]
 id = "situacao-publica-do-edital"
 data = 2026-09-26
 categoria = "melhoria"
-titulo = "A página pública diz a situação real do Edital em execução"
+titulo = "A página pública mostra a situação real de cada Edital"
 resumo = """
-O Edital cancelado dentro do período deixou de anunciar inscrições abertas e passou a dizer "Edital
-cancelado em …"; o encerramento do Processo também é dito, com a data. Depois das inscrições, a página
-mostra o próximo Evento do Cronograma, e o prazo de recurso aparece na página do resultado, o mesmo que
-a interposição aplica. O resultado sucedido continua consultável, marcado como sucedido.
+O Edital cancelado no meio das inscrições deixa de anunciá-las abertas e diz "Edital cancelado em …".
+Depois das inscrições, a página mostra o próximo evento do cronograma, e o prazo de recurso aparece
+junto do resultado. O candidato não é chamado a um Edital que já não o recebe.
 """
-beneficio = "O candidato não é chamado a um Edital que já não recebe inscrições."
+exemplo = """
+O Edital 10/2026 foi cancelado em 12/09. Quem abre a página da seleção no dia seguinte lê "Edital
+cancelado em 12/09/2026", e não um convite para se inscrever.
+"""
 documentacao = "pagina-publica-do-edital"
 prs = [193]
 specs = ["047"]
 
 [[nota]]
-id = "publicacao-recusa-o-que-nao-executaria"
+id = "revisao-acusa-o-que-nao-funcionaria"
 data = 2026-09-26
 categoria = "melhoria"
-titulo = "A publicação recusa o Edital que o sistema não conseguiria executar"
+titulo = "Descubra antes de publicar o que travaria o Edital depois"
 resumo = """
-Um Perfil cujos marcos não cortam, de onde ninguém seria convocado, ou uma Etapa cujo resultado o
-sistema depois se recusaria a consolidar, passaram a impedir a publicação, com o caminho para
-corrigir. Depois de publicado, o Edital deixa de ser conferido como se ainda fosse publicar. E o corte que não governa
-Etapa passou a convocar quem progrediu na faixa, que antes ficava sem vaga ocupada.
+A Revisão confere se o Edital funciona, e não só se está preenchido: impede publicar o Perfil sem
+regra de classificação, de onde ninguém seria convocado, ou o sorteio que não poderia acontecer, e
+mostra como corrigir. O erro aparece no rascunho, e não no meio da seleção.
 """
-beneficio = "O defeito aparece antes de publicar, e não no meio do certame."
+exemplo = """
+Você esquece de dizer como o Perfil do polo de Guarapari será classificado. A Revisão avisa que dali ninguém
+seria convocado e mostra onde corrigir — antes de o Edital publicado não poder mais ser alterado.
+"""
 documentacao = "composicao-validacao"
-prs = [188, 194]
-specs = ["046"]
+prs = [131, 139, 161, 188, 194]
+specs = ["032", "035", "046"]
 
 [[nota]]
-id = "atencao-do-processo-confiavel"
+id = "processo-aponta-o-que-esta-parado"
 data = 2026-09-26
 categoria = "melhoria"
-titulo = "A Atenção do Processo diz o que conta, desde quando e a quem pedir"
+titulo = "A página do Processo aponta o que está parado e quem resolve"
 resumo = """
-O recurso passou a aparecer na Atenção desde a interposição, e a ação "Recursos aguardando decisão"
-conta só os pendentes. O Cronograma deixou de gerar alarme permanente: a fase de cada Evento sai das
-datas. Cada medida diz a sua unidade, quem não pratica o ato lê a quem pedir, e quem não acompanha
-tudo lê "Nenhuma condição de atenção entre as que você acompanha neste Processo".
+Depois da publicação, a página do Processo conta as inscrições e reúne em "Precisa de atenção" o que
+está parado — avaliação não concluída, recurso à espera de decisão —, com o caminho até a tela certa.
+Se a tarefa não é sua, ela diz a quem pedir.
 """
-beneficio = "O sinal que fica é verdadeiro e diz o caminho."
-onde = "Na página do Processo, em Precisa de atenção."
+exemplo = """
+Na terça, você abre o Processo e lê em "Precisa de atenção" que há 3 recursos aguardando decisão. Um
+clique leva até eles; se julgar não é com você, a página diz a quem pedir.
+"""
 documentacao = "painel-atencao"
-prs = [187]
-specs = ["045"]
+prs = [149, 152, 187]
+specs = ["038", "045"]
 
 [[nota]]
 id = "documento-exigido-em-todos-os-perfis"
 data = 2026-09-26
 categoria = "novidade"
-titulo = "Pedir um documento a quem concorre por uma Modalidade, em todos os Perfis"
+titulo = "Peça um documento a quem concorre por uma cota, em todos os Perfis"
 resumo = """
-Um documento exigido pode valer para uma Modalidade em todos os Perfis que a têm — a autodeclaração
-de quem concorre por PPI, em qualquer campus —, numa linha só, e o documento publicado o diz assim.
-No envio, a inscrição grava a lista de documentos que valeu para ela: a Mesa e a consulta mostram por
-que cada um é pedido e a seção "Não se aplicam a esta inscrição".
+Um documento exigido pode valer para uma Modalidade em todos os Perfis que a têm, numa linha só. Você
+deixa de repetir o mesmo pedido Perfil a Perfil, e a Mesa mostra por que cada documento é pedido àquela
+inscrição e quais não se aplicam a ela.
 """
-beneficio = "O mesmo documento deixa de ser repetido Perfil a Perfil, e o publicado é o que se cobra."
-onde = "Na composição do Edital, etapa Inscrição, em Documentos exigidos."
+exemplo = """
+No Edital 02/2026, com 10 Perfis, um por polo, você pede uma vez só a autodeclaração de quem concorre pela cota
+PPI. Na Mesa, a inscrição de um candidato da ampla a mostra em "Não se aplicam a esta inscrição".
+"""
 documentacao = "c-documento-exigido"
 prs = [173]
 specs = ["044"]
-
-# ---- sem nota --------------------------------------------------------------------------
 
 [[nota]]
 id = "duplicar-perfil"
 data = 2026-09-25
 categoria = "novidade"
-titulo = "Duplicar um Perfil na composição, pedindo só o Código e a Localidade"
+titulo = "Duplique um Perfil e mude só o código e a localidade"
 resumo = """
-Na etapa Perfis da composição, cada cartão oferece "Duplicar este Perfil": basta informar o "Código
-do novo Perfil" e a "Localidade do novo Perfil" e clicar "Criar a cópia". O novo Perfil chega logo
-abaixo com Modalidades, quadro de vagas, requisitos e marcos classificatórios da origem, e nada é
-gravado até a etapa ser gravada. Documentos exigidos só da origem não vêm junto, e a tela diz quantos.
+Em cada Perfil da composição, "Duplicar este Perfil" cria uma cópia com as Modalidades, as vagas, os
+requisitos e a regra de classificação, pedindo só o código e a localidade do novo. Perfis parecidos
+deixam de ser montados do zero, um a um.
 """
-beneficio = "Polos que diferem em poucos campos deixam de ser compostos do zero, um a um."
-onde = "Na composição do Edital, etapa Perfis, no cartão do Perfil de origem."
+exemplo = """
+O Perfil do polo de Serra está pronto. Você clica "Duplicar este Perfil", informa o código SER-02 e a
+localidade Cariacica e clica "Criar a cópia": o novo Perfil aparece logo abaixo, e falta só gravar a
+etapa.
+"""
 documentacao = "duplicar-perfil"
 prs = [170]
 specs = ["043"]
 
 [[nota]]
-id = "instrucao-do-documento-na-mesa"
-data = 2026-09-25
-categoria = "melhoria"
-titulo = "A instrução do Edital aparece sob cada documento, na Mesa de quem analisa"
-resumo = """
-Na Mesa, quem analisa a inscrição lê, embaixo do nome de cada documento, a instrução que o Edital
-publicou — como "Apenas para quem concorre na modalidade PcD". Na revisão da inscrição, o candidato
-vê o documento facultativo marcado "(facultativo)" e, se não o enviou, a frase neutra "Não enviado.",
-sem o alerta que é só do obrigatório que falta.
-"""
-prs = [167]
-specs = []
-
-[[nota]]
-id = "tabelas-e-cabecalhos-do-edital-em-pdf"
-data = 2026-09-25
-categoria = "correcao"
-titulo = "O Edital em PDF: tabelas sem colunas espremidas e documentos de cada polo identificados"
-resumo = """
-Com duas colunas longas, como as do Cronograma, a tabela do Edital em PDF deixou de cortar o número e
-de partir a data em pedaços, e a linha que atravessa a quebra de página deixou de se fundir com a
-seguinte. Nos documentos exigidos, cada grupo passou a nomear o código do Perfil, e não só a função:
-com vários polos, cada pessoa acha o bloco que é dela. Vale para as próximas publicações.
-"""
-prs = [115, 164]
-specs = []
-
-[[nota]]
 id = "revisao-do-edital-reaproveitado"
 data = 2026-09-25
 categoria = "melhoria"
-titulo = "Edital criado a partir de outro: a Revisão aponta datas vencidas e o que foi copiado"
+titulo = "Edital copiado de outro: a Revisão aponta as datas que ficaram velhas"
 resumo = """
-O Edital cujo período de inscrição já terminou não publica, e cada Evento com data que já passou, ou
-de ano diferente do Edital, vira aviso na Revisão — dobrado num resumo quando são vários. A etapa
-Cronograma deixa de aparecer concluída enquanto houver data a rever. Cada pendência nomeia a Etapa e
-o campo, e não um caminho técnico. A cópia também passou a trazer a Etapa que o corte alimenta, e não
-a do Edital de origem.
+No Edital criado a partir de outro, cada data do cronograma que já passou ou é de outro ano vira
+aviso na Revisão, com a Etapa e o campo a corrigir. A data vencida se corrige no rascunho, e não
+depois, por Retificação.
 """
-beneficio = "A data vencida é corrigida no rascunho, e não depois, por Retificação."
+exemplo = """
+Você cria o Edital de 2026 a partir do de 2025. A Revisão avisa que 6 eventos do cronograma ainda
+estão em 2025, e a etapa Cronograma só aparece concluída depois que você os corrige.
+"""
 documentacao = "reaproveitar"
 prs = [118, 163, 169]
 specs = ["028"]
 
 [[nota]]
-id = "edital-que-funciona-antes-de-publicar"
-data = 2026-09-25
-categoria = "melhoria"
-titulo = "Antes de publicar, a Revisão acusa o Edital que não funcionaria"
-resumo = """
-A Revisão passou a perguntar se o Edital funciona, e não só se está preenchido. O Perfil sem marco
-classificatório não publica; a ocorrência do sorteio que não permitiria realizá-lo é recusada ao
-gravar, e algoritmo e fonte do sorteio viram escolhas numa lista; e o documento exigido de "todos os Perfis" restrito à modalidade de um
-Perfil só é recusado, com a saída na mensagem. O Edital de sorteio publica o método inteiro.
-"""
-beneficio = "O erro aparece enquanto ainda é rascunho, e não depois de a publicação torná-lo imutável."
-documentacao = "composicao-validacao"
-prs = [131, 139, 161]
-specs = ["032", "035"]
-
-[[nota]]
-id = "marco-que-se-explica"
-data = 2026-09-25
-categoria = "melhoria"
-titulo = "O marco classificatório mostra primeiro o que importa, e explica os termos"
-resumo = """
-No cartão do marco, o que toda ordem exige fica à vista; "Recurso contra o resultado", "Método do
-sorteio" e "Regra de corte" abrem quando são o assunto, e já abertos quando declarados. O "Método do
-sorteio comum a este Edital" se declara uma vez para todos os Perfis. Recorte, geração e faixa são
-definidos onde aparecem, o campo "Alvo" só surge sob quantidade fixa, e os Eventos se distinguem pela
-data e pela descrição.
-"""
-documentacao = "marco"
-prs = [124, 162]
-specs = ["030"]
-
-[[nota]]
 id = "visao-geral-institucional"
 data = 2026-09-21
 categoria = "novidade"
-titulo = "Visão Geral: o conjunto dos Processos Seletivos, do Edital ao Perfil"
+titulo = "Veja todos os Editais sob sua responsabilidade numa só tabela"
 resumo = """
-A Visão Geral reúne os Editais do escopo numa tabela, com filtros por ano, situação do Edital,
-situação do período e busca, e a procura aberta por Perfil de vaga. As vagas saem do que foi
-publicado, e a página diz em "O que esta página não mede" o que ela não conta, para que uma ausência
-não seja lida como zero.
+A Visão Geral reúne os Editais que você acompanha, com filtros por ano e situação, busca e procura
+por Perfil de vaga. Você vê o conjunto sem abrir Processo por Processo — e a página diz o que não
+mede, para que nenhuma ausência seja lida como zero.
 """
-beneficio = "Quem responde pela atividade de seleção vê o conjunto sem abrir Processo por Processo."
+exemplo = """
+Na reunião de segunda, você filtra a Visão Geral por 2026 e pelos Editais com inscrições abertas, e
+mostra à direção quais seleções estão recebendo candidatos agora.
+"""
 destino = "interface:visao-geral"
 documentacao = "visao-institucional"
 prs = [157]
 specs = ["040", "041", "042"]
 
 [[nota]]
-id = "painel-do-processo-depois-da-publicacao"
-data = 2026-09-20
-categoria = "melhoria"
-titulo = "A página do Processo continua guiando depois da publicação"
-resumo = """
-Publicado o Edital, a página do Processo passou a dizer quantas inscrições chegaram e quantas estão em
-preenchimento, e a reunir em "Precisa de atenção" o que está parado — avaliação distribuída e não
-concluída, recurso à espera de julgamento, ordem sem divulgação —, cada condição com o caminho até a
-tela que a resolve. O link para a Supervisão só aparece a quem pode abri-la.
-"""
-documentacao = "painel"
-prs = [149, 152]
-specs = ["038"]
-
-[[nota]]
 id = "recusa-diz-a-quem-pedir"
 data = 2026-09-19
 categoria = "melhoria"
-titulo = "Quando o ato não é seu, a tela diz de quem é e a quem pedir"
+titulo = "Quando a tarefa não é sua, a tela diz a quem pedir"
 resumo = """
-As telas deixam de oferecer caminho que a pessoa não alcança, e passam a oferecer o que ela
-alcança, como a divulgação do resultado a quem só publica. Quando a operação é recusada, ou quando a
-ação existe e não é sua, a mensagem nomeia a permissão que falta e a quem pedir, em vez de uma
-página vazia ou de um "não encontrado".
+As telas deixam de oferecer caminhos que você não pode seguir e mostram os que pode. Quando algo é
+recusado, a mensagem diz qual permissão falta e a quem pedir, em vez de uma página vazia ou de um
+"não encontrado".
+"""
+exemplo = """
+Você abre uma tela que pede uma permissão que você não tem. Em vez de "não encontrado", lê qual
+permissão falta e a quem pedir.
 """
 documentacao = "recusa-403-404"
 prs = [132, 144]
@@ -1595,14 +1547,16 @@ specs = ["033", "037"]
 id = "instrucao-do-recurso"
 data = 2026-09-19
 categoria = "novidade"
-titulo = "Quem julga o recurso confere o que se contesta, e recebe a prova por instrução"
+titulo = "Julgue o recurso com o Edital, os documentos e o parecer à vista"
 resumo = """
-A tela do recurso ganhou "Conferir o que se contesta": o Edital, os documentos da inscrição, o
-resultado atacado e a trilha da avaliação, para quem pode abri-los. Quem gere a comissão ou preside o
-Processo pode "Instruir o recurso", anexando o parecer atacado e os documentos citados, que quem julga
-lê até a decisão. O candidato eliminado lê, no acompanhamento, o parecer ao lado do motivo.
+A tela do recurso ganhou "Conferir o que se contesta", com o Edital, os documentos da inscrição e o
+resultado contestado. A presidência ou quem gere a comissão pode "Instruir o recurso" com o parecer
+e os documentos citados, e o candidato eliminado lê o parecer junto do motivo.
 """
-beneficio = "O julgamento se faz com a prova à vista, e o candidato recorre sabendo o que faltou."
+exemplo = """
+Um candidato recorre da eliminação no Edital 13/2026. A presidência anexa o parecer da análise por
+"Instruir o recurso", e quem julga lê tudo na mesma tela antes de decidir.
+"""
 documentacao = "recursos"
 prs = [119, 142]
 specs = ["036"]
@@ -1611,14 +1565,16 @@ specs = ["036"]
 id = "ordem-por-lista-reservada"
 data = 2026-09-19
 categoria = "novidade"
-titulo = "Ordem e corte para cada lista reservada, no marco por pontuação"
+titulo = "Cada lista de vagas reservadas ganha sua ordem, corte e convocação"
 resumo = """
-No marco que ordena por pontuação, cada lista de concorrência — a ampla e cada reserva — ganha a sua
-ordem, o seu corte e a sua convocação. A ordenação e o corte dizem em que recorte se está e oferecem
-os outros, e o recorte ainda sem ordem diz o que falta e onde se faz. Emitir a ordem de uma lista não
-altera as das outras.
+Na classificação por pontuação, a ampla e cada lista de vagas reservadas têm a sua ordem, o seu corte
+e a sua convocação. Os Editais com cotas chegam à convocação de cada lista, e emitir a ordem de uma
+não altera as outras.
 """
-beneficio = "Os Editais com cotas chegam à convocação de cada reserva, e não só da ampla."
+exemplo = """
+No Edital 16/2026, você emite a ordem da ampla na segunda e a da lista PPI na quarta. A ordem da
+ampla continua como estava, e cada lista segue para a sua convocação.
+"""
 documentacao = "ato"
 prs = [138]
 specs = ["034"]
@@ -1627,14 +1583,16 @@ specs = ["034"]
 id = "exportacao-para-matricula"
 data = 2026-09-18
 categoria = "novidade"
-titulo = "Exportar para matrícula, no formato que o Registro Acadêmico importa"
+titulo = "Exporte os dados de matrícula prontos para o Registro Acadêmico"
 resumo = """
-O Edital que pede o Requerimento de Matrícula oferece, depois de publicado, "Exportar para matrícula":
-o arquivo com o que os candidatos declararam, nas colunas que o Registro Acadêmico espera. Antes do
-download, "Ver o que sairá vazio" mostra quais colunas ficarão em branco e por quê — inclusive as
-três que só o destino preenche.
+O Edital que pede o Requerimento de Matrícula oferece "Exportar para matrícula": um arquivo com o que
+os candidatos declararam, nas colunas que o Registro Acadêmico importa. Acaba a planilha montada à
+mão, e antes você vê quais colunas sairão em branco e por quê.
 """
-beneficio = "Acaba a planilha montada à mão, e a célula vazia vem com a razão."
+exemplo = """
+Com o Edital 01/2026 publicado, você clica "Ver o que sairá vazio", vê que três colunas só o Registro
+Acadêmico preenche e baixa o arquivo para enviar ao setor.
+"""
 documentacao = "registro-academico"
 prs = [130]
 specs = ["031"]
@@ -1643,46 +1601,34 @@ specs = ["031"]
 id = "requerimento-de-matricula"
 data = 2026-09-17
 categoria = "novidade"
-titulo = "Requerimento de Matrícula: os dados da matrícula pedidos pelo GPS, uma vez"
+titulo = "Receba os dados de matrícula pelo GPS, na inscrição ou na convocação"
 resumo = """
-O Edital pode pedir o Requerimento de Matrícula e escolher, em "Quando pedir", se no ato da inscrição
-ou na convocação. O candidato preenche só o que ainda não informou — o CEP completa município e UF —
-e aceita a declaração de veracidade. O requerimento enviado não se altera; a correção cria um novo,
-e o anterior continua legível.
+O Edital pode pedir o Requerimento de Matrícula e escolher, em "Quando pedir", se na inscrição ou na
+convocação. O candidato preenche só o que ainda não informou — o CEP completa município e UF —, e o
+requerimento enviado não se altera: a correção gera um novo.
 """
-onde = "Na composição do Edital, etapa da inscrição, bloco Requerimento de Matrícula."
+exemplo = """
+No Edital 01/2026, você escolhe pedir o requerimento na convocação. A candidata Marta digita o CEP,
+vê município e UF preenchidos, aceita a declaração de veracidade e envia.
+"""
 documentacao = "matricula"
 prs = [123]
 specs = ["029"]
 
 [[nota]]
-id = "conferir-antes-de-consolidar-e-emitir"
-data = 2026-09-16
-categoria = "melhoria"
-titulo = "Conferência antes de consolidar, de emitir a ordem e de retirar atribuições"
-resumo = """
-Consolidar o resultado, emitir a ordem e retirar atribuições da distribuição passam por uma página
-"Confira antes de…", que mostra o que será gravado e o que ficará de fora. A distribuição diz, antes
-da tentativa, que não se distribui com o período de inscrições em curso, e quem elaborou a revisão
-do Edital é avisado, antes de homologar, que a publicação ficará com outra pessoa.
-"""
-documentacao = "consolidacao"
-prs = [120]
-specs = []
-
-[[nota]]
 id = "vagas-declaradas-uma-vez"
 data = 2026-09-15
 categoria = "correcao"
-titulo = "O número de vagas se declara uma vez, e é ele que o Edital apura"
+titulo = "Resolvido: o número de vagas não é mais pedido em dois lugares"
 resumo = """
-O Perfil pedia o número de vagas em duas caixas, e só uma era a que a ocupação usava. Agora "Vagas
-imediatas" é a única, enquanto não há lista reservada; declarada a primeira Modalidade reservada, o
-"Quadro de vagas" aparece e pede a repartição por lista, conferida contra o total.
+O Perfil pedia o número de vagas em duas caixas, e só uma valia para a convocação. Agora você informa
+as vagas uma vez só; com cotas, o quadro de vagas pede a divisão por lista e confere a soma com o
+total.
 """
-beneficio = "O número publicado ao candidato é o mesmo que a ocupação e a convocação usam."
+exemplo = """
+O Perfil do polo de Vila Velha tem 40 vagas, 10 delas reservadas. Você digita 40 e reparte no quadro de vagas:
+se as listas somarem 38, a tela acusa a diferença.
+"""
 documentacao = "quadro-de-vagas"
 prs = [116]
 specs = ["027"]
-
-# ---- sem nota ------------------------------------------------------------------------

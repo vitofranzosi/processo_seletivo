@@ -32,8 +32,17 @@ JARGAO = re.compile(
 )
 
 
+# As palavras do sistema que a diretriz de 14/11 tira do texto de quem opera (FR-7427): quem lê não
+# sabe — nem precisa saber — o que é um marco, um recorte ou uma derivação.
+PALAVRAS_DO_SISTEMA = re.compile(
+    r"\b(?:marcos?|recortes?|deriva\w*|apura\w*|predicados?|persist\w*|renderiz\w*|idempot\w*)\b"
+    r"|\b(?:RC|DP|ED|PV|A)-\d",
+    re.IGNORECASE,
+)
+
+
 def _visivel(nota):
-    return [nota.titulo, nota.resumo, nota.beneficio, nota.onde, *nota.passos]
+    return [nota.titulo, nota.resumo, nota.exemplo, nota.beneficio, nota.onde, *nota.passos]
 
 
 def test_o_arquivo_tem_o_conteudo_inicial():
@@ -53,11 +62,26 @@ def test_o_texto_visivel_nao_e_log_tecnico(nota):
 
 
 @pytest.mark.parametrize("nota", NOTAS, ids=lambda n: n.id)
-def test_a_nota_cabe_num_cartao(nota):
-    """UX-802: o título é curto e o resumo não vira manual — o detalhe vai para os passos."""
-    assert len(nota.titulo) <= 90, nota.id
-    assert len(nota.resumo) <= 520, nota.id
+def test_a_nota_fala_a_lingua_de_quem_opera(nota):
+    """FR-7427: nenhuma palavra do sistema no que a pessoa lê."""
+    for texto in _visivel(nota):
+        achado = PALAVRAS_DO_SISTEMA.search(texto)
+        assert not achado, f"{nota.id}: {achado.group(0)!r}"
+
+
+@pytest.mark.parametrize("nota", NOTAS, ids=lambda n: n.id)
+def test_a_nota_e_um_anuncio_curto(nota):
+    """FR-7427, UX-802: título que promete, resumo de duas frases, exemplo de uma cena."""
+    assert len(nota.titulo) <= 70, nota.id
+    assert len(nota.resumo) <= 300, nota.id
+    assert len(nota.exemplo) <= 300, nota.id
     assert len(nota.passos) <= 4, nota.id
+
+
+def test_toda_novidade_traz_um_exemplo():
+    """FR-7427: a capacidade nova se mostra numa cena concreta — "Na prática"."""
+    sem = [n.id for n in NOTAS if n.categoria.codigo == "novidade" and not n.exemplo]
+    assert not sem, sem
 
 
 def test_o_destino_e_uma_secao_da_barra():

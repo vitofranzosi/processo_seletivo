@@ -36,6 +36,10 @@
 .cabeca-da-novidade{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.82rem;
   color:var(--texto-fraco)}
 .beneficio-da-novidade{color:var(--texto)}
+/* "Na prática" (FR-7427): a cena que faz a nota se entender de primeira, destacada sem competir com o
+   título — um filete e o fundo neutro da gestão. */
+.novidade .exemplo-da-novidade{margin:.5rem 0;padding:.45rem .75rem;border-left:3px solid var(--verde);
+  border-radius:0 4px 4px 0;background:var(--fundo)}
 
 .categoria-da-novidade{display:inline-block;padding:0 .45rem;border:1px solid var(--borda);
   border-radius:4px;background:var(--fundo);color:var(--texto);font-size:.75rem;font-weight:600;

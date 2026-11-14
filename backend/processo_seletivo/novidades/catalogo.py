@@ -38,6 +38,7 @@ POR_CODIGO = {categoria.codigo: categoria for categoria in CATEGORIAS}
 IDENTIFICADOR = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 OBRIGATORIOS = ("id", "data", "categoria", "titulo", "resumo", "prs", "specs")
 OPCIONAIS = (
+    "exemplo",
     "beneficio",
     "onde",
     "passos",
@@ -62,6 +63,9 @@ class Nota:
     # Fora do que se mostra (FR-7407): servem à rastreabilidade e ao roteiro de curadoria.
     prs: tuple
     specs: tuple
+    # A cena concreta que a página mostra como "Na prática" (FR-7427): é o que faz a nota se
+    # entender de primeira (diretriz de 14/11, `doc/curadoria-das-novidades.md`).
+    exemplo: str = ""
     beneficio: str = ""
     onde: str = ""
     passos: tuple = ()
@@ -142,6 +146,7 @@ def _nota(numero, entrada):
         resumo=_texto(numero, entrada, "resumo", obrigatorio=True),
         prs=tuple(prs),
         specs=tuple(specs),
+        exemplo=_texto(numero, entrada, "exemplo", obrigatorio=False),
         beneficio=_texto(numero, entrada, "beneficio", obrigatorio=False),
         onde=_texto(numero, entrada, "onde", obrigatorio=False),
         passos=tuple(" ".join(p.split()) for p in passos),

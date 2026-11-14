@@ -40,4 +40,5 @@
 - [x] T019 Achados da revisão de código de 14/11: testes sem teto de data nem título fixo, troca de unidade que preserva o bloco, público com várias capacidades, contagem na camada de identidade, falha do arquivo guardada, roteiro que não confunde número solto com spec e avisa a lista cortada
 - [x] T020 Segunda revisão de 14/11: registro `curadoria.toml` e roteiro pela data do merge (FR-7424); 17 notas novas e 9 PRs acrescentados a notas existentes, sem PR de produto da janela sem destino (FR-7426); os caminhos institucionais por teste (`tests/seguranca/test_novidades_na_entrada_institucional.py`)
 - [x] T021 Período do histórico (P-4, respondida em 14/11: estender): 47 notas de 15/09 a 16/10, curadas em três frentes, e 26 PRs a mais no registro
-- [ ] T022 Validação humana com alguém da comissão (SC-2501)
+- [x] T022 A diretriz do anúncio (`D-011`, FR-7427, UX-806): o campo `exemplo` ("Na prática"), os limites e o vocabulário na suíte, o guia reescrito com antes e depois, a convenção no `AGENTS.md`; as 109 notas reescritas e reunidas em 90
+- [ ] T023 Validação humana com alguém da comissão (SC-2501)

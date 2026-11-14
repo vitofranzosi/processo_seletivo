@@ -298,6 +298,14 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
   14/11/2026, conferidas contra o código da `main` e contra a Documentação do Sistema, sem nota de PR
   só de especificação ou documentação, e sem PR de produto da janela sem destino.
 
+- **FR-7427**: A nota DEVE ser escrita como anúncio para quem opera, e não como relatório técnico:
+  título que promete o ganho (até 70 caracteres), resumo de duas frases curtas em "você" (até 300),
+  sem palavras do sistema ("marco", "recorte", "derivação", "apuração") nem siglas internas, e um
+  **exemplo** — uma cena concreta, mostrada como "Na prática" (até 300) —, obrigatório na categoria
+  Novidade. As melhorias miúdas de um período se reúnem numa nota "Pequenas melhorias". A suíte cobra
+  os tamanhos, o vocabulário e o exemplo; o guia `doc/curadoria-das-novidades.md` traz a diretriz com
+  antes e depois (`D-011`).
+
 ### Requisitos de experiência
 
 - **UX-801**: A página DEVE usar a moldura, a tipografia, as cores e os componentes da gestão; nenhuma
@@ -307,6 +315,8 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
 - **UX-803**: A categoria DEVE se distinguir por texto, e não só por cor.
 - **UX-804**: A página DEVE funcionar sem rolagem horizontal a 375 px, 1.280 px e 1.440 px, e não
   pressupor tela ultralarga.
+- **UX-806**: O exemplo aparece logo abaixo do resumo, rotulado "Na prática", destacado por um filete
+  e pelo fundo neutro da gestão, sem competir com o título.
 - **UX-805**: A contagem da barra DEVE ser discreta (um número pequeno ao lado do rótulo, e um ponto na
   barra recolhida), com texto para leitor de tela.
 
@@ -427,6 +437,17 @@ a 14/11/2026, e a página o diz na primeira visita.
 **A nota de setembro descreve a capacidade como ela existe hoje**, e não a tela em que ela nasceu:
 boa parte daquelas telas foi refeita a partir de 17/10. A capacidade que foi depois substituída ou
 removida não ganha nota; o PR dela vai para o registro, com o motivo.
+
+### D-011 — A nota é um anúncio, com exemplo
+
+O usuário leu a primeira versão do conteúdo e teve dificuldade de entender: as notas estavam escritas
+como relatório — termos internos, frases longas, nenhuma cena do dia a dia. A decisão dele, em 14/11:
+"tem que ser algo simples, interessante e que mostre o valor daquela novidade — quase propaganda —,
+com exemplos". A nota passa a ter título que promete o ganho, resumo de duas frases em "você", e o
+campo `exemplo`, mostrado como "Na prática" (FR-7427, UX-806). O detalhe técnico continua onde já
+morava: na Documentação do Sistema, pelo "Saiba mais". A diretriz fica no guia de curadoria, e a suíte
+cobra o que dela é verificável — tamanho, vocabulário e exemplo —, para que as próximas notas sigam o
+padrão sem depender de quem lembra dele.
 
 ---
 
