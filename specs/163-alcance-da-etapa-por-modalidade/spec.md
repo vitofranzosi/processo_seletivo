@@ -71,8 +71,9 @@ documento do Edital.
   autodeclaração" e o degrau "falta um passo seu");
 - o **vídeo** (camada B), bloqueado por norma (P-0);
 - o **alcance por Perfil**, que o barema por curso pede (D-009);
-- os **"dez primeiros de cada código"**: a metade da L-2 que depende da ordem. Ela já se exprime pela
-  faixa do corte da `014`, que se soma ao alcance (FR-6974), e não é refeita aqui.
+- os **"dez primeiros de cada código"**: a metade da L-2 que depende da ordem. Ela pediria a Etapa
+  restrita governada pelo corte da `014`, que esta entrega impede (FR-6964); a regra de soma fica
+  escrita (FR-6974) para a spec que a admitir.
 
 ---
 
@@ -359,9 +360,10 @@ Atribuição na Etapa.
 - **FR-6973**: A distribuição, o rodízio e a atribuição individual DEVEM oferecer só inscrições
   alcançadas, e DEVEM recusar, no servidor, a atribuição de inscrição fora do alcance, com motivo que
   o diga.
-- **FR-6974**: Quando a Etapa restrita for governada por uma faixa, a inscrição DEVE participar só se
-  for alcançada **e** estiver dentro da faixa. As duas condições são independentes, e nenhuma
-  substitui a outra.
+- **FR-6974**: O alcance e a faixa do corte DEVEM se somar como condições independentes de
+  participação, sem que uma substitua a outra. Nesta entrega elas não incidem sobre a mesma Etapa —
+  a FR-6964 impede a Etapa restrita governada pelo corte —, e a regra fica escrita para a spec que
+  vier a admitir a combinação (os "dez primeiros de cada código" da L-2).
 - **FR-6975**: O registro de Ocorrência e a conclusão de avaliação DEVEM recusar inscrição fora do
   alcance da Etapa.
 - **FR-6976**: A prontidão, o panorama da Etapa e a consolidação DEVEM contar e processar como
