@@ -2,6 +2,7 @@ from django.urls import path
 
 from processo_seletivo.interface import (
     acessos,
+    agenda_da_etapa,
     assistente,
     avisos,
     centro_do_edital,
@@ -512,6 +513,25 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
+    # A agenda da Etapa (167): configurar e montar. Segmento próprio, `agenda-da-etapa`, e nunca
+    # `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`, pela decisão de rotas da
+    # 011. A porta é a da Distribuição, e as recusas que a montagem diz estão no contrato.
+    *[
+        path(
+            f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}",
+            view,
+            name=f"agenda-{segmento}",
+        )
+        for segmento, view in (
+            ("configurar", agenda_da_etapa.configurar),
+            ("capacidade", agenda_da_etapa.capacidade),
+            ("montar", agenda_da_etapa.montar),
+            ("painel", agenda_da_etapa.painel),
+            ("preencher", agenda_da_etapa.preencher),
+            ("agendar", agenda_da_etapa.agendar),
+            ("liberar", agenda_da_etapa.liberar),
+        )
+    ],
     # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é
     # dali que ela é alcançada e porque a autorização é a mesma.
     path(

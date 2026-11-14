@@ -236,6 +236,13 @@ MODELOS = RAIZ / "interface/templates/interface"
 # Quem carrega cada arquivo de `telas/` e de `grupos/`. Escrito à mão, e não derivado dos modelos: é
 # a afirmação que o teste confere — "o estilo de uma tela não viaja nas outras" (040, FR-2096).
 QUEM_CARREGA = {
+    # A agenda da Etapa (167): configurar e montar, com o medidor e as larguras de Minhas etapas.
+    "interface/telas/agenda-da-etapa.css": {"agenda_configurar.html", "agenda_montar.html"},
+    "interface/telas/minhas-etapas.css": {
+        "minhas_etapas.html",
+        "agenda_configurar.html",
+        "agenda_montar.html",
+    },
     "interface/grupos/acesso.css": {
         "base_de_acesso.html",
         "identificar.html",
@@ -356,7 +363,6 @@ QUEM_CARREGA = {
             # O kit de divulgação (111).
             "kit-de-divulgacao",
             "marco",
-            "minhas-etapas",
             "prototipo-do-assistente",
             "relatorio-do-edital",
             "retificar",

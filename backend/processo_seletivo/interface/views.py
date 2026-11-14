@@ -7207,6 +7207,7 @@ def distribuicao(request, edital_id, etapa_id):
         panorama=panorama,
         prontidao=request.GET.get("prontidao") or None,
     )
+    resumo = avaliacao_selectors.resumo_da_etapa(edital=edital, etapa=etapa, panorama=panorama)
     return marcar_como_privada(
         render(
             request,
@@ -7218,9 +7219,10 @@ def distribuicao(request, edital_id, etapa_id):
                 "linhas": linhas,
                 "pagina": pagina,
                 "carga": avaliacao_selectors.carga_por_avaliador(edital=edital, etapa_id=etapa_id),
-                "resumo": avaliacao_selectors.resumo_da_etapa(
-                    edital=edital, etapa=etapa, panorama=panorama
-                ),
+                "resumo": resumo,
+                # A seção "Agenda" da Etapa (167, UX-765): a participação é a que o resumo acima
+                # já contou, e não uma segunda leitura.
+                "agenda_da_etapa": _resumo_da_agenda(edital, etapa_id, resumo),
                 "prontidao": request.GET.get("prontidao") or "",
                 # **O impedimento anunciado antes de alguém bater nele**, como a tela da Comissão
                 # faz com a presidência ausente. Distribuir com o período aberto é recusado pelo
@@ -7257,6 +7259,12 @@ def distribuicao(request, edital_id, etapa_id):
             },
         )
     )
+
+
+def _resumo_da_agenda(edital, etapa_id, resumo):
+    from processo_seletivo.interface.agenda_da_etapa import resumo_para_a_etapa
+
+    return resumo_para_a_etapa(edital, etapa_id, resumo.get("inscricoes") or 0)
 
 
 def _mesa_do_avaliador(request, edital_id, etapa_id):

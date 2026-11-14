@@ -47,6 +47,24 @@ mesma frase 75 vezes, uma por par, o que enterra a informação em vez de dá-la
 </p>
 
 {% comment %}
+A agenda da Etapa (167, UX-765): quando cada pessoa é atendida, para a Etapa que exige
+comparecimento. Opcional por Etapa. Vazia, a seção diz para que serve e que pode ser configurada antes
+de a lista fechar — a agenda acompanha a participação, e não guarda lista própria.
+{% endcomment %}
+<section class="cartao" aria-labelledby="agenda-da-etapa-titulo">
+  <h2 id="agenda-da-etapa-titulo">Agenda</h2>
+  {% if agenda_da_etapa.existe %}
+  <p><span class="situacao s-EM_ELABORACAO">Agenda em montagem</span> Nada é público até a agenda ser conferida e publicada.</p>
+  <p>{{ agenda_da_etapa.com_horario }} de {{ agenda_da_etapa.participantes }} pessoa{{ agenda_da_etapa.participantes|pluralize:"s" }} com horário · {{ agenda_da_etapa.horarios }} horário{{ agenda_da_etapa.horarios|pluralize:"s" }}{% if agenda_da_etapa.falta %} · <strong>faltam {{ agenda_da_etapa.falta }}</strong>{% endif %}</p>
+  <p class="acoes-do-painel"><a class="botao" href="{% url 'interface:agenda-montar' edital.id etapa.id %}">Montar a agenda</a> <a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Ajustar a configuração</a></p>
+  {% else %}
+  <p><strong>Esta Etapa ainda não tem agenda.</strong></p>
+  <p>Se a Etapa exige que cada pessoa compareça num dia e horário, configure os dias, as janelas e as bancas. Dá para fazer isso antes de a lista de participantes estar fechada: a agenda acompanha a lista.</p>
+  <p class="acoes-do-painel"><a class="botao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Configurar a agenda</a></p>
+  {% endif %}
+</section>
+
+{% comment %}
 O que falta, antes do detalhe (FR-014). É a resposta que esta tela existe para dar.
 
 Os números **são o filtro**: "3 sem avaliador suficiente" é onde a presidência quer chegar, e ler o

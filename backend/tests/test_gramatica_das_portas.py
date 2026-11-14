@@ -63,6 +63,7 @@ MODULOS_DE_VIEW = (
     # A vaga não preenchida (155): nenhum 404 próprio — o recorte e o marco recusam pelas funções
     # de `views.py` que o inventário já classifica. Fica para que um futuro não escape.
     RAIZ / "processo_seletivo/interface/views_da_nao_preenchida.py",
+    RAIZ / "processo_seletivo/interface/agenda_da_etapa.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

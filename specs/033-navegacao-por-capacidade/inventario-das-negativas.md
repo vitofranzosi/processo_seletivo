@@ -223,6 +223,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 9981 | `cartao_do_documento_da_convocacao` | sim | não | objeto inexistente | **acrescentada pela `157`** — o cartão relido de um item que não está entre os pedidos desta chamada. A porta `_convocacao_para_conferir` decide escopo e autorização antes |
 | 7516 | `documentos_da_mesa` | sim | não | vínculo de **Atribuição** | **acrescentada pela `157`** — a lista de documentos da inscrição, relida pelo visualizador: a mesma recusa de `inscricao_da_mesa`, pela porta da Mesa |
 | 9924 | `pedir_aviso_de_pendencia_view` | sim | não | objeto inexistente | **acrescentada pela `157`** — o pedido de aviso de uma pessoa: a recusa de inexistente do comando do aviso. A porta `_convocacao_para_conferir` decide escopo e autorização antes |
+| 60 | `_inexistente` | sim | não | objeto inexistente | **acrescentada pela `167`**, em `interface/agenda_da_etapa.py` — a agenda da Etapa: a pessoa ou o horário que a rota nomeia e não existe, ou o 404 que o domínio declarou. A porta é `_etapa_para_distribuir`, que decide escopo e autorização antes |
 
 ---
 

@@ -1,0 +1,24 @@
+{% comment %}
+A grade compacta (04-redesign, decisão 5): uma linha por horário, a célula inteira é o link que abre
+o painel. Ocupada mostra quem; livre fica quieta; escolhida ganha contorno — e nenhum texto de ação
+se repete pela grade (UX-761). No estreito, a mesma marcação vira lista cronológica, com a banca
+dentro de cada horário, só pela folha (UX-763).
+{% endcomment %}
+{% url 'interface:agenda-montar' edital.id etapa_id as endereco %}
+<div class="tabela-rolavel">
+<table class="grade-compacta">
+  <caption class="oculto">{{ dia_por_extenso }}</caption>
+  <thead><tr><th scope="col" class="coluna-hora">Horário</th>{% for banca in bancas %}<th scope="col">{{ banca }}</th>{% endfor %}</tr></thead>
+  <tbody>
+    {% for linha in grade %}
+    <tr><th scope="row" class="coluna-hora">{{ linha.hora }}</th>
+      {% for celula in linha.celulas %}
+      {% with item=celula.agendamento %}
+      <td>{% if item %}<a class="vaga ocupada{% if celula.escolhido %} escolhido{% endif %}{% if celula.nao_participa %} sem-participacao{% endif %}" href="?dia={{ dia|date:'Y-m-d' }}&amp;pessoa={{ item.inscricao_id }}" hx-get="{{ endereco }}?dia={{ dia|date:'Y-m-d' }}&amp;pessoa={{ item.inscricao_id }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true" aria-label="{{ linha.hora }}, {{ celula.banca }}: {{ item.inscricao.nome|default:item.inscricao.protocolo }}{% if celula.nao_participa %}, não participa mais{% endif %}">{% if varias_bancas %}<span class="banca-no-estreito">{{ celula.banca }} · </span>{% endif %}<span class="quem">{{ item.inscricao.nome|default:item.inscricao.protocolo }}</span><span class="inscricao">{{ item.inscricao.protocolo }}</span>{% if celula.nao_participa %}<span class="situacao s-CANCELADO">não participa mais</span>{% elif item.origem == "MANUAL" %}<span class="origem">à mão</span>{% endif %}</a>{% else %}<a class="vaga livre{% if celula.escolhido %} escolhido{% endif %}" href="?dia={{ dia|date:'Y-m-d' }}&amp;horario={{ celula.chave|urlencode }}" hx-get="{{ endereco }}?dia={{ dia|date:'Y-m-d' }}&amp;horario={{ celula.chave|urlencode }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true" aria-label="{{ linha.hora }}, {{ celula.banca }}: livre">{% if varias_bancas %}<span class="banca-no-estreito">{{ celula.banca }} · </span>{% endif %}<span class="livre-rotulo">Livre</span></a>{% endif %}</td>
+      {% endwith %}
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>

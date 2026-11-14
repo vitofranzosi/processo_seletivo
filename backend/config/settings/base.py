@@ -145,6 +145,13 @@ INSTALLED_APPS = [
     # `inscricoes` e `editais`, e nenhum deles passa a conhecê-lo; o arquivo que ele entrega
     # continua único, onde a inscrição e a convocação o guardaram (117, D-004).
     "processo_seletivo.formalizacao",
+    # A agenda da Etapa (167): a configuração dos horários de atendimento e quem está em cada um,
+    # para as Etapas que exigem comparecimento. App próprio porque o ato é outro — nem alocar, nem
+    # avaliar, nem convocar para vaga (`D-005`) — e porque as migrations de `comissoes`, `editais`
+    # e `resultados` têm contagem guardada. **Lê** `editais`, `comissoes`, `resultados` e
+    # `inscricoes`, e nenhum deles passa a conhecê-lo: quem participa da Etapa continua sendo
+    # perguntado à prontidão, e a agenda não guarda lista própria (`D-002`, T-001).
+    "processo_seletivo.agendamento",
     # Os cenários de treinamento e homologação (134): o manifesto do que o gerador criou, e nada
     # mais. **Nenhum app do domínio o conhece**: ele chama os comandos da aplicação como qualquer
     # ator, e some inteiro sem que o produto perceba.
