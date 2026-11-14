@@ -377,6 +377,73 @@ def montar_c07(m):
 # As fichas
 # ---------------------------------------------------------------------------------------------
 
+# Os estados do C18 (168), pela ordem dos candidatos: os quatro que a Etapa restrita alcança, e o
+# 05, na ampla.
+SEM_AVALIADOR_DO_C18 = 1
+SEM_PARECER_DO_C18 = 2
+UM_PARECER_DO_C18 = 3
+DOIS_PARECERES_DO_C18 = 4
+NA_AMPLA_DO_C18 = 5
+
+
+def montar_c18(m):
+    """A Etapa restrita em curso, sem ninguém avisado (168, FR-7333).
+
+    Quatro alcançados, em quatro estados do mesmo período: sem avaliador; distribuído, sem parecer;
+    com um parecer de dois; com os dois, à espera da consolidação. O quinto está só na ampla, e a
+    Etapa não o alcança. **Ninguém avisado**: o aviso do passo é um gesto só sobre todos os que
+    participam, e um cenário de um período não mostra avisado e não avisado ao mesmo tempo — o
+    exercício é a presidência avisar.
+    """
+    from processo_seletivo.avaliacoes.application.avaliacao import concluir
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+
+    m.criar()
+    m.elaborar(
+        perfis=c.perfil_de_notas(),
+        inicio=m.agora - timedelta(days=10),
+        duracao_dias=40,
+        documentos=c.documentos_de_notas(),
+        etapas_a_mais=[c.etapa_da_verificacao()],
+        eventos_a_mais=[
+            c.evento_da_verificacao(m.agora - timedelta(hours=1), m.agora + timedelta(days=7))
+        ],
+    )
+    m.publicar()
+    inscricoes = m.inscrever(
+        NA_AMPLA_DO_C18,
+        reservada=(
+            SEM_AVALIADOR_DO_C18,
+            SEM_PARECER_DO_C18,
+            UM_PARECER_DO_C18,
+            DOIS_PARECERES_DO_C18,
+        ),
+    )
+    m.encerrar_inscricoes(timezone.now())
+    m.constituir_comissao(alocar_em=(c.ETAPA_VERIFICACAO,))
+    distribuidas = inscricoes[SEM_PARECER_DO_C18 - 1 : DOIS_PARECERES_DO_C18]
+    m.distribuir(c.ETAPA_VERIFICACAO, distribuidas, avaliadores=(AVALIACAO_1, AVALIACAO_2))
+    versao = effective_version(edital_id=m.edital.id)
+    pareceres = [
+        (inscricoes[UM_PARECER_DO_C18 - 1], AVALIACAO_1),
+        (inscricoes[DOIS_PARECERES_DO_C18 - 1], AVALIACAO_1),
+        (inscricoes[DOIS_PARECERES_DO_C18 - 1], AVALIACAO_2),
+    ]
+    for inscricao, avaliador in pareceres:
+        concluir(
+            ator=m.ator(avaliador),
+            edital=m.edital,
+            etapa_id=m.id(c.ETAPA_VERIFICACAO),
+            inscricao_id=inscricao.id,
+            pontuacao=None,
+            sentido="FAVORAVEL",
+            parecer=f"Parecer de treinamento. {c.MARCA}.",
+            expected_revision=1,
+            versao_reconhecida=versao.id,
+            correlation_id=m.correlacao,
+        )
+
+
 _SELECAO = "Professor substituto (Perfil docente de Informática, com cota PPP)"
 _CURSO = "Curso técnico EaD (ampla concorrência e cota PPP)"
 _EQUIPE_DA_PUBLICACAO = (
@@ -731,6 +798,40 @@ CENARIOS = (
         dependencias=(),
         montar=montar_c17,
         provisiona_formalizacao=True,
+    ),
+    Cenario(
+        codigo="C18",
+        nome="Verificação da autodeclaração",
+        objetivo=(
+            "Conduzir uma Etapa só para quem se inscreveu na reserva: avisar, acompanhar os "
+            "pareceres e ver o que o candidato lê."
+        ),
+        tipo_de_selecao=_SELECAO,
+        metodo="Etapa restrita à cota PPP, decisória, com dois pareceres e unanimidade",
+        estado_inicial=(
+            "4 inscritos na cota no período da Etapa: 1 sem avaliador, 1 sem parecer, 1 com um "
+            "parecer de dois, 1 com os dois; 1 inscrito só na ampla; ninguém avisado."
+        ),
+        precondicoes=("O envio de avisos ligado no ambiente (`AVISOS_AOS_CANDIDATOS`).",),
+        papeis=(
+            f"Presidência ({PRESIDENCIA})",
+            f"Avaliadores ({AVALIACAO_1}, {AVALIACAO_2})",
+            "Candidato (01 a 04, na cota; 05, na ampla)",
+        ),
+        proxima_acao=(
+            "Presidência: avisar os inscritos pelo Centro e distribuir o 01; avaliadores: dar os "
+            "pareceres; candidato: ler o passo no acompanhamento."
+        ),
+        resultado_esperado=(
+            "Aviso confirmado e despachado; pareceres completos; a Etapa consolidada pela regra."
+        ),
+        dependencias=("Correio do ambiente para o aviso e para o código de acesso do candidato.",),
+        montar=montar_c18,
+        validade_dias=7,
+        limitacoes=(
+            "O período vencido e o resultado visível ao candidato não cabem num período em curso: "
+            "ficam na suíte (FR-7333 da 168).",
+        ),
     ),
 )
 

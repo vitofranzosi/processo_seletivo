@@ -149,6 +149,51 @@ ETAPA_DOCUMENTAL = do_molde("d3")
 AMPLA = do_molde("e1")
 RESERVADA = do_molde("e2")
 EVENTO_INSCRICOES = do_molde("c1")
+# A Etapa restrita do C18 (168): só neste cenário, e fora do molde do `seed_demo`, que não tem
+# nenhuma. Os outros cenários não a veem.
+ETAPA_VERIFICACAO = do_molde("d4")
+EVENTO_VERIFICACAO = do_molde("c9")
+NOME_DA_VERIFICACAO = "Verificação da autodeclaração"
+
+
+def etapa_da_verificacao():
+    """A Etapa restrita e colegiada do C18: dois pareceres, confirma só por unanimidade (168).
+
+    Antes da Prova na ordem, para que a progressão a torne esperada pelo marco que lê a Prova — num
+    Edital do Ifes ela vem antes da classificação. O efeito é o padrão da `164`: retira da reserva e
+    mantém a ampla. Dois pareceres, e não três, porque a comissão do gerador tem dois avaliadores; a
+    unanimidade admite número par (`165`).
+    """
+    return {
+        "id": ETAPA_VERIFICACAO,
+        "name": NOME_DA_VERIFICACAO,
+        "order": 0,
+        "weight": None,
+        "eliminatory": True,
+        "classificatory": False,
+        "minimumScore": None,
+        "forma": "DECISORIA",
+        "rotuloFavoravel": "Confirmada",
+        "rotuloDesfavoravel": "Não confirmada",
+        "evaluationsPerRegistration": 2,
+        "deliberationRule": "UNANIMOUS_FOR_FAVORABLE",
+        "modalityCodes": ["PPP"],
+        "unfavorableOutcomeEffect": "RESERVE_REMOVAL",
+        "absenceEffect": "RESERVE_REMOVAL",
+        "scheduleEventId": EVENTO_VERIFICACAO,
+    }
+
+
+def evento_da_verificacao(inicio, fim):
+    return {
+        "id": EVENTO_VERIFICACAO,
+        "type": NOME_DA_VERIFICACAO,
+        "description": "Entrevista com a comissão, para quem se inscreveu na reserva de vagas.",
+        "startAt": inicio,
+        "endAt": fim,
+        "order": 9,
+        "isRegistrationPeriod": False,
+    }
 
 
 def perfil_de_notas(*, vagas=4, janela="declarada"):
@@ -408,11 +453,23 @@ class Montagem:
         self.anotar("edital", edital.id)
         return edital
 
-    def elaborar(self, *, perfis, inicio, duracao_dias, documentos, metodo=None, etapas=None):
+    def elaborar(
+        self,
+        *,
+        perfis,
+        inicio,
+        duracao_dias,
+        documentos,
+        metodo=None,
+        etapas=None,
+        etapas_a_mais=(),
+        eventos_a_mais=(),
+    ):
         """Grava o rascunho: os moldes remapeados, com o período de inscrições pedido.
 
         `inicio` e `duracao_dias` são o período de inscrições; os demais eventos do molde se
-        deslocam junto, para que a sequência do cronograma continue coerente.
+        deslocam junto, para que a sequência do cronograma continue coerente. `etapas_a_mais` e
+        `eventos_a_mais` são peças de fora do molde, em identificadores do molde (o C18, 168).
         """
         from processo_seletivo.editais.application.draft import replace_draft
 
@@ -420,8 +477,8 @@ class Montagem:
         calendario[0]["endAt"] = inicio + timedelta(days=duracao_dias)
         argumentos = {
             "profiles": self.remapear(perfis),
-            "schedule": self.remapear(calendario),
-            "stages": self.remapear(self._etapas(etapas)),
+            "schedule": self.remapear([*calendario, *eventos_a_mais]),
+            "stages": self.remapear([*self._etapas(etapas), *etapas_a_mais]),
             "document_requirements": self.remapear(documentos),
         }
         if metodo is not None:
@@ -699,15 +756,17 @@ class Montagem:
         self.anotar("alocacao_a_conferencia", alocacao.id)
         return alocacao
 
-    def distribuir(self, etapa, inscricoes, avaliador=AVALIACAO_1):
+    def distribuir(self, etapa, inscricoes, avaliador=AVALIACAO_1, *, avaliadores=None):
+        """`avaliadores` dá a cada inscrição um parecer de cada um (a Etapa colegiada, 168)."""
         from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 
+        quem = avaliadores or (avaliador,)
         distribuir(
             actor=self.ator(GESTAO),
             processo_id=self.processo.id,
             edital_id=self.edital.id,
             etapa_id=self.id(etapa),
-            membro_ids=[self.membros[avaliador].id],
+            membro_ids=[self.membros[subject].id for subject in quem],
             inscricao_ids=[item.id for item in inscricoes],
             idempotency_key=self.chave(f"lote-{etapa[-2:]}"),
             correlation_id=self.correlacao,
