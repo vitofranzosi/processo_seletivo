@@ -1,12 +1,13 @@
 # Data Model: O agendamento dos participantes da Etapa
 
-Seis tabelas novas no app `agendamento` — quatro operacionais na entrega A, duas append-only na B — e
+Sete tabelas novas no app `agendamento` — quatro operacionais na entrega A, três append-only na B — e
 uma origem nova, com uma coluna anulável, no `Aviso` da `066`, na C. Nada muda em `EtapaAvaliacao`,
 `EventoCronograma`, `Inscricao`, `ResultadoEtapa` ou `Ocorrencia` (T-001, T-022).
 
 O §2.5 do estudo diz "cinco tabelas — três operacionais e duas append-only", mas a figura e a tabela
 dele listam quatro operacionais: a agenda, a janela, a banca e o agendamento. São as mesmas do estudo,
-contadas de novo; nenhuma foi acrescentada.
+contadas de novo. A sétima, `DocumentoDoAtoDaAgenda`, veio da decisão `D-012` (o documento PDF),
+depois do estudo e do primeiro plano; o que ela preserva está na seção dela.
 
 ```text
 AgendaDaEtapa ─────────┬── JanelaDaAgenda (n)
@@ -14,8 +15,9 @@ AgendaDaEtapa ─────────┬── JanelaDaAgenda (n)
                        └── Agendamento (n) ──── Inscricao
                                     │
 AtoDaAgenda (append-only) ── HorarioPublicado (n, append-only) ── Inscricao, BancaDaAgenda
- PUBLICACAO | REMARCACAO |     substitui → HorarioPublicado
- INCLUSAO | CANCELAMENTO       aviso → avisos.Aviso (origem AGENDA)
+ │ PUBLICACAO | REMARCACAO |   substitui → HorarioPublicado
+ │ INCLUSAO | CANCELAMENTO     aviso → avisos.Aviso (origem AGENDA)
+ └── DocumentoDoAtoDaAgenda (1, append-only): os bytes do PDF do ato
 ```
 
 ## `AgendaDaEtapa` — a configuração (A)
@@ -147,13 +149,29 @@ O horário vigente de uma inscrição numa agenda é o `HorarioPublicado` dela *
 candidato leem só isso (T-016, T-017). "Remarcado em" é o `praticado_em` do ato do vigente quando ele
 é `REMARCACAO`.
 
+## `DocumentoDoAtoDaAgenda` — o PDF de cada ato, como foi gerado (B, append-only)
+
+| Campo | Tipo | Regra |
+|---|---|---|
+| `id` | UUID | |
+| `ato` | `OneToOne` `AtoDaAgenda`, `PROTECT` | um documento por ato |
+| `bytes` | binário | o PDF de `render_agenda_pdf(conteudo)`, gerado uma vez, na transação do ato |
+| `content_type` | 100 | `application/pdf` |
+| `documento_hash` | 64 | o resumo dos bytes; o `ETag` do portal |
+
+O molde de `DocumentoDaPublicacaoDeConvocados` (`149`) e de `DocumentoDoResultado` (`017`). **O que
+preserva**: os bytes do documento tal como foi publicado. O `conteudo_publico` do ato já é imutável,
+mas o compositor não é, e recompor depois daria outro arquivo para o mesmo ato (T-013). Tabela
+própria, e não coluna no ato, para a ausência de documento ser a ausência de linha.
+
 ## As três camadas append-only (B)
 
 1. `save` só de linha nova e `delete` recusado, pela classe `_AppendOnly` do app.
-2. Gatilhos `ato_da_agenda_append_only` e `horario_publicado_append_only` em `UPDATE` e `DELETE`, na
+2. Gatilhos `ato_da_agenda_append_only`, `horario_publicado_append_only` e
+   `documento_do_ato_da_agenda_append_only` em `UPDATE` e `DELETE`, na
    migration `agendamento/0002_atos_da_agenda`.
-3. As duas em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py`): o papel de runtime não recebe `UPDATE`
-   nem `DELETE`. O `M` do provisionamento passa de **61** a **63**.
+3. As três em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py`): o papel de runtime não recebe `UPDATE`
+   nem `DELETE`. O `M` do provisionamento passa de **65** a **68**.
 
 ## `Aviso` da `066` (C)
 
@@ -161,9 +179,11 @@ candidato leem só isso (T-016, T-017). "Remarcado em" é o `praticado_em` do at
 |---|---|
 | `origem` ganha `AGENDA` | `ck_aviso_origem_conhecida` refeito |
 | `ck_aviso_ato_da_origem` | ramo novo: `origem=AGENDA`, `natureza=""`, `referencia_da_publicacao≠""` |
-| `marco_id` anulável | `ck_aviso_marco_da_origem`: `marco_id IS NOT NULL OR origem='AGENDA'` |
+| `marco_id` anulável | `ck_aviso_marco_da_origem`: `marco_id IS NOT NULL OR origem='AGENDA'` (com a `168` na base: `origem IN ('PASSO','AGENDA')`, e o aviso da agenda preenche o `etapa_id` dela) |
 
-Um `Aviso` e um `DestinatarioDoAviso` por pessoa e por ato, com o corpo final daquela pessoa (T-018).
+Um `Aviso` e um `DestinatarioDoAviso` por pessoa e por ato, com o corpo final daquela pessoa (T-018),
+e só com `AVISOS_AOS_CANDIDATOS` ligada no instante do ato (`D-011`): desligada, não nasce linha, e
+ligá-la depois não cria nenhuma.
 
 ## Valores de domínio (sem tabela)
 

@@ -123,9 +123,14 @@ página».
 | `autoridade_invalida` | autoridade escolhida fora de vigência ou de outra unidade | A autoridade escolhida não está vigente na unidade do Edital. Escolha outra. |
 | `ja_publicada` | — | *(não é recusa: a confirmação repetida devolve o ato já criado, com 200 e a tela da agenda publicada; FR-7223, SC-2396)* |
 
-### O botão
+### O botão e os avisos
 
-«Publicar a agenda e avisar as pessoas».
+Com os avisos aos candidatos ligados: «Publicar a agenda e avisar as pessoas», e, acima dele, «A
+publicação criará «43» avisos, um para cada pessoa da agenda. O envio sai pelo despacho dos avisos.»
+
+Desligados (`D-011`): «Publicar a agenda», e, acima dele, «Os avisos por e-mail estão desligados nesta
+instalação. A agenda vale pela publicação, e nenhum aviso será criado.» A mesma frase vai à agenda
+publicada, no lugar do resumo dos avisos.
 
 ## 5. Agenda publicada, remarcação, inclusão, cancelamento (FR-7233, FR-7240 a FR-7247)
 
@@ -154,7 +159,7 @@ página».
 | horário fora do período vigente | O Evento da Etapa foi retificado depois da publicação, e «2» horários publicados estão fora do período vigente. Eles continuam valendo como foram publicados. |
 
 O botão da remarcação: «Remarcar e avisar esta pessoa»; o da inclusão: «Agendar e avisar esta
-pessoa»; o do cancelamento: «Cancelar o agendamento».
+pessoa» — com os avisos desligados, «Remarcar esta pessoa» e «Agendar esta pessoa» (`D-011`); o do cancelamento: «Cancelar o agendamento».
 
 ## 6. Portal (FR-7225 a FR-7229, FR-7245)
 

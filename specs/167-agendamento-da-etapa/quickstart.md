@@ -10,7 +10,7 @@ Roteiro de verificação da `167`. O modelo está em [data-model.md](data-model.
   caras* no `CLAUDE.md`). A suíte em SQLite não vale.
 - `uv sync --extra dev` na worktree (worktree nova não tem pytest).
 - O banco preparado por `make preparar`. Depois da entrega B, o provisionamento deve dizer
-  **63** tabelas append-only no total — e o primeiro número não pode ser zero.
+  **68** tabelas append-only no total — e o primeiro número não pode ser zero.
 - `manage.py migrate --check` limpo antes de investigar qualquer erro estranho.
 
 ## 1. A suíte de cada entrega
@@ -40,9 +40,11 @@ cd backend && DB_NAME=gps_167 make test-pg PYTEST_ADDOPTS="tests/integration/age
 | US2, concorrência | `tests/integration/agendamento/test_concorrencia_da_montagem.py` | duas transações no mesmo horário: uma ocupa, a outra recebe `horario_ocupado` (SC-2392) |
 | US3, impedimentos e publicação | `tests/integration/agendamento/test_publicacao.py` | cada impedimento recusa; o completo publica; o repetido devolve o mesmo ato (SC-2393, SC-2396) |
 | US3, a página pública | `tests/portal/test_agenda_publica.py` | busca por protocolo e por nome; só protocolo na Etapa por Modalidade; nenhum endereço, CPF, e-mail, telefone ou Modalidade nos bytes nem no HTML (SC-2394) |
+| US3, o documento | `tests/unit/agendamento/test_documento.py`, `tests/portal/test_documento_da_agenda.py` | o texto do PDF diz o que o conteúdo diz, sem sala nem dado privado, só protocolo na Etapa restrita; o servido é o gravado (SC-2399) |
+| US3, quem publica | `tests/integration/agendamento/test_publicacao.py` | quem gere a comissão publica; sem escopo no Edital, negado no servidor; autor e autoridade distintos no ato (`D-013`) |
 | US3, a área do candidato | `tests/portal/test_horario_na_area_do_candidato.py` | publicado e não publicado; o botão da sala só ali |
-| US4, os avisos | `tests/integration/agendamento/test_avisos_da_agenda.py` | um aviso por pessoa por ato; o despacho envia; a falha não desfaz (SC-2395) |
-| US5, os atos individuais | `tests/integration/agendamento/test_atos_individuais.py` | remarcação, inclusão e cancelamento com motivo; um aviso só; o anterior no histórico |
+| US4, os avisos | `tests/integration/agendamento/test_avisos_da_agenda.py` | um aviso por pessoa por ato; o despacho envia; a falha não desfaz (SC-2395); com a chave desligada, nenhum aviso, nem depois de ligá-la (`D-011`) |
+| US5, os atos individuais | `tests/integration/agendamento/test_atos_individuais.py` | remarcação, inclusão e cancelamento com motivo; um aviso só; o anterior no histórico; um documento por ato, e o da publicação intacto (FR-7248) |
 | Append-only | `tests/integration/agendamento/test_atos_imutaveis.py` | `UPDATE` e `DELETE` recusados pelo gatilho e pelo privilégio |
 | SC-2397 | `tests/interface/test_agenda_da_etapa_no_estreito.py`, varreduras de CSP e folhas | nenhum `style=`, `<style>`, `<script>` ou `on…=`; toda classe com regra na folha |
 
@@ -61,12 +63,16 @@ publicado com uma Etapa ligada a um Evento de 23 a 25/11 e 43 inscrições envia
 3. Salvar; "Montar a agenda"; "Preencher automaticamente": a prévia diz 43; "Aplicar".
 4. Clicar numa pessoa, escolher outro dia e horário, "Mudar de horário".
 5. "Conferir e publicar": as quatro linhas de prontidão; escolher o veículo e a autoridade;
-   "Publicar a agenda e avisar as pessoas".
+   "Publicar a agenda e avisar as pessoas" ("Publicar a agenda", com os avisos desligados).
 6. `manage.py despachar_avisos` à mão (com `AVISOS_AOS_CANDIDATOS` ligada, como no `development`):
    os e-mails saem no terminal **do comando**.
-7. Na página pública da seleção, "Agendas"; buscar pelo protocolo de uma pessoa.
+7. Na página pública da seleção, "Agendas"; buscar pelo protocolo de uma pessoa; baixar o documento
+   da publicação e conferir que diz o mesmo que a página.
 8. "Remarcar" uma pessoa, com motivo; despachar de novo: um e-mail só, que diz que o anterior não vale.
-9. Repetir em 375 px: a montagem vira coluna e a grade, lista; nenhuma rolagem horizontal; o console
+   Na página pública, o documento da publicação continua o mesmo, e o da remarcação vem depois dele.
+9. Com `AVISOS_AOS_CANDIDATOS=false` no ambiente do `runserver`, outra Etapa: a conferência e a
+   agenda publicada dizem que os avisos estão desligados, e o despacho não envia nada dela.
+10. Repetir em 375 px: a montagem vira coluna e a grade, lista; nenhuma rolagem horizontal; o console
    sem violação de CSP.
 
 Para o cenário B (heteroidentificação), compor a Etapa com alcance restrito a `PPI`: a página pública

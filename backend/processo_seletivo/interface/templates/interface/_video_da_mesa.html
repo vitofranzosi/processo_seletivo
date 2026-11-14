@@ -1,0 +1,30 @@
+{% load l10n %}{% comment %}
+**O vídeo da verificação, no painel do documento** (166, FR-7128 a FR-7133, UX-774). Abrir é ato: o
+botão registra **uma** abertura, e o vídeo toca dali em diante, avançando e voltando sem registrar de
+novo (D-007). Não há botão de baixar, e o reprodutor recusa o "baixar" do próprio navegador onde ele
+aceita a recusa — o que não impede captura de tela, e a tela não promete que impede.
+{% endcomment %}
+<section id="video" class="video-da-mesa" aria-labelledby="video-titulo">
+  <h3 id="video-titulo">Vídeo da verificação</h3>
+  {% if video_da_mesa.eliminado_em %}
+  <p class="ajuda">O arquivo deste vídeo foi eliminado em {{ video_da_mesa.eliminado_em|date:"d/m/Y" }}, conforme o prazo de retenção. O resumo e a duração continuam registrados.</p>
+  {% elif video_da_mesa.abertura %}
+  <video class="reprodutor" data-reprodutor src="{% url 'interface:mesa-video' edital.id etapa_id inscricao.id video_da_mesa.abertura.id %}" controls controlslist="nodownload" disablepictureinpicture playsinline preload="metadata"></video>
+  <div class="controles-do-video" role="group" aria-label="Controles do vídeo">
+    <button type="button" class="acao" data-recuar>Voltar 10 s</button>
+    <button type="button" class="acao" data-avancar>Avançar 10 s</button>
+    <button type="button" class="acao" data-lento aria-pressed="false">Velocidade 0,5×</button>
+  </div>
+  <p class="ajuda">Ir ao passo do roteiro:</p>
+  <ul class="passos-do-video">
+    {% for marca in video_da_mesa.marcas %}<li><button type="button" class="acao" data-saltar="{{ marca.instante|unlocalize }}">{{ marca.titulo }}</button></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="ajuda">Duração: {{ video_da_mesa.video.duracao|floatformat:0 }} segundos. Abrir fica registrado na trilha da sua avaliação.</p>
+  <form method="post" action="{% url 'interface:mesa-video-abrir' edital.id etapa_id inscricao.id %}">
+    {% csrf_token %}
+    <button type="submit" class="botao">Abrir o vídeo</button>
+  </form>
+  {% endif %}
+  {% if video_da_mesa.em_modo_video %}<p class="ajuda">O vídeo só confirma: se ele não bastar, marque «Não dá para confirmar pelo vídeo», e a presidência encaminha a pessoa à entrevista ao vivo. Isso não é desfecho desfavorável.</p>{% else %}<p class="ajuda">Esta inscrição foi encaminhada à entrevista ao vivo: o parecer agora é o da entrevista.</p>{% endif %}
+</section>

@@ -879,6 +879,9 @@ def ler_etapas(dados):
         )
         etapas[-1].update(_efeito(dados, base, etapas[-1]))
         etapas[-1]["deliberationRule"] = _regra_de_deliberacao(dados, base, etapas[-1])
+        # A admissão do vídeo (166, FR-7102): a caixa marcada é "admite"; quem recusa a admissão
+        # fora da Etapa colegiada, sem alcance, sem período ou sem a chave é a publicação.
+        etapas[-1]["videoOption"] = _texto(dados, f"{base}-admiteVideo") == "1"
     return _renumerar(etapas)
 
 
@@ -1772,6 +1775,8 @@ def etapas_do_edital(edital):
             "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia) or "",
             # A regra de deliberação (165): o vazio é "não declarada", e nada nasce marcado.
             "deliberationRule": deliberacao.da_coluna(etapa.regra_de_deliberacao) or "",
+            # A admissão do vídeo (166).
+            "videoOption": etapa.admite_video,
             # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
             "criteria": [
                 {
@@ -1895,6 +1900,8 @@ def etapas_persistidas(edital):
             "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia),
             # A regra de deliberação (165), pela mesma razão do efeito.
             "deliberationRule": deliberacao.da_coluna(etapa.regra_de_deliberacao),
+            # A admissão do vídeo (166), pela mesma razão do efeito.
+            "videoOption": etapa.admite_video,
             # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
             # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
             # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.

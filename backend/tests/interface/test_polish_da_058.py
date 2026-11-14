@@ -242,6 +242,8 @@ def _etapa(**numeros):
         criterios=SimpleNamespace(all=lambda: []),
         # O alcance (163): a Etapa para todas as inscrições.
         alcance=None,
+        # A admissão do vídeo (166): a Etapa que não o admite.
+        admite_video=False,
     )
     return SimpleNamespace(**{**campos, **numeros})
 

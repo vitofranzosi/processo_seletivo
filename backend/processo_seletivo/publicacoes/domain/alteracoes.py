@@ -132,6 +132,8 @@ CAMPOS = {
         "absenceEffect": "Efeito do não comparecimento",
         # A regra de deliberação (165), com o rótulo da tela da Retificação.
         "deliberationRule": "Regra de deliberação",
+        # A admissão do vídeo (166).
+        "videoOption": "Admite vídeo gravado pelo candidato",
     },
     "sections": {"title": "Título", "content": "Texto", "order": "Ordem"},
     "attachments": {
