@@ -12880,7 +12880,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
         <rect class="cx-z" x="480" y="30" width="390" height="150" rx="10"/>
         <text class="rt-t" x="500" y="56">2 · Privilégio ausente</text>
         <text class="rt-p" x="500" y="78">O papel de runtime tem SELECT e INSERT nas</text>
-        <text class="rt-p" x="500" y="96">61 tabelas append-only — e nada mais.</text>
+        <text class="rt-p" x="500" y="96">59 tabelas append-only (61 com a 165) — e nada mais.</text>
         <text class="rt-p" x="500" y="122">Recusa antes, mesmo que o gatilho seja removido.</text>
         <text class="rt-p" x="500" y="152">Quem migra é outro papel, e nenhuma das duas</text>
         <text class="rt-p" x="500" y="168">camadas depende de a aplicação se comportar.</text>
@@ -12901,7 +12901,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
       <p><strong>Exemplo:</strong> o valor que a inscrição congelou no envio (<code>ValorDeFato</code>) estava na lista e não tinha gatilho — uma camada só. Desde 26/09 tem gatilho e recusa no modelo.</p>
       <details><summary>Em detalhes</summary>
         <p>
-          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 13/11), com 59 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
+          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 14/11, sem mudança desde 13/11), com 59 append-only; com a 165, sem merge, 96 gatilhos em 38 migrations sobre 75 tabelas, e 61 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
           ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e catorze
           que não são append-only mas travam o que ficou final ou não se exclui — o artefato de anexo
           congelado, a alteração normativa e a Retificação finais, o Requerimento de Matrícula enviado,
@@ -14144,30 +14144,33 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       provedor do Ifes não foi integrado, e não há caminho de produção no ar.
     </p>
 
-    <h3>Os números de 13/11, contra os de 04/11</h3>
+    <h3>Os números de 14/11, contra os de 13/11</h3>
+    <p class="miudo">Cada número é o da <code>main</code> em <code>37ed0ad0</code>. Entre parênteses, quando
+      difere, o desta branch — a <code>main</code> com a 163, a 164 e a 165, nos PRs #542, #543 e #545, sem
+      merge.</p>
     <div class="numeros">
-      <div><b>162</b><span>pastas de especificação (eram 120 em 04/11; a página dizia 114, número de 02/11 que não foi recontado), até a 161 — as 133 e 134 em duas pastas cada</span></div>
-      <div><b>59</b><span>tabelas append-only (eram 53): as vagas não preenchidas (155), as publicações das inscrições (148) e das convocações (149), entre outras</span></div>
-      <div><b>91</b><span>gatilhos de banco (eram 83), em 36 migrations, sobre 73 tabelas</span></div>
-      <div><b>118</b><span>migrations (eram 107)</span></div>
-      <div><b>24</b><span>módulos de domínio (eram 23): o <code>treinamento</code> (134)</span></div>
-      <div><b>580</b><span>arquivos Python de aplicação (eram 515)</span></div>
-      <div><b>259</b><span>templates (eram 213)</span></div>
-      <div><b>1 220</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 062 + 17)</span></div>
-      <div><b>180</b><span>rotas da gestão (eram 166); o portal tem 42 (eram 38)</span></div>
+      <div><b>163</b><span>pastas de especificação (eram 162 em 13/11), até a 162 — as 133 e 134 em duas pastas cada (166 com a camada A)</span></div>
+      <div><b>59</b><span>tabelas append-only, sem mudança (61 com a 165: os pareceres da deliberação e a exposição ao parecer)</span></div>
+      <div><b>91</b><span>gatilhos de banco, sem mudança, em 36 migrations, sobre 73 tabelas (96, em 38 migrations, sobre 75 tabelas, com a 165)</span></div>
+      <div><b>119</b><span>migrations (eram 118; 126 com a camada A)</span></div>
+      <div><b>24</b><span>módulos de domínio (sem mudança)</span></div>
+      <div><b>583</b><span>arquivos Python de aplicação (eram 580; 587 com a camada A)</span></div>
+      <div><b>266</b><span>templates (eram 259; a camada A não acrescenta nenhum)</span></div>
+      <div><b>1 233</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 220 + 25; 1 260 + 25 com a camada A)</span></div>
+      <div><b>180</b><span>rotas da gestão (sem mudança); o portal tem 42 (sem mudança)</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
       <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code></dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> e <code>CREATE CONSTRAINT TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas. Os dois adiáveis da 165 são <code>CONSTRAINT TRIGGER</code>, e é por isso que a contagem os inclui pelo nome</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code>, sem o <code>interface</code>, que ganhou o seu na 089 e não é domínio (o <code>shared</code> não tem)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 165,6 mil linhas (eram 135,6 mil)</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte não foi rodada nesta revisão. A última medição registrada da suíte inteira contra PostgreSQL é a da 136: 17 698 passando, 12 pulados e nenhuma falha (09/11, com os grupos <code>navegador</code> e <code>assistente</code>). O CI roda em três fatias desde 11/11, e nenhuma delas mede o total</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 167,1 mil linhas (eram 165,6 mil; 170,4 mil com a camada A)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte rodou contra PostgreSQL em 14/11 na branch da 165, com a camada A inteira: 20 042 passando, 24 pulados e nenhuma falha (4 workers, 582s). Não rodou sobre a <code>main</code> nesta revisão</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 04/11, <code>a3e23b1f</code>, medida em 13/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data — menos as especificações, que davam 120 e a página mantinha em 114. As linhas de base anteriores (21/10, 30/10, 02/11) também reproduziam as suas</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 13/11, <code>214c8cd7</code>, medida em 14/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data. As linhas de base anteriores (21/10, 30/10, 02/11, 04/11) também reproduziam as suas</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -14208,7 +14211,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#mesa">Avaliação</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso</td>
+            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso. Na Etapa colegiada, o parecer é às cegas no servidor, e quem recebeu o parecer alheio não avalia a inscrição (165, sem merge)</td>
             <td>A reavaliação determinada se cumpre pelas telas, mas elas não orientam o próximo passo</td>
           </tr>
           <tr>
@@ -14292,7 +14295,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#auditoria">Auditoria e imutabilidade</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (13/11) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
+            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (recontados em 14/11; 61 e 96 com a 165, sem merge) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
             <td>Quem audita o nível institucional é decisão pendente (108, 110)</td>
           </tr>
           <tr>

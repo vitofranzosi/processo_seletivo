@@ -558,7 +558,7 @@ A spec 165 viaja no PR #545, empilhado sobre a 164 (#543) e a 163 (#542), e esta
   - a restrição de não criar estrutura antes de a família entrar no alvo.
 - **A Mesa:** o parecer às cegas entre os membros, com a frase da tela; a avaliação cega quanto ao candidato continua fora.
 - **Os campos da Etapa:** `deliberationRule` entrou, e `evaluationsPerRegistration` ganhou a restrição da Retificação.
-- **As 61 tabelas append-only** no diagrama da imutabilidade (eram 59). Somam-se os pareceres da deliberação e a exposição ao parecer.
+- **O diagrama da imutabilidade** diz 59 tabelas append-only na `main` e 61 com a 165, que soma os pareceres da deliberação e a exposição ao parecer.
 
 **Como foi conferido:**
 
@@ -569,6 +569,28 @@ A spec 165 viaja no PR #545, empilhado sobre a 164 (#543) e a 163 (#542), e esta
 
 **Não verificado:**
 
-- os números de *Maturidade* não foram recontados;
 - o parágrafo de revisões do rodapé não foi estendido: ele registra revisões contra a `main`, e a 165 ainda não está lá;
 - o SC-2356, humano, segue aberto.
+
+## Acréscimo de 14/11: os números de *Maturidade* recontados
+
+Os dez números foram recontados pelo método da própria página, com os mesmos comandos, sobre duas árvores. O número é o da `main` em `37ed0ad0`; entre parênteses vem o desta branch, quando difere: a `main` com a 163, a 164 e a 165, nos PRs #542, #543 e #545, sem merge.
+
+| | 13/11 (`214c8cd7`) | `main` em `37ed0ad0` | com a camada A |
+|---|---|---|---|
+| pastas de especificação | 162 | 163 | 166 |
+| tabelas append-only | 59 | 59 | 61 |
+| gatilhos | 91 em 36 migrations, sobre 73 tabelas | igual | 96 em 38 migrations, sobre 75 tabelas |
+| migrations | 118 | 119 | 126 |
+| módulos de domínio | 24 | 24 | 24 |
+| Python de aplicação | 580 (165,6 mil linhas) | 583 (167,1 mil) | 587 (170,4 mil) |
+| templates | 259 | 266 | 266 |
+| testes | 1 220 + 25 | 1 233 + 25 | 1 260 + 25 |
+| rotas (gestão, portal) | 180, 42 | 180, 42 | 180, 42 |
+| espécies de sinal | 8 | 8 | 8 |
+
+- **Linha de base:** a `main` de 13/11, `214c8cd7`, medida em 14/11 pelo mesmo método, reproduz ali, sem exceção, os dez números publicados naquela data.
+- **Os gatilhos** contam também os `CREATE CONSTRAINT TRIGGER`: os dois adiáveis da 165 são desse tipo. Na `main` não há nenhum, e a contagem dela não muda por isso.
+- **O texto mudou** no bloco de números (título, dez números e evidência), no parágrafo dos gatilhos da imutabilidade, no diagrama, na linha da imutabilidade do veredito e na linha da Avaliação da tabela de domínios, que ganhou o parecer às cegas.
+
+**Não verificado:** a suíte não rodou sobre a `main`. A medição da suíte que a página cita é a da branch: 20 042 passando e 24 pulados.
