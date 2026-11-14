@@ -38,9 +38,9 @@ em [quickstart.md](quickstart.md).
 **Storage**: PostgreSQL, com **uma** migration, `avisos/0003_origem_passo`:
 
 - a origem `PASSO` nas choices e nos CHECKs;
-- `aviso.marco_id` nulo e `aviso.etapa_id` novo, nulo, com o CHECK "`PASSO` ⇔ `etapa_id` e não
-  `marco_id`";
-- `modelodeaviso.chave_inicial`, nula, para o modelo inicial do passo.
+- `aviso.marco_id` e `aviso.perfil_id` nulos e `aviso.etapa_id` novo, nulo, com o CHECK "`PASSO` ⇔
+  `etapa_id` e não `marco_id`";
+- `modelodeaviso.chave_inicial`, vazia por padrão, para o modelo inicial do passo.
 
 Nenhuma tabela nova; o `M` da preparação continua **65**. A contagem de migrations por app (`avisos`)
 sobe uma.

@@ -154,8 +154,8 @@ class TestPrecedencia:
             estado=convocacao_nomes.CONVOCADO_PRAZO_EM_CURSO,
         )
         assert resultado.codigo == situacao.CONVOCADO
-        assert (
-            f"Também falta um passo seu: {ETAPA}, de 01/12/2026 a 05/12/2026." in textos(resultado)
+        assert f"Também falta um passo seu: {ETAPA}, de 01/12/2026 a 05/12/2026." in textos(
+            resultado
         )
 
     def test_o_segundo_passo_e_linha_do_primeiro(self):

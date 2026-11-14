@@ -39,21 +39,23 @@ Com o vídeo, os estados `RECEBIDO` e `EM_ANALISE` da `166` dão `AGUARDA_RESULT
 | `origem` | aceita `PASSO` |
 | `marco_id` | passa a aceitar nulo |
 | `etapa_id` | novo, UUID, nulo |
+| `perfil_id` | passa a aceitar nulo |
 
 CHECKs:
 
 - `ck_aviso_origem_conhecida` com as quatro origens;
 - `ck_aviso_ato_da_origem`: `PASSO` ⇒ `etapa_id` não nulo, `marco_id` nulo, `natureza = ''` e
-  `referencia_da_publicacao = ''`; as outras três ⇒ `marco_id` não nulo e `etapa_id` nulo.
+  `referencia_da_publicacao = ''`; as outras três ⇒ `marco_id` e `perfil_id` não nulos e `etapa_id`
+  nulo.
 
-Um gesto grava um `Aviso` por Perfil com destinatário no universo, e os `DestinatarioDoAviso` de
+Um gesto grava **um** `Aviso` por Etapa (research T-004, revisto), e os `DestinatarioDoAviso` de
 sempre.
 
 ### `ModeloDeAviso` (mutável, nunca excluído)
 
 | Campo | Mudança |
 |---|---|
-| `chave_inicial` | novo, texto curto, nulo; `"PASSO"` no quarto modelo inicial; nulo em todos os de hoje |
+| `chave_inicial` | novo, texto curto, vazio por padrão; `"PASSO"` no quarto modelo inicial |
 
 ## Relações com o que existe
 

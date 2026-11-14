@@ -5,7 +5,7 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11. As cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em 14/11,
+**Status**: Especificada, planejada e implementada em 14/11 (PR #551, sem merge). As cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em 14/11,
 pelas recomendações, com dois ajustes: o link para o Edital e a advertência de nome não pressupõem que a
 Etapa restrita seja de verificação da autodeclaração, e o degrau depois do prazo diz só o que os dados
 permitem afirmar. Planejada em 14/11 (o plano estreitou a FR-7321 à Etapa restrita e a FR-7333 e a FR-7334 ao que um
@@ -302,7 +302,8 @@ da `166` e o Centro com uma inscrição a encaminhar.
 ### User Story 5 — A equipe percorre a orientação num cenário de treinamento (Priority: P3)
 
 A equipe carrega um cenário de treinamento com uma Etapa restrita e colegiada, alcançados em estados
-diferentes — antes do aviso, avisados, com parecer pendente, com os pareceres completos — e percorre, no navegador, o acompanhamento de um candidato, o Centro da presidência e Minhas
+diferentes — sem avaliador, com parecer pendente, com os pareceres completos, ninguém ainda
+avisado — e percorre, no navegador, o acompanhamento de um candidato, o Centro da presidência e Minhas
 atividades de um membro.
 
 **Why this priority**: é como o plano do estudo verifica a entrega, e é como a equipe aprende a rotina
@@ -514,8 +515,10 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 
 - **FR-7333**: O catálogo de cenários de treinamento (`134`) DEVE ganhar um cenário com uma Etapa
   restrita e colegiada, sem vídeo, com o período em curso, e alcançados nos estados que um período só
-  permite: não avisado, avisado, com parecer pendente e com os pareceres completos à espera da
-  consolidação. O período vencido e o Resultado visível ficam na suíte, e não no cenário.
+  permite: sem avaliador, com parecer pendente, com um parecer de dois e com os pareceres completos
+  à espera da consolidação, todos ainda não avisados, e um inscrito só na ampla. O avisado, o
+  período vencido e o Resultado visível ficam na suíte, e não no cenário: o aviso do passo é um
+  gesto sobre todos os que participam, e é ele o exercício da presidência.
 - **FR-7334**: Um teste do cenário, no molde dos testes que já conferem os cenários no Centro, DEVE
   conferir os estados que ele promete. O comando de verificação dos cenários não ganha conferência de
   domínio.

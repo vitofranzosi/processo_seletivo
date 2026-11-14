@@ -63,8 +63,11 @@ O campo `prazo` **não** é usado: o template o escreve como "Prazo desta convoc
 - o CHECK da origem exige `etapa_id` e `marco_id` nulo em `PASSO`, e o contrário nas outras três;
 - `natureza` e `referencia_da_publicacao` vazios em `PASSO`, como em `PENDENCIA`.
 
-Um gesto grava **um Aviso por Perfil** com alcançados no universo. Assim `perfil_id` continua não nulo,
-e a lista de avisos do Edital continua agrupada por Perfil.
+Um gesto grava **um Aviso por Etapa**, com `perfil_id` também nulo no passo. *Revisto na
+implementação:* o plano previa um Aviso por Perfil para manter `perfil_id` não nulo, mas nenhuma
+leitura dos avisos agrupa por Perfil — a lista do Edital lê a origem e o marco —, e um gesto que
+gravasse vários avisos pediria várias prévias e várias assinaturas para o mesmo ato. O CHECK exige
+`etapa_id` e `marco_id` nulo no passo, e `marco_id` e `perfil_id` nas outras três.
 
 O fluxo é o da `RESULTADO`:
 
@@ -84,13 +87,15 @@ significados, e um leitor do marco leria uma Etapa.
 
 - O caminho da `PENDENCIA`, com texto fixo, sem modelo e um aviso por pessoa: o pedido é um aviso com
   prévia e modelo da unidade.
-- `perfil_id` nulo: quebraria o agrupamento da lista.
+- Um Aviso por Perfil: o plano original; ver acima.
 
 ## T-005 — O modelo inicial do passo tem marca própria
 
-**Decisão.** `ModeloDeAviso` ganha `chave_inicial` (texto, nulo). Os três modelos de hoje continuam
+**Decisão.** `ModeloDeAviso` ganha `chave_inicial` (texto, vazio por padrão). Os três modelos de hoje continuam
 regidos pela regra de hoje: nenhum é criado quando a unidade já tem algum modelo inicial **sem**
-chave. O quarto, `chave_inicial="PASSO"`, é criado quando a unidade não tem modelo com essa chave. O
+chave. O quarto, `chave_inicial="PASSO"`, é criado quando a unidade não tem modelo com essa chave.
+Sem escolha na prévia, o aviso do passo abre com esse modelo, e os outros avisos nunca com ele (ele
+usa uma variável que só o passo tem). O
 comando `semear_unidades` continua imprimindo "Modelos de aviso: C criados". Num banco que já existe,
 a primeira passada depois da migration cria um por unidade; depois disso, zero.
 
