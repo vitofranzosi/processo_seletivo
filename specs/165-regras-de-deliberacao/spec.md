@@ -135,6 +135,14 @@ do `/speckit-clarify`, abaixo.
   parecer dela já não está pronta, o que dispensa um bloqueio geral. **E o caminho inverso fica fechado**:
   quem já recebeu o sentido ou o texto de parecer de outro membro sobre a inscrição não pode receber
   atribuição nela, nem ter o próprio parecer reaberto (FR-7056, FR-7082, FR-7083, D-010).
+- Q: Uma Etapa sob a regra da maioria pode ter número par de pareceres, e o que o empate produz? → A:
+  **Não pode: a maioria exige número ímpar**, e a publicação e a Retificação recusam o par. O Edital
+  com número par tem as duas regras de unanimidade (FR-7052, D-003).
+- Q: Depois de concluir o próprio parecer, o membro passa a ver na Mesa os pareceres dos colegas sobre
+  a mesma inscrição? → A: **Nunca.** A Mesa não mostra o parecer dos colegas, nem a existência nem a
+  situação deles, antes ou depois de concluir, nem depois do Resultado. Quem precisa vê-los, a
+  presidência, a auditoria e a autoridade recursal, vê pelas telas da gestão e do julgamento, com as
+  restrições da pendência e da exposição (FR-7057, D-004).
 
 ### Session 2026-11-14 (revisão do PR #545, pedida pelo usuário)
 
@@ -510,7 +518,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   A tela DEVE dizer que o conteúdo está oculto porque a pessoa ainda tem parecer pendente sobre a
   inscrição.
 - **FR-7057**: Na **Mesa**, o membro NÃO DEVE ver os pareceres dos outros membros, nem a existência nem
-  a situação deles, antes ou depois de concluir o seu (D-004).
+  a situação deles, antes ou depois de concluir o seu, e também depois do Resultado. A Mesa NÃO DEVE
+  ser, por isso, caminho de exposição (D-004).
 - **FR-7058**: O parecer **reaberto** pela presidência, pela FR-036 da `012`, DEVE devolver o membro à
   condição de parecer pendente, e a FR-7056 DEVE voltar a valer para ele. A reabertura de parecer que
   já fundamentou Resultado DEVE seguir a regra que vale hoje para a avaliação consolidada, e a de
@@ -793,6 +802,8 @@ leitura dos editais do Ifes; e ler o acervo pela maioria, que mudaria norma publ
 
 ### D-003 — A maioria exige número ímpar
 
+Confirmada pelo usuário em 14/11, no `/speckit-clarify`.
+
 Com quatro pareceres, dois e dois não é maioria de nenhum lado. As saídas seriam favorecer a
 autodeclaração, favorecer o indeferimento ou dar o voto de minerva a alguém, e nenhum Edital lido
 escreve qualquer delas. O Ofício MEC pede comissão ímpar. Recusar na publicação é dizer ao Edital o que
@@ -801,11 +812,14 @@ ele não declarou, em vez de decidir por ele. *Descartados:* o empate favorável
 
 ### D-004 — Na Mesa, o membro nunca vê o parecer do outro
 
-A R-4 diz *"até registrar"*. Mostrar depois de registrar abriria o caminho de concluir, ler o dos
-colegas e pedir a reabertura. A Mesa é o instrumento de quem avalia, e o parecer do colega não serve ao
+Confirmada pelo usuário em 14/11, no `/speckit-clarify`. A R-4 diz *"até registrar"*. Mostrar depois
+de registrar abriria o caminho de concluir, ler o dos colegas e pedir a reabertura, e com a exposição da
+D-010 todo membro ficaria impedido de ter o parecer reaberto por erro material. A Mesa é o instrumento de quem avalia, e o parecer do colega não serve ao
 trabalho de ninguém ali. Quem precisa ver os pareceres, a presidência e a auditoria, vê pelas telas da
-gestão, e nelas a restrição é só a da pendência. *Descartado:* mostrar na Mesa depois de concluir, que é
-a leitura literal da R-4 e a mais fraca.
+gestão, e nelas valem a pendência e a exposição. *Descartados:* mostrar na Mesa depois de concluir, que é
+a leitura literal da R-4 e a mais fraca; e mostrar depois do Resultado, que não serve ao trabalho de
+ninguém na Mesa: o que se faz com o Resultado depois dele é recurso, e quem o julga vê os pareceres pela
+tela do julgamento.
 
 ### D-005 — A deliberação espera os N pareceres
 

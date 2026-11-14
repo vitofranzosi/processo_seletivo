@@ -89,6 +89,11 @@ foi conferido contra o requisito que o resolve:
   ganhou quatro cenários (6 a 9), o SC-2352 passou a cobrir link direto, exportação e resposta do
   servidor, e o caso "leu como presidência e recebeu atribuição depois", que o usuário pediu para
   fechar, virou a exposição: FR-7082, FR-7083, a entidade nova e a D-010.
+- **Iteração 6, `/speckit-clarify`.** Pergunta 4 respondida pelo usuário (opção A): a maioria exige
+  número ímpar. Confirma a FR-7052 e a D-003, sem mudança de requisito.
+- **Iteração 7, `/speckit-clarify`.** Pergunta 5 respondida pelo usuário (opção A): a Mesa nunca
+  mostra o parecer dos colegas, nem depois do Resultado. Confirma a D-004 e precisa a FR-7057. Cinco
+  perguntas feitas, cinco respondidas: a cota do `/speckit-clarify` está cheia.
 - **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
   usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
 - **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"
