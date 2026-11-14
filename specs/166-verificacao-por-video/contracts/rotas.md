@@ -1,8 +1,10 @@
 # Contrato — as rotas da verificação por vídeo
 
-Todas respondem **como inexistentes** (a recusa `not_found` do domínio, 404) quando a chave
-`VERIFICACAO_POR_VIDEO` está desligada, quando quem pede não é o titular (portal) ou não tem a
-Atribuição alocada (gestão), e quando a Etapa não admite o vídeo (FR-7100, FR-7110, FR-7129).
+Todas respondem **como inexistentes** (a recusa `not_found` do domínio, 404) quando quem pede não é o
+titular (portal) ou não tem a Atribuição alocada (gestão), e quando a Etapa não admite o vídeo
+(FR-7110, FR-7129). **A chave desligada fecha só as rotas do portal** (FR-7100): a Mesa e o
+encaminhamento continuam servindo os vídeos já recebidos, porque o parecer sobre eles é ato do
+certame (achado I1 do `/speckit-analyze`).
 
 ## Portal — `selecoes/inscricoes/<inscricao>/verificacao/<etapa>/`
 

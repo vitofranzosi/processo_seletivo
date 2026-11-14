@@ -343,8 +343,9 @@ existe.
 - **Recurso contra o Resultado favorável pelo vídeo**: não há interesse do titular; um terceiro não
   recorre de Resultado alheio. Nada muda.
 - **Recurso contra o Resultado desfavorável da entrevista ao vivo**: segue a `165`; a autoridade
-  recursal vê os pareceres pelo vídeo preservados, e o vídeo, pela instrução da `018`, se a instrução
-  o pedir — o vídeo não entra automaticamente.
+  recursal vê as conclusões pelo vídeo preservadas, mas **não abre o vídeo nesta entrega**: a FR-7129
+  só o entrega a quem tem a Atribuição. Abrir o vídeo por ato de instrução da `018` (R-18) é achado
+  registrado, e não escopo.
 - **Formato**: o aparelho grava MP4 quando pode, e WebM quando não. O servidor aceita os dois pela
   assinatura do contêiner, e recusa o resto, inclusive um MP4 que só tenha a extensão.
 - **Duração**: o teto técnico é de três minutos, declarado antes de começar. Não há mínimo nem
@@ -622,7 +623,12 @@ existe.
 
 ## Achados (registro, e não escopo)
 
-*(preenchidos ao longo do fluxo)*
+- **O vídeo na instrução do recurso** (R-18 do estudo): a autoridade recursal da `018` não abre o
+  vídeo nesta entrega. A instrução hoje anexa documentos da inscrição, e estendê-la ao vídeo, com a
+  trilha de abertura do julgador, é trabalho da spec do recurso colegiado (P-5).
+- **A chave fecha o portal, e não a Mesa** (achado I1 do `/speckit-analyze`): com a chave desligada
+  depois de vídeos recebidos, a comissão continua os assistindo e deliberando, e a R-11 continua
+  valendo.
 
 ## Decisões
 
