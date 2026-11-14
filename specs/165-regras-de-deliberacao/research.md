@@ -103,6 +103,10 @@ constraint de hoje para todo Resultado por avaliação.
 
 O ramo de uma avaliação fica palavra por palavra.
 
+O banco confere a **contagem** e a coerência dos pareceres; a **regra** aplicada à contagem é do
+domínio (`deliberacao.deliberar`), e a reprodução a confere (FR-7065). Escrever a tabela-verdade em
+PL/pgSQL duplicaria a regra num segundo lugar, livre para divergir.
+
 **Por quê.** A garantia de hoje é do banco, e a FR-7065 pede a mesma força. O adiável é o que permite
 gravar o Resultado e os pareceres na mesma transação, em qualquer ordem, sem que um Resultado
 deliberado sem pareceres sobreviva ao `COMMIT`.

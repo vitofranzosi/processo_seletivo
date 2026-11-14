@@ -483,8 +483,12 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   - **unanimidade para o desfavorável**: o desfecho é desfavorável só quando todos os pareceres são
     desfavoráveis.
 - **FR-7051**: A regra NÃO DEVE ter padrão. A composição NÃO DEVE marcar nenhuma das três, e a
-  publicação e a Retificação DEVEM ser impedidas enquanto a Etapa da FR-7050 não declarar a regra, com
-  mensagem que nomeie a Etapa e diga o que falta (D-002).
+  publicação DEVE ser impedida enquanto a Etapa da FR-7050 não declarar a regra, com mensagem que
+  nomeie a Etapa e diga o que falta (D-002). A Retificação DEVE ser impedida pela mesma razão quando o
+  ato **compõe ou recompõe** a Etapa: Etapa nova, mudança de forma, do número de avaliações ou da
+  própria regra. A Retificação que não toca a Etapa do acervo sem regra NÃO DEVE ser impedida por
+  isso: ela travaria toda correção do Edital, até um prazo, à espera de uma regra que a CPVA ainda
+  não escolheu (FR-7054).
 - **FR-7052**: A **maioria** DEVE exigir número **ímpar** de avaliações por inscrição. A publicação e a
   Retificação DEVEM ser impedidas quando a Etapa declarar a maioria com número par, com mensagem que
   diga que o empate não tem regra publicada. As duas regras de unanimidade DEVEM admitir qualquer número
@@ -508,7 +512,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   ela acumula:
   - a restrição DEVE ser aplicada **no servidor**, e não só na tela. Ela DEVE valer para toda página,
     link direto, detalhe, exportação e resposta consumida por tela, inclusive as da gestão (prontidão,
-    conclusões preservadas, consolidação, julgamento);
+    conclusões preservadas, impedimentos, consolidação). O julgamento é protegido pelo impedimento da
+    FR-7069: quem tem parecer pendente não julga;
   - ela DEVE alcançar a **revelação indireta**: contagem por sentido, prévia do desfecho e resumo que
     permitam deduzir o sentido de um parecer alheio sobre aquela inscrição DEVEM ficar ocultos para ela.
     O número de pareceres concluídos e o que falta, sem sentido, PODEM aparecer na gestão;

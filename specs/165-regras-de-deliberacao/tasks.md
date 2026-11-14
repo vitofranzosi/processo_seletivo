@@ -74,7 +74,7 @@ consequência, motivo, pareceres citados e versão.
 ### Tests for User Story 3
 
 - [ ] T021 [P] [US3] Testes de `regra.py` em `tests/unit/resultados/test_regra.py` (acrescentar): a colegiada não é impedida; a pontuada com N>1 e a decisória com N>1 sem regra continuam com `REGRA_DE_COMBINACAO_AUSENTE`; a consequência da `Deliberacao` com o efeito da `164` (FR-7064)
-- [ ] T022 [P] [US3] Testes de integração em `tests/integration/resultados/test_consolidacao_deliberada.py`: aguardando pareceres com "faltam k de N"; nenhuma antecipação; pronta com N; não consolidável com mais de N e com parecer incompatível; o Resultado `DELIBERACAO` com os N pareceres, a regra, a contagem, a versão vigente e o motivo; retirada da reserva completada como na `164`; a reprodução chega à mesma consequência; a Etapa de uma avaliação inalterada (FR-7061 a FR-7068, SC-2351, SC-2353)
+- [ ] T022 [P] [US3] Testes de integração em `tests/integration/resultados/test_consolidacao_deliberada.py`: aguardando pareceres com "faltam k de N"; nenhuma antecipação; pronta com N; não consolidável com mais de N e com parecer incompatível; o Resultado `DELIBERACAO` com os N pareceres, a regra, a contagem, a versão vigente e o motivo; retirada da reserva completada como na `164`; a reprodução chega à mesma consequência; o evento da trilha diz a consequência sem regra nem contagem (FR-7060); a Etapa de uma avaliação inalterada; a prévia da classificação sem deliberação e com a equivalência de hoje (FR-7061 a FR-7068, FR-7080, SC-2351, SC-2353)
 - [ ] T023 [P] [US3] Teste da conferência em `tests/interface/test_conferencia_da_deliberacao.py`: a linha "«desfecho» — k de N pareceres …" e o total por desfecho; a contagem "aguardando pareceres" no resumo da Etapa (UX-752, FR-7079)
 
 ### Implementation for User Story 3
@@ -101,7 +101,7 @@ reabrir parecer de autor exposto.
 ### Tests for User Story 2
 
 - [ ] T029 [P] [US2] Testes em `tests/integration/avaliacoes/test_parecer_as_cegas.py`: pendentes; ocultação nos seletores de conclusões preservadas e inelegíveis; nenhuma contagem por sentido para a inscrição pendente; as outras inscrições como hoje; registro da exposição só de conclusões de outro autor; a Etapa de uma avaliação sem ocultação nem exposição (FR-7056, FR-7082, SC-2352)
-- [ ] T030 [P] [US2] Testes de interface em `tests/interface/test_parecer_as_cegas_na_gestao.py`: as views de conclusões preservadas e impedimentos, com HTML e fragmento, para o ator pendente; a frase "Oculto: …"; a Mesa sem nada de outros membros, antes e depois de concluir, e com as frases da UX-751 e da UX-754 (FR-7056, FR-7057, UX-751, UX-754)
+- [ ] T030 [P] [US2] Testes de interface em `tests/interface/test_parecer_as_cegas_na_gestao.py`: as views de conclusões preservadas e impedimentos, com HTML e fragmento, para o ator pendente; a frase "Oculto: …"; a Mesa sem nada de outros membros, antes e depois de concluir, e com as frases da UX-751 e da UX-754; a Mesa continua mostrando os dados do candidato (FR-7056, FR-7057, FR-7059, UX-751, UX-754)
 - [ ] T031 [P] [US2] Testes em `tests/integration/avaliacoes/test_exposicao.py`: distribuição e rodízio recusam o exposto com o motivo do contrato; a reabertura de parecer de autor exposto é recusada e a de autor não exposto volta à pendência (FR-7058, FR-7082, FR-7083)
 
 ### Implementation for User Story 2
@@ -161,7 +161,7 @@ condições da `036`.
 
 ### Tests for User Story 4
 
-- [ ] T042 [P] [US4] Testes em `tests/integration/portal/test_deliberacao_ao_titular.py`: a linha com regra e contagem; os textos desfavoráveis, sem autoria e à parte do motivo; os favoráveis só na contagem; as condições de prazo e de recurso pendente; o texto da conclusão que fundamentou; a publicação do marco sem regra, contagem nem pareceres (FR-7076 a FR-7078, FR-7081)
+- [ ] T042 [P] [US4] Testes em `tests/integration/portal/test_deliberacao_ao_titular.py`: a linha com regra e contagem; os textos desfavoráveis, sem autoria e à parte do motivo; os favoráveis só na contagem; as condições de prazo e de recurso pendente; o texto da conclusão que fundamentou; a publicação do marco sem regra, contagem nem pareceres; o texto diz "a comissão decidiu", nunca "o avaliador" (FR-7076 a FR-7078, FR-7081, UX-753)
 
 ### Implementation for User Story 4
 
@@ -177,6 +177,7 @@ condições da `036`.
 - [ ] T047 [P] Atualizar a matriz `specs/165-regras-de-deliberacao/rastreabilidade.md` (requisito → teste)
 - [ ] T048 Rodar `make lint check` e a suíte inteira contra PostgreSQL com `DB_NAME=gps_165`, e corrigir o que quebrar
 - [ ] T049 Validar o roteiro de `quickstart.md`
+- [ ] T050 [P] Registrar na nota de faixas da família de sessões que a Visão do Sistema documenta a `165` no merge, e não na branch
 
 ---
 
