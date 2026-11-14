@@ -1,6 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{{ ato.rotulo }} — Edital {{ edital.number }}/{{ edital.year }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' edital.processo_id %}">{{ edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' edital.id %}">Edital {{ edital.number }}/{{ edital.year }}</a> › <span aria-current="page">{{ ato.rotulo }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/confirmacao-de-ato.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>{{ ato.rotulo }}</h1>
 <p class="sub">Edital {{ edital.number }}/{{ edital.year }} — {{ edital.title }}</p>
@@ -9,8 +10,18 @@
 
 {% include "interface/_impedimento.html" %}
 
+{% comment %}
+**A espécie de cada bloco está no texto, e não só na cor** (P0 do estudo de design system, 14/11;
+WCAG 1.4.1). Encerrar empilhava três faixas — o que impede, o que continua e o que não se desfaz —,
+e duas delas só se distinguiam pelo vermelho e pelo amarelo. Onde a primeira frase não dizia a
+espécie, ela ganhou a marca: **Impedimento:** no que recusa o ato, **Atenção:** no que o deixa
+seguir. Onde já dizia — "Aviso:", "Não foi possível concluir:", "Este ato não pode ser desfeito",
+"Nenhuma pendência registrada no GPS impede o encerramento" —, nada mudou. As palavras são as que a
+própria tela e a da Retificação já usavam; o texto que segue a marca é o mesmo de antes.
+{% endcomment %}
+
 {% if impedido_por_segregacao %}
-<p class="erro" role="alert"><strong>Segregação de funções.</strong> Você elaborou e homologou
+<p class="erro" role="alert"><strong>Impedimento:</strong> <strong>Segregação de funções.</strong> Você elaborou e homologou
 esta revisão, então não pode publicá-la sozinho. Ao menos outra pessoa autorizada precisa
 participar do ato. O sistema recusará esta operação.</p>
 {% endif %}
@@ -26,7 +37,7 @@ poder combiná-la em vez de descobri-la.
 {% endcomment %}
 {% if homologar_fecha_a_publicacao %}
 <p class="aviso" role="status">
-  <strong>Depois de homologar, você não poderá publicar esta revisão.</strong>
+  <strong>Atenção:</strong> <strong>Depois de homologar, você não poderá publicar esta revisão.</strong>
   Você a elaborou, e publicar exige que ao menos outra pessoa autorizada tenha participado.
   Homologar é permitido; a publicação precisará de outra autoridade.</p>
 {% endif %}
@@ -57,7 +68,7 @@ pedir: o caminho só é oferecido a quem a tela de destino aceita.
 {% endcomment %}
 {% if desfecho.impedimentos %}
 <div class="erro" role="alert">
-  <p><strong>Antes de encerrar, resolva {{ desfecho.impedimentos|length }} pendência{{ desfecho.impedimentos|length|pluralize:"s" }}.</strong></p>
+  <p><strong>Impedimento:</strong> <strong>Antes de encerrar, resolva {{ desfecho.impedimentos|length }} pendência{{ desfecho.impedimentos|length|pluralize:"s" }}.</strong></p>
   <ul>{% for item in desfecho.impedimentos %}
     <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% elif item.a_quem_pedir %} {{ item.a_quem_pedir }}{% endif %}</li>
   {% endfor %}</ul>
@@ -65,7 +76,7 @@ pedir: o caminho só é oferecido a quem a tela de destino aceita.
 {% endif %}
 {% if desfecho.advertencias %}
 <div class="aviso" role="status">
-  <p><strong>{{ desfecho.titulo_das_advertencias }}</strong></p>
+  <p><strong>Atenção:</strong> <strong>{{ desfecho.titulo_das_advertencias }}</strong></p>
   <ul>{% for item in desfecho.advertencias %}
     <li>{{ item.mensagem }}{% if item.url %} <a href="{{ item.url }}">{{ item.rotulo }}</a>{% elif item.a_quem_pedir %} {{ item.a_quem_pedir }}{% endif %}</li>
   {% endfor %}</ul>
