@@ -4,7 +4,8 @@
 
 **Created**: 2026-11-13
 
-**Status**: Draft
+**Status**: Especificada e implementada em 13/11/2026 pelo fluxo completo do Spec Kit, a pedido do
+usuário; PR sem merge. Pendente: o SC-2316, humano, e a medida de tempo do SC-2315.
 
 **Input**: a lacuna **L-2** da avaliação de capacidade de 11/09
 (`doc/avaliacao-de-capacidade-editais-2026-09-11.md`, *"As lacunas de autoria"*) e a decisão **P-1**

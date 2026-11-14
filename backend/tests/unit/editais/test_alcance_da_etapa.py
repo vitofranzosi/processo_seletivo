@@ -270,3 +270,19 @@ def test_a_etapa_para_todas_ocupa_qualquer_papel():
     conteudo["stages"] = [_etapa(modalityCodes=None, classificatory=True, weight="1.0000")]
 
     assert _codigos_do_alcance(conteudo) == []
+
+
+# ---------------------------------------------------------------- a tela da Retificação (T-009)
+
+
+def test_a_caixa_vazia_da_retificacao_e_todas_as_inscricoes():
+    """FR-6967: vazio é o `null` publicado, e não a lista vazia que a publicação recusa."""
+    from processo_seletivo.interface.retificacao import ALCANCE, _converter, _para_formulario
+
+    assert _converter("", ALCANCE, "Modalidades que a Etapa alcança") is None
+    assert _converter("PPI\n\nPcD\nPPI", ALCANCE, "Modalidades que a Etapa alcança") == [
+        "PPI",
+        "PcD",
+    ]
+    assert _para_formulario(None, ALCANCE) == ""
+    assert _para_formulario(["PcD", "PPI"], ALCANCE) == "PPI\nPcD"

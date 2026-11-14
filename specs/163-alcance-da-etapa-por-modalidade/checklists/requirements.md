@@ -46,4 +46,8 @@
   Etapa imediatamente anterior, o universo da ordem (lido na última Etapa enumerada), a Etapa de
   análise da publicação das inscrições e o reingresso pendente travariam a ampla diante de uma Etapa
   restrita. Os quatro viraram `FR-6972`, `FR-6985`, `FR-6987` e `FR-6986`.
+- **Revisões depois da escrita**, todas no mesmo dia: o clarify registrou a resposta do usuário sobre
+  a Retificação que estreita (recusar); o analyze reescreveu a `FR-6974`; a implementação mostrou que
+  o Perfil já declara qual Modalidade é a ampla (`014`), e a `D-003` e a `FR-6968` passaram a seguir a
+  recusa que a `044` já fazia para o recorte de documento.
 - O `SC-2316` é humano e fica pendente.
