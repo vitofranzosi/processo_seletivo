@@ -259,6 +259,7 @@ from processo_seletivo.resultados.application import consolidacao as consolidaca
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
+from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.seguranca.application.authorization import (
     base_de_permissao,
     frase_do_aviso,
@@ -6772,6 +6773,12 @@ def impedimentos(request, edital_id, etapa_id):
     inelegiveis, pagina_dos_inelegiveis = avaliacao_selectors.avaliacoes_inelegiveis(
         edital=edital, etapa_id=etapa_id, pagina=request.GET.get("pagina") or 1
     )
+    # Às cegas e exposição (165, FR-7056, FR-7082), pela razão das Conclusões preservadas.
+    from processo_seletivo.avaliacoes.application import cegas
+
+    cegas.proteger_linhas(
+        inelegiveis, subject=ator.subject, edital=edital, etapa=etapa, etapa_id=etapa_id
+    )
     return marcar_como_privada(
         render(
             request,
@@ -6880,6 +6887,14 @@ def consolidar_resultados(request, edital_id, etapa_id):
             # pedido que não se pode praticar seria oferecer a confirmação de coisa nenhuma.
             request.session["erro_da_consolidacao"] = recusa.detail
             return redirect(destino)
+        # **A conferência entrega a contagem**, e a contagem é o sentido dos pareceres alheios
+        # (165, FR-7082): quem a lê fica exposto àquelas inscrições, ainda que não as consolide.
+        from processo_seletivo.avaliacoes.application import cegas
+
+        if cegas.colegiada(_etapa):
+            cegas.registrar_exposicao(
+                ator.subject, edital, etapa_id, [item.inscricao.id for item in consolidaveis]
+            )
         return marcar_como_privada(
             render(
                 request,
@@ -7312,6 +7327,9 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 # decidir onde o foco começa, porque a tela abria com o cursor na nota, pronta
                 # para receber uma pontuação antes de qualquer leitura.
                 "ultima_leitura": leitura,
+                # A Etapa colegiada (165, UX-751, UX-754): a Mesa diz que o parecer é às cegas, e
+                # que o desfavorável chega ao candidato sem o nome de quem o escreveu.
+                "colegiada": deliberacao_da_etapa.colegiada(contexto.get("etapa")),
                 "documentos_abertos": abertos,
                 "documentos_entregues": sum(1 for d in documentos if d["enviado"]),
                 "ja_abriu_documento": leitura is not None,
@@ -12077,6 +12095,14 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
         linhas = [
             {**linha, "rotulo": SITUACAO_DA_CONCLUSAO[linha["situacao"]]} for linha in encontradas
         ]
+        # **Às cegas, no servidor** (165, FR-7056, FR-7082): quem tem parecer pendente sobre uma
+        # inscrição da Etapa colegiada não recebe o dos colegas sobre ela; o que é entregue fica
+        # registrado como exposição, e barra a atribuição e a reabertura.
+        from processo_seletivo.avaliacoes.application import cegas
+
+        cegas.proteger_linhas(
+            linhas, subject=ator.subject, edital=edital, etapa=etapa, etapa_id=etapa_id
+        )
     return marcar_como_privada(
         render(
             request,
