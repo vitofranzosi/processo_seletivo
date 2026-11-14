@@ -124,6 +124,7 @@ def _publicada(**extra):
         "modalityCodes": None,
         "unfavorableOutcomeEffect": None,
         "absenceEffect": None,
+        "deliberationRule": None,
         **extra,
     }
 

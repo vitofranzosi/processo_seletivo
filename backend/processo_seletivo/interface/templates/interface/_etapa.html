@@ -295,6 +295,38 @@
     </fieldset>
   </div>
   {% comment %}
+  A regra de deliberação (165, UX-750). Só na Etapa decisória com mais de uma avaliação: a folha esconde
+  o grupo na pontuada (`so-decisoria`) e com o número vazio, que é uma avaliação (`so-colegiada`).
+  Nenhuma opção nasce marcada — a escolha é do Edital, sem padrão (D-002) —, e o servidor ignora a
+  escolha quando o número é um. As opções usam os rótulos digitados no cartão.
+  {% endcomment %}
+  <div class="campos dependentes so-decisoria so-colegiada">
+    <fieldset class="opcoes">
+      <legend>Como a comissão chega ao resultado?</legend>
+      {% recusa_de recusas "etapa" indice "deliberationRule" as recusado_regra %}
+      {% if recusado_regra %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-deliberationRule">{{ recusado_regra }}</span>{% endif %}
+      <p class="ajuda">Vale quando a Etapa prevê mais de uma avaliação por inscrição. A maioria exige número ímpar de pareceres.</p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-maioria"
+               name="etapa-{{ indice }}-regraDeDeliberacao" value="MAJORITY"
+               {% if etapa_linha.deliberationRule == "MAJORITY" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-maioria">«{{ etapa_linha.rotuloFavoravel|default:"favorável" }}» quando a maioria dos pareceres for «{{ etapa_linha.rotuloFavoravel|default:"favorável" }}»</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-favoravel"
+               name="etapa-{{ indice }}-regraDeDeliberacao" value="UNANIMOUS_FOR_FAVORABLE"
+               {% if etapa_linha.deliberationRule == "UNANIMOUS_FOR_FAVORABLE" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-favoravel">«{{ etapa_linha.rotuloFavoravel|default:"favorável" }}» só quando todos os pareceres forem «{{ etapa_linha.rotuloFavoravel|default:"favorável" }}»</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-desfavoravel"
+               name="etapa-{{ indice }}-regraDeDeliberacao" value="UNANIMOUS_FOR_UNFAVORABLE"
+               {% if etapa_linha.deliberationRule == "UNANIMOUS_FOR_UNFAVORABLE" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-desfavoravel">«{{ etapa_linha.rotuloDesfavoravel|default:"desfavorável" }}» só quando todos os pareceres forem «{{ etapa_linha.rotuloDesfavoravel|default:"desfavorável" }}»</label>
+      </p>
+    </fieldset>
+  </div>
+  {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
   só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
   esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema

@@ -439,7 +439,18 @@ CAMPOS_ETAPA = [
     # `null` publicado: na Etapa que não declara efeito, e na ausência, "o mesmo efeito".
     ("unfavorableOutcomeEffect", "Efeito do desfecho desfavorável", REFERENCIA),
     ("absenceEffect", "Efeito do não comparecimento", REFERENCIA),
+    # A regra de deliberação (165, FR-7055, FR-7073): trocá-la depois do primeiro Resultado por
+    # avaliação é recusado na gravação e na publicação, por `retificacoes.py`.
+    ("deliberationRule", "Regra de deliberação", REFERENCIA),
 ]
+REGRAS_DE_DELIBERACAO = (
+    # **O vazio é "não declarada", e não um padrão** (165, D-002): na Etapa decisória com várias
+    # avaliações, ela continua impedida na consolidação até que uma das três seja escolhida.
+    ("", "Não declarada"),
+    ("MAJORITY", "Favorável quando a maioria dos pareceres é favorável"),
+    ("UNANIMOUS_FOR_FAVORABLE", "Favorável só quando todos os pareceres são favoráveis"),
+    ("UNANIMOUS_FOR_UNFAVORABLE", "Desfavorável só quando todos os pareceres são desfavoráveis"),
+)
 EFEITOS_DO_DESFAVORAVEL = (
     # **O vazio publicado não é o padrão da composição** (164, D-002): na Etapa restrita e
     # eliminatória, `null` é o acervo de antes do degrau 23, lido "elimina". Dizê-lo "Não declarado"
@@ -1655,6 +1666,7 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 opcoes={
                     "unfavorableOutcomeEffect": EFEITOS_DO_DESFAVORAVEL,
                     "absenceEffect": EFEITOS_DA_AUSENCIA,
+                    "deliberationRule": REGRAS_DE_DELIBERACAO,
                 },
             )
         )

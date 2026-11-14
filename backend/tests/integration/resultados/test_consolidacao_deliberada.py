@@ -53,7 +53,7 @@ def _resultado(cenario, inscricao):
 
 
 def test_espera_os_tres_pareceres_sem_antecipar(gestor, api_client, manager_headers):
-    """FR-7062, D-005: dois Indeferido sob "confirma só por unanimidade" já decidiriam, e esperam."""
+    """FR-7062, D-005: dois Indeferido sob "confirma só por unanimidade" decidiriam, e esperam."""
     cenario = montar_colegiada(
         gestor, api_client, manager_headers, seed=1651, regra="UNANIMOUS_FOR_FAVORABLE"
     )
