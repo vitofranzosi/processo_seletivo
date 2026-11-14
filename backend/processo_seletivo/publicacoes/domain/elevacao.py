@@ -62,6 +62,9 @@ DEGRAUS = {
     # anterior: a capacidade não existia, e a Etapa com várias avaliações era impedida. Ler o nulo
     # como uma das regras mudaria norma publicada sem Retificação (D-002).
     24: {"deliberationRule": None},
+    # **O degrau 25 é a admissão do vídeo** (166, FR-7102). `False` é verdade sobre todo Edital
+    # anterior: nenhum publicou o vídeo como meio, e ler `true` daria um direito sem norma (D-001).
+    25: {"videoOption": False},
 }
 
 # **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção

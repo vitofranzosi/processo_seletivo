@@ -43,6 +43,7 @@ from .base import (
     REST_FRAMEWORK,
     SECRET_KEY,
     SORTEIO_FONTE_DE_DEMONSTRACAO,
+    VERIFICACAO_POR_VIDEO,
 )
 
 # Módulo inteiro, não uma classe: qualquer adaptador de desenvolvimento que nasça ao lado do
@@ -243,6 +244,17 @@ _exigir(
     "ASSISTENTE_NA_PAGINA_DO_EDITAL",
     "o assistente na página pública da seleção é só do desenvolvimento local; a abertura ao "
     "público depende dos requisitos da implantação.",
+)
+
+# A verificação da autodeclaração por vídeo (166, `FR-7101`). Nenhuma norma do Ifes autoriza hoje o
+# vídeo assíncrono: a Res. CS 61/2019 prevê entrevista presencial, e o Ofício MEC 3/2025 pede
+# entrevista síncrona. **Esta recusa só sai por PR revisado, depois do ato do Conselho Superior, do
+# protocolo da CPVA e do Edital que o cite** (`doc/verificacao-por-video-porta-do-piloto.md`).
+_exigir(
+    not VERIFICACAO_POR_VIDEO,
+    "VERIFICACAO_POR_VIDEO",
+    "a verificação da autodeclaração por vídeo é só do desenvolvimento; o vídeo assíncrono depende "
+    "de ato do Conselho Superior, de protocolo da CPVA e de Edital que o cite (P-0).",
 )
 
 # A entrada institucional da gestão (106, `D-009`). **Sem provedor, a gestão continua bloqueada**:

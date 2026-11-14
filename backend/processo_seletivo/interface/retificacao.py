@@ -442,6 +442,9 @@ CAMPOS_ETAPA = [
     # A regra de deliberação (165, FR-7055, FR-7073): trocá-la depois do primeiro Resultado por
     # avaliação é recusado na gravação e na publicação, por `retificacoes.py`.
     ("deliberationRule", "Regra de deliberação", REFERENCIA),
+    # A admissão do vídeo (166, FR-7104, FR-7105): acrescentá-la sem a chave, ou retirá-la depois do
+    # primeiro vídeo recebido, é recusado por `retificacoes.py`.
+    ("videoOption", "Admite vídeo gravado pelo candidato", BOOLEANO),
 ]
 REGRAS_DE_DELIBERACAO = (
     # **O vazio é "não declarada", e não um padrão** (165, D-002): na Etapa decisória com várias

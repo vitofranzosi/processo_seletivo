@@ -125,6 +125,7 @@ def _publicada(**extra):
         "unfavorableOutcomeEffect": None,
         "absenceEffect": None,
         "deliberationRule": None,
+        "videoOption": False,
         **extra,
     }
 

@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 24
+VERSAO_DO_ESQUEMA = 25
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -217,6 +217,10 @@ COBERTURA = {
     # sobre as Etapas é decisão da pergunta P-07.
     "/stages/*/deliberationRule": excluido(
         "regra de deliberação da Etapa (165); a resposta sobre as Etapas ainda não a lê"
+    ),
+    # A admissão do vídeo (166): só em desenvolvimento, atrás de chave recusada em produção (P-0).
+    "/stages/*/videoOption": excluido(
+        "admissão do vídeo (166); só em desenvolvimento, e a resposta sobre as Etapas não a lê"
     ),
     "/stages/*/rotuloFavoravel": ("P-07",),
     "/stages/*/rotuloDesfavoravel": ("P-07",),

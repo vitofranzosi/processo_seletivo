@@ -38,6 +38,7 @@ from processo_seletivo.seguranca.application.authorization import require_permis
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 
 def _identidades_aninhadas_alheias(profiles):
@@ -508,6 +509,8 @@ def replace_draft(
                     # A regra de deliberação (165, FR-7050), na grafia publicada; chave ausente é
                     # "não declarada", sem padrão (D-002).
                     regra_de_deliberacao=deliberacao.para_coluna(stage.get("deliberationRule")),
+                    # A admissão do vídeo (166, FR-7102): só `true` admite.
+                    admite_video=admissao_do_video.ler(stage.get("videoOption")),
                 )
                 for stage in stages
             ]

@@ -360,6 +360,16 @@ def _superar(protegido, decisao, motivo_da_regra, agora, actor):
     motivo_da_superacao = (
         f"Resultado corrigido em cumprimento da decisão no recurso {decisao.recurso.protocolo}"
     )
+    # **O vídeo só confirma** (166, FR-7139): a correção fixada também não grava desfavorável sobre
+    # inscrição em modo vídeo. Por importação local, sem consulta na Etapa sem vídeo.
+    from processo_seletivo.verificacao.application import ganchos
+
+    ganchos.recusar_desfavoravel_pelo_video(
+        edital=protegido.edital_id,
+        etapa_id=protegido.etapa_id,
+        inscricao_id=protegido.inscricao_id,
+        sentido=decisao.sentido,
+    )
     try:
         with transaction.atomic():
             return ResultadoEtapa.objects.create(

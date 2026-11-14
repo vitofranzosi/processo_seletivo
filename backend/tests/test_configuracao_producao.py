@@ -190,6 +190,9 @@ def test_os_cenarios_de_treinamento_vem_desligados_por_padrao():
         ),
         # O assistente na página pública é só do desenvolvimento local (074, `FR-1683`).
         ({"ASSISTENTE_NA_PAGINA_DO_EDITAL": "true"}, "ASSISTENTE_NA_PAGINA_DO_EDITAL"),
+        # A verificação por vídeo é só do desenvolvimento (166, `FR-7101`, SC-2376): a porta do
+        # piloto é um PR revisado, depois da P-0, e não uma variável.
+        ({"VERIFICACAO_POR_VIDEO": "true"}, "VERIFICACAO_POR_VIDEO"),
     ],
 )
 def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):

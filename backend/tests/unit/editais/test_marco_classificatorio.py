@@ -40,6 +40,7 @@ def etapa(identificador, *, classificatory, weight="1.0000"):
         "unfavorableOutcomeEffect": None,
         "absenceEffect": None,
         "deliberationRule": None,
+        "videoOption": False,
     }
 
 

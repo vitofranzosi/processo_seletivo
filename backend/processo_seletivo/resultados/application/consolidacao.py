@@ -20,6 +20,7 @@ from uuid import UUID
 
 from processo_seletivo.avaliacoes.application.distribuicao import resultado_declarado
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.avaliacoes.domain.formas import Sentido
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
@@ -221,7 +222,12 @@ def _planejar(etapa, panorama, inscricoes, conteudo=None):
 
     Nenhuma consulta: tudo sai do panorama, que já respondeu pela Etapa inteira de uma vez.
     """
+    from processo_seletivo.verificacao.application import ganchos
+
     consolidaveis, recusas = [], []
+    # **As inscrições em modo vídeo** (166, FR-7136): uma consulta, só na Etapa que admite o vídeo.
+    inscricoes = list(inscricoes)
+    pelo_video = ganchos.em_modo_video_na_selecao(etapa, inscricoes)
     for inscricao in inscricoes:
         estado, motivo = panorama["estados"][inscricao.id]
         cumprindo = _decisao_a_cumprir(panorama, inscricao, estado)
@@ -241,6 +247,12 @@ def _planejar(etapa, panorama, inscricoes, conteudo=None):
                 sentidos=tuple(str(item.sentido) for item in conclusoes),
                 pareceres=tuple(item.avaliacao_id for item in conclusoes),
             )
+            if inscricao.id in pelo_video and conclusao.sentido == str(Sentido.DESFAVORAVEL):
+                # **O vídeo só confirma** (166, R-11, FR-7138): a deliberação pelo vídeo que não
+                # confirma não vira Resultado — encaminha à entrevista ao vivo, por ato da
+                # presidência.
+                recusas.append(Recusa(inscricao, ganchos.ENCAMINHAR_AO_VIVO))
+                continue
         else:
             conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
         if conclusao is None:
@@ -459,6 +471,15 @@ def _criar_deliberado(item, edital, etapa, versao, ctx, actor):
     nascer em duas instruções sem que um Resultado sem pareceres sobreviva.
     """
     conclusao = item.conclusao
+    # A guarda da R-11 no ato, e não só no plano (166, FR-7139): a chamada direta também é recusada.
+    from processo_seletivo.verificacao.application import ganchos
+
+    ganchos.recusar_desfavoravel_pelo_video(
+        edital=edital,
+        etapa_id=etapa["id"],
+        inscricao_id=item.inscricao.id,
+        sentido=conclusao.sentido,
+    )
     resultado = ResultadoEtapa.objects.create(
         inscricao=item.inscricao,
         edital=edital,
