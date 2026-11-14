@@ -131,7 +131,7 @@ ausência já é Ocorrência.
   e-mail dela.
 - **R-25** A identificação pública é **nome e protocolo**, como a `149`, salvo quando a Etapa revela
   dado sensível — a de alcance por Modalidade reservada (heteroidentificação) —, quando é **só o
-  protocolo**. Ver a decisão pendente Q-2.
+  protocolo**. Decidido pelo usuário em 14/11 (`D-009` da spec).
 - **R-26** O GPS **não calcula prazo** a partir do horário (a justificativa de 24 h do 28/2026 fica
   com o Edital); ele grava e mostra o horário como dado do ato.
 
@@ -234,5 +234,5 @@ heteroidentificação.
 | Convocar para Etapa é ato próprio, com lista congelada? | **Sim**: a publicação da agenda é ato, e congela os pares pessoa-horário publicados. A participação continua projeção; a diferença aparece como "sem horário" ou "não participa mais" |
 | Quem é alcançado na heteroidentificação? | Quem a Etapa alcança, pela `163`. A agenda não decide |
 | Horário individual, ou data e local por Etapa? | Horário individual, com banca |
-| Exposição da Modalidade | Só o protocolo na página pública quando a Etapa tem alcance por Modalidade (Q-2) |
-| Relação com o aviso | Origem nova do aviso da `066`, com revisão da FR-084 (Q-5) |
+| Exposição da Modalidade | Só o protocolo na página pública quando a Etapa tem alcance por Modalidade (decidido, `D-009` da spec) |
+| Relação com o aviso | Origem nova do aviso da `066`, com revisão da FR-084 (decidido, `D-010` da spec) |

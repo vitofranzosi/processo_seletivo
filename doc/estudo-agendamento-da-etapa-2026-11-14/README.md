@@ -54,24 +54,27 @@ aviso. Nada muda na Etapa, no Edital, na avaliação ou no resultado.
 | Ocorrência | a ausência, como hoje |
 | Centro (`136`), Minhas atividades (`160`) | a pendência "montar e publicar a agenda" (entrega D) |
 
+## Decisões
+
+Tomadas pelo usuário em 14/11/2026, todas pela recomendação, e registradas na spec `166`
+(*Clarifications*, `D-008` a `D-010`):
+
+- **Q-2: só o protocolo** na página pública da agenda de Etapa restrita por Modalidade; nome e
+  protocolo nas demais. A consulta ao encarregado de dados continua recomendada antes da implantação.
+- **Q-3: publicação formal**, com a natureza da relação de convocados da `149` e o veículo escolhido
+  como na `159`.
+- **Q-5: revisar a FR-084** para o aviso de agenda, como origem do aviso complementar, sem envio novo.
+
 ## Decisões pendentes
 
-Só o que depende de validação humana ou de regra institucional. Cada uma traz a recomendação.
+Só o que depende de validação humana ou de regra institucional. Cada uma traz a recomendação, que a
+spec adota como premissa.
 
 - **Q-1 — O Cefor opera bancas simultâneas?** Muda a capacidade desde o primeiro dia. *Recomendação:*
   incluir no MVP mesmo assim. Custa uma tabela e uma coluna na grade, e o cenário B já tem duas salas
   da RNP.
-- **Q-2 — Como a página pública identifica a pessoa numa Etapa de alcance por Modalidade?** Nome e
-  protocolo, como a `149`, ou só o protocolo, porque a lista revela quem concorre pela reserva para
-  pretos e pardos? É a P-11 do estudo da autodeclaração, e pede o encarregado de dados.
-  *Recomendação:* só o protocolo nessas Etapas; nome e protocolo nas demais.
-- **Q-3 — Que ato é a agenda publicada?** *Recomendação:* o mesmo da relação de convocados da `149`:
-  autoridade signatária, e o veículo escolhido como na `159` (publicar no GPS, declarando onde o
-  Edital admite a página, ou registrar a publicação feita fora).
 - **Q-4 — Publicar em partes?** Uma agenda por dia, à medida que a lista fecha. *Recomendação:* não
   no MVP: todo participante com horário antes de publicar (R-13).
-- **Q-5 — Revisar a FR-084 para o aviso de horário.** É a quarta revisão da lista fechada de
-  mensagens. *Recomendação:* sim, como origem do aviso complementar, sem envio novo.
 - **Q-6 — A ordem do preenchimento automático.** Nome, classificação ou inscrição? *Recomendação:*
   nome, com o protocolo no empate: explicável e sem expor a posição na classificação.
 - **Q-7 — A sala virtual é por banca ou por pessoa?** *Recomendação:* por banca, que é o que os
@@ -91,6 +94,5 @@ passa entrevistando.**
 ## Próximo passo proposto
 
 1. **Marco 0:** percorrer o protótipo com a comissão, num caso real de entrevista ou de
-   heteroidentificação, e decidir Q-1 a Q-3.
-2. Com a experiência aprovada, `/speckit-clarify` sobre a spec `166`, depois plan, tasks e a
-   entrega A, uma sessão por entrega.
+   heteroidentificação, e confirmar a Q-1.
+2. Com a experiência aprovada, plan, tasks e a entrega A da spec `166`, uma sessão por entrega.

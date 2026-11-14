@@ -13,9 +13,8 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain — três, de propósito: FR-7124 (natureza do ato e
-  veículo), FR-7125 (identificação pública na Etapa por Modalidade) e FR-7130 (revisão da FR-084).
-  As três são decisão do usuário e de instâncias do Ifes, e o estudo traz a recomendação de cada uma.
+- [x] No [NEEDS CLARIFICATION] markers remain — as três perguntas (FR-7124, FR-7125, FR-7130)
+  foram respondidas pelo usuário em 14/11 e registradas como `D-008` a `D-010`.
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -37,5 +36,5 @@
   mecanismo; o modelo de tabelas está no estudo (`02-proposta.md` §2.5), e não aqui, de propósito.
 - "Despacho de avisos" e "origem" são vocabulário de domínio já usado pela `066`, e não detalhe de
   implementação.
-- Antes do `/speckit-plan`: responder às três perguntas (ou rodar `/speckit-clarify`) e aprovar a
-  experiência pelo protótipo do estudo, que é o marco 0 do plano de entregas.
+- Antes do `/speckit-plan`: aprovar a experiência pelo protótipo do estudo, que é o marco 0 do plano
+  de entregas.

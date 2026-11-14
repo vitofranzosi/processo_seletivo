@@ -7,7 +7,7 @@ VI), e não só com domínio. A complexidade é relativa: P, M ou G.*
 
 O protótipo (`prototipo/`) é percorrido pela comissão com um caso real. O critério de saída é a
 pergunta do pedido: **"consigo sair de uma lista de 43 pessoas para uma agenda conferida e publicada
-sem abrir uma planilha?"**, mais as decisões Q-1 a Q-3 do README. Ajustes de tela entram aqui, e
+sem abrir uma planilha?"**, mais a confirmação da Q-1 do README (Q-2, Q-3 e Q-5 já decididas). Ajustes de tela entram aqui, e
 custam um arquivo de HTML.
 
 ## As entregas
@@ -19,7 +19,7 @@ sessão.
 |---|---|---|---|---|
 | **A** | Configurar e montar | A comissão configura, vê a capacidade, preenche com prévia e ajusta à mão, sem publicar | **G** | Marco 0 |
 | **B** | Conferir, publicar e mostrar | Publica com conferência e autoridade; página pública e área do candidato mostram o horário | **G** | A |
-| **C** | Avisar e remarcar | Avisos por pessoa, reenvio das falhas; remarcação, inclusão e cancelamento individuais | **M** | B; revisão da FR-084 (Q-5) |
+| **C** | Avisar e remarcar | Avisos por pessoa, reenvio das falhas; remarcação, inclusão e cancelamento individuais | **M** | B; o texto revisto da FR-084 (decidido, `D-010` da spec) |
 | D | Orientação | "Montar a agenda" e "Publicar a agenda" como pendência no Centro (`136`) e em Minhas atividades (`160`); horário na tela da Ocorrência | **P** | B |
 
 **A** concentra o modelo (três tabelas operacionais), a derivação dos horários, as recusas da

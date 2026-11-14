@@ -4,9 +4,10 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia, sem plan nem tasks. Três
-perguntas esperam o usuário (marcadas *NEEDS CLARIFICATION*), e a experiência visual espera a
-aprovação do protótipo, que o estudo põe como marco anterior a qualquer implementação.
+**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia, sem plan nem tasks. As três
+perguntas ao usuário foram respondidas no mesmo dia (ver *Clarifications*). A experiência visual
+espera a aprovação do protótipo pela comissão, que o estudo põe como marco anterior a qualquer
+implementação.
 
 **Input**: o pedido de 14/11/2026 para especificar o agendamento de participantes em Etapas que
 exigem comparecimento em dia e horário — entrevista, verificação da autodeclaração, arguição —, como
@@ -62,6 +63,18 @@ remarcação, inclusão e cancelamento.
 avaliadores; calendário institucional; integração com Google ou Outlook; videoconferência
 embutida; gravação; registro de presença na agenda; lembrete na véspera; publicação da agenda em
 partes. Ver *Out of Scope*.
+
+## Clarifications
+
+### Session 2026-11-14 (decisões do usuário)
+
+- Q: Que ato é a agenda publicada: a publicação formal, com a natureza da relação de convocados da
+  `149` e o veículo escolhido como na `159` (A), ou uma publicação informativa, sem autoridade (B)?
+  → A: **A** (`D-008`).
+- Q: Na Etapa restrita por Modalidade, a página pública identifica a pessoa só pelo protocolo (A),
+  ou pelo nome e protocolo, como as demais (B)? → A: **A**, só o protocolo (`D-009`).
+- Q: A lista fechada da FR-084 da `010` é revista para incluir o aviso de agenda, como origem do aviso
+  complementar e sem envio novo (A), ou a agenda fica sem e-mail (B)? → A: **A** (`D-010`).
 
 ---
 
@@ -349,19 +362,15 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   pessoa-horário) e MUST ser recusada se a agenda mudou desde a conferência. A confirmação repetida
   MUST devolver o ato já criado, sem criar outro e sem aviso novo.
 - **FR-7124**: A publicação MUST ser um ato imutável, que registra autor, autoridade signatária,
-  instante, e o conteúdo público tal como foi publicado, com o seu resumo criptográfico.
-  [NEEDS CLARIFICATION: Que ato é a agenda publicada? A recomendação do estudo é a mesma natureza da
-  relação de convocados da `149` — autoridade signatária, e o veículo escolhido como na `159`
-  (publicar no GPS, declarando onde o Edital admite a página como veículo, ou registrar a publicação
-  feita fora). A alternativa é uma publicação informativa, sem autoridade, com o Edital como único
-  ato formal.]
+  instante, e o conteúdo público tal como foi publicado, com o seu resumo criptográfico. Ela MUST
+  ter a mesma natureza da relação de convocados da `149`, e o veículo MUST ser escolhido na
+  confirmação como na `159`: publicar no GPS, declarando onde o Edital admite a página pública como
+  veículo, ou registrar depois a publicação feita fora dele (`D-008`).
 - **FR-7125**: O conteúdo público MUST ter, por pessoa: o dia, o horário, o nome da banca quando há
   mais de uma, e a identificação da pessoa. A identificação MUST ser o nome e o protocolo, como a
-  FR-5712 da `149`, salvo na Etapa cujo alcance é restrito por Modalidade.
-  [NEEDS CLARIFICATION: Na Etapa restrita por Modalidade (a heteroidentificação), a página pública
-  identifica a pessoa só pelo protocolo, porque a lista revela quem concorre pela reserva para
-  pretos e pardos, ou pelo nome e protocolo, como as demais? A recomendação do estudo é só o
-  protocolo, e a decisão pede o encarregado de dados.]
+  FR-5712 da `149`, salvo na Etapa cujo alcance é restrito por Modalidade, em que a identificação
+  MUST ser só o protocolo (`D-009`). Na área do candidato, identificado, nada muda: ele vê tudo o que
+  é dele.
 - **FR-7126**: O conteúdo público MUST NOT conter o endereço da sala, o CPF inteiro ou parcial, o
   e-mail, o telefone, a Modalidade ou o desfecho de Etapa alguma.
 - **FR-7127**: A página pública da seleção MUST mostrar a agenda publicada por dia, e MUST permitir
@@ -376,10 +385,9 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 - **FR-7130**: A publicação MUST criar um aviso por pessoa publicada, que cita o ato, pela origem
   "agenda" dos avisos complementares; a confirmação MUST NOT enviar, e o envio MUST ser o do
-  despacho de avisos. [NEEDS CLARIFICATION: O aviso de horário é uma situação nova de mensagem, e a
-  FR-084 da `010` mantém essa lista fechada. Ela pode ser revista para incluir o aviso de agenda,
-  de publicação e de remarcação, como origem do aviso complementar e sem envio novo, como recomenda
-  o estudo? Sem a revisão, a agenda é publicada e lida no portal, sem e-mail.]
+  despacho de avisos. A lista fechada da FR-084 da `010` MUST ser revista para incluir o aviso de
+  agenda — na publicação, na remarcação e na inclusão — como origem do aviso complementar, sem envio
+  novo (`D-010`).
 - **FR-7131**: O aviso MUST trazer o dia, a hora, a duração prevista, a banca quando há mais de uma,
   o local ou o endereço da sala, as orientações, o protocolo, e a frase de que o que vale é a agenda
   publicada.
@@ -560,4 +568,32 @@ foi publicado. O ato individual muda uma pessoa, avisa uma pessoa, e guarda o an
 
 O app de avisos já tem envio fora da confirmação, deduplicação por pessoa, retentativa, reenvio e a
 moldura dos e-mails. Um envio próprio da agenda duplicaria tudo isso. A revisão da FR-084 da `010`
-é a pergunta que a FR-7130 deixa ao usuário.
+foi decidida pelo usuário (`D-010`).
+
+### D-008 — A agenda publicada tem a natureza da relação de convocados
+
+Decisão do usuário em 14/11/2026, entre a publicação formal (A) e a informativa, sem autoridade (B).
+**A.** Os Editais da amostra contam prazo e consequência do horário publicado: no 28/2026 a
+justificativa da ausência conta 24 horas do horário marcado "no ato da convocação", e a ausência
+indefere. Um horário com esse efeito precisa de ato rastreável, com autoridade. O veículo segue a
+`159`, que já distingue publicar no GPS de registrar a publicação feita fora, e por isso o Edital que
+publica em outro lugar continua servido. A avaliação da proposta trazida pelo usuário em 14/11
+sugeriu que a formalidade dependa do Edital; a decisão não adotou a variante, e o registro fica aqui
+como insumo.
+
+### D-009 — Na Etapa por Modalidade, a página pública mostra só o protocolo
+
+Decisão do usuário em 14/11/2026, entre só o protocolo (A) e nome e protocolo, como a `149` (B).
+**A.** A agenda de uma Etapa restrita por Modalidade é, por construção, a lista de quem concorre pela
+reserva para pretos e pardos; com o nome, ela publicaria a autodeclaração de cada pessoa. O protocolo
+basta para cada um achar o próprio horário, e a área do candidato mostra o resto. O estudo recomendou
+ouvir o encarregado de dados; a consulta continua recomendada antes da implantação, e não bloqueia a
+especificação.
+
+### D-010 — A FR-084 é revista para o aviso de agenda
+
+Decisão do usuário em 14/11/2026, entre revisar a lista fechada (A) e não avisar por e-mail (B).
+**A.** Os Editais reagendam por e-mail, e o horário que a pessoa não vê é o que a faz perder a Etapa
+(o registro de 09/10). O aviso entra como origem do aviso complementar da `066`, e não como envio
+novo: a lista ganha uma situação, e o mecanismo, nenhum. O texto da FR-084 na `010` é revisto na
+entrega que implementa os avisos, como a `019` e a `066` fizeram.
