@@ -18,12 +18,14 @@ unicidades no banco.
 Um app novo, `agendamento`, guarda quatro tabelas operacionais — a agenda, as janelas e as bancas,
 que são a configuração, e o agendamento corrente — na entrega **A**, com a
 configuração que calcula a capacidade ao digitar (htmx sobre o mesmo domínio) e a montagem com prévia,
-preenchimento automático e ajuste à mão sem arrastar. A entrega **B** traz as duas tabelas append-only
-— o ato e o horário publicado —, a conferência na moldura da `140`, a publicação no molde da `149` com
-o veículo da `159`, a página pública e o horário na área do candidato. A entrega **C** acrescenta a
+preenchimento automático e ajuste à mão sem arrastar. A entrega **B** traz as três tabelas append-only
+— o ato, o horário publicado e o documento PDF do ato —, a conferência na moldura da `140`, a
+publicação no molde da `149` com o veículo da `159` e o documento gravado como o dela, a página
+pública e o horário na área do candidato. A entrega **C** acrescenta a
 origem `AGENDA` aos avisos da `066` (um aviso por pessoa, como a pendência da `134`), revê a FR-084 da
 `010` e traz remarcação, inclusão e cancelamento como atos individuais. A **D**, opcional, põe a agenda
-nas pendências do Centro e de Minhas atividades, e o horário na tela da Ocorrência.
+nas pendências do Centro e de Minhas atividades, e o horário na tela da Ocorrência; por decisão do
+usuário de 14/11, fica fora desta implementação.
 
 As decisões técnicas estão em [research.md](research.md) (`T-001` a `T-023`); o modelo, em
 [data-model.md](data-model.md); as telas e as frases, em [contracts/](contracts/); o roteiro, em
@@ -39,15 +41,17 @@ As decisões técnicas estão em [research.md](research.md) (`T-001` a `T-023`);
 
 - `agendamento/0001_agenda_da_etapa` (A): `AgendaDaEtapa`, `JanelaDaAgenda`, `BancaDaAgenda`,
   `Agendamento`;
-- `agendamento/0002_atos_da_agenda` (B): `AtoDaAgenda`, `HorarioPublicado`, os gatilhos append-only e o
-  de coerência;
-- `avisos/0003_origem_agenda` (C): a origem, as constraints refeitas e `marco_id` anulável.
+- `agendamento/0002_atos_da_agenda` (B): `AtoDaAgenda`, `HorarioPublicado`, `DocumentoDoAtoDaAgenda`,
+  os gatilhos append-only e o de coerência;
+- a origem `AGENDA` nos avisos (C): a origem, as constraints refeitas e `marco_id` anulável — a
+  `avisos/0003`, ou a `0004` se a `168` entrar antes (*Coordenação com a 168*).
 
-Duas tabelas append-only novas: o `M` da preparação do banco vai de 61 a **63**.
+Três tabelas append-only novas: o `M` da preparação do banco vai de 65 a **68**.
 
 **Testing**: pytest contra PostgreSQL (`make test-pg`, com `DB_NAME` próprio):
 
-- unidade para `horarios`, `configuracao`, `capacidade`, `preenchimento`, `conteudo` e `mensagem`
+- unidade para `horarios`, `configuracao`, `capacidade`, `preenchimento`, `conteudo`, `documento` e
+  `mensagem`
   (SC-2391, SC-2392 na parte pura);
 - integração para os comandos, as unicidades sob duas transações, a publicação, os gatilhos, os
   privilégios, os avisos e os atos individuais;
@@ -82,7 +86,7 @@ com uma a três bancas e até alguns dias.
 | II. Integridade normativa e imutabilidade | a agenda é operacional e não toca o Edital nem pede Retificação (`D-001`); a participação tem fonte única (`D-002`); os horários são derivados (`D-003`); a publicação e cada ato individual são append-only, e a remarcação substitui sem apagar (`D-006`); a zona é a institucional |
 | III. Segurança, LGPD e auditoria | negar por padrão, com escopo do Edital e base da gestão da comissão (T-021); o endereço da sala só à própria pessoa (FR-7229); a página pública sem CPF, e-mail, telefone ou Modalidade, e só o protocolo na Etapa por Modalidade (`D-009`); a trilha sem e-mail nem sala (T-019); os avisos sob a chave da `066` (T-018) |
 | IV. Regras explícitas | as oito recusas da configuração, a ordem do preenchimento escrita na tela, os impedimentos da publicação nomeados com o caminho, a confirmação conferida por assinatura e idempotente |
-| V. Rastreabilidade e simplicidade | cada FR- e SC- tem tarefa e teste; nenhum JavaScript que duplique a regra; o `M` novo no `CLAUDE.md` e no README; nenhuma tabela além das do modelo do estudo |
+| V. Rastreabilidade e simplicidade | cada FR- e SC- tem tarefa e teste; nenhum JavaScript que duplique a regra; o `M` novo no `CLAUDE.md` e no README; uma só tabela além das do modelo do estudo, a do documento, justificada pelo que preserva (T-013) |
 | VI. Completude de jornada | cada entrega fecha com uma jornada pela interface: A, configurar e montar; B, conferir, publicar e o candidato ver; C, avisar e remarcar |
 
 **Gate: aprovado.** Duas leituras a registrar, nenhuma violação:
@@ -94,7 +98,12 @@ com uma a três bancas e até alguns dias.
 - **A FR-084 da `010` é revista**, pela `D-010`, na entrega C — revisão de regra declarada na spec,
   com a redação anterior preservada, como fizeram a `019`, a `066`, a `134` e a `156`.
 
-**Re-check pós-desenho: aprovado.** As duas tabelas append-only entram nas três camadas (classe,
+**Re-check depois das decisões de 14/11 (`D-011` a `D-013`): aprovado.** O documento PDF é gerado uma
+vez, no ato, e servido como foi gerado (Princípio II); os avisos não ganham chave nem envio próprios
+(Princípio V); a autorização continua a da gestão da comissão, negada por padrão, com o escopo do
+Edital no servidor (Princípio III).
+
+**Re-check pós-desenho: aprovado.** As três tabelas append-only entram nas três camadas (classe,
 gatilho, privilégio ausente), e nenhuma recebe `FOR UPDATE` (T-009). A `avisos` não passa a conhecer a
 `agendamento`: o vínculo fica no `HorarioPublicado` (T-018).
 
@@ -123,7 +132,7 @@ backend/config/settings/base.py                       # INSTALLED_APPS + agendam
 backend/processo_seletivo/
 ├── agendamento/                                      # app novo (T-001)
 │   ├── models.py                                     # A: AgendaDaEtapa, JanelaDaAgenda, BancaDaAgenda, Agendamento
-│   │                                                 # B: AtoDaAgenda, HorarioPublicado (_AppendOnly)
+│   │                                                 # B: AtoDaAgenda, HorarioPublicado, DocumentoDoAtoDaAgenda (_AppendOnly)
 │   ├── migrations/0001_agenda_da_etapa.py            # A
 │   ├── migrations/0002_atos_da_agenda.py             # B, gatilhos em SQL
 │   ├── domain/
@@ -135,6 +144,7 @@ backend/processo_seletivo/
 │   │   ├── recusas.py                                # códigos e frases (T-008)
 │   │   ├── conteudo.py                               # B: o conteúdo público (T-014)
 │   │   └── mensagem.py                               # C: assunto e corpo por pessoa (T-018)
+│   ├── infrastructure/documento.py                   # B: render_agenda_pdf, sem banco (T-013)
 │   └── application/
 │       ├── leitura.py                                # a agenda, a participação, os vigentes (T-007, T-017)
 │       ├── configurar.py                             # A: salvar, devolver quem perdeu o horário (FR-7208)
@@ -144,9 +154,9 @@ backend/processo_seletivo/
 │       └── atos_individuais.py                       # C: remarcar, incluir, cancelar
 ├── avisos/
 │   ├── domain/nomes.py                               # C: AGENDA
-│   ├── models.py, migrations/0003_origem_agenda.py   # C
+│   ├── models.py, migrations/000N_origem_agenda.py   # C: 0003, ou 0004 depois da 168
 │   └── application/{confirmar,despacho}.py           # C: reenvio e estado visual da origem nova
-├── seguranca/papeis.py                               # B: TABELAS_APPEND_ONLY (63)
+├── seguranca/papeis.py                               # B: TABELAS_APPEND_ONLY (68)
 ├── interface/
 │   ├── agenda_da_etapa.py                            # as views da gestão (T-020)
 │   ├── urls.py                                       # as rotas de contracts/telas.md
@@ -162,17 +172,17 @@ backend/processo_seletivo/
 │       ├── gestao/componentes.css                    # controle segmentado, seletor de horário, painel de ação, veredito
 │       └── telas/agenda-da-etapa.css                 # grade, simulador, estreito
 ├── portal/
-│   ├── urls.py, views.py                             # B: agendas/<id>/, seção da seleção, bloco na inscrição
+│   ├── urls.py, views.py                             # B: agendas/<id>/, o documento de cada ato, seção da seleção, bloco na inscrição
 │   ├── templates/portal/agenda_da_etapa.html, _agendas_da_selecao.html, _horario_da_inscricao.html
 │   └── static/portal/portal.css                      # B
-└── interface/{centro,atividades}.py, templates/interface/ocorrencia.html   # D
+└── interface/{centro,atividades}.py, templates/interface/ocorrencia.html   # D (fora desta implementação)
 specs/010-area-do-candidato/spec.md                   # C: FR-084 revista (sete situações)
 specs/033-navegacao-por-capacidade/inventario-das-negativas.md   # A, B, C: um 404 por linha
 backend/tests/
 ├── unit/agendamento/                                 # A, B, C
 ├── integration/agendamento/                          # A, B, C
 ├── interface/test_agenda_da_etapa_*.py, test_vocabulario_da_agenda_da_etapa.py
-├── portal/test_agenda_publica.py, test_horario_na_area_do_candidato.py
+├── portal/test_agenda_publica.py, test_horario_na_area_do_candidato.py, test_documento_da_agenda.py
 └── migrations/test_migrations.py, integration/test_database_permissions.py, test_situacoes_de_mensagem.py
 ```
 
@@ -189,9 +199,9 @@ fecha com uma jornada demonstrável pela interface do ator (Constituição, VI).
 | # | Entrega | O ator consegue | Depende de |
 |---|---|---|---|
 | **A** | Configurar e montar | configurar, ver a capacidade, preencher com prévia e ajustar à mão, sem publicar | — |
-| **B** | Conferir, publicar e mostrar | publicar com conferência, veículo e autoridade; a página pública e a área do candidato mostram o horário | A |
+| **B** | Conferir, publicar e mostrar | publicar com conferência, veículo e autoridade, com o documento PDF; a página pública e a área do candidato mostram o horário | A |
 | **C** | Avisar e remarcar | um aviso por pessoa, as falhas com reenvio; remarcação, inclusão e cancelamento | B |
-| D | Orientação | a agenda como pendência no Centro e em Minhas atividades; o horário na Ocorrência | B |
+| D | Orientação *(fora desta implementação)* | a agenda como pendência no Centro e em Minhas atividades; o horário na Ocorrência | B |
 
 Dentro de cada entrega: o domínio puro e os testes de unidade, o modelo e a migration, os comandos e
 os testes de integração, as telas e os de interface, os guardiões, e por fim a jornada no navegador.
@@ -206,7 +216,9 @@ os testes de integração, as telas e os de interface, os guardiões, e por fim 
 | `FOR UPDATE` em append-only | role de runtime | travar só a `AgendaDaEtapa` (T-009) |
 | Fuso | horários derivados | data e hora locais em `America/Sao_Paulo`, convertidas uma vez (T-003) |
 | Evento retificado depois | `EventoCronograma` | a conferência relê o Evento vigente; publicada, a gestão é avisada e o horário vale (Edge Cases) |
-| O `M` do provisionamento | `CLAUDE.md` | 61 → 63 na B, com o README e `test_database_permissions.py` |
+| O `M` do provisionamento | `CLAUDE.md` | 65 → 68 na B, com o README e `test_database_permissions.py` |
+| O compositor do PDF muda depois | `publicacoes/infrastructure/pdf.py` | o portal serve os bytes gravados, nunca recompostos (T-013) |
+| A `168` mexe nos mesmos avisos e no mesmo acompanhamento | `avisos/migrations`, `portal` | *Coordenação com a 168*, abaixo |
 | Guardião da FR-084 e a ordem com a `156` | `test_situacoes_de_mensagem.py` | reler o guardião no dia da C (T-018) |
 | Varredura de vocabulário com lista literal | `tests/**/test_vocabulario_*` | varredura própria das telas novas (T-020) |
 | Inventário de negativas | `033` | uma linha por `Http404` novo, em cada entrega |
@@ -214,22 +226,35 @@ os testes de integração, as telas e os de interface, os guardiões, e por fim 
 | Nome "agenda" | `interface/agenda.py` (`101`) | "agenda da Etapa" em arquivo, rota e folha (T-001) |
 | Limpeza por `DELETE` muda a ordem física | `tests/conftest.py` | toda consulta da agenda com `ORDER BY` completo |
 
-## Pontos para o usuário
+## Decisões do usuário sobre os pontos do plano (14/11)
 
-O `/speckit-analyze` de 14/11 não teve achado crítico. Três leituras do plano interpretam a spec, e
-são do usuário; nenhuma bloqueia a entrega A.
+O primeiro `/speckit-analyze` não teve achado crítico, e o plano levou ao usuário três leituras da
+spec. As três foram decididas no mesmo dia, e a spec foi revista com elas (*Clarifications*, segunda
+rodada):
 
-1. **Avisos com a chave da `066` desligada.** A FR-7230 diz que a publicação MUST criar um aviso por
-   pessoa; o plano não cria aviso nenhum com `AVISOS_AOS_CANDIDATOS` desligada — o padrão de produção
-   até a validação de LGPD da `066` —, porque o aviso é origem daquele app e herda a chave dele, e um
-   aviso criado agora sairia dias depois, quando a chave fosse ligada (T-018). A alternativa é revisar
-   a FR-7230 para dizer isso, ou ligar a chave só para a origem `AGENDA`.
-2. **Sem documento PDF.** A FR-7224 dá à publicação "a mesma natureza da relação de convocados da
-   `149`", que tem PDF; ela não pede PDF, e o plano não o gera (T-013). Se o PDF for o documento
-   oficial também aqui, é revisão da FR-7224, com uma tabela append-only a mais (o `M` iria a 64).
-3. **Quem publica.** A spec chama de presidência quem publica; a FR-7255 pede a permissão de gerir a
-   Etapa e o escopo do Edital, e o plano aceita as duas bases da gestão da comissão — a permissão
-   `comissao:gerir` e a presidência (T-021). Uma porta só da presidência seria revisão da FR-7255.
+1. **Avisos** (`D-011`). A habilitação dos avisos aos candidatos da `066` é o controle único.
+   Desligada, a publicação acontece sem aviso, e as telas dizem isso; ligada depois, nenhum aviso de
+   ato anterior nasce. Ligada, a conferência mostra quantos avisos, para quem e a prévia (T-018, T088).
+2. **PDF** (`D-012`). Cada ato tem documento PDF, gerado uma vez e gravado, no molde da `149`; a
+   página pública mostra o vigente e os documentos em ordem. Uma tabela a mais, justificada pelo que
+   preserva (T-013, T086, T087, T091).
+3. **Quem publica** (`D-013`). Quem gere a comissão, a presidência inclusive, com o escopo do Edital
+   conferido no servidor; a autoridade signatária é escolha distinta. Nenhum papel novo (T-021, T089).
+
+A implementação faz **A, B e C**; a **D** fica fora.
+
+## Coordenação com a 168
+
+A `168` (orientação da verificação da autodeclaração, #551, sem merge) mexe em dois lugares que a
+`167` também toca. Nenhuma das duas bloqueia a outra; quem entrar **depois** acomoda a primeira, e as
+regras abaixo valem nos dois sentidos.
+
+| Ponto | `168` | `167` | Regra comum |
+|---|---|---|---|
+| Migration dos avisos | `avisos/0003_origem_passo`: origem `PASSO`, `marco_id` anulável, `etapa_id` novo | origem `AGENDA`, `marco_id` anulável | uma migration por feature, na ordem do merge; `marco_id` nulo **só** em `PASSO` e `AGENDA`; com o `etapa_id` presente, o aviso da agenda o preenche (T063) |
+| CHECKs do `Aviso` | `ck_aviso_origem_conhecida` com quatro origens | idem, com `AGENDA` | quem entra depois refaz o CHECK com as cinco, e não com as suas |
+| Acompanhamento do candidato | o degrau da Etapa restrita, que é "o lugar" do horário quando houver agenda (o requisito da `168` que faz do degrau o lugar do horário) | o bloco do horário na inscrição (T054) | **um cartão por Etapa**: na Etapa restrita, o horário entra no degrau da `168`; nas outras, o bloco da `167`. A fonte é `horarios_da_inscricao` (T050, T090) |
+| Avisos ao candidato | o aviso do passo ("há um passo a mais") | o aviso da agenda (o horário) | são fatos diferentes, e não duplicata; nenhum dos dois substitui o outro |
 
 ## Complexity Tracking
 
@@ -237,3 +262,4 @@ são do usuário; nenhuma bloqueia a entrega A.
 |---|---|---|
 | Gatilho de coerência no `HorarioPublicado` | o `substitui` atravessa tabelas (a mesma inscrição, a mesma agenda) | só na aplicação, a cadeia de remarcações poderia apontar outra pessoa sem que o banco recusasse |
 | `marco_id` anulável no `Aviso` da `066` | a agenda é da Etapa, e não de um marco | um marco fictício seria dado falso numa tabela append-only |
+| `DocumentoDoAtoDaAgenda`, sétima tabela | os bytes do documento publicado, que o compositor não reproduz depois (`D-012`) | gerar sob demanda do conteúdo daria outro arquivo para o mesmo ato quando o compositor mudasse |

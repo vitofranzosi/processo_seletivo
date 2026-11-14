@@ -39,6 +39,8 @@ ETAPA_V6 = {
     "unfavorableOutcomeEffect": None,
     "absenceEffect": None,
     "deliberationRule": None,
+    # A admissão do vídeo do degrau 25 (166), `false`: nenhum Edital anterior admitia o vídeo.
+    "videoOption": False,
 }
 
 
