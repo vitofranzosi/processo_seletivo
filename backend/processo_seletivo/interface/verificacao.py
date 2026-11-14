@@ -1,9 +1,9 @@
 """As rotas da Mesa para o vídeo da verificação (166, FR-7128 a FR-7131; `contracts/rotas.md`).
 
 **Abrir é ato, e assistir é a entrega dele** (D-007): o `POST` confere o resumo, grava a abertura e
-registra um evento; o `<video>` pede os bytes com `Range`, sem evento. Só quem está alocado à Etapa e
-tem a Atribuição ativa da inscrição chega aqui — todo o resto responde como inexistente, inclusive a
-presidência sem Atribuição (FR-7129).
+registra um evento; o `<video>` pede os bytes com `Range`, sem evento. Só quem está alocado à Etapa
+e tem a Atribuição ativa da inscrição chega aqui — todo o resto responde como inexistente, inclusive
+a presidência sem Atribuição (FR-7129).
 
 **A chave não fecha a Mesa** (achado I1 do `/speckit-analyze`): os vídeos já recebidos continuam
 sendo analisados, porque o parecer sobre eles é ato do certame.
@@ -72,8 +72,8 @@ def video(request, edital_id, etapa_id, inscricao_id, abertura_id):
 def encaminhar(request, edital_id, etapa_id):
     """O encaminhamento à entrevista ao vivo, em dois passos (166, FR-7138, FR-7140; D-005).
 
-    A porta é a de consolidar — a gestão da comissão —, e o alcance aparece antes do ato: a lista das
-    inscrições que o vídeo não confirmou. **Sem contagem dos sentidos**: a presidência pode ser
+    A porta é a de consolidar — a gestão da comissão —, e o alcance aparece antes do ato: a lista
+    das inscrições que o vídeo não confirmou. **Sem contagem dos sentidos**: a presidência pode ser
     membro, e a entrevista ao vivo ainda vai ser dada às cegas (FR-7082 da `165`).
     """
     from processo_seletivo.interface.views import _etapa_para_distribuir

@@ -80,8 +80,8 @@ def pagina(request, inscricao_id, etapa_id):
             "teto_segundos": roteiro.TETO_SEGUNDOS,
             "limite_bytes": settings.VERIFICACAO_POR_VIDEO_LIMITE_BYTES,
             "parte_bytes": PARTE,
-            # A imagem de teste da prova de conceito, para verificar sem câmera e sem gravar
-            # ninguém (research T-007). Só no desenvolvimento, que é o único lugar onde a chave liga.
+            # A imagem de teste da prova de conceito, para verificar sem câmera e sem gravar ninguém
+            # (research T-007). Só no desenvolvimento, que é o único lugar onde a chave liga.
             "fonte_sintetica": settings.DEBUG,
             "rotas": _rotas(inscricao.id, etapa["id"]),
         },
@@ -141,8 +141,8 @@ def estado_do_envio(request, inscricao_id, etapa_id, envio_id):
 def parte(request, inscricao_id, etapa_id, envio_id):
     """Uma parte do envio, no corpo cru (research T-002).
 
-    O tamanho é conferido pelo `Content-Length` **antes** de ler o corpo: uma parte grande demais não
-    chega à memória.
+    O tamanho é conferido pelo `Content-Length` **antes** de ler o corpo: uma parte grande demais
+    não chega à memória.
     """
     try:
         declarado = int(request.headers.get("Content-Length") or 0)
@@ -198,7 +198,7 @@ def concluir(request, inscricao_id, etapa_id, envio_id):
 
 @require_GET
 def comprovante(request, inscricao_id, etapa_id):
-    """O comprovante do vídeo vigente; com `?abertura=`, o vídeo para assistir (FR-7123, FR-7127)."""
+    """O comprovante do vídeo vigente; com `?abertura=`, o vídeo a assistir (FR-7123)."""
     inscricao, etapa, situacao = envio.contexto_do_titular(
         identidade=_identidade(request), inscricao_id=inscricao_id, etapa_id=etapa_id
     )
@@ -207,9 +207,7 @@ def comprovante(request, inscricao_id, etapa_id):
     abertura_id = request.GET.get("abertura", "")
     fonte = ""
     if abertura_id and abertura.da_sessao(request, abertura_id):
-        fonte = reverse(
-            "portal:verificacao-video", args=[inscricao.id, etapa["id"], abertura_id]
-        )
+        fonte = reverse("portal:verificacao-video", args=[inscricao.id, etapa["id"], abertura_id])
     resposta = render(
         request,
         "portal/verificacao_comprovante.html",

@@ -1740,12 +1740,13 @@ def _coerencia_do_video(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     """A admissão do vídeo de cada Etapa, e o que ela exige (166, FR-7103, FR-7104, D-002).
 
     **O vídeo só confirma, e quem confirma é a deliberação** (R-11): sem a Etapa colegiada da `165`
-    não há regra a aplicar ao vídeo. Sem alcance, a ampla concorrência gravaria uma autodeclaração que
-    não fez; sem início e fim, a R-12 — não enviar não é ausência — não tem quando valer.
+    não há regra a aplicar ao vídeo. Sem alcance, a ampla concorrência gravaria uma autodeclaração
+    que não fez; sem início e fim, a R-12 — não enviar não é ausência — não tem quando valer.
 
-    **A chave só pesa na publicação.** Na Retificação o conteúdo inteiro é reconferido, e recusar ali
-    toda Etapa que já admitia o vídeo travaria a correção de um prazo só porque a chave foi desligada
-    depois; quem recusa a Retificação que **acrescenta** o vídeo sem a chave é `retificacoes.py`.
+    **A chave só pesa na publicação.** Na Retificação o conteúdo inteiro é reconferido, e recusar
+    ali toda Etapa que já admitia o vídeo travaria a correção de um prazo só porque a chave foi
+    desligada depois; quem recusa a Retificação que **acrescenta** o vídeo sem a chave é
+    `retificacoes.py`.
     """
     from django.conf import settings
 

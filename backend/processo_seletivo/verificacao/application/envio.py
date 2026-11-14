@@ -5,8 +5,8 @@ limite global (research T-002). Cada parte só é aceita no deslocamento que o s
 quem retoma pergunta o deslocamento, em vez de reenviar o que chegou.
 
 **A conclusão confere tudo de novo, no servidor** (Constituição, IV): o tamanho, a assinatura do
-contêiner, a duração contra o teto, as marcas contra a duração e o resumo contra o do aparelho. O que
-a página conferiu antes melhora a experiência, e não é fronteira.
+contêiner, a duração contra o teto, as marcas contra a duração e o resumo contra o do aparelho. O
+que a página conferiu antes melhora a experiência, e não é fronteira.
 
 **A titularidade e a disponibilidade são relidas a cada ato**, sob a trava da inscrição: o período
 pode ter acabado, a comissão pode ter aberto o vídeo, e a resposta precisa ser a de agora (FR-7152).
@@ -164,7 +164,15 @@ def _apagar(nome):
 
 
 def iniciar(
-    *, identidade, inscricao_id, etapa_id, tamanho, formato, duracao, marcas, roteiro_versao,
+    *,
+    identidade,
+    inscricao_id,
+    etapa_id,
+    tamanho,
+    formato,
+    duracao,
+    marcas,
+    roteiro_versao,
     maioridade,
 ):
     """Abre o envio; o anterior, incompleto, do mesmo titular para a mesma Etapa é descartado."""
@@ -362,7 +370,7 @@ def concluir(*, identidade, inscricao_id, etapa_id, envio_id, sha256, correlatio
 
 
 def _recusar_se_indisponivel_na_conclusao(situacao):
-    """Na conclusão vale a tolerância do período (FR-7126), e a troca continua barrada pela abertura."""
+    """Na conclusão vale a tolerância do período (FR-7126); a abertura continua barrando a troca."""
     if situacao.estado == disponibilidade.EM_ANALISE:
         raise _recusa(
             "ja_aberto",
@@ -376,7 +384,9 @@ def _recusar_se_indisponivel_na_conclusao(situacao):
             and disponibilidade.dentro_da_tolerancia(situacao)
         ):
             raise _recusa(
-                "indisponivel", "O envio do vídeo não está disponível para esta inscrição agora.", 409
+                "indisponivel",
+                "O envio do vídeo não está disponível para esta inscrição agora.",
+                409,
             )
     elif not disponibilidade.dentro_da_tolerancia(situacao):
         raise _recusa("indisponivel", "O período da verificação terminou.", 409)

@@ -19,7 +19,7 @@ def publicar(coluna) -> dict:
 
 
 def ler(valor) -> bool:
-    """O valor que a gravação do rascunho aceita: só `True` admite; `None`, ausência e `False`, não."""
+    """O valor que a gravação do rascunho aceita: só `True` admite; o resto, não."""
     return valor is True
 
 

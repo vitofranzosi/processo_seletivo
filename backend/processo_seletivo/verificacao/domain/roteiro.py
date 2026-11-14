@@ -40,9 +40,9 @@ PASSOS = (
     Passo(
         "frente",
         "De frente",
-        "Olhe para a câmera e diga o seu nome e a frase «Eu me autodeclaro pessoa preta» ou «pessoa "
-        "parda», como declarou na inscrição. Não diga o seu CPF. Se preferir, mostre a frase escrita "
-        "num papel, ou diga em Libras.",
+        "Olhe para a câmera e diga o seu nome e a frase «Eu me autodeclaro pessoa preta» ou "
+        "«pessoa parda», como declarou na inscrição. Não diga o seu CPF. Se preferir, mostre a "
+        "frase escrita num papel, ou diga em Libras.",
     ),
 )
 

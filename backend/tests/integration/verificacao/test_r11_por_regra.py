@@ -9,7 +9,7 @@ import itertools
 
 import pytest
 
-from processo_seletivo.resultados.domain.deliberacao import deliberar, DO_PUBLICADO
+from processo_seletivo.resultados.domain.deliberacao import DO_PUBLICADO, deliberar
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.verificacao.application import ganchos
 from tests.fixtures.deliberacao import concluir_pareceres, consolidar_na, distribuir_na_hetero
@@ -21,11 +21,15 @@ pytestmark = pytest.mark.django_db
 COMBINACOES = list(itertools.product(("FAVORAVEL", "DESFAVORAVEL"), repeat=3))
 
 
-@pytest.mark.parametrize("regra", ["MAJORITY", "UNANIMOUS_FOR_FAVORABLE", "UNANIMOUS_FOR_UNFAVORABLE"])
+@pytest.mark.parametrize(
+    "regra", ["MAJORITY", "UNANIMOUS_FOR_FAVORABLE", "UNANIMOUS_FOR_UNFAVORABLE"]
+)
 def test_nenhuma_combinacao_produz_nao_confirmada(
     raiz_de_arquivos, gestor, api_client, manager_headers, regra
 ):
-    seed = {"MAJORITY": 6620, "UNANIMOUS_FOR_FAVORABLE": 6621, "UNANIMOUS_FOR_UNFAVORABLE": 6622}[regra]
+    seed = {"MAJORITY": 6620, "UNANIMOUS_FOR_FAVORABLE": 6621, "UNANIMOUS_FOR_UNFAVORABLE": 6622}[
+        regra
+    ]
     cenario = montar_com_video(
         gestor, api_client, manager_headers, seed=seed, quantas=len(COMBINACOES), regra=regra
     )
@@ -34,7 +38,9 @@ def test_nenhuma_combinacao_produz_nao_confirmada(
         enviar_video(inscricao, cenario["hetero"])
         for subject in ("ana", "bruno", "carla"):
             abrir_como(cenario, subject, inscricao)
-        concluir_pareceres(cenario, inscricao, dict(zip(("ana", "bruno", "carla"), sentidos, strict=True)))
+        concluir_pareceres(
+            cenario, inscricao, dict(zip(("ana", "bruno", "carla"), sentidos, strict=True))
+        )
     declarado = consolidar_na(cenario, cenario["hetero"], cenario["inscricoes"], chave=f"c-{seed}")
     resultados = ResultadoEtapa.objects.filter(etapa_id=cenario["hetero"])
     assert not resultados.filter(sentido="DESFAVORAVEL").exists()

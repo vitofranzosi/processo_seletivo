@@ -95,7 +95,9 @@ def test_so_o_alocado_com_atribuicao_abre(cenario, quem):
     assert not AberturaDoVideo.objects.exists()
 
 
-def test_abrir_registra_um_evento_por_abertura_e_os_pedidos_nao_registram(cenario, client, seletor_ligado):
+def test_abrir_registra_um_evento_por_abertura_e_os_pedidos_nao_registram(
+    cenario, client, seletor_ligado
+):
     """SC-2372 e FR-7131, pelo canal da comissão: um evento; N pedidos com `Range`, nenhum."""
     maria = cenario["inscricoes"][0]
     edital, etapa = cenario["edital"], cenario["hetero"]
@@ -122,7 +124,8 @@ def test_abrir_registra_um_evento_por_abertura_e_os_pedidos_nao_registram(cenari
     assert client.get(rota, HTTP_RANGE=f"bytes={tamanho}-").status_code == 416
     assert RegistroAuditoria.objects.filter(operation=abertura.VISUALIZAR).count() == 1
     # A Mesa mostra o reprodutor e os rótulos do vídeo, e não oferece baixar.
-    mesa = client.get(f"{reverse('interface:mesa-inscricao', args=[edital.id, etapa, maria.id])}?abertura={aberta.id}")
+    pagina = reverse("interface:mesa-inscricao", args=[edital.id, etapa, maria.id])
+    mesa = client.get(f"{pagina}?abertura={aberta.id}")
     corpo = mesa.content.decode()
     assert "nodownload" in corpo
     assert "Confirmo" in corpo
@@ -233,7 +236,10 @@ def test_o_encaminhamento_reabre_e_a_entrevista_ao_vivo_pode_nao_confirmar(cenar
     pareceres_pelo_video(
         cenario, {"ana": "FAVORAVEL", "bruno": "DESFAVORAVEL", "carla": "FAVORAVEL"}
     )
-    assert [i.id for i in encaminhamento.a_encaminhar(edital=cenario["edital"], etapa_id=cenario["hetero"])] == [maria.id]
+    assert [
+        i.id
+        for i in encaminhamento.a_encaminhar(edital=cenario["edital"], etapa_id=cenario["hetero"])
+    ] == [maria.id]
     declarado = _encaminhar(cenario)
     assert declarado["feitas"] == 1, declarado
     registro = EncaminhamentoAoVivo.objects.get()
@@ -242,18 +248,32 @@ def test_o_encaminhamento_reabre_e_a_entrevista_ao_vivo_pode_nao_confirmar(cenar
     assert not Avaliacao.objects.filter(
         inscricao_id=maria.id, etapa_id=cenario["hetero"], estado=Avaliacao.Estado.CONCLUIDA
     ).exists()
-    assert ConclusaoAvaliacao.objects.filter(
-        avaliacao__inscricao_id=maria.id, avaliacao__etapa_id=cenario["hetero"]
-    ).count() == 3
+    assert (
+        ConclusaoAvaliacao.objects.filter(
+            avaliacao__inscricao_id=maria.id, avaliacao__etapa_id=cenario["hetero"]
+        ).count()
+        == 3
+    )
     assert not disponibilidade.inscricao_em_modo_video(
         edital=cenario["edital"], etapa_id=cenario["hetero"], inscricao_id=maria.id
     )
     # O ao vivo: sem exigir a abertura do vídeo, e o desfavorável vira Resultado.
-    for subject, sentido in {"ana": "DESFAVORAVEL", "bruno": "DESFAVORAVEL", "carla": "FAVORAVEL"}.items():
+    for subject, sentido in {
+        "ana": "DESFAVORAVEL",
+        "bruno": "DESFAVORAVEL",
+        "carla": "FAVORAVEL",
+    }.items():
         revisao = Avaliacao.objects.get(
             inscricao_id=maria.id, etapa_id=cenario["hetero"], identity_subject=subject
         ).revision
-        concluir_como(na_hetero(cenario), subject, maria, sentido=sentido, parecer=f"Ao vivo: {sentido}", revisao=revisao)
+        concluir_como(
+            na_hetero(cenario),
+            subject,
+            maria,
+            sentido=sentido,
+            parecer=f"Ao vivo: {sentido}",
+            revisao=revisao,
+        )
     consolidar_na(cenario, cenario["hetero"], [maria], chave="c-6610-vivo")
     resultado = ResultadoEtapa.objects.get(etapa_id=cenario["hetero"], inscricao=maria)
     assert resultado.sentido == "DESFAVORAVEL"

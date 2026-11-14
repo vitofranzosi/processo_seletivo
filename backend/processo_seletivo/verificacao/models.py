@@ -5,8 +5,8 @@ outros quatro — o vídeo, a abertura, o encaminhamento e a eliminação — s�
 camadas de sempre: `save` só cria, o gatilho recusa `UPDATE` e `DELETE`, e o papel de runtime não
 tem o privilégio (`seguranca/papeis.py::TABELAS_APPEND_ONLY`).
 
-**Nenhum guarda o conteúdo do vídeo.** O arquivo vive no armazenamento privado; aqui ficam o caminho,
-o resumo e o que a conferência técnica leu do contêiner (FR-7121, FR-7151).
+**Nenhum guarda o conteúdo do vídeo.** O arquivo vive no armazenamento privado; aqui ficam o
+caminho, o resumo e o que a conferência técnica leu do contêiner (FR-7121, FR-7151).
 """
 
 import uuid
@@ -37,9 +37,9 @@ class _SoCria(models.Model):
 class EnvioDoVideo(models.Model):
     """O envio em partes em andamento, de um titular para uma Etapa (FR-7118, FR-7125).
 
-    **Transitório e mutável**: o deslocamento recebido muda a cada parte, e a linha some quando o envio
-    conclui ou quando outro envio a substitui. Registrar cada parte em linha imutável guardaria o
-    rastro de um upload, que não é ato (plano, *Complexity Tracking*).
+    **Transitório e mutável**: o deslocamento recebido muda a cada parte, e a linha some quando o
+    envio conclui ou quando outro envio a substitui. Registrar cada parte em linha imutável
+    guardaria o rastro de um upload, que não é ato (plano, *Complexity Tracking*).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -68,14 +68,17 @@ class EnvioDoVideo(models.Model):
             models.CheckConstraint(condition=Q(declarou_maioridade=True), name="ck_envio_maior"),
         ]
 
+    def __str__(self):
+        return f"Envio {self.id} ({self.recebido} de {self.tamanho} bytes)"
+
 
 class VideoDaVerificacao(_SoCria):
     """O vídeo recebido. O `id` é o número do comprovante (FR-7121, FR-7123).
 
-    **Vigente** é o que nenhum outro substitui. A troca antes da primeira abertura da comissão cria um
-    vídeo novo que aponta o anterior em `substitui`, e os dois continuam registrados (FR-7124). A
-    unicidade de `substitui` impede que duas trocas concorrentes substituam o mesmo vídeo; o primeiro
-    vídeo é único pela trava da inscrição na conclusão do envio (FR-7152).
+    **Vigente** é o que nenhum outro substitui. A troca antes da primeira abertura da comissão cria
+    um vídeo novo que aponta o anterior em `substitui`, e os dois continuam registrados (FR-7124). A
+    unicidade de `substitui` impede que duas trocas concorrentes substituam o mesmo vídeo; o
+    primeiro vídeo é único pela trava da inscrição na conclusão do envio (FR-7152).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -101,15 +104,20 @@ class VideoDaVerificacao(_SoCria):
         indexes = [models.Index(fields=["edital", "etapa_id", "inscricao"])]
         constraints = [
             models.CheckConstraint(condition=Q(declarou_maioridade=True), name="ck_video_maior"),
-            models.CheckConstraint(condition=Q(sha256__regex=r"^[0-9a-f]{64}$"), name="ck_video_sha"),
+            models.CheckConstraint(
+                condition=Q(sha256__regex=r"^[0-9a-f]{64}$"), name="ck_video_sha"
+            ),
         ]
+
+    def __str__(self):
+        return f"Vídeo {self.id}"
 
 
 class AberturaDoVideo(_SoCria):
     """Alguém abriu o vídeo (FR-7130). Só a abertura da comissão encerra a troca (FR-7124).
 
-    O `id` é o identificador que a sessão guarda e que os pedidos com `Range` apresentam: a abertura é
-    o ato, e os pedidos são só a entrega dele (D-007).
+    O `id` é o identificador que a sessão guarda e que os pedidos com `Range` apresentam: a abertura
+    é o ato, e os pedidos são só a entrega dele (D-007).
     """
 
     class Papel(models.TextChoices):
@@ -117,7 +125,9 @@ class AberturaDoVideo(_SoCria):
         TITULAR = "TITULAR"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    video = models.ForeignKey(VideoDaVerificacao, on_delete=models.PROTECT, related_name="aberturas")
+    video = models.ForeignKey(
+        VideoDaVerificacao, on_delete=models.PROTECT, related_name="aberturas"
+    )
     pessoa = models.CharField(max_length=255)
     papel = models.CharField(max_length=20, choices=Papel.choices)
     aberta_em = models.DateTimeField()
@@ -126,6 +136,9 @@ class AberturaDoVideo(_SoCria):
         db_table = "verificacao_abertura_do_video"
         verbose_name = "A abertura do vídeo"
         indexes = [models.Index(fields=["video", "papel"])]
+
+    def __str__(self):
+        return f"Abertura de {self.video_id} por {self.pessoa}"
 
 
 class EncaminhamentoAoVivo(_SoCria):
@@ -153,12 +166,15 @@ class EncaminhamentoAoVivo(_SoCria):
             )
         ]
 
+    def __str__(self):
+        return f"Encaminhamento de {self.inscricao_id}"
+
 
 class EliminacaoDoVideo(_SoCria):
     """O arquivo do vídeo foi eliminado pelo prazo de retenção (FR-7148).
 
-    O vídeo continua: o resumo, o tamanho, a duração, as marcas e as aberturas são a prova do ato, e o
-    arquivo era só a evidência (R-23 do estudo).
+    O vídeo continua: o resumo, o tamanho, a duração, as marcas e as aberturas são a prova do ato, e
+    o arquivo era só a evidência (R-23 do estudo).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -172,3 +188,6 @@ class EliminacaoDoVideo(_SoCria):
     class Meta:
         db_table = "verificacao_eliminacao_do_video"
         verbose_name = "A eliminação do vídeo"
+
+    def __str__(self):
+        return f"Eliminação de {self.video_id}"

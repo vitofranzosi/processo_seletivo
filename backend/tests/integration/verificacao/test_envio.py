@@ -81,9 +81,7 @@ def test_a_parte_fora_do_deslocamento_responde_onde_retomar(cenario):
     assert fora.value.deslocamento == 10_000
     assert envio.consultar(**comum).recebido == 10_000
     envio.receber_parte(deslocamento=10_000, dados=dados[10_000:], **comum)
-    video = envio.concluir(
-        sha256=videos_sinteticos.resumo(dados), correlation_id="t", **comum
-    )
+    video = envio.concluir(sha256=videos_sinteticos.resumo(dados), correlation_id="t", **comum)
     assert video.sha256 == videos_sinteticos.resumo(dados)
 
 
@@ -240,7 +238,11 @@ def test_o_envio_pelas_rotas_do_portal(cenario, client):
     """As rotas JSON do portal, com a sessão do titular, chegam ao comprovante."""
     maria = cenario["inscricoes"][0]
     fim, _rotas = enviar_pelo_portal(
-        client, maria, cenario["hetero"], dados=videos_sinteticos.mp4(5.0, corpo=40_000), parte=9_000
+        client,
+        maria,
+        cenario["hetero"],
+        dados=videos_sinteticos.mp4(5.0, corpo=40_000),
+        parte=9_000,
     )
     assert fim.status_code == 201, fim.content
     assert fim.json()["comprovante"].endswith("/comprovante")

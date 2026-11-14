@@ -34,11 +34,11 @@ from processo_seletivo.editais.models.secoes import SecaoEdital
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.domain import deliberacao, efeito
-from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 
 def _identidades_aninhadas_alheias(profiles):

@@ -2,8 +2,8 @@
 
 Sem `Range`, o `<video>` do Safari não avança nem volta, e o de qualquer navegador baixa o arquivo
 inteiro antes de tocar. A entrega **não registra** e **não confere o resumo**: as duas coisas são da
-abertura, que acontece uma vez (D-007, T-006). Ela só serve os bytes de um arquivo cujo acesso já foi
-decidido.
+abertura, que acontece uma vez (D-007, T-006). Ela só serve os bytes de um arquivo cujo acesso já
+foi decidido.
 """
 
 import os
@@ -47,8 +47,8 @@ def entregar(request, *, caminho, formato):
         resposta["Content-Range"] = f"bytes */{tamanho}"
         return _cabecalhos(resposta, formato)
     if pedido is None:
-        # O arquivo inteiro pelo mesmo gerador das fatias, e não por `FileResponse`: o gerador fecha o
-        # arquivo ao terminar, sem depender de quem fecha a resposta.
+        # O arquivo inteiro pelo mesmo gerador das fatias, e não por `FileResponse`: o gerador fecha
+        # o arquivo ao terminar, sem depender de quem fecha a resposta.
         resposta = StreamingHttpResponse(_fatias(caminho, 0, tamanho - 1))
         resposta["Content-Length"] = str(tamanho)
         return _cabecalhos(resposta, formato)

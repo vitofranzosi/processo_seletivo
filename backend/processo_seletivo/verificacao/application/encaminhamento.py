@@ -22,8 +22,8 @@ from processo_seletivo.verificacao.models import EncaminhamentoAoVivo
 
 ENCAMINHAR = "ENCAMINHAR_A_ENTREVISTA_AO_VIVO"
 MOTIVO_DA_REABERTURA = (
-    "Encaminhada à entrevista ao vivo: a deliberação pelo vídeo não confirmou a autodeclaração, e o "
-    "vídeo só confirma (R-11)."
+    "Encaminhada à entrevista ao vivo: a deliberação pelo vídeo não confirmou a autodeclaração, "
+    "e o vídeo só confirma (R-11)."
 )
 NAO_ENCAMINHAVEL = "esta inscrição não está entre as que o vídeo não confirmou"
 DUPLICADO = "esta inscrição já foi encaminhada à entrevista ao vivo"
@@ -57,8 +57,9 @@ def a_encaminhar(*, edital, etapa_id) -> list:
 def encaminhar(
     *, actor, processo_id, edital_id, etapa_id, inscricao_ids, idempotency_key, correlation_id
 ):
-    """Encaminha as inscrições marcadas, uma transação por inscrição; declara o que ficou de fora."""
+    """Encaminha as inscrições marcadas, uma transação por inscrição, e declara as recusadas."""
     from processo_seletivo.avaliacoes.application.avaliacao import reabrir
+    from processo_seletivo.avaliacoes.application.trilha import auditar
     from processo_seletivo.avaliacoes.models import Avaliacao
     from processo_seletivo.comissoes.application import comando_de_comissao
     from processo_seletivo.comissoes.application.comissao import identificador
@@ -67,7 +68,6 @@ def encaminhar(
         _edital_do_processo,
         _plano_do_lote,
     )
-    from processo_seletivo.avaliacoes.application.trilha import auditar
 
     ids = [identificador(item) for item in inscricao_ids]
     if not ids:

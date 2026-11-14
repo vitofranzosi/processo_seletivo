@@ -1,4 +1,4 @@
-"""A composição admite o vídeo, e sem a chave diz por que não (166, US1, FR-7102, FR-7104, FR-7106)."""
+"""A composição admite o vídeo, e sem a chave diz por que não (166, US1, FR-7102 a FR-7106)."""
 
 import pytest
 
@@ -54,6 +54,8 @@ def test_sem_a_chave_o_campo_aparece_desabilitado_com_a_razao(client, elaborando
 
 
 def test_a_revisao_diz_a_admissao():
-    linhas = linhas_da_revisao({"name": "Hetero", "videoOption": True}, {"stages": [], "schedule": []})
+    linhas = linhas_da_revisao(
+        {"name": "Hetero", "videoOption": True}, {"stages": [], "schedule": []}
+    )
     assert "Vídeo" in repr(linhas)
     assert "as duas formas valem igual" in repr(linhas)

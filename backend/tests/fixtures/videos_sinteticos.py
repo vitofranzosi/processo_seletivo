@@ -1,8 +1,8 @@
 """Vídeos sintéticos para a suíte da verificação por vídeo (166, research T-007).
 
 **Nenhum vídeo real, e nenhuma imagem**: só os contêineres, montados à mão — as caixas do MP4 e os
-elementos do WebM que a conferência técnica lê, e um corpo de bytes sem significado no lugar da mídia.
-É o suficiente para a assinatura, a duração, o tamanho e o resumo; e a suíte não precisa de
+elementos do WebM que a conferência técnica lê, e um corpo de bytes sem significado no lugar da
+mídia. É o suficiente para a assinatura, a duração, o tamanho e o resumo; e a suíte não precisa de
 codificador nem de amostra gravada.
 """
 
@@ -26,7 +26,9 @@ def mp4(duracao=4.8, *, escala=1000, fragmentado=False, corpo=4096, moov_no_fim=
     )
     filhos = mvhd
     if fragmentado:
-        filhos += _caixa(b"mvex", _caixa(b"mehd", b"\x00\x00\x00\x00" + struct.pack(">I", unidades)))
+        filhos += _caixa(
+            b"mvex", _caixa(b"mehd", b"\x00\x00\x00\x00" + struct.pack(">I", unidades))
+        )
     moov = _caixa(b"moov", filhos)
     mdat = _caixa(b"mdat", bytes((i * 7) % 251 for i in range(corpo)))
     return ftyp + (mdat + moov if moov_no_fim else moov + mdat)

@@ -64,8 +64,8 @@ def _resumo(video) -> str | None:
 def _conferir_integridade(video, *, actor, permission, aggregate, correlation_id):
     """A cópia no disco é a que foi recebida; senão, o fato vai à trilha e a entrega é recusada.
 
-    O evento é gravado **fora** da transação do ato, que a recusa desfaz: é o mesmo cuidado da entrega
-    mediada de hoje, em que a divergência fica registrada mesmo sem abertura.
+    O evento é gravado **fora** da transação do ato, que a recusa desfaz: é o mesmo cuidado da
+    entrega mediada de hoje, em que a divergência fica registrada mesmo sem abertura.
     """
     from django.utils import timezone
 
@@ -183,7 +183,10 @@ def abrir_pelo_titular(request, *, identidade, inscricao_id, etapa_id, correlati
     with transaction.atomic():
         agora = timezone.now()
         abertura = AberturaDoVideo.objects.create(
-            video=video, pessoa=identidade.subject, papel=AberturaDoVideo.Papel.TITULAR, aberta_em=agora
+            video=video,
+            pessoa=identidade.subject,
+            papel=AberturaDoVideo.Papel.TITULAR,
+            aberta_em=agora,
         )
         record_event(
             actor=ator,

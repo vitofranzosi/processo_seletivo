@@ -96,7 +96,6 @@ from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.portal import leitura, obrigacoes
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal import situacao as situacao_da_inscricao
-from processo_seletivo.verificacao.application import disponibilidade as verificacao_por_video
 from processo_seletivo.portal.arquivos import entregar_ao_titular
 from processo_seletivo.processos.application.selectors import desfechos
 from processo_seletivo.publicacoes.application import selectors
@@ -123,6 +122,7 @@ from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
 from processo_seletivo.unidades.application import identificacao
+from processo_seletivo.verificacao.application import disponibilidade as verificacao_por_video
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
 LIMITE_DO_TELEFONE = 30
@@ -2084,8 +2084,8 @@ def acompanhamento(request, inscricao_id):
         {
             "inscricao": registro,
             # **A verificação por vídeo** (166, FR-7145): o acesso à página, e não o degrau da
-            # situação, que é da entrega 4. Sem Etapa que admita o vídeo no conteúdo já lido, nenhuma
-            # consulta a mais.
+            # situação, que é da entrega 4. Sem Etapa que admita o vídeo no conteúdo já lido,
+            # nenhuma consulta a mais.
             "verificacoes": verificacao_por_video.situacoes_do_titular(
                 registro, conteudo=versao.content
             ),

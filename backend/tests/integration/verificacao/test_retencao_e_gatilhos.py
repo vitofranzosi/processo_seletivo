@@ -1,4 +1,4 @@
-"""A retenção do arquivo (166, US6, FR-7146 a FR-7149, SC-2375) e as tabelas append-only (FR-7151)."""
+"""A retenção do arquivo (166, US6, FR-7146 a FR-7149, SC-2375) e o append-only (FR-7151)."""
 
 import os
 from datetime import timedelta
@@ -46,7 +46,9 @@ def _encerrar(edital, ha_dias):
 def test_sem_prazo_o_comando_recusa_e_elimina_zero(cenario):
     """SC-2375: P-10 aberta, nada sai."""
     with pytest.raises(CommandError, match="P-10"):
-        call_command("eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True)
+        call_command(
+            "eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True
+        )
     assert not EliminacaoDoVideo.objects.exists()
     assert os.path.exists(envio.caminho(cenario["video"].arquivo))
 
@@ -54,14 +56,18 @@ def test_sem_prazo_o_comando_recusa_e_elimina_zero(cenario):
 def test_edital_nao_encerrado_recusa(cenario, settings):
     settings.VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = 30
     with pytest.raises(CommandError, match="não está encerrado"):
-        call_command("eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True)
+        call_command(
+            "eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True
+        )
 
 
 def test_dentro_do_prazo_diz_a_data(cenario, settings):
     settings.VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = 30
     _encerrar(cenario["edital"], 10)
     with pytest.raises(CommandError, match="só cabe a partir de"):
-        call_command("eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True)
+        call_command(
+            "eliminar_videos_da_verificacao", edital=str(cenario["edital"].id), confirmar=True
+        )
 
 
 def test_sem_confirmar_so_lista(cenario, settings, capsys):

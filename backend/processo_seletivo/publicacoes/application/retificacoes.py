@@ -625,8 +625,8 @@ def _recusar_reducao_abaixo_das_conclusoes(edital, base, content):
 def _recusar_video_sem_protocolo(base, content):
     """A Retificação que **acrescenta** o vídeo a uma Etapa exige a chave (166, FR-7104).
 
-    Só o acréscimo: a Etapa que já admitia o vídeo continua Retificável com a chave desligada, porque
-    o vídeo já recebido continua sendo analisado (achado I1 do `/speckit-analyze`).
+    Só o acréscimo: a Etapa que já admitia o vídeo continua Retificável com a chave desligada,
+    porque o vídeo já recebido continua sendo analisado (achado I1 do `/speckit-analyze`).
     """
     from django.conf import settings
 
@@ -640,8 +640,8 @@ def _recusar_video_sem_protocolo(base, content):
             continue
         raise DomainError(
             "video_sem_protocolo",
-            f"A Etapa «{etapa.get('name') or ''}» passaria a admitir o vídeo, mas o vídeo depende de "
-            "protocolo institucional que ainda não existe.",
+            f"A Etapa «{etapa.get('name') or ''}» passaria a admitir o vídeo, mas o vídeo "
+            "depende de protocolo institucional que ainda não existe.",
             422,
         )
 
@@ -663,11 +663,12 @@ def _recusar_video_retirado_apos_recebido(edital, base, content):
         if videos_recebidos(edital=edital, etapa_id=etapa.get("id")):
             raise DomainError(
                 "video_ja_recebido",
-                f"A Etapa «{etapa.get('name') or ''}» já recebeu vídeo, e deixar de admiti-lo agora "
-                "tiraria o meio de quem o usou.",
+                f"A Etapa «{etapa.get('name') or ''}» já recebeu vídeo, e deixar de admiti-lo "
+                "agora tiraria o meio de quem o usou.",
                 422,
             )
-    # A Etapa removida inteira pela Retificação cai na recusa de Etapa com Atribuição, que já existe.
+    # A Etapa removida inteira pela Retificação cai na recusa de Etapa com Atribuição, que já
+    # existe.
 
 
 def _replace_changes(retificacao, changes, base_content):

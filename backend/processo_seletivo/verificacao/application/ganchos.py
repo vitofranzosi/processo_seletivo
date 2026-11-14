@@ -1,8 +1,8 @@
 """Os três pontos em que as apps existentes perguntam à verificação por vídeo (166, T-001).
 
 A Avaliação, a consolidação e o recurso **não** dependem desta app: chamam estas funções por
-importação local, e cada uma responde de graça quando a Etapa não admite o vídeo — nenhuma consulta a
-mais na Etapa sem vídeo, que é toda Etapa de hoje.
+importação local, e cada uma responde de graça quando a Etapa não admite o vídeo — nenhuma consulta
+a mais na Etapa sem vídeo, que é toda Etapa de hoje.
 """
 
 from processo_seletivo.avaliacoes.domain.formas import Sentido
@@ -11,8 +11,8 @@ from processo_seletivo.verificacao.application import abertura, disponibilidade
 from processo_seletivo.verificacao.domain import admissao
 
 # A frase da conferência para a inscrição que o vídeo não confirmou (FR-7138). **Sem contagem**: a
-# conferência a mostra à presidência, que pode ser membro, e a contagem diria como os colegas votaram
-# antes da entrevista ao vivo que eles ainda vão dar (D-005).
+# conferência a mostra à presidência, que pode ser membro, e a contagem diria como os colegas
+# votaram antes da entrevista ao vivo que eles ainda vão dar (D-005).
 ENCAMINHAR_AO_VIVO = "o vídeo não confirmou; encaminhe à entrevista ao vivo"
 
 
@@ -53,9 +53,9 @@ def em_modo_video_na_selecao(etapa, inscricoes) -> set:
 def recusar_desfavoravel_pelo_video(*, edital, etapa_id, inscricao_id, sentido):
     """Nenhum caminho grava Resultado desfavorável sobre inscrição em modo vídeo (FR-7139, R-11).
 
-    É a garantia que dá segurança jurídica ao experimento: ninguém perde a reserva sem ter sido visto
-    ao vivo. O plano da consolidação já separa estas inscrições; esta recusa cobre a chamada direta e a
-    correção fixada do recurso.
+    É a garantia que dá segurança jurídica ao experimento: ninguém perde a reserva sem ter sido
+    visto ao vivo. O plano da consolidação já separa estas inscrições; esta recusa cobre a chamada
+    direta e a correção fixada do recurso.
     """
     if str(sentido) != Sentido.DESFAVORAVEL:
         return

@@ -247,12 +247,10 @@ def _planejar(etapa, panorama, inscricoes, conteudo=None):
                 sentidos=tuple(str(item.sentido) for item in conclusoes),
                 pareceres=tuple(item.avaliacao_id for item in conclusoes),
             )
-            if (
-                inscricao.id in pelo_video
-                and conclusao.sentido == str(Sentido.DESFAVORAVEL)
-            ):
+            if inscricao.id in pelo_video and conclusao.sentido == str(Sentido.DESFAVORAVEL):
                 # **O vídeo só confirma** (166, R-11, FR-7138): a deliberação pelo vídeo que não
-                # confirma não vira Resultado — encaminha à entrevista ao vivo, por ato da presidência.
+                # confirma não vira Resultado — encaminha à entrevista ao vivo, por ato da
+                # presidência.
                 recusas.append(Recusa(inscricao, ganchos.ENCAMINHAR_AO_VIVO))
                 continue
         else:

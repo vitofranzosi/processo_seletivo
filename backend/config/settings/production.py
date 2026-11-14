@@ -43,6 +43,7 @@ from .base import (
     REST_FRAMEWORK,
     SECRET_KEY,
     SORTEIO_FONTE_DE_DEMONSTRACAO,
+    VERIFICACAO_POR_VIDEO,
 )
 
 # Módulo inteiro, não uma classe: qualquer adaptador de desenvolvimento que nasça ao lado do

@@ -258,8 +258,6 @@ from processo_seletivo.requerimentos.domain import nomes as nomes_do_requeriment
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
-from processo_seletivo.verificacao.application import mesa as verificacao_na_mesa
-from processo_seletivo.verificacao.application.ganchos import ENCAMINHAR_AO_VIVO
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.seguranca.application.authorization import (
@@ -281,6 +279,8 @@ from processo_seletivo.unidades.application.autoridades import encerrar as encer
 from processo_seletivo.unidades.domain import vigencia as vigencia_de_autoridade
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 from processo_seletivo.unidades.domain.rotulos import rotulo_da_autoridade
+from processo_seletivo.verificacao.application import mesa as verificacao_na_mesa
+from processo_seletivo.verificacao.application.ganchos import ENCAMINHAR_AO_VIVO
 
 # `ACOES_POR_SITUACAO` foi removido: era a segunda fonte de verdade que FR-023 proíbe, e ela **já
 # divergia**. O mapa não conhecia `Cancelar`, então um gestor via a ação no detalhe do Edital e a

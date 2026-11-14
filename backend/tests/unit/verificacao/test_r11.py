@@ -1,8 +1,9 @@
 """A tabela da R-11 com cinco pareceres (166, SC-2373): o plano nunca leva o desfavorável ao ato.
 
-O ramo da R-11 em `consolidacao._planejar` encaminha toda deliberação pelo vídeo que não é favorável.
-Aqui, sobre a mesma função de deliberação da `165`, todas as 32 combinações de cinco pareceres nas
-três regras: o que não é favorável é exatamente o que o plano encaminha, e não há terceira saída.
+O ramo da R-11 em `consolidacao._planejar` encaminha toda deliberação pelo vídeo que não é
+favorável. Aqui, sobre a mesma função de deliberação da `165`, todas as 32 combinações de cinco
+pareceres nas três regras: o que não é favorável é exatamente o que o plano encaminha, e não há
+terceira saída.
 """
 
 import itertools

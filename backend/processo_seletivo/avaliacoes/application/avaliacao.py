@@ -299,9 +299,9 @@ def concluir(
         if forma == Forma.DECISORIA:
             escolha = regras.normalizar_sentido(sentido, exigir=True)
             valor = None
-            # **A verificação por vídeo** (166, FR-7134): em modo vídeo, o parecer é sobre o vídeo, e
-            # exige tê-lo aberto. Por importação local: a Avaliação não depende da app do vídeo, e a
-            # Etapa que não o admite responde sem consulta.
+            # **A verificação por vídeo** (166, FR-7134): em modo vídeo, o parecer é sobre o
+            # vídeo, e exige tê-lo aberto. Por importação local: a Avaliação não depende da app do
+            # vídeo, e a Etapa que não o admite responde sem consulta.
             from processo_seletivo.verificacao.application import ganchos
 
             ganchos.exigir_abertura_para_concluir(

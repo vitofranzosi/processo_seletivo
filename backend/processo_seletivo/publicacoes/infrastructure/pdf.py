@@ -45,8 +45,8 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
 from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
-from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56

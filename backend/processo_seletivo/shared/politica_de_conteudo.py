@@ -52,18 +52,19 @@ POLITICA = "; ".join(f"{diretiva} {valor}" for diretiva, valor in DIRETIVAS)
 
 CABECALHO = "Content-Security-Policy"
 
-# **A única exceção do sistema: a página de gravação do vídeo** (166, FR-7117, research T-004). A
-# revisão local toca a tomada por um endereço `blob:`, que `default-src 'self'` recusa em silêncio — a
-# prova de conceito de 13/11 mostrou a linha necessária e suficiente (V-5, A-1). A reprodução pela
-# comissão e pelo titular é servida da própria origem e cabe no `'self'`; por isso a exceção não vai à
-# política comum, e só a view da gravação a declara, pondo o cabeçalho antes do middleware.
+# **A única exceção do sistema: a página de gravação do vídeo** (166, FR-7117, research T-004).
+# A revisão local toca a tomada por um endereço `blob:`, que `default-src 'self'` recusa em
+# silêncio — a prova de conceito de 13/11 mostrou a linha necessária e suficiente (V-5, A-1). A
+# reprodução pela comissão e pelo titular é servida da própria origem e cabe no `'self'`; por isso
+# a exceção não vai à política comum, e só a view da gravação a declara, pondo o cabeçalho antes
+# do middleware.
 MIDIA_LOCAL = ("media-src", "'self' blob:")
 POLITICA_COM_MIDIA_LOCAL = "; ".join(
     f"{diretiva} {valor}" for diretiva, valor in (*DIRETIVAS, MIDIA_LOCAL)
 )
-# A câmera e o microfone, também só na gravação. O projeto não declara `Permissions-Policy` em lugar
-# nenhum, e esta não abre nada que o navegador já não daria à própria origem: ela **fecha** o acesso a
-# moldura de outra origem e nomeia, na resposta, o que a página pede.
+# A câmera e o microfone, também só na gravação. O projeto não declara `Permissions-Policy` em
+# lugar nenhum, e esta não abre nada que o navegador já não daria à própria origem: ela **fecha**
+# o acesso a moldura de outra origem e nomeia, na resposta, o que a página pede.
 PERMISSOES = "Permissions-Policy"
 PERMISSOES_DA_GRAVACAO = "camera=(self), microphone=(self)"
 
@@ -73,6 +74,7 @@ def com_midia_local(resposta):
     resposta[CABECALHO] = POLITICA_COM_MIDIA_LOCAL
     resposta[PERMISSOES] = PERMISSOES_DA_GRAVACAO
     return resposta
+
 
 # O `<meta>` que os modelos de depuração do Django (`technical_404.html`, `technical_500.html`)
 # trazem no `<head>`, e que os modelos do sistema não trazem.

@@ -154,11 +154,7 @@ def _ha_resultado(edital, etapa_id, inscricao_id) -> bool:
 
 
 def etapas_que_admitem(conteudo) -> list[dict]:
-    return [
-        etapa
-        for etapa in (conteudo or {}).get("stages") or []
-        if admissao.admite_video(etapa)
-    ]
+    return [etapa for etapa in (conteudo or {}).get("stages") or [] if admissao.admite_video(etapa)]
 
 
 def situacao(*, inscricao, etapa, conteudo, exigir_chave=True) -> Situacao | None:
@@ -219,7 +215,9 @@ def dentro_da_tolerancia(situacao_) -> bool:
     """O envio já iniciado ainda pode concluir (FR-7126)."""
     agora = timezone.now()
     return bool(
-        situacao_.inicio and situacao_.fim and situacao_.inicio <= agora <= situacao_.fim + TOLERANCIA
+        situacao_.inicio
+        and situacao_.fim
+        and situacao_.inicio <= agora <= situacao_.fim + TOLERANCIA
     )
 
 

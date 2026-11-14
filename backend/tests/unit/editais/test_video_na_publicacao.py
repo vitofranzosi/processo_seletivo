@@ -15,13 +15,24 @@ from processo_seletivo.verificacao.domain import admissao
 from tests.unit.editais.test_alcance_da_etapa import _conteudo, _etapa
 
 EVENTO = "00000000-0000-0000-0000-000000000403"
-CODIGOS = ("video_sem_protocolo", "video_fora_da_colegiada", "video_sem_alcance", "video_sem_periodo")
+CODIGOS = (
+    "video_sem_protocolo",
+    "video_fora_da_colegiada",
+    "video_sem_alcance",
+    "video_sem_periodo",
+)
 
 
 def _com_periodo(etapa, *, inicio="2026-12-01T08:00:00-03:00", fim="2026-12-05T18:00:00-03:00"):
     conteudo = _conteudo(etapa=etapa)
     conteudo["schedule"] = [
-        {"id": EVENTO, "type": "VERIFICACAO", "description": "Verificação", "startAt": inicio, "endAt": fim}
+        {
+            "id": EVENTO,
+            "type": "VERIFICACAO",
+            "description": "Verificação",
+            "startAt": inicio,
+            "endAt": fim,
+        }
     ]
     return conteudo
 
@@ -58,7 +69,7 @@ def test_sem_a_chave_a_publicacao_e_impedida(settings):
 
 
 def test_sem_a_chave_a_retificacao_nao_recusa_o_que_ja_admitia(settings):
-    """Achado I1: quem recusa o acréscimo na Retificação é `retificacoes.py`, que sabe o que mudou."""
+    """Achado I1: quem recusa o acréscimo na Retificação é `retificacoes.py`, que vê a mudança."""
     settings.VERIFICACAO_POR_VIDEO = False
     assert _codigos(_com_periodo(_video()), ato=ATO_DE_RETIFICACAO) == []
 

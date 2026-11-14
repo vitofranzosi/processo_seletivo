@@ -1,4 +1,4 @@
-"""Elimina os arquivos de vídeo de um Edital encerrado, pelo prazo de retenção (166, FR-7146 a FR-7149).
+"""Elimina os vídeos de um Edital encerrado, pelo prazo de retenção (166, FR-7146 a FR-7149).
 
 **Sem o prazo, recusa** (P-10): `VERIFICACAO_POR_VIDEO_RETENCAO_DIAS` não tem valor padrão. Com ele,
 o comando exige o Edital e, para eliminar, `--confirmar`; sem a confirmação, só lista. O ator é
@@ -20,9 +20,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--edital", required=True, help="a identidade do Edital")
-        parser.add_argument(
-            "--confirmar", action="store_true", help="elimina; sem ela, só lista"
-        )
+        parser.add_argument("--confirmar", action="store_true", help="elimina; sem ela, só lista")
 
     def handle(self, *args, **opcoes):
         edital = Edital.objects.filter(pk=opcoes["edital"]).first()

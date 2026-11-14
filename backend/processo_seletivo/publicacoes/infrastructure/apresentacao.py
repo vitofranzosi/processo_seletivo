@@ -38,8 +38,8 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure import pdf as composicao_pdf
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
-from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 # Natureza dos itens numerados que só esta apresentação tem (R-003): a subseção textual (membro) e
 # a gerada (requisitos, atribuições, regras de classificação, dados do sorteio).

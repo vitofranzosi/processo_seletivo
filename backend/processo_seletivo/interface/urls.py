@@ -520,8 +520,8 @@ urlpatterns = [
         views.consolidar_resultados,
         name="consolidar-resultados",
     ),
-    # O encaminhamento à entrevista ao vivo (166): o vídeo não confirmou, e só confirma (R-11). Pende
-    # da consolidação, porque é ela que separa quem encaminhar, e a porta é a mesma.
+    # O encaminhamento à entrevista ao vivo (166): o vídeo não confirmou, e só confirma (R-11).
+    # Pende da consolidação, porque é ela que separa quem encaminhar, e a porta é a mesma.
     path(
         "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/encaminhar",
         verificacao.encaminhar,
@@ -914,8 +914,7 @@ urlpatterns = [
     # O vídeo da verificação na Mesa (166): abrir é ato registrado; assistir é a entrega dele, com
     # `Range` e sem evento (D-007). A autorização é a da Mesa: alocação e Atribuição.
     path(
-        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
-        "/video/abrir",
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/video/abrir",
         verificacao.abrir_video,
         name="mesa-video-abrir",
     ),

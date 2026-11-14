@@ -1,13 +1,13 @@
 """A retenção do arquivo de vídeo (166, FR-7146 a FR-7149, D-008).
 
 **O prazo não tem valor padrão.** É a P-10 — a guarda do vídeo pede o arquivo institucional e o
-encarregado de dados —, e um número escrito aqui seria o sistema decidindo a retenção de dado sensível
-por quem ainda não decidiu. Sem o prazo no ambiente, nada se elimina.
+encarregado de dados —, e um número escrito aqui seria o sistema decidindo a retenção de dado
+sensível por quem ainda não decidiu. Sem o prazo no ambiente, nada se elimina.
 
 **Elimina-se o arquivo, e não o registro.** O ato é o Resultado da Etapa, append-only, e o vídeo era
-a evidência dele (R-23 do estudo): o resumo, o tamanho, a duração, as marcas, as aberturas e a trilha
-ficam, e a eliminação ganha a linha dela. Não contraria o "nada se exclui" do projeto, que é sobre
-dado normativo.
+a evidência dele (R-23 do estudo): o resumo, o tamanho, a duração, as marcas, as aberturas e a
+trilha ficam, e a eliminação ganha a linha dela. Não contraria o "nada se exclui" do projeto, que é
+sobre dado normativo.
 
 **Contado do encerramento do Edital**, o único fim de certame que o sistema registra. Se a P-10
 escolher outro marco — o trânsito do último recurso, por exemplo —, ele entra como parâmetro.
@@ -66,14 +66,16 @@ def elegiveis(edital):
     if encerrado_em is None:
         raise DomainError(
             "encerramento_sem_registro",
-            "O encerramento do Edital não está na trilha, e sem ele o prazo não tem de onde contar.",
+            "O encerramento do Edital não está na trilha, e sem ele o prazo não tem de onde "
+            "contar.",
             409,
         )
     liberada = encerrado_em + timedelta(days=prazo)
     if timezone.now() < liberada:
         raise DomainError(
             "dentro_do_prazo",
-            f"A eliminação só cabe a partir de {timezone.localtime(liberada):%d/%m/%Y}, {prazo} dias "
+            f"A eliminação só cabe a partir de {timezone.localtime(liberada):%d/%m/%Y}, "
+            f"{prazo} dias "
             f"depois do encerramento do Edital.",
             409,
         )

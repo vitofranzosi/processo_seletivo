@@ -50,7 +50,7 @@ def formato_da_assinatura(cabeca: bytes) -> str | None:
 
 
 def ler(arquivo) -> Conteiner:
-    """O formato e a duração do arquivo aberto em modo binário; `ConteinerInvalido` se não for vídeo."""
+    """O formato e a duração do arquivo binário; `ConteinerInvalido` se não for vídeo."""
     arquivo.seek(0)
     formato = formato_da_assinatura(arquivo.read(64))
     if formato is None:

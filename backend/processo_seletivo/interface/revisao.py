@@ -67,8 +67,8 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
-from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
 
