@@ -23,6 +23,7 @@ from processo_seletivo.publicacoes.models import (
     RevisaoEdital,
 )
 from processo_seletivo.resultados.domain import deliberacao, efeito
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -109,6 +110,9 @@ def _stages(edital: Edital) -> list[dict]:
         # avaliações, e `null` nas demais (research T-002). Sem padrão: o vazio continua `null`, e
         # é a conferência que recusa a Etapa colegiada sem regra (FR-7051).
         item.update(deliberacao.publicar(item, etapa.regra_de_deliberacao))
+        # **A admissão do vídeo** (166, degrau 25): sempre presente, `true` ou `false`. Quem recusa a
+        # admissão fora da Etapa colegiada, sem alcance ou sem período é a conferência (FR-7103).
+        item.update(admissao_do_video.publicar(etapa.admite_video))
         itens.append(item)
     return itens
 

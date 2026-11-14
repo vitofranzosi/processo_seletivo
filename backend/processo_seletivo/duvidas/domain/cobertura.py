@@ -218,6 +218,10 @@ COBERTURA = {
     "/stages/*/deliberationRule": excluido(
         "regra de deliberação da Etapa (165); a resposta sobre as Etapas ainda não a lê"
     ),
+    # A admissão do vídeo (166): só em desenvolvimento, atrás de chave recusada em produção (P-0).
+    "/stages/*/videoOption": excluido(
+        "admissão do vídeo (166); só em desenvolvimento, e a resposta sobre as Etapas não a lê"
+    ),
     "/stages/*/rotuloFavoravel": ("P-07",),
     "/stages/*/rotuloDesfavoravel": ("P-07",),
     "/stages/*/scheduleEventId": excluido(

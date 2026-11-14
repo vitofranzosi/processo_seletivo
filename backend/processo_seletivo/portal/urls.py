@@ -1,6 +1,6 @@
 from django.urls import path
 
-from processo_seletivo.portal import assistente, views
+from processo_seletivo.portal import assistente, verificacao, views
 
 app_name = "portal"
 
@@ -76,6 +76,25 @@ urlpatterns = [
         name="requerimento-anterior",
     ),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
+    # A verificação da autodeclaração por vídeo (166), atrás da chave `VERIFICACAO_POR_VIDEO`, que a
+    # produção recusa. A Etapa vai no endereço porque um Edital pode ter mais de uma que admita o vídeo;
+    # nada sobre a pessoa vai nele (FR-073 da `009`).
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/", verificacao.pagina, name="verificacao"),
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/envios", verificacao.iniciar, name="verificacao-envios"),
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/envios/<uuid:envio_id>", verificacao.estado_do_envio, name="verificacao-envio"),
+    path(
+        "inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/envios/<uuid:envio_id>/partes",
+        verificacao.parte,
+        name="verificacao-envio-partes",
+    ),
+    path(
+        "inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/envios/<uuid:envio_id>/concluir",
+        verificacao.concluir,
+        name="verificacao-envio-concluir",
+    ),
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/comprovante", verificacao.comprovante, name="verificacao-comprovante"),
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/video/abrir", verificacao.abrir, name="verificacao-abrir"),
+    path("inscricoes/<uuid:inscricao_id>/verificacao/<uuid:etapa_id>/video/<uuid:abertura_id>", verificacao.video, name="verificacao-video"),
     # O mesmo documento, como arquivo. `.pdf` no endereço porque é o que ele devolve, e porque um
     # endereço que termina em `.pdf` é o que uma pessoa reconhece como arquivo para guardar.
     path(

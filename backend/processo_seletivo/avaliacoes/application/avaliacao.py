@@ -299,6 +299,14 @@ def concluir(
         if forma == Forma.DECISORIA:
             escolha = regras.normalizar_sentido(sentido, exigir=True)
             valor = None
+            # **A verificação por vídeo** (166, FR-7134): em modo vídeo, o parecer é sobre o vídeo, e
+            # exige tê-lo aberto. Por importação local: a Avaliação não depende da app do vídeo, e a
+            # Etapa que não o admite responde sem consulta.
+            from processo_seletivo.verificacao.application import ganchos
+
+            ganchos.exigir_abertura_para_concluir(
+                ator=ator, edital=edital, etapa=etapa, inscricao_id=inscricao_id
+            )
             # A decisória não tem barema: a publicação o recusa (FR-5204), e o envio que o traga é
             # recusado aqui pela mesma porta da pontuação.
             _total_do_barema({}, None, criterios, exigir=True)

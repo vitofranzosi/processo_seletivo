@@ -476,6 +476,10 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     # formal; o que protege quem já teve desfecho é a Retificação recusar a troca depois do primeiro
     # Resultado, favorável ou desfavorável, superado ou não.
     ("stages", "deliberationRule"): retificavel(),
+    # **A admissão do vídeo, retificável** (166, FR-7105): acrescentá-la cabe enquanto a chave
+    # existir; retirá-la depois do primeiro vídeo recebido é recusado por `retificacoes.py`, porque
+    # tiraria o meio de quem já o usou.
+    ("stages", "videoOption"): retificavel(),
     # ---- criteria (o barema da Etapa, 146) ----------------------------------------------------
     # **Todos retificáveis, menos a identidade** (FR-5210). O barema é a regra contra a qual a
     # comissão pontua, e um título errado, uma máxima trocada ou o documento que não comprova o que

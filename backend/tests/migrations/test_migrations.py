@@ -88,6 +88,13 @@ TRIGGERS_POR_APP = {
         "parecer_da_deliberacao_completo",
         "resultado_deliberado_completo",
     ),
+    # A verificação por vídeo (166): quatro tabelas append-only, um gatilho cada.
+    "verificacao": (
+        "verificacao_video_append_only",
+        "verificacao_abertura_append_only",
+        "verificacao_encaminhamento_append_only",
+        "verificacao_eliminacao_append_only",
+    ),
     "classificacao": (
         "ato_de_ordenacao_append_only",
         # A proveniência do ato, conferida uma vez por ato e não uma vez por posição (T125).

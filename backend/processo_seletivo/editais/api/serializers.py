@@ -305,6 +305,9 @@ class StageSerializer(serializers.Serializer):
     deliberationRule = serializers.CharField(
         max_length=40, required=False, allow_null=True, allow_blank=True, default=None
     )
+    # A admissão do vídeo (166, FR-7102). Ausência e `null` são "não admite", que é a leitura de
+    # quem integrava antes do campo existir.
+    videoOption = serializers.BooleanField(required=False, allow_null=True, default=False)
     # O barema (146, FR-5213). **Ausente é sem critérios**, e o preço é o de todo campo deste
     # contrato: quem lê o rascunho e o reenvia sem a chave apaga a ficha. É a regra que a API já
     # tem para as outras coleções, e a única grafia que a FR-5213 admite.

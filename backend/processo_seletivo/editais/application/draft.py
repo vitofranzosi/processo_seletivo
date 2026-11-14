@@ -34,6 +34,7 @@ from processo_seletivo.editais.models.secoes import SecaoEdital
 from processo_seletivo.processos.domain.finalizacao import ensure_processo_accepts_changes
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.domain import deliberacao, efeito
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -508,6 +509,8 @@ def replace_draft(
                     # A regra de deliberação (165, FR-7050), na grafia publicada; chave ausente é
                     # "não declarada", sem padrão (D-002).
                     regra_de_deliberacao=deliberacao.para_coluna(stage.get("deliberationRule")),
+                    # A admissão do vídeo (166, FR-7102): só `true` admite.
+                    admite_video=admissao_do_video.ler(stage.get("videoOption")),
                 )
                 for stage in stages
             ]

@@ -1,0 +1,50 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Comprovante do vídeo{% endblock %}
+{% block conteudo %}
+<p class="voltar"><a href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
+<h1>Comprovante do vídeo</h1>
+<p class="sub">{{ situacao.nome_da_etapa }}</p>
+
+{% comment %}
+O comprovante do envio (166, FR-7123) e o vídeo para o titular assistir (FR-7127). O número é a
+identidade do vídeo; o resumo é o SHA-256 que o servidor calculou e que bate com o do aparelho.
+Assistir é ato registrado, como na Mesa: o botão abre, e só então o vídeo toca — sem botão de baixar.
+{% endcomment %}
+<section class="comprovante-do-video" aria-labelledby="t-recebido">
+  <h2 id="t-recebido">Vídeo recebido</h2>
+  <dl class="dados-do-video">
+    <dt>Número</dt><dd><code>{{ video.id }}</code></dd>
+    <dt>Recebido em</dt><dd>{{ video.recebido_em|date:"d/m/Y \à\s H:i" }}</dd>
+    <dt>Duração</dt><dd>{{ video.duracao|floatformat:1 }} segundos</dd>
+    <dt>Formato</dt><dd>{{ video.formato }}</dd>
+    <dt>Resumo (SHA-256)</dt><dd><code class="resumo-do-video">{{ video.sha256 }}</code></dd>
+  </dl>
+  {% if situacao.eliminado_em %}
+  <p class="aviso">O arquivo deste vídeo foi eliminado em {{ situacao.eliminado_em|date:"d/m/Y" }}, conforme o prazo de retenção. O número, a duração e o resumo continuam registrados.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="t-agora">
+  <h2 id="t-agora">E agora?</h2>
+  {% if situacao.estado == "ENCAMINHADA" %}
+  <p>A comissão quer conversar com você ao vivo. Isso não é reprovação. Ela vai informar a data, a hora e como entrar.</p>
+  {% else %}
+  <p>A comissão vai assistir ao vídeo{% if situacao.fim %} depois de {{ situacao.fim|date:"d/m/Y" }}{% endif %}. Se ela precisar ver você ao vivo, isso não é reprovação: ela vai informar a data, a hora e como entrar.</p>
+  {% endif %}
+  {% if pode_trocar %}<p>Enquanto a comissão não abrir o vídeo, você pode trocá-lo. <a href="{{ rotas.pagina }}">Gravar outro vídeo</a></p>{% elif situacao.estado == "EM_ANALISE" %}<p>A comissão já começou a análise, e o vídeo não pode mais ser trocado.</p>{% endif %}
+</section>
+
+{% if not situacao.eliminado_em %}
+<section id="assistir" aria-labelledby="t-assistir">
+  <h2 id="t-assistir">Assistir ao vídeo que você enviou</h2>
+  {% if fonte %}
+  <video class="video-do-titular" src="{{ fonte }}" controls controlslist="nodownload" disablepictureinpicture playsinline preload="metadata"></video>
+  {% else %}
+  <form method="post" action="{{ abrir }}">
+    {% csrf_token %}
+    <button type="submit" class="secundario">Assistir ao vídeo</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

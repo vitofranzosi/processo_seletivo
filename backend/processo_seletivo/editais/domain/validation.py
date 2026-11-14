@@ -304,6 +304,9 @@ ETAPA_PUBLICADA = (
     # A regra de deliberação (165, degrau 24). `null` é "sem regra"; que só a Etapa decisória com
     # várias avaliações a declare, e que a maioria peça número ímpar, é `_coerencia_da_deliberacao`.
     Campo("deliberationRule", str, admite_nulo=True, valores=(*REGRAS_PUBLICADAS, None)),
+    # A admissão do vídeo (166, degrau 25). Que só a Etapa colegiada, com alcance e período, a
+    # declare, e só com a chave, é `_coerencia_do_video`.
+    Campo("videoOption", bool),
 )
 
 # Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
@@ -1733,6 +1736,75 @@ def _coerencia_da_deliberacao(snapshot: dict, *, ato: str) -> list[ValidationFin
     return findings
 
 
+def _coerencia_do_video(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """A admissão do vídeo de cada Etapa, e o que ela exige (166, FR-7103, FR-7104, D-002).
+
+    **O vídeo só confirma, e quem confirma é a deliberação** (R-11): sem a Etapa colegiada da `165`
+    não há regra a aplicar ao vídeo. Sem alcance, a ampla concorrência gravaria uma autodeclaração que
+    não fez; sem início e fim, a R-12 — não enviar não é ausência — não tem quando valer.
+
+    **A chave só pesa na publicação.** Na Retificação o conteúdo inteiro é reconferido, e recusar ali
+    toda Etapa que já admitia o vídeo travaria a correção de um prazo só porque a chave foi desligada
+    depois; quem recusa a Retificação que **acrescenta** o vídeo sem a chave é `retificacoes.py`.
+    """
+    from django.conf import settings
+
+    findings = []
+    eventos = {
+        str(evento.get("id")): evento
+        for evento in snapshot.get("schedule") or []
+        if isinstance(evento, dict)
+    }
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict) or etapa.get("videoOption") is not True:
+            continue
+        nome = _nome(etapa, "name") or "sem nome"
+        caminho = f"/stages/id={etapa.get('id', '')}/videoOption"
+        previstas = etapa.get("evaluationsPerRegistration")
+        varias = isinstance(previstas, int) and not isinstance(previstas, bool) and previstas > 1
+        if ato == ATO_DE_PUBLICACAO and not getattr(settings, "VERIFICACAO_POR_VIDEO", False):
+            findings.append(
+                _impeditivo(
+                    "video_sem_protocolo",
+                    f"A Etapa «{nome}» admite o vídeo, mas o vídeo depende de protocolo "
+                    "institucional que ainda não existe.",
+                    caminho,
+                )
+            )
+        if not (
+            etapa.get("forma") == "DECISORIA"
+            and varias
+            and etapa.get("deliberationRule") is not None
+        ):
+            findings.append(
+                _impeditivo(
+                    "video_fora_da_colegiada",
+                    f"A Etapa «{nome}» admite o vídeo, mas só a Etapa decisória com regra de "
+                    "deliberação pode admiti-lo: o vídeo só confirma, e quem confirma é a "
+                    "deliberação.",
+                    caminho,
+                )
+            )
+        if not etapa.get("modalityCodes"):
+            findings.append(
+                _impeditivo(
+                    "video_sem_alcance",
+                    f"A Etapa «{nome}» admite o vídeo, mas não declara as Modalidades que alcança.",
+                    caminho,
+                )
+            )
+        evento = eventos.get(str(etapa.get("scheduleEventId")))
+        if not evento or not evento.get("startAt") or not evento.get("endAt"):
+            findings.append(
+                _impeditivo(
+                    "video_sem_periodo",
+                    f"A Etapa «{nome}» admite o vídeo, mas o período dela não tem início e fim.",
+                    caminho,
+                )
+            )
+    return findings
+
+
 def _coerencia_do_alcance(snapshot: dict) -> list[ValidationFinding]:
     """O que o alcance de cada Etapa aponta, e o papel que ela ocupa (163, FR-6963 a FR-6965).
 
@@ -1988,6 +2060,7 @@ def validate_for_publication(
     findings.extend(_coerencia_do_alcance(snapshot))
     findings.extend(_coerencia_do_efeito(snapshot))
     findings.extend(_coerencia_da_deliberacao(snapshot, ato=ato))
+    findings.extend(_coerencia_do_video(snapshot, ato=ato))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))

@@ -261,6 +261,8 @@ def _recusar_o_que_o_ato_acrescenta(edital, base, content):
     _recusar_colegiada_sem_regra(base, content)
     _recusar_deliberacao_mudada_apos_resultado(edital, base, content)
     _recusar_reducao_abaixo_das_conclusoes(edital, base, content)
+    _recusar_video_sem_protocolo(base, content)
+    _recusar_video_retirado_apos_recebido(edital, base, content)
     _recusar_criterio_que_a_composicao_recusaria(base, content)
     _recusar_modalidade_que_a_composicao_recusaria(base, content)
 
@@ -618,6 +620,54 @@ def _recusar_reducao_abaixo_das_conclusoes(edital, base, content):
                 "pareceres concluídos que isso.",
                 422,
             )
+
+
+def _recusar_video_sem_protocolo(base, content):
+    """A Retificação que **acrescenta** o vídeo a uma Etapa exige a chave (166, FR-7104).
+
+    Só o acréscimo: a Etapa que já admitia o vídeo continua Retificável com a chave desligada, porque
+    o vídeo já recebido continua sendo analisado (achado I1 do `/speckit-analyze`).
+    """
+    from django.conf import settings
+
+    if getattr(settings, "VERIFICACAO_POR_VIDEO", False):
+        return
+    antes = _etapas_por_id(base)
+    for etapa in (content or {}).get("stages") or []:
+        if not isinstance(etapa, dict) or etapa.get("videoOption") is not True:
+            continue
+        if (antes.get(str(etapa.get("id"))) or {}).get("videoOption") is True:
+            continue
+        raise DomainError(
+            "video_sem_protocolo",
+            f"A Etapa «{etapa.get('name') or ''}» passaria a admitir o vídeo, mas o vídeo depende de "
+            "protocolo institucional que ainda não existe.",
+            422,
+        )
+
+
+def _recusar_video_retirado_apos_recebido(edital, base, content):
+    """A Etapa não deixa de admitir o vídeo depois do primeiro recebido (166, FR-7105).
+
+    Tiraria o meio de quem já o usou: o vídeo recebido ficaria sem Etapa que o admite, e a R-11, que
+    protege quem o vídeo não confirmou, deixaria de ter onde valer.
+    """
+    from processo_seletivo.verificacao.application.disponibilidade import videos_recebidos
+
+    antes = _etapas_por_id(base)
+    for etapa in (content or {}).get("stages") or []:
+        if not isinstance(etapa, dict) or etapa.get("videoOption") is True:
+            continue
+        if (antes.get(str(etapa.get("id"))) or {}).get("videoOption") is not True:
+            continue
+        if videos_recebidos(edital=edital, etapa_id=etapa.get("id")):
+            raise DomainError(
+                "video_ja_recebido",
+                f"A Etapa «{etapa.get('name') or ''}» já recebeu vídeo, e deixar de admiti-lo agora "
+                "tiraria o meio de quem o usou.",
+                422,
+            )
+    # A Etapa removida inteira pela Retificação cai na recusa de Etapa com Atribuição, que já existe.
 
 
 def _replace_changes(retificacao, changes, base_content):
