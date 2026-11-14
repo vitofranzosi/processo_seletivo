@@ -62,9 +62,10 @@ caso-limite cita, na própria linha, o requisito que o resolve. Conferido um a u
 - `VERIFICACAO_POR_VIDEO`, `AVISOS_AOS_CANDIDATOS` e os nomes das telas existentes (Centro, Minhas
   atividades, Mesa, distribuição) aparecem nos requisitos porque são restrições do pedido e pontos de
   integração com o que já existe, e não escolhas de implementação.
-- Nenhum marcador de esclarecimento: as cinco perguntas ao usuário estão na seção *Perguntas ao
-  usuário* como Q-1 a Q-5, cada uma com a recomendação já adotada no texto. Uma resposta diferente
-  muda os requisitos que a pergunta cita.
+- Nenhum marcador de esclarecimento: as cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em
+  14/11, pelas recomendações, com dois ajustes registrados em *Clarifications*: o link para o Edital e
+  a advertência de nome valem para qualquer Etapa restrita (FR-7304, FR-7336), e o degrau depois do
+  prazo só afirma o que os dados permitem (FR-7306).
 - O pedido pediu "a natureza 'verificação da autodeclaração'" no Centro. A spec a entrega como as
   pendências da Etapa restrita, lida pelo nome publicado, e não como natureza nova, porque o GPS não
   tem — e a `163` e a `164` recusaram — marcador semântico de "cota racial" (Q-1, D-001).

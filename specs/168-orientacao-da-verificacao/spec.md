@@ -5,8 +5,10 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11. Só a spec: não há plano nem implementação, e o merge é do usuário.
-Cinco perguntas ao usuário (Q-1 a Q-5) estão abertas, cada uma com a recomendação adotada no texto.
+**Status**: Especificada em 14/11. As cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em 14/11,
+pelas recomendações, com dois ajustes: o link para o Edital e a advertência de nome não pressupõem que a
+Etapa restrita seja de verificação da autodeclaração, e o degrau depois do prazo diz só o que os dados
+permitem afirmar. Planejada em seguida; a implementação espera a aprovação do plano. O merge é do usuário.
 
 **Input**: a **entrega 4** do plano do estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/04-plano-de-entregas.md`): *"Orientação: degrau no
@@ -101,11 +103,23 @@ aparece quando a Etapa admite o vídeo e a chave está ligada — isto é, nunca
   `02-experiencia.md` do estudo).
 - Um achado fora do escopo vira registro, e não escopo.
 
-### Perguntas ao usuário (abertas; o texto adota a recomendação)
+### Session 2026-11-14 (decisões do usuário sobre o PR #551)
 
-Esta spec foi escrita por uma sessão aberta por outra, e não pelo usuário. Cada pergunta abaixo tem a
-recomendação, e o resto da spec já a adota, para o fluxo poder seguir; uma resposta diferente muda os
-requisitos citados.
+- **Q-1 a Q-5: adotadas as recomendações.** A Etapa existente, pelo nome publicado; o nome preservado no
+  portal; o degrau só nas Etapas restritas; o aviso pelo gesto humano; o prazo na linha de avaliar de
+  toda Etapa com período.
+- **Ajuste 1 — toda Etapa restrita, e não só a verificação.** O link para o Edital e a advertência de
+  nome não podem pressupor que a Etapa seja verificação da autodeclaração: uma perícia de pessoa com
+  deficiência não aponta para "Verificação da autodeclaração". O link vai ao Edital vigente, que já
+  existe no portal, e diz qual Etapa procurar (FR-7304); a advertência é contextual, sem campo novo
+  (FR-7336).
+- **Ajuste 2 — prazo encerrado não é análise iniciada.** Sem parecer nem Resultado, o degrau diz só que o
+  período terminou e que a pessoa aguarda a comissão (FR-7306).
+
+### Perguntas ao usuário (decididas em 14/11 pelas recomendações abaixo)
+
+Esta spec foi escrita por uma sessão aberta por outra. As perguntas ficam com o texto original, para a
+rastreabilidade; a decisão é a da sessão acima.
 
 - **Q-1 — A "natureza verificação da autodeclaração" é uma natureza nova, ou é a Etapa que já existe,
   pelo nome que o Edital lhe deu?** O GPS não sabe que uma Etapa é de verificação: a `163` e a `164`
@@ -120,8 +134,8 @@ requisitos citados.
 - **Q-2 — E se o Edital chamar a Etapa de "Heteroidentificação"?** O nome é do Edital, e o candidato o
   lê também no documento. **Recomendação: o portal mostra o nome publicado**, e o texto fixo do degrau
   nunca usa os termos técnicos; a composição, ao gravar uma Etapa restrita cujo nome traga um termo
-  que a varredura do candidato proíbe, dá uma advertência **não impeditiva** sugerindo "Verificação da
-  autodeclaração" (FR-7336). Alternativas descartadas: um "nome para o candidato" à parte (segundo
+  que a varredura do candidato proíbe, dá uma advertência **não impeditiva** (FR-7336; ajustada
+  pela decisão de 14/11 para não sugerir um nome que pressuponha o procedimento). Alternativas descartadas: um "nome para o candidato" à parte (segundo
   campo para a mesma coisa) e recusar a publicação (o nome normativo é decisão do Edital).
 - **Q-3 — O degrau "falta um passo seu" vale só para a Etapa restrita, ou para toda Etapa com
   período?** Toda Etapa com período e sem Resultado é, em tese, um passo do candidato. **Recomendação:
@@ -157,7 +171,8 @@ Maria abre o acompanhamento em 20/11. A situação diz **"Falta um passo seu"**.
 também por esta etapa: Verificação da autodeclaração." O que fazer: "Acontece de 01/12 a 05/12. A
 comissão vai informar o dia, a hora e como participar." A consequência vem no mesmo cartão: "Se você não
 participar, deixa de concorrer pela reserva de vagas e continua concorrendo pela ampla concorrência." Um
-link leva a "O que diz o Edital sobre este passo". Pedro, só na ampla, não vê nada disso.
+link leva ao Edital vigente, com a frase "No Edital, veja a etapa Verificação da autodeclaração". Pedro,
+só na ampla, não vê nada disso.
 
 **Why this priority**: é a lacuna principal. Sem o degrau, a camada A funciona para a comissão e é
 invisível para quem ela verifica.
@@ -171,12 +186,15 @@ dele para Pedro.
 1. **Given** Maria alcançada e o período no futuro, **When** ela abre o acompanhamento, **Then** a
    situação é "Falta um passo seu", com o porquê pela Modalidade, as datas do Evento, a frase de que a
    comissão informa dia, hora e como participar, a consequência da ausência declarada pela Etapa e o
-   link para a seção do Edital.
+   link para o Edital vigente, que nomeia a Etapa a procurar.
 2. **Given** o período em curso, **When** Maria abre o acompanhamento, **Then** o degrau diz que a
    etapa está acontecendo e até quando.
-3. **Given** o período encerrado, ou um parecer já concluído sobre Maria, e nenhum Resultado visível,
-   **When** ela abre o acompanhamento, **Then** a situação é "Em análise", diz que a comissão está
-   analisando e que o resultado aparece no acompanhamento, e não promete data que o sistema não tem.
+3. **Given** o período encerrado, sem parecer concluído nem Resultado sobre Maria, **When** ela abre o
+   acompanhamento, **Then** a situação é "Aguardando a comissão", diz que o período terminou e que ela
+   aguarda a comissão, e não diz que a análise começou nem promete data.
+3a. **Given** um parecer já concluído ou um Resultado ainda não visível sobre Maria, **When** ela abre o
+   acompanhamento, **Then** a situação é "Aguardando o resultado", diz que o resultado aparece no
+   acompanhamento quando for publicado, e não diz o sentido de parecer algum nem promete data.
 4. **Given** o Resultado da Etapa visível a Maria, **When** ela abre o acompanhamento, **Then** o degrau
    some, e o que ela lê é o que a `164` e a `165` já mostram.
 5. **Given** Pedro, só na ampla, **When** ele abre o acompanhamento, **Then** nada sobre a Etapa
@@ -250,7 +268,7 @@ a distribuição.
 
 Só em desenvolvimento, com `VERIFICACAO_POR_VIDEO` ligada e a Etapa admitindo o vídeo. Maria vê "Falta
 um passo seu" com as duas formas, "Gravar um vídeo curto" e "Prefiro entrevista ao vivo", com o mesmo
-peso e a frase "as duas formas valem igual". Depois do envio, a situação vira "Em análise", com o
+peso e a frase "as duas formas valem igual". Depois do envio, a situação vira "Aguardando o resultado", com o
 comprovante. Se a comissão encaminhar, volta a "Falta um passo seu": "A comissão quer conversar com você
 ao vivo. Isso não é reprovação." O cartão separado da `166` não existe mais. No Centro, Rita vê
 "Encaminhar 1 inscrição à entrevista ao vivo".
@@ -267,7 +285,7 @@ da `166` e o Centro com uma inscrição a encaminhar.
    acompanhamento, **Then** o degrau oferece as duas formas com o mesmo peso, e leva à página da
    `166`.
 2. **Given** o vídeo recebido ou em análise, **When** Maria abre o acompanhamento, **Then** a situação é
-   "Em análise", com o acesso ao comprovante.
+   "Aguardando o resultado", com o estado do vídeo dito pela `166` e o acesso ao comprovante.
 3. **Given** Maria encaminhada à entrevista ao vivo, **When** ela abre o acompanhamento, **Then** a
    situação é "Falta um passo seu", com a frase da FR-7144 da `166`.
 4. **Given** a chave desligada, **When** qualquer candidato abre o acompanhamento, **Then** nenhuma
@@ -323,12 +341,12 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 - **Inscrição que deixou de participar da Etapa** (a progressão a tirou antes dela): o degrau não
   aparece, e o aviso não a inclui (FR-7302, FR-7318).
 - **Resultado deliberado mas ainda não visível ao titular** (a visibilidade da Etapa restrita espera a
-  publicação de um marco, pela `164`): o degrau fica em "Em análise", sem data (FR-7306).
+  publicação de um marco, pela `164`): o degrau fica em "Aguardando o resultado", sem data (FR-7306).
 - **Etapa restrita depois da última Etapa que o marco enumera** (achado da `164`): o Resultado pode
-  nunca ficar visível pelo marco, e o degrau não sai de "Em análise" por conta própria. O caso é
+  nunca ficar visível pelo marco, e o degrau não sai de "Aguardando o resultado" por conta própria. O caso é
   registrado, e não resolvido aqui (*Achados*); a spec só garante que o degrau não mente (FR-7306).
 - **A Ocorrência de ausência registrada**: é Resultado, e segue a visibilidade dele; até ficar visível,
-  o titular vê "Em análise" (FR-7306).
+  o titular vê "Aguardando o resultado" (FR-7306).
 - **Recurso contra o Resultado da Etapa**: o degrau já saiu quando o Resultado ficou visível; o recurso
   segue a `018` e a `165`, sem nada desta spec (FR-7307).
 - **O aviso confirmado e a inscrição que deixa de participar antes do despacho**: o despacho segue as
@@ -348,7 +366,7 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 - **O candidato sem e-mail válido**: segue as elegibilidades e falhas da `066`; o degrau no
   acompanhamento é o canal que não depende do e-mail (FR-7300, FR-7318).
 - **Chave do vídeo desligada depois de vídeos recebidos** (só em desenvolvimento): o portal volta ao
-  degrau da camada A para quem não enviou; para quem enviou, "Em análise", sem acesso à gravação; a
+  degrau da camada A para quem não enviou; para quem enviou, "Aguardando o resultado", sem acesso à gravação; a
   Mesa e o encaminhamento continuam, como a `166` decidiu (FR-7313, FR-7325).
 - **O acompanhamento de quem nenhuma Etapa restrita alcança**: não custa consulta a mais (FR-7311).
 
@@ -360,8 +378,8 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 
 - **FR-7300**: O acompanhamento DEVE mostrar à inscrição alcançada por uma Etapa restrita (a que declara
   alcance por Modalidade, `163`) um degrau de situação próprio, enquanto o Resultado dela naquela Etapa
-  não estiver visível ao titular. O degrau tem dois rótulos: **"Falta um passo seu"** e **"Em
-  análise"**.
+  não estiver visível ao titular. O degrau tem três rótulos: **"Falta um passo seu"**, **"Aguardando a
+  comissão"** e **"Aguardando o resultado"** (FR-7306).
 - **FR-7301**: O degrau NÃO DEVE aparecer para a inscrição que a Etapa não alcança, nem para inscrição
   não enviada.
 - **FR-7302**: O degrau NÃO DEVE aparecer para a inscrição que deixou de participar da Etapa pela
@@ -377,14 +395,22 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
   - como: que a comissão vai informar o dia, a hora e como participar;
   - a consequência da ausência, pelo efeito que a Etapa declara (`164`): deixar de concorrer pela
     reserva e continuar na ampla, ou ser eliminado desta seleção;
-  - o link "O que diz o Edital sobre este passo", para a seção "Verificação da autodeclaração" do
-    documento vigente quando ela tem texto, e para a seção das Etapas quando não tem.
+  - o link para o Edital vigente, pela página da seleção que o portal já tem, com a frase "No Edital,
+    veja a etapa {nome publicado}". O link NÃO DEVE apontar para uma seção textual do documento: o
+    catálogo de seções não diz qual seção trata de qual Etapa, e uma perícia de pessoa com deficiência
+    não pode cair em "Verificação da autodeclaração".
 - **FR-7305**: O período DEVE ser lido do Evento que a Etapa aponta, na versão vigente do Edital. Sem
   Evento, ou sem início e fim, o degrau DEVE dizer que a comissão vai informar quando e como, sem data.
-- **FR-7306**: O degrau DEVE passar a **"Em análise"** quando o período terminou, ou quando há parecer
-  concluído ou Resultado sobre a inscrição naquela Etapa, e o Resultado ainda não é visível ao titular.
-  "Em análise" DEVE dizer que a comissão está analisando e que o resultado aparece no acompanhamento, e
-  NÃO DEVE prometer data nem dizer o sentido de parecer algum.
+- **FR-7306**: Enquanto o Resultado não é visível ao titular, o degrau DEVE dizer só o que os dados
+  permitem afirmar:
+  - **"Aguardando a comissão"**, quando o período terminou e não há parecer concluído nem Resultado sobre
+    a inscrição naquela Etapa: o período terminou em {data} e a pessoa aguarda a comissão. NÃO DEVE dizer
+    que a análise começou;
+  - **"Aguardando o resultado"**, quando há parecer concluído ou Resultado sobre a inscrição naquela
+    Etapa: o resultado aparece no acompanhamento quando for publicado.
+
+  Nenhum dos dois DEVE prometer data nem dizer o sentido de parecer algum, nem se o Resultado é de
+  desfecho ou de ausência.
 - **FR-7307**: Visível o Resultado, o degrau DEVE sumir; o que o titular lê da Etapa é o que a `164` e a
   `165` já mostram, sem mudança.
 - **FR-7308**: O degrau NÃO DEVE criar estado guardado: é derivado do alcance, da participação, do
@@ -404,11 +430,13 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
   - podendo gravar: "Falta um passo seu", com "Gravar um vídeo curto" e "Prefiro entrevista ao vivo"
     com o mesmo peso, a frase "as duas formas valem igual" e o fim do prazo do envio, levando à página
     da `166`;
-  - vídeo recebido ou em análise: "Em análise", com o acesso ao comprovante;
+  - vídeo recebido ou em análise: "Aguardando o resultado", com a frase da `166` para o estado (recebido
+    e ainda não aberto, ou em análise pela comissão, que é fato registrado) e o acesso ao comprovante;
   - encaminhada à entrevista ao vivo: "Falta um passo seu", com a frase da FR-7144 da `166`;
   - entrevista ao vivo sem vídeo: o degrau da camada A.
 - **FR-7313**: Com a chave desligada, o degrau NÃO DEVE conter palavra sobre vídeo, e DEVE ser o da
-  camada A, inclusive na Etapa que admite o vídeo. Quem já enviou vídeo, nesse caso, lê "Em análise".
+  camada A, inclusive na Etapa que admite o vídeo. Quem já enviou vídeo, nesse caso, lê "Aguardando o resultado",
+  sem a palavra vídeo.
 - **FR-7314**: O cartão de acesso da `166` no acompanhamento (a FR-7145 da `166`) DEVE deixar de
   existir: o acesso à gravação e ao comprovante passa a ser do degrau. As páginas da gravação e do
   comprovante da `166` NÃO mudam.
@@ -493,9 +521,10 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 #### Advertência na composição
 
 - **FR-7336**: Ao gravar uma Etapa restrita cujo nome traga termo que a FR-7330 proíbe ao candidato, a
-  composição DEVE dar uma advertência **não impeditiva**, dizendo que o candidato lê aquele nome no
-  acompanhamento e sugerindo "Verificação da autodeclaração". A publicação NÃO DEVE ser recusada por
-  isso.
+  composição DEVE dar uma advertência **não impeditiva** e contextual: nomeia o termo encontrado e diz que
+  o candidato lê o nome da Etapa no acompanhamento. Ela NÃO DEVE sugerir um nome que pressuponha o
+  procedimento (uma perícia de pessoa com deficiência não se chama "Verificação da autodeclaração"), e
+  NÃO DEVE exigir campo novo. A publicação NÃO DEVE ser recusada por isso.
 
 ### Requisitos de experiência
 
@@ -514,7 +543,7 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 ### Key Entities
 
 - **Degrau do passo**: leitura derivada, por inscrição e Etapa restrita — rótulo, porquê, período,
-  consequência, link do Edital e, com o vídeo, o estado da `166`. Não é guardado.
+  consequência, link para o Edital vigente e, com o vídeo, o estado da `166`. Não é guardado.
 - **Aviso do passo**: um aviso complementar da `066`, com a Etapa como origem no lugar da publicação.
   Imutável como os outros.
 - **Modelo do aviso do passo**: um modelo de aviso da unidade, como os da `066`, com a origem nova.
@@ -591,7 +620,7 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 - **A-5 — "Aviso automático já saiu"**, no *wireframe* do Centro do estudo, contraria a FR-1243 da
   `066` (Q-4).
 - **A-6 — A Etapa restrita depois da última Etapa que o marco enumera** (achado da `164`) deixaria o
-  degrau em "Em análise" para sempre, porque o Resultado nunca ficaria visível. A spec não resolve; só
+  degrau em "Aguardando o resultado" para sempre, porque o Resultado nunca ficaria visível. A spec não resolve; só
   garante que o degrau não diz nada falso.
 - **A-7 — O degrau para toda Etapa com período** (Q-3): a mesma leitura serviria a qualquer Etapa que
   peça a presença do candidato. Fica para decisão do usuário.
@@ -604,9 +633,11 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 Sem marcador semântico novo (Q-1). A Etapa restrita é a que declara alcance (`163`); "verificação da
 autodeclaração" é o nome que o Edital dá a ela (FR-7300, FR-7322).
 
-### D-002 — O degrau é derivado, e tem dois rótulos
+### D-002 — O degrau é derivado, e tem três rótulos
 
-"Falta um passo seu" enquanto há algo do candidato a fazer ou a esperar no período; "Em análise" depois.
+"Falta um passo seu" enquanto há algo do candidato a fazer ou a esperar no período; "Aguardando a
+comissão" quando o período terminou sem registro nenhum; "Aguardando o resultado" quando há parecer ou
+Resultado ainda não visível. Prazo encerrado não é análise iniciada (decisão do usuário de 14/11).
 Nenhum estado guardado (FR-7300, FR-7306, FR-7308).
 
 ### D-003 — O degrau fica abaixo da eliminação e da convocação
