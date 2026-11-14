@@ -4,7 +4,7 @@ from django.db import transaction
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.avaliacoes.domain.formas import Forma
-from processo_seletivo.editais.domain import cadastro_de_reserva
+from processo_seletivo.editais.domain import alcance, cadastro_de_reserva
 from processo_seletivo.editais.domain import secoes as secoes_do_catalogo
 from processo_seletivo.editais.domain.cronograma import ScheduleValidationError, validate_schedule
 from processo_seletivo.editais.domain.documentos import (
@@ -497,6 +497,9 @@ def replace_draft(
                     rotulo_favoravel=stage.get("rotuloFavoravel") or "",
                     rotulo_desfavoravel=stage.get("rotuloDesfavoravel") or "",
                     evento_id=stage.get("scheduleEventId"),
+                    # O alcance (163, FR-6960). Chave ausente é "todas as inscrições", e não
+                    # apagamento: é a leitura de quem integrava antes do campo existir (D-002).
+                    alcance=alcance.normalizar(stage.get("modalityCodes")),
                 )
                 for stage in stages
             ]

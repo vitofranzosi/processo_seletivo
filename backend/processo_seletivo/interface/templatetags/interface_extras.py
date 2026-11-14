@@ -620,6 +620,65 @@ def nome_de_pessoa(context, valor):
     return nomes.get(texto, texto)
 
 
+def _enumerar(itens):
+    itens = list(itens)
+    if len(itens) <= 1:
+        return "".join(itens)
+    return f"{', '.join(itens[:-1])} e {itens[-1]}"
+
+
+@register.simple_tag
+def opcoes_do_alcance(modalidades, etapa):
+    """As linhas do grupo "A quem a Etapa se aplica", com o que cada uma diz (163, UX-731).
+
+    O código marcado que nenhum Perfil tem mais continua na lista, marcado e dito como tal: some-lo
+    da tela faria a próxima gravação apagá-lo sem que ninguém tivesse escolhido isso (FR-6963).
+    """
+    modalidades = modalidades or {"codigos": [], "perfis": []}
+    todos_os_perfis = [perfil for perfil in modalidades.get("perfis") or [] if perfil]
+    marcados = set((etapa or {}).get("modalityCodes") or [])
+    opcoes = []
+    for item in modalidades.get("codigos") or []:
+        perfis = item["perfis"]
+        onde = (
+            "todos os Perfis"
+            if todos_os_perfis and len(perfis) == len(todos_os_perfis)
+            else _enumerar(perfis)
+        )
+        opcoes.append(
+            {
+                "codigo": item["codigo"],
+                "denominacao": item["denominacao"],
+                "onde": onde,
+                "marcada": item["codigo"] in marcados,
+                "inexistente": False,
+            }
+        )
+    conhecidos = {opcao["codigo"] for opcao in opcoes}
+    for codigo in sorted(marcados - conhecidos):
+        opcoes.append(
+            {
+                "codigo": codigo,
+                "denominacao": codigo,
+                "onde": "",
+                "marcada": True,
+                "inexistente": True,
+            }
+        )
+    alcancados = {
+        perfil
+        for item in modalidades.get("codigos") or []
+        if item["codigo"] in marcados
+        for perfil in item["perfis"]
+    }
+    sem_alcancado = [perfil for perfil in todos_os_perfis if perfil not in alcancados]
+    return {
+        "restrita": (etapa or {}).get("modalityCodes") is not None,
+        "opcoes": opcoes,
+        "sem_alcancado": _enumerar(sem_alcancado) if marcados and alcancados else "",
+    }
+
+
 @register.simple_tag
 def previa_do_barema(etapa, documentos):
     """A prévia da seção Barema como o servidor a desenha (146, UX-421).

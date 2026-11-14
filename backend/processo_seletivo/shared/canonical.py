@@ -169,7 +169,12 @@ from uuid import UUID
 # antes dele — a comissão somava o barema fora do sistema, e a Etapa não publicava parcela nenhuma.
 # Conversão sem invenção, no molde do degrau 7, que trouxe as coleções do Perfil: nenhuma Etapa
 # antiga ganha critério por elevação.
-SCHEMA_VERSION = 21
+#
+# **O degrau 22 é o alcance da Etapa** (163, D-002, FR-6966): `modalityCodes` em cada item de
+# `stages`, `null` ou a lista ordenada dos códigos de Modalidade que a Etapa alcança. `null` diz
+# "todas as inscrições", e é verdade sobre todo Edital publicado antes dele — a capacidade não
+# existia. Conversão sem invenção, no molde dos degraus 17 e 21.
+SCHEMA_VERSION = 22
 
 
 def _default(value):

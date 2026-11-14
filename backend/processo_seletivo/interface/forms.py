@@ -873,9 +873,28 @@ def ler_etapas(dados):
                 # Vazio é "não vinculada a Evento", e não Evento inexistente.
                 "scheduleEventId": _texto(dados, f"{base}-scheduleEventId") or None,
                 "criteria": criterios,
+                "modalityCodes": _alcance(dados, base),
             }
         )
     return _renumerar(etapas)
+
+
+#: As duas opções do alcance na composição (163, UX-730).
+ALCANCE_TODAS = "TODAS"
+ALCANCE_RESTRITA = "RESTRITA"
+
+
+def _alcance(dados, base):
+    """O alcance enviado: `None` com "Todas as inscrições", a lista marcada com a outra opção.
+
+    **As marcas são ignoradas quando a opção é "todas"**, e é deliberado: sem JavaScript a lista
+    aparece sempre (UX-730), e uma marca esquecida ali não pode restringir a Etapa às escondidas.
+    Com "só estas" e nada marcado, a lista vazia segue para `validate_stage`, que a recusa com a
+    mensagem que diz como corrigir (FR-6962).
+    """
+    if _texto(dados, f"{base}-alcance") != ALCANCE_RESTRITA:
+        return None
+    return [codigo for codigo in dados.getlist(f"{base}-modalityCodes") if codigo.strip()]
 
 
 def _modalidade_para_o_formulario(modalidade):
@@ -1715,6 +1734,8 @@ def etapas_do_edital(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": "" if etapa.evento_id is None else str(etapa.evento_id),
+            # O alcance (163): `None` é "todas as inscrições", e o cartão marca a opção por ele.
+            "modalityCodes": None if etapa.alcance is None else list(etapa.alcance),
             # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
             "criteria": [
                 {
@@ -1774,6 +1795,40 @@ def documentos_para_o_barema(edital):
     ]
 
 
+def modalidades_para_o_alcance(edital):
+    """O que o grupo "A quem a Etapa se aplica" oferece: um código por linha (163, UX-731).
+
+    **Um código, e não uma Modalidade por Perfil** (D-001): num Edital de 16 Perfis a pessoa marca
+    `PPI` uma vez (SC-2315). Cada linha diz a denominação e os Perfis que têm o código, porque o
+    alcance vale onde o código existe. A Modalidade que o Perfil declara como a sua ampla fica de
+    fora: ela não restringe Etapa (FR-6968), e oferecê-la seria convidar à recusa da publicação.
+    """
+    perfis = list(edital.perfis.order_by("code").prefetch_related("modalidades"))
+    por_codigo = {}
+    for perfil in perfis:
+        rotulo = (perfil.code or perfil.name or "").strip()
+        for modalidade in sorted(perfil.modalidades.all(), key=lambda m: m.code):
+            if perfil.modalidade_ampla_concorrencia == modalidade.id:
+                continue
+            codigo = (modalidade.code or "").strip()
+            if not codigo:
+                continue
+            item = por_codigo.setdefault(
+                codigo,
+                {
+                    "codigo": codigo,
+                    "denominacao": (modalidade.name or codigo).strip(),
+                    "perfis": [],
+                },
+            )
+            if rotulo not in item["perfis"]:
+                item["perfis"].append(rotulo)
+    return {
+        "codigos": [por_codigo[codigo] for codigo in sorted(por_codigo)],
+        "perfis": [(perfil.code or perfil.name or "").strip() for perfil in perfis],
+    }
+
+
 def etapas_persistidas(edital):
     """Etapas já salvas, no formato do command — para preservá-las ao salvar outra etapa."""
     return [
@@ -1791,6 +1846,9 @@ def etapas_persistidas(edital):
             "rotuloFavoravel": etapa.rotulo_favoravel,
             "rotuloDesfavoravel": etapa.rotulo_desfavoravel,
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
+            # O alcance (163), pela mesma razão do barema logo abaixo: gravar outra etapa do
+            # assistente sem ele devolveria toda Etapa a "todas as inscrições" em silêncio.
+            "modalityCodes": None if etapa.alcance is None else list(etapa.alcance),
             # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
             # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
             # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.

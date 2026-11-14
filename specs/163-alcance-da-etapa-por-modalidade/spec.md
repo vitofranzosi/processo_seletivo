@@ -259,9 +259,10 @@ Atribuição na Etapa.
 - **Inscrição sem Modalidade.** É a ampla concorrência, na grafia que o sorteio, a ordem e o quadro
   de vagas já usam. Uma Etapa restrita **nunca** a alcança; uma Etapa com *"Todas as inscrições"*
   sempre (FR-6968).
-- **A Modalidade chamada "Ampla concorrência".** Quando o Edital a cadastra como Modalidade com
-  código, ela é um código como os outros, e pode ser marcada. O sistema não sabe o que o código
-  significa, e não equipara o código `AC` à inscrição sem Modalidade (FR-6968).
+- **A Modalidade declarada como ampla concorrência.** O Perfil pode cadastrar a ampla como
+  Modalidade com código (`AC`) e declará-la a ampla do Perfil (`014`). Esse código não pode estar no
+  alcance: a publicação é impedida, como o recorte transversal da `044` já impede para documento, e a
+  inscrição nessa Modalidade é tratada como a inscrição sem Modalidade (FR-6968).
 - **Concorrência concomitante.** O candidato `PPI` também concorre pela ampla na ocupação. O alcance
   lê a Modalidade **declarada** na inscrição, e não as listas em que ela concorre: o `PPI` é
   alcançado, e o `AC` não passa a ser por concorrer na mesma lista que ele (FR-6969).
@@ -340,8 +341,9 @@ Atribuição na Etapa.
 
 - **FR-6968**: Uma inscrição DEVE ser alcançada por uma Etapa restrita **se e somente se** ela
   declarar uma Modalidade cujo código esteja no alcance. A inscrição sem Modalidade NÃO DEVE ser
-  alcançada por Etapa restrita nenhuma, e a Modalidade cadastrada com código para a ampla DEVE ser
-  tratada como qualquer outro código (D-003).
+  alcançada por Etapa restrita nenhuma. O código da Modalidade que algum Perfil declara como a sua
+  ampla concorrência NÃO DEVE estar no alcance: a publicação e a Retificação DEVEM ser impedidas,
+  com mensagem que nomeie o Perfil (D-003).
 - **FR-6969**: O alcance DEVE ser lido da Modalidade declarada na inscrição, e não das listas em que a
   inscrição concorre por concorrência concomitante.
 - **FR-6970**: A versão da norma que decide o alcance DEVE ser a vigente no momento de cada ato
@@ -464,8 +466,9 @@ Atribuição na Etapa.
   concomitante é da ocupação, e não da inscrição. Se isso mudar, a FR-6969 é o lugar a rever.
 - **A Etapa continua do Edital.** O alcance restringe a Etapa existente, e não cria Etapa por Perfil
   nem por Modalidade.
-- **O sistema não sabe o que o código significa.** Não há marcador semântico de "cota racial" (a
-  `039` não seguiu), e esta spec não cria um: `PPI` é o código que o Edital escolheu.
+- **O sistema não sabe o que o código significa**, além de qual Modalidade é a ampla do Perfil
+  (`014`). Não há marcador semântico de "cota racial" (a `039` não seguiu), e esta spec não cria um:
+  `PPI` é o código que o Edital escolheu.
 - **A remoção de Atribuição aberta já existe**, com motivo e trilha. É o caminho que a FR-6980 indica
   para quem precisa estreitar o alcance antes de qualquer conclusão.
 - **O efeito do desfecho não muda** até a spec da R-2. Um Edital publicado com Heteroidentificação
@@ -521,8 +524,10 @@ acrescentasse Modalidade, e mudaria o resumo canônico do acervo.
 
 A ausência de Modalidade é a ampla concorrência, e a heteroidentificação, que motiva a spec, nunca a
 alcança. O alcance não oferece "ampla concorrência" como opção, porque não há Edital na amostra com
-Etapa só para a ampla, e a Constituição recusa estrutura antes da regra. A Modalidade cadastrada com
-código para a ampla é só um código: o sistema não sabe o que ele significa.
+Etapa só para a ampla, e a Constituição recusa estrutura antes da regra. Pela mesma razão, o código
+da Modalidade que um Perfil declara como a sua ampla (`014`) não entra no alcance — é a recusa que a
+`044` já faz para o recorte transversal de documento, e as duas grafias da ampla (sem Modalidade, e
+a Modalidade declarada ampla) ficam fora pelas mesmas regras.
 
 ### D-004 — A Etapa que não alcança a inscrição não existe na progressão dela
 

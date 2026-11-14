@@ -748,7 +748,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # `ck_perfil_reserve_limit_compatible` — o cadastro limitado deixa de exigir número, porque
         # ele passa a vir do corte do marco que convoca (FR-6931). Só afrouxa: nenhuma linha
         # existente viola a condição nova, e `PerfilVaga` é elaboração, fora do `M`.
-        "editais": 28,
+        # **Sobe para 29 com a 163**: a `editais/0029` acrescenta `alcance` à Etapa — os códigos de
+        # Modalidade que ela alcança, `NULL` para "todas as inscrições" (FR-6960). Nasce sem
+        # preenchimento, porque `NULL` é o que toda Etapa significava; elaboração, fora do `M`.
+        "editais": 29,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -980,7 +983,9 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 28 com a 162**: a `editais/0028` afrouxa a metade limitada de
         # `ck_perfil_reserve_limit_compatible` — o número do cadastro limitado passa a vir do corte
         # (FR-6931). Não é a 022 tocando o que lê: só afrouxa, nenhuma linha muda.
-        "editais": 28,
+        # **Sobe para 29 com a 163**: a `editais/0029` acrescenta o alcance da Etapa (FR-6960). Não
+        # é a 022 tocando o que lê: coluna anulável, sem preenchimento, nenhuma linha muda.
+        "editais": 29,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se

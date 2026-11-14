@@ -22,6 +22,7 @@ deste Edital tem mais. Escolha outra Modalidade, ou o Edital não poderá ser pu
 |---|---|---|
 | `alcance_codigo_inexistente` | FR-6963 | A Etapa «nome» alcança a Modalidade «código», que nenhum Perfil deste Edital tem. |
 | `alcance_em_papel_de_todos` | FR-6964 | A Etapa «nome» alcança só algumas Modalidades e não pode «papel»: o que ela decide valeria para quem ela não avalia. |
+| `alcance_alcanca_a_ampla` | FR-6968 | A Etapa «nome» alcança a Modalidade «código», que é a ampla concorrência no Perfil «perfil». A ampla não restringe Etapa: escolha "Todas as inscrições" ou outra Modalidade. |
 | `alcance_denominacao_divergente` | FR-6965 | A Modalidade «código», que a Etapa «nome» alcança, tem denominações diferentes nos Perfis «lista». Use a mesma denominação em todos. |
 
 «papel», um por caso: *ser classificatória*; *ter peso*; *ser a Etapa comparada pelo critério de

@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.classificacao.domain import faixa
-from processo_seletivo.editais.domain import secoes
+from processo_seletivo.editais.domain import alcance, secoes
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     blocking_findings,
@@ -92,6 +92,9 @@ def _stages(edital: Edital) -> list[dict]:
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
             # O barema (146, degrau 21). Lista sempre presente, vazia na Etapa sem critério.
             "criteria": _criteria(etapa),
+            # O alcance (163, degrau 22): `None` é "todas as inscrições"; a forma restrita sai
+            # ordenada, para o resumo não depender da ordem em que alguém marcou (T-002).
+            "modalityCodes": alcance.normalizar(etapa.alcance),
         }
         # Os critérios numa consulta só, e não uma por Etapa: o conteúdo é montado em toda
         # submissão, prévia e conferência.

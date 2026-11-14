@@ -2055,6 +2055,10 @@ def compor_etapa(request, edital_id, etapa):
             "documentos_do_barema": (
                 forms.documentos_para_o_barema(edital) if etapa == "etapas" else []
             ),
+            # O que o alcance oferece (163, UX-731), pela mesma razão: só no passo das Etapas.
+            "modalidades_do_alcance": (
+                forms.modalidades_para_o_alcance(edital) if etapa == "etapas" else None
+            ),
             "secoes": (
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
@@ -3694,6 +3698,7 @@ def fragmento_etapa(request, edital_id):
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
             "documentos_do_barema": forms.documentos_para_o_barema(edital),
+            "modalidades_do_alcance": forms.modalidades_para_o_alcance(edital),
             "edital": edital,
         },
     )

@@ -97,7 +97,7 @@ devolveria só os `PPI`, e a ordem da ampla sairia vazia.
 posição" (`universo_classificavel.py`) quem ela não alcança; a decisória é pulada, como hoje é pulada
 quando não há Resultado. Daí a FR-6964 ter ganhado o caso *"pontuada e enumerada por um marco"*.
 
-## T-007 — Quatro achados de publicação, um aviso de rascunho
+## T-007 — Os achados de publicação, um aviso de rascunho
 
 **Decisão.** Em `editais/domain/validation.py`, achados `BLOCKING_ERROR` nos atos de publicação e de
 Retificação:
@@ -106,6 +106,7 @@ Retificação:
 |---|---|
 | `alcance_codigo_inexistente` | código do alcance que nenhum Perfil tem (FR-6963) |
 | `alcance_em_papel_de_todos` | Etapa restrita classificatória, com peso, comparada por critério de desempate, pontuada e enumerada por marco, governada por corte ou de habilitação ao sorteio (FR-6964) |
+| `alcance_alcanca_a_ampla` | código que algum Perfil declara como a sua ampla concorrência (FR-6968) |
 | `alcance_denominacao_divergente` | mesmo código com denominações diferentes entre Perfis (FR-6965) |
 
 A coerência de denominação reaproveita a função da `044`, estendida para os códigos referidos pelo

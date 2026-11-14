@@ -460,6 +460,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     ("stages", "forma"): retificavel(),
     ("stages", "rotuloFavoravel"): retificavel(),
     ("stages", "rotuloDesfavoravel"): retificavel(),
+    # **O alcance** (163, D-006, FR-6967). Diz **quem passa pela Etapa**, da mesma natureza do
+    # recorte transversal do Documento Exigido, que a `044` deixou retificável. O que protege a
+    # avaliação já feita não é congelar o campo: é a Retificação recusar o estreitamento sobre
+    # inscrição já atribuída ou avaliada (FR-6980). Ampliar só acrescenta pendentes.
+    ("stages", "modalityCodes"): retificavel(),
     # ---- criteria (o barema da Etapa, 146) ----------------------------------------------------
     # **Todos retificáveis, menos a identidade** (FR-5210). O barema é a regra contra a qual a
     # comissão pontua, e um título errado, uma máxima trocada ou o documento que não comprova o que

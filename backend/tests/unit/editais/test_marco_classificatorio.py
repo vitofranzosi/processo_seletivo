@@ -36,6 +36,7 @@ def etapa(identificador, *, classificatory, weight="1.0000"):
         "scheduleEventId": None,
         # O barema (146, degrau 21): sempre presente, vazio na Etapa sem critério.
         "criteria": [],
+        "modalityCodes": None,
     }
 
 
