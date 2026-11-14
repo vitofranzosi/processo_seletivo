@@ -1,0 +1,35 @@
+<!--
+titulo: Montar a agenda
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <span aria-current="page">Montar a agenda</span>
+moldura: gestao
+folhas: interface/telas/minhas-etapas.css
+-->
+<header class="cabecalho-do-workspace">
+  <div class="titulo-do-workspace">
+    <h1>Montar a agenda</h1><span id="estado-da-agenda"></span>
+    <p class="sub"><span data-texto="etapa"></span> · <span data-texto="edital"></span></p>
+  </div>
+  <p class="acoes-do-workspace">
+    <button type="button" class="botao" data-preencher>Preencher automaticamente</button>
+    <a class="botao secundario" href="conferir.html" data-ir-conferir>Conferir e publicar</a>
+  </p>
+</header>
+<div id="mensagem" aria-live="polite"></div>
+<div id="resumo"></div>
+
+<div class="workspace">
+  <section class="agenda-do-dia" aria-labelledby="grade-titulo">
+    <h2 id="grade-titulo" class="oculto">Grade de horários</h2>
+    <nav aria-label="Dias da agenda"><ul class="dias-da-agenda" id="dias-da-agenda"></ul></nav>
+    <div class="tabela-rolavel">
+      <table class="grade-compacta" id="grade"></table>
+    </div>
+    <p class="ajuda">Clique numa pessoa para mudá-la de horário, ou num horário livre para escolher quem vai para ele. <a href="configurar.html">Ajustar dias, horários ou bancas</a></p>
+  </section>
+  <aside class="painel-de-acao" id="painel" aria-labelledby="painel-titulo" aria-live="polite"></aside>
+</div>
+
+<details class="prototipo-controle">
+  <summary>Simulações do protótipo</summary>
+  <p><button type="button" class="acao" data-simular-concorrente>Simular outro operador</button> Outra sessão ocupa o primeiro horário livre do dia no instante em que você o escolher.</p>
+</details>

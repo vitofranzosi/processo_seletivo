@@ -1,0 +1,69 @@
+<!--
+titulo: Conferir a agenda
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <a href="montar.html">Montar a agenda</a> › <span aria-current="page">Conferir</span>
+moldura: gestao
+folhas: interface/grupos/aviso.css interface/telas/convocacao-conferir.css interface/telas/minhas-etapas.css
+-->
+<h1>Confira antes de publicar a agenda</h1>
+<div class="tela-da-conferencia">
+<p class="sub">Nada foi gravado nem enviado até aqui: a publicação acontece quando você confirmar, no fim desta página.</p>
+<div id="mensagem"></div>
+<section aria-label="Pronto para publicar?" id="prontidao"></section>
+
+<section id="impedimentos" class="consequencias impedimentos" aria-labelledby="impedimentos-titulo"></section>
+
+<section class="consequencias irreversivel" aria-labelledby="publica-titulo">
+  <h2 id="publica-titulo">Será publicada</h2>
+  <dl class="fatos-da-operacao" id="fatos"></dl>
+</section>
+
+<section class="consequencias" aria-labelledby="publico-titulo">
+  <h2 id="publico-titulo">Na página pública da seleção</h2>
+  <p>Dia, horário<span data-so-cenario="b"> e banca</span> de cada pessoa, identificada por <strong data-texto="identificacao"></strong>. Nada além: nem CPF, nem e-mail, nem telefone, nem o endereço da sala.</p>
+  <p class="ajuda" data-so-cenario="b">Só o protocolo, porque a lista desta Etapa revela quem concorre pela reserva para pretos e pardos.</p>
+  <div class="previa-publica" id="previa-publica"></div>
+</section>
+
+<section class="consequencias comunicacao-e-prazo" aria-labelledby="mensagem-titulo">
+  <h2 id="mensagem-titulo">O que cada pessoa recebe</h2>
+  <div class="colunas-da-comunicacao">
+    <dl class="dados-da-comunicacao">
+      <dt>Na área do candidato</dt><dd>O próprio horário, a banca, o endereço da sala ou o local, e as orientações, a partir da publicação.</dd>
+      <dt>Por e-mail</dt><dd>Um aviso por pessoa, enviado depois da publicação. O aviso não é o ato: se um e-mail falhar, a agenda continua publicada e vale do mesmo jeito.</dd>
+      <dt>Efeito</dt><dd>A agenda informa quando e onde comparecer. A consequência da ausência é a que o Edital já prevê para esta Etapa, e continua sendo registrada como Ocorrência.</dd>
+    </dl>
+    <div class="mensagens-da-conferencia">
+      <h3>Exemplo da mensagem, para a primeira pessoa da agenda</h3>
+      <p class="assunto"><strong>Assunto:</strong> <span id="assunto"></span></p>
+      <details class="mensagem-inteira">
+        <summary>Ler a mensagem inteira, como sai</summary>
+        <p class="texto-do-aviso" id="previa-mensagem"></p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<form id="form-publicar" class="confirmar">
+  <input type="hidden" name="assinatura">
+  <section class="consequencias" aria-labelledby="autoridade-titulo">
+    <h2 id="autoridade-titulo">Quem assina</h2>
+    <p class="campo">
+      <label for="autoridade">Autoridade signatária da publicação <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="autoridade" name="autoridade" required aria-required="true" aria-describedby="ajuda-autoridade">
+        <option value="">— escolha a autoridade —</option>
+        <option>Diretora-Geral do Cefor</option>
+        <option>Presidente da Comissão do Edital</option>
+      </select>
+      <span class="ajuda" id="ajuda-autoridade">Nome, cargo e ato de nomeação ficam gravados na publicação.</span>
+    </p>
+    <div id="erro-autoridade"></div>
+  </section>
+  <div class="confirmacao-da-convocacao">
+    <p><strong>Ao confirmar, a agenda é publicada e não se edita mais em bloco.</strong> Depois disso, cada mudança é a remarcação de uma pessoa, com motivo, e só ela é avisada.</p>
+    <p class="salvar">
+      <button type="submit" class="botao perigoso" data-publicar>Publicar a agenda e avisar as pessoas</button>
+      <a class="acao" href="montar.html">Voltar à montagem</a>
+    </p>
+  </div>
+</form>
+</div>
