@@ -179,7 +179,12 @@ from uuid import UUID
 # `absenceEffect` em cada item de `stages`, `null` ou `"RESERVE_REMOVAL"`/`"ELIMINATION"`. A
 # publicação grava o explícito só na Etapa restrita e eliminatória; o `null` nela é o acervo, e se
 # lê "elimina", que é o que ela produzia. Conversão sem invenção, no molde do degrau 22.
-SCHEMA_VERSION = 23
+#
+# **O degrau 24 é a regra de deliberação** (165, FR-7054): `deliberationRule` em cada item de
+# `stages`, `null` ou `"MAJORITY"`/`"UNANIMOUS_FOR_FAVORABLE"`/`"UNANIMOUS_FOR_UNFAVORABLE"`. A
+# publicação a grava só na Etapa decisória com mais de uma avaliação; o `null` nela é o acervo, e se
+# lê "sem regra" — a Etapa continua impedida na consolidação, como era (D-002).
+SCHEMA_VERSION = 24
 
 
 def _default(value):

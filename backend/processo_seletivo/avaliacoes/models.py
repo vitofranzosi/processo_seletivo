@@ -268,3 +268,50 @@ class Impedimento(models.Model):
 
     def __str__(self):
         return f"{self.identity_subject} — {self.inscricao_id}"
+
+
+class ExposicaoAoParecer(models.Model):
+    """O sistema entregou a esta pessoa o parecer de outro membro sobre esta inscrição (165).
+
+    **A exposição** (FR-7082, D-010). O fato que decide é a entrega, e não o papel: quem recebeu o
+    sentido ou o texto de um parecer alheio sobre a inscrição, numa Etapa colegiada, não avalia mais
+    aquela inscrição ali, e não tem o próprio parecer reaberto (FR-7083). Avaliaria sabendo o que os
+    colegas decidiram.
+
+    **Guarda o fato, e nunca o conteúdo** (FR-054 da `012`): quem, sobre qual inscrição, em qual
+    Etapa, e quando. Append-only, nas três camadas: `save` só cria, o gatilho recusa `UPDATE` e
+    `DELETE`, e o papel de runtime não tem o privilégio. Uma linha por pessoa, inscrição e Etapa: a
+    segunda entrega não diz nada que a primeira não tenha dito, e entra por
+    `ON CONFLICT DO NOTHING`.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    edital = models.ForeignKey(Edital, on_delete=models.PROTECT, related_name="exposicoes")
+    # A identidade da Etapa no conteúdo publicado, como em `Atribuicao`.
+    etapa_id = models.UUIDField()
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.PROTECT, related_name="exposicoes")
+    # O `subject`, e não o vínculo de comissão, pela razão do `Impedimento`: a exposição é da
+    # pessoa, e sair da comissão e voltar não a desfaz.
+    pessoa = models.CharField(max_length=255)
+    registrada_em = models.DateTimeField()
+
+    class Meta:
+        db_table = "avaliacoes_exposicao_ao_parecer"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["edital", "etapa_id", "inscricao", "pessoa"],
+                name="uq_exposicao_por_pessoa",
+            )
+        ]
+        indexes = [models.Index(fields=["edital", "etapa_id", "pessoa"])]
+
+    def __str__(self):
+        return f"{self.pessoa} — {self.inscricao_id}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValueError("A exposição ao parecer é imutável.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("A exposição ao parecer não é excluída: ela impede a atribuição.")

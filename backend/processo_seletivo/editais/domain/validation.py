@@ -260,6 +260,9 @@ NOTA = "A Etapa decisória não publica nota em "
 # este módulo confere a string publicada, e importar o domínio de `resultados` inverteria a direção.
 EFEITOS_PUBLICADOS = ("RESERVE_REMOVAL", "ELIMINATION")
 
+# As três regras de deliberação, na grafia publicada (165), literais pela mesma razão.
+REGRAS_PUBLICADAS = ("MAJORITY", "UNANIMOUS_FOR_FAVORABLE", "UNANIMOUS_FOR_UNFAVORABLE")
+
 ETAPA_PUBLICADA = (
     Campo("id", str, formato="uuid"),
     Campo("name", str),
@@ -298,6 +301,9 @@ ETAPA_PUBLICADA = (
     # contrato (`enum` com `null`). Que só essa Etapa o declare é coerência: `_coerencia_do_efeito`.
     Campo("unfavorableOutcomeEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
     Campo("absenceEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
+    # A regra de deliberação (165, degrau 24). `null` é "sem regra"; que só a Etapa decisória com
+    # várias avaliações a declare, e que a maioria peça número ímpar, é `_coerencia_da_deliberacao`.
+    Campo("deliberationRule", str, admite_nulo=True, valores=(*REGRAS_PUBLICADAS, None)),
 )
 
 # Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
@@ -1662,6 +1668,71 @@ def _coerencia_do_efeito(snapshot: dict) -> list[ValidationFinding]:
     return findings
 
 
+def _coerencia_da_deliberacao(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """A regra de deliberação de cada Etapa, e o que ela exige (165, FR-7051 a FR-7053).
+
+    Três achados valem em qualquer ato, porque só nascem de alguém escrevendo a regra errada: valor
+    fora dos três, regra na Etapa que não a usa, e maioria com número par. O quarto — a Etapa
+    decisória com várias avaliações e **sem** regra — vale só na publicação (research T-003). O
+    conteúdo retificado é elevado ao degrau corrente antes desta conferência, e por isso aqui não se
+    distingue o acervo do que se compõe: na Retificação, quem recusa a falta de regra é
+    `retificacoes.py`, e só quando o ato compõe ou recompõe a Etapa (FR-7051).
+    """
+    findings = []
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict):
+            continue
+        nome = _nome(etapa, "name") or "sem nome"
+        regra = etapa.get("deliberationRule")
+        decisoria = etapa.get("forma") == "DECISORIA"
+        previstas = etapa.get("evaluationsPerRegistration")
+        varias = isinstance(previstas, int) and not isinstance(previstas, bool) and previstas > 1
+        caminho = f"/stages/id={etapa.get('id', '')}/deliberationRule"
+        if regra is None:
+            if decisoria and varias and ato == ATO_DE_PUBLICACAO:
+                findings.append(
+                    _impeditivo(
+                        "deliberacao_sem_regra",
+                        f"A Etapa «{nome}» prevê {previstas} pareceres por inscrição e não declara "
+                        "como a comissão chega ao resultado. Escolha uma das três regras.",
+                        caminho,
+                    )
+                )
+            continue
+        if regra not in REGRAS_PUBLICADAS:
+            findings.append(
+                _impeditivo(
+                    "regra_invalida",
+                    f"A regra de deliberação da Etapa «{nome}» não é uma das previstas.",
+                    caminho,
+                )
+            )
+            continue
+        if not decisoria or not varias:
+            motivo = "é pontuada" if not decisoria else "prevê uma avaliação por inscrição"
+            findings.append(
+                _impeditivo(
+                    "regra_sem_colegiado",
+                    f"A Etapa «{nome}» declara regra de deliberação, mas ela {motivo}. Só a Etapa "
+                    "decisória com mais de uma avaliação por inscrição declara como a comissão "
+                    "chega ao resultado.",
+                    caminho,
+                )
+            )
+            continue
+        if regra == "MAJORITY" and previstas % 2 == 0:
+            findings.append(
+                _impeditivo(
+                    "maioria_com_numero_par",
+                    f"A Etapa «{nome}» decide por maioria com {previstas} pareceres por inscrição. "
+                    "A maioria exige número ímpar, porque o empate não tem regra publicada; com "
+                    "número par, escolha uma das regras de unanimidade.",
+                    caminho,
+                )
+            )
+    return findings
+
+
 def _coerencia_do_alcance(snapshot: dict) -> list[ValidationFinding]:
     """O que o alcance de cada Etapa aponta, e o papel que ela ocupa (163, FR-6963 a FR-6965).
 
@@ -1916,6 +1987,7 @@ def validate_for_publication(
     findings.extend(_coerencia_do_barema(snapshot))
     findings.extend(_coerencia_do_alcance(snapshot))
     findings.extend(_coerencia_do_efeito(snapshot))
+    findings.extend(_coerencia_da_deliberacao(snapshot, ato=ato))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))

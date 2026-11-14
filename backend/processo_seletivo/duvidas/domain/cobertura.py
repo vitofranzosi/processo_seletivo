@@ -213,6 +213,11 @@ COBERTURA = {
     "/stages/*/absenceEffect": excluido(
         "efeito do não comparecimento (164); a resposta sobre as Etapas ainda não o lê"
     ),
+    # A regra de deliberação (165), pela mesma razão: o candidato a lê no PDF, e dizê-la na resposta
+    # sobre as Etapas é decisão da pergunta P-07.
+    "/stages/*/deliberationRule": excluido(
+        "regra de deliberação da Etapa (165); a resposta sobre as Etapas ainda não a lê"
+    ),
     "/stages/*/rotuloFavoravel": ("P-07",),
     "/stages/*/rotuloDesfavoravel": ("P-07",),
     "/stages/*/scheduleEventId": excluido(

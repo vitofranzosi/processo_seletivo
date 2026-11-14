@@ -72,8 +72,22 @@ TRIGGERS_POR_APP = {
     # D-1, também que o Resultado por Ocorrência afirme fonte nenhuma e cite norma de outro Edital.
     # O nome não mudou com o terceiro ramo: a função foi recriada, e a trigger é a mesma.
     # A-03: a Avaliação concluída só sai de `CONCLUIDA` pela forma exata da reabertura.
-    "avaliacoes": ("conclusao_avaliacao_append_only", "avaliacao_concluida_imutavel"),
-    "resultados": ("resultado_etapa_append_only", "resultado_etapa_coerente"),
+    "avaliacoes": (
+        "conclusao_avaliacao_append_only",
+        "avaliacao_concluida_imutavel",
+        # A exposição ao parecer (165, FR-7082).
+        "exposicao_ao_parecer_append_only",
+    ),
+    "resultados": (
+        "resultado_etapa_append_only",
+        "resultado_etapa_coerente",
+        # O Resultado deliberado (165, T-006): os pareceres, imutáveis e coerentes, e os dois
+        # adiáveis que conferem a contagem no `COMMIT`.
+        "parecer_da_deliberacao_append_only",
+        "parecer_da_deliberacao_coerente",
+        "parecer_da_deliberacao_completo",
+        "resultado_deliberado_completo",
+    ),
     "classificacao": (
         "ato_de_ordenacao_append_only",
         # A proveniência do ato, conferida uma vez por ato e não uma vez por posição (T125).
@@ -674,7 +688,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 7 com a 164**: a `resultados/0007` acrescenta a terceira consequência,
         # `RETIRADA_DA_RESERVA`, à constraint de valores. A constraint foi **estendida**, não
         # afrouxada: ela continua recusando todo texto que nenhuma regra produz (164, D-003).
-        "resultados": 7,
+        # **Sobe para 8 com a 165**: a `resultados/0008` acrescenta a sexta origem, `DELIBERACAO`,
+        # e a tabela append-only dos pareceres. A constraint de origem foi **estendida**, e a
+        # invariante de proveniência revista com a mesma força (165, FR-7065, T-006).
+        "resultados": 8,
         # **Sobe para 11 com a 018**: a `editais/0011` acrescenta `janela_recursal` ao marco
         # classificatório — o degrau 8. É elaboração, e não divulgação: quem declara o prazo é o
         # Edital, e é por isso que o campo mora aqui e não na 017 (FR-020, FR-030).
@@ -757,7 +774,9 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 30 com a 164**: a `editais/0030` acrescenta à Etapa o efeito do desfecho
         # desfavorável e o do não comparecimento (FR-7000, FR-7004). Nascem vazios — "não
         # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
-        "editais": 30,
+        # **Sobe para 31 com a 165**: a `editais/0031` acrescenta à Etapa a regra de deliberação
+        # (FR-7050). Nasce vazia — "não declarada", sem padrão (D-002); elaboração, fora do `M`.
+        "editais": 31,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -901,7 +920,9 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # Avaliação e à Conclusão preservada, e recria a função do gatilho da concluída com a
         # coluna nova. Duas colunas com default `[]`, que não reescrevem linha nem disparam o
         # append-only; o total continua em `pontuacao`, e a 022 lê o de sempre (D-004).
-        "avaliacoes": 5,
+        # **Sobe para 6 com a 165**: a `avaliacoes/0006` cria a tabela append-only da exposição ao
+        # parecer (FR-7082). Tabela nova, que não toca a Avaliação nem a Conclusão.
+        "avaliacoes": 6,
         # **Sobe para 5 com a 021**: a `classificacao/0005` dá ao ato de ordenação a origem e a
         # lista de concorrência — o ato passa a poder nascer de um sorteio, e não só de nota.
         # **Sobe para 6 com a 014**, e a justificativa é própria: a `classificacao/0006` cria o
@@ -994,7 +1015,9 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 30 com a 164**: a `editais/0030` acrescenta à Etapa o efeito do desfecho
         # desfavorável e o do não comparecimento (FR-7000, FR-7004). Nascem vazios — "não
         # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
-        "editais": 30,
+        # **Sobe para 31 com a 165**: a `editais/0031` acrescenta à Etapa a regra de deliberação
+        # (FR-7050). Nasce vazia — "não declarada", sem padrão (D-002); elaboração, fora do `M`.
+        "editais": 31,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se
@@ -1064,7 +1087,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 7 com a 164**: a `resultados/0007` acrescenta a terceira consequência,
         # `RETIRADA_DA_RESERVA`, à constraint de valores. A constraint foi **estendida**, não
         # afrouxada: ela continua recusando todo texto que nenhuma regra produz (164, D-003).
-        "resultados": 7,
+        # **Sobe para 8 com a 165**: a `resultados/0008` acrescenta a sexta origem, `DELIBERACAO`,
+        # e a tabela append-only dos pareceres. A constraint de origem foi **estendida**, e a
+        # invariante de proveniência revista com a mesma força (165, FR-7065, T-006).
+        "resultados": 8,
     }
     assert set(esperadas) == set(APPS_QUE_A_022_NAO_TOCA)
     for app, quantas in esperadas.items():
