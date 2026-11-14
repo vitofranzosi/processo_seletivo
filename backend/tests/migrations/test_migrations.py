@@ -27,6 +27,8 @@ APPS = (
     # A contestação da 018: três tabelas append-only e **duas** de coerência — uma por tabela que
     # precisa dela, porque o gatilho é por tabela e uma trigger não valida linha de outra.
     "recursos",
+    # A verificação por vídeo da 166: quatro tabelas append-only.
+    "verificacao",
     # A lista exigida da 044: uma tabela append-only, e a coerência dela contra a inscrição enviada.
     "inscricoes",
     # O registro de unidades e autoridades da 060: duas tabelas que mudam e nunca se excluem.
@@ -783,7 +785,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
         # **Sobe para 31 com a 165**: a `editais/0031` acrescenta à Etapa a regra de deliberação
         # (FR-7050). Nasce vazia — "não declarada", sem padrão (D-002); elaboração, fora do `M`.
-        "editais": 31,
+        # **Sobe para 32 com a 166**: a `editais/0032` acrescenta à Etapa a admissão do vídeo
+        # (FR-7102). Nasce `False` — "não admite" —, que é o que toda Etapa significava; elaboração,
+        # fora do `M`.
+        "editais": 32,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -1024,7 +1029,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
         # **Sobe para 31 com a 165**: a `editais/0031` acrescenta à Etapa a regra de deliberação
         # (FR-7050). Nasce vazia — "não declarada", sem padrão (D-002); elaboração, fora do `M`.
-        "editais": 31,
+        # **Sobe para 32 com a 166**: a `editais/0032` acrescenta à Etapa a admissão do vídeo
+        # (FR-7102). Nasce `False` — "não admite" —, que é o que toda Etapa significava; elaboração,
+        # fora do `M`.
+        "editais": 32,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se

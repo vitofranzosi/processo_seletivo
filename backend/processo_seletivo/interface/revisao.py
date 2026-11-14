@@ -67,6 +67,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
@@ -380,6 +381,9 @@ def _etapa(etapa, snapshot):
     # A regra de deliberação (165, FR-7075), com as palavras do documento, só onde é declarada.
     if frase := deliberacao_da_etapa.frase_da_regra(etapa):
         linhas.append(Rotulada("Deliberação", frase))
+    # A admissão do vídeo (166, FR-7106), com as palavras do documento, só onde é declarada.
+    if frase := admissao_do_video.frase(etapa):
+        linhas.append(Rotulada("Vídeo", frase))
     vinculado = next(
         (
             evento
@@ -1063,6 +1067,8 @@ _LIDOS_POR_COLECAO = {
         "absenceEffect",
         # A regra de deliberação (165, FR-7075): a linha "Deliberação" de `_etapa`.
         "deliberationRule",
+        # A admissão do vídeo (166, FR-7106): a linha "Vídeo" de `_etapa`.
+        "videoOption",
     ),
     "sections": ("title", "order", "type", "content", "source"),
     # A ordem é a da lista: o conteúdo publica os Anexos na ordem editorial, e a conferência os

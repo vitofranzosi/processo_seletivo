@@ -45,6 +45,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
 from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
@@ -4487,6 +4488,9 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 # demais é o que recompõe o acervo byte a byte (SC-2350).
                 if frase := deliberacao_da_etapa.frase_da_regra(etapa):
                     composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                # A admissão do vídeo (166, FR-7106), pela mesma régua: só quando declarada.
+                if frase := admissao_do_video.frase(etapa):
+                    composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
                 tabela_do_barema(composicao, etapa, snapshot, tabelas)
                 continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
@@ -4524,6 +4528,8 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             # A regra de deliberação (165, FR-7075), pela mesma régua: só quando declarada.
             if frase := deliberacao_da_etapa.frase_da_regra(etapa):
                 pares.append(["Deliberação", frase])
+            if frase := admissao_do_video.frase(etapa):
+                pares.append(["Vídeo", frase])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

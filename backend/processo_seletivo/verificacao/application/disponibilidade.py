@@ -146,7 +146,9 @@ def _parecer_ja_concluido(edital, etapa_id, inscricao_id) -> bool:
 def _ha_resultado(edital, etapa_id, inscricao_id) -> bool:
     from processo_seletivo.resultados.models import ResultadoEtapa
 
-    return ResultadoEtapa.objects.filter(
+    # Pelo manager de vigência: o Resultado superado por recurso tem sucessor, e o que importa é que
+    # a inscrição tem desfecho nesta Etapa.
+    return ResultadoEtapa.vigentes.filter(
         edital=edital, etapa_id=_uuid(etapa_id), inscricao_id=inscricao_id
     ).exists()
 

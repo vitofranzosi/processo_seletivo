@@ -496,12 +496,15 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: publicado antes; e o nulo na Etapa restrita e eliminatória se lê "elimina", que é o que ela
 #: produzia (164, D-002, FR-7005).
 #:
+#: **E muda com a `166`, pela mesma razão**: o degrau 25 escreve `videoOption: false` em toda Etapa,
+#: que é verdade sobre todo Edital publicado antes — nenhum admitia o vídeo (166, D-001, FR-7102).
+#:
 #: **E muda com a `165`, também de propósito**: o degrau 24 escreve `deliberationRule: null` em toda
 #: Etapa — "sem regra" —, que é verdade sobre todo Edital publicado antes; e a Etapa colegiada dele
 #: continua impedida na consolidação, como era (165, D-002, FR-7054).
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 24,
-    "DEGRAUS": (5, 6, 21, 22, 23, 24),
+    "SCHEMA_VERSION": 25,
+    "DEGRAUS": (5, 6, 21, 22, 23, 24, 25),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),

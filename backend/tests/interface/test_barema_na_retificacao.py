@@ -40,6 +40,8 @@ def conteudo():
                 "evaluationsPerRegistration": 1,
                 "maximumScore": "20.0000",
                 "forma": "PONTUADA",
+                # O degrau 25 (166): o conteúdo da Retificação já vem elevado.
+                "videoOption": False,
                 "rotuloFavoravel": None,
                 "rotuloDesfavoravel": None,
                 "scheduleEventId": None,
@@ -66,6 +68,7 @@ def conteudo():
                 "evaluationsPerRegistration": 1,
                 "maximumScore": None,
                 "forma": "DECISORIA",
+                "videoOption": False,
                 "rotuloFavoravel": "Apto",
                 "rotuloDesfavoravel": "Inapto",
                 "scheduleEventId": None,

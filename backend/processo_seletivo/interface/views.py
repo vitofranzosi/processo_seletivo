@@ -5606,6 +5606,13 @@ OPERACOES = {
     # e da convocação, e na página da formalização.
     "ARQUIVO_INDISPONIVEL": "Arquivo indisponível",
     "CONSULTAR_DOCUMENTO": "Consulta a documento do candidato",
+    # A verificação por vídeo (166). A abertura é um evento por abertura, e não um por pedaço
+    # entregue (FR-7130); nenhum evento leva o conteúdo do vídeo (FR-7151).
+    "VIDEO_DA_VERIFICACAO_RECEBIDO": "Recebimento do vídeo da verificação",
+    "VISUALIZAR_VIDEO_DA_VERIFICACAO": "Abertura do vídeo da verificação",
+    "VIDEO_DA_VERIFICACAO_INTEGRIDADE": "Vídeo da verificação divergente do resumo registrado",
+    "ENCAMINHAR_A_ENTREVISTA_AO_VIVO": "Encaminhamento à entrevista ao vivo",
+    "ELIMINAR_VIDEO_DA_VERIFICACAO": "Eliminação do arquivo de vídeo pelo prazo de retenção",
     # A organização do trabalho (011). Mesma trilha, pela mesma razão: quem investiga quem
     # perdeu acesso a uma Etapa lê a mesma tela de quem investiga uma publicação.
     # A execução do trabalho (012). Os sete atos de FR-052 na mesma trilha, pela razão de sempre:
@@ -5736,6 +5743,9 @@ OPERACOES_DA_AVALIACAO = (
     "AVALIACAO_ATRIBUIR",
     "AVALIACAO_ATRIBUICAO_REMOVER",
     "CONSULTAR_DOCUMENTO",
+    # A abertura do vídeo pela comissão, sob a Atribuição, como a consulta ao documento (166).
+    "VISUALIZAR_VIDEO_DA_VERIFICACAO",
+    "VIDEO_DA_VERIFICACAO_INTEGRIDADE",
     "AVALIACAO_GRAVAR",
     "AVALIACAO_CONCLUIR",
     "AVALIACAO_REABRIR",

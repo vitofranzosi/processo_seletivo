@@ -21,3 +21,19 @@ def publicar(coluna) -> dict:
 def ler(valor) -> bool:
     """O valor que a gravação do rascunho aceita: só `True` admite; `None`, ausência e `False`, não."""
     return valor is True
+
+
+FRASE = (
+    "O candidato alcançado por esta Etapa pode escolher entre gravar um vídeo curto, na página do "
+    "sistema, e a entrevista ao vivo; as duas formas valem igual. O vídeo só confirma a "
+    "autodeclaração: quem o vídeo não confirmar fará a entrevista ao vivo, e só ela pode concluir "
+    "pela não confirmação."
+)
+
+
+def frase(etapa) -> str:
+    """A frase do documento e da Revisão (FR-7106); vazia onde a Etapa não admite o vídeo.
+
+    Vazia, e não "não admite": o acervo inteiro se recompõe byte a byte sem ela.
+    """
+    return FRASE if admite_video(etapa) else ""

@@ -105,7 +105,7 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
 
 
 def test_a_conta_fecha_com_a_matriz():
-    """96 retificáveis, e 96 com tela. O número está na matriz e no contrato.
+    """97 retificáveis, e 97 com tela. O número está na matriz e no contrato.
 
     Era 73 com a `029` — o texto da declaração de veracidade — e chegou a 83 com a `030`, que
     acrescentou `orderProduction` ao marco e os nove campos do método do sorteio comum ao Edital.
@@ -117,10 +117,11 @@ def test_a_conta_fecha_com_a_matriz():
     93 com a `163`: o alcance da Etapa, `modalityCodes` (FR-6967).
     95 com a `164`: o efeito do desfecho desfavorável e o do não comparecimento (FR-7006).
     96 com a `165`: a regra de deliberação, `deliberationRule` (FR-7055).
+    97 com a `166`: a admissão do vídeo, `videoOption` (FR-7102).
 
 
     Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
     importam" — todos.
     """
-    assert len(_retificaveis()) == 96
+    assert len(_retificaveis()) == 97
     assert _retificaveis() <= _oferecidos()

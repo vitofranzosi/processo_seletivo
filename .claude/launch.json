@@ -663,6 +663,16 @@
       ],
       "port": 8197,
       "url": "http://localhost:8197"
+    },
+    {
+      "name": "verificacao-por-video-166",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DJANGO_DEBUG=true DB_NAME=ps_166_local DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true VERIFICACAO_POR_VIDEO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-166-arquivos uv run python manage.py runserver 8166"
+      ],
+      "port": 8166,
+      "url": "http://localhost:8166"
     }
   ]
 }
