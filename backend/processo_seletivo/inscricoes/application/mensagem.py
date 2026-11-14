@@ -34,37 +34,62 @@ isso ela é registrada no servidor em vez de interromper a pessoa.
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 
+from processo_seletivo.shared import correio
 from processo_seletivo.unidades.application import identificacao
 
 logger = logging.getLogger("processo_seletivo.inscricoes")
 
-ASSUNTO = "Inscrição recebida — {protocolo}"
+# **O texto mora nos modelos** (`inscricoes/templates/inscricoes/mensagem/comprovante.*`): o texto
+# puro, com o assunto na primeira linha, e o HTML na moldura comum de `shared/correio.py`.
+MODELO = "inscricoes/mensagem/comprovante"
 
-CORPO = """Recebemos a sua inscrição.
 
-    Protocolo: {protocolo}
-    Código de verificação: {verificacao}
+def compor_comprovante(dados):
+    """O assunto, o texto e o HTML do recibo — sem enviar.
 
-{selecao}
-Perfil de vaga: {perfil}
-Concorrência: {modalidade}
-Enviada em {quando}
+    `dados["assinatura"]` é a unidade do ato, que o portal resolve como o comprovante em papel
+    (109). Sem ela, a da implantação — e nunca um Cefor escrito aqui.
+    """
+    assinatura = dados.get("assinatura") or identificacao.da_implantacao().rotulo
+    sigla, _, instituicao = assinatura.partition("/")
+    return correio.compor(
+        MODELO,
+        {
+            "instituicao": identificacao.SIGLA_DA_INSTITUICAO,
+            "instituicao_por_extenso": identificacao.NOME_DA_INSTITUICAO,
+            # O cabeçalho diz a unidade que assina, e só a instituição quando é ela que assina.
+            "unidade": sigla if instituicao else "",
+            "assinatura": assinatura,
+            "protocolo": dados["protocolo"],
+            "verificacao": dados["verificacao"],
+            "selecao": [linha for linha in str(dados["selecao"]).split("\n") if linha.strip()],
+            "perfil": dados["perfil"],
+            "modalidade": dados["modalidade"],
+            "quando": dados["quando"],
+            "documentos": dados["documentos"],
+            "endereco": dados["endereco"],
+        },
+    )
 
-Documentos recebidos:
-{documentos}
 
-O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos são
-feitas pela comissão, nos prazos do Edital.
+def entregar(*, para, mensagem):
+    """Põe a mensagem na fila do correio: texto puro, HTML e os cabeçalhos de mensagem automática.
 
-Para rever a inscrição e baixar o comprovante, acesse
-{endereco}
-e entre com este e-mail — enviamos um código de acesso a cada entrada, e não há senha.
-
-{assinatura} — Seleções
-Esta mensagem é automática; não responda.
-"""
+    **Um destinatário só, sem cópia.** `EmailMultiAlternatives`, e não `send_mail`, porque só ela
+    leva cabeçalho: `Auto-Submitted` diz aos servidores que ninguém a escreveu à mão, e a resposta
+    automática de férias não volta para uma caixa que ninguém lê.
+    """
+    email = EmailMultiAlternatives(
+        subject=mensagem.assunto,
+        body=mensagem.texto,
+        from_email=settings.DEFAULT_FROM_EMAIL or None,
+        to=[para],
+        headers=dict(correio.CABECALHOS),
+    )
+    email.attach_alternative(mensagem.html, "text/html")
+    email.send(fail_silently=False)
 
 
 def enviar_comprovante(*, para: str, dados: dict) -> None:
@@ -75,33 +100,8 @@ def enviar_comprovante(*, para: str, dados: dict) -> None:
     """
     if not para:
         return
-    documentos = (
-        "\n".join(
-            f"    - {documento['requisito']}: {documento['arquivo']}"
-            for documento in dados["documentos"]
-        )
-        or "    (nenhum)"
-    )
     try:
-        send_mail(
-            subject=ASSUNTO.format(protocolo=dados["protocolo"]),
-            message=CORPO.format(
-                protocolo=dados["protocolo"],
-                verificacao=dados["verificacao"],
-                selecao=dados["selecao"],
-                perfil=dados["perfil"],
-                modalidade=dados["modalidade"],
-                quando=dados["quando"],
-                documentos=documentos,
-                endereco=dados["endereco"],
-                # A unidade do ato, que o portal resolve como o comprovante em papel (109). Sem
-                # ela, a da implantação — e nunca um Cefor escrito aqui.
-                assinatura=dados.get("assinatura") or identificacao.da_implantacao().rotulo,
-            ),
-            from_email=settings.DEFAULT_FROM_EMAIL or None,
-            recipient_list=[para],
-            fail_silently=False,
-        )
+        entregar(para=para, mensagem=compor_comprovante(dados))
     except Exception:
         # Sem o endereço e sem o protocolo: o registro técnico diz que falhou, e nada além disso.
         logger.exception("Falha ao enviar a confirmação de inscrição.")

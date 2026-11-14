@@ -453,4 +453,4 @@ def test_a_p05_menciona_o_que_so_a_convocacao_pede():
     )
 
     assert "Certidão de nascimento ou casamento" in resposta.explicacao.conteudo
-    assert "Se você for convocado" in resposta.explicacao.conteudo
+    assert "Se houver convocação, ela pedirá também" in resposta.explicacao.conteudo

@@ -269,8 +269,13 @@ concorrência"*, e não o nome do laudo, nem o motivo, nem o nome da pessoa.
 
 #### C. O texto
 
-- **FR-4613**: O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há documento da sua
-  convocação para revisar"* e MUST NOT começar por "Convocação".
+- **FR-4613** *(revista em 2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`)*:
+  O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há documento da sua convocação para
+  revisar"* com um documento pendente, e *"… há documentos da sua convocação para revisar"* com dois
+  ou mais — o número que o corpo já concorda —, e MUST NOT começar por "Convocação".
+
+  > **Redação anterior, preservada:** O assunto MUST ser *"‹instituição› · Edital ‹número›/‹ano›: há
+  > documento da sua convocação para revisar"* e MUST NOT começar por "Convocação".
 - **FR-4614**: O corpo MUST nomear cada item pendente pelo nome publicado do requisito, na ordem da
   lista. O item exigido por modalidade (recorte por `modalityId` ou `modalityCode`) MUST aparecer
   como *"um documento da sua modalidade de concorrência"*, e dois ou mais como *"N documentos da sua

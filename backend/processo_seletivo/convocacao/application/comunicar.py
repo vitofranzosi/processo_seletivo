@@ -47,6 +47,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.requerimentos.domain import nomes as requerimento_nomes
 from processo_seletivo.requerimentos.domain.disponibilidade import momento_declarado
+from processo_seletivo.shared import correio
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.unidades.application import identificacao
 
@@ -484,7 +485,9 @@ def _renderizar(html_do_modelo, texto_do_modelo, dados):
     feita para a tela poderia divergir do envio em silêncio; esta é a única.
     """
     contexto = _contexto(dados)
-    html = html_do_modelo.render(contexto)
+    # As classes do modelo viram estilo em linha, com os tokens da moldura comum: o modelo não pode
+    # escrever `style` (a guarda da CSP), e o cliente de e-mail só respeita o que está em linha.
+    html = correio.estilizar(html_do_modelo.render(contexto))
     assunto, corpo = _assunto_e_corpo(texto_do_modelo.render(contexto))
     return html, assunto, corpo
 
@@ -573,7 +576,12 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         return Envio(f"{type(erro).__name__}: {FALHA_NA_MONTAGEM}", "")
     # O resumo das fontes que o motor compilou e que renderizam logo abaixo, e não do arquivo
     # relido do disco (R-009). Antes da renderização, para a falha dela também dizer o modelo.
-    modelo = identificacao_do_modelo(dados["escolha"].modelo, html_do_modelo, texto_do_modelo)
+    modelo = identificacao_do_modelo(
+        dados["escolha"].modelo,
+        html_do_modelo,
+        texto_do_modelo,
+        estilos=correio.FONTE_DOS_ESTILOS,
+    )
     try:
         html, assunto, corpo = _renderizar(html_do_modelo, texto_do_modelo, dados)
     except Exception as erro:
@@ -586,6 +594,8 @@ def enviar_mensagem_de_convocacao(*, para, dados):
         body=corpo,
         from_email=settings.DEFAULT_FROM_EMAIL or None,
         to=[para],
+        # A mensagem é automática, como a dos avisos: a resposta de férias não volta (RFC 3834).
+        headers=dict(correio.CABECALHOS),
     )
     mensagem.attach_alternative(html, "text/html")
     try:

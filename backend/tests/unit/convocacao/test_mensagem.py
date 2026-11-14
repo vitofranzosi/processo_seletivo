@@ -151,7 +151,9 @@ class TestAFalhaNaoInterrompe:
 
         assert envio.detalhe
         assert "candidata@exemplo.test" not in envio.detalhe
-        assert envio.modelo.startswith("inicial:sha256:"), "a falha grava o modelo (FR-3889)"
+        assert envio.modelo.startswith("inicial:sha256-com-estilos:"), (
+            "a falha grava o modelo (FR-3889)"
+        )
 
 
 class CorreioQueFalha:

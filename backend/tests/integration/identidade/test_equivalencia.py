@@ -114,7 +114,7 @@ def test_a_falha_de_envio_nao_aparece(client, settings, monkeypatch):
     def explodir(*_args, **_kwargs):
         raise OSError("servidor de e-mail indisponível")
 
-    monkeypatch.setattr(mensagem, "send_mail", explodir)
+    monkeypatch.setattr(mensagem, "entregar", explodir)
     resposta = pedir(client, DESCONHECIDO)
     assert resposta.status_code == 302
     assert "Se este endereço puder ser utilizado" in (

@@ -118,7 +118,7 @@ class TestAConvocacaoDaPropriaPessoa:
 
         # Sem documento pedido, a estrutura da 118 com as três mudanças da 121 (FR-3868): o título
         # por estado, que diz o que "Você foi convocada(o)" dizia, e o vencimento nos dados.
-        assert "<h1" in pagina and "Você foi convocado!" in pagina
+        assert "<h1" in pagina and "Você tem uma convocação!" in pagina
         assert "Você foi convocada(o)" not in pagina
         # O formato único do prazo (FR-3747 da `118`).
         assert vencimento.strftime("%d/%m/%Y, às %Hh%M") in pagina
@@ -378,7 +378,7 @@ class TestAChamada:
         assert pagina.index('id="andamento"') < pagina.index('id="o-que-falta"')
         assert pagina.index('id="o-que-falta"') < pagina.index('id="sobre-esta-convocacao"')
         assert pagina.count("<h1") == 1
-        assert "Você foi convocado!" in _texto(pagina)
+        assert "Você tem uma convocação!" in _texto(pagina)
         contexto = pagina.split('class="contexto-da-chamada">', 1)[1].split("</p>", 1)[0]
         edital = cenario.edital
         assert contexto.endswith(f" · Edital {edital.number}/{edital.year}"), contexto
@@ -439,7 +439,7 @@ class TestAChamada:
         """FR-3868: o título e o cartão do prazo, sem "Você foi convocada(o)"."""
         pagina = _main(client, _montar(fx, "B"))
 
-        assert '<h1 id="titulo-da-chamada">Você foi convocado!</h1>' in pagina
+        assert '<h1 id="titulo-da-chamada">Você tem uma convocação!</h1>' in pagina
         assert 'class="cartao-do-prazo"' in pagina
         assert "Você foi convocada(o)" not in pagina
         assert 'class="etapa-da-chamada"' not in pagina, "a etapa é da chamada com documento"
@@ -575,7 +575,7 @@ def _frases_da_sc_1150(letra):
     etapa = obrigacoes.ETAPAS[(True, True)]
     return {
         "C1": [
-            "Você foi convocado!",
+            "Você tem uma convocação!",
             etapa,
             "Prazo desta convocação",
             "Você ainda precisa enviar 4 documentos e preencher o Requerimento de Matrícula.",
@@ -583,7 +583,7 @@ def _frases_da_sc_1150(letra):
             *aberta,
         ],
         "F": [
-            "Você foi convocado!",
+            "Você tem uma convocação!",
             etapa,
             "Prazo desta convocação",
             "Você ainda precisa corrigir 1 documento e enviar 1 documento.",
@@ -607,7 +607,7 @@ def _frases_da_sc_1150(letra):
             "Conferido",
         ],
         "corr": [
-            "Você foi convocado!",
+            "Você tem uma convocação!",
             obrigacoes.CORRIGIDA,
             "Convocação substituída Enviada em",
             "Ver o que preciso fazer",

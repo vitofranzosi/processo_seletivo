@@ -430,7 +430,7 @@ def _p05(contexto, parametros, pergunta, canal):
     ]
     if na_convocacao:
         rascunho.explicacao += (
-            " Se você for convocado, a convocação pedirá também: "
+            " Se houver convocação, ela pedirá também: "
             + ", ".join(na_convocacao)
             + ". Esses não são enviados na inscrição."
         )

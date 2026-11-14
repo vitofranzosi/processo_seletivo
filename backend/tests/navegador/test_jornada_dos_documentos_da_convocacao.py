@@ -227,7 +227,9 @@ def test_aluno_envia_corrige_a_pendencia_e_fica_apto(
     abrir_convocacao(candidata, tela.servidor, pessoa)
     # Os blocos da `118` (FR-3735) no lugar da lista única; "Falta enviar." continua.
     # A chamada da 121 no lugar de "O que fazer agora" (FR-3735 da 118, revista).
-    expect(candidata.get_by_role("heading", name="Você foi convocado!", level=1)).to_be_visible()
+    expect(
+        candidata.get_by_role("heading", name="Você tem uma convocação!", level=1)
+    ).to_be_visible()
     expect(candidata.get_by_text("Falta enviar")).to_have_count(4)
     sem_rolagem_horizontal(candidata)
     tela.capturar(candidata, "candidato-lista")

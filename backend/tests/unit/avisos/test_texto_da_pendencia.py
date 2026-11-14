@@ -90,3 +90,14 @@ def test_chave_no_nome_do_documento_chega_como_foi_escrita():
 def test_sem_pendente_nao_ha_texto():
     with pytest.raises(ValueError):
         _compor([])
+
+
+def test_com_mais_de_um_documento_o_assunto_vai_ao_plural():
+    """Revisão de 13/11 da FR-4613: o assunto concorda o número, como o corpo já concordava."""
+    assunto, corpo = _compor(
+        [Pendente("Comprovante de residência", False), Pendente("Laudo médico", True)]
+    )
+
+    assert assunto == "Ifes · Edital 72/2026: há documentos da sua convocação para revisar"
+    assert not assunto.startswith("Convocação")
+    assert corpo.startswith("Há documentos da sua convocação no Edital 72/2026 que precisam")

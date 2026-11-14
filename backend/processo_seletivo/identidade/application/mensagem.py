@@ -8,7 +8,7 @@ que a origina.
 **São três situações desde a `019`**, e não duas: a convocação por mensagem individual entrou depois
 de a `FR-084` ser revisada por escrito, e não por exceção silenciosa. Ela mora em
 `convocacao/application/comunicar.py`, e a contagem é varrida por
-`tests/test_situacoes_de_mensagem.py` — um `send_mail` num módulo não declarado reprova a suíte.
+`tests/test_situacoes_de_mensagem.py` — um remetente num módulo não declarado reprova a suíte.
 
 **O código muda de texto conforme a finalidade** (FR-082a). Entrar e adicionar credencial produzem
 riscos opostos para quem recebe: no primeiro, ignorar a mensagem basta, porque ninguém entra sem o
@@ -26,66 +26,69 @@ de quem é — é justamente o que ela está tentando descobrir.
 import logging
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 
 from processo_seletivo.identidade.models import VALIDADE_EM_MINUTOS, DesafioDeAcesso
+from processo_seletivo.shared import correio
 from processo_seletivo.unidades.application import identificacao
 
 logger = logging.getLogger("processo_seletivo.identidade")
 
-ASSUNTO = "Seu código de acesso — Seleções {instituicao}"
-ASSUNTO_VINCULO = "Confirme este e-mail — Seleções {instituicao}"
-
+# **O texto mora nos modelos**, em `identidade/templates/identidade/mensagem/`: o texto puro, com o
+# assunto na primeira linha, e o HTML na moldura comum de `shared/correio.py`. Os dois saem na mesma
+# mensagem; quem não lê HTML lê o texto, que diz tudo o que o HTML diz.
+#
 # **A identificação da implantação, e não a de uma unidade** (109, FR-3210): a conta do candidato
 # não é de unidade nenhuma, e o código serve para entrar em qualquer seleção. Com o Cefor sozinho no
 # registro, é "Cefor/Ifes", como sempre foi; com mais de uma unidade ativa, "Ifes" (P-1).
-RODAPE = """
-{instituicao} — Seleções
-Esta mensagem é automática; não responda.
-"""
+MODELO_DO_CODIGO = "identidade/mensagem/codigo"
+# O risco é o oposto do de entrar, e o texto precisa dizer isso (FR-082a).
+MODELO_DO_VINCULO = "identidade/mensagem/vinculo"
+MODELO_DA_MUDANCA = "identidade/mensagem/mudanca"
 
-CORPO = (
-    """Seu código de acesso é:
 
-    {codigo}
+def entregar(*, para, mensagem):
+    """Põe a mensagem na fila do correio: texto puro, HTML e os cabeçalhos de mensagem automática.
 
-Ele vale por {validade} minutos e só pode ser usado uma vez.
+    **Um destinatário só, sem cópia.** `EmailMultiAlternatives`, e não `send_mail`, porque só ela
+    leva cabeçalho: `Auto-Submitted` diz aos servidores que ninguém a escreveu à mão, e a resposta
+    automática de férias não volta para uma caixa que ninguém lê.
+    """
+    email = EmailMultiAlternatives(
+        subject=mensagem.assunto,
+        body=mensagem.texto,
+        from_email=settings.DEFAULT_FROM_EMAIL or None,
+        to=[para],
+        headers=dict(correio.CABECALHOS),
+    )
+    email.attach_alternative(mensagem.html, "text/html")
+    email.send(fail_silently=False)
 
-Se não foi você que pediu este código, ignore esta mensagem: ninguém entra sem ele.
-"""
-    + RODAPE
-)
 
-# O risco é o oposto do de entrar, e o texto precisa dizer isso. Quem receber este código e o
-# repassar não perde o acesso a nada — passa a ter este endereço vinculado à conta de outra
-# pessoa, que então entra por ele.
-CORPO_VINCULO = (
-    """Alguém pediu para usar este e-mail como forma de entrar numa conta das Seleções
-{instituicao}. Se foi você, o código é:
+def compor_codigo(*, codigo, identificacao_da_implantacao, finalidade=""):
+    """O assunto, o texto e o HTML do código — sem enviar, e sem ler o banco."""
+    vinculo = finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
+    return correio.compor(
+        MODELO_DO_VINCULO if vinculo else MODELO_DO_CODIGO,
+        {
+            **correio.moldura(identificacao_da_implantacao),
+            "codigo": codigo,
+            "validade": VALIDADE_EM_MINUTOS,
+        },
+    )
 
-    {codigo}
 
-Ele vale por {validade} minutos e só pode ser usado uma vez.
-
-Se não foi você, não informe este código a ninguém: quem o tiver poderá entrar na conta dele
-por este endereço. Ignorar esta mensagem é suficiente — nada acontece sem o código.
-"""
-    + RODAPE
-)
-
-ASSUNTO_DA_MUDANCA = "Mudança no acesso à sua conta — Seleções {instituicao}"
-
-CORPO_DA_MUDANCA = (
-    """O endereço abaixo foi {acao} como forma de entrar na sua conta das Seleções {instituicao}:
-
-    {endereco}
-
-Se foi você, não é preciso fazer nada.
-
-Se não foi, fale com {atendimento}: alguém pode ter obtido acesso à sua conta.
-"""
-    + RODAPE
-)
+def compor_mudanca(*, endereco, acao, atendimento, identificacao_da_implantacao):
+    """O assunto, o texto e o HTML do aviso de mudança de credencial — sem enviar."""
+    return correio.compor(
+        MODELO_DA_MUDANCA,
+        {
+            **correio.moldura(identificacao_da_implantacao),
+            "acao": acao,
+            "endereco": endereco,
+            "atendimento": atendimento or "o atendimento institucional",
+        },
+    )
 
 
 def enviar_codigo(*, para: str, codigo: str, finalidade: str = "") -> None:
@@ -97,17 +100,14 @@ def enviar_codigo(*, para: str, codigo: str, finalidade: str = "") -> None:
     """
     if not codigo:
         return
-    vinculo = finalidade == DesafioDeAcesso.Finalidade.ADICIONAR_CREDENCIAL
     try:
-        instituicao = identificacao.da_implantacao().rotulo
-        send_mail(
-            subject=(ASSUNTO_VINCULO if vinculo else ASSUNTO).format(instituicao=instituicao),
-            message=(CORPO_VINCULO if vinculo else CORPO).format(
-                codigo=codigo, validade=VALIDADE_EM_MINUTOS, instituicao=instituicao
+        entregar(
+            para=para,
+            mensagem=compor_codigo(
+                codigo=codigo,
+                identificacao_da_implantacao=identificacao.da_implantacao(),
+                finalidade=finalidade,
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL or None,
-            recipient_list=[para],
-            fail_silently=False,
         )
     except Exception:
         # Sem o endereço e sem o código: o registro técnico diz que falhou, e nada além disso. O
@@ -136,18 +136,14 @@ def avisar_mudanca_de_credencial(*, para: str, endereco: str, acao: str, atendim
     if not para:
         return
     try:
-        instituicao = identificacao.da_implantacao().rotulo
-        send_mail(
-            subject=ASSUNTO_DA_MUDANCA.format(instituicao=instituicao),
-            message=CORPO_DA_MUDANCA.format(
-                acao=acao,
+        entregar(
+            para=para,
+            mensagem=compor_mudanca(
                 endereco=endereco,
-                atendimento=atendimento or "o atendimento institucional",
-                instituicao=instituicao,
+                acao=acao,
+                atendimento=atendimento,
+                identificacao_da_implantacao=identificacao.da_implantacao(),
             ),
-            from_email=settings.DEFAULT_FROM_EMAIL or None,
-            recipient_list=[para],
-            fail_silently=False,
         )
     except Exception:
         logger.exception("Falha ao avisar mudança de credencial.")

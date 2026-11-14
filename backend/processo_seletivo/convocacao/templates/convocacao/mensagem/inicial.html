@@ -1,10 +1,14 @@
 {% comment %}
 A mensagem inicial de convocação, em HTML (121, FR-3882 a FR-3888).
 
-**Sem CSS nenhum.** A mensagem de e-mail não é página e a política de conteúdo não a alcança, mas a
-varredura da CSP lê todo modelo `.html` do repositório e recusa o atributo `style`. O destaque do
-prazo e o quadro de segurança usam os atributos de apresentação do próprio HTML (`bgcolor`,
-`border`, `cellpadding`), que os clientes de e-mail respeitam melhor que folha de estilo.
+**Classe no modelo, estilo na mensagem.** O cliente de e-mail só respeita estilo em linha, e a
+varredura da CSP recusa o atributo `style` em todo modelo `.html` do repositório. O modelo escreve
+`class`, e `shared/correio.py` troca cada classe pela declaração dela depois de renderizar — a mesma
+moldura das demais mensagens (`shared/templates/correio/base.html`), repetida aqui por inteiro porque
+o resumo gravado na comunicação (FR-3889) é o destes dois arquivos e do mapa de estilos
+(`shared/templates/correio/estilos.json`), e uma moldura herdada mudaria o texto que saiu sem mudar o
+resumo. Os atributos de apresentação (`bgcolor`, `width`) ficam para o
+Outlook do Windows, que ignora o resto.
 
 **Sem imagem, sem fonte ou folha externa, sem `src=`** (FR-3886): a identificação é texto, e o
 único endereço é o link da convocação, além do canal de atendimento.
@@ -21,50 +25,67 @@ Este arquivo e o `inicial.txt` dizem as mesmas frases (FR-3882); o assunto mora 
 do texto puro. Mudou uma frase aqui? Mude lá também.
 {% endcomment %}<!doctype html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><title>Convocação no {{ edital }}</title></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Convocação no {{ edital }}</title>
+</head>
 <body>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td align="center">
-<table role="presentation" width="600" cellpadding="16" cellspacing="0" border="0">
-<tr><td>
-<p><strong>{{ instituicao_por_extenso }}</strong>{% if unidade %}<br>{{ unidade }} · Seleções{% endif %}</p>
+<div class="preheader">{% if prazo %}Prazo para atender: até {{ prazo.por_extenso }}.{% else %}O prazo para atender é o que o Edital publica.{% endif %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f4f2" class="fundo">
+<tr><td align="center" class="moldura">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" class="cartao">
+<tr><td class="faixa" bgcolor="#0b5a2a">&nbsp;</td></tr>
+<tr><td class="cabecalho">
+<p class="marca">{{ instituicao_por_extenso }}</p>
+{% if unidade %}<p class="unidade">{{ unidade }} · Seleções</p>{% endif %}
+</td></tr>
+<tr><td class="conteudo">
+<h1 class="titulo">Você tem uma convocação no {{ edital }}</h1>
+<p class="subtitulo">{{ processo }}</p>
 
-<h1>Você foi convocado no {{ edital }}</h1>
-<p>{{ processo }}</p>
+{% if variante == "documento_e_requerimento" %}<p class="texto">Esta convocação pede documentos e o Requerimento de Matrícula.</p>
+<p class="texto">Você envia tudo pela sua área do candidato.</p>{% elif variante == "so_documento" %}<p class="texto">Esta convocação pede documentos, que você envia pela sua área do candidato.</p>{% elif variante == "so_requerimento" %}<p class="texto">Esta convocação pede o Requerimento de Matrícula, que você preenche pela sua área do candidato.</p>{% else %}<p class="texto">Siga as instruções do Edital dentro do prazo. As instruções estão na sua área do candidato.</p>{% endif %}
 
-{% if variante == "documento_e_requerimento" %}<p>Esta convocação pede documentos e o Requerimento de Matrícula.</p>
-<p>Você envia tudo pela sua área do candidato.</p>{% elif variante == "so_documento" %}<p>Esta convocação pede documentos, que você envia pela sua área do candidato.</p>{% elif variante == "so_requerimento" %}<p>Esta convocação pede o Requerimento de Matrícula, que você preenche pela sua área do candidato.</p>{% else %}<p>Siga as instruções do Edital dentro do prazo. As instruções estão na sua área do candidato.</p>{% endif %}
-
-<table role="presentation" width="100%" cellpadding="16" cellspacing="0" border="0" bgcolor="#eef3f8">
-<tr><td>{% if prazo %}<p>Prazo para atender:</p>
-<p><strong>até {{ prazo.por_extenso }}.</strong></p>{% else %}<p>O prazo para atender é o que o Edital publica.</p>{% endif %}</td></tr>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
+<tr><td class="destaque-prazo" bgcolor="#fdf5e5">{% if prazo %}<p class="rotulo">Prazo para atender:</p>
+<p class="prazo"><strong>até {{ prazo.por_extenso }}.</strong></p>{% else %}<p class="texto fim">O prazo para atender é o que o Edital publica.</p>{% endif %}</td></tr>
 </table>
 
-<p><a href="{{ link }}"><strong>Acessar minha convocação</strong></a></p>
-<p>{{ link }}</p>
+<!--[if mso]><table role="presentation" width="340" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="acao">
+<tr><td class="botao-celula" bgcolor="#15803d" align="center"><a class="botao" href="{{ link }}">Acessar minha convocação</a></td></tr>
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+<p class="endereco">{{ link }}</p>
 
-<p>Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviamos numa mensagem separada.</p>
+<p class="texto">Como entrar: informe o seu e-mail na tela de acesso e digite o código de seis dígitos que enviaremos numa mensagem separada.</p>
 
-<p>{% if requerimento_exigido %}Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.{% else %}Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o resultado.{% endif %}</p>
+<p class="fraco">{% if requerimento_exigido %}Esta convocação ainda não é a matrícula: a comissão confere o que você enviar e registra o resultado.{% else %}Esta convocação ainda não é o resultado: a comissão confere o que você enviar e registra o resultado.{% endif %}</p>
 
-<p>Em caso de dúvida, fale com {{ atendimento }}.</p>
+<p class="texto">Em caso de dúvida, fale com {{ atendimento }}.</p>
 
-<table role="presentation" width="100%" cellpadding="12" cellspacing="0" border="1">
-<tr><td>
-<p><strong>Para a sua segurança</strong></p>
-<ul>
-<li>O {{ instituicao }} não pede senha, pagamento nem documentos por e-mail.</li>
-<li>Os documentos vão só pela sua área do candidato.</li>
-<li>O código de acesso só chega quando você o pede. Não o repasse a ninguém.</li>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="seguranca">
+<tr><td class="seguranca-celula">
+<p class="rotulo">Para a sua segurança</p>
+<ul class="seguranca-lista">
+<li class="item">O {{ instituicao }} não pede senha, pagamento nem documentos por e-mail.</li>
+<li class="item">Os documentos vão só pela sua área do candidato.</li>
+<li class="item">O código de acesso só chega quando você o pede. Não o repasse a ninguém.</li>
 </ul>
 </td></tr>
 </table>
-
-<p>{{ assinatura }} — Seleções<br>
-Esta mensagem é automática; não responda.<br>
-Você a recebe porque foi convocado num processo seletivo em que se inscreveu.</p>
+</td></tr>
+<tr><td class="rodape">
+<p class="assinatura">{{ assinatura }} — Seleções</p>
+<p class="nota">Esta mensagem é automática; não responda.</p>
+<p class="nota">Você a recebe porque tem uma convocação num processo seletivo em que se inscreveu.</p>
 </td></tr>
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
 </table>
 </body>

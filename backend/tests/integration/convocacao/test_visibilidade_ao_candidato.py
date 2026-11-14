@@ -277,7 +277,7 @@ class TestAsSuperficiesDoPortal:
 
         assert "Ver convocação" in lista
         assert 'id="convocacao-da-inscricao"' in acompanhamento
-        assert "Você foi convocado!" in tela
+        assert "Você tem uma convocação!" in tela
         # A palavra do canal (FR-3998): a referência, e não *"Comunicação enviada em"*.
         assert f"Publicada em</dt><dd>{REFERENCIA}" in tela
         assert "Comunicação enviada em" not in tela

@@ -120,21 +120,38 @@ def _fonte(modelo):
     return modelo.template.source
 
 
-def identificacao_do_modelo(nome, html, texto):
-    """``<nome>:sha256:<64 hex>`` das duas fontes que renderizaram o envio (R-009, FR-3889).
+#: O rótulo da regra das três fontes (revisão de 2026-11-13 da R-009). O rótulo anterior,
+#: `<nome>:sha256:`, continua nos registros gravados antes dela, e se confere pela regra das duas
+#: fontes, preservada na R-009: o rótulo diz qual regra recalcular.
+REGRA_DO_RESUMO = "sha256-com-estilos"
 
-    **A composição é fixa**: o HTML e depois o texto, cada um precedido do rótulo, separados por
-    NUL, em UTF-8 e sem normalizar fim de linha nem espaço. Os rótulos impedem que um trecho movido
-    de um arquivo para o outro produza o mesmo resumo.
+
+def identificacao_do_modelo(nome, html, texto, *, estilos):
+    """``<nome>:sha256-com-estilos:<64 hex>`` das três fontes que deram forma ao envio (R-009).
+
+    **A composição é fixa**: o HTML, o texto e o mapa de estilos (`shared/templates/correio/
+    estilos.json`), cada um precedido do rótulo, separados por NUL, em UTF-8 e sem normalizar fim de
+    linha nem espaço. Os rótulos impedem que um trecho movido de um arquivo para o outro produza o
+    mesmo resumo.
+
+    **Os estilos entram porque decidem o HTML que sai.** Sem eles, uma cor ou um quadro mudados no
+    mapa mudavam a mensagem sem mudar o resumo gravado, e a conferência pelo Git apontaria um commit
+    cujo HTML não é o que saiu (achado 6 da auditoria dos e-mails, 13/11).
     """
     conteudo = (
-        b"html\0" + _fonte(html).encode("utf-8") + b"\0texto\0" + _fonte(texto).encode("utf-8")
+        b"html\0"
+        + _fonte(html).encode("utf-8")
+        + b"\0texto\0"
+        + _fonte(texto).encode("utf-8")
+        + b"\0estilos\0"
+        + estilos.encode("utf-8")
     )
-    return f"{nome}:sha256:{hashlib.sha256(conteudo).hexdigest()}"
+    return f"{nome}:{REGRA_DO_RESUMO}:{hashlib.sha256(conteudo).hexdigest()}"
 
 
 __all__ = [
     "CORRECAO",
+    "REGRA_DO_RESUMO",
     "DOCUMENTO_E_REQUERIMENTO",
     "INICIAL",
     "NENHUM",

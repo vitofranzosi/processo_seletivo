@@ -96,7 +96,7 @@ def test_publicada_a_relacao_a_pagina_diz_que_o_sorteio_esta_por_vir(client, cer
     assert "Aguardando o sorteio" in corpo
     # **A frase que o cidadão precisa ler**, e que só o sistema pode afirmar: a lista fechou antes.
     assert "antes de existirem os números" in corpo
-    assert f"{relacao.quantidade} candidatos habilitados" in corpo
+    assert f"{relacao.quantidade} pessoas habilitadas" in corpo
     assert reverse("portal:relacao-de-habilitados", args=[relacao.id]) in corpo
 
 

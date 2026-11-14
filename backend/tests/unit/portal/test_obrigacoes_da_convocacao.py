@@ -701,7 +701,7 @@ def test_data_hora_e_ate_delegam_ao_prazo_apresentado(settings):
 @pytest.mark.parametrize(
     ("momento", "titulo"),
     [
-        (o.ABERTA, "Você foi convocado!"),
+        (o.ABERTA, "Você tem uma convocação!"),
         (o.ENCERRADA_PELO_PRAZO, "O prazo desta convocação terminou"),
         (o.ENCERRADA_PELO_PROCESSO, "O envio pelo portal está encerrado"),
         (o.DECIDIDA, "Resultado da sua convocação"),
@@ -867,7 +867,7 @@ class TestOCartaoDoPrazo:
             agora=VENCIMENTO - timedelta(days=3),
         )
 
-        assert projetada.titulo == "Você foi convocado!"
+        assert projetada.titulo == "Você tem uma convocação!"
         assert projetada.cartao == o.CartaoDoPrazo(frases=(o.PRAZO_NAO_INICIADO, o.JA_PODE_ENVIAR))
 
     def test_sem_vencimento(self):

@@ -286,12 +286,12 @@ Cada caso abaixo é requisito, e entra na verificação como os `FR-`.
 
 - **FR-6202**: A linha *"chamada aberta, prazo correndo, sem vencimento ou com a comunicação não
   enviada"* da tabela da FR-3858 da `121` MUST se dividir em duas: **com** providência pendente
-  (FR-6200), *"Você foi convocado!"*; **sem** providência pendente, *"Acompanhe sua convocação"*. As
+  (FR-6200), *"Você tem uma convocação!"* *(revisto em 2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`: era *"Você foi convocado!"*, masculino genérico)*; **sem** providência pendente, *"Acompanhe sua convocação"*. As
   demais linhas não mudam. O título novo MUST NOT afirmar matrícula, contratação, bolsa, vaga
   garantida ou aprovação, como os demais (FR-3751 da `118`).
 - **FR-6203**: O título MUST acompanhar a providência pendente nos dois sentidos: o envio que tira a
   última tarefa leva, na volta da confirmação (FR-3870 da `121`), ao título *"Acompanhe sua
-  convocação"*; a pendência nova num obrigatório leva de volta a *"Você foi convocado!"*.
+  convocação"*; a pendência nova num obrigatório leva de volta a *"Você tem uma convocação!"*.
 
 #### C. A frase de conclusão e o próximo passo
 
@@ -506,7 +506,7 @@ pelo portal, como hoje até o desfecho (FR-6201 da `154`).
 
 | Estado | Título |
 |---|---|
-| chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **com** providência pendente | *"Você foi convocado!"* |
+| chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **com** providência pendente | *"Você tem uma convocação!"* |
 | chamada *aberta*, prazo correndo, sem vencimento ou com a comunicação não enviada, **sem** providência pendente | *"Acompanhe sua convocação"* |
 
 > *Redação anterior:* uma linha só, *"Você foi convocado!"*.

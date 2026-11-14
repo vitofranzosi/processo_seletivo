@@ -508,7 +508,7 @@ de conclusão; ela fica só no bloco *Sobre esta convocação*.
 > *Redação anterior:* *"Comunicada em ‹data›, às ‹hora›, com prazo até ‹data›, às ‹hora›. Esse prazo
 > não vale mais."*
 
-**Cenário K, nova redação** (caso-limite *"Prazo não iniciado"*). O título é *"Você foi convocado!"*;
+**Cenário K, nova redação** (caso-limite *"Prazo não iniciado"*). O título é *"Você tem uma convocação!"* *(revisto em 2026-11-13, na auditoria dos e-mails — `doc/auditoria-dos-emails-2026-11-13.md`: era *"Você foi convocado!"*, masculino genérico)*;
 o cartão do prazo diz só a frase da FR-3749 da `118`, revista pela `125`, no canal da convocação, sem
 data, sem dia da semana e sem contagem; a consequência não aparece (FR-1177 da `063`). Na mensagem, o
 e-mail não existe ainda: ele é o que inicia o prazo. Na publicação, o cenário só existe na correção de

@@ -1,0 +1,49 @@
+{% comment %}
+A moldura de toda mensagem de e-mail do GPS: o cabeçalho institucional, o cartão de 600 px e o rodapé.
+
+**Classe, e nunca o atributo de estilo.** `shared/correio.py` troca cada classe pela declaração dela
+depois de renderizar: o cliente de e-mail só respeita estilo em linha, e a guarda da política de
+conteúdo recusa o atributo escrito no modelo. Os atributos de apresentação (`bgcolor`, `width`,
+`cellpadding`) ficam, porque o Outlook do Windows os lê quando ignora o resto.
+
+**O cartão é fluido até 600 px**: 100% da tela no celular, 600 no computador. O Outlook do Windows não
+entende largura máxima, e a tabela entre comentários condicionais é só para ele.
+
+**Sem imagem, sem fonte externa, sem script.** A identificação é texto, e sobrevive ao bloqueio de
+imagens; as cores são sólidas, e o modo escuro dos clientes inverte sem perder contraste.
+
+**O texto puro contém tudo o que o HTML diz.** O cabeçalho repete a identificação que o texto também
+traz, e o botão repete o endereço que vem por extenso logo abaixo dele.
+{% endcomment %}<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>{% block titulo_do_documento %}{% endblock %}</title>
+</head>
+<body>
+<div class="preheader">{% block preheader %}{% endblock %}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f3f4f2" class="fundo">
+<tr><td align="center" class="moldura">
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" class="cartao">
+<tr><td class="faixa" bgcolor="#0b5a2a">&nbsp;</td></tr>
+<tr><td class="cabecalho">
+<p class="marca">{{ instituicao_por_extenso }}</p>
+<p class="unidade">{% if unidade %}{{ unidade }} · {% endif %}Seleções</p>
+</td></tr>
+<tr><td class="conteudo">
+{% block conteudo %}{% endblock %}
+</td></tr>
+<tr><td class="rodape">
+{% block rodape %}<p class="assinatura">{{ assinatura }} — Seleções</p>
+<p class="nota">Esta mensagem é automática; não responda.</p>{% block motivo_do_envio %}{% endblock %}{% endblock %}
+</td></tr>
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+</td></tr>
+</table>
+</body>
+</html>

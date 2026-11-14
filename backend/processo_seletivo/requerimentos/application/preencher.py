@@ -245,7 +245,7 @@ def _exigir_disponibilidade(inscricao, conteudo, status_do_processo):
     if not apurado.disponivel:
         raise DomainError(
             nomes.INDISPONIVEL,
-            "O Requerimento de Matrícula ficará disponível quando você for convocado.",
+            "O Requerimento de Matrícula ficará disponível na sua convocação.",
             409,
         )
     _recusar_escrita_fechada(apurado)

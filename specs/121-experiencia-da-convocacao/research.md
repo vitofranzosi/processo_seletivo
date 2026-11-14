@@ -222,8 +222,26 @@ e não devem ser unificadas.
 
 ## R-009 — O resumo sai das fontes que o carregador entregou para o envio
 
-**Decisão.** `identificacao_do_modelo(nome, html, texto)`, em `convocacao/domain/mensagem.py`, recebe
-os dois objetos de modelo que o envio acabou de usar para renderizar. Ela devolve:
+> **Revista em 2026-11-13, na auditoria dos e-mails** (`doc/auditoria-dos-emails-2026-11-13.md`,
+> achado 6). O HTML da convocação passou a ter estilo em linha, aplicado depois da renderização a
+> partir de um mapa de classes, e mudar uma cor mudava a mensagem sem mudar o resumo. O mapa saiu do
+> código para um arquivo versionado, `backend/processo_seletivo/shared/templates/correio/estilos.json`,
+> e entrou no resumo como terceira fonte, com rótulo de regra próprio:
+>
+> ```text
+> <nome>:sha256-com-estilos:<hex de sha256( b"html\0" + fonte_html_utf8 + b"\0texto\0"
+>                                           + fonte_texto_utf8 + b"\0estilos\0" + estilos_utf8 )>
+> ```
+>
+> O mapa é lido uma vez pelo processo (`correio.FONTE_DOS_ESTILOS`), e é **a mesma leitura** que
+> estiliza o HTML e que entra no resumo — o equivalente, para o mapa, da fonte compilada dos modelos.
+> **O rótulo diz a regra**: um valor `<nome>:sha256:` foi gravado antes desta revisão e se confere pela
+> regra das duas fontes, abaixo, preservada; um valor `<nome>:sha256-com-estilos:`, pela das três. Na
+> conferência pelo Git, o passo 1 lista também os commits que mudaram o `estilos.json`.
+
+**Decisão** *(redação anterior à revisão de 2026-11-13, preservada — é a regra dos valores
+`<nome>:sha256:`)*. `identificacao_do_modelo(nome, html, texto)`, em `convocacao/domain/mensagem.py`,
+recebe os dois objetos de modelo que o envio acabou de usar para renderizar. Ela devolve:
 
 ```text
 <nome>:sha256:<hex de sha256( b"html\0" + fonte_html_utf8 + b"\0texto\0" + fonte_texto_utf8 )>

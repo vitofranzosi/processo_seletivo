@@ -1,0 +1,19 @@
+{% autoescape off %}{% comment %}
+O código para acrescentar este endereço a uma conta (010, FR-082a). A PRIMEIRA LINHA É O ASSUNTO.
+
+O risco é o oposto do de entrar, e o texto diz isso: quem receber este código e o repassar não perde
+o acesso a nada — passa a ter este endereço vinculado à conta de outra pessoa, que então entra por ele.
+{% endcomment %}Confirme este e-mail — Seleções {{ assinatura }}
+
+Alguém pediu para usar este e-mail como forma de entrar numa conta das Seleções
+{{ assinatura }}. Se foi você, o código é:
+
+    {{ codigo }}
+
+Digite-o na tela em que você o pediu. Ele vale por {{ validade }} minutos e só pode ser usado uma vez.
+
+Se não foi você, não informe este código a ninguém: quem o tiver poderá usar este endereço para entrar na própria conta. Ignorar esta mensagem é suficiente — nada acontece sem o código.
+
+{{ assinatura }} — Seleções
+Esta mensagem é automática; não responda.
+{% endautoescape %}

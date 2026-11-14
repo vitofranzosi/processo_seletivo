@@ -14,6 +14,7 @@ ele confira. O instante impresso é `publicado_em`, que é um fato passado — u
 geração faria o mesmo resultado produzir arquivos diferentes a cada download.
 """
 
+from processo_seletivo.divulgacao.domain import vocabulario_dos_atos as vocabulario
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA_DO_BRASAO,
@@ -47,7 +48,9 @@ def render_resultado_pdf(conteudo: dict) -> bytes:
     composicao = Composicao()
     _timbre(composicao, cabecalho)
     _identificacao(composicao, cabecalho)
-    _lista(composicao, conteudo["posicoes"])
+    _lista(
+        composicao, conteudo["posicoes"], rotulo_da_pessoa=vocabulario.rotulo_da_pessoa(cabecalho)
+    )
     _sorteio(composicao, cabecalho)
     _autoridade(composicao, cabecalho)
     _integridade(composicao, conteudo)
@@ -145,7 +148,7 @@ def _par(composicao, rotulo, valor):
     composicao.escrever(valor, tamanho=CORPO_TEXTO, recuo=RECUO_DO_VALOR, antes=SUBIR_PARA_A_LINHA)
 
 
-def _lista(composicao, posicoes):
+def _lista(composicao, posicoes, *, rotulo_da_pessoa):
     composicao.escrever(
         "Resultado", tamanho=CORPO_SECAO, fonte=NEGRITO, antes=ENTRE_SECOES, junto=True
     )
@@ -158,7 +161,8 @@ def _lista(composicao, posicoes):
         return
     _tabela(
         composicao,
-        ["Posição", "Candidato", "Protocolo", "Modalidade", "Pontuação"],
+        # O rótulo que o ato gravou, e "Candidato" no ato anterior a 13/11 (vocabulario_dos_atos).
+        ["Posição", rotulo_da_pessoa, "Protocolo", "Modalidade", "Pontuação"],
         [
             [
                 _posicao(item),

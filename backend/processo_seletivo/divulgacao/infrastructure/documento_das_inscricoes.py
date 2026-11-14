@@ -9,6 +9,7 @@ Perfil.
 documento é gerado uma vez, na publicação, a partir dos bytes que a página também lê (FR-5424).
 """
 
+from processo_seletivo.divulgacao.domain import vocabulario_dos_atos as vocabulario
 from processo_seletivo.divulgacao.domain.inscricoes import (
     FRASE_DAS_LISTAS,
     grupos_publicados,
@@ -110,7 +111,8 @@ def _lista(composicao, lista, conteudo):
     if lista["constam"]:
         _tabela(
             composicao,
-            ["Candidato", "Protocolo"],
+            # O rótulo que o ato gravou, e "Candidato" no ato anterior a 13/11.
+            [vocabulario.rotulo_da_pessoa(conteudo), "Protocolo"],
             [[linha["candidato"], linha["protocolo"]] for linha in lista["constam"]],
             recuo=0.0,
             alinhamentos=[ESQUERDA, ESQUERDA],
@@ -125,8 +127,8 @@ def _lista(composicao, lista, conteudo):
         onde = "nesta lista" if lista["lista"] else "neste Perfil"
         composicao.escrever(
             f"{conteudo['rotulo_nao_constam'].capitalize()} {onde}: "
-            f"{lista['nao_constam']} — não nomeadas; cada candidato consulta a própria situação "
-            "e o motivo na área do candidato.",
+            f"{lista['nao_constam']} — não nomeadas; {vocabulario.quem_consulta(conteudo)} "
+            "consulta a própria situação e o motivo na área do candidato.",
             tamanho=CORPO_NOTA,
             antes=ANTES_DE_LINHA,
         )

@@ -25,7 +25,7 @@ from processo_seletivo.portal import obrigacoes, situacao
 from tests.interface.test_portal_convocacao import entrar_como
 
 ADVERTENCIA = situacao.NAO_ATENDIMENTO_PODE_SER_REGISTRADO
-CONVOCADO = "Você foi convocado!"
+CONVOCADO = "Você tem uma convocação!"
 ACOMPANHE = "Acompanhe sua convocação"
 
 

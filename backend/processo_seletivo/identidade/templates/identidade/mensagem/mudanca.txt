@@ -1,0 +1,16 @@
+{% autoescape off %}{% comment %}
+O aviso de que outro endereço passou a alcançar — ou deixou de alcançar — a conta (010).
+A PRIMEIRA LINHA É O ASSUNTO.
+{% endcomment %}Mudança no acesso à sua conta — Seleções {{ assinatura }}
+
+O endereço abaixo foi {{ acao }} como forma de entrar na sua conta das Seleções {{ assinatura }}:
+
+    {{ endereco }}
+
+Se foi você, não é preciso fazer nada.
+
+Se não foi, fale com {{ atendimento }}: alguém pode ter obtido acesso à sua conta.
+
+{{ assinatura }} — Seleções
+Esta mensagem é automática; não responda.
+{% endautoescape %}

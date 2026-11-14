@@ -1,0 +1,17 @@
+{% extends "correio/base.html" %}
+{% comment %}
+O código de acesso, em HTML. O código vem num quadro, grande e espaçado, para ser lido e digitado sem
+erro num celular; nenhum link, porque nenhum link autentica (P-001 da 010).
+{% endcomment %}
+{% block titulo_do_documento %}Seu código de acesso{% endblock %}
+{% block preheader %}Ele vale por {{ validade }} minutos e só pode ser usado uma vez.{% endblock %}
+{% block conteudo %}
+<h1 class="titulo">Seu código de acesso</h1>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
+<tr><td class="destaque-informacao" align="center">
+<p class="codigo">{{ codigo }}</p>
+</td></tr>
+</table>
+<p class="texto">Digite-o na tela em que você o pediu. Ele vale por {{ validade }} minutos e só pode ser usado uma vez.</p>
+<p class="fraco">Se não foi você que pediu este código, ignore esta mensagem: ninguém entra sem ele.</p>
+{% endblock %}

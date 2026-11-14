@@ -10,7 +10,7 @@ repetido que o pedido recusou.
 {% endcomment %}
 <section class="convocacoes-da-selecao" aria-labelledby="convocacoes-titulo">
   <h2 id="convocacoes-titulo">Convocações</h2>
-  <p class="orientacao-da-secao">Foi convocado? As providências — documentos, prazos e envio — estão em <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>, a área do candidato. Estar convocado não é ter a documentação aceita nem a matrícula concluída.</p>
+  <p class="orientacao-da-secao">Tem uma convocação? As providências — documentos, prazos e envio — estão em <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>, a área do candidato. Ter uma convocação não é ter a documentação aceita nem a matrícula concluída.</p>
   <ul class="publicacoes-de-convocados">
     {% for item in convocacoes_publicadas.recentes %}{% include "portal/_publicacao_de_convocados.html" %}{% endfor %}
   </ul>
