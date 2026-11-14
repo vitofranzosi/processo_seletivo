@@ -174,8 +174,14 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
         "verificacao_encaminhamento",
         "verificacao_eliminacao_do_video",
     )
-    assert TABELAS_APPEND_ONLY[-22:] == (
-        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166
+    # E a 167, o ato da agenda, o horário publicado e o documento de cada ato, depois das da 166.
+    da_167 = (
+        "agendamento_atodaagenda",
+        "agendamento_horariopublicado",
+        "agendamento_documentodoatodaagenda",
     )
-    assert len(TABELAS_APPEND_ONLY) == 65
-    assert len(set(TABELAS_APPEND_ONLY)) == 65
+    assert TABELAS_APPEND_ONLY[-25:] == (
+        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166 + da_167
+    )
+    assert len(TABELAS_APPEND_ONLY) == 68
+    assert len(set(TABELAS_APPEND_ONLY)) == 68

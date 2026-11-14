@@ -171,7 +171,7 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 - [x] T059 [P] Testes do que a agenda não faz, em `tests/integration/agendamento/test_fronteira.py`: nenhuma operação da agenda grava `ResultadoEtapa`, `Ocorrencia`, `Avaliacao` ou prazo; as orientações são só texto; nenhum campo de presença (FR-7250, FR-7251, FR-7252)
 - [x] T060 Provisionamento: `make preparar` num banco vazio informa "68 de 68"; `tests/integration/test_database_permissions.py` passa com as três tabelas novas
 - [x] T061 Jornada no navegador do cenário A até a publicação e do cenário B (duas bancas, Etapa restrita a `PPI`, página pública e documento só com protocolo), abrindo o PDF da publicação, em 1440, 1366 e 375 px; capturas em `specs/167-agendamento-da-etapa/capturas/b/` (SC-2397)
-- [ ] T062 `make lint check` e a suíte inteira; README (a linha da `167` e o `M`) e o PR da B
+- [x] T062 `make lint check` e a suíte inteira; README (a linha da `167` e o `M`) e o PR da B
 
 ---
 
