@@ -59,6 +59,7 @@ def compor(
     orientacoes="",
     veiculo_detalhe="",
     especie=nomes.PUBLICACAO,
+    nota="",
 ):
     """O conteúdo público, como valor que `canonical_bytes` serializa.
 
@@ -68,6 +69,10 @@ def compor(
     `unidade` é `{"cabecalho", "local", "sigla", "nome"}`; `signatario` é `{"nome", "cargo",
     "atoDeNomeacao"}` ou `None` na prévia, que não é ato e não tem quem assine; `bancas` é
     `[(nome, acesso), …]` na ordem; `itens` é `[Item, …]`, em qualquer ordem.
+
+    Nos atos individuais (entrega C), `itens` é a linha da pessoa afetada, e `nota` diz o que o ato
+    muda — "substitui o horário publicado em …", "deixa de valer" —, sem o motivo, que fica na
+    trilha (FR-7246, FR-7248).
     """
     modo = identificacao(restrita)
     varias = len(bancas) > 1
@@ -102,6 +107,7 @@ def compor(
             "forma": forma,
             "duracao": duracao,
             "identificacao": modo,
+            **({"nota": nota} if nota else {}),
         },
         "bancas": [
             {"nome": nome, "local": (acesso or "").strip() if presencial else ""}

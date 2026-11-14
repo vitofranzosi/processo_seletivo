@@ -91,3 +91,28 @@ VEICULO_NAO_ESCOLHIDO = "veiculo_nao_escolhido"
 DECLARACAO_DO_VEICULO_AUSENTE = "declaracao_do_veiculo_ausente"
 PUBLICACAO_EXTERNA_INCOMPLETA = "publicacao_externa_incompleta"
 AUTORIDADE_INVALIDA = "autoridade_invalida"
+
+# --- §5 a agenda publicada: os atos individuais (entrega C) -------------------------------------
+MOTIVO_AUSENTE = "motivo_ausente"
+HORARIO_NAO_ESCOLHIDO = "horario_nao_escolhido"
+MESMO_HORARIO = "mesmo_horario"
+PESSOA_JA_TEM_HORARIO_PUBLICADO = "pessoa_ja_agendada"
+INCLUSAO_DE_QUEM_NAO_PARTICIPA = "inclusao_de_quem_nao_participa"
+CANCELAMENTO_DE_QUEM_PARTICIPA = "cancelamento_de_quem_participa"
+AGENDA_NAO_PUBLICADA = "agenda_nao_publicada"
+SEM_HORARIO_PUBLICADO = "sem_horario_publicado"
+AVISO_NAO_REENVIAVEL = "aviso_nao_reenviavel"
+
+# As operações da trilha dos atos individuais e do reenvio (FR-7256).
+REMARCACAO_DA_AGENDA = "agenda.remarcacao"
+INCLUSAO_NA_AGENDA = "agenda.inclusao"
+CANCELAMENTO_NA_AGENDA = "agenda.cancelamento"
+REENVIO_DO_AVISO_DA_AGENDA = "agenda.reenvio"
+ROTULOS_DA_TRILHA.update(
+    {
+        REMARCACAO_DA_AGENDA: "Remarcação na agenda da Etapa",
+        INCLUSAO_NA_AGENDA: "Inclusão na agenda da Etapa",
+        CANCELAMENTO_NA_AGENDA: "Cancelamento na agenda da Etapa",
+        REENVIO_DO_AVISO_DA_AGENDA: "Reenvio do aviso da agenda da Etapa",
+    }
+)

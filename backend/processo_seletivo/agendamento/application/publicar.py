@@ -26,8 +26,11 @@ em `Contexto.repetido`; outra chave, depois da primeira, encontra o ato sob a tr
 grava nada — e, quando os avisos chegarem na entrega C, nenhum dos dois avisa de novo.
 
 **O documento é gravado na mesma transação** (`D-012`), como o da relação de convocados: os bytes do
-PDF como saíram, que a página serve sem recompor. Os avisos são da entrega C: aqui
-`HorarioPublicado.aviso` nasce nulo.
+PDF como saíram, que a página serve sem recompor.
+
+**Os avisos também** (entrega C, T-018): um por pessoa, criados antes dos `HorarioPublicado`, que os
+gravam no próprio `INSERT` — append-only, não há `UPDATE` que os ligue depois. Com a chave da `066`
+desligada, nenhum nasce, e `HorarioPublicado.aviso` fica nulo para sempre (`D-011`).
 """
 
 import hashlib
@@ -36,7 +39,12 @@ from datetime import date
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.agendamento.application import leitura
-from processo_seletivo.agendamento.application.conferir import compor_conteudo, conferencia_sob
+from processo_seletivo.agendamento.application.avisar import Destino, criar_avisos
+from processo_seletivo.agendamento.application.conferir import (
+    compor_conteudo,
+    conferencia_sob,
+    rotulo_do_edital,
+)
 from processo_seletivo.agendamento.domain import nomes, recusas
 from processo_seletivo.agendamento.models import (
     AtoDaAgenda,
@@ -227,11 +235,26 @@ def publicar(
             ctx.concluir_sem_resultado(200, _declarado(existente))
             return existente
 
-        agendados = [
-            item
-            for item in conferencia.montagem.por_inscricao.values()
-            if str(item.inscricao_id) in conferencia.montagem.participacao.participantes
-        ]
+        agendados = sorted(
+            (
+                item
+                for item in conferencia.montagem.por_inscricao.values()
+                if str(item.inscricao_id) in conferencia.montagem.participacao.participantes
+            ),
+            key=lambda i: (i.inicio, i.banca.ordem),
+        )
+        avisos = criar_avisos(
+            especie=nomes.PUBLICACAO,
+            destinos=[Destino(item.inscricao, item.banca, item.inicio) for item in agendados],
+            agenda=agenda,
+            edital=edital,
+            etapa=conferencia.etapa.get("name") or "Etapa",
+            rotulo_do_edital=rotulo_do_edital(edital),
+            actor=actor,
+            agora=agora,
+            idempotency_key=idempotency_key,
+            correlation_id=correlation_id,
+        )
         HorarioPublicado.objects.bulk_create(
             HorarioPublicado(
                 ato=ato,
@@ -241,8 +264,9 @@ def publicar(
                 banca_nome=item.banca.nome,
                 inicio=item.inicio,
                 fim=item.fim,
+                aviso=avisos.get(str(item.inscricao_id)),
             )
-            for item in sorted(agendados, key=lambda i: (i.inicio, i.banca.ordem))
+            for item in agendados
         )
         _gravar_documento(ato, conteudo)
         revisao_anterior = agenda.revision
@@ -269,13 +293,16 @@ def publicar(
                 "veiculo": veiculo,
                 "signatario": assinante.cargo,
                 "conteudo": ato.conteudo_publico_hash,
+                # Quantos avisos o ato criou, e não para quem (FR-1278 da `066`): zero com a chave
+                # desligada (`D-011`).
+                "avisos": len(avisos),
                 "posterior": [
                     {
                         "protocolo": item.inscricao.protocolo,
                         "banca": item.banca.nome,
                         "inicio": item.inicio.isoformat(),
                     }
-                    for item in sorted(agendados, key=lambda i: (i.inicio, i.banca.ordem))
+                    for item in agendados
                 ],
             },
         )

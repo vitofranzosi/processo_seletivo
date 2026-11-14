@@ -24,6 +24,9 @@ DA_167 = [
     # A entrega B: conferir e a agenda publicada.
     "agenda_conferir.html",
     "agenda_publicada.html",
+    # A entrega C: remarcar, que é também incluir, e cancelar.
+    "agenda_remarcar.html",
+    "agenda_cancelar.html",
 ]
 
 

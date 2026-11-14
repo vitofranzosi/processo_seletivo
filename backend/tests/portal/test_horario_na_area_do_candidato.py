@@ -142,3 +142,29 @@ def test_um_cartao_por_etapa(client, gestor, edital_a, etapa_a1, etapa_a2, inscr
 
     assert corpo.count('class="painel horario-da-etapa"') == 2
     assert corpo.count("Seu horário: Prova didática") == 1
+
+
+def test_remarcada_a_pessoa_le_que_o_horario_mudou(client, gestor, edital_a, etapa_a2, inscricoes):
+    """US5 cenário 3, FR-7245: "Seu horário mudou", o novo em destaque, e nunca o motivo."""
+    from processo_seletivo.agendamento.application import atos_individuais, leitura
+
+    montar_completa(gestor, edital_a, etapa_a2)
+    publicar_agenda(gestor, edital_a, etapa_a2)
+    agenda = leitura.agenda_da_etapa(edital_a, etapa_a2)
+    livre = leitura.montagem(edital_a, etapa_a2, agenda).livres[-1]
+    atos_individuais.remarcar(
+        actor=gestor,
+        edital=edital_a,
+        etapa_id=etapa_a2,
+        inscricao_id=inscricoes[0].id,
+        banca_id=livre.banca_id,
+        inicio=livre.inicio,
+        motivo="falha de conexão comprovada",
+        idempotency_key="remarcar-area",
+    )
+    corpo = _area(client, inscricoes[0])
+    assert "Seu horário mudou em" in corpo
+    assert "O horário anterior não vale mais" in corpo
+    assert "falha de conexão" not in corpo
+    hora = livre.inicio.astimezone(leitura.zona())
+    assert f"<strong>{hora:%H:%M}</strong>" in corpo

@@ -61,6 +61,7 @@ def render_agenda_pdf(conteudo: dict) -> bytes:
     composicao = Composicao()
     _timbre(composicao, cabecalho, titulo(conteudo))
     _identificacao(composicao, cabecalho)
+    _nota(composicao, cabecalho)
     so_protocolo = cabecalho.get("identificacao") == nomes.PROTOCOLO
     varias = len(conteudo.get("bancas") or []) > 1
     for dia in conteudo["dias"]:
@@ -96,12 +97,26 @@ def _identificacao(composicao, cabecalho):
             ("EDITAL", cabecalho["edital"]),
             ("ETAPA", cabecalho["etapa"]),
             ("ATENDIMENTO", f"{cabecalho['duracao']} minutos, {forma}"),
-            ("PUBLICADA EM", _instante(cabecalho.get("publicadoEm"))),
+            (_rotulo_do_instante(cabecalho), _instante(cabecalho.get("publicadoEm"))),
             ("VEÍCULO", _veiculo(cabecalho)),
         ):
             if valor:
                 _par(composicao, rotulo, valor)
         composicao.espaco(4.0)
+
+
+def _rotulo_do_instante(cabecalho):
+    """ "Publicada em" na publicação; nos atos individuais, o instante do ato (entrega C)."""
+    if (cabecalho.get("especie") or nomes.PUBLICACAO) == nomes.PUBLICACAO:
+        return "PUBLICADA EM"
+    return "REGISTRADO EM"
+
+
+def _nota(composicao, cabecalho):
+    """O que o ato individual muda, numa frase; nunca o motivo, que fica na trilha (FR-7246)."""
+    texto = (cabecalho.get("nota") or "").strip()
+    if texto:
+        composicao.escrever(texto, tamanho=CORPO_TEXTO, antes=ENTRE_SECOES, justificar=True)
 
 
 def _veiculo(cabecalho):
