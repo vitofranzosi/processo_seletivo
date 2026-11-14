@@ -234,7 +234,7 @@ anterior, o novo, o autor e o motivo.
 ## Phase 12: Fechamento da Entrega C
 
 - [x] T079 [P] Acrescentar os templates da C à varredura de vocabulário e ao teste do estreito (SC-2397)
-- [ ] T080 Jornada no navegador: publicar, `manage.py despachar_avisos` à mão, ver os e-mails no terminal do comando, remarcar com motivo, despachar de novo e ver um e-mail só, no celular; capturas em `specs/167-agendamento-da-etapa/capturas/c/`
+- [x] T080 Jornada no navegador: publicar, `manage.py despachar_avisos` à mão, ver os e-mails no terminal do comando, remarcar com motivo, despachar de novo e ver um e-mail só, no celular; capturas em `specs/167-agendamento-da-etapa/capturas/c/`
 - [x] T081 Escrever `specs/167-agendamento-da-etapa/rastreabilidade.md` com uma linha para cada identificador em negrito da spec — FR-7200 a FR-7256, SC-2390 a SC-2399, UX-760 a UX-767 —, cada uma com a tarefa e o teste; os SC-2390 e SC-2398, humanos, marcados como pendentes de validação
 - [ ] T082 `make lint check` e a suíte inteira; README e Visão do Sistema; o PR da C
 
