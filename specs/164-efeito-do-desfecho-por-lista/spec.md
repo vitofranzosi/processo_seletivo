@@ -264,8 +264,10 @@ obsolescência da ordem e a volta à lista reservada.
    Maria por ausência, **When** a reavaliação determinada conclui desfavorável, **Then** a nova Avaliação
    é registrada, e o Resultado dela não é consolidado como sucessor: seria eliminação, mais grave que a
    retirada.
-6. **Given** o Resultado de eliminação por ausência, **When** a decisão fixa *retirada da reserva*,
-   **Then** o sucessor nasce, porque a retirada é um dos efeitos que a Etapa declara e é menos grave.
+6. **Given** o Resultado de eliminação por ausência, **When** a decisão é de correção fixada, **Then**
+   o sucessor é *habilitada*, como na `018`: a correção contra Ocorrência diz que a ocorrência não
+   subsiste. A retirada só vem pela reavaliação (cenário 4), porque a consequência é sempre derivada
+   da regra, e nunca escolhida pelo julgador.
 
 ---
 
@@ -365,6 +367,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   participa da Análise documental. A faixa `PPI` **não** se reabre para o seguinte. A vaga reservada
   que fica sem ocupante segue o caminho de hoje para vaga reservada sem ocupante: suplência, a
   continuação da ordem quando o Edital a admite, e a destinação da `155` (FR-7013, FR-7015).
+- **O sorteio da reserva.** Maria, retirada antes da Etapa de habilitação ao sorteio, segue a
+  progressão e chega habilitada a ela. A relação da lista `PPI` não a inclui; a da ampla, sim
+  (FR-7030).
 - **Habilitada na Etapa governada pela faixa da ampla.** Maria, retirada, está nas duas faixas e é
   habilitada na Análise documental. A ocupação da lista `PPI` lê *"progrediu na faixa `PPI` e foi
   habilitada na Etapa governada"*, e a contaria. Ela **não** é contada na reserva, nem oferecida pela
@@ -487,6 +492,11 @@ abaixo dizem, cada um, quais Resultados de retirada consideram, e a FR-7027 os a
   que tenha progredido na faixa reservada e sido habilitada na Etapa governada. Na ampla, ela DEVE ser
   contada e oferecida como qualquer inscrição da ampla, e a regra de hoje da concorrência concomitante
   DEVE continuar valendo.
+- **FR-7030**: A **relação de habilitados do sorteio** da lista reservada DEVE considerar os Resultados de
+  retirada das Etapas anteriores à Etapa de habilitação ao sorteio, e NÃO DEVE incluir a inscrição
+  com uma delas, ainda que habilitada na Etapa de habilitação. Na ampla, ela DEVE entrar como entra
+  hoje. Sem Etapa de habilitação declarada, a relação NÃO DEVE ler a retirada, como hoje não lê a
+  eliminação.
 - **FR-7027**: A retirada numa Etapa **posterior ao horizonte** de um marco NÃO DEVE produzir efeito
   nas listas desse marco: nem na ordem, nem na faixa, nem na ocupação, na fila, na situação da vaga ou
   na publicação dos convocados. É o mesmo alcance que a eliminação tem hoje, e o caso fica em
@@ -516,11 +526,15 @@ As consequências têm uma **ordem de gravidade**: *habilitada* é a menos grave
 vem depois, e *eliminada* é a mais grave. A vedação de piora da `018` (FR-070 a FR-073) passa a
 compará-las por essa ordem.
 
-- **FR-7019**: O Resultado de retirada DEVE ser recorrível como o Resultado de eliminação é. A decisão
-  que **fixa** a consequência DEVE poder fixar só *habilitada* e os dois efeitos que a Etapa declara na
-  versão que o Resultado atacado citou: o do desfecho desfavorável e o do não comparecimento. A decisão
-  que fixa *habilitada* DEVE suceder o Resultado pelo mecanismo da `018`, e a inscrição DEVE voltar à
-  lista reservada.
+- **FR-7019**: O Resultado de retirada DEVE ser recorrível como o Resultado de eliminação é. A
+  consequência do sucessor DEVE continuar **derivada**, e nunca escolhida (FR-059 da `018`):
+  - a correção que fixa a conclusão aplica a regra da versão que a decisão cita, e a conclusão
+    desfavorável produz o efeito do desfecho desfavorável dela;
+  - a correção contra Ocorrência continua produzindo *habilitada*, porque a ocorrência não subsiste;
+  - a reavaliação determinada produz o que a nova Avaliação concluir (FR-7029).
+
+  O sucessor *habilitada* DEVE suceder o Resultado pelo mecanismo da `018`, e a inscrição DEVE voltar
+  à lista reservada.
 - **FR-7028**: O recurso do próprio candidato NÃO DEVE produzir sucessor de consequência mais grave que a
   do superado, pela ordem de gravidade. Isso vale para a correção fixada e para o Resultado da
   reavaliação determinada. Por exemplo:

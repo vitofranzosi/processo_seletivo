@@ -45,6 +45,7 @@ foi conferido contra o requisito que o resolve:
 | Retirada depois do horizonte | FR-7027; *Achados* |
 | Retificação depois de todo desfavorável superado | FR-7020 |
 | Faixa do corte já emitida | FR-7013, FR-7015 |
+| O sorteio da reserva | FR-7030 |
 | Habilitada na Etapa governada pela faixa da ampla | FR-7014 |
 | Concorrência concomitante e o 8.9 | FR-7014 |
 | Já convocado pela reserva | FR-7016 |
@@ -75,6 +76,12 @@ achou mais duas ambiguidades. As três foram resolvidas na spec:
   o padrão é "o mesmo efeito". O recurso ganhou a ordem de gravidade e a regra da reavaliação contra
   ausência (FR-7019, FR-7028, FR-7029). A resposta também mexeu na FR-7009, na FR-7023, na UX-741, nos
   cenários das histórias 4 e 6 e na D-007.
+
+## Refinamentos do plano (14/11)
+
+- [x] **FR-7019 e o cenário 6 da US4** reescritos: a consequência é derivada da regra (FR-059 da `018`), e a
+  correção contra Ocorrência habilita (research T-011).
+- [x] **FR-7030** nova: a relação de habilitados do sorteio é um leitor que a spec não nomeava (T-010).
 
 ## Notes
 
