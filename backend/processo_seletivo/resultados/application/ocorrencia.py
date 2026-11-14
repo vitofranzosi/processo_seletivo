@@ -51,6 +51,13 @@ REGISTRAR = "RESULTADO_OCORRENCIA"
 ATO = "resultado:ocorrencia"
 
 JA_TEM_RESULTADO = "esta inscrição já possui Resultado nesta Etapa"
+# A inscrição em verificação pelo vídeo (166, R-11, R-12; achado 2 do code review do #547):
+# ninguém falta a um vídeo que já enviou. O desfecho desfavorável só existe depois da entrevista ao
+# vivo, e é o encaminhamento que leva a ela; ausente, só a quem faltou a ela.
+EM_ANALISE_PELO_VIDEO = (
+    "esta inscrição está na verificação pelo vídeo; a ausência só existe depois do encaminhamento "
+    "à entrevista ao vivo"
+)
 
 
 def _edital_do_processo(processo, edital_id):
@@ -187,7 +194,15 @@ def registrar_ocorrencia(
             efeito_do_desfecho.efeito_da_ausencia(etapa)
         )
         criados, recusas = [], []
+        # As inscrições em modo vídeo (166, FR-7139): uma consulta, só na Etapa que admite o vídeo.
+        from processo_seletivo.verificacao.application import ganchos
+
+        inscricoes = list(inscricoes)
+        pelo_video = ganchos.em_modo_video_na_selecao(etapa, inscricoes)
         for inscricao in inscricoes:
+            if inscricao.id in pelo_video:
+                recusas.append(Recusa(inscricao, EM_ANALISE_PELO_VIDEO))
+                continue
             if inscricao.id in ja_resolvidas:
                 # Recusa de linha, e não erro do pedido: o lote segue, e I-6 fica intacto — para
                 # uma Inscrição × Etapa existe no máximo um Resultado vigente, e a unicidade no

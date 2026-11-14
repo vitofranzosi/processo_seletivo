@@ -43,10 +43,10 @@ class _Recusa:
 
 def a_encaminhar(*, edital, etapa_id) -> list:
     """As inscrições prontas da Etapa cuja deliberação pelo vídeo não confirmou (FR-7138)."""
-    from processo_seletivo.resultados.application.consolidacao import _plano_do_lote
+    from processo_seletivo.resultados.application.consolidacao import planejar
 
     try:
-        _etapa, _consolidaveis, recusas = _plano_do_lote(edital, etapa_id, None)
+        _etapa, _consolidaveis, recusas = planejar(edital=edital, etapa_id=etapa_id)
     except DomainError as erro:
         if erro.code == "nada_pronto":
             return []
@@ -65,8 +65,8 @@ def encaminhar(
     from processo_seletivo.comissoes.application.comissao import identificador
     from processo_seletivo.resultados.application.consolidacao import (
         ATO,
-        _edital_do_processo,
-        _plano_do_lote,
+        edital_do_processo,
+        planejar,
     )
 
     ids = [identificador(item) for item in inscricao_ids]
@@ -87,12 +87,14 @@ def encaminhar(
         },
         idempotency_key=idempotency_key,
     ) as ctx:
-        edital = _edital_do_processo(ctx.processo, edital_id)
+        edital = edital_do_processo(ctx.processo, edital_id)
         if ctx.repetido:
             return ctx.desfecho_anterior
         # **A mesma regra que a tela declarou, relida no ato**: o plano da consolidação, que é a
         # fonte única de "o vídeo não confirmou" (D-006).
-        _etapa, consolidaveis, recusas = _plano_do_lote(edital, etapa_id, ids)
+        _etapa, consolidaveis, recusas = planejar(
+            edital=edital, etapa_id=etapa_id, inscricao_ids=ids
+        )
         elegiveis = {
             recusa.inscricao.id: recusa.inscricao
             for recusa in recusas

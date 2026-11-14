@@ -72,11 +72,21 @@ def _uuid(valor):
     return valor if isinstance(valor, UUID) else UUID(str(valor))
 
 
-def periodo(edital, etapa) -> tuple:
-    """`(inicio, fim)` do Evento que a Etapa aponta, no conteúdo vigente; `(None, None)` sem ele."""
-    from processo_seletivo.comissoes.domain.etapas import evento_vigente
+def periodo(conteudo, etapa) -> tuple:
+    """`(inicio, fim)` do Evento que a Etapa aponta, no conteúdo dado; `(None, None)` sem ele.
 
-    evento = evento_vigente(edital, etapa.get("scheduleEventId"))
+    Do conteúdo que quem chama já leu, e não relido (achado 8 do code review do #547): o vigente
+    custava uma consulta da Versão Consolidada a mais por Etapa, em toda rota do envio.
+    """
+    alvo = str(etapa.get("scheduleEventId") or "")
+    evento = next(
+        (
+            item
+            for item in (conteudo or {}).get("schedule") or []
+            if alvo and isinstance(item, dict) and str(item.get("id")) == alvo
+        ),
+        None,
+    )
     if not evento:
         return None, None
     inicio = parse_datetime(evento["startAt"]) if evento.get("startAt") else None
@@ -127,20 +137,18 @@ def inscricao_em_modo_video(*, edital, etapa_id, inscricao_id) -> bool:
 
 
 def _parecer_ja_concluido(edital, etapa_id, inscricao_id) -> bool:
-    """A comissão já registrou algum parecer, ainda que reaberto depois (FR-7107)."""
-    from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
+    """A comissão já registrou algum parecer, ainda que reaberto depois (FR-7107).
 
-    filtro = {"etapa_id": _uuid(etapa_id), "inscricao_id": inscricao_id}
-    return (
-        Avaliacao.objects.filter(
-            atribuicao__edital=edital, estado=Avaliacao.Estado.CONCLUIDA, **filtro
-        ).exists()
-        or ConclusaoAvaliacao.objects.filter(
-            avaliacao__atribuicao__edital=edital,
-            avaliacao__etapa_id=_uuid(etapa_id),
-            avaliacao__inscricao_id=inscricao_id,
-        ).exists()
-    )
+    Uma consulta: toda conclusão grava a `ConclusaoAvaliacao`, e a reabertura a preserva — a
+    Avaliação concluída é sempre um subconjunto dela (achado 9 do code review do #547).
+    """
+    from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
+
+    return ConclusaoAvaliacao.objects.filter(
+        avaliacao__atribuicao__edital=edital,
+        avaliacao__etapa_id=_uuid(etapa_id),
+        avaliacao__inscricao_id=inscricao_id,
+    ).exists()
 
 
 def _ha_resultado(edital, etapa_id, inscricao_id) -> bool:
@@ -173,7 +181,7 @@ def situacao(*, inscricao, etapa, conteudo, exigir_chave=True) -> Situacao | Non
         return None
     edital = inscricao.edital
     etapa_id = etapa.get("id")
-    inicio, fim = periodo(edital, etapa)
+    inicio, fim = periodo(conteudo, etapa)
     base = {"etapa": etapa, "inicio": inicio, "fim": fim}
     if exigir_chave and not settings.VERIFICACAO_POR_VIDEO:
         return Situacao(INDISPONIVEL, motivo="chave", **base)

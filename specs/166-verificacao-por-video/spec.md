@@ -628,6 +628,10 @@ existe.
 - **O vídeo na instrução do recurso** (R-18 do estudo): a autoridade recursal da `018` não abre o
   vídeo nesta entrega. A instrução hoje anexa documentos da inscrição, e estendê-la ao vídeo, com a
   trilha de abertura do julgador, é trabalho da spec do recurso colegiado (P-5).
+- **O code review do #547** achou dez defeitos, corrigidos no mesmo PR, cada um com o seu teste de
+  regressão. Os que mudam o que a spec diz: a Ocorrência também recusa a inscrição em modo vídeo
+  (FR-7139 — ninguém falta a um vídeo que já enviou), e a Retificação que remove a Etapa inteira
+  depois do primeiro vídeo também é recusada (FR-7105).
 - **A chave fecha o portal, e não a Mesa** (achado I1 do `/speckit-analyze`): com a chave desligada
   depois de vídeos recebidos, a comissão continua os assistindo e deliberando, e a R-11 continua
   valendo.

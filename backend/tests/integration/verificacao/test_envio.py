@@ -250,3 +250,121 @@ def test_o_envio_pelas_rotas_do_portal(cenario, client):
     assert resposta.status_code == 200
     video = VideoDaVerificacao.objects.get()
     assert video.sha256 in resposta.content.decode()
+
+
+def test_a_parte_de_8_mib_passa_sem_mexer_no_limite_global(cenario, client, settings):
+    """FR-7118, achado 1 do code review: o corpo cru não passa pelo `DATA_UPLOAD_MAX_MEMORY_SIZE`.
+
+    Ler `request.body` aplicava a todo corpo os 2,5 MB do Django, e toda parte acima disso voltava
+    400 — com partes de 8 MiB, nenhum vídeo real chegava. O limite global continua o mesmo.
+    """
+    assert settings.DATA_UPLOAD_MAX_MEMORY_SIZE < envio.PARTE_MAXIMA
+    maria = cenario["inscricoes"][0]
+    dados = videos_sinteticos.mp4(30.0, corpo=envio.PARTE_MAXIMA + 300_000)
+    fim, _rotas = enviar_pelo_portal(
+        client, maria, cenario["hetero"], dados=dados, duracao=30.0, parte=envio.PARTE_MAXIMA
+    )
+    assert fim.status_code == 201, fim.content
+    assert VideoDaVerificacao.objects.get().tamanho == len(dados)
+
+
+def test_a_parte_acima_de_8_mib_e_recusada_antes_de_ler(cenario, client):
+    from django.urls import reverse
+
+    from tests.fixtures.divulgacao import entrar_como_titular
+
+    maria = cenario["inscricoes"][0]
+    novo = _iniciar(maria, cenario["hetero"], tamanho=envio.PARTE_MAXIMA + 10)
+    entrar_como_titular(client, maria)
+    rota = reverse("portal:verificacao-envio-partes", args=[maria.id, cenario["hetero"], novo.id])
+    resposta = client.put(
+        f"{rota}?deslocamento=0",
+        data=b"\0" * (envio.PARTE_MAXIMA + 1),
+        content_type="application/octet-stream",
+    )
+    assert resposta.status_code == 413
+    assert (
+        envio.consultar(
+            identidade=identidade_de(maria),
+            inscricao_id=maria.id,
+            etapa_id=cenario["hetero"],
+            envio_id=novo.id,
+        ).recebido
+        == 0
+    )
+
+
+def test_o_video_que_chega_ao_teto_comeca_a_enviar(cenario):
+    """Achado 3 do code review do #547: o temporizador passa do teto por milissegundos.
+
+    A mesma folga da conclusão vale no início; acima dela, a recusa continua.
+    """
+    maria = cenario["inscricoes"][0]
+    teto = roteiro.TETO_SEGUNDOS
+    marcas_no_teto = marcas(teto)
+    assert _iniciar(maria, cenario["hetero"], duracao=teto + 0.004, marcas=marcas_no_teto)
+    with pytest.raises(DomainError) as recusa:
+        _iniciar(maria, cenario["hetero"], duracao=teto + 1.5, marcas=marcas_no_teto)
+    assert recusa.value.code == "duracao"
+
+
+def test_a_falha_depois_da_conferencia_nao_deixa_arquivo_orfao(cenario, monkeypatch):
+    """Achado 4 do code review do #547: o arquivo só se move depois dos registros.
+
+    Uma falha ao registrar o recebimento desfaz a transação; o envio continua inteiro, o temporário
+    continua no lugar, e a nova tentativa conclui — antes, caía em `FileNotFoundError`.
+    """
+    import os
+
+    from processo_seletivo import auditoria
+
+    maria = cenario["inscricoes"][0]
+    identidade = identidade_de(maria)
+    dados = videos_sinteticos.mp4(4.8)
+    novo = _iniciar(maria, cenario["hetero"], tamanho=len(dados))
+    comum = {
+        "identidade": identidade,
+        "inscricao_id": maria.id,
+        "etapa_id": cenario["hetero"],
+        "envio_id": novo.id,
+    }
+    envio.receber_parte(deslocamento=0, dados=dados, **comum)
+
+    def falha(**_):
+        raise RuntimeError("a trilha caiu")
+
+    monkeypatch.setattr(auditoria.application, "record_event", falha)
+    with pytest.raises(RuntimeError):
+        envio.concluir(sha256=videos_sinteticos.resumo(dados), correlation_id="t", **comum)
+    assert os.path.exists(envio.caminho(novo.arquivo))
+    assert envio.consultar(**comum).recebido == len(dados)
+    assert not VideoDaVerificacao.objects.exists()
+    monkeypatch.undo()
+    video = envio.concluir(sha256=videos_sinteticos.resumo(dados), correlation_id="t", **comum)
+    assert os.path.exists(envio.caminho(video.arquivo))
+    assert not os.path.exists(envio.caminho(novo.arquivo))
+
+
+def _etapa_publicada(cenario, **campos):
+    return {**_etapa(cenario), **campos}
+
+
+@pytest.mark.parametrize("como", ["retirada", "etapa-removida"])
+def test_a_retificacao_nao_tira_o_video_de_quem_o_enviou(cenario, como):
+    """FR-7105, e o achado 5 do code review do #547: retirar a admissão, ou remover a Etapa inteira,
+    depois do primeiro vídeo recebido é recusado; antes dele, cabe."""
+    from processo_seletivo.publicacoes.application.retificacoes import (
+        _recusar_video_retirado_apos_recebido as recusar,
+    )
+
+    base = {"stages": [_etapa_publicada(cenario)]}
+    depois = (
+        {"stages": [_etapa_publicada(cenario, videoOption=False)]}
+        if como == "retirada"
+        else {"stages": []}
+    )
+    recusar(cenario["edital"], base, depois)
+    enviar_video(cenario["inscricoes"][0], cenario["hetero"])
+    with pytest.raises(DomainError) as recusa:
+        recusar(cenario["edital"], base, depois)
+    assert recusa.value.code == "video_ja_recebido"

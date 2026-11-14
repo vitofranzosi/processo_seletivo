@@ -321,6 +321,22 @@ def _plano_do_lote(edital, etapa_id, ids):
     return (etapa, *_planejar(etapa, panorama, inscricoes, conteudo))
 
 
+def planejar(*, edital, etapa_id, inscricao_ids=None):
+    """`(etapa, consolidáveis, recusas)` — a entrada pública do plano, para quem age sobre ele.
+
+    O encaminhamento à entrevista ao vivo (166) separa as inscrições pelo motivo da recusa que este
+    plano declara, e precisa da mesma leitura que a conferência faz. Por aqui, e não por
+    `_plano_do_lote`: o plano continua sendo um só, e o contrato com quem o usa fica nomeado.
+    """
+    ids = None if inscricao_ids is None else [identificador(i) for i in inscricao_ids]
+    return _plano_do_lote(edital, etapa_id, ids)
+
+
+def edital_do_processo(processo, edital_id):
+    """O Edital do Processo travado pelo comando, ou a recusa de recurso inexistente."""
+    return _edital_do_processo(processo, edital_id)
+
+
 def _selecao_exigida(inscricao_ids):
     ids = [identificador(i) for i in inscricao_ids]
     if not ids:
@@ -458,6 +474,8 @@ __all__ = [
     "Consolidavel",
     "Recusa",
     "consolidar",
+    "edital_do_processo",
+    "planejar",
     "prever",
     "prever_as_prontas",
 ]

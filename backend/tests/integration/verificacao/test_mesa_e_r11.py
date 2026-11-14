@@ -332,3 +332,31 @@ def test_a_tela_de_encaminhar_mostra_o_alcance_sem_contagem(cenario, client, sel
     )
     assert confirmado.status_code == 302
     assert EncaminhamentoAoVivo.objects.count() == 1
+
+
+def test_a_ocorrencia_nao_alcanca_quem_esta_no_video(cenario):
+    """FR-7139, R-12; achado 2 do code review do #547: ninguém falta a um vídeo que já enviou.
+
+    Maria enviou o vídeo e não foi encaminhada: a ausência é recusada para ela, e o lote segue com
+    João, que não enviou nada e faltou à entrevista ao vivo.
+    """
+    from processo_seletivo.resultados.application.ocorrencia import (
+        EM_ANALISE_PELO_VIDEO,
+        registrar_ocorrencia,
+    )
+
+    maria, joao = cenario["inscricoes"][:2]
+    declarado = registrar_ocorrencia(
+        actor=ator_institucional("maria"),
+        processo_id=cenario["processo"].id,
+        edital_id=cenario["edital"].id,
+        etapa_id=cenario["hetero"],
+        inscricao_ids=[maria.id, joao.id],
+        motivo="Não compareceu à entrevista.",
+        idempotency_key="ocorrencia-6610",
+        correlation_id="t",
+    )
+    assert declarado["feitas"] == 1
+    assert declarado["motivos"][0]["motivo"] == EM_ANALISE_PELO_VIDEO
+    assert not ResultadoEtapa.objects.filter(etapa_id=cenario["hetero"], inscricao=maria).exists()
+    assert ResultadoEtapa.objects.filter(etapa_id=cenario["hetero"], inscricao=joao).exists()

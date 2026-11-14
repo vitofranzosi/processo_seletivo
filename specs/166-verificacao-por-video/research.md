@@ -112,8 +112,11 @@ deslocamento certo.
 **Por quê**: cabe nos 12 MB do nginx e nos 120 s do gunicorn síncrono, não muda nenhum limite global e
 não precisa de dependência nova. O tus faria o mesmo com um pacote a aprovar.
 
-**Corpo cru**: o `PUT` lê `request.body`; o `DATA_UPLOAD_MAX_MEMORY_SIZE` (2,5 MB) não se aplica a
-corpo que não é formulário, e a view confere o tamanho pelo `Content-Length` antes de ler.
+**Corpo cru**: o `PUT` lê o fluxo por `request.read()`, limitado à parte, e **não** `request.body`.
+A primeira redação dizia que o `DATA_UPLOAD_MAX_MEMORY_SIZE` (2,5 MB) não se aplicava a corpo que
+não é formulário, e estava errada: o `body` do Django o aplica a todo corpo, e a parte de 8 MiB
+voltava 400 (achado 1 do code review do #547). A view confere o `Content-Length` antes de ler, e
+lê no máximo a parte e um byte; o limite global não muda.
 
 ## T-003 — Conferência do contêiner sem biblioteca
 

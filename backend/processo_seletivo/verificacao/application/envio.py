@@ -12,7 +12,6 @@ que a página conferiu antes melhora a experiência, e não é fronteira.
 pode ter acabado, a comissão pode ter aberto o vídeo, e a resposta precisa ser a de agora (FR-7152).
 """
 
-import hashlib
 import os
 import uuid
 from decimal import Decimal
@@ -141,7 +140,9 @@ def _validar_declaracao(*, tamanho, formato, duracao, marcas, versao, maioridade
         raise _recusa("tamanho", "O tamanho ou a duração do vídeo não são números.") from erro
     if tamanho <= 0 or tamanho > settings.VERIFICACAO_POR_VIDEO_LIMITE_BYTES:
         raise _recusa("tamanho", "O vídeo é maior que o permitido.", campo="tamanho")
-    if duracao <= 0 or duracao > roteiro.TETO_SEGUNDOS:
+    # A mesma folga da conclusão (achado 3 do code review do #547): a página encerra a tomada no
+    # teto por um temporizador, e a duração medida passa dele por milissegundos.
+    if duracao <= 0 or duracao > roteiro.TETO_SEGUNDOS + _FOLGA_DO_TETO:
         raise _recusa(
             "duracao",
             f"O vídeo pode ter até {roteiro.TETO_SEGUNDOS // 60} minutos.",
@@ -270,12 +271,12 @@ def receber_parte(*, identidade, inscricao_id, etapa_id, envio_id, deslocamento,
         return envio.recebido
 
 
-def _resumo_do_arquivo(nome) -> str:
-    sha = hashlib.sha256()
+def resumo_do_arquivo(nome) -> str:
+    """O SHA-256 do arquivo, pelo helper comum dos envios (`shared/arquivos.resumo`)."""
+    from processo_seletivo.shared.arquivos import resumo
+
     with open(caminho(nome), "rb") as arquivo:
-        for bloco in iter(lambda: arquivo.read(1024 * 1024), b""):
-            sha.update(bloco)
-    return sha.hexdigest()
+        return resumo(arquivo)
 
 
 def concluir(*, identidade, inscricao_id, etapa_id, envio_id, sha256, correlation_id):
@@ -284,89 +285,105 @@ def concluir(*, identidade, inscricao_id, etapa_id, envio_id, sha256, correlatio
     from processo_seletivo.inscricoes.application.rascunho import ator_do_candidato
     from processo_seletivo.shared.application.commands import command_context
 
-    with command_context() as agora:
-        # A inscrição primeiro, e só depois o envio: a ordem das travas é a do `iniciar`, e duas
-        # conclusões concorrentes da mesma inscrição se enfileiram aqui (FR-7152).
-        inscricao, etapa, situacao = contexto_do_titular(
-            identidade=identidade, inscricao_id=inscricao_id, etapa_id=etapa_id, travar=True
-        )
-        envio = _envio_do_titular(
-            identidade=identidade,
-            inscricao_id=inscricao_id,
-            etapa_id=etapa_id,
-            envio_id=envio_id,
-            travar=True,
-        )
-        _recusar_se_indisponivel_na_conclusao(situacao)
-        if envio.recebido != envio.tamanho:
-            raise _recusa("tamanho", "O envio ainda não chegou inteiro.")
-        with open(caminho(envio.arquivo), "rb") as arquivo:
-            arquivo.seek(0, 2)
-            if arquivo.tell() != envio.tamanho:
-                raise _recusa("tamanho", "O arquivo recebido não tem o tamanho declarado.")
-            try:
-                lido = conteiner.ler(arquivo)
-            except conteiner.ConteinerInvalido as erro:
-                raise _recusa("formato", "O arquivo enviado não é um vídeo MP4 ou WebM.") from erro
-        if lido.formato != envio.formato:
-            raise _recusa("formato", "O formato do arquivo não é o que a página declarou.")
-        duracao = (
-            Decimal(str(lido.duracao)).quantize(Decimal("0.001"))
-            if lido.duracao
-            else envio.duracao_medida
-        )
-        if duracao > roteiro.TETO_SEGUNDOS + _FOLGA_DO_TETO:
-            raise _recusa("duracao", f"O vídeo pode ter até {roteiro.TETO_SEGUNDOS // 60} minutos.")
-        calculado = _resumo_do_arquivo(envio.arquivo)
-        if str(sha256 or "").lower() != calculado:
-            raise _recusa(
-                "resumo",
-                "O vídeo chegou diferente do que saiu do seu aparelho. Envie de novo.",
+    movido = []
+    try:
+        with command_context() as agora:
+            # A inscrição primeiro, e só depois o envio: a ordem das travas é a do `iniciar`, e duas
+            # conclusões concorrentes da mesma inscrição se enfileiram aqui (FR-7152).
+            inscricao, etapa, situacao = contexto_do_titular(
+                identidade=identidade, inscricao_id=inscricao_id, etapa_id=etapa_id, travar=True
             )
-        anterior = situacao.video
-        identificador = uuid.uuid4()
-        nome = f"verificacao/{inscricao.id}/{identificador}.{conteiner.EXTENSAO[lido.formato]}"
-        os.replace(caminho(envio.arquivo), caminho(nome))
-        video = VideoDaVerificacao.objects.create(
-            id=identificador,
-            inscricao=inscricao,
-            edital=inscricao.edital,
-            etapa_id=etapa["id"],
-            arquivo=nome,
-            sha256=calculado,
-            tamanho=envio.tamanho,
-            duracao=duracao,
-            formato=lido.formato,
-            roteiro=envio.roteiro,
-            marcas=envio.marcas,
-            declarou_maioridade=True,
-            substitui=anterior,
-            recebido_em=agora,
-        )
-        envio.delete()
-        record_event(
-            actor=ator_do_candidato(identidade, inscricao.edital),
-            permission="",
-            operation=RECEBIDO,
-            aggregate=video,
-            now=agora,
-            correlation_id=correlation_id,
-            reason=(
-                f"Vídeo da verificação da autodeclaração recebido na Etapa {etapa['id']}"
-                + (f", em troca do {anterior.id}." if anterior else ".")
-            ),
-            new_state="",
-            new_revision=None,
-            # O que o servidor conferiu, e nunca o conteúdo (FR-7151).
-            detalhe={
-                "tamanho": envio.tamanho,
-                "duracao": str(duracao),
-                "formato": lido.formato,
-                "sha256": calculado,
-                "substitui": str(anterior.id) if anterior else None,
-            },
-        )
-        return video
+            envio = _envio_do_titular(
+                identidade=identidade,
+                inscricao_id=inscricao_id,
+                etapa_id=etapa_id,
+                envio_id=envio_id,
+                travar=True,
+            )
+            _recusar_se_indisponivel_na_conclusao(situacao)
+            if envio.recebido != envio.tamanho:
+                raise _recusa("tamanho", "O envio ainda não chegou inteiro.")
+            with open(caminho(envio.arquivo), "rb") as arquivo:
+                arquivo.seek(0, 2)
+                if arquivo.tell() != envio.tamanho:
+                    raise _recusa("tamanho", "O arquivo recebido não tem o tamanho declarado.")
+                try:
+                    lido = conteiner.ler(arquivo)
+                except conteiner.ConteinerInvalido as erro:
+                    raise _recusa(
+                        "formato", "O arquivo enviado não é um vídeo MP4 ou WebM."
+                    ) from erro
+            if lido.formato != envio.formato:
+                raise _recusa("formato", "O formato do arquivo não é o que a página declarou.")
+            duracao = (
+                Decimal(str(lido.duracao)).quantize(Decimal("0.001"))
+                if lido.duracao
+                else envio.duracao_medida
+            )
+            if duracao > roteiro.TETO_SEGUNDOS + _FOLGA_DO_TETO:
+                raise _recusa(
+                    "duracao", f"O vídeo pode ter até {roteiro.TETO_SEGUNDOS // 60} minutos."
+                )
+            calculado = resumo_do_arquivo(envio.arquivo)
+            if str(sha256 or "").lower() != calculado:
+                raise _recusa(
+                    "resumo",
+                    "O vídeo chegou diferente do que saiu do seu aparelho. Envie de novo.",
+                )
+            anterior = situacao.video
+            identificador = uuid.uuid4()
+            nome = f"verificacao/{inscricao.id}/{identificador}.{conteiner.EXTENSAO[lido.formato]}"
+            video = VideoDaVerificacao.objects.create(
+                id=identificador,
+                inscricao=inscricao,
+                edital=inscricao.edital,
+                etapa_id=etapa["id"],
+                arquivo=nome,
+                sha256=calculado,
+                tamanho=envio.tamanho,
+                duracao=duracao,
+                formato=lido.formato,
+                roteiro=envio.roteiro,
+                marcas=envio.marcas,
+                declarou_maioridade=True,
+                substitui=anterior,
+                recebido_em=agora,
+            )
+            envio.delete()
+            record_event(
+                actor=ator_do_candidato(identidade, inscricao.edital),
+                permission="",
+                operation=RECEBIDO,
+                aggregate=video,
+                now=agora,
+                correlation_id=correlation_id,
+                reason=(
+                    f"Vídeo da verificação da autodeclaração recebido na Etapa {etapa['id']}"
+                    + (f", em troca do {anterior.id}." if anterior else ".")
+                ),
+                new_state="",
+                new_revision=None,
+                # O que o servidor conferiu, e nunca o conteúdo (FR-7151).
+                detalhe={
+                    "tamanho": envio.tamanho,
+                    "duracao": str(duracao),
+                    "formato": lido.formato,
+                    "sha256": calculado,
+                    "substitui": str(anterior.id) if anterior else None,
+                },
+            )
+            # **O arquivo se move por último** (achado 4 do code review do #547): movê-lo antes dos
+            # registros deixava, numa falha depois, o envio apontando para um temporário que já não
+            # existia e o arquivo final órfão — e a nova tentativa caía em 500. A falha do próprio
+            # `COMMIT` é desfeita no `except` de fora, que devolve o arquivo ao temporário.
+            temporario, final = caminho(envio.arquivo), caminho(nome)
+            os.replace(temporario, final)
+            movido.append((final, temporario))
+            return video
+    except BaseException:
+        for final, temporario in movido:
+            os.replace(final, temporario)
+        raise
 
 
 def _recusar_se_indisponivel_na_conclusao(situacao):

@@ -143,6 +143,12 @@ def parte(request, inscricao_id, etapa_id, envio_id):
 
     O tamanho é conferido pelo `Content-Length` **antes** de ler o corpo: uma parte grande demais
     não chega à memória.
+
+    **Pelo fluxo, e não por `request.body`** (achado 1 do code review do #547). O `body` aplica a
+    todo corpo o `DATA_UPLOAD_MAX_MEMORY_SIZE` de 2,5 MB, e a parte de 8 MiB voltava 400 antes de
+    chegar aqui: nenhum vídeo real chegava. O limite global continua o mesmo para o resto do
+    sistema; o teto desta rota é o da parte, conferido acima, e a leitura não passa dele nem que o
+    cabeçalho minta.
     """
     try:
         declarado = int(request.headers.get("Content-Length") or 0)
@@ -158,7 +164,7 @@ def parte(request, inscricao_id, etapa_id, envio_id):
             etapa_id=etapa_id,
             envio_id=envio_id,
             deslocamento=deslocamento,
-            dados=request.body,
+            dados=request.read(PARTE + 1),
         )
     except envio.ForaDoDeslocamento as fora:
         return _json(

@@ -654,21 +654,21 @@ def _recusar_video_retirado_apos_recebido(edital, base, content):
     """
     from processo_seletivo.verificacao.application.disponibilidade import videos_recebidos
 
-    antes = _etapas_por_id(base)
-    for etapa in (content or {}).get("stages") or []:
-        if not isinstance(etapa, dict) or etapa.get("videoOption") is True:
+    depois = _etapas_por_id(content)
+    for identidade, anterior in _etapas_por_id(base).items():
+        if anterior.get("videoOption") is not True:
             continue
-        if (antes.get(str(etapa.get("id"))) or {}).get("videoOption") is not True:
+        # **A Etapa removida inteira também** (achado 5 do code review do #547): a recusa de Etapa
+        # com Atribuição não cobre o vídeo recebido antes da distribuição.
+        if (depois.get(identidade) or {}).get("videoOption") is True:
             continue
-        if videos_recebidos(edital=edital, etapa_id=etapa.get("id")):
+        if videos_recebidos(edital=edital, etapa_id=identidade):
             raise DomainError(
                 "video_ja_recebido",
-                f"A Etapa «{etapa.get('name') or ''}» já recebeu vídeo, e deixar de admiti-lo "
+                f"A Etapa «{anterior.get('name') or ''}» já recebeu vídeo, e deixar de admiti-lo "
                 "agora tiraria o meio de quem o usou.",
                 422,
             )
-    # A Etapa removida inteira pela Retificação cai na recusa de Etapa com Atribuição, que já
-    # existe.
 
 
 def _replace_changes(retificacao, changes, base_content):

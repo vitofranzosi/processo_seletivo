@@ -392,7 +392,8 @@
 
   function terminar() {
     if (!estado.gravador || estado.gravador.state === "inactive") return;
-    estado.duracao = (performance.now() - estado.inicio) / 1000;
+    // Nunca acima do teto: o temporizador dispara depois dele por milissegundos (achado 3 do review).
+    estado.duracao = Math.min((performance.now() - estado.inicio) / 1000, teto);
     pararRelogios();
     estado.gravador.stop();
   }

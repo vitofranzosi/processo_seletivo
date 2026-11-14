@@ -31,7 +31,7 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-7102 | `editais/models/etapas.py`, `verificacao/domain/admissao.py`, `publicacoes/domain/elevacao.py` | UP, TC, G |
 | FR-7103 | `editais/domain/validation.py` (`_coerencia_do_video`) | UP |
 | FR-7104 | `editais/domain/validation.py`, `publicacoes/application/retificacoes.py`, `_etapa.html` | UP, TC |
-| FR-7105 | `publicacoes/application/retificacoes.py` (`_recusar_video_retirado_apos_recebido`) | IE (indireta; ver *Pendências*) |
+| FR-7105 | `publicacoes/application/retificacoes.py` (`_recusar_video_retirado_apos_recebido`), inclusive a Etapa removida inteira | IE |
 | FR-7106 | `verificacao/domain/admissao.py` (`frase`), `pdf.py`, `apresentacao.py`, `revisao.py` | UP, TC |
 | FR-7107 | `verificacao/application/disponibilidade.py` | IE |
 | FR-7108 | `portal/templates/portal/verificacao.html` | PV |
@@ -65,7 +65,7 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-7136 | `resultados/application/consolidacao.py` (`_planejar`), `ganchos.py` | IM, IR |
 | FR-7137 | `consolidacao.py` | IM, IR |
 | FR-7138 | `consolidacao.py`, `consolidacao_confirmar.html`, `encaminhar_ao_vivo.html` | IM, IR |
-| FR-7139 | `ganchos.py` (`recusar_desfavoravel_pelo_video`), `consolidacao.py`, `recursos/application/julgar.py` | IM, IR |
+| FR-7139 | `ganchos.py` (`recusar_desfavoravel_pelo_video`), `consolidacao.py`, `recursos/application/julgar.py`, `resultados/application/ocorrencia.py` | IM, IR |
 | FR-7140 | `verificacao/application/encaminhamento.py`, `interface/verificacao.py` (`encaminhar`) | IM |
 | FR-7141 | `encaminhamento.py` (reabertura da `012`) | IM |
 | FR-7142 | `encaminhamento.py`, `disponibilidade.py` | IM |
@@ -106,6 +106,6 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 
 ## Pendências
 
-- **FR-7105** e **FR-7126** estão no código e não têm teste dedicado: a Retificação que retira o vídeo depois do primeiro recebido, e a hora de tolerância depois do fim do período.
+- **FR-7126** está no código e não tem teste dedicado: a hora de tolerância depois do fim do período.
 - **SC-2377** é humano: a matriz de navegadores com câmera real, critério de saída da entrega 0 do estudo.
 - **P-0, P-7, P-8 e P-10** continuam abertas (spec, *Dependências*).

@@ -11,7 +11,6 @@ reprodutor apresentam esse identificador, e não registram nada.
 abertura do titular não encerra a troca: só a da comissão (FR-7124).
 """
 
-import hashlib
 import os
 
 from django.db import transaction
@@ -51,14 +50,10 @@ def _recusar_se_eliminado(video):
 
 def _resumo(video) -> str | None:
     """O resumo do arquivo no disco, ou `None` se ele não está lá."""
-    sha = hashlib.sha256()
     try:
-        with open(envio.caminho(video.arquivo), "rb") as arquivo:
-            for bloco in iter(lambda: arquivo.read(1024 * 1024), b""):
-                sha.update(bloco)
+        return envio.resumo_do_arquivo(video.arquivo)
     except OSError:
         return None
-    return sha.hexdigest()
 
 
 def _conferir_integridade(video, *, actor, permission, aggregate, correlation_id):
