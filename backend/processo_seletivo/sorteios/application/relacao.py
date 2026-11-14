@@ -30,6 +30,7 @@ from processo_seletivo.sorteios.application.habilitacao import (
     habilitadas_na_etapa,
     nome_da_etapa,
     para_o_recorte,
+    retiradas_antes,
 )
 from processo_seletivo.sorteios.domain import conferencia as dominio_da_conferencia
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
@@ -297,15 +298,29 @@ def _projetar(edital, versao, perfil_id, marco_id, lista_id):
         projecao.elegiveis(
             inscricoes,
             lista_id=lista_id,
-            habilitadas=para_o_recorte(
-                edital,
-                dominio_do_metodo.metodo_declarado(
-                    versao.content, perfil_id=perfil_id, marco_id=marco_id
-                ),
-                _habilitadas(edital, versao, perfil_id, marco_id),
-                lista_id,
-            ),
+            habilitadas=_habilitadas_do_recorte(edital, versao, perfil_id, marco_id, lista_id),
         )
+    )
+
+
+def _habilitadas_do_recorte(edital, versao, perfil_id, marco_id, lista_id):
+    """As habilitadas que o recorte conta, sem a retirada da reserva na lista reservada (164).
+
+    As retiradas são lidas com o conteúdo da versão que a relação cita, que já está em mãos: sem
+    isso, `para_o_recorte` releria o conteúdo vigente para situar cada retirada.
+    """
+    metodo = dominio_do_metodo.metodo_declarado(
+        versao.content, perfil_id=perfil_id, marco_id=marco_id
+    )
+    habilitadas = _habilitadas(edital, versao, perfil_id, marco_id)
+    if habilitadas is None or not lista_id:
+        return habilitadas
+    return para_o_recorte(
+        edital,
+        metodo,
+        habilitadas,
+        lista_id,
+        retiradas=retiradas_antes(edital, metodo, versao.content),
     )
 
 

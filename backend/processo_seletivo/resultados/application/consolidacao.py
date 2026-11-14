@@ -22,6 +22,7 @@ from processo_seletivo.avaliacoes.application.distribuicao import resultado_decl
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
@@ -231,7 +232,9 @@ def _planejar(etapa, panorama, inscricoes, conteudo=None):
             # si, ele precisa dizer o que aconteceu, e "a avaliação concluiu Indeferido" deixaria o
             # titular achando que saiu do certame. A regra não conhece a inscrição; quem a conhece
             # completa a frase, sem consulta — a denominação vem do conteúdo já lido.
-            causa = efeito_do_desfecho.motivo_com_a_reserva(causa, conteudo, inscricao.modality_id)
+            causa = efeito_do_desfecho.motivo_com_a_reserva(
+                causa, nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
+            )
         if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
             # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
             # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele

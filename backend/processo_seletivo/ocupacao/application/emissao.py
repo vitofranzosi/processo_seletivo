@@ -172,7 +172,7 @@ def _apurar(*, actor, edital, perfil, marco, lista, motivo, now, movimento_admit
     )
     etapa = corte.etapa_governada_id if corte is not None else None
     habilitadas = selectors.habilitadas_pelo_corte(
-        edital=edital, corte=corte, progrediram=progrediram
+        edital=edital, corte=corte, progrediram=progrediram, conteudo=versao.content
     )
     # **Os efeitos que a `019` registrou, congelados como os movimentos já são** (`FR-244`).
     # Reproduzir esta apuração é reler **estes** ids, e não os efeitos de hoje: sem o

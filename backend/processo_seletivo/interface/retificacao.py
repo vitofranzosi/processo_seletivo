@@ -441,7 +441,10 @@ CAMPOS_ETAPA = [
     ("absenceEffect", "Efeito do não comparecimento", REFERENCIA),
 ]
 EFEITOS_DO_DESFAVORAVEL = (
-    ("", "Não declarado"),
+    # **O vazio publicado não é o padrão da composição** (164, D-002): na Etapa restrita e
+    # eliminatória, `null` é o acervo de antes do degrau 23, lido "elimina". Dizê-lo "Não declarado"
+    # faria quem retifica escolher a eliminação achando que escolhia nada.
+    ("", "Não declarado (na Etapa restrita e eliminatória, lido como eliminação)"),
     ("RESERVE_REMOVAL", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
     ("ELIMINATION", "É eliminado do processo seletivo"),
 )

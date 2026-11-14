@@ -37,9 +37,10 @@ def habilita(consequencia):
 def piora(*, protegido, consequencia, pontuacao):
     """A correção proposta piora o que o `resultado_protegido` já dizia?
 
-    Duas perguntas, e a ordem entre elas importa: a consequência **mais grave** é piora qualquer que
-    seja a pontuação, e por isso ela vem primeiro. Só depois, mantida a consequência, a grandeza
-    decide.
+    Duas perguntas, e cada uma basta: a consequência **mais grave**, qualquer que seja a pontuação,
+    e a **pontuação menor**, qualquer que seja a consequência (FR-070 da `018`). Mudar a
+    consequência para uma menos grave não dispensa a segunda: um sucessor habilitado com nota
+    abaixo da do superado continua sendo piora na nota.
 
     **A gravidade tem três degraus desde a 164** (FR-7028): habilitada, retirada da reserva e
     eliminada. Perder a habilitação continua piora; e a retirada que viraria eliminação também,
@@ -50,10 +51,6 @@ def piora(*, protegido, consequencia, pontuacao):
     """
     if efeito_do_desfecho.mais_grave(consequencia, protegido.consequencia):
         return True
-    if str(consequencia) != str(protegido.consequencia):
-        # Menos grave: a retirada que vira habilitada, a eliminação por ausência que vira retirada
-        # pela reavaliação. Melhora, qualquer que seja a nota.
-        return False
     if protegido.pontuacao is None or pontuacao is None:
         return False
     return pontuacao < protegido.pontuacao

@@ -135,3 +135,14 @@ def test_a_vedacao_de_piora_segue_a_gravidade(antes, depois, piorou):
     """FR-7028: a retirada não vira eliminação por recurso; a eliminação por ausência pode virar
     retirada pela reavaliação."""
     assert piora(protegido=_protegido(antes), consequencia=depois, pontuacao=None) is piorou
+
+
+def test_a_nota_menor_continua_piora_mesmo_com_consequencia_menos_grave():
+    """FR-070 da `018`: a gravidade não dispensa a nota. Eliminada com 50 que viraria habilitada com
+    40 — possível quando uma Retificação baixou a mínima — continua sendo piora na nota."""
+    from decimal import Decimal
+
+    protegido = SimpleNamespace(consequencia="ELIMINADA", pontuacao=Decimal("50"))
+
+    assert piora(protegido=protegido, consequencia="HABILITADA", pontuacao=Decimal("40")) is True
+    assert piora(protegido=protegido, consequencia="HABILITADA", pontuacao=Decimal("60")) is False
