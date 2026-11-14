@@ -8,7 +8,8 @@
 **Status**: Especificada em 14/11. As cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em 14/11,
 pelas recomendações, com dois ajustes: o link para o Edital e a advertência de nome não pressupõem que a
 Etapa restrita seja de verificação da autodeclaração, e o degrau depois do prazo diz só o que os dados
-permitem afirmar. Planejada em seguida; a implementação espera a aprovação do plano. O merge é do usuário.
+permitem afirmar. Planejada em 14/11 (o plano estreitou a FR-7321 à Etapa restrita e a FR-7333 e a FR-7334 ao que um
+cenário de período único mostra); a implementação espera a aprovação do plano. O merge é do usuário.
 
 **Input**: a **entrega 4** do plano do estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/04-plano-de-entregas.md`): *"Orientação: degrau no
@@ -301,15 +302,14 @@ da `166` e o Centro com uma inscrição a encaminhar.
 ### User Story 5 — A equipe percorre a orientação num cenário de treinamento (Priority: P3)
 
 A equipe carrega um cenário de treinamento com uma Etapa restrita e colegiada, alcançados em estados
-diferentes — antes do aviso, avisados, com parecer pendente, com o período vencido sem desfecho, com
-Resultado — e percorre, no navegador, o acompanhamento de um candidato, o Centro da presidência e Minhas
+diferentes — antes do aviso, avisados, com parecer pendente, com os pareceres completos — e percorre, no navegador, o acompanhamento de um candidato, o Centro da presidência e Minhas
 atividades de um membro.
 
 **Why this priority**: é como o plano do estudo verifica a entrega, e é como a equipe aprende a rotina
 antes de um Edital real.
 
-**Independent Test**: carregar o cenário, verificar com o comando de verificação dos cenários, e
-percorrer as três telas.
+**Independent Test**: carregar o cenário e percorrer as três telas; o teste do cenário confere os
+estados.
 
 **Acceptance Scenarios**:
 
@@ -317,8 +317,8 @@ percorrer as três telas.
    degrau "Falta um passo seu".
 2. **Given** o cenário carregado, **When** a equipe entra como a presidência, **Then** o Centro mostra
    as pendências desta spec com os números do cenário.
-3. **Given** o cenário carregado, **When** o comando de verificação dos cenários roda, **Then** ele
-   confere os estados que o cenário promete.
+3. **Given** o cenário carregado, **When** o teste do cenário roda, **Then** ele confere os estados que
+   o cenário promete.
 
 ---
 
@@ -466,7 +466,7 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 
 #### O Centro de Controle e Minhas atividades (comissão e operação)
 
-- **FR-7321**: Na Etapa colegiada ou não, o Centro DEVE mostrar à presidência os pareceres que faltam,
+- **FR-7321**: Na Etapa restrita, colegiada ou não, o Centro DEVE mostrar à presidência os pareceres que faltam,
   por membro alocado: o nome e quantas Atribuições ativas dele estão sem parecer concluído naquela Etapa.
   NUNCA o sentido de parecer algum, nem de quem são os pareceres já concluídos de uma inscrição.
 - **FR-7322**: Na Etapa restrita, a Etapa DEVE aparecer no Centro pelo nome publicado, com a frase do
@@ -512,9 +512,12 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 #### Cenário de treinamento
 
 - **FR-7333**: O catálogo de cenários de treinamento (`134`) DEVE ganhar um cenário com uma Etapa
-  restrita e colegiada, sem vídeo, e alcançados nos estados: não avisado, avisado, com parecer
-  pendente, com o período vencido sem desfecho, e com Resultado visível.
-- **FR-7334**: O comando de verificação dos cenários DEVE conferir os estados que o cenário promete.
+  restrita e colegiada, sem vídeo, com o período em curso, e alcançados nos estados que um período só
+  permite: não avisado, avisado, com parecer pendente e com os pareceres completos à espera da
+  consolidação. O período vencido e o Resultado visível ficam na suíte, e não no cenário.
+- **FR-7334**: Um teste do cenário, no molde dos testes que já conferem os cenários no Centro, DEVE
+  conferir os estados que ele promete. O comando de verificação dos cenários não ganha conferência de
+  domínio.
 - **FR-7335**: O cenário DEVE obedecer às regras dos cenários: nada se exclui, os atores de treino ficam
   fora das sugestões da página de acesso, e o gerador não concede papel além da exceção já registrada.
 
