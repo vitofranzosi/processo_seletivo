@@ -310,19 +310,19 @@
         <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-maioria"
                name="etapa-{{ indice }}-regraDeDeliberacao" value="MAJORITY"
                {% if etapa_linha.deliberationRule == "MAJORITY" %}checked{% endif %}>
-        <label for="etapa-{{ indice }}-regraDeDeliberacao-maioria">«{{ etapa_linha.rotuloFavoravel|default:"favorável" }}» quando a maioria dos pareceres for «{{ etapa_linha.rotuloFavoravel|default:"favorável" }}»</label>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-maioria">Resultado {% if etapa_linha.rotuloFavoravel %}«{{ etapa_linha.rotuloFavoravel }}»{% else %}favorável{% endif %} quando a maioria dos pareceres for {% if etapa_linha.rotuloFavoravel %}«{{ etapa_linha.rotuloFavoravel }}»{% else %}favorável{% endif %}</label>
       </p>
       <p class="opcao">
         <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-favoravel"
                name="etapa-{{ indice }}-regraDeDeliberacao" value="UNANIMOUS_FOR_FAVORABLE"
                {% if etapa_linha.deliberationRule == "UNANIMOUS_FOR_FAVORABLE" %}checked{% endif %}>
-        <label for="etapa-{{ indice }}-regraDeDeliberacao-favoravel">«{{ etapa_linha.rotuloFavoravel|default:"favorável" }}» só quando todos os pareceres forem «{{ etapa_linha.rotuloFavoravel|default:"favorável" }}»</label>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-favoravel">Resultado {% if etapa_linha.rotuloFavoravel %}«{{ etapa_linha.rotuloFavoravel }}»{% else %}favorável{% endif %} só quando todos os pareceres forem {% if etapa_linha.rotuloFavoravel %}«{{ etapa_linha.rotuloFavoravel }}»{% else %}favorável{% endif %}</label>
       </p>
       <p class="opcao">
         <input type="radio" id="etapa-{{ indice }}-regraDeDeliberacao-desfavoravel"
                name="etapa-{{ indice }}-regraDeDeliberacao" value="UNANIMOUS_FOR_UNFAVORABLE"
                {% if etapa_linha.deliberationRule == "UNANIMOUS_FOR_UNFAVORABLE" %}checked{% endif %}>
-        <label for="etapa-{{ indice }}-regraDeDeliberacao-desfavoravel">«{{ etapa_linha.rotuloDesfavoravel|default:"desfavorável" }}» só quando todos os pareceres forem «{{ etapa_linha.rotuloDesfavoravel|default:"desfavorável" }}»</label>
+        <label for="etapa-{{ indice }}-regraDeDeliberacao-desfavoravel">Resultado {% if etapa_linha.rotuloDesfavoravel %}«{{ etapa_linha.rotuloDesfavoravel }}»{% else %}desfavorável{% endif %} só quando todos os pareceres forem {% if etapa_linha.rotuloDesfavoravel %}«{{ etapa_linha.rotuloDesfavoravel }}»{% else %}desfavorável{% endif %}</label>
       </p>
     </fieldset>
   </div>

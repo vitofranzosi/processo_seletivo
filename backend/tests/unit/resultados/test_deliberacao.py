@@ -164,7 +164,13 @@ def test_sem_regra_nao_ha_frase():
 def test_as_opcoes_da_composicao():
     """UX-750: escritas com os rótulos digitados."""
     opcoes = dict(d.opcoes_da_regra("Deferido", "Indeferido"))
-    assert opcoes["MAJORITY"] == "«Deferido» quando a maioria dos pareceres for «Deferido»"
+    assert (
+        opcoes["MAJORITY"] == "Resultado «Deferido» quando a maioria dos pareceres for «Deferido»"
+    )
     assert opcoes["UNANIMOUS_FOR_UNFAVORABLE"] == (
-        "«Indeferido» só quando todos os pareceres forem «Indeferido»"
+        "Resultado «Indeferido» só quando todos os pareceres forem «Indeferido»"
+    )
+    sem_rotulo = dict(d.opcoes_da_regra())
+    assert sem_rotulo["MAJORITY"] == (
+        "Resultado favorável quando a maioria dos pareceres for favorável"
     )

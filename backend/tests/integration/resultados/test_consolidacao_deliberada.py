@@ -63,7 +63,7 @@ def test_espera_os_tres_pareceres_sem_antecipar(gestor, api_client, manager_head
 
     panorama = _panorama(cenario)
 
-    assert panorama["estados"][maria.id] == (NAO_CONSOLIDAVEL, "faltam 1 de 3 pareceres")
+    assert panorama["estados"][maria.id] == (NAO_CONSOLIDAVEL, "falta 1 de 3 pareceres")
     # As outras duas inscrições esperam também, com nenhum dos três.
     assert panorama["contagens"]["aguardando_pareceres"] == 3
     concluir_pareceres(cenario, maria, {"carla": F})
@@ -163,7 +163,7 @@ def test_a_conferencia_e_o_ato_leem_o_mesmo_plano(gestor, api_client, manager_he
     assert [item.inscricao for item in consolidaveis] == [maria]
     linha = deliberacao.linha_da_conferencia(_etapa, consolidaveis[0].conclusao)
     assert linha == "Indeferido — 2 de 3 pareceres Indeferido, por maioria"
-    assert [(r.inscricao, r.motivo) for r in recusas] == [(joana, "faltam 1 de 3 pareceres")]
+    assert [(r.inscricao, r.motivo) for r in recusas] == [(joana, "falta 1 de 3 pareceres")]
 
 
 @pytest.mark.django_db(transaction=True)

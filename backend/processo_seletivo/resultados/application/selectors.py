@@ -91,6 +91,28 @@ def pareceres_da_deliberacao(resultado):
     )
 
 
+def pareceristas_das_deliberacoes(resultados):
+    """`{resultado_id: [subject]}` dos Resultados deliberados de uma página, numa consulta (165).
+
+    A gestão vê quem deu cada parecer (FR-7081); a tela de Resultados precisa disso para não dizer
+    "ninguém avaliou" de um Resultado que três pessoas formaram. Vazio, sem consulta, quando a
+    página não tem Resultado deliberado.
+    """
+    from processo_seletivo.resultados.models import ParecerDaDeliberacao
+
+    deliberados = [r.pk for r in resultados if r.origem == ResultadoEtapa.Origem.DELIBERACAO]
+    if not deliberados:
+        return {}
+    autores = {}
+    for resultado_id, subject in (
+        ParecerDaDeliberacao.objects.filter(resultado_id__in=deliberados)
+        .order_by("avaliacao__concluida_em", "avaliacao_id")
+        .values_list("resultado_id", "avaliacao__identity_subject")
+    ):
+        autores.setdefault(resultado_id, []).append(subject)
+    return autores
+
+
 def reproduzir_deliberacao(resultado):
     """A deliberação refeita a partir do que o Resultado gravou (165, FR-7065, SC-2351).
 

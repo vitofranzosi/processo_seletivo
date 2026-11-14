@@ -71,7 +71,7 @@ promete o que se pretende, e aquela responde pelo que foi feito.
           O cumprimento de decisão é dito, porque ele é a única porta pela qual consolidar sucede
           um Resultado protegido (FR-068).
           {% endcomment %}
-          <td>{{ item.efeito|title }}{% if item.cumprindo %} <span class="situacao s-EM_REVISAO">em cumprimento de decisão</span>{% endif %}{% if item.linha_da_deliberacao %} <span class="ajuda">{{ item.linha_da_deliberacao }}</span>{% endif %}</td>
+          <td>{% if item.efeito == "RETIRADA_DA_RESERVA" %}Retirada da reserva{% else %}{{ item.efeito|title }}{% endif %}{% if item.cumprindo %} <span class="situacao s-EM_REVISAO">em cumprimento de decisão</span>{% endif %}{% if item.linha_da_deliberacao %} <span class="ajuda">{{ item.linha_da_deliberacao }}</span>{% endif %}</td>
           <td>{{ item.causa }}</td>
         </tr>
         {% endfor %}

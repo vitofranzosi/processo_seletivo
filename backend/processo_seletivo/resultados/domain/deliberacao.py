@@ -186,18 +186,22 @@ def linha_da_conferencia(etapa, deliberacao_) -> str:
 
 
 def opcoes_da_regra(favoravel=None, desfavoravel=None) -> list[tuple[str, str]]:
-    """As três opções da composição, com os rótulos digitados no cartão (UX-750)."""
-    favoravel = favoravel or "favorável"
-    desfavoravel = desfavoravel or "desfavorável"
+    """As três opções da composição, com os rótulos digitados no cartão (UX-750).
+
+    O template as escreve com as mesmas palavras; esta é a versão que os testes e o contrato leem.
+    Sem rótulo, as palavras vão sem aspas, porque não são o vocabulário de Edital nenhum.
+    """
+    f = f"«{favoravel}»" if favoravel else "favorável"
+    d = f"«{desfavoravel}»" if desfavoravel else "desfavorável"
     return [
-        (PUBLICADO[MAIORIA], f"«{favoravel}» quando a maioria dos pareceres for «{favoravel}»"),
+        (PUBLICADO[MAIORIA], f"Resultado {f} quando a maioria dos pareceres for {f}"),
         (
             PUBLICADO[UNANIMIDADE_PARA_O_FAVORAVEL],
-            f"«{favoravel}» só quando todos os pareceres forem «{favoravel}»",
+            f"Resultado {f} só quando todos os pareceres forem {f}",
         ),
         (
             PUBLICADO[UNANIMIDADE_PARA_O_DESFAVORAVEL],
-            f"«{desfavoravel}» só quando todos os pareceres forem «{desfavoravel}»",
+            f"Resultado {d} só quando todos os pareceres forem {d}",
         ),
     ]
 

@@ -111,7 +111,7 @@ SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
 # `NAO_CONSOLIDAVEL` — o estado de quem ainda não pode ser consolidado —, com o motivo que diz
 # quanto falta, e as contagens a separam das demais (FR-7079). Um estado novo obrigaria toda tela
 # que lê a partição a aprender um nome para a mesma pergunta: "por que esta não está pronta?".
-FALTAM_PARECERES = "faltam {faltam} de {previstos} pareceres"
+FALTAM_PARECERES = "{verbo} {faltam} de {previstos} pareceres"
 
 
 class FaltamPareceres(str):
@@ -883,7 +883,11 @@ def _estado_colegiado(etapa, conclusoes):
         return (
             NAO_CONSOLIDAVEL,
             FaltamPareceres(
-                FALTAM_PARECERES.format(faltam=previstos - len(conclusoes), previstos=previstos)
+                FALTAM_PARECERES.format(
+                    verbo="falta" if previstos - len(conclusoes) == 1 else "faltam",
+                    faltam=previstos - len(conclusoes),
+                    previstos=previstos,
+                )
             ),
         )
     if len(conclusoes) > previstos:

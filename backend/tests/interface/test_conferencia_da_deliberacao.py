@@ -45,3 +45,31 @@ def test_a_organizacao_conta_quem_espera_pareceres(client, seletor_ligado, cenar
 
     # Joana tem um de três; a terceira inscrição, nenhum.
     assert "2 aguardando pareceres" in corpo
+
+
+def test_os_resultados_dizem_quem_formou_a_deliberacao(client, seletor_ligado, cenario):
+    """FR-7081, revisão no navegador: a tela não diz "ninguém avaliou" do Resultado deliberado."""
+    from tests.fixtures.deliberacao import consolidar_na
+
+    maria = cenario["inscricoes"][0]
+    consolidar_na(cenario, cenario["hetero"], [maria], chave="consolidar-1671")
+    identificar(client, "maria", ["gestor"])
+    url = reverse("interface:resultados-da-etapa", args=[cenario["edital"].id, cenario["hetero"]])
+
+    corpo = client.get(url).content.decode()
+
+    assert "Deliberação da comissão" in corpo
+    assert "ninguém: não houve avaliação" not in corpo
+    for nome in ("ana", "bruno", "carla"):
+        assert nome in corpo
+
+
+def test_a_conferencia_nomeia_a_retirada(client, seletor_ligado, cenario):
+    """A consequência da `164` pelo nome, e não pelo código com `title`."""
+    identificar(client, "maria", ["gestor"])
+    url = reverse("interface:consolidar-resultados", args=[cenario["edital"].id, cenario["hetero"]])
+
+    corpo = client.post(url, {"inscricao_id": [str(cenario["inscricoes"][0].id)]}).content.decode()
+
+    assert "Retirada da reserva" in corpo
+    assert "Retirada_Da_Reserva" not in corpo

@@ -7,9 +7,12 @@
 
 | Regra | Opção |
 |---|---|
-| `MAJORITY` | «F» quando a maioria dos pareceres for «F» |
-| `UNANIMOUS_FOR_FAVORABLE` | «F» só quando todos os pareceres forem «F» |
-| `UNANIMOUS_FOR_UNFAVORABLE` | «D» só quando todos os pareceres forem «D» |
+| `MAJORITY` | Resultado «F» quando a maioria dos pareceres for «F» |
+| `UNANIMOUS_FOR_FAVORABLE` | Resultado «F» só quando todos os pareceres forem «F» |
+| `UNANIMOUS_FOR_UNFAVORABLE` | Resultado «D» só quando todos os pareceres forem «D» |
+
+Sem rótulo digitado, a opção diz *favorável* e *desfavorável* sem aspas: "Resultado favorável quando a
+maioria dos pareceres for favorável". Os rótulos entram nas opções quando o cartão é relido.
 
 Pergunta: *Como a comissão chega ao resultado?* Ao lado da maioria, com `N` par: *exige número
 ímpar de pareceres*.

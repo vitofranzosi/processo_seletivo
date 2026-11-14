@@ -7659,6 +7659,10 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     # inteiro em JSON por linha da página para imprimir esta data, e a contagem de consultas não
     # mudaria — nenhum teste de custo denunciaria (D-1).
     vigencias = resultado_selectors.vigencias_das_versoes({linha.versao_id for linha in linhas})
+    # Quem formou cada Resultado deliberado (165, FR-7081), pendurado na linha como a vigência.
+    pareceristas = resultado_selectors.pareceristas_das_deliberacoes(linhas)
+    for linha in linhas:
+        linha.pareceristas = pareceristas.get(linha.pk, [])
     for linha in linhas:
         linha.vigencia = vigencias.get(linha.versao_id)
     return marcar_como_privada(

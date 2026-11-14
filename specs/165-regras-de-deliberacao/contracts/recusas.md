@@ -30,7 +30,7 @@ pelos rótulos publicados ou pelos números.
 
 | Estado | Frase |
 |---|---|
-| `NAO_CONSOLIDAVEL` (menos de N, contada em `aguardando_pareceres`) | faltam «k» de «N» pareceres |
+| `NAO_CONSOLIDAVEL` (menos de N, contada em `aguardando_pareceres`) | «falta \| faltam» «k» de «N» pareceres |
 | `NAO_CONSOLIDAVEL` (mais de N) | há «k» pareceres concluídos onde o Edital prevê «N», e o sistema não escolhe quais contam |
 
 ## Julgamento (422)
