@@ -16,12 +16,13 @@ capacidade transversal da Etapa, e não como módulo de entrevistas; o registro
 o estudo `doc/estudo-agendamento-da-etapa-2026-11-14/`, com diagnóstico, proposta (regras R-01 a
 R-26 e modelo mínimo), protótipo navegável e plano de entregas.
 
-> **Faixa de identificadores.** Esta spec abre em **FR-7100**, **SC-2370** e **UX-760**. Os tetos
-> medidos em 14/11/2026 eram, na `main`, o requisito seis mil novecentos e cinquenta e um, o critério
-> dois mil trezentos e quatro e o requisito de experiência setecentos e vinte e sete; nos PRs
-> abertos (#542 a #545), o requisito sete mil e oitenta e três, o critério dois mil trezentos e
-> cinquenta e seis e o requisito de experiência setecentos e cinquenta e quatro. A pasta `166`
-> estava livre na `main`, nos PRs abertos e nas worktrees locais. As decisões reiniciam em `D-001`.
+> **Faixa de identificadores.** Esta spec abre em **FR-7200**, **SC-2390** e **UX-760**. Ela nasceu
+> como `166`, com a faixa a partir do requisito sete mil e cem e do critério dois mil trezentos e
+> setenta; no mesmo dia, o PR #547 (verificação da autodeclaração por vídeo) tomou a pasta `166` e a
+> mesma faixa, com código já implementado, e reservou até o requisito sete mil cento e noventa e nove.
+> Por decisão do usuário em 14/11, esta passou a `167`, com os requisitos e os critérios deslocados
+> sem mudar de conteúdo; os requisitos de experiência não colidiam e ficaram. A pasta `167` estava
+> livre na `main`, nos PRs abertos e nas worktrees locais. As decisões reiniciam em `D-001`.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-084 da `010`"). Uma decisão de outra feature é citada pelo assunto e pela feature.
@@ -197,7 +198,7 @@ endereço da sala e as orientações.
 6. **Given** a conferência aberta, **When** a comissão confirma duas vezes seguidas, **Then** nasce
    um só ato, e a segunda confirmação devolve o primeiro.
 7. **Given** a agenda publicada, **When** qualquer pessoa abre a página pública da seleção, **Then**
-   ela vê a agenda por dia, com horário, banca e a identificação definida pela FR-7125, e nunca o
+   ela vê a agenda por dia, com horário, banca e a identificação definida pela FR-7225, e nunca o
    endereço da sala, o CPF, o e-mail ou o telefone.
 8. **Given** a agenda publicada, **When** o candidato abre a área dele, **Then** vê o dia e a hora
    em destaque, a duração prevista, a banca, o local ou o botão da sala virtual, e as orientações.
@@ -275,9 +276,9 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 - **A lista muda entre a montagem e a publicação.** Um recurso deferido acrescenta uma pessoa; uma
   eliminação tira outra. A montagem mostra a primeira em "Pessoas sem horário" e sinaliza a segunda
-  na grade; a conferência impede a publicação até as duas serem resolvidas (FR-7121).
+  na grade; a conferência impede a publicação até as duas serem resolvidas (FR-7221).
 - **O Evento da Etapa é retificado depois da configuração**, e um dia da agenda fica fora do período.
-  A montagem avisa; a conferência impede (FR-7121); publicada a agenda, o horário publicado continua
+  A montagem avisa; a conferência impede (FR-7221); publicada a agenda, o horário publicado continua
   valendo como foi publicado, e a gestão é avisada de que ele está fora do período vigente.
 - **Agenda parcialmente preenchida.** Pode ser salva e reaberta quantas vezes for preciso; só a
   publicação exige todos.
@@ -290,7 +291,7 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 - **Atendimento presencial com local em várias salas.** Cada sala é uma banca.
 - **A pessoa sem endereço de e-mail válido.** A agenda vale para ela pela publicação; o aviso falha
   como qualquer outro, e a tela o mostra.
-- **Publicação repetida.** Devolve o mesmo ato e não gera aviso novo (FR-7123).
+- **Publicação repetida.** Devolve o mesmo ato e não gera aviso novo (FR-7223).
 - **Uma Etapa sem agenda.** Nada muda para ela: o agendamento é opcional por Etapa.
 
 ---
@@ -301,135 +302,135 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 #### A agenda e a configuração
 
-- **FR-7100**: Uma Etapa de avaliação MAY ter uma agenda, e no máximo uma. A agenda MUST ser
+- **FR-7200**: Uma Etapa de avaliação MAY ter uma agenda, e no máximo uma. A agenda MUST ser
   operacional: configurá-la, montá-la ou publicá-la MUST NOT alterar o Edital, a Etapa, o cronograma
   ou pedir Retificação.
-- **FR-7101**: A agenda MUST se referir à Etapa pela identidade dela no Edital, e continuar válida
+- **FR-7201**: A agenda MUST se referir à Etapa pela identidade dela no Edital, e continuar válida
   para Etapa acrescentada por Retificação.
-- **FR-7102**: A configuração MUST ter: a forma de atendimento (remota ou presencial); a duração de
+- **FR-7202**: A configuração MUST ter: a forma de atendimento (remota ou presencial); a duração de
   cada atendimento e o intervalo entre atendimentos, em minutos; um ou mais dias, cada um com uma ou
   mais janelas de início e fim; uma ou mais bancas, cada uma com nome e local (presencial) ou
   endereço da sala (remota); e orientações ao candidato.
-- **FR-7103**: Os horários MUST ser derivados da configuração, e não digitados: em cada janela, o
+- **FR-7203**: Os horários MUST ser derivados da configuração, e não digitados: em cada janela, o
   primeiro atendimento começa no início; cada seguinte começa depois da duração mais o intervalo; o
   último termina até o fim da janela. Cada horário existe uma vez em cada banca.
-- **FR-7104**: A configuração MUST ser recusada, com frase que diz o que mudar, quando: um dia
+- **FR-7204**: A configuração MUST ser recusada, com frase que diz o que mudar, quando: um dia
   estiver fora do período do Evento da Etapa no cronograma vigente; uma janela terminar antes de
   começar; uma janela for menor que a duração; duas janelas do mesmo dia se sobrepuserem; uma banca
   não tiver nome; duas bancas tiverem o mesmo nome; a duração não for positiva; o intervalo for
   negativo.
-- **FR-7105**: A capacidade MUST ser o número de horários vezes o número de bancas, e MUST ser
+- **FR-7205**: A capacidade MUST ser o número de horários vezes o número de bancas, e MUST ser
   comparada com o número de pessoas que participam da Etapa naquele momento. A insuficiência MUST
   ser dita com o número que falta, e MUST NOT impedir salvar a configuração.
-- **FR-7106**: A sobra no fim de uma janela que não comporta outro atendimento MUST ser informada,
+- **FR-7206**: A sobra no fim de uma janela que não comporta outro atendimento MUST ser informada,
   e MUST NOT ser tratada como erro.
-- **FR-7107**: A configuração MUST poder ser salva antes de a participação da Etapa estar definida.
-- **FR-7108**: Antes da publicação, mudar a configuração MUST devolver a "sem horário" quem estava
+- **FR-7207**: A configuração MUST poder ser salva antes de a participação da Etapa estar definida.
+- **FR-7208**: Antes da publicação, mudar a configuração MUST devolver a "sem horário" quem estava
   num horário que deixou de existir, e MUST dizer quem foi devolvido. Depois da publicação, a
   configuração MUST só aceitar acrescentar dia, janela ou banca, e MUST recusar mudança que remova ou
   mova um horário publicado.
 
 #### A montagem
 
-- **FR-7110**: Quem precisa de horário MUST ser quem participa da Etapa pela regra de participação
+- **FR-7210**: Quem precisa de horário MUST ser quem participa da Etapa pela regra de participação
   vigente, lida a cada abertura da agenda. A agenda MUST NOT manter lista própria de participantes.
-- **FR-7111**: Uma inscrição MUST ter no máximo um horário na agenda, e um horário de uma banca MUST
+- **FR-7211**: Uma inscrição MUST ter no máximo um horário na agenda, e um horário de uma banca MUST
   ter no máximo uma inscrição. As duas regras MUST valer sob operações simultâneas.
-- **FR-7112**: A comissão MUST poder agendar uma pessoa sem horário num horário livre, mudar uma
+- **FR-7212**: A comissão MUST poder agendar uma pessoa sem horário num horário livre, mudar uma
   pessoa de horário e liberar um horário, antes da publicação.
-- **FR-7113**: O preenchimento automático MUST alocar só pessoas sem horário, só em horários livres,
+- **FR-7213**: O preenchimento automático MUST alocar só pessoas sem horário, só em horários livres,
   sem mexer em quem já tem horário, na ordem: pessoas pelo nome, e pelo protocolo no empate;
   horários do mais cedo ao mais tarde; com mais de uma banca, as bancas lado a lado em cada horário.
-- **FR-7114**: O preenchimento MUST mostrar uma prévia sem gravar nada — quantas pessoas receberão
+- **FR-7214**: O preenchimento MUST mostrar uma prévia sem gravar nada — quantas pessoas receberão
   horário, quantas continuarão sem, os pares e a ordem — e MUST gravar só na aplicação.
-- **FR-7115**: A aplicação MUST ser recusada quando a agenda tiver mudado desde a prévia, e MUST
+- **FR-7215**: A aplicação MUST ser recusada quando a agenda tiver mudado desde a prévia, e MUST
   mostrar a prévia nova.
-- **FR-7116**: Cada agendamento MUST registrar a origem (à mão ou automático), quem o fez e quando.
-- **FR-7117**: A montagem MUST mostrar, separados, quem participa e não tem horário, e quem tem
+- **FR-7216**: Cada agendamento MUST registrar a origem (à mão ou automático), quem o fez e quando.
+- **FR-7217**: A montagem MUST mostrar, separados, quem participa e não tem horário, e quem tem
   horário e não participa mais.
 
 #### A conferência e a publicação
 
-- **FR-7120**: A conferência MUST NOT gravar, enviar ou reservar nada.
-- **FR-7121**: A publicação MUST ser impedida quando houver: pessoa que participa sem horário;
-  pessoa agendada que não participa mais; configuração que a FR-7104 recusaria, relida contra o
+- **FR-7220**: A conferência MUST NOT gravar, enviar ou reservar nada.
+- **FR-7221**: A publicação MUST ser impedida quando houver: pessoa que participa sem horário;
+  pessoa agendada que não participa mais; configuração que a FR-7204 recusaria, relida contra o
   cronograma vigente; banca sem local ou endereço; nenhuma autoridade signatária vigente. Cada
   impedimento MUST nomear o que está errado e levar ao lugar de corrigir.
-- **FR-7122**: A conferência MUST mostrar os fatos da publicação (Etapa, período do cronograma,
+- **FR-7222**: A conferência MUST mostrar os fatos da publicação (Etapa, período do cronograma,
   dias, duração e intervalo, bancas, forma de atendimento, pessoas e horários), a prévia da página
   pública, o assunto e o texto da mensagem, e a escolha da autoridade signatária.
-- **FR-7123**: A confirmação MUST levar a assinatura do que foi conferido (configuração e pares
+- **FR-7223**: A confirmação MUST levar a assinatura do que foi conferido (configuração e pares
   pessoa-horário) e MUST ser recusada se a agenda mudou desde a conferência. A confirmação repetida
   MUST devolver o ato já criado, sem criar outro e sem aviso novo.
-- **FR-7124**: A publicação MUST ser um ato imutável, que registra autor, autoridade signatária,
+- **FR-7224**: A publicação MUST ser um ato imutável, que registra autor, autoridade signatária,
   instante, e o conteúdo público tal como foi publicado, com o seu resumo criptográfico. Ela MUST
   ter a mesma natureza da relação de convocados da `149`, e o veículo MUST ser escolhido na
   confirmação como na `159`: publicar no GPS, declarando onde o Edital admite a página pública como
   veículo, ou registrar depois a publicação feita fora dele (`D-008`).
-- **FR-7125**: O conteúdo público MUST ter, por pessoa: o dia, o horário, o nome da banca quando há
+- **FR-7225**: O conteúdo público MUST ter, por pessoa: o dia, o horário, o nome da banca quando há
   mais de uma, e a identificação da pessoa. A identificação MUST ser o nome e o protocolo, como a
   FR-5712 da `149`, salvo na Etapa cujo alcance é restrito por Modalidade, em que a identificação
   MUST ser só o protocolo (`D-009`). Na área do candidato, identificado, nada muda: ele vê tudo o que
   é dele.
-- **FR-7126**: O conteúdo público MUST NOT conter o endereço da sala, o CPF inteiro ou parcial, o
+- **FR-7226**: O conteúdo público MUST NOT conter o endereço da sala, o CPF inteiro ou parcial, o
   e-mail, o telefone, a Modalidade ou o desfecho de Etapa alguma.
-- **FR-7127**: A página pública da seleção MUST mostrar a agenda publicada por dia, e MUST permitir
+- **FR-7227**: A página pública da seleção MUST mostrar a agenda publicada por dia, e MUST permitir
   encontrar um horário pelo protocolo, e também pelo nome quando o nome é público.
-- **FR-7128**: A área do candidato MUST mostrar, na inscrição agendada: o dia e a hora em destaque,
+- **FR-7228**: A área do candidato MUST mostrar, na inscrição agendada: o dia e a hora em destaque,
   a duração prevista, a banca, o local ou o acesso à sala virtual, e as orientações. Antes da
   publicação, MUST dizer que o horário ainda não foi publicado e o período da Etapa no cronograma.
-- **FR-7129**: O endereço da sala virtual MUST chegar só à própria pessoa: na área dela, depois de
+- **FR-7229**: O endereço da sala virtual MUST chegar só à própria pessoa: na área dela, depois de
   identificada, e no aviso dela.
 
 #### Os avisos
 
-- **FR-7130**: A publicação MUST criar um aviso por pessoa publicada, que cita o ato, pela origem
+- **FR-7230**: A publicação MUST criar um aviso por pessoa publicada, que cita o ato, pela origem
   "agenda" dos avisos complementares; a confirmação MUST NOT enviar, e o envio MUST ser o do
   despacho de avisos. A lista fechada da FR-084 da `010` MUST ser revista para incluir o aviso de
   agenda — na publicação, na remarcação e na inclusão — como origem do aviso complementar, sem envio
   novo (`D-010`).
-- **FR-7131**: O aviso MUST trazer o dia, a hora, a duração prevista, a banca quando há mais de uma,
+- **FR-7231**: O aviso MUST trazer o dia, a hora, a duração prevista, a banca quando há mais de uma,
   o local ou o endereço da sala, as orientações, o protocolo, e a frase de que o que vale é a agenda
   publicada.
-- **FR-7132**: Uma pessoa MUST NOT receber dois avisos do mesmo ato.
-- **FR-7133**: A falha de envio MUST NOT desfazer nem suspender o ato. A tela da agenda publicada
+- **FR-7232**: Uma pessoa MUST NOT receber dois avisos do mesmo ato.
+- **FR-7233**: A falha de envio MUST NOT desfazer nem suspender o ato. A tela da agenda publicada
   MUST mostrar quantos avisos saíram, quantos estão na fila e quais falharam, com o reenvio dos
   avisos complementares.
 
 #### Depois da publicação
 
-- **FR-7140**: Publicada a agenda, toda mudança MUST ser ato individual, sobre uma pessoa, com
+- **FR-7240**: Publicada a agenda, toda mudança MUST ser ato individual, sobre uma pessoa, com
   motivo; o preenchimento automático e a liberação de horário publicado MUST NOT estar disponíveis.
-- **FR-7141**: A remarcação MUST levar a pessoa a um horário livre, MUST exigir motivo, e MUST
+- **FR-7241**: A remarcação MUST levar a pessoa a um horário livre, MUST exigir motivo, e MUST
   registrar o horário anterior, o novo, o autor, o instante e o motivo. O registro anterior MUST
   continuar existindo.
-- **FR-7142**: A inclusão MUST agendar, num horário livre e com motivo, quem passou a participar da
+- **FR-7242**: A inclusão MUST agendar, num horário livre e com motivo, quem passou a participar da
   Etapa depois da publicação, pelo mesmo ato da remarcação, sem horário anterior.
-- **FR-7143**: O cancelamento MUST tirar da agenda vigente, com motivo, quem estava agendado e
+- **FR-7243**: O cancelamento MUST tirar da agenda vigente, com motivo, quem estava agendado e
   deixou de participar, sem apagar o que foi publicado, e MUST liberar o horário.
-- **FR-7144**: A remarcação e a inclusão MUST gerar aviso só à pessoa afetada; a remarcação MUST
+- **FR-7244**: A remarcação e a inclusão MUST gerar aviso só à pessoa afetada; a remarcação MUST
   dizer que o horário anterior não vale mais.
-- **FR-7145**: A página pública e a área do candidato MUST mostrar o horário vigente, com "remarcado
+- **FR-7245**: A página pública e a área do candidato MUST mostrar o horário vigente, com "remarcado
   em" e a data quando houve remarcação.
-- **FR-7146**: O motivo da remarcação, da inclusão e do cancelamento MUST ficar na trilha e MUST NOT
+- **FR-7246**: O motivo da remarcação, da inclusão e do cancelamento MUST ficar na trilha e MUST NOT
   aparecer ao candidato nem na página pública.
-- **FR-7147**: As regras da FR-7111 MUST valer também para a remarcação e a inclusão.
+- **FR-7247**: As regras da FR-7211 MUST valer também para a remarcação e a inclusão.
 
 #### O que a agenda não faz
 
-- **FR-7150**: A agenda MUST NOT registrar presença, nota, parecer, ausência ou resultado. A ausência
+- **FR-7250**: A agenda MUST NOT registrar presença, nota, parecer, ausência ou resultado. A ausência
   MUST continuar sendo registrada como Ocorrência na Etapa.
-- **FR-7151**: A agenda MUST NOT calcular prazo a partir do horário. O horário MUST ser gravado e
+- **FR-7251**: A agenda MUST NOT calcular prazo a partir do horário. O horário MUST ser gravado e
   mostrado como dado do ato.
-- **FR-7152**: A agenda MUST NOT conter regra de avaliação de Etapa alguma; o que é próprio de uma
+- **FR-7252**: A agenda MUST NOT conter regra de avaliação de Etapa alguma; o que é próprio de uma
   Etapa (documento a apresentar, acompanhamento de menor, gravação, conexão) MUST entrar só como
   texto das orientações.
 
 #### Autorização e trilha
 
-- **FR-7155**: Configurar e montar a agenda MUST exigir a permissão de gerir a Etapa; publicar,
+- **FR-7255**: Configurar e montar a agenda MUST exigir a permissão de gerir a Etapa; publicar,
   remarcar, incluir e cancelar MUST exigir também o escopo do Edital, e MUST ser negados por padrão.
-- **FR-7156**: Configuração salva, preenchimento aplicado, agendamento à mão, publicação,
+- **FR-7256**: Configuração salva, preenchimento aplicado, agendamento à mão, publicação,
   remarcação, inclusão, cancelamento e reenvio MUST gerar registro na trilha, com ator, instante,
   estado anterior e posterior, e motivo quando houver; o registro MUST NOT conter e-mail nem endereço
   de sala.
@@ -474,25 +475,25 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 ### Measurable Outcomes
 
-- **SC-2370**: *(humano)* Uma pessoa da comissão que não participou desta feature sai de uma lista
+- **SC-2390**: *(humano)* Uma pessoa da comissão que não participou desta feature sai de uma lista
   de 43 participantes para uma agenda conferida e publicada, pela interface, sem planilha e sem
   ajuda, em menos de 15 minutos.
-- **SC-2371**: Para as configurações das fixtures — uma ou duas janelas por dia, uma a três bancas,
-  durações e intervalos variados —, o número de horários mostrado é igual ao derivado pela FR-7103 em
-  100% dos casos, e os oito casos de recusa da FR-7104 são recusados em 100%.
-- **SC-2372**: Depois de qualquer preenchimento, nenhuma pessoa tem dois horários, nenhum horário
+- **SC-2391**: Para as configurações das fixtures — uma ou duas janelas por dia, uma a três bancas,
+  durações e intervalos variados —, o número de horários mostrado é igual ao derivado pela FR-7203 em
+  100% dos casos, e os oito casos de recusa da FR-7204 são recusados em 100%.
+- **SC-2392**: Depois de qualquer preenchimento, nenhuma pessoa tem dois horários, nenhum horário
   tem duas pessoas, e nenhuma pessoa agendada à mão mudou de horário — 100% dos casos de teste,
   inclusive sob duas operações simultâneas.
-- **SC-2373**: Nenhuma publicação acontece com pessoa sem horário, pessoa que não participa mais ou
+- **SC-2393**: Nenhuma publicação acontece com pessoa sem horário, pessoa que não participa mais ou
   banca sem local — 100% dos casos impeditivos recusados, e nenhum caso completo recusado.
-- **SC-2374**: Em 100% das publicações, o conteúdo da página pública não contém endereço de sala,
+- **SC-2394**: Em 100% das publicações, o conteúdo da página pública não contém endereço de sala,
   CPF, e-mail, telefone ou Modalidade.
-- **SC-2375**: Cada pessoa publicada recebe exatamente um aviso por ato; numa remarcação, exatamente
+- **SC-2395**: Cada pessoa publicada recebe exatamente um aviso por ato; numa remarcação, exatamente
   uma pessoa recebe aviso.
-- **SC-2376**: A confirmação repetida da publicação cria um ato e zero avisos a mais.
-- **SC-2377**: Todas as telas da feature abrem a 375 px de largura sem rolagem horizontal da página,
+- **SC-2396**: A confirmação repetida da publicação cria um ato e zero avisos a mais.
+- **SC-2397**: Todas as telas da feature abrem a 375 px de largura sem rolagem horizontal da página,
   e passam na política de conteúdo sem violação.
-- **SC-2378**: *(humano)* Um candidato que não participou desta feature encontra o próprio horário
+- **SC-2398**: *(humano)* Um candidato que não participou desta feature encontra o próprio horário
   na página pública, pelo celular, em menos de 1 minuto.
 
 ---

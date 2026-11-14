@@ -38,7 +38,7 @@ aviso. Nada muda na Etapa, no Edital, na avaliação ou no resultado.
    [prototipo/capturas/](prototipo/capturas/).
 5. [Plano de entregas](03-plano-de-entregas.md): o marco de aprovação visual, as entregas A a D, os
    riscos e os testes.
-6. [Especificação](../../specs/166-agendamento-da-etapa/spec.md), pelo Spec Kit.
+6. [Especificação](../../specs/167-agendamento-da-etapa/spec.md), pelo Spec Kit.
 
 ## Pontos de integração
 
@@ -56,7 +56,7 @@ aviso. Nada muda na Etapa, no Edital, na avaliação ou no resultado.
 
 ## Decisões
 
-Tomadas pelo usuário em 14/11/2026, todas pela recomendação, e registradas na spec `166`
+Tomadas pelo usuário em 14/11/2026, todas pela recomendação, e registradas na spec `167`
 (*Clarifications*, `D-008` a `D-010`):
 
 - **Q-2: só o protocolo** na página pública da agenda de Etapa restrita por Modalidade; nome e
@@ -95,4 +95,4 @@ passa entrevistando.**
 
 1. **Marco 0:** percorrer o protótipo com a comissão, num caso real de entrevista ou de
    heteroidentificação, e confirmar a Q-1.
-2. Com a experiência aprovada, plan, tasks e a entrega A da spec `166`, uma sessão por entrega.
+2. Com a experiência aprovada, plan, tasks e a entrega A da spec `167`, uma sessão por entrega.

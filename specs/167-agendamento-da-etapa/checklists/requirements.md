@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain — as três perguntas (FR-7124, FR-7125, FR-7130)
+- [x] No [NEEDS CLARIFICATION] markers remain — as três perguntas (FR-7224, FR-7225, FR-7230)
   foram respondidas pelo usuário em 14/11 e registradas como `D-008` a `D-010`.
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable

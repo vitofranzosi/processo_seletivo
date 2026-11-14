@@ -12,7 +12,7 @@ custam um arquivo de HTML.
 
 ## As entregas
 
-Uma spec (`specs/166-agendamento-da-etapa/`), três PRs, como a `110` (A, B, C). Cada PR cabe numa
+Uma spec (`specs/167-agendamento-da-etapa/`), três PRs, como a `110` (A, B, C). Cada PR cabe numa
 sessão.
 
 | # | Entrega | O que o ator consegue ao fim | Complexidade | Depende de |

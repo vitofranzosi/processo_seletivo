@@ -1,7 +1,7 @@
 # 4. Redesign da experiência (14/11, segunda rodada)
 
 *A primeira versão do protótipo acertou o fluxo e errou a forma. Esta rodada redesenha a experiência
-sem mudar regra: as R-01 a R-26, a spec `166` e o modelo continuam como estavam. As capturas do antes
+sem mudar regra: as R-01 a R-26, a spec `167` e o modelo continuam como estavam. As capturas do antes
 e do depois estão em [`prototipo/capturas/`](prototipo/capturas/).*
 
 ## 4.1 Diagnóstico crítico do antes
@@ -87,7 +87,7 @@ No Chromium do painel, sob a CSP de produção, sem erro no console:
 ## 4.5 Limitações do design system, registradas e não resolvidas aqui
 
 O redesign esbarrou em quatro faltas da gestão, que valem para outras telas e **não** são escopo da
-`166`. Ficam como registro, na linha de "achado não vira escopo":
+`167`. Ficam como registro, na linha de "achado não vira escopo":
 
 1. **Não há escala de espaçamento como token.** Os valores se repetem (.5, .75, 1, 1.5rem) por
    costume, e não por regra; cada folha nova os reescreve.
