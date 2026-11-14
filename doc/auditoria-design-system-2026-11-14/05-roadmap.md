@@ -133,22 +133,33 @@ do piloto muda" deixa de contradizer o item P1.4.
 | **Ocupação de vagas** | prova o indicador e o trilho numa tela de operação de tamanho médio | ver abaixo |
 | **Lista de Processos Seletivos**, sem a coluna nova | é a porta de entrada: prova o cabeçalho de página e a tabela em cartão, e todo perfil vê | cada aba; busca com e sem resultado; lista vazia; paginação; Processo com um e com vários Editais; com e sem o painel de ações; quem preside e quem não preside |
 
-**A Ocupação pratica atos, ao contrário do que a primeira versão deste plano dizia.** O template tem
-cinco formulários de operação: apurar a ocupação, emitir nova apuração (a sucessão, com motivo),
-pedir a faixa seguinte, conferir o acréscimo de vaga e conferir o desfazimento. O piloto precisa
-cobrir, por recorte:
+**A Ocupação pratica atos, ao contrário do que a primeira versão deste plano dizia.** A tela tem
+sete formulários de operação: apurar a ocupação, emitir nova apuração (a sucessão, com motivo),
+pedir a faixa seguinte, conferir o acréscimo de vaga, conferir o desfazimento dele, declarar a vaga
+não preenchida e desfazer essa declaração. Os dois últimos estão na parcial
+`_situacao_da_vaga.html`, e a versão anterior deste plano contava cinco. O piloto precisa cobrir,
+por recorte:
 
 - sem quadro de vagas; não apurado, com e sem ordem emitida; recorte sem inscrito;
 - apuração vigente, com e sem vaga a ocupar; apuração obsoleta, com a sucessão aberta;
 - com vagas acrescidas e com movimento de vaga entre recortes;
+- a vaga sem quem a ocupe: o Edital silente, a declaração de não preenchida e a que não se desfaz;
+- o marco intermediário, que não apura; e o próximo passo depois de um ato;
 - a recusa de cada gesto e o retorno de sucesso de cada um;
 - quem pode emitir e quem só lê.
 
-Os estados que os cenários de treinamento não produzem se montam pelos fixtures da suíte, como os
-testes de tela da ocupação já fazem. Se cobrir esses estados se mostrar caro demais para um piloto,
-a alternativa é o Histórico da ocupação ou o Corte histórico, que só leem; mas eles não testam
-indicador, contexto e ação juntos, e por isso a troca só se justifica depois de levantar quanto dos
-estados as fixtures existentes já cobrem. É decisão do usuário (decisão 2).
+**O levantamento das fixtures foi feito** ([07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md)):
+a suíte já desenha 51 dos 63 ramos visíveis da tela, em 54 testes, e todos os estados desta lista
+têm teste de tela que os monta. As ressalvas são a apuração obsoleta, desenhada por uma só das sete
+causas, e o recorte sem quadro, desenhado só para quem não retifica. Dos 12 ramos sem teste de
+tela, 7 já são montados em teste de domínio. O custo que sobra é fotografar: as fixtures vivem no
+banco de teste, nenhuma jornada de `tests/navegador/` passa pela Ocupação, e os cenários de
+treinamento chegam a um estado só. A spec do piloto decide também se as duas telas de conferência
+(`ocupacao_acrescimo.html` e `ocupacao_nao_preenchida.html`) entram.
+
+A alternativa continua sendo o Histórico da ocupação ou o Corte histórico, que só leem e não
+testam indicador, contexto e ação juntos. Com o levantamento em mãos, a escolha é do usuário
+(decisão 2).
 
 Ficam de fora do piloto, de propósito: a Convocação (risco de domínio), o assistente (muitos
 guardiões) e o portal (scripts próprios). Entram na P2, cada um com a sua spec.
@@ -265,8 +276,9 @@ decisão continua sendo do usuário.
    telas do piloto?
 2. **Piloto.** As três telas propostas, com os estados listados? O segundo parecer recomenda manter
    a Ocupação, porque ela testa indicadores, contexto e ações em condições que uma tela de
-   histórico não testa. Antes de trocá-la por custo, vale levantar quantos dos estados as fixtures
-   da suíte já cobrem; esse levantamento ainda não foi feito.
+   histórico não testa. O levantamento que ele pedia está em
+   [07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md): a suíte já monta os estados listados,
+   e o custo que sobra é fotografá-los.
 3. **Fonte.** A pilha do sistema, declarada como a fonte do produto, ou Open Sans embarcada? Pode
    esperar, se o piloto mantiver a pilha de hoje.
 

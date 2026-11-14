@@ -75,8 +75,11 @@ Constituição. A aprovação da migração completa continua dependendo dos res
 - **A posição do trilho no celular.** O defeito do protótipo de Compor está registrado, e não
   corrigido: a correção depende de decidir a ordem por conteúdo, tela a tela.
 - **A acessibilidade.** Continua sendo triagem até a conferência manual do piloto.
-- **O custo de cobrir os estados da Ocupação.** Falta levantar quanto as fixtures da suíte já
-  cobrem. Só depois disso faz sentido discutir a troca por uma tela que só lê; a escolha é do
-  usuário.
+- **O custo de fotografar os estados da Ocupação.** O levantamento das fixtures foi feito depois
+  da segunda rodada ([07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md)): a suíte desenha 51
+  dos 63 ramos visíveis da tela, e montar cenário deixou de ser o custo. Falta o caminho para
+  levar esses estados a imagem e a um banco que a equipe abra. O levantamento também corrigiu o
+  plano: a tela tem sete formulários, e não cinco. Manter a Ocupação ou trocá-la continua sendo
+  escolha do usuário.
 - **O rastreio não foi refeito** nestas revisões, nem pelos pareceres nem aqui. As medidas são as de
   14/11, sobre `37ed0ad0`.

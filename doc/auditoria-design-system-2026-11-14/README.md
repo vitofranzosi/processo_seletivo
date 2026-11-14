@@ -18,6 +18,7 @@ proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão so
 | E. Protótipos comparativos | [04-prototipos.md](04-prototipos.md) e [`prototipos/`](prototipos/index.html) |
 | F. Plano de convergência | [05-roadmap.md](05-roadmap.md) |
 | Registro da revisão | [06-revisao.md](06-revisao.md) |
+| Estados da Ocupação que a suíte já monta | [07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md) |
 | Capturas | [`capturas/`](capturas/), 94 imagens |
 | Medições e scripts | [`medicoes/`](medicoes/), com o resultado por tela em [`telas.csv`](medicoes/telas.csv) |
 
