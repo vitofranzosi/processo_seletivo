@@ -515,6 +515,16 @@ Quatro capacidades faltam, e **cada uma serve a uma família da amostra, e só a
   pontuação e acumulação DEVEM existir no domínio") tornaria o barema e o alcance lacunas A. **Esta
   leitura também é do usuário.**
 
+> **Decidido em 13/11/2026 para a família "heteroidentificação"** (pelo usuário, no
+> [estudo da verificação da autodeclaração](estudo-verificacao-da-autodeclaracao-2026-11-13/README.md#decisões)):
+> - ela entra no alvo;
+> - a Etapa passa a ter **alcance por Modalidade** (L-2);
+> - o efeito do desfecho desfavorável é declarado pelo Edital, com "sai da reserva e fica na ampla"
+>   como padrão;
+> - o GPS oferece as três regras de deliberação.
+>
+> As outras três famílias seguem sem decisão.
+
 ---
 
 ## DP-11 — A comissão local enxerga só o seu Perfil ou polo?

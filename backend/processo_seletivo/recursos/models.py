@@ -272,7 +272,9 @@ class DecisaoRecurso(models.Model):
             # inventado entra uma vez e fica. É a mesma razão de `ck_resultado_consequencia` na
             # 013, aplicada aos três campos que carregam o que a decisão afirma.
             models.CheckConstraint(
-                condition=Q(consequencia__in=("", "HABILITADA", "ELIMINADA")),
+                condition=Q(
+                    consequencia__in=("", "HABILITADA", "ELIMINADA", "RETIRADA_DA_RESERVA")
+                ),
                 name="ck_decisao_consequencia",
             ),
             # A conclusão fixada é internamente coerente, na mesma forma que

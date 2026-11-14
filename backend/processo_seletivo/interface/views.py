@@ -259,6 +259,7 @@ from processo_seletivo.resultados.application import consolidacao as consolidaca
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
 from processo_seletivo.resultados.application import selectors as resultado_selectors
+from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.seguranca.application.authorization import (
     base_de_permissao,
     frase_do_aviso,
@@ -2055,6 +2056,10 @@ def compor_etapa(request, edital_id, etapa):
             "documentos_do_barema": (
                 forms.documentos_para_o_barema(edital) if etapa == "etapas" else []
             ),
+            # O que o alcance oferece (163, UX-731), pela mesma razão: só no passo das Etapas.
+            "modalidades_do_alcance": (
+                forms.modalidades_para_o_alcance(edital) if etapa == "etapas" else None
+            ),
             "secoes": (
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
@@ -3694,6 +3699,7 @@ def fragmento_etapa(request, edital_id):
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
             "documentos_do_barema": forms.documentos_para_o_barema(edital),
+            "modalidades_do_alcance": forms.modalidades_para_o_alcance(edital),
             "edital": edital,
         },
     )
@@ -6767,6 +6773,12 @@ def impedimentos(request, edital_id, etapa_id):
     inelegiveis, pagina_dos_inelegiveis = avaliacao_selectors.avaliacoes_inelegiveis(
         edital=edital, etapa_id=etapa_id, pagina=request.GET.get("pagina") or 1
     )
+    # Às cegas e exposição (165, FR-7056, FR-7082), pela razão das Conclusões preservadas.
+    from processo_seletivo.avaliacoes.application import cegas
+
+    cegas.proteger_linhas(
+        inelegiveis, subject=ator.subject, edital=edital, etapa=etapa, etapa_id=etapa_id
+    )
     return marcar_como_privada(
         render(
             request,
@@ -6875,6 +6887,14 @@ def consolidar_resultados(request, edital_id, etapa_id):
             # pedido que não se pode praticar seria oferecer a confirmação de coisa nenhuma.
             request.session["erro_da_consolidacao"] = recusa.detail
             return redirect(destino)
+        # **A conferência entrega a contagem**, e a contagem é o sentido dos pareceres alheios
+        # (165, FR-7082): quem a lê fica exposto àquelas inscrições, ainda que não as consolide.
+        from processo_seletivo.avaliacoes.application import cegas
+
+        if cegas.colegiada(_etapa):
+            cegas.registrar_exposicao(
+                ator.subject, edital, etapa_id, [item.inscricao.id for item in consolidaveis]
+            )
         return marcar_como_privada(
             render(
                 request,
@@ -6889,8 +6909,8 @@ def consolidar_resultados(request, edital_id, etapa_id):
                     # Centenas de linhas não se conferem uma a uma: o total por consequência é
                     # o que a presidência compara com o que esperava da Etapa, antes de descer
                     # à tabela. Sai do mesmo plano que o ato relê, e não de uma contagem à parte.
-                    "por_consequencia": sorted(
-                        Counter(item.efeito for item in consolidaveis).items()
+                    "por_consequencia": _por_consequencia(
+                        Counter(item.efeito for item in consolidaveis)
                     ),
                     "chave_idempotencia": chave,
                 },
@@ -7307,6 +7327,9 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 # decidir onde o foco começa, porque a tela abria com o cursor na nota, pronta
                 # para receber uma pontuação antes de qualquer leitura.
                 "ultima_leitura": leitura,
+                # A Etapa colegiada (165, UX-751, UX-754): a Mesa diz que o parecer é às cegas, e
+                # que o desfavorável chega ao candidato sem o nome de quem o escreveu.
+                "colegiada": deliberacao_da_etapa.colegiada(contexto.get("etapa")),
                 "documentos_abertos": abertos,
                 "documentos_entregues": sum(1 for d in documentos if d["enviado"]),
                 "ja_abriu_documento": leitura is not None,
@@ -7636,6 +7659,10 @@ def resultados_da_etapa(request, edital_id, etapa_id):
     # inteiro em JSON por linha da página para imprimir esta data, e a contagem de consultas não
     # mudaria — nenhum teste de custo denunciaria (D-1).
     vigencias = resultado_selectors.vigencias_das_versoes({linha.versao_id for linha in linhas})
+    # Quem formou cada Resultado deliberado (165, FR-7081), pendurado na linha como a vigência.
+    pareceristas = resultado_selectors.pareceristas_das_deliberacoes(linhas)
+    for linha in linhas:
+        linha.pareceristas = pareceristas.get(linha.pk, [])
     for linha in linhas:
         linha.vigencia = vigencias.get(linha.versao_id)
     return marcar_como_privada(
@@ -12072,6 +12099,14 @@ def conclusoes_preservadas(request, edital_id, etapa_id):
         linhas = [
             {**linha, "rotulo": SITUACAO_DA_CONCLUSAO[linha["situacao"]]} for linha in encontradas
         ]
+        # **Às cegas, no servidor** (165, FR-7056, FR-7082): quem tem parecer pendente sobre uma
+        # inscrição da Etapa colegiada não recebe o dos colegas sobre ela; o que é entregue fica
+        # registrado como exposição, e barra a atribuição e a reabertura.
+        from processo_seletivo.avaliacoes.application import cegas
+
+        cegas.proteger_linhas(
+            linhas, subject=ator.subject, edital=edital, etapa=etapa, etapa_id=etapa_id
+        )
     return marcar_como_privada(
         render(
             request,
@@ -12621,11 +12656,18 @@ def _alvo_da_correcao(peca, digitado=None):
                 # consequência diretamente (FR-059).
                 "forma": "" if vigente.forma == "" else forma_publicada(etapa),
                 "sentidos": rotulos(etapa),
+                # A Etapa colegiada (165, FR-7071): a reavaliação não está disponível contra ela.
+                "colegiada": vigente.origem == "DELIBERACAO"
+                or deliberacao_da_etapa.colegiada(etapa),
                 **_fichas_do_julgamento(vigente, etapa_id, digitado, vigente_do_edital),
             }
         )
     return {
         "alcancaveis": alcancaveis,
+        # **Sem a espécie, e com a razão** (165, FR-7071, contrato `frases.md`): quando toda Etapa
+        # alcançável é colegiada, a tela não oferece o que o comando recusaria. Com Etapas dos dois
+        # tipos, a opção fica, e o comando recusa a que não cabe.
+        "sem_reavaliacao": bool(alcancaveis) and all(a["colegiada"] for a in alcancaveis),
         "etapas_do_objeto": etapas_do_objeto,
         "tem_ficha": any(alvo.get("ficha_corrigir") for alvo in alcancaveis),
     }
@@ -12835,6 +12877,14 @@ def _parecer_atacado(peca):
     from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
 
     resultado = peca.resultado_atacado
+    if resultado is not None and resultado.origem == "DELIBERACAO":
+        # **A autoridade recursal lê todos os pareceres, com a autoria** (165, FR-7081): a
+        # restrição da FR-7077 é da apresentação ao candidato, e não reduz o que ela vê.
+        return "\n\n".join(
+            f"Parecer de {avaliacao.identity_subject} ({avaliacao.sentido.lower()}): {texto}"
+            for avaliacao, texto in recursos_selectors.textos_da_deliberacao(resultado)
+            if texto
+        )
     if resultado is None or resultado.avaliacao_id is None:
         return ""
     conclusoes = list(
@@ -13713,3 +13763,21 @@ def autoridades(request):
         },
         status=status,
     )
+
+
+# Os nomes das consequências na confirmação da consolidação, no singular e no plural (164, UX-743).
+# "retirada da reserva" não se pluraliza pelo filtro do template, que poria o "s" no fim.
+NOMES_DAS_CONSEQUENCIAS = {
+    "HABILITADA": ("habilitada", "habilitadas"),
+    "RETIRADA_DA_RESERVA": ("retirada da reserva", "retiradas da reserva"),
+    "ELIMINADA": ("eliminada", "eliminadas"),
+}
+
+
+def _por_consequencia(contagem):
+    """ "3 habilitadas, 1 retirada da reserva" — a presidência vê o efeito antes de confirmar."""
+    return [
+        f"{contagem[chave]} {NOMES_DAS_CONSEQUENCIAS[chave][0 if contagem[chave] == 1 else 1]}"
+        for chave in NOMES_DAS_CONSEQUENCIAS
+        if contagem.get(chave)
+    ]

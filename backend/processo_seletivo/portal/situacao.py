@@ -283,7 +283,18 @@ def situacao_da_inscricao(
             ),
         )
 
-    eliminacoes = [etapa for etapa in resultados_das_etapas if not etapa["habilitada"]]
+    # **A retirada da reserva não é eliminação** (164, FR-7024, UX-742): quem a recebeu continua na
+    # ampla, e o degrau dele é o da classificação. A linha que a explica entra no "porquê" de todo
+    # degrau abaixo deste, junto dos recursos em análise.
+    eliminacoes = [
+        etapa
+        for etapa in resultados_das_etapas
+        if not etapa["habilitada"] and not etapa.get("retirada")
+    ]
+    em_analise = [
+        *(_linha_da_retirada(etapa) for etapa in resultados_das_etapas if etapa.get("retirada")),
+        *em_analise,
+    ]
     nao_aceita = _nao_aceita_na_analise(eliminacoes, inscricao_publicada, em_analise, recurso)
     if nao_aceita is not None:
         return nao_aceita
@@ -721,6 +732,19 @@ def natureza_do_cartao(cartao):
     `natureza` existe em toda publicação, e o rótulo dela é o mesmo que `compor` congela.
     """
     return cartao["natureza_rotulo"] or cartao["publicacao"].get_natureza_display()
+
+
+def _linha_da_retirada(etapa):
+    """A reserva perdida, dita pelo que acontece com a pessoa, e nunca como eliminação (UX-742).
+
+    O motivo gravado já traz o rótulo do desfecho e o nome da reserva (FR-7008); a frase de cima diz
+    o essencial antes dele, para quem não lê até o fim.
+    """
+    return Linha(
+        f"Na etapa {etapa['etapa']}, você deixou de concorrer pela reserva de vagas e continua "
+        "concorrendo pela ampla concorrência."
+        + (f" {etapa['motivo'][:1].upper()}{etapa['motivo'][1:]}." if etapa.get("motivo") else "")
+    )
 
 
 def _linha_do_cartao(cartao):

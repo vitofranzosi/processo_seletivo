@@ -486,9 +486,22 @@ def test_a_publicacao_na_versao_6_continua_servindo_o_conteudo_literal(legado_v6
 #: **E muda com a `146`, também de propósito**: o degrau 21 escreve `criteria: []` em toda Etapa —
 #: "nenhum critério publicado" —, que é verdade sobre todo Edital publicado antes: a comissão somava
 #: o barema fora do sistema, e nenhuma Etapa ganha critério por elevação (146, D-001, FR-5208).
+#:
+#: **E muda com a `163`, também de propósito**: o degrau 22 escreve `modalityCodes: null` em toda
+#: Etapa — "todas as inscrições" —, que é verdade sobre todo Edital publicado antes: toda Etapa
+#: alcançava todas, e nenhuma ganha alcance restrito por elevação (163, D-002, FR-6966).
+#:
+#: **E muda com a `164`, também de propósito**: o degrau 23 escreve `unfavorableOutcomeEffect: null`
+#: e `absenceEffect: null` em toda Etapa — "sem efeito declarado" —, que é verdade sobre todo Edital
+#: publicado antes; e o nulo na Etapa restrita e eliminatória se lê "elimina", que é o que ela
+#: produzia (164, D-002, FR-7005).
+#:
+#: **E muda com a `165`, também de propósito**: o degrau 24 escreve `deliberationRule: null` em toda
+#: Etapa — "sem regra" —, que é verdade sobre todo Edital publicado antes; e a Etapa colegiada dele
+#: continua impedida na consolidação, como era (165, D-002, FR-7054).
 CENSO_DOS_DEGRAUS_ANTES_DA_032 = {
-    "SCHEMA_VERSION": 21,
-    "DEGRAUS": (5, 6, 21),
+    "SCHEMA_VERSION": 24,
+    "DEGRAUS": (5, 6, 21, 22, 23, 24),
     "DEGRAUS_DE_PERFIL": (7, 12, 13, 14, 15),
     "DEGRAUS_DA_RAIZ": (7, 9, 16),
     "DEGRAUS_DE_MARCO": (8, 10, 13),

@@ -22,19 +22,24 @@ from processo_seletivo.avaliacoes.application.distribuicao import resultado_decl
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
     E_TAMBEM_FORA,
     FORA_DA_FAIXA,
+    FORA_DO_ALCANCE,
+    FORA_DO_ALCANCE_RECUSA,
     FORA_DO_CORTE,
     NAO_PARTICIPA,
     PRONTA,
     REAVALIACAO,
     panorama_da_etapa,
 )
+from processo_seletivo.resultados.domain import deliberacao
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.domain.regra import consequencia
-from processo_seletivo.resultados.models import ResultadoEtapa
+from processo_seletivo.resultados.models import ParecerDaDeliberacao, ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 
 CONSOLIDAR = "RESULTADO_CONSOLIDAR"
@@ -110,6 +115,11 @@ def _inscricoes_da_selecao(edital, ids, panorama):
         # que não aconteceu: ele foi considerado, tem posição na ordem, e a norma publicada o
         # deixou de fora (014, FR-210, UX-025, E2E14-008).
         cortadas = [i for i in fora if panorama["estados"].get(i.id, (None,))[0] == FORA_DO_CORTE]
+        # A 163, pela mesma razão: quem a Etapa não alcança ouve isso, e não a eliminação (FR-6976).
+        if any(panorama["estados"].get(i.id, (None,))[0] == FORA_DO_ALCANCE for i in fora):
+            raise DomainError(
+                "inscricao_fora_da_etapa", FORA_DO_ALCANCE_RECUSA, 422, campo="inscricao_id"
+            )
         raise DomainError(
             "inscricao_fora_da_etapa",
             (
@@ -124,6 +134,9 @@ def _inscricoes_da_selecao(edital, ids, panorama):
 
 
 SEM_REAVALIACAO = "a reavaliação determinada por recurso ainda não foi concluída por um avaliador"
+REAVALIACAO_COLEGIADA = (
+    "a reavaliação determinada não está disponível contra o Resultado de uma Etapa colegiada"
+)
 PIORARIA = (
     "a reavaliação produziu resultado pior que o protegido pela decisão, e o recurso não pode "
     "agravar a situação de quem recorreu; a avaliação fica registrada e o resultado não é superado"
@@ -184,18 +197,20 @@ def _pioraria(cumprindo, efeito, conclusao):
 class Consolidavel:
     """Uma inscrição que virará Resultado, com o que dela já está decidido."""
 
-    def __init__(self, inscricao, conclusao, cumprindo, efeito, causa):
+    def __init__(self, inscricao, conclusao, cumprindo, efeito, causa, linha=""):
         self.inscricao = inscricao
         self.conclusao = conclusao
         self.cumprindo = cumprindo
         self.efeito = efeito
         self.causa = causa
+        # A linha da deliberação na conferência (165, UX-752): vazia fora da Etapa colegiada.
+        self.linha_da_deliberacao = linha
 
     def __repr__(self):
         return f"Consolidavel({self.inscricao}, {self.efeito!r})"
 
 
-def _planejar(etapa, panorama, inscricoes):
+def _planejar(etapa, panorama, inscricoes, conteudo=None):
     """O que a consolidação fará com cada inscrição da seleção — sem fazer nada.
 
     **Uma regra só para o ato e para a tela que o precede.** Consolidar é irreversível e a V1 não
@@ -213,11 +228,33 @@ def _planejar(etapa, panorama, inscricoes):
         if estado != PRONTA and cumprindo is None:
             recusas.append(Recusa(inscricao, motivo))
             continue
-        conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
+        if deliberacao.colegiada(etapa):
+            # **A Etapa colegiada delibera** (165, T-009). O cumprimento de reavaliação não chega
+            # aqui — o julgamento o recusa antes de gravar (D-007) —, e se chegasse seria recusado
+            # pela mesma frase, e não consolidado pela regra de uma avaliação.
+            if cumprindo is not None:
+                recusas.append(Recusa(inscricao, REAVALIACAO_COLEGIADA))
+                continue
+            conclusoes = panorama["elegiveis"].get(inscricao.id, [])
+            conclusao = deliberacao.Deliberacao(
+                regra=deliberacao.regra_publicada(etapa),
+                sentidos=tuple(str(item.sentido) for item in conclusoes),
+                pareceres=tuple(item.avaliacao_id for item in conclusoes),
+            )
+        else:
+            conclusao = _conclusao_a_consolidar(panorama, inscricao, cumprindo)
         if conclusao is None:
             recusas.append(Recusa(inscricao, SEM_REAVALIACAO))
             continue
         efeito, causa = consequencia(etapa, conclusao)
+        if efeito == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA:
+            # **O motivo diz a reserva perdida e a ampla mantida** (164, FR-7008): lido depois, por
+            # si, ele precisa dizer o que aconteceu, e "a avaliação concluiu Indeferido" deixaria o
+            # titular achando que saiu do certame. A regra não conhece a inscrição; quem a conhece
+            # completa a frase, sem consulta — a denominação vem do conteúdo já lido.
+            causa = efeito_do_desfecho.motivo_com_a_reserva(
+                causa, nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
+            )
         if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
             # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
             # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele
@@ -225,7 +262,12 @@ def _planejar(etapa, panorama, inscricoes):
             # ordenada seria a porta dos fundos da *non reformatio*.
             recusas.append(Recusa(inscricao, PIORARIA))
             continue
-        consolidaveis.append(Consolidavel(inscricao, conclusao, cumprindo, efeito, causa))
+        linha = (
+            deliberacao.linha_da_conferencia(etapa, conclusao)
+            if isinstance(conclusao, deliberacao.Deliberacao)
+            else ""
+        )
+        consolidaveis.append(Consolidavel(inscricao, conclusao, cumprindo, efeito, causa, linha))
     return consolidaveis, recusas
 
 
@@ -264,7 +306,7 @@ def _plano_do_lote(edital, etapa_id, ids):
         if not ids:
             raise DomainError("nada_pronto", NADA_PRONTO, 422)
     inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
-    return (etapa, *_planejar(etapa, panorama, inscricoes))
+    return (etapa, *_planejar(etapa, panorama, inscricoes, conteudo))
 
 
 def _selecao_exigida(inscricao_ids):
@@ -334,7 +376,21 @@ def consolidar(
         etapa, consolidaveis, recusas = _plano_do_lote(edital, etapa_id, ids)
 
         criados = []
+        # **A versão da regra aplicada é a vigente no ato** (165, D-006), lida uma vez e só quando
+        # há deliberação: os pareceres podem ter sido concluídos sob versões diferentes, todas
+        # compatíveis com ela, e o Resultado cita a cuja regra aplicou.
+        versao_vigente = None
+        if any(isinstance(item.conclusao, deliberacao.Deliberacao) for item in consolidaveis):
+            from processo_seletivo.publicacoes.application.selectors import selecao_publica
+
+            versao_vigente = selecao_publica(edital_id=edital.id)
         for item in consolidaveis:
+            if isinstance(item.conclusao, deliberacao.Deliberacao):
+                criados.append(_criar_deliberado(item, edital, etapa, versao_vigente, ctx, actor))
+                _auditar_consolidacao(
+                    actor, ctx, criados[-1], etapa, item, correlation_id, idempotency_key
+                )
+                continue
             inscricao, conclusao, cumprindo = item.inscricao, item.conclusao, item.cumprindo
             efeito, causa = item.efeito, item.causa
             resultado = ResultadoEtapa.objects.create(
@@ -375,18 +431,8 @@ def consolidar(
             # foi a consequência desta inscrição, e quem a produziu" é a pergunta que ela existe
             # para responder. **Sem pontuação e sem parecer** — a assinatura de `auditar` não tem
             # por onde eles caberem, e a omissão é de projeto (FR-040).
-            auditar(
-                actor=actor,
-                permissao=ctx.base.permissao,
-                operation=CONSOLIDAR,
-                aggregate=resultado,
-                now=ctx.now,
-                correlation_id=correlation_id,
-                reason=(
-                    f"Resultado da Etapa {etapa.get('name') or etapa['id']} para a inscrição "
-                    f"{inscricao.protocolo or inscricao.id}: {efeito.lower()}."
-                ),
-                idempotency_key=idempotency_key,
+            _auditar_consolidacao(
+                actor, ctx, resultado, etapa, item, correlation_id, idempotency_key
             )
         declarado = resultado_declarado(criados, recusas, "consolidada")
         ctx.concluir_sem_resultado(201, declarado)
@@ -403,3 +449,54 @@ __all__ = [
     "prever",
     "prever_as_prontas",
 ]
+
+
+def _criar_deliberado(item, edital, etapa, versao, ctx, actor):
+    """O Resultado `DELIBERACAO` e os seus N pareceres, na mesma transação (165, T-005, T-006).
+
+    O Resultado primeiro: o gatilho do parecer confere a origem dele. A contagem é conferida no
+    `COMMIT`, pelo gatilho adiável, contra os pareceres ligados — e é por isso que os dois podem
+    nascer em duas instruções sem que um Resultado sem pareceres sobreviva.
+    """
+    conclusao = item.conclusao
+    resultado = ResultadoEtapa.objects.create(
+        inscricao=item.inscricao,
+        edital=edital,
+        etapa_id=etapa["id"],
+        origem=ResultadoEtapa.Origem.DELIBERACAO,
+        avaliacao=None,
+        versao_id=versao.id,
+        forma=conclusao.forma,
+        pontuacao=None,
+        sentido=conclusao.sentido,
+        consequencia=item.efeito,
+        motivo=item.causa,
+        consolidado_em=ctx.now,
+        consolidado_por=actor.subject,
+        regra_de_deliberacao=deliberacao.PUBLICADO[conclusao.regra],
+        favoraveis=conclusao.favoraveis,
+        desfavoraveis=conclusao.desfavoraveis,
+    )
+    ParecerDaDeliberacao.objects.bulk_create(
+        ParecerDaDeliberacao(resultado=resultado, avaliacao_id=avaliacao_id)
+        for avaliacao_id in conclusao.pareceres
+    )
+    return resultado
+
+
+def _auditar_consolidacao(actor, ctx, resultado, etapa, item, correlation_id, idempotency_key):
+    """O evento da consolidação, nos dois ramos: a consequência, e nunca a nota, o parecer, a regra
+    nem a contagem (FR-040 da `013`, FR-7060)."""
+    auditar(
+        actor=actor,
+        permissao=ctx.base.permissao,
+        operation=CONSOLIDAR,
+        aggregate=resultado,
+        now=ctx.now,
+        correlation_id=correlation_id,
+        reason=(
+            f"Resultado da Etapa {etapa.get('name') or etapa['id']} para a inscrição "
+            f"{item.inscricao.protocolo or item.inscricao.id}: {item.efeito.lower()}."
+        ),
+        idempotency_key=idempotency_key,
+    )

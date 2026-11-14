@@ -71,7 +71,7 @@ concluído antes vive aqui, no registro append-only do domínio, e não na trilh
           {% endfor %}
         </ul>
         {% endif %}</td>
-      <td>{{ linha.conclusao.parecer|default:"—" }}</td>
+      <td>{% if linha.oculta %}—{% else %}{{ linha.conclusao.parecer|default:"—" }}{% endif %}</td>
       <td>vigente desde {{ linha.conclusao.versao.valid_from|date:"d/m/Y H:i" }}
         <span class="codigo">{{ linha.conclusao.versao.id }}</span></td>
       <td>{{ linha.conclusao.concluida_em|date:"d/m/Y H:i:s" }} por {% nome_de_pessoa linha.conclusao.concluida_por %}</td>

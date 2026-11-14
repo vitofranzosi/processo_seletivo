@@ -20,7 +20,7 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
     {% endcomment %}
     {% comment %}Na ordem do editor do Compor, sem mudar nome de campo (056, FR-1038, D-013).{% endcomment %}
     {% for campo in grupo|campos_na_ordem_do_compor %}
-    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' or campo.tipo == 'lista_de_texto' %} largo{% endif %}">
+    <p class="campo{% if campo.tipo == 'inteiro' or campo.tipo == 'decimal' %} curto{% elif campo.tipo == 'texto_longo' or campo.tipo == 'lista_de_texto' or campo.tipo == 'alcance' %} largo{% endif %}">
       <label for="c-{{ campo.referencia }}">{{ campo.rotulo }}</label>
       {% if campo.tipo == 'lista_de_texto' %}
       {% comment %}
@@ -31,6 +31,11 @@ AC — DOC-INFO?" viria com o espaçamento da marcação dentro da frase.
       <textarea id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}" rows="4"
                 aria-describedby="ajuda-{{ campo.referencia }}">{{ campo.valor }}</textarea>
       <span class="ajuda" id="ajuda-{{ campo.referencia }}">Um requisito por linha. A lista inteira é substituída.</span>
+      {% elif campo.tipo == 'alcance' %}
+      {% comment %}O alcance (163): vazio é "todas as inscrições", e a frase o diz junto do campo.{% endcomment %}
+      <textarea id="c-{{ campo.referencia }}" name="campo:{{ campo.referencia }}" rows="3"
+                aria-describedby="ajuda-{{ campo.referencia }}">{{ campo.valor }}</textarea>
+      <span class="ajuda" id="ajuda-{{ campo.referencia }}">Um código de Modalidade por linha. Vazio: todas as inscrições.</span>
       {% elif campo.tipo == 'texto_longo' %}
       {% comment %}
       Duas linhas para o que é frase — título e descrição —, e quatro para a declaração, que é um

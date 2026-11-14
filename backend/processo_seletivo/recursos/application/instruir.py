@@ -339,6 +339,14 @@ def _exigir_parecer_instruivel(peca):
     resultado = peca.resultado_atacado
     if resultado is None:
         raise DomainError("no_opinion_to_instruct", SEM_PARECER_A_INSTRUIR, 422)
+    if resultado.origem == "DELIBERACAO":
+        # O Resultado deliberado tem N pareceres (165): basta um com texto para haver o que
+        # instruir.
+        from processo_seletivo.recursos.application.selectors import textos_da_deliberacao
+
+        if not any(texto for _avaliacao, texto in textos_da_deliberacao(resultado)):
+            raise DomainError("no_opinion_to_instruct", PARECER_INEXISTENTE, 422)
+        return
     avaliacao = resultado.avaliacao
     if avaliacao is None or not (avaliacao.parecer or "").strip():
         raise DomainError("no_opinion_to_instruct", PARECER_INEXISTENTE, 422)

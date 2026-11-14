@@ -127,8 +127,18 @@ def _agrupar(declaradas):
     return sorted(resumo, key=lambda item: -item["quantas"])
 
 
-def _edital_do_processo(processo, edital_id):
-    edital = Edital.objects.filter(
+def _edital_do_processo(processo, edital_id, *, travar=False):
+    """O Edital do Processo, travado quando o ato vai criar Atribuição (163, T-008).
+
+    **A trava é a que a publicação da Retificação também toma.** A participação lê o alcance da
+    versão vigente, e uma Retificação que estreita o alcance confere, sob esta mesma trava, se
+    alguma inscrição que sairia já tem Atribuição: sem ela, as duas podiam passar ao mesmo tempo, e
+    a Atribuição ficaria para uma inscrição que a norma já não alcança (FR-6980). A ordem é a mesma
+    nos dois — o Processo antes, o Edital depois; a publicação não trava o Processo —, e por isso
+    não há ciclo.
+    """
+    consulta = Edital.objects.select_for_update() if travar else Edital.objects
+    edital = consulta.filter(
         pk=identificador(edital_id),
         processo=processo,
         institution_scope=processo.institution_scope,
@@ -267,6 +277,27 @@ def _contexto_de_recusa(edital, etapa_id, membros, inscricoes):
     return impedidos, ja_atribuidas, ja_concluidas, ocupacao
 
 
+def _expostos(edital, etapa, etapa_id, membros, inscricoes):
+    """`{(subject, inscricao_id)}` de quem já recebeu parecer alheio sobre a inscrição (165).
+
+    **Só na Etapa colegiada**, que é onde a exposição é gravada: a Etapa de uma avaliação não paga a
+    consulta, que nunca acharia nada ali.
+    """
+    from processo_seletivo.avaliacoes.application import cegas
+
+    if not cegas.colegiada(etapa):
+        return set()
+    return cegas.pares_expostos(
+        edital.id, etapa_id, [m.identity_subject for m in membros], [i.id for i in inscricoes]
+    )
+
+
+EXPOSTO = (
+    "{membro} já teve acesso aos pareceres dos colegas sobre a inscrição {protocolo} nesta Etapa, "
+    "e não pode avaliá-la."
+)
+
+
 def distribuir(
     *,
     actor,
@@ -303,7 +334,7 @@ def distribuir(
         },
         idempotency_key=idempotency_key,
     ) as ctx:
-        edital = _edital_do_processo(ctx.processo, edital_id)
+        edital = _edital_do_processo(ctx.processo, edital_id, travar=True)
         if ctx.repetido:
             return ctx.desfecho_anterior
         _exigir_conjunto_fechado(edital)
@@ -314,6 +345,10 @@ def distribuir(
         impedidos, ja_atribuidas, ja_concluidas, ocupacao = _contexto_de_recusa(
             edital, etapa_id, membros, inscricoes
         )
+        # **A exposição barra a atribuição** (165, FR-7082, D-010): quem já recebeu o parecer
+        # alheio avaliaria sabendo o que os colegas decidiram. Vale também para a redistribuição
+        # depois de um impedimento — é o caminho pelo qual a presidência chegaria à inscrição.
+        expostos = _expostos(edital, etapa, etapa_id, membros, inscricoes)
         # **A reavaliação determinada abre uma vaga a mais, e não é exceção de conveniência.** O
         # teto do Edital conta as avaliações que a Etapa prevê no curso normal; a reavaliação é
         # avaliação **ordenada por decisão**, e contá-la contra esse teto tornaria a determinação
@@ -334,6 +369,11 @@ def distribuir(
                 motivo = _motivo_da_recusa(
                     membro, inscricao, impedidos, ja_atribuidas, ja_concluidas
                 )
+                if motivo is None and (membro.identity_subject, inscricao.id) in expostos:
+                    motivo = EXPOSTO.format(
+                        membro=membro.identity_subject,
+                        protocolo=inscricao.protocolo or inscricao.id,
+                    )
                 if motivo is not None:
                     recusas.append(Recusa(membro, inscricao, motivo))
                     continue
@@ -428,6 +468,8 @@ def _plano_do_rodizio(processo, edital, etapa_id, ids_membros):
     impedidos, ja_atribuidas, ja_concluidas, _ = _contexto_de_recusa(
         edital, etapa_id, membros, inscricoes
     )
+    # O rodízio não propõe o par exposto (165, FR-7082): para ele, é o mesmo que um impedimento.
+    impedidos = impedidos | _expostos(edital, etapa, etapa_id, membros, inscricoes)
     carga = _carga_atual(edital, etapa_id, membros)
     pares, projecao, fora = rodizio.propor(
         previstas=previstas,
@@ -531,7 +573,7 @@ def confirmar_rodizio(
         },
         idempotency_key=idempotency_key,
     ) as ctx:
-        edital = _edital_do_processo(ctx.processo, edital_id)
+        edital = _edital_do_processo(ctx.processo, edital_id, travar=True)
         if ctx.repetido:
             return ctx.desfecho_anterior
         # **Dentro da transação, e não só na proposta.** Guarda em `propor_rodizio` é consultiva:

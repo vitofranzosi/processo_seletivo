@@ -165,6 +165,10 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
     )
     # E a 155, a da vaga não preenchida, depois das da 149.
     da_155 = ("ocupacao_vaganaopreenchida",)
-    assert TABELAS_APPEND_ONLY[-16:] == novas + da_107 + da_115 + da_117 + da_149 + da_155
-    assert len(TABELAS_APPEND_ONLY) == 59
-    assert len(set(TABELAS_APPEND_ONLY)) == 59
+    # E a 165, os pareceres da deliberação e a exposição ao parecer, depois da da 155.
+    da_165 = ("resultados_parecer_da_deliberacao", "avaliacoes_exposicao_ao_parecer")
+    assert TABELAS_APPEND_ONLY[-18:] == (
+        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165
+    )
+    assert len(TABELAS_APPEND_ONLY) == 61
+    assert len(set(TABELAS_APPEND_ONLY)) == 61

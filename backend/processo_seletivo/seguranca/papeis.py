@@ -191,6 +191,12 @@ TABELAS_APPEND_ONLY = (
     # tem nada "a ocupar". Reescrevê-la poria a vaga de volta na conta, ou a tiraria, sem fundamento
     # nem autor; e o desfazimento existe para que o erro se corrija com rastro (FR-6325).
     "ocupacao_vaganaopreenchida",
+    # Os pareceres da deliberação (165): o vínculo entre o Resultado de uma Etapa colegiada e os N
+    # pareceres que a regra combinou. Reescrevê-lo trocaria a fonte de um ato consolidado (FR-7065).
+    "resultados_parecer_da_deliberacao",
+    # A exposição ao parecer (165): o fato de o sistema ter entregado a alguém o parecer de outro
+    # membro. Apagá-la devolveria a quem já leu o caminho de avaliar a mesma inscrição (FR-7082).
+    "avaliacoes_exposicao_ao_parecer",
 )
 
 

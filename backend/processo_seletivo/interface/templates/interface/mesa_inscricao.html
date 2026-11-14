@@ -106,6 +106,9 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
 
 <section aria-labelledby="avaliacao">
   <h2 id="avaliacao">Avaliação</h2>
+  {% comment %} O parecer às cegas (165, UX-751, FR-7057): a Mesa nunca mostra o dos colegas, antes
+  ou depois de concluir, e diz isso uma vez, fora do formulário que some depois da conclusão. {% endcomment %}
+  {% if colegiada %}<p class="ajuda">Os demais membros não veem o seu parecer, e você não vê o deles.</p>{% endif %}
 
   {% if aviso %}
   <p class="{% if aviso.tipo == 'erro' %}erro{% else %}sucesso{% endif %}" role="{% if aviso.tipo == 'erro' %}alert{% else %}status{% endif %}" tabindex="-1">{{ aviso.texto }}</p>
@@ -248,7 +251,9 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
       <span class="ajuda" id="ajuda-parecer">
         Registre o que fundamenta {% if decisoria %}a conclusão{% else %}a pontuação{% endif %}. É o que responderá a um eventual recurso.
         {% if decisoria %}A conclusão {{ rotulo_desfavoravel }} exige parecer.{% elif eliminatoria and minima %}Nesta Etapa eliminatória, ele é obrigatório quando a pontuação fica abaixo de {{ minima|pontuacao }}.{% endif %}
+        {% if colegiada %}Se o parecer for {{ rotulo_desfavoravel|default:"desfavorável" }}, o candidato o lê sem o seu nome. Não escreva nele o seu nome, a sua assinatura nem outro dado que identifique você.{% endif %}
       </span>
+
     </p>
 
     {% comment %}

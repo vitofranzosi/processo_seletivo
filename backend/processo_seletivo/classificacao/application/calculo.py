@@ -6,14 +6,20 @@ traria uma cópia do JSON inteiro do Edital por Resultado sem alterar a contagem
 """
 
 from collections import defaultdict
+from functools import reduce
+from operator import or_
+
+from django.db.models import Exists, OuterRef, Q
 
 from processo_seletivo.classificacao.domain import universo_classificavel
 from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le, ordenar
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.application.prontidao import restringir_a_participantes
 from processo_seletivo.resultados.application.selectors import conteudos_das_versoes
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -55,12 +61,14 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # grava —, nunca na progressão acima nem no que decide quem tem posição (`preparar`, FR-3548).
     lidas = etapas_que_a_ordem_le(marco)
 
-    consulta = _universo(edital, perfil, etapas, etapa_do_marco)
+    consulta = _universo(edital, perfil, etapas, etapa_do_marco, enumeradas=enumeradas)
     # **O filtro do recorte reservado, e ele é o único acréscimo ao universo** (`FR-492`). Fica na
     # própria consulta, junto do resto: filtrar em memória depois de ler leria o Perfil inteiro por
     # recorte, e o projeto tem orçamento de consulta verificado por teste.
     if recorte is not None:
-        consulta = consulta.filter(modality_id=recorte)
+        consulta = _sem_retirada_anterior(
+            consulta.filter(modality_id=recorte), etapas, etapa_do_marco
+        )
     inscricoes = list(
         consulta.order_by("id").values("id", "protocolo", "nome", "identity_subject", "modality_id")
     )
@@ -164,7 +172,39 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     }
 
 
-def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None):
+def _sem_retirada_anterior(consulta, etapas, etapa_do_marco):
+    """O universo de uma lista **reservada**, sem quem uma Etapa anterior retirou da reserva (164).
+
+    É o par exato do que a eliminação faz em todas as listas (FR-7012): retirada antes da última
+    Etapa que o marco enumera, a inscrição sai do universo da lista reservada, como a eliminada sai
+    de todos; retirada **na** última enumerada, ela fica e sai sem posição, pela mão de
+    `universo_classificavel.preparar`. A ampla nunca passa por aqui: ali a retirada não produz
+    efeito nenhum.
+
+    **Só as anteriores que podem retirar entram na subconsulta**, e sem nenhuma a consulta volta
+    intacta: em todo Edital sem Etapa restrita e eliminatória que retire, a ordem é a de antes,
+    sem `EXISTS` a mais.
+    """
+    limite = etapa_do_marco.get("order") or 0
+    que_retiram = [
+        etapa["id"]
+        for etapa in etapas.values()
+        if (etapa.get("order") or 0) < limite and efeito_do_desfecho.pode_retirar(etapa)
+    ]
+    if not que_retiram:
+        return consulta
+    return consulta.exclude(
+        Exists(
+            ResultadoEtapa.vigentes.filter(
+                inscricao_id=OuterRef("pk"),
+                etapa_id__in=que_retiram,
+                consequencia=ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+            )
+        )
+    )
+
+
+def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None, enumeradas=()):
     """As inscrições que concorrem no marco, antes do filtro do recorte.
 
     A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez só
@@ -174,20 +214,89 @@ def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None):
 
     `conteudo`, quando quem chama já o leu, poupa à condição do corte a releitura do conteúdo
     vigente (135, a revisão do PR #441).
+
+    `enumeradas` são as Etapas do marco, e só pesam quando a última delas é restrita (163).
     """
     consulta = Inscricao.objects.filter(
         edital=edital,
         profile_id=perfil["id"],
         status=Inscricao.Status.SUBMETIDA,
     )
-    return restringir_a_participantes(
-        consulta,
-        edital=edital,
-        etapa_id=etapa_do_marco["id"],
-        vigentes={_uuid_da_etapa(chave): valor for chave, valor in etapas.items()},
-        prefixo="",
-        conteudo=conteudo,
+    vigentes = {_uuid_da_etapa(chave): valor for chave, valor in etapas.items()}
+    if not alcance_da_etapa.restrita(etapa_do_marco):
+        return restringir_a_participantes(
+            consulta,
+            edital=edital,
+            etapa_id=etapa_do_marco["id"],
+            vigentes=vigentes,
+            prefixo="",
+            conteudo=conteudo,
+        )
+    return _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, conteudo=conteudo)
+
+
+def _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, *, conteudo=None):
+    """Quando a última Etapa enumerada é restrita, cada inscrição é decidida pela última que a
+    alcança (163, FR-6985).
+
+    Perguntar só à última, como antes, devolveria só as inscrições que ela alcança — com a
+    Heteroidentificação por última enumerada, a ordem da ampla sairia vazia. Da última para a
+    primeira, cada Etapa decide sobre as Modalidades que alcança e que nenhuma posterior decidiu; a
+    sobra, que nenhuma enumerada alcança, entra como entraria num marco sem Etapa: a inscrição
+    submetida do Perfil. Uma consulta, por disjunção de subconsultas — nenhuma lista materializada.
+
+    **A eliminação nas Etapas que o marco não enumera continua valendo para todos** (D-010,
+    FR-6971). Ler a ampla na Análise não pode esquecer a Entrevista, fora do marco, que veio depois
+    dela e antes da última enumerada: perguntar à última, como antes, a excluía.
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+
+    conteudo = conteudo if conteudo is not None else conteudo_vigente(edital)
+    ordenadas = sorted(
+        (etapas[item] for item in enumeradas if item in etapas),
+        key=lambda etapa: etapa.get("order") or 0,
+        reverse=True,
     )
+    partes = []
+    decididas = frozenset()
+    for etapa in ordenadas:
+        parte = restringir_a_participantes(
+            consulta,
+            edital=edital,
+            etapa_id=etapa["id"],
+            vigentes=vigentes,
+            prefixo="",
+            conteudo=conteudo,
+        )
+        if decididas:
+            parte = parte.exclude(modality_id__in=list(decididas))
+        partes.append(Q(pk__in=parte.values("pk")))
+        alcancadas = alcance_da_etapa.modalidades_alcancadas(conteudo, etapa)
+        if alcancadas is None:
+            break
+        decididas = decididas | alcancadas
+    else:
+        sobra = consulta.exclude(modality_id__in=list(decididas)) if decididas else consulta
+        partes.append(Q(pk__in=sobra.values("pk")))
+    consulta = consulta.filter(reduce(or_, partes))
+    enumeradas_ids = {str(etapa["id"]) for etapa in ordenadas}
+    ultima = (ordenadas[0].get("order") or 0) if ordenadas else 0
+    fora_do_marco = [
+        identidade
+        for identidade, etapa in vigentes.items()
+        if str(identidade) not in enumeradas_ids and (etapa.get("order") or 0) < ultima
+    ]
+    if fora_do_marco:
+        consulta = consulta.filter(
+            ~Exists(
+                ResultadoEtapa.vigentes.filter(
+                    inscricao_id=OuterRef("pk"),
+                    etapa_id__in=fora_do_marco,
+                    consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
+                )
+            )
+        )
+    return consulta
 
 
 def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
@@ -226,9 +335,22 @@ def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
     }
     if not reservadas:
         return set()
+    # A pergunta é das listas reservadas, e por isso o universo é o delas: sem quem uma Etapa
+    # anterior retirou da reserva (164, FR-7012). A lista que só tinha retirados está vazia.
     concorrem = {
         str(modalidade)
-        for modalidade in _universo(edital, perfil, etapas, etapa_do_marco, conteudo=conteudo)
+        for modalidade in _sem_retirada_anterior(
+            _universo(
+                edital,
+                perfil,
+                etapas,
+                etapa_do_marco,
+                conteudo=conteudo,
+                enumeradas=[str(item) for item in marco.get("stages") or []],
+            ),
+            etapas,
+            etapa_do_marco,
+        )
         .order_by()
         .values_list("modality_id", flat=True)
         .distinct()

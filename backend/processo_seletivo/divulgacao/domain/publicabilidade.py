@@ -271,15 +271,49 @@ def reingressos_pendentes(*, edital, marco, at=None):
     if not reabilitadas:
         return {}
 
+    # **A Etapa que não alcança a inscrição não lhe deve Resultado** (163, FR-6986). Sem isto, a
+    # reabilitada da ampla ficaria pendente para sempre na Heteroidentificação que o marco enumera,
+    # e o marco nunca publicaria. Só se pergunta quando há reabilitada — o caso raro —, e a
+    # Modalidade delas só é lida quando alguma enumerada é restrita.
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    alcances = _alcances_das_enumeradas(edital, etapas, at=at)
+    modalidades = (
+        dict(Inscricao.objects.filter(pk__in=list(reabilitadas)).values_list("id", "modality_id"))
+        if alcances
+        else {}
+    )
     pendentes = {}
     for etapa_id in etapas:
         com_resultado = inscricoes_com_resultado(edital=edital, etapa_id=etapa_id)
+        alcancadas = alcances.get(etapa_id)
         for inscricao_id, resultado in reabilitadas.items():
+            if alcancadas is not None:
+                modalidade = modalidades.get(inscricao_id)
+                if modalidade is None or str(modalidade) not in alcancadas:
+                    continue
             # A própria Etapa em que a reabilitação aconteceu não é pendência: ali o Resultado
             # existe, e é justamente o sucessor.
             if inscricao_id not in com_resultado:
                 pendentes.setdefault(inscricao_id, resultado)
     return pendentes
+
+
+def _alcances_das_enumeradas(edital, etapas, *, at=None):
+    """`{Etapa enumerada restrita: identidades de Modalidade que ela alcança}` — vazio sem restrita.
+
+    Uma leitura do conteúdo vigente, e só depois de haver reabilitada a conferir.
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+    from processo_seletivo.editais.domain import alcance
+
+    conteudo = conteudo_vigente(edital, at=at)
+    publicadas = {str(item.get("id")): item for item in conteudo.get("stages") or []}
+    return {
+        etapa_id: alcance.modalidades_alcancadas(conteudo, publicadas[etapa_id])
+        for etapa_id in etapas
+        if etapa_id in publicadas and alcance.restrita(publicadas[etapa_id])
+    }
 
 
 def aferir(

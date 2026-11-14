@@ -186,18 +186,22 @@ def _janelas_pertinentes(inscricao, publicacao, resultado, agora):
         declaracao_aplicavel,
         declaracao_do_marco,
     )
+    from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
     edital = inscricao.edital
     conteudo = conteudo_vigente(edital)
     if publicacao is not None:
         marcos = [str(publicacao.marco_id)]
     else:
+        # Os marcos que **leem** a Etapa, e não só os que a enumeram (164, FR-7032): a Etapa
+        # restrita nunca é enumerada, e o prazo do Resultado dela é o do marco cuja ordem o leu.
+        etapas = {str(item.get("id")): item for item in conteudo.get("stages") or []}
         marcos = [
             str(marco.get("id"))
             for perfil in conteudo.get("profiles") or []
             if str(perfil.get("id")) == str(inscricao.profile_id)
             for marco in perfil.get("classificationMilestones") or []
-            if str(resultado.etapa_id) in {str(item) for item in marco.get("stages") or []}
+            if str(resultado.etapa_id) in efeito_do_desfecho.etapas_lidas_pelo_marco(marco, etapas)
         ]
 
     janelas, negados = [], []

@@ -151,3 +151,70 @@ def test_a_forma_decisoria_nao_le_nota_minima():
     com_minima = decisoria_etapa(eliminatory=True, minimumScore="60.0000")
 
     assert consequencia(com_minima, decisoria(Sentido.FAVORAVEL))[0] == HABILITADA
+
+
+# ---------------------------------------------------------------- a Etapa colegiada (165)
+
+
+def _colegiada(**campos):
+    return {
+        "id": "hetero",
+        "name": "Heteroidentificação",
+        "eliminatory": True,
+        "forma": "DECISORIA",
+        "evaluationsPerRegistration": 3,
+        "rotuloFavoravel": "Deferido",
+        "rotuloDesfavoravel": "Indeferido",
+        "modalityCodes": ["PPI"],
+        "unfavorableOutcomeEffect": "RESERVE_REMOVAL",
+        "deliberationRule": "MAJORITY",
+        **campos,
+    }
+
+
+def test_a_etapa_colegiada_nao_e_impedida():
+    """165, FR-7050: com a regra publicada, as várias avaliações deixam de impedir."""
+    from processo_seletivo.resultados.domain.regra import impedimento_da_regra
+
+    assert impedimento_da_regra(_colegiada()) is None
+
+
+@pytest.mark.parametrize(
+    "campos",
+    [{"deliberationRule": None}, {"forma": "PONTUADA", "deliberationRule": None}],
+    ids=["decisória do acervo, sem regra", "pontuada com várias"],
+)
+def test_sem_regra_as_varias_avaliacoes_continuam_impedidas(campos):
+    """165, FR-7054: o acervo sem regra e a combinação de notas continuam impedidos."""
+    from processo_seletivo.resultados.domain.regra import (
+        REGRA_DE_COMBINACAO_AUSENTE,
+        impedimento_da_regra,
+    )
+
+    assert impedimento_da_regra(_colegiada(**campos))[0] == REGRA_DE_COMBINACAO_AUSENTE
+
+
+def test_a_colegiada_nao_eliminatoria_continua_impedida():
+    """165, FR-7064: a regra diz o sentido, e não o que o desfavorável produz (FR-047 da 013)."""
+    from processo_seletivo.resultados.domain.regra import REGRA_INSUFICIENTE, impedimento_da_regra
+
+    assert impedimento_da_regra(_colegiada(eliminatory=False))[0] == REGRA_INSUFICIENTE
+
+
+def test_a_deliberacao_produz_a_consequencia_do_efeito():
+    """165, FR-7064, FR-7066: o desfavorável deliberado retira, e o motivo diz a regra."""
+    from processo_seletivo.resultados.domain import deliberacao
+    from processo_seletivo.resultados.domain.regra import consequencia
+
+    desfavoravel = deliberacao.Deliberacao(
+        regra=deliberacao.MAIORIA, sentidos=("DESFAVORAVEL", "DESFAVORAVEL", "FAVORAVEL")
+    )
+    efeito, motivo = consequencia(_colegiada(), desfavoravel)
+    assert efeito == "RETIRADA_DA_RESERVA"
+    assert motivo == "a comissão deliberou Indeferido por maioria: 2 de 3 pareceres Indeferido"
+
+    favoravel = deliberacao.Deliberacao(
+        regra=deliberacao.UNANIMIDADE_PARA_O_DESFAVORAVEL,
+        sentidos=("DESFAVORAVEL", "DESFAVORAVEL", "FAVORAVEL"),
+    )
+    assert consequencia(_colegiada(), favoravel)[0] == "HABILITADA"

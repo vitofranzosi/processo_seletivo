@@ -8,6 +8,7 @@ from django.http import QueryDict
 from django.utils import timezone
 
 from processo_seletivo.convocacao.domain import vocabulario_dos_documentos
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.interface import andamento
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
 
@@ -618,6 +619,64 @@ def nome_de_pessoa(context, valor):
         if request is not None:
             setattr(request, _NOMES_DA_REQUISICAO, nomes)
     return nomes.get(texto, texto)
+
+
+@register.simple_tag
+def opcoes_do_alcance(modalidades, etapa):
+    """As linhas do grupo "A quem a Etapa se aplica", com o que cada uma diz (163, UX-731).
+
+    O código marcado que nenhum Perfil tem mais continua na lista, marcado e dito como tal: some-lo
+    da tela faria a próxima gravação apagá-lo sem que ninguém tivesse escolhido isso (FR-6963).
+    """
+    modalidades = modalidades or {"codigos": [], "perfis": []}
+    todos_os_perfis = [perfil for perfil in modalidades.get("perfis") or [] if perfil]
+    marcados = set((etapa or {}).get("modalityCodes") or [])
+    opcoes = []
+    for item in modalidades.get("codigos") or []:
+        perfis = item["perfis"]
+        onde = (
+            "todos os Perfis"
+            if todos_os_perfis and len(perfis) == len(todos_os_perfis)
+            else alcance_da_etapa.enumerar(perfis)
+        )
+        opcoes.append(
+            {
+                "codigo": item["codigo"],
+                "denominacao": item["denominacao"],
+                "onde": onde,
+                "marcada": item["codigo"] in marcados,
+                "inexistente": False,
+            }
+        )
+    conhecidos = {opcao["codigo"] for opcao in opcoes}
+    amplas = set(modalidades.get("amplas") or [])
+    for codigo in sorted(marcados - conhecidos):
+        # A ampla de algum Perfil não está entre as opções, mas existe: dizer que "nenhum Perfil a
+        # tem mais" contradiria a recusa que a publicação vai dar (FR-6968).
+        opcoes.append(
+            {
+                "codigo": codigo,
+                "denominacao": codigo,
+                "onde": "",
+                "marcada": True,
+                "inexistente": codigo not in amplas,
+                "ampla": codigo in amplas,
+            }
+        )
+    alcancados = {
+        perfil
+        for item in modalidades.get("codigos") or []
+        if item["codigo"] in marcados
+        for perfil in item["perfis"]
+    }
+    sem_alcancado = [perfil for perfil in todos_os_perfis if perfil not in alcancados]
+    return {
+        "restrita": (etapa or {}).get("modalityCodes") is not None,
+        "opcoes": opcoes,
+        "sem_alcancado": alcance_da_etapa.enumerar(sem_alcancado)
+        if marcados and alcancados
+        else "",
+    }
 
 
 @register.simple_tag

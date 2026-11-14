@@ -40,12 +40,14 @@ cumprimento se prova pela citação que o ato sucessor carrega, quando ele é pu
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.publicacoes.application.selectors import selecao_publica
 from processo_seletivo.recursos.application.porta import exigir_elegibilidade, travar
 from processo_seletivo.recursos.domain.consequencia import derivar
 from processo_seletivo.recursos.domain.pejus import MENSAGEM as PIORARIA
 from processo_seletivo.recursos.domain.pejus import PIORA, piora
 from processo_seletivo.recursos.models import DecisaoRecurso
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
@@ -143,9 +145,18 @@ def julgar(
         # se **recorreu**, e responde outra pergunta.
         versao = selecao_publica(edital_id=peca.inscricao.edital_id)
         protegido = _protegido(peca, especie, etapa_id, assinatura_do_resultado)
+        _recusar_reavaliacao_colegiada(especie, protegido, versao, etapa_id)
         efeito, motivo_da_regra, conclusao = _conclusao(
             peca, versao, especie, etapa_id, pontuacao, sentido, criterios
         )
+        if efeito == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA:
+            # O motivo diz a reserva perdida e a ampla mantida (164, FR-7008), como na consolidação.
+            motivo_da_regra = efeito_do_desfecho.motivo_com_a_reserva(
+                motivo_da_regra,
+                nome_da_modalidade(
+                    versao.content, peca.inscricao.profile_id, peca.inscricao.modality_id
+                ),
+            )
         _recusar_se_piora(especie, protegido, efeito, conclusao)
 
         decisao = _gravar(
@@ -197,6 +208,32 @@ def julgar(
             )
         finish(reserva, decisao, 201)
         return decisao, sucessor
+
+
+REAVALIACAO_COLEGIADA = (
+    "A reavaliação determinada não está disponível contra o Resultado de uma Etapa colegiada. O "
+    "recurso pode ser decidido por correção fixada, informando o desfecho."
+)
+
+
+def _recusar_reavaliacao_colegiada(especie, protegido, versao, etapa_id):
+    """Na Etapa colegiada, o recurso corrige o desfecho, e não reavalia (165, FR-7071, D-007).
+
+    **Antes de gravar**: a reserva de idempotência nasceu nesta transação e some com a recusa, e
+    nenhuma decisão impossível de cumprir chega a existir. **E sem converter**: se quem julga quer
+    uma nova avaliação, a correção fixada não é a mesma coisa, e escolher outra espécie é dele. Quem
+    reavalia, com que composição e por que procedimento é a P-5.
+    """
+    from processo_seletivo.avaliacoes.domain.previsao import etapa_do_conteudo
+    from processo_seletivo.resultados.domain import deliberacao
+
+    if especie != DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA:
+        return
+    colegiada = getattr(protegido, "origem", None) == ResultadoEtapa.Origem.DELIBERACAO or (
+        deliberacao.colegiada(etapa_do_conteudo(versao.content, etapa_id))
+    )
+    if colegiada:
+        raise DomainError("reavaliacao_colegiada_indisponivel", REAVALIACAO_COLEGIADA, 422)
 
 
 def _especie(valor):

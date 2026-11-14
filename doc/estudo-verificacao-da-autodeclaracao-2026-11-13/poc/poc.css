@@ -1,0 +1,96 @@
+/* Os tokens são os de `shared/tokens.css`; o resto imita `portal.css`, celular primeiro. */
+:root{
+  --verde:#15803d;--verde-texto:#146c37;--verde-escuro:#0b5a2a;--verde-claro:#e7f5ec;
+  --texto:#1c1c1c;--fraco:#555;--borda:#d4d4d4;--fundo:#f8f8f8;--branco:#fff;
+  --amarelo:#8a5300;--amarelo-fundo:#fdf5e5;--vermelho:#a91b1b;--vermelho-fundo:#fbe9e9;--cinza:#eee;
+  --roxo:#5b4a9e;--roxo-fundo:#efecf9;
+}
+*{box-sizing:border-box}
+/* `.botao{display:block}` venceria o atributo `hidden`, e o botão escondido apareceria. */
+[hidden]{display:none !important}
+body{margin:0;font-family:"Open Sans","Segoe UI",system-ui,sans-serif;color:var(--texto);background:var(--fundo);line-height:1.6;font-size:16px}
+.pular{position:absolute;left:-9999px;top:0;background:var(--branco);padding:.75rem 1rem;z-index:10}
+.pular:focus{left:0}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
+main:focus{outline:none}
+.visualmente-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+header.topo{background:var(--verde-escuro);color:var(--branco);padding:.75rem 1rem;display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;font-size:.875rem}
+.marca{font-weight:600}.marca span{font-weight:300;opacity:.85}
+.aviso-sintetico{opacity:.9}
+nav.abas{display:flex;gap:.4rem;padding:.6rem 1rem;flex-wrap:wrap;max-width:68rem;margin:0 auto}
+nav.abas button{font:inherit;font-size:.875rem;border:1px solid var(--borda);background:var(--branco);color:var(--texto);padding:.3rem .9rem;border-radius:999px;cursor:pointer}
+nav.abas button[aria-current="page"]{background:var(--verde);border-color:var(--verde);color:var(--branco)}
+.anuncio{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+main{max-width:34rem;margin:0 auto;padding:0 1rem 3rem}
+main.larga{max-width:68rem}
+h2{font-size:1.25rem;margin:.25rem 0 .5rem;line-height:1.3}
+h3{font-size:1rem;margin:0 0 .35rem}
+p{margin:.4rem 0}
+ul,ol{margin:.25rem 0;padding-left:1.25rem}
+.fraco{color:var(--fraco);font-size:.875rem}
+.passo-de{color:var(--fraco);font-size:.8125rem;margin:0}
+.cartao{border:1px solid var(--borda);border-radius:8px;padding:.75rem 1rem;background:var(--branco);margin:.75rem 0}
+.cartao.atencao{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo)}
+.cartao.ok{border-left:4px solid var(--verde);background:var(--verde-claro)}
+.cartao.espera{border-left:4px solid var(--roxo);background:var(--roxo-fundo)}
+.rotulo{display:inline-block;font-size:.75rem;font-weight:600;padding:0 .6rem;border-radius:999px;border:1px solid}
+.rotulo.amarelo{color:var(--amarelo);background:var(--amarelo-fundo)}
+.rotulo.verde{color:var(--verde-texto);background:var(--verde-claro)}
+.rotulo.roxo{color:var(--roxo);background:var(--roxo-fundo)}
+.botao{display:block;width:100%;font:inherit;font-weight:600;text-align:center;background:var(--verde);color:var(--branco);border:1px solid var(--verde);border-radius:6px;padding:.7rem 1rem;margin:.5rem 0;cursor:pointer}
+.botao.secundario{background:transparent;color:var(--verde-texto)}
+.botao:disabled{background:var(--cinza);border-color:var(--borda);color:var(--fraco);cursor:not-allowed}
+.link{background:none;border:0;padding:.25rem 0;font:inherit;font-size:.875rem;color:var(--verde-texto);text-decoration:underline;cursor:pointer}
+.perfil{display:block;font-size:.8125rem;color:var(--fraco);margin:.5rem 0}
+.perfil select,label select{display:block;font:inherit;font-size:.875rem;margin-top:.2rem;padding:.3rem;width:100%}
+label{display:block;font-size:.9375rem}
+.caixa{display:flex;gap:.5rem;align-items:baseline;padding:.2rem 0}
+textarea{width:100%;font:inherit;border:1px solid var(--borda);border-radius:6px;padding:.4rem;margin-top:.25rem}
+fieldset{border:1px solid var(--borda);border-radius:8px;padding:.5rem .9rem;margin:.6rem 0}
+legend{font-weight:600;padding:0 .25rem}
+.alerta{color:var(--amarelo);background:var(--amarelo-fundo);border-radius:6px;padding:.4rem .6rem;font-size:.875rem}
+
+/* A câmera. O oval é desenhado por cima do <video>, e o MediaRecorder grava o MediaStream, e não o
+   que se vê: por construção, o guia não entra no arquivo (R-13). */
+/* No celular, a câmera não passa de 55% da altura: o botão "Próximo passo" tem de caber na
+   primeira tela, sem rolar no meio da gravação. Medido a 375×812 na POC. */
+.camera{position:relative;background:#2b2f35;border-radius:10px;overflow:hidden;aspect-ratio:3/4;max-height:55vh;margin:.5rem auto}
+/* Durante a gravação, a faixa sobre a imagem já diz o passo atual e o seguinte; a lista inteira
+   empurraria os botões. Antes de começar, ela fica, para quem quer ler o roteiro todo. */
+#tela-gravacao.em-gravacao .roteiro-completo{display:none}
+.camera video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+.camera.sem-espelho video{transform:none}
+.oval{position:absolute;left:22%;right:22%;top:12%;bottom:30%;border:2px dashed rgba(255,255,255,.75);border-radius:50%;pointer-events:none}
+.gravando{position:absolute;top:.5rem;left:.5rem;background:#c62828;color:#fff;font-size:.75rem;padding:.1rem .6rem;border-radius:999px}
+.tempo{position:absolute;top:.5rem;right:.5rem;background:rgba(0,0,0,.55);color:#fff;font-size:.75rem;padding:.1rem .6rem;border-radius:999px}
+.fala{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.68);color:#fff;font-size:1rem;padding:.6rem .8rem;line-height:1.4}
+.fala .proximo{opacity:.75;font-size:.8125rem}
+.checagem{font-size:.875rem;margin:.2rem 0}
+.checagem.ok::before{content:"✓ ";color:var(--verde-texto);font-weight:700}
+.checagem.pendente::before{content:"… ";color:var(--amarelo)}
+.medidor{height:8px;background:var(--cinza);border-radius:4px;overflow:hidden;margin:.3rem 0}
+.medidor.grande{height:14px}
+.medidor i{display:block;height:100%;width:0;background:var(--verde);transition:width .1s}
+ol.passos li.feito{color:var(--fraco);text-decoration:line-through}
+ol.passos li.atual{font-weight:700}
+#revisao,#meu-video{width:100%;max-height:60vh;background:#000;border-radius:8px;margin:.5rem 0}
+.partes{font-size:.8125rem;color:var(--fraco)}
+dl.recibo{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;font-size:.875rem;background:var(--branco);border:1px dashed var(--borda);border-radius:6px;padding:.6rem .8rem}
+dl.recibo dt{color:var(--fraco)}dl.recibo dd{margin:0;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,monospace;font-size:.8125rem}
+
+/* Comissão: a Mesa, em duas colunas quando cabe. */
+.trilha-nav{font-size:.8125rem;color:var(--fraco)}
+.mesa{display:grid;gap:1rem}
+@media (min-width:56rem){.mesa{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}}
+.painel-video video{width:100%;background:#000;border-radius:8px;aspect-ratio:16/10}
+.controles{display:flex;gap:.4rem;flex-wrap:wrap;margin:.4rem 0}
+.controles button,.marcas button{font:inherit;font-size:.8125rem;border:1px solid var(--borda);background:var(--branco);border-radius:6px;padding:.25rem .6rem;cursor:pointer}
+.controles button[aria-pressed="true"]{background:var(--verde-claro);border-color:var(--verde)}
+.marcas{display:flex;gap:.4rem;flex-wrap:wrap}
+dl.ficha{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;margin:0 0 .5rem;font-size:.9375rem}
+dl.ficha dt{color:var(--fraco)}dl.ficha dd{margin:0}
+.pareceres{font-size:.875rem}
+.trilha-eventos{font-size:.8125rem;font-family:ui-monospace,Menlo,monospace;color:var(--fraco)}
+table.medicao{border-collapse:collapse;width:100%;font-size:.8125rem;margin:.5rem 0}
+table.medicao th,table.medicao td{text-align:left;vertical-align:top;padding:.3rem .4rem;border-top:1px solid var(--borda);overflow-wrap:anywhere}
+table.medicao th{color:var(--fraco);font-weight:600;width:40%}

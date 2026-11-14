@@ -235,10 +235,11 @@ ler a peça, e separá-las obrigaria a decidir a espécie antes de escrever a mo
       <option value="INDEFERIDO">Indeferir</option>
       {% if alcancaveis %}
       <option value="CORRECAO_FIXADA">Deferir fixando a correção</option>
-      <option value="REAVALIACAO_DETERMINADA">Deferir determinando reavaliação</option>
+      {% if not sem_reavaliacao %}<option value="REAVALIACAO_DETERMINADA">Deferir determinando reavaliação</option>{% endif %}
       {% endif %}
       <option value="PROVIDENCIA_A_JUSANTE">Deferir determinando providência a jusante</option>
     </select>
+    {% if sem_reavaliacao %}<span class="ajuda">A reavaliação determinada não está disponível contra o Resultado de uma Etapa colegiada. Decida por correção fixada, informando o desfecho.</span>{% endif %}
   </div>
   {% if alcancaveis %}
   {% comment %}

@@ -72,7 +72,8 @@ def test_a_eliminada_nao_conta_como_sem_resultado():
     assert lido["grupos"] == [
         {
             "motivo": "Documentação insuficiente",
-            "consequencia": "ELIMINADA",
+            # O nome, e não o enum (164): a retirada tem três palavras.
+            "consequencia": "Eliminada",
             "protocolos": ["INS-3"],
         }
     ]

@@ -337,8 +337,14 @@ def contexto_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     etapa = corte.etapa_governada_id if corte is not None else None
+    # Lida uma vez, e só na reservada: é ela que a concorrência concomitante e a retirada da
+    # reserva (164) precisam, e a ampla não paga nada.
+    versao = effective_version(edital_id=edital.id, at=at) if lista_id is not None else None
     habilitadas = ocupacao_selectors.habilitadas_pelo_corte(
-        edital=edital, corte=corte, progrediram=ordem
+        edital=edital,
+        corte=corte,
+        progrediram=ordem,
+        conteudo=versao.content if versao is not None else None,
     )
     # A concorrência concomitante, lida **pela `016`** e não por uma segunda conta: quem ocupa vaga
     # de ampla é titular dela, e essa definição tem um dono só (`FR-252`, `UX-035`).
@@ -347,7 +353,7 @@ def contexto_do_recorte(*, edital, perfil_id, marco_id, lista_id=None, at=None):
             edital=edital,
             perfil_id=perfil_id,
             marco_id=marco_id,
-            versao=effective_version(edital_id=edital.id, at=at),
+            versao=versao,
         )
         if lista_id is not None
         else set()
