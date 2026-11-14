@@ -10,7 +10,7 @@ Roteiro de verificação da `167`. O modelo está em [data-model.md](data-model.
   caras* no `CLAUDE.md`). A suíte em SQLite não vale.
 - `uv sync --extra dev` na worktree (worktree nova não tem pytest).
 - O banco preparado por `make preparar`. Depois da entrega B, o provisionamento deve dizer
-  **63** tabelas append-only no total — e o primeiro número não pode ser zero.
+  **67** tabelas append-only no total — e o primeiro número não pode ser zero.
 - `manage.py migrate --check` limpo antes de investigar qualquer erro estranho.
 
 ## 1. A suíte de cada entrega

@@ -447,7 +447,7 @@ porta mais estreita para a publicação.
 | Entrega | Migration | Guardiões que mudam |
 |---|---|---|
 | A | `agendamento/0001_agenda_da_etapa` (quatro tabelas operacionais) | `APPS` de `tests/migrations/test_migrations.py` ganha `agendamento`; `INSTALLED_APPS` com o comentário de fronteira |
-| B | `agendamento/0002_atos_da_agenda` (duas append-only, gatilho `ato_da_agenda_append_only`, `horario_publicado_append_only` e `horario_publicado_coerente`) | `TABELAS_APPEND_ONLY` em `seguranca/papeis.py` (61 → **63**); `TRIGGERS_POR_APP["agendamento"]`; `CLAUDE.md` e README com o `M` novo |
+| B | `agendamento/0002_atos_da_agenda` (duas append-only, gatilho `ato_da_agenda_append_only`, `horario_publicado_append_only` e `horario_publicado_coerente`) | `TABELAS_APPEND_ONLY` em `seguranca/papeis.py` (65 → **67**); `TRIGGERS_POR_APP["agendamento"]`; `CLAUDE.md` e README com o `M` novo |
 | C | `avisos/0003_origem_agenda` | `TRIGGERS_POR_APP["avisos"]` se o gatilho mudar; `test_situacoes_de_mensagem.py` |
 
 O gatilho append-only é SQL na própria migration, com `RunPython` só em PostgreSQL, como a

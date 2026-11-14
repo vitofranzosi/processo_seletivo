@@ -153,7 +153,7 @@ candidato leem só isso (T-016, T-017). "Remarcado em" é o `praticado_em` do at
 2. Gatilhos `ato_da_agenda_append_only` e `horario_publicado_append_only` em `UPDATE` e `DELETE`, na
    migration `agendamento/0002_atos_da_agenda`.
 3. As duas em `TABELAS_APPEND_ONLY` (`seguranca/papeis.py`): o papel de runtime não recebe `UPDATE`
-   nem `DELETE`. O `M` do provisionamento passa de **61** a **63**.
+   nem `DELETE`. O `M` do provisionamento passa de **65** a **67**.
 
 ## `Aviso` da `066` (C)
 

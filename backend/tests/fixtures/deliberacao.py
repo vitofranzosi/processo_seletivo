@@ -50,6 +50,7 @@ def montar_colegiada(
     efeito=None,
     pareceristas=PARECERISTAS,
     presidencia_parecerista=False,
+    rascunho=None,
 ):
     """Publica, constitui a comissão, aloca, inscreve e consolida a Análise de todas.
 
@@ -65,7 +66,9 @@ def montar_colegiada(
             "title": f"Processo {codigo}",
             "firstEdital": {"number": codigo, "year": 2026, "title": f"Edital {codigo}"},
         },
-        draft=rascunho_colegiado(seed, regra=regra, avaliacoes=avaliacoes, efeito=efeito),
+        # `rascunho` é o da `166`, com o período e a admissão do vídeo sobre este mesmo Edital.
+        draft=rascunho
+        or rascunho_colegiado(seed, regra=regra, avaliacoes=avaliacoes, efeito=efeito),
     )
     processo = edital.processo
     pessoas = [("maria", Funcao.PRESIDENTE), ("joao", Funcao.MEMBRO)]

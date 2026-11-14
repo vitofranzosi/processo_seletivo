@@ -43,7 +43,7 @@ As decisões técnicas estão em [research.md](research.md) (`T-001` a `T-023`);
   de coerência;
 - `avisos/0003_origem_agenda` (C): a origem, as constraints refeitas e `marco_id` anulável.
 
-Duas tabelas append-only novas: o `M` da preparação do banco vai de 61 a **63**.
+Duas tabelas append-only novas: o `M` da preparação do banco vai de 65 a **67**.
 
 **Testing**: pytest contra PostgreSQL (`make test-pg`, com `DB_NAME` próprio):
 
@@ -146,7 +146,7 @@ backend/processo_seletivo/
 │   ├── domain/nomes.py                               # C: AGENDA
 │   ├── models.py, migrations/0003_origem_agenda.py   # C
 │   └── application/{confirmar,despacho}.py           # C: reenvio e estado visual da origem nova
-├── seguranca/papeis.py                               # B: TABELAS_APPEND_ONLY (63)
+├── seguranca/papeis.py                               # B: TABELAS_APPEND_ONLY (67)
 ├── interface/
 │   ├── agenda_da_etapa.py                            # as views da gestão (T-020)
 │   ├── urls.py                                       # as rotas de contracts/telas.md
@@ -206,7 +206,7 @@ os testes de integração, as telas e os de interface, os guardiões, e por fim 
 | `FOR UPDATE` em append-only | role de runtime | travar só a `AgendaDaEtapa` (T-009) |
 | Fuso | horários derivados | data e hora locais em `America/Sao_Paulo`, convertidas uma vez (T-003) |
 | Evento retificado depois | `EventoCronograma` | a conferência relê o Evento vigente; publicada, a gestão é avisada e o horário vale (Edge Cases) |
-| O `M` do provisionamento | `CLAUDE.md` | 61 → 63 na B, com o README e `test_database_permissions.py` |
+| O `M` do provisionamento | `CLAUDE.md` | 65 → 67 na B, com o README e `test_database_permissions.py` |
 | Guardião da FR-084 e a ordem com a `156` | `test_situacoes_de_mensagem.py` | reler o guardião no dia da C (T-018) |
 | Varredura de vocabulário com lista literal | `tests/**/test_vocabulario_*` | varredura própria das telas novas (T-020) |
 | Inventário de negativas | `033` | uma linha por `Http404` novo, em cada entrega |

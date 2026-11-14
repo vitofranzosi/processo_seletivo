@@ -63,6 +63,9 @@ MODULOS_DE_VIEW = (
     # A vaga não preenchida (155): nenhum 404 próprio — o recorte e o marco recusam pelas funções
     # de `views.py` que o inventário já classifica. Fica para que um futuro não escape.
     RAIZ / "processo_seletivo/interface/views_da_nao_preenchida.py",
+    # A verificação por vídeo (166): 404 a quem não tem a Atribuição alocada, que é a composição
+    # da Mesa, e à abertura que não é da sessão; o encaminhamento usa a porta da consolidação.
+    RAIZ / "processo_seletivo/interface/verificacao.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

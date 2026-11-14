@@ -1,0 +1,26 @@
+{% comment %}
+**O acesso à verificação por vídeo, no acompanhamento** (166, FR-7145). É um cartão de informação, e
+não o degrau "falta um passo seu" da situação: o degrau, a natureza no Centro e o aviso por e-mail são
+da entrega 4 do estudo, que não existe; quando existir, o substitui.
+{% endcomment %}
+{% for item in verificacoes %}
+<section class="verificacao-no-acompanhamento" aria-labelledby="verificacao-{{ forloop.counter }}">
+  <h2 id="verificacao-{{ forloop.counter }}">Verificação da autodeclaração</h2>
+  {% if item.estado == "PODE_GRAVAR" %}
+  <p>Você pode gravar um vídeo curto ou fazer a entrevista ao vivo. As duas formas valem igual.{% if item.fim %} O vídeo pode ser enviado até {{ item.fim|date:"d/m/Y \à\s H:i" }}.{% endif %}</p>
+  <p><a class="principal" href="{% url 'portal:verificacao' inscricao.id item.etapa.id %}">Ver como funciona</a></p>
+  {% elif item.estado == "RECEBIDO" %}
+  <p>Vídeo recebido em {{ item.video.recebido_em|date:"d/m/Y" }}. A comissão ainda não o abriu.</p>
+  <p><a href="{% url 'portal:verificacao-comprovante' inscricao.id item.etapa.id %}">Ver o comprovante</a></p>
+  {% elif item.estado == "EM_ANALISE" %}
+  <p>A comissão está analisando o seu vídeo.</p>
+  <p><a href="{% url 'portal:verificacao-comprovante' inscricao.id item.etapa.id %}">Ver o comprovante</a></p>
+  {% elif item.estado == "ENCAMINHADA" %}
+  <p>A comissão quer conversar com você ao vivo. Isso não é reprovação. Ela vai informar a data, a hora e como entrar.</p>
+  {% elif item.estado == "AO_VIVO" %}
+  <p>A sua verificação será por entrevista ao vivo. A comissão vai informar a data, a hora e como entrar.</p>
+  {% else %}
+  <p>Você vai poder escolher entre gravar um vídeo curto e a entrevista ao vivo{% if item.inicio %} a partir de {{ item.inicio|date:"d/m/Y \à\s H:i" }}{% endif %}.</p>
+  {% endif %}
+</section>
+{% endfor %}

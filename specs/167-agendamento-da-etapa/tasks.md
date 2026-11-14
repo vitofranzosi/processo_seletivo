@@ -122,7 +122,7 @@ por nome; agendar à mão uma pessoa às 08:15 de 24/11 antes de preencher a man
 
 - [ ] T037 Criar em `processo_seletivo/agendamento/models.py` a classe `_AppendOnly` do app e os modelos `AtoDaAgenda` e `HorarioPublicado`, com os campos e as constraints do data-model (`uq_ato_da_agenda_uma_publicacao` parcial, `ck_ato_da_agenda_motivo`, `ck_ato_da_agenda_veiculo`, `ck_ato_da_agenda_signatario`, `uq_horario_publicado_por_ato`, `uq_horario_publicado_substituido_uma_vez`, `uq_horario_publicado_aviso`, `ck_horario_publicado_forma`); `HorarioPublicado.aviso` já existe na B, sempre nulo até a C (FR-7224, FR-7241)
 - [ ] T038 Escrever `processo_seletivo/agendamento/migrations/0002_atos_da_agenda.py` com o SQL dos gatilhos `ato_da_agenda_append_only`, `horario_publicado_append_only` e `horario_publicado_coerente` (data-model), por `RunPython` só em PostgreSQL, como `convocacao/migrations/0007_publicacao_de_convocados.py` (T-022)
-- [ ] T039 Acrescentar as duas tabelas a `TABELAS_APPEND_ONLY` em `processo_seletivo/seguranca/papeis.py` (61 → 63), `TRIGGERS_POR_APP["agendamento"]` em `tests/migrations/test_migrations.py`, e o `M` novo no `CLAUDE.md` ("eram **61** … são **63** com os atos da agenda da `167`") (T-022)
+- [ ] T039 Acrescentar as duas tabelas a `TABELAS_APPEND_ONLY` em `processo_seletivo/seguranca/papeis.py` (65 → 67), `TRIGGERS_POR_APP["agendamento"]` em `tests/migrations/test_migrations.py`, e o `M` novo no `CLAUDE.md` ("eram **61** … são **63** com os atos da agenda da `167`") (T-022)
 - [ ] T040 [P] Testes em `tests/integration/agendamento/test_atos_imutaveis.py`: `UPDATE` e `DELETE` recusados pelo gatilho nas duas tabelas e pela falta de privilégio da role de runtime; `save` de linha existente e `delete` recusados pela classe; o gatilho de coerência recusa `substitui` de outra inscrição ou outra agenda, `banca` de outra agenda e `CANCELADO` fora de ato de cancelamento (FR-7224, FR-7241)
 - [ ] T041 [P] Criar `processo_seletivo/agendamento/domain/conteudo.py::compor(...)` com o formato de T-014: `NOME_E_PROTOCOLO`, ou `PROTOCOLO` quando `editais.domain.alcance.restrita(etapa)`; banca por horário só com mais de uma; local só na forma presencial; nada de sala, CPF, e-mail, telefone, Modalidade ou desfecho (FR-7225, FR-7226, `D-009`)
 - [ ] T042 [P] Testes de unidade em `tests/unit/agendamento/test_conteudo.py`: as duas identificações; a banca com uma e com duas; o local presencial e o vazio remoto; para as fixtures, nenhum endereço de sala, CPF inteiro ou parcial, e-mail, telefone ou código de Modalidade nos `canonical_bytes` (SC-2394, FR-7225, FR-7226)
@@ -164,7 +164,7 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 
 - [ ] T058 [P] Acrescentar os templates da B a `tests/interface/test_vocabulario_da_agenda_da_etapa.py` e a `tests/portal/test_vocabulario_das_telas_publicas.py`; e a `tests/interface/test_agenda_da_etapa_no_estreito.py` (SC-2397)
 - [ ] T059 [P] Testes do que a agenda não faz, em `tests/integration/agendamento/test_fronteira.py`: nenhuma operação da agenda grava `ResultadoEtapa`, `Ocorrencia`, `Avaliacao` ou prazo; as orientações são só texto; nenhum campo de presença (FR-7250, FR-7251, FR-7252)
-- [ ] T060 Provisionamento: `make preparar` num banco vazio informa "63 de 63"; `tests/integration/test_database_permissions.py` passa com as duas tabelas novas
+- [ ] T060 Provisionamento: `make preparar` num banco vazio informa "67 de 67"; `tests/integration/test_database_permissions.py` passa com as duas tabelas novas
 - [ ] T061 Jornada no navegador do cenário A até a publicação e do cenário B (duas bancas, Etapa restrita a `PPI`, página pública só com protocolo), em 1440, 1366 e 375 px; capturas em `specs/167-agendamento-da-etapa/capturas/b/` (SC-2397)
 - [ ] T062 `make lint check` e a suíte inteira; README (a linha da `167` e o `M`) e o PR da B
 
@@ -293,7 +293,7 @@ publicar. É o que o pedido mede no SC-2390, até a conferência.
 ### Incremental
 
 1. **A** → demonstrar configurar e montar → PR.
-2. **B** → demonstrar publicar e o candidato encontrar o horário → PR. O `M` vai a 63.
+2. **B** → demonstrar publicar e o candidato encontrar o horário → PR. O `M` vai a 67.
 3. **C** → demonstrar avisar e remarcar → PR. A FR-084 revista.
 4. **D**, quando a comissão de uso pedir.
 
