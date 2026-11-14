@@ -8,7 +8,7 @@ decidido.
 
 import os
 
-from django.http import FileResponse, HttpResponse, StreamingHttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 
 from processo_seletivo.shared.http import marcar_como_privada
 from processo_seletivo.verificacao.domain import intervalo
@@ -47,7 +47,9 @@ def entregar(request, *, caminho, formato):
         resposta["Content-Range"] = f"bytes */{tamanho}"
         return _cabecalhos(resposta, formato)
     if pedido is None:
-        resposta = FileResponse(open(caminho, "rb"), content_type=formato)  # noqa: SIM115
+        # O arquivo inteiro pelo mesmo gerador das fatias, e não por `FileResponse`: o gerador fecha o
+        # arquivo ao terminar, sem depender de quem fecha a resposta.
+        resposta = StreamingHttpResponse(_fatias(caminho, 0, tamanho - 1))
         resposta["Content-Length"] = str(tamanho)
         return _cabecalhos(resposta, formato)
     inicio, fim = pedido

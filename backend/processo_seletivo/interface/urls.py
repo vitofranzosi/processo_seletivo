@@ -13,6 +13,7 @@ from processo_seletivo.interface import (
     relatorio,
     trilha_da_unidade,
     unidades,
+    verificacao,
     views,
     views_da_nao_preenchida,
     views_formalizacao,
@@ -519,6 +520,13 @@ urlpatterns = [
         views.consolidar_resultados,
         name="consolidar-resultados",
     ),
+    # O encaminhamento à entrevista ao vivo (166): o vídeo não confirmou, e só confirma (R-11). Pende
+    # da consolidação, porque é ela que separa quem encaminhar, e a porta é a mesma.
+    path(
+        "editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/encaminhar",
+        verificacao.encaminhar,
+        name="encaminhar-ao-vivo",
+    ),
     # O desfecho de quem não foi avaliado (D-1). Página própria, e não um botão a mais na
     # distribuição: o ato tem conteúdo próprio — o motivo constatado —, elimina e não se desfaz.
     path(
@@ -902,6 +910,20 @@ urlpatterns = [
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/documentos",
         views.documentos_da_mesa,
         name="mesa-documentos",
+    ),
+    # O vídeo da verificação na Mesa (166): abrir é ato registrado; assistir é a entrega dele, com
+    # `Range` e sem evento (D-007). A autorização é a da Mesa: alocação e Atribuição.
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/video/abrir",
+        verificacao.abrir_video,
+        name="mesa-video-abrir",
+    ),
+    path(
+        "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>"
+        "/video/<uuid:abertura_id>",
+        verificacao.video,
+        name="mesa-video",
     ),
     path(
         "minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",

@@ -1,0 +1,41 @@
+{% extends "interface/base.html" %}
+{% block titulo %}Encaminhar à entrevista ao vivo — {{ etapa.name }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <a href="{% url 'interface:alocacoes' processo.id %}">Alocação por Etapa</a> › <a href="{% url 'interface:distribuicao' edital.id etapa.id %}">{{ etapa.name }}</a> › <span aria-current="page">Encaminhar ao vivo</span></nav>{% endblock %}
+{% block conteudo %}
+<h1>Encaminhar à entrevista ao vivo</h1>
+<p class="sub">{{ etapa.name }} — Edital {{ edital.number }}/{{ edital.year }}</p>
+
+{% comment %}
+**O vídeo só confirma** (166, R-11, FR-7138 a FR-7141). A deliberação pelo vídeo destas inscrições
+não confirmou a autodeclaração, e isso não é desfecho: elas vão à entrevista ao vivo, que é o rito da
+heteroidentificação, e só a entrevista pode produzir o desfavorável.
+
+**Sem a contagem dos sentidos** (D-005): esta tela é da presidência, que pode ser membro do painel, e
+a entrevista ao vivo ainda vai ser dada às cegas. O alcance é a lista, lida agora e relida no ato.
+{% endcomment %}
+<p class="ajuda">Os pareceres pelo vídeo ficam registrados, e cada Avaliação volta à Mesa de quem a
+  deu, para o parecer da entrevista ao vivo. A comissão marca a entrevista fora do sistema e registra
+  o desfecho aqui. <strong>O encaminhamento não se desfaz.</strong></p>
+
+{% if inscricoes %}
+<section aria-labelledby="a-encaminhar">
+  <h2 id="a-encaminhar">O vídeo não confirmou — {{ inscricoes|length }} inscriç{{ inscricoes|length|pluralize:"ão,ões" }}</h2>
+  <ul>
+    {% for inscricao in inscricoes %}<li><strong>{{ inscricao.protocolo|default:inscricao.id }}</strong> — {{ inscricao.nome }}</li>{% endfor %}
+  </ul>
+</section>
+<form method="post" action="{% url 'interface:encaminhar-ao-vivo' edital.id etapa.id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="confirmar" value="1">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="inscricoes" value="{% for inscricao in inscricoes %}{{ inscricao.id }} {% endfor %}">
+  <p class="salvar">
+    <button type="submit" class="botao perigoso">Encaminhar {{ inscricoes|length }} inscriç{{ inscricoes|length|pluralize:"ão,ões" }} à entrevista ao vivo</button>
+    <a href="{% url 'interface:distribuicao' edital.id etapa.id %}" class="acao">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
+<p>Nenhuma inscrição pronta desta Etapa está para encaminhar agora.</p>
+<p><a href="{% url 'interface:distribuicao' edital.id etapa.id %}" class="acao">Voltar</a></p>
+{% endif %}
+{% endblock %}

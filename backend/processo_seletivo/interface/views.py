@@ -258,6 +258,8 @@ from processo_seletivo.requerimentos.domain import nomes as nomes_do_requeriment
 from processo_seletivo.resultados.application import consolidacao as consolidacao_app
 from processo_seletivo.resultados.application import ocorrencia as ocorrencia_app
 from processo_seletivo.resultados.application import prontidao as prontidao_013
+from processo_seletivo.verificacao.application import mesa as verificacao_na_mesa
+from processo_seletivo.verificacao.application.ganchos import ENCAMINHAR_AO_VIVO
 from processo_seletivo.resultados.application import selectors as resultado_selectors
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.seguranca.application.authorization import (
@@ -6905,6 +6907,10 @@ def consolidar_resultados(request, edital_id, etapa_id):
                     "etapa": etapa,
                     "consolidaveis": consolidaveis,
                     "recusas": recusas,
+                    # O vídeo que não confirmou (166, FR-7138): a ação de encaminhar, na mesma tela.
+                    "encaminhar_ao_vivo": any(
+                        recusa.motivo == ENCAMINHAR_AO_VIVO for recusa in recusas
+                    ),
                     "todas_as_prontas": todas_as_prontas,
                     # Centenas de linhas não se conferem uma a uma: o total por consequência é
                     # o que a presidência compara com o que esperava da Etapa, antes de descer
@@ -7309,6 +7315,18 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
         )
     tem_documento = any(documento["enviado"] for documento in documentos)
     abertos = sum(1 for documento in documentos if documento["enviado"] and documento["aberto_em"])
+    # **O vídeo da verificação** (166, FR-7128, FR-7133): no painel do documento, e, em modo vídeo,
+    # os dois sentidos com os nomes do vídeo. Fora da Etapa que o admite, nada, e nenhuma consulta.
+    video_da_mesa = verificacao_na_mesa.contexto(
+        request,
+        ator=ator,
+        edital=edital,
+        etapa=contexto.get("etapa"),
+        inscricao_id=inscricao_id,
+    )
+    if video_da_mesa and video_da_mesa["em_modo_video"]:
+        contexto["rotulo_favoravel"] = verificacao_na_mesa.CONFIRMO
+        contexto["rotulo_desfavoravel"] = verificacao_na_mesa.NAO_DA
     # A **página** carrega dado pessoal, e não só o arquivo: protocolo, nome e CPF mascarado não
     # podem ficar no cache do navegador (FR-056).
     return marcar_como_privada(
@@ -7331,6 +7349,7 @@ def inscricao_da_mesa(request, edital_id, etapa_id, inscricao_id):
                 # que o desfavorável chega ao candidato sem o nome de quem o escreveu.
                 "colegiada": deliberacao_da_etapa.colegiada(contexto.get("etapa")),
                 "documentos_abertos": abertos,
+                "video_da_mesa": video_da_mesa,
                 "documentos_entregues": sum(1 for d in documentos if d["enviado"]),
                 "ja_abriu_documento": leitura is not None,
                 "tem_documento": tem_documento,

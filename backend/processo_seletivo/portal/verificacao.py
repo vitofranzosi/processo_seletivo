@@ -32,7 +32,7 @@ PARTE = envio.PARTE_MAXIMA
 
 
 def _identidade(request):
-    return identidade_do_candidato.identidadeda_sessao(request)
+    return identidade_do_candidato.identidade_da_sessao(request)
 
 
 def _json(dados, status=200):

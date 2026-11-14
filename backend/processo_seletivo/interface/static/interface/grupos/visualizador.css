@@ -58,3 +58,10 @@ html[data-recusa-no-painel] body{margin:0;padding:1rem;background:var(--branco)}
 .retorno-ao-ponto .acao{white-space:normal;max-width:100%;}
 .retorno-ao-ponto:empty{display:none}
 .preenchimento-restaurado{margin:.5rem 0;color:var(--texto-fraco)}
+
+/* O vídeo da verificação na Mesa (166, UX-774): no painel dos documentos, com os controles abaixo e
+   os saltos por passo como botões com o nome do passo. */
+.video-da-mesa{margin:0 0 1.25rem;padding:.75rem;border:1px solid var(--borda);border-radius:6px;}
+.video-da-mesa .reprodutor{display:block;width:100%;max-width:32rem;background:var(--texto);border-radius:4px;}
+.controles-do-video{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0;}
+.passos-do-video{display:flex;flex-wrap:wrap;gap:.5rem;margin:.25rem 0 .75rem;padding:0;list-style:none;}

@@ -90,6 +90,9 @@ promete o que se pretende, e aquela responde pelo que foi feito.
     {% endfor %}
   </ul>
   <p class="ajuda">Estas não impedem as demais: o lote segue com o que estiver pronto.</p>
+  {% comment %} O vídeo só confirma (166, R-11): quem o vídeo não confirmou não vira Resultado, e vai à
+  entrevista ao vivo por ato próprio, sem a contagem dos sentidos (FR-7138, FR-7140). {% endcomment %}
+  {% if encaminhar_ao_vivo %}<p><a class="acao" href="{% url 'interface:encaminhar-ao-vivo' edital.id etapa.id %}">Encaminhar à entrevista ao vivo as inscrições que o vídeo não confirmou</a></p>{% endif %}
 </section>
 {% endif %}
 
