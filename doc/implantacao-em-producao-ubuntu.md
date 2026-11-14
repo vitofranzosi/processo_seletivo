@@ -121,14 +121,14 @@ Tudo nesta seção é **constatado**.
 |---|---|---|
 | Linguagem e framework | Python `>=3.13,<3.14`, Django 5.2.17, DRF 3.16.1, psycopg 3.3 (binary), openpyxl 3.1.5 | `backend/pyproject.toml:9-18`, `backend/uv.lock` |
 | Gerenciador de dependências | `uv`, com lock versionado; o Dockerfile fixa o uv 0.9 | `backend/uv.lock`, `Dockerfile:14` |
-| SGBD | **Somente PostgreSQL**; SQLite só na suíte. O CI valida contra o PostgreSQL 18 | `config/settings/base.py:257-266`, `config/settings/test.py`, `.github/workflows/backend.yml` |
+| SGBD | **Somente PostgreSQL**; SQLite só na suíte. O CI valida contra o PostgreSQL 18 | `config/settings/base.py:503-512`, `config/settings/test.py`, `.github/workflows/backend.yml` |
 | Papéis do banco | Dois papéis: migração (dono do esquema) e runtime (DML). O runtime **não** tem `UPDATE`/`DELETE` em 40 tabelas append-only, que também têm gatilhos | `processo_seletivo/seguranca/papeis.py:26-133`, `seguranca/management/commands/provisionar_papeis.py` |
 | Preparação do banco | provisionar → migrar → provisionar de novo; a segunda passada é a que tranca. Depois, o registro das Unidades (060), com a role de runtime | `backend/Makefile` (`preparar`), `scripts/docker/entrypoint.sh` |
 | Settings | `base`, `development`, `test` e `production`. `production` **recusa subir** com qualquer pressuposto inseguro | `config/settings/production.py` |
 | Entrada WSGI | `config.wsgi` usa `production` por padrão; o **`manage.py` usa `development`** | `config/wsgi.py:14`, `manage.py:7` |
 | Servidor de aplicação | **Nenhum** entre as dependências. O Dockerfile roda `runserver` e se declara só de desenvolvimento | `pyproject.toml:9-18`, `Dockerfile:8-10,59` |
 | Workers, filas, agendador | **Não existem.** Prazos, fases do Cronograma e vigência de Retificação são calculados na leitura | ausência de celery, rq, huey, dramatiq e apscheduler; `inscricoes/domain/periodo.py`, `publicacoes/application/selectors.py` |
-| E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:186-197`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
+| E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:255-266`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
 | Cache | Nenhum `CACHES`. O limite de pedidos de código é contado **no banco** | `identidade/application/desafio.py:14-16` |
 | Sessões | Backend de banco padrão, cookie único `sessionid`, validade de 2 semanas. Nada limpa sessões expiradas | ausência de `SESSION_ENGINE` e `SESSION_COOKIE_AGE`; `production.py:342-347` |
 | Documentos do candidato | Disco, em `ARQUIVOS_CANDIDATOS_RAIZ`, como `inscricoes/<uuid>/<uuid>.pdf`. O arquivo nunca tem URL, e todo download passa pela aplicação | `inscricoes/storage.py:27-72`, `portal/arquivos.py` |
@@ -137,7 +137,7 @@ Tudo nesta seção é **constatado**.
 | Arquivos estáticos | 22 arquivos JS em `interface/static/interface/` e `portal/static/portal/`; desde a `089`, a folha comum da gestão — por área desde a `091`, em `interface/static/interface/gestao/` — e os tokens dos dois canais (`shared/static/shared/tokens.css`, por `STATICFILES_DIRS`); desde a `091`, o estilo de cada tela (`interface/telas/`, `interface/grupos/`) e o da página de erro (`shared/erro.css`). Só o portal ainda tem CSS no documento. **Não há `STATIC_ROOT`** — o `collectstatic` falha (ensaiado) | `config/settings/base.py` (`STATIC_URL`, `STATICFILES_DIRS`) |
 | Integrações externas | SMTP. Loteria Federal (`https://servicebus2.caixa.gov.br/...`), chamada **só por ação do gestor**. Base de CEP carregada de arquivo `.zip` local | `sorteios/infrastructure/fontes/loteria_federal.py:22`, `doc/runbook-base-de-cep.md` |
 | Saúde | `/health` (não toca o banco), `/readiness` (banco e migrations pendentes, 503 se falhar), `/metrics` (exige autenticação da API) | `processo_seletivo/shared/api/operacional.py` |
-| Logs | JSON, uma linha por evento, no **stdout**, com `correlationId`. Não há arquivo de log | `config/settings/base.py:281-294`, `shared/observability.py` |
+| Logs | JSON, uma linha por evento, no **stdout**, com `correlationId`. Não há arquivo de log | `config/settings/base.py:527-540`, `shared/observability.py` |
 | Correlação | `X-Correlation-ID` de entrada é aceito (ASCII até 100 caracteres), ecoado na resposta e gravado na auditoria | `shared/api/middleware.py` |
 | Auditoria funcional | `RegistroAuditoria`, append-only em três camadas (modelo, gatilho, privilégio), consultável em `/gestao/.../auditoria` e na API | `processo_seletivo/auditoria/` |
 | Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:729-730`, `interface/identidade.py:6-8` |
@@ -153,7 +153,7 @@ Tudo nesta seção é **constatado**.
   pública. A gestão hoje não autentica ninguém em produção (B-1). Quando autenticar, avalie restringi-la
   à rede institucional ou VPN (§27).
 - **"Criar o primeiro usuário administrativo"** não tem caminho. O `django.contrib.admin` não está
-  instalado (`base.py:21-26`), o `createsuperuser` criaria um usuário que nada lê, e os papéis da
+  instalado (`base.py:27-31`), o `createsuperuser` criaria um usuário que nada lê, e os papéis da
   gestão são um dicionário fixo, escolhido no seletor (`interface/identidade.py:25-131`).
 
 ---
@@ -219,7 +219,7 @@ Recomendação. Nada disto está no repositório.
 | journald (`journalctl -u processoseletivo`) | log da aplicação e dos timers | root | não; retenção local |
 | `/var/log/postgresql/` | log do banco | postgres/adm | não |
 
-Não há `/var/log/processoseletivo/`: a aplicação só escreve no stdout (`base.py:281-294`), e o
+Não há `/var/log/processoseletivo/`: a aplicação só escreve no stdout (`base.py:527-540`), e o
 journald já coleta, carimba a hora e rotaciona. Um arquivo à parte duplicaria dado pessoal em log
 sem ganho.
 
@@ -249,7 +249,7 @@ sem ganho.
 
 ```
 documentos ≈ inscrições por ano × documentos por inscrição × tamanho médio × anos retidos
-exemplo: 5.000 × 5 × 1,5 MB × 2 anos ≈ 75 GB   (teto por arquivo: 10 MiB, base.py:200-202)
+exemplo: 5.000 × 5 × 1,5 MB × 2 anos ≈ 75 GB   (teto por arquivo: 10 MiB, base.py:435-437)
 banco    ≈ 5–20 GB  (Editais, anexos e PDFs publicados em bytea, ~300 MB da base de CEP, auditoria)
 backup local ≈ 7 dumps × tamanho do dump
 ```
@@ -288,7 +288,7 @@ inscrições, a vigência de Retificações, o instante gravado em cada registro
 publicação de resultados. Relógio errado é ato com data errada.
 
 O banco guarda instantes em UTC (`USE_TZ = True`) e a instituição lê em `America/Sao_Paulo`
-(`base.py:11-12`). O fuso do SO define a hora dos logs e dos timers.
+(`base.py:17-18`). O fuso do SO define a hora dos logs e dos timers.
 
 ```bash
 sudo timedatectl set-timezone America/Sao_Paulo
@@ -870,14 +870,14 @@ nomeia a variável.
 | `DJANGO_SETTINGS_MODULE` | obrigatória, comum | `config.settings.production` | O `manage.py` cai em `development` sem ela (`manage.py:7`); o `wsgi.py` já usa `production` |
 | `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:75-85`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
 | `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:87-92`) |
-| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:352-361` |
-| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:343-351`) |
+| `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:503-512` |
+| `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:494-502`) |
 | `DB_RUNTIME_USER` | comum | `processo_seletivo_runtime` | — |
 | `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:330-334`) |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | segredo | `processo_seletivo_owner`, `<GERAR_SEGREDO_ALEATORIO>` | **Só** em `migracao.env`: a aplicação em serviço não enxerga |
 | `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:134-147`) |
 | `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:149-172`) |
-| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `EMAIL_HOST` obrigatória com o backend SMTP; as outras, comuns | `<SMTP_HOST>`, `587`, `true` | Recusa `EMAIL_HOST` vazio com o backend SMTP (`production.py:179-187`). Só STARTTLS: uma porta de SSL implícito, como costuma ser a 465, **não funciona** (`base.py:186-197`) |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `EMAIL_HOST` obrigatória com o backend SMTP; as outras, comuns | `<SMTP_HOST>`, `587`, `true` | Recusa `EMAIL_HOST` vazio com o backend SMTP (`production.py:179-187`). Só STARTTLS: uma porta de SSL implícito, como costuma ser a 465, **não funciona** (`base.py:255-266`) |
 | `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5; testar: §10.4 |
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:173-178`) |
@@ -891,7 +891,7 @@ nomeia a variável.
 | `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:358-359`) |
 | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | opcional | padrão, 10 MiB | Se mudar, ajuste o `client_max_body_size` de `/selecoes/` (§14) |
 | `EDITAL_ANEXOS_LIMITE_BYTES` | opcional | padrão, 5 MiB | Se mudar, ajuste o de `/gestao/` |
-| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:144-145` |
+| `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:160-161` |
 
 **Proibidas em produção** — ausentes, ou `false`:
 
@@ -2939,7 +2939,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 
 **I-3 — Não há `STATIC_ROOT`.**
 
-- Evidência: `base.py:150`; o `collectstatic` falha (ensaiado).
+- Evidência: `base.py:191-195`; o `collectstatic` falha (ensaiado).
 - Paliativo: `alias` do nginx para os diretórios `static/` da release (§14).
 - Correção: `STATIC_ROOT` e `collectstatic`, idealmente com nomes versionados (`ManifestStaticFilesStorage`).
 - Desde a `089`, as duas folhas de estilo levam a versão no endereço (`?v=` com o resumo do conteúdo,
@@ -2948,7 +2948,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **I-4 — Não há `EMAIL_TIMEOUT` nem `EMAIL_USE_SSL`.** *O timeout foi resolvido pela 066
 (`EMAIL_TIMEOUT`, padrão 20 s); falta o `EMAIL_USE_SSL`.*
 
-- Evidência: `base.py:186-197`.
+- Evidência: `base.py:255-266`.
 - Efeito: um SMTP lento prendia o worker até 120 s, e a porta 465 continua inutilizável.
 - Correção: o `EMAIL_TIMEOUT` já está no `base.py`; falta o `EMAIL_USE_SSL`.
 
