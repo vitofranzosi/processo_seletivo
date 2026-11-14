@@ -555,15 +555,13 @@ def _recusar_se_o_autor_foi_exposto(avaliacao):
     O caminho de correção é o de hoje para trocar quem avalia: a inativação da Atribuição por ato
     nomeado, com motivo, e a atribuição a outro membro não exposto (FR-092 da `012`).
     """
-    from processo_seletivo.avaliacoes.models import ExposicaoAoParecer
+    from processo_seletivo.avaliacoes.application import cegas
 
     atribuicao = avaliacao.atribuicao
-    if ExposicaoAoParecer.objects.filter(
-        edital_id=atribuicao.edital_id,
-        etapa_id=atribuicao.etapa_id,
-        inscricao_id=atribuicao.inscricao_id,
-        pessoa=avaliacao.identity_subject or avaliacao.concluida_por,
-    ).exists():
+    autor = avaliacao.identity_subject or avaliacao.concluida_por
+    if cegas.pares_expostos(
+        atribuicao.edital_id, atribuicao.etapa_id, [autor], [atribuicao.inscricao_id]
+    ):
         raise DomainError("parecer_exposto", PARECER_EXPOSTO, 409)
 
 
@@ -644,7 +642,6 @@ def reabrir(
         if ctx.repetido:
             return avaliacao
         _recusar_se_fundamenta_resultado(avaliacao)
-        _recusar_se_o_autor_foi_exposto(avaliacao)
         if avaliacao.estado != Avaliacao.Estado.CONCLUIDA:
             # Transição inválida, e não "nada a fazer": reabrir um rascunho não tem significado, e
             # responder sucesso faria a tela afirmar um ato que não aconteceu (FR-083).
@@ -653,6 +650,7 @@ def reabrir(
                 "Só uma avaliação concluída pode ser reaberta.",
                 409,
             )
+        _recusar_se_o_autor_foi_exposto(avaliacao)
         compare_and_swap(
             Avaliacao.objects,
             pk=avaliacao.pk,

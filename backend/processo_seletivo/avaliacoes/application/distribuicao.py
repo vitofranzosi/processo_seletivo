@@ -277,21 +277,18 @@ def _contexto_de_recusa(edital, etapa_id, membros, inscricoes):
     return impedidos, ja_atribuidas, ja_concluidas, ocupacao
 
 
-def _expostos(edital, etapa_id, membros, inscricoes):
+def _expostos(edital, etapa, etapa_id, membros, inscricoes):
     """`{(subject, inscricao_id)}` de quem já recebeu parecer alheio sobre a inscrição (165).
 
-    Uma consulta por lote, como as do contexto de recusa. A exposição só existe na Etapa colegiada
-    — é lá que ela é gravada —, e por isso a Etapa de uma avaliação recebe sempre o vazio.
+    **Só na Etapa colegiada**, que é onde a exposição é gravada: a Etapa de uma avaliação não paga a
+    consulta, que nunca acharia nada ali.
     """
-    from processo_seletivo.avaliacoes.models import ExposicaoAoParecer
+    from processo_seletivo.avaliacoes.application import cegas
 
-    return set(
-        ExposicaoAoParecer.objects.filter(
-            edital=edital,
-            etapa_id=etapa_id,
-            pessoa__in={m.identity_subject for m in membros},
-            inscricao_id__in=[i.id for i in inscricoes],
-        ).values_list("pessoa", "inscricao_id")
+    if not cegas.colegiada(etapa):
+        return set()
+    return cegas.pares_expostos(
+        edital.id, etapa_id, [m.identity_subject for m in membros], [i.id for i in inscricoes]
     )
 
 
@@ -351,7 +348,7 @@ def distribuir(
         # **A exposição barra a atribuição** (165, FR-7082, D-010): quem já recebeu o parecer
         # alheio avaliaria sabendo o que os colegas decidiram. Vale também para a redistribuição
         # depois de um impedimento — é o caminho pelo qual a presidência chegaria à inscrição.
-        expostos = _expostos(edital, etapa_id, membros, inscricoes)
+        expostos = _expostos(edital, etapa, etapa_id, membros, inscricoes)
         # **A reavaliação determinada abre uma vaga a mais, e não é exceção de conveniência.** O
         # teto do Edital conta as avaliações que a Etapa prevê no curso normal; a reavaliação é
         # avaliação **ordenada por decisão**, e contá-la contra esse teto tornaria a determinação
@@ -472,7 +469,7 @@ def _plano_do_rodizio(processo, edital, etapa_id, ids_membros):
         edital, etapa_id, membros, inscricoes
     )
     # O rodízio não propõe o par exposto (165, FR-7082): para ele, é o mesmo que um impedimento.
-    impedidos = impedidos | _expostos(edital, etapa_id, membros, inscricoes)
+    impedidos = impedidos | _expostos(edital, etapa, etapa_id, membros, inscricoes)
     carga = _carga_atual(edital, etapa_id, membros)
     pares, projecao, fora = rodizio.propor(
         previstas=previstas,

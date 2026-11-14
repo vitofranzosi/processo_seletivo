@@ -716,6 +716,7 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
         ConclusaoAvaliacao, [linha.avaliacao_id for linha in linhas if linha.avaliacao_id]
     )
 
+    deliberacoes = textos_das_deliberacoes(linhas)
     lido = {}
     for linha in linhas:
         textos = []
@@ -725,7 +726,7 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
             # quem escreveu não vai a lugar nenhum desta leitura.
             textos = [
                 texto
-                for avaliacao, texto in textos_da_deliberacao(linha)
+                for avaliacao, texto in deliberacoes.get(linha.pk, [])
                 if avaliacao.sentido == "DESFAVORAVEL" and texto
             ]
             texto = "\n\n".join(textos)
@@ -770,30 +771,46 @@ def parecer_que_fundamenta(resultado, conclusoes=()):
     return (avaliacao.parecer or "").strip() if avaliacao is not None else ""
 
 
-def textos_da_deliberacao(resultado):
-    """`[(avaliação, texto)]` dos pareceres que formaram o Resultado deliberado (165, FR-7077).
+def textos_das_deliberacoes(resultados):
+    """`{resultado_id: [(avaliação, texto)]}` dos Resultados deliberados, em duas consultas (165).
 
     **O texto é o da conclusão que fundamentou o Resultado**, pela regra de `parecer_que_fundamenta`
     aplicada a cada parecer: uma reabertura posterior não troca o que o titular lê. A autoria viaja
     na Avaliação, e é quem chama que decide se a mostra — a autoridade recursal, sim; o titular,
-    nunca (FR-7081).
+    nunca (FR-7081). Duas consultas para o lote, e não duas por Resultado: o acompanhamento tem
+    orçamento, e um titular pode ter Resultado deliberado em mais de uma Etapa.
     """
-    from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
-    from processo_seletivo.resultados.application.selectors import pareceres_da_deliberacao
+    from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
+    from processo_seletivo.resultados.models import ResultadoEtapa
 
-    pareceres = pareceres_da_deliberacao(resultado)
+    deliberados = {
+        resultado.pk: resultado
+        for resultado in resultados
+        if resultado.origem == ResultadoEtapa.Origem.DELIBERACAO
+    }
+    if not deliberados:
+        return {}
+    pareceres = list(
+        Avaliacao.objects.filter(deliberacao__resultado_id__in=deliberados)
+        .select_related("deliberacao")
+        .order_by("concluida_em", "id")
+    )
     conclusoes = _conclusoes_por_avaliacao(ConclusaoAvaliacao, [item.id for item in pareceres])
-    textos = []
+    textos = {identidade: [] for identidade in deliberados}
     for avaliacao in pareceres:
-        texto = ""
+        resultado = deliberados[avaliacao.deliberacao.resultado_id]
+        texto = (avaliacao.parecer or "").strip()
         for conclusao in conclusoes.get(avaliacao.id, ()):
             if conclusao.concluida_em <= resultado.consolidado_em:
                 texto = (conclusao.parecer or "").strip()
                 break
-        else:
-            texto = (avaliacao.parecer or "").strip()
-        textos.append((avaliacao, texto))
+        textos[resultado.pk].append((avaliacao, texto))
     return textos
+
+
+def textos_da_deliberacao(resultado):
+    """`[(avaliação, texto)]` de um Resultado deliberado — o lote de um só."""
+    return textos_das_deliberacoes([resultado]).get(resultado.pk, [])
 
 
 def _conclusoes_por_avaliacao(modelo, avaliacao_ids):

@@ -175,3 +175,29 @@ def test_o_acervo_sem_regra_nao_trava_outra_correcao():
             base, {"stages": [{**acervo, "evaluationsPerRegistration": 5}]}
         )
     assert recusa.value.code == "stage_deliberation_without_rule"
+
+
+def test_a_reducao_na_etapa_pontuada_nao_e_recusada():
+    """FR-7073, revisão de código: a recusa da redução é só da Etapa decisória."""
+    from processo_seletivo.publicacoes.application.retificacoes import (
+        _recusar_reducao_abaixo_das_conclusoes,
+    )
+
+    prova = {"id": "prova", "name": "Prova", "forma": "PONTUADA", "evaluationsPerRegistration": 2}
+    _recusar_reducao_abaixo_das_conclusoes(
+        None, {"stages": [prova]}, {"stages": [{**prova, "evaluationsPerRegistration": 1}]}
+    )
+
+
+def test_gravar_um_explicito_onde_havia_nulo_nao_e_mudanca():
+    """FR-7073, revisão de código: `null` e `1` são o mesmo número de avaliações."""
+    from processo_seletivo.publicacoes.application.retificacoes import (
+        _recusar_deliberacao_mudada_apos_resultado,
+    )
+
+    etapa = {"id": "hetero", "name": "Hetero", "forma": "DECISORIA", "deliberationRule": None}
+    _recusar_deliberacao_mudada_apos_resultado(
+        None,
+        {"stages": [{**etapa, "evaluationsPerRegistration": None}]},
+        {"stages": [{**etapa, "evaluationsPerRegistration": 1}]},
+    )

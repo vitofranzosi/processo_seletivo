@@ -431,18 +431,8 @@ def consolidar(
             # foi a consequência desta inscrição, e quem a produziu" é a pergunta que ela existe
             # para responder. **Sem pontuação e sem parecer** — a assinatura de `auditar` não tem
             # por onde eles caberem, e a omissão é de projeto (FR-040).
-            auditar(
-                actor=actor,
-                permissao=ctx.base.permissao,
-                operation=CONSOLIDAR,
-                aggregate=resultado,
-                now=ctx.now,
-                correlation_id=correlation_id,
-                reason=(
-                    f"Resultado da Etapa {etapa.get('name') or etapa['id']} para a inscrição "
-                    f"{inscricao.protocolo or inscricao.id}: {efeito.lower()}."
-                ),
-                idempotency_key=idempotency_key,
+            _auditar_consolidacao(
+                actor, ctx, resultado, etapa, item, correlation_id, idempotency_key
             )
         declarado = resultado_declarado(criados, recusas, "consolidada")
         ctx.concluir_sem_resultado(201, declarado)
@@ -495,7 +485,8 @@ def _criar_deliberado(item, edital, etapa, versao, ctx, actor):
 
 
 def _auditar_consolidacao(actor, ctx, resultado, etapa, item, correlation_id, idempotency_key):
-    """O evento da consolidação: a consequência, e nunca a regra nem a contagem (FR-7060)."""
+    """O evento da consolidação, nos dois ramos: a consequência, e nunca a nota, o parecer, a regra
+    nem a contagem (FR-040 da `013`, FR-7060)."""
     auditar(
         actor=actor,
         permissao=ctx.base.permissao,

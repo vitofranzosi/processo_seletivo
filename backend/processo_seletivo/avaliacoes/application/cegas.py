@@ -115,21 +115,23 @@ def proteger_linhas(linhas, *, subject, edital, etapa, etapa_id):
     return linhas
 
 
-def expostos(edital, etapa_id, inscricao_id) -> set:
-    """Quem já recebeu parecer alheio sobre esta inscrição nesta Etapa."""
+def pares_expostos(edital_id, etapa_id, pessoas, inscricao_ids) -> set:
+    """`{(pessoa, inscricao_id)}` expostos entre estas pessoas e inscrições, numa consulta.
+
+    A leitura única da exposição: a distribuição a pergunta para o lote, e a reabertura para um par
+    (FR-7082, FR-7083).
+    """
+    pessoas = {pessoa for pessoa in pessoas if pessoa}
+    inscricao_ids = [identidade for identidade in inscricao_ids if identidade]
+    if not pessoas or not inscricao_ids:
+        return set()
     return set(
         ExposicaoAoParecer.objects.filter(
-            edital=edital, etapa_id=etapa_id, inscricao_id=inscricao_id
-        ).values_list("pessoa", flat=True)
-    )
-
-
-def exposicoes_da_etapa(edital, etapa_id) -> set:
-    """`{(pessoa, inscricao_id)}` da Etapa inteira, numa consulta — para a distribuição em lote."""
-    return set(
-        ExposicaoAoParecer.objects.filter(edital=edital, etapa_id=etapa_id).values_list(
-            "pessoa", "inscricao_id"
-        )
+            edital_id=edital_id,
+            etapa_id=etapa_id,
+            pessoa__in=pessoas,
+            inscricao_id__in=inscricao_ids,
+        ).values_list("pessoa", "inscricao_id")
     )
 
 
@@ -137,9 +139,8 @@ __all__ = [
     "OCULTO",
     "colegiada",
     "entregues",
-    "exposicoes_da_etapa",
-    "expostos",
     "ocultar",
+    "pares_expostos",
     "pendentes",
     "proteger_linhas",
     "registrar_exposicao",

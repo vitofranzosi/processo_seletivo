@@ -112,6 +112,16 @@ SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
 # quanto falta, e as contagens a separam das demais (FR-7079). Um estado novo obrigaria toda tela
 # que lê a partição a aprender um nome para a mesma pergunta: "por que esta não está pronta?".
 FALTAM_PARECERES = "faltam {faltam} de {previstos} pareceres"
+
+
+class FaltamPareceres(str):
+    """O motivo de quem espera pareceres, marcado pelo tipo, e não pela redação (FR-7079).
+
+    É uma `str`, e continua sendo o motivo que toda tela lê; a contagem pergunta pelo tipo, e uma
+    revisão de redação da frase não a zera em silêncio.
+    """
+
+
 PARECERES_DEMAIS = (
     "há {quantos} pareceres concluídos onde o Edital prevê {previstos}, e o sistema não escolhe "
     "quais contam"
@@ -872,7 +882,9 @@ def _estado_colegiado(etapa, conclusoes):
     if len(conclusoes) < previstos:
         return (
             NAO_CONSOLIDAVEL,
-            FALTAM_PARECERES.format(faltam=previstos - len(conclusoes), previstos=previstos),
+            FaltamPareceres(
+                FALTAM_PARECERES.format(faltam=previstos - len(conclusoes), previstos=previstos)
+            ),
         )
     if len(conclusoes) > previstos:
         return (
@@ -890,11 +902,10 @@ def _estado_colegiado(etapa, conclusoes):
 
 def aguardando_pareceres(panorama) -> int:
     """Quantas inscrições da Etapa colegiada esperam pareceres (165, FR-7079)."""
-    inicio = FALTAM_PARECERES.split("{", 1)[0]
     return sum(
         1
         for estado, motivo in panorama["estados"].values()
-        if estado == NAO_CONSOLIDAVEL and str(motivo).startswith(inicio)
+        if estado == NAO_CONSOLIDAVEL and isinstance(motivo, FaltamPareceres)
     )
 
 

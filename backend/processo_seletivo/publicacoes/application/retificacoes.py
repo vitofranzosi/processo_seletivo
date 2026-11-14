@@ -510,6 +510,7 @@ def _recusar_colegiada_sem_regra(base, content):
     Retificação do Edital — nem a de um prazo — à espera de uma escolha que é da CPVA; ela continua
     impedida na consolidação, como era, até um ato declarar a regra.
     """
+    from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
     from processo_seletivo.resultados.domain import deliberacao
 
     antes = _etapas_por_id(base)
@@ -519,9 +520,11 @@ def _recusar_colegiada_sem_regra(base, content):
         if etapa.get("deliberationRule") is not None:
             continue
         anterior = antes.get(str(etapa.get("id")))
-        tocada = anterior is None or any(
-            anterior.get(campo) != etapa.get(campo)
-            for campo in ("forma", "evaluationsPerRegistration", "deliberationRule")
+        tocada = (
+            anterior is None
+            or anterior.get("forma") != etapa.get("forma")
+            or anterior.get("deliberationRule") != etapa.get("deliberationRule")
+            or avaliacoes_previstas(anterior) != avaliacoes_previstas(etapa)
         )
         if tocada:
             raise DomainError(
@@ -542,6 +545,7 @@ def _recusar_deliberacao_mudada_apos_resultado(edital, base, content):
     de avaliações segue o contrato de hoje. Roda sob o bloqueio do Processo que a consolidação
     também toma (FR-7074).
     """
+    from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
     from processo_seletivo.resultados.application.selectors import (
         resultados_por_avaliacao_registrados,
     )
@@ -553,10 +557,11 @@ def _recusar_deliberacao_mudada_apos_resultado(edital, base, content):
         anterior = antes[str(etapa.get("id"))]
         if "DECISORIA" not in (anterior.get("forma"), etapa.get("forma")):
             continue
-        mudou = any(
-            anterior.get(campo) != etapa.get(campo)
-            for campo in ("deliberationRule", "evaluationsPerRegistration")
-        )
+        # **O número pela leitura, e não pelo valor cru**: `null` e `1` dizem a mesma coisa, e
+        # gravar o explícito onde a base tinha o nulo não muda a regra de ninguém.
+        mudou = anterior.get("deliberationRule") != etapa.get(
+            "deliberationRule"
+        ) or avaliacoes_previstas(anterior) != avaliacoes_previstas(etapa)
         if not mudou:
             continue
         quantos = resultados_por_avaliacao_registrados(edital=edital, etapa_id=etapa.get("id"))
@@ -588,8 +593,13 @@ def _recusar_reducao_abaixo_das_conclusoes(edital, base, content):
     for etapa in (content or {}).get("stages") or []:
         if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
             continue
+        anterior = antes[str(etapa.get("id"))]
+        # **Só a Etapa decisória** (FR-7073): na pontuada, o número de avaliações segue o contrato
+        # de hoje, e as conclusões a mais caem na recusa da prontidão que a `013` já tem.
+        if "DECISORIA" not in (anterior.get("forma"), etapa.get("forma")):
+            continue
         novo = avaliacoes_previstas(etapa)
-        if novo >= avaliacoes_previstas(antes[str(etapa.get("id"))]):
+        if novo >= avaliacoes_previstas(anterior):
             continue
         acima = (
             avaliacoes_elegiveis(edital=edital, etapa_id=etapa.get("id"))
