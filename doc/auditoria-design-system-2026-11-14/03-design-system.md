@@ -4,15 +4,28 @@
 traz cada token e cada componente descritos aqui, e a
 [folha de componentes](prototipos/componentes.html) mostra todos numa página.*
 
+## 0. O que é direção, e o que é hipótese
+
+Depois da revisão de 14/11 ([registro](06-revisao.md)), a proposta se divide em duas partes.
+
+| Parte | O que contém | Situação |
+|---|---|---|
+| **Direção experimental**, para o piloto | os neutros da tela de entrada; a hierarquia (cabeçalho de página, composições de largura); os componentes (botão, indicador, aviso, cartão) | recomendada para aprovação, como experimento |
+| **Hipóteses**, para decidir depois do piloto | a redução tipográfica (seis tamanhos, tabela em 14 px); o recolhimento e o deslocamento de explicações; os limites rígidos (um botão cheio por tela, quatro pontos de quebra, um aviso por tom, um nível de caixa); os guardiões novos | ficam descritas aqui, sem valer como regra |
+
+Onde este documento diz "sempre", "no máximo" ou "um só", leia-se convenção de partida. Vira regra o
+que o piloto confirmar com a equipe.
+
 ## 1. Três decisões de partida
 
 1. **Consolidar, e não substituir.** O produto já tem tokens num lugar só, moldura única, política
    de conteúdo e guardiões. A proposta mantém os nomes de classe que existem (`.botao`, `.acao`,
    `.cartao`, `.aviso`, `.situacao`, `.codigo`, `.campo`, `.tabela`, `.sub`) e reduz as variantes.
    Nenhuma biblioteca nova: a pilha continua sendo template do Django, CSS em arquivo e htmx.
-2. **O componente passa a existir no template, e não só na folha.** Hoje a única peça
-   compartilhada entre as 89 telas é a trilha. O ganho vem de cinco ou seis parciais que as telas
-   incluem, e não de mais classes.
+2. **Cada componente passa a ter contrato.** O que ele é, quais variantes tem e quando se usa,
+   escrito num lugar só e acompanhado de um mecanismo de adoção. O contrato pode ser firmado por
+   CSS, por parcial de template ou pelos dois, conforme a peça: o cabeçalho de página pede parcial,
+   porque é estrutura; o botão se resolve em CSS. Criar parciais, sozinho, não resolve.
 3. **A largura é decidida pelo tipo de conteúdo.** Tabela ocupa a página; formulário tem medida
    própria; prosa tem medida de leitura; contexto vai para um trilho ao lado.
 
@@ -49,6 +62,8 @@ de apoio usa `--tinta-2`. *Valores calculados pela fórmula do WCAG; entram no
 `--azul`, a paleta da Visão Geral volta aos neutros, e o resto é variação de um tom existente.
 
 ### 2.2 Tipografia
+
+*Hipótese, para decidir depois do piloto. No piloto as telas mantêm os tamanhos de hoje.*
 
 Seis tamanhos, no lugar dos onze que hoje têm mais de 1% do texto cada.
 
@@ -116,6 +131,9 @@ estado, continuam acompanhados de palavra.
 
 ### 2.7 Pontos de quebra
 
+*Hipótese. Quatro é ponto de partida, e não teto: a tela cujo conteúdo quebra em outro lugar
+justifica o próprio ponto.*
+
 Quatro, no lugar de dezenove:
 
 | Nome | Largura | O que muda |
@@ -161,6 +179,16 @@ Quatro, no lugar de dezenove:
 
 Em monitor muito largo, a página para em 96rem e fica centralizada. Nada estica além disso.
 
+**O trilho no celular é ponto aberto.** Abaixo de 80rem ele desce para o fim da página. Onde carrega
+pendência ou ajuda de preenchimento, isso o põe depois da ação de avançar, que é a ordem errada
+para quem preenche: é o que acontece no protótipo de Compor a 375 px. A posição no estreito precisa
+ser decidida por conteúdo (pendência antes do formulário, ajuda junto do campo), e não por uma
+regra única.
+
+**O critério destas composições é a tarefa, e não a largura preenchida.** Vale a composição em que a
+ação fica perto do dado de que depende, o contexto fica à vista sem empurrar o trabalho, e a prosa
+não passa da medida de leitura. Ocupar a metade direita não é objetivo.
+
 ## 4. Componentes
 
 Para cada um: o que existe, o que fica e quantas formas somem.
@@ -189,15 +217,21 @@ decisão de segurança (prevenção nos atos irreversíveis). A proposta padroni
 confirmação* e não cria modal. Também não entram menu suspenso, notificação flutuante e tema escuro:
 nenhuma tela de hoje pede.
 
-### Regras de uso que evitam a fragmentação
+### Convenções de partida
 
-- **Um botão cheio por tela ou por cartão.** O resto é secundário ou discreto.
+São hipóteses úteis, e não limites absolutos. Cada uma admite exceção justificada, e todas esperam o
+piloto.
+
+- **Um botão cheio por tela ou por cartão, como regra geral.** O resto é secundário ou discreto. A
+  tela com dois gestos de igual peso é exceção legítima.
 - **Perigo só no ato irreversível**, e sempre com a marca "Irreversível" ao lado.
 - **Caixa dentro de caixa, no máximo um nível.** Dentro de um cartão, separa-se por linha ou por
   espaço.
-- **Aviso em bloco, no máximo um por tom, no topo.** O que acompanha um controle é aviso em linha.
-- **Texto explicativo permanente vai para o trilho ou para um recolhido.** Na coluna de trabalho
-  fica uma frase.
+- **Aviso em bloco, de preferência um por tom, no topo.** O que acompanha um controle é aviso em
+  linha. Dois impeditivos distintos continuam sendo dois avisos.
+- **Texto explicativo permanente pode ir para o trilho ou para um recolhido.** É a hipótese mais
+  sensível: cada frase de tela de operação foi decidida em spec, e recolher muda o que a pessoa lê
+  antes do ato. No piloto nada é recolhido nem cortado.
 - **Número com rótulo é sempre indicador.** Zero esmaece; o que pede ação fica ativo.
 
 ## 5. Padrões de página
@@ -239,8 +273,15 @@ com o documento. Nenhum deles precisa do trilho.
 
 ### 6.2 Guardiões novos
 
-O projeto já prova regra de interface por teste. Cinco testes fecham a porta por onde a
-fragmentação entrou; todos leem as folhas como texto, como os que existem.
+*Para decidir depois do piloto. Nenhum nasce antes de a escala que ele protege ser confirmada.*
+
+Um guardião protege um contrato que importa e admite exceção justificada. **Contar propriedade de
+CSS não garante consistência:** uma folha pode usar só tokens e ainda compor mal a tela. Os testes
+abaixo fecham a porta por onde a variação entra; a consistência em si se confere pelo que foi
+renderizado (§6.5) e pela revisão de tela nova (§6.4).
+
+O projeto já prova regra de interface por teste. Cinco candidatos, que leem as folhas como texto,
+como os que existem:
 
 | Guardião | O que recusa | Lista de exceções |
 |---|---|---|
@@ -250,7 +291,9 @@ fragmentação entrou; todos leem as folhas como texto, como os que existem.
 | Pontos de quebra | `@media` de largura fora dos quatro | começa com as 19 de hoje e só diminui |
 | Caixa nova | regra de tela com `border`, `border-radius` e `background` juntos | lista fechada, que só diminui |
 
-O último é o que mais importa: obriga a tela nova a usar `.cartao` ou a pedir exceção por escrito.
+Os dois de contrato mais claro são o primeiro, porque a cor literal já produziu a única falha de
+contraste medida, e o último, que leva a tela nova a usar `.cartao` ou a pedir exceção por escrito.
+Os de fonte e de ponto de quebra dependem de as escalas saírem do piloto como estão.
 **Cada guardião nasce com a lista do que existe hoje e proíbe crescer.** É o mesmo desenho do teto
 de caracteres da distribuição e da contagem de migrations: a convergência tira itens da lista, e
 nada novo entra.

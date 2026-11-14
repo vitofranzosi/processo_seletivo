@@ -29,7 +29,21 @@ Três dimensões, avaliadas em separado, como o pedido exige:
   fonte, raio, padding e cor. Duas regras diferentes que dão o mesmo resultado contam uma vez; uma
   regra que rende resultados diferentes conta várias.
 - *Metade direita ocupada* é a fração da altura do conteúdo em que existe algum texto ou controle
-  além do meio da área útil. Uma tela com 14% tem a metade direita vazia em 86% da altura.
+  além do meio da área útil. Uma tela com 14% tem a metade direita vazia em 86% da altura. **A
+  medida descreve distribuição. Ela não prova desperdício nem dificuldade de uso**, e não serve de
+  meta: uma tela pode estar certa com a metade direita vazia, e errada com ela cheia.
+
+**Limites do instrumento.** O que ele acusa é triagem, e não auditoria de acessibilidade.
+
+- *Rótulo.* Conta como rotulado o campo com `label` associado, ou com `aria-label`,
+  `aria-labelledby` ou `title` presentes. Não confere se o rótulo é visível, se o `aria-labelledby`
+  aponta para algo que existe, nem se o texto do rótulo faz sentido.
+- *Contraste.* O fundo é aproximado pelo primeiro ancestral de cor opaca. Gradiente, imagem e
+  transparência parcial ficam de fora, e só o estado de repouso foi medido: foco, passagem do
+  ponteiro, erro e desabilitado não.
+- *Alvo.* Mede a caixa do elemento, e não a área clicável somada ao rótulo.
+- *Não medido:* ordem de tabulação, foco coberto por elemento fixo, zoom de 200% e 400%, 320 px de
+  largura, leitor de tela e os estados de erro de formulário.
 
 **O que não foi medido.** As 44 rotas marcadas no [inventário](01-inventario.md) como não vistas no
 navegador. As conferências que só nascem de um POST (conferir a convocação, emitir a ordem, emitir o
@@ -62,7 +76,9 @@ compartilhado é a trilha de navegação (`_produto_na_trilha.html`, em 90 inclu
 O tamanho do `h1` é o mesmo em todas (25,6 px), e toda tela tem um `h1` só. O que varia é a
 composição ao redor dele.
 
-**Causa.** O sistema de design existe como classes de CSS, e não como componentes de template.
+**Causa provável.** Não há contrato compartilhado para a abertura da página: a base não oferece o
+bloco, não há parcial, e nenhuma regra diz onde fica a ação. Um parcial é um jeito de firmar esse
+contrato; não é o único, e sozinho não o garante.
 **Abrangência:** todas as telas. **Severidade:** alta. **Esforço:** M (um parcial e a migração por
 família). **Risco:** baixo; os guardiões de acessibilidade já exigem um `h1` e a ordem dos títulos.
 
@@ -80,7 +96,9 @@ larga.
 | 1920 px | 14% | 92 de 92 | 9% |
 
 A 1920 px, na tela mediana, a metade direita está vazia em 86% da altura
-([Ocupação a 1920 px](capturas/w1920-g-ocupacao.jpg)). As telas que melhor ocupam a largura são o
+([Ocupação a 1920 px](capturas/w1920-g-ocupacao.jpg)). O número diz onde o conteúdo está, e não que
+isso atrapalha: o sinal de problema de uso é a ação longe do dado, o contexto separado do trabalho
+e a linha longa, logo abaixo. As telas que mais distribuem o conteúdo pela largura são o
 Centro de Controle (46% a 1440 px) e as etapas de formulário do assistente (37% a 57%).
 
 No portal o efeito é maior, e há um segundo defeito. A 1440 px, 9 das 20 telas têm **0%** da metade
@@ -198,9 +216,10 @@ O tom só se distingue pela cor: não há ícone nem rótulo de espécie.
   classificação (11 usos, sem token), e a paleta cinza-azulada da Visão Geral (`#5a6470`, `#d7dce2`,
   `#9aa3ad`).
 
-**Consequência mensurável.** A única tela que reprova em contraste é a que saiu dos tokens: a Visão
-Geral tem **155 trechos de texto abaixo de 4,5:1**, a maior parte em `#9aa3ad` sobre `#f8f8f8`
-(2,41:1). Nas demais telas medidas nenhum trecho reprova; o guia incorporado é caso à parte (E11). O teste `test_contraste_atende_wcag_aa` confere
+**Consequência mensurável.** A única tela da gestão em que o instrumento acusou contraste baixo é a
+que saiu dos tokens: a Visão Geral tem **155 trechos de texto abaixo de 4,5:1**, a maior parte em `#9aa3ad` sobre `#f8f8f8`
+(2,41:1). Nas demais telas o instrumento não acusou nenhum trecho, dentro dos limites dele (§1); o guia
+incorporado é caso à parte (E11). O teste `test_contraste_atende_wcag_aa` confere
 os pares de tokens, e por isso não vê a cor literal.
 **Severidade:** alta na Visão Geral (acessibilidade), média no resto. **Esforço:** P. **Risco:**
 baixo.
@@ -304,17 +323,21 @@ por que ela é a próxima. "Minhas atividades" lista o trabalho sem caixa nenhum
 irreversível separa o que impede, o que continua e o que não se desfaz. A convocação do candidato
 põe o prazo acima de tudo. Nenhuma dessas é problema visual.
 
-## 5. O que os números dizem de bom
+## 5. O que o instrumento não acusou
+
+São resultados de triagem, nos estados inspecionados e dentro dos limites do §1. Não equivalem a
+conformidade com o WCAG.
 
 | Medida | Resultado |
 |---|---|
 | Telas com um `h1` e só um | todas as medidas |
-| Campos sem rótulo acessível | 0 |
-| Telas que transbordam a 375 px | 0 de 116 |
-| Telas que reprovam em contraste | 1 da gestão (Visão Geral) e o guia incorporado |
+| Campos sem rótulo, pelo critério do instrumento | nenhum detectado |
+| Telas que transbordam a 375 px | nenhuma das 116 medidas |
+| Telas com contraste baixo detectado | 1 da gestão (Visão Geral) e o guia incorporado |
 | Cor por token | 94% dos usos na gestão; 3 literais no portal |
 | Foco visível | regra global, 3 px, em todo elemento |
 | Estilo ou script embutido | nenhum; a política de conteúdo recusa |
 
-A fragmentação é de composição e de escala, e não de fundação. É por isso que a proposta é
-consolidar, e não refazer.
+A fragmentação medida é de composição e de escala. A fundação parece sólida, e é por isso que a
+proposta é consolidar, e não refazer; a confirmação de acessibilidade fica para a conferência
+manual do piloto.

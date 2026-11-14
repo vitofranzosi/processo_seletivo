@@ -3,6 +3,12 @@
 **Data:** 14/11/2026 · **Base:** `main` em `37ed0ad0` · **Natureza:** investigação, diagnóstico e
 proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão sobre a direção visual.
 
+> **Revisto em 14/11/2026**, em duas rodadas, depois de um parecer que apontou seis correções e de
+> outro que apontou mais três. O que mudou, e por
+> quê, está em [06-revisao.md](06-revisao.md). Em resumo: o diagnóstico ficou menos categórico, a
+> medida de largura deixou de ser meta, os ganhos dos protótipos passaram a ser indicativos, as
+> afirmações de acessibilidade se limitam à triagem feita, e o piloto foi reescrito.
+
 | Entregável | Arquivo |
 |---|---|
 | A. Inventário de interfaces | [01-inventario.md](01-inventario.md) |
@@ -11,33 +17,43 @@ proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão so
 | D. Proposta de design system | [03-design-system.md](03-design-system.md) |
 | E. Protótipos comparativos | [04-prototipos.md](04-prototipos.md) e [`prototipos/`](prototipos/index.html) |
 | F. Plano de convergência | [05-roadmap.md](05-roadmap.md) |
+| Registro da revisão | [06-revisao.md](06-revisao.md) |
 | Capturas | [`capturas/`](capturas/), 94 imagens |
 | Medições e scripts | [`medicoes/`](medicoes/), com o resultado por tela em [`telas.csv`](medicoes/telas.csv) |
 
 ## Resposta curta
 
-**A percepção do pedido se confirma, com uma correção importante.** O GPS não tem um problema de
-fundação: tem tokens num lugar só, moldura única, 94% das cores por token, nenhum transbordo no
-celular e nenhum campo sem rótulo. O que ele tem é um problema de **composição e de escala**:
+**A percepção do pedido se confirma, com uma correção importante.** A fundação do GPS parece sólida:
+tokens num lugar só, moldura única, 94% das cores por token, e nenhum transbordo a 375 px nem campo
+sem rótulo que o instrumento tenha detectado nos estados inspecionados. O que as medidas mostram é
+um problema de **composição e de escala**:
 
 - cada tela monta o próprio cabeçalho, e por isso há **71 aberturas diferentes em 89 telas**;
-- não existe regra de largura por tipo de conteúdo, e por isso **a metade direita da tela fica vazia
-  em 73% da altura** na tela mediana a 1440 px, e em 86% a 1920 px;
+- não existe regra de largura por tipo de conteúdo: na tela mediana, **a metade direita não tem
+  conteúdo em 73% da altura** a 1440 px, e em 86% a 1920 px. O número descreve distribuição, e não
+  prova desperdício;
 - a mesma peça foi redesenhada a cada tela: **63 regras de caixa, 28 de aviso, sete desenhos de
   indicador, quatro alturas para o mesmo botão**, onze tamanhos de fonte em uso corrente.
 
-A causa é uma só e é estrutural: **o sistema de design existe como classes de CSS, e não como
-componentes de template.** A única peça que as 89 telas compartilham é a trilha de navegação. Cada
-funcionalidade nova resolveu a própria tela, com o guardião exigindo regra para toda classe citada,
-e o resultado são 576 classes usadas por um template só.
+O que essas evidências têm em comum: **faltam contratos compartilhados de composição, de variantes
+e de uso, e mecanismos que levem as telas a adotá-los.** A única peça que as 89 telas compartilham
+é a trilha de navegação. Cada funcionalidade nova resolveu a própria tela, com o guardião exigindo
+regra para toda classe citada, e o resultado são 576 classes usadas por um template só. O estudo
+não demonstra uma causa única, e parcial de template é um meio de firmar o contrato, e não o
+remédio inteiro: um componente também pode ser bem definido só por CSS.
 
 **A proposta é consolidar, e não redesenhar.** Seis mudanças de fundação e uma convergência por
-família de tela. Os [protótipos](04-prototipos.md) mostram quatro arquétipos diferentes saindo de
-uma única folha de cerca de 260 linhas, sem estilo próprio de tela.
+família de tela. Os [protótipos](04-prototipos.md) mostram que quatro arquétipos diferentes saem de
+uma única folha de cerca de 260 linhas, sem estilo próprio de tela. Eles mostram que a direção é
+viável; **ainda não mostram que ela opera melhor**, porque a comparação com as telas de hoje não é
+equivalente.
 
-**Primeiro piloto recomendado:** as correções críticas, os fundamentos e três telas: a confirmação
-de ato do Edital, a Ocupação de vagas e a Lista de Processos Seletivos
-([detalhe](05-roadmap.md#o-piloto)).
+**Sequência recomendada:** primeiro as correções críticas, como entrega própria; depois uma nova
+medição de referência; depois o piloto em três telas, a confirmação de ato do Edital, a Ocupação de
+vagas e a Lista de Processos Seletivos, com o estilo novo delimitado a elas e com textos,
+quantidades, associações e ações preservados ([detalhe](05-roadmap.md#o-piloto)). Os neutros, a
+hierarquia e os componentes entram como direção experimental. A redução tipográfica, o recolhimento
+de explicações e os limites rígidos ficam para decidir depois do piloto, com a equipe.
 
 ## O que foi feito
 
@@ -47,7 +63,7 @@ de ato do Edital, a Ocupação de vagas e a Lista de Processos Seletivos
 | Auditoria das interfaces reais | Chromium dirigido por script: 647 visitas, **131 variações de tela**, nove identidades, cinco larguras |
 | Melhores referências internas | escolhidas pelas medidas e pela leitura das capturas (abaixo) |
 | Diagnóstico transversal | 11 problemas sistêmicos e 12 específicos, cada um com evidência, causa, alcance, severidade e esforço |
-| Proposta de design system | fundamentos, 16 componentes, 11 arquétipos, governança com cinco guardiões |
+| Proposta de design system | fundamentos, 16 componentes, 11 arquétipos, governança com contratos e guardiões candidatos |
 | Demonstração | quatro protótipos HTML navegáveis e uma folha de componentes, medidos com o mesmo instrumento |
 | Plano de convergência | P0 a P3, piloto com critérios de aceite, sete decisões para o usuário |
 
@@ -99,8 +115,9 @@ A abertura da página (71 formas), o conteúdo encostado à esquerda (90 de 92 t
 desenhos), o botão pequeno (4 alturas), o aviso (28 regras) e a escala de fonte (11 tamanhos).
 
 **5. Quais problemas têm origem compartilhada?**
-Quase todos: S1 a S11 no [relatório de evidências](02-evidencias.md#2-problemas-sistêmicos). A raiz
-comum é a falta de componentes de template e de escalas em token.
+Quase todos: S1 a S11 no [relatório de evidências](02-evidencias.md#2-problemas-sistêmicos). O que
+eles têm em comum é a falta de contratos compartilhados (composição, variantes, uso) e de escalas
+em token.
 
 **6. O que se corrige globalmente, e o que pede solução local?**
 Global: tokens, cabeçalho, composições, botão, indicador, aviso, guardiões. Local: os 12 problemas
@@ -111,7 +128,8 @@ o Retificar de 11.631 px e a troca de moldura da Alocação.
 Por tipo de conteúdo, e não por tela: tabela e matriz na página inteira (96rem); formulário em 46rem;
 prosa em 68ch; contexto num trilho de 21rem ao lado; página de um gesto só em 44rem, centrada. Acima
 de 96rem nada estica. A regra vale de 1280 px para cima e não toma monitor ultralargo como
-referência: a 1280 px o trilho já cabe, e abaixo disso ele desce.
+referência: a 1280 px o trilho já cabe, e abaixo disso ele desce. São hipóteses de composição, a
+confirmar no piloto por legibilidade e por localização da ação, e não por ocupação da largura.
 
 **8. Quais componentes precisam ser padronizados?**
 Dezesseis, na [proposta](03-design-system.md#4-componentes). Os cinco de maior efeito: cabeçalho de
@@ -119,22 +137,28 @@ página, botão, indicador, aviso e cartão.
 
 **9. Que direção visual representa o GPS como SaaS moderno?**
 A que ele já tem na tela de entrada, levada para dentro: neutros levemente esverdeados, raio de 10 e
-6 px, sombra discreta, texto de interface em 14 px, um botão cheio por tela, e o contexto ao lado do
-trabalho. O verde institucional e a moldura ficam. Está nos [protótipos](prototipos/index.html).
+6 px, sombra discreta, hierarquia clara no cabeçalho e o contexto ao lado do trabalho. O verde
+institucional e a moldura ficam. Está nos [protótipos](prototipos/index.html). O texto de interface
+em 14 px e o limite de um botão cheio por tela aparecem neles como hipótese, e não como parte da
+direção a aprovar agora.
 
 **10. Qual é o menor conjunto de mudanças com o maior avanço?**
 Seis: tokens de escala, cabeçalho de página, três composições, `.acao` com altura única, indicador e
-aviso como componentes, e guardiões com lista fechada
-([tabela](05-roadmap.md#o-menor-conjunto-com-o-maior-avanço)).
+aviso como componentes, e contratos de componente com os guardiões que o piloto justificar
+([tabela](05-roadmap.md#o-menor-conjunto-com-o-maior-avanço)). É a hipótese de maior alcance; o
+piloto testa quatro delas em três telas antes de qualquer uma valer para o produto inteiro.
 
 **11. Como demonstrar o avanço antes de alterar dezenas de telas?**
 Com os protótipos, que já existem, e com o piloto: três telas, uma delas um template que serve seis
-rotas, e critérios de aceite medidos pelo mesmo instrumento desta auditoria.
+rotas. O primeiro passo do piloto é a comparação que os protótipos não fazem: o mesmo estado, com os
+mesmos registros, textos, permissões e ações, antes e depois.
 
 **12. Como impedir que a fragmentação volte?**
-Com cinco guardiões que nascem com a lista do que existe hoje e proíbem crescer: cor só por token,
-escala de fonte, escala de raio, pontos de quebra e caixa nova. E com o instrumento de medida no
-repositório, que acusa a tela que ganhou uma assinatura nova.
+Com contratos escritos para cada componente, guardiões que protegem os contratos que importam e
+admitem exceção justificada, e o instrumento de medida no repositório, que acusa a tela que ganhou
+uma assinatura nova. Contar propriedade de CSS não garante consistência: os guardiões fecham a porta
+de entrada, e a consistência se confere pelo que foi renderizado e pela revisão de tela nova. Quais
+guardiões nascem é decisão para depois do piloto.
 
 ## Limites do que este estudo afirma
 
@@ -142,10 +166,15 @@ repositório, que acusa a tela que ganhou uma assinatura nova.
   sistêmica depende delas.
 - **Experiência operacional.** As leituras de uso (§4 das evidências) são de quem percorreu as telas
   com dados fictícios. Não houve teste com a equipe de seleção nem com candidatos.
-- **Acessibilidade.** Foram medidos contraste, rótulos, alvos, títulos e refluxo. Leitor de tela e
-  navegação só por teclado não foram exercitados.
-- **Protótipos.** Cobrem um estado de cada tela, e encurtam textos que foram decididos em spec. São
-  proposta de composição, e não de redação.
+- **Acessibilidade.** O que há é triagem automática: contraste com fundo aproximado, presença de
+  rótulo, tamanho de alvo, títulos e refluxo a 375 px. "Nenhum detectado" quer dizer nenhum problema
+  adicional acusado pelo instrumento nos estados inspecionados, e não conformidade. Teclado, foco,
+  zoom, 320 px, estados de erro e leitor de tela não foram exercitados, e entram no piloto.
+- **Largura.** A ocupação da metade direita é diagnóstico auxiliar. Não é meta, e nenhum critério de
+  aceite depende dela.
+- **Protótipos.** Cobrem um estado de cada tela, resumem conteúdo, usam quantidades diferentes de
+  registros e encurtam textos decididos em spec. A redução de altura não pode ser atribuída só ao
+  design. São proposta de composição, e não de redação nem prova de ganho.
 - **Estimativas.** Esforço e risco são relativos, feitos sem escrever código do produto.
 - **Relação com os estudos anteriores.** A série de polish de setembro (`055` a `058`) resolveu
   medidas pontuais, tela a tela, e várias continuam valendo. Este estudo olha o que ela não podia
@@ -160,5 +189,6 @@ demonstração, e o resto é leitura.
 
 ## O que se pede agora
 
-Uma decisão sobre a **direção visual** e sobre o **piloto**. As sete decisões estão no
-[fim do plano](05-roadmap.md#decisões-que-ficam-com-o-usuário). Enquanto isso, nada no produto muda.
+Uma decisão sobre a **direção experimental** e sobre o **piloto revisto**. As decisões estão no
+[fim do plano](05-roadmap.md#decisões-que-ficam-com-o-usuário), separadas entre as que cabem agora
+e as que esperam o piloto. Enquanto isso, nada no produto muda.

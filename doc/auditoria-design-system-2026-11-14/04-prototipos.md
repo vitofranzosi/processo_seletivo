@@ -7,6 +7,28 @@ foi alterada.*
 **Para abrir:** [`prototipos/index.html`](prototipos/index.html) no navegador. Não precisam de
 servidor. A [folha de componentes](prototipos/componentes.html) mostra cada peça isolada.
 
+## O que estas comparações provam, e o que não provam
+
+**Provam viabilidade:** quatro arquétipos saem dos mesmos tokens e componentes, respondem de 375 a
+1920 px e não precisam de estilo próprio de tela.
+
+**Não provam ganho de operação.** Nenhuma das quatro comparações é equivalente:
+
+| Protótipo | O que difere do estado real comparado |
+|---|---|
+| Lista de Processos | mostra 9 dos 19 Processos; recolhe o texto do painel de ações; acrescenta uma coluna que não existe |
+| Convocação | resume em um cartão duas seções inteiras da tela; encurta o fundamento e as explicações |
+| Compor · Etapas | tem duas Etapas, contra três na captura de hoje; move a ajuda para o trilho |
+| Convocação do candidato | funde dois parágrafos de consequência em um aviso; troca o quadro de andamento por uma barra |
+
+Por isso **a redução de altura não pode ser atribuída só ao design**, e as medidas das tabelas abaixo
+são indicativas. A ocupação da metade direita aparece como diagnóstico auxiliar, e não como ganho:
+ela descreve distribuição, e não qualidade.
+
+**A comparação equivalente é o primeiro passo do piloto:** o mesmo estado, com os mesmos registros,
+textos, permissões e ações, antes e depois, na tela real. Só ela permite separar o que vem da
+composição do que vem de conteúdo cortado.
+
 ## Por que estas quatro
 
 A escolha saiu da auditoria, e não da lista de candidatas do pedido:
@@ -53,11 +75,11 @@ de explicação. O aviso de demonstração ocupa a largura toda acima do trabalh
 - "Ações disponíveis para você" vai para o trilho e fica visível enquanto se rola a lista.
 - A explicação da faixa vira um recolhido; o aviso de demonstração vira aviso em linha no trilho.
 
-| Medida | Hoje | Proposta |
+| Medida (indicativa; comparação não equivalente) | Hoje | Proposta |
 |---|---:|---:|
 | Altura por Processo de um Edital | cerca de 135 px | cerca de 60 px |
-| Altura para os 19 Processos | 3.210 px | cerca de 1.600 px (estimativa pela altura de linha) |
-| Metade direita ocupada, a 1440 e a 1920 px | 32% e 26% | 61% e 64% |
+| Altura para os 19 Processos | 3.210 px | não medida: o protótipo tem 9 |
+| Metade direita ocupada, a 1440 e a 1920 px (diagnóstico) | 32% e 26% | 61% e 64% |
 | Botões cheios | 2 | 1 |
 | Alvos menores que 24 px | 22 | 1 |
 
@@ -92,13 +114,13 @@ topo, depois do contexto. Tudo fica na metade esquerda.
 - As duas contagens de vagas (pela apuração, pelas chamadas) vão para o trilho, e a frase que
   explica a diferença fica junto delas.
 
-| Medida | Hoje | Proposta |
+| Medida (indicativa; comparação não equivalente) | Hoje | Proposta |
 |---|---:|---:|
-| Altura da tela | 4.325 px | 1.396 px |
+| Altura da tela | 4.325 px | 1.396 px, com duas seções resumidas |
 | Onde começa o bloco do gesto principal | cerca de 1.200 px do topo | cerca de 350 px |
 | Níveis de caixa dentro de caixa | 3 | 2 |
 | Assinaturas de botão (altura e fonte) | 5 | 2 |
-| Metade direita ocupada, a 1440 e a 1920 px | 16% e 12% | 49% e 47% |
+| Metade direita ocupada, a 1440 e a 1920 px (diagnóstico) | 16% e 12% | 49% e 47% |
 
 **A comparação de altura pede cuidado.** O protótipo cobre o estado "titulares a convocar, nenhuma
 chamada praticada", e resume em um cartão as seções "Acompanhar e conferir" e "Fila, suplentes e
@@ -134,9 +156,9 @@ coluna. A barra de ações fica no fim da página.
   hora do último rascunho ao lado.
 - Subir, descer e remover usam os ícones do conjunto da barra lateral.
 
-| Medida | Hoje | Proposta |
+| Medida (indicativa; comparação não equivalente) | Hoje | Proposta |
 |---|---:|---:|
-| Metade direita ocupada, a 1440 e a 1920 px | 40% e 32% | 58% e 61% |
+| Metade direita ocupada, a 1440 e a 1920 px (diagnóstico) | 40% e 32% | 58% e 61% |
 | Caixas com borda nos passos | 9 | 0 |
 | Alvos menores que 24 px | 14 | 9 |
 | Ajuda de preenchimento à vista | não (recolhida) | sim, no trilho |
@@ -146,6 +168,12 @@ restantes são as caixas de seleção e os rádios, de 18 px, com o rótulo clic
 
 **Componentes envolvidos:** cabeçalho de página com situação, passos, grade de campos, escolha,
 cartão, lista de itens, barra de ações.
+
+**Ponto aberto no celular.** A 375 px o trilho desce para o fim da página, e "Pendências desta
+etapa" e "Como preencher" aparecem **depois** de "Avançar"
+([captura](capturas/proposta-compor-etapas-375.jpg)). O trilho melhora o monitor e piora a ordem no
+celular: quem preenche chega ao botão antes de ver o que falta. A posição do trilho no estreito
+precisa de revisão antes de virar regra; o protótipo não a resolve.
 
 **Risco.** Baixo. A estrutura do formulário e os nomes dos campos não mudam; o assistente tem a
 maior cobertura de teste de tela do projeto, e vários guardiões leem os templates dele.
@@ -173,9 +201,9 @@ tela.
   frase que explica ao lado.
 - O que hoje são dois parágrafos de consequência vira um aviso de informação.
 
-| Medida | Hoje | Proposta |
+| Medida (indicativa; comparação não equivalente) | Hoje | Proposta |
 |---|---:|---:|
-| Altura da tela a 1440 px | 1.566 px | 900 px |
+| Altura da tela a 1440 px | 1.566 px | 900 px, com texto fundido |
 | Margens a 1920 px | 216 px à esquerda, mais de 1.000 à direita | iguais |
 | Botão de envio | contornado, igual aos de escolher arquivo | cheio assim que há arquivo escolhido |
 
@@ -193,11 +221,11 @@ conferida contra cada um antes de virar spec.
 | Mesma folha, sem regra própria de tela | sim | sim | sim | sim |
 | Tamanhos de fonte em uso | 4 | 5 | 6 | 6 |
 | Transbordo a 375 px | não | não | não | não |
-| Trechos abaixo do contraste | 0 | 0 | 0 | 0 |
+| Trechos de contraste baixo detectados pelo instrumento | 0 | 0 | 0 | 0 |
 
 Quatro arquétipos diferentes saíram de **uma folha de cerca de 260 linhas**, sem classe criada para uma tela.
-É a demonstração do argumento central: a consistência vem de poucos componentes usados sempre, e não
-de mais estilo.
+Isso mostra que a consolidação é viável com poucos componentes. Não mostra que as telas operam
+melhor: essa parte depende da comparação equivalente e da leitura com a equipe, no piloto.
 
 ## Como reproduzir
 
