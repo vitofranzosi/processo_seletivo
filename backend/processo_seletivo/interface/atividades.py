@@ -331,6 +331,9 @@ def linhas_de_avaliacao(atribuicoes, carga):
             url=reverse("interface:minha-etapa", args=[edital.id, item["etapa_id"]]),
             contagem=pendentes,
             lugar=nome,
+            # O fim do período da Etapa (168, FR-7326): de toda Etapa com período, e não só da
+            # restrita (D-006).
+            ate=item.get("fim"),
         )
         fase = c.NOMES[c.AVALIACAO]
         linhas.append(Linha(providencia, edital, ALOCACAO, fase, _INDICE_DA_AVALIACAO + n))

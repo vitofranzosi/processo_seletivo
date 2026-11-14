@@ -87,6 +87,29 @@ def carga_por_avaliador(*, edital, etapa_id):
     ]
 
 
+def pendentes_por_membro(*, edital, etapa_id, participantes):
+    """`[(nome, quantas)]`: as Atribuições ativas sem parecer concluído, por membro (168, FR-7321).
+
+    **A conta da Mesa** (FR-7328): Atribuição ativa de inscrição que participa, menos a concluída —
+    a mesma de `mesa()` e de `carga_nas_etapas`, para os números do Centro e da Mesa coincidirem.
+    Uma consulta. **Nunca o sentido**: o que se conta é a ausência de conclusão, e não o que alguém
+    concluiu. Quem não deve nada não aparece; a ordem é a do que falta, decrescente (UX-793).
+    """
+    linhas = (
+        Atribuicao.objects.filter(
+            edital=edital, etapa_id=etapa_id, ativo=True, inscricao_id__in=list(participantes)
+        )
+        .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+        .values("membro__display_label", "membro__identity_subject")
+        .annotate(total=Count("id"))
+    )
+    pares = [
+        (linha["membro__display_label"] or linha["membro__identity_subject"], linha["total"])
+        for linha in linhas
+    ]
+    return sorted(pares, key=lambda par: (-par[1], par[0]))
+
+
 def _cobertura(atribuidas, previstas):
     if atribuidas == 0:
         return SEM_NENHUM

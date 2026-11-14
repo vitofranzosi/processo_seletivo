@@ -4,8 +4,11 @@ Toda Etapa vem de `etapas_vigentes()`, e a alocação órfã é **derivada na le
 alocação com o conteúdo vigente, sem campo, sem sincronizador e sem cópia da Etapa (FR-047).
 """
 
-from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from uuid import UUID
+
+from processo_seletivo.comissoes.domain.etapas import conteudo_vigente, etapas_vigentes
 from processo_seletivo.comissoes.models import AlocacaoEtapa, Funcao, MembroComissao
+from processo_seletivo.editais.domain.cronograma import periodo_da_etapa
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.texto import dobrar
@@ -222,13 +225,24 @@ def minhas_etapas(ator, *, processo=None):
     return _atribuicoes(alocacoes)
 
 
+def _conteudo_ou_nada(edital):
+    """O conteúdo vigente, ou `{}` quando o Edital ainda não foi publicado."""
+    try:
+        return conteudo_vigente(edital) or {}
+    except DomainError:
+        return {}
+
+
 def _atribuicoes(alocacoes):
-    vigentes_por_edital = {}
+    conteudo_por_edital = {}
     itens = []
     for alocacao in alocacoes:
-        if alocacao.edital_id not in vigentes_por_edital:
-            vigentes_por_edital[alocacao.edital_id] = _etapas_ou_nada(alocacao.edital)
-        vigentes = vigentes_por_edital[alocacao.edital_id] or {}
+        if alocacao.edital_id not in conteudo_por_edital:
+            # O conteúdo, e não só as Etapas: o fim do período sai do mesmo documento, sem uma
+            # leitura a mais (168, T-008).
+            conteudo_por_edital[alocacao.edital_id] = _conteudo_ou_nada(alocacao.edital)
+        conteudo = conteudo_por_edital[alocacao.edital_id]
+        vigentes = {UUID(str(e["id"])): e for e in conteudo.get("stages") or []}
         dados = vigentes.get(alocacao.etapa_id)
         if dados is None:
             # A órfã não aparece para quem foi alocado: ela não concede acesso (FR-047).
@@ -241,6 +255,8 @@ def _atribuicoes(alocacoes):
                 "etapa_id": alocacao.etapa_id,
                 "nome": dados.get("name", ""),
                 "ordem": dados.get("order", 0),
+                # O fim do período da Etapa, para "até dd/mm" na linha de avaliar (168, FR-7326).
+                "fim": periodo_da_etapa(conteudo, dados)[1],
             }
         )
     itens.sort(key=lambda i: (i["edital"].year, _numero(i["edital"].number), i["ordem"]))
