@@ -75,7 +75,7 @@ Caminhos relativos a `backend/`. `[P]` = arquivo distinto, sem dependência de t
 
 - [x] T034 `rastreabilidade.md` com uma linha por FR-, SC- e UX- desta spec, inclusive os números de abertura
 - [x] T035 Varreduras: `test_citacoes_de_requisito`, `test_acessibilidade` (classe com regra), `test_estaticos`, inventário de negativas da `033` se nascer `Http404`
-- [ ] T036 `make lint check test-pg`, uma suíte por vez; atualizar o CLAUDE.md só se o número de pulados ou falhas mudar
+- [x] T036 `make lint check test-pg`, uma suíte por vez; atualizar o CLAUDE.md só se o número de pulados ou falhas mudar
 - [x] T037 Atualizar o status da spec e as notas do checklist
 
 ## Dependencies
