@@ -77,7 +77,8 @@ ampla também. A `163` registrou isso como risco e deixou a correção para esta
 - as **regras de deliberação** dos pareceres (R-4 do estudo, decisão P-3): spec própria;
 - o **vídeo** (camada B), bloqueado por norma (P-0);
 - a **análise documental de indígenas**, que é Documento Exigido e conferência, e não Etapa;
-- a **visibilidade e a recorribilidade** da Etapa que nenhum marco enumera (R-8 do estudo);
+- a **visibilidade e a recorribilidade** da Etapa **não restrita** que nenhum marco enumera (R-8 do
+  estudo); a da restrita foi antecipada por decisão do usuário (FR-7031, FR-7032);
 - o **efeito por motivo**, e não por Etapa (ver *Edge Cases* e *Achados*);
 - a **migração para outra lista reservada** (D-006);
 - o **indeferimento na convocação** com alcance por causa, a QC4 do estudo da concorrência
@@ -113,6 +114,10 @@ Nenhuma toma decisão normativa do Ifes: todas deixam ao Edital a escolha que el
 - **Quais marcos a retirada alcança?** A revisão apontou que a ordem, a faixa e a ocupação não diziam
   quais Resultados consideram. → Cada regra diz, pelo **horizonte do marco** (FR-7011 a FR-7014,
   FR-7027). A Etapa posterior ao horizonte continua em *Achados*.
+- **Como o candidato retirado fica sabendo?** A jornada de 14/11 mostrou que não fica: a Etapa
+  restrita nunca é enumerada por marco, e o Resultado dela não é visível nem recorrível. → **O
+  usuário decidiu antecipar na 164** a visibilidade e a recorribilidade da Etapa restrita, sem
+  esperar a spec da R-8 (FR-7031, FR-7032, D-012).
 - **"Primeiro Resultado" ou "Resultado vigente"?** → **O primeiro.** O impedimento de retificar o
   efeito é histórico, e não cai quando os Resultados desfavoráveis são superados (FR-7020, D-008).
 
@@ -412,10 +417,14 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   retirada **não** entra nessa conta. É contada à parte (FR-7025).
 - **A Etapa que nenhum marco enumera — e é toda Etapa restrita.** O marco só enumera Etapa
   classificatória, e a `163` impede a Etapa restrita classificatória. Logo, a Etapa restrita nunca é
-  enumerada, e o seu Resultado nunca é visível nem recorrível para o titular até a spec da R-8. A
-  jornada de 14/11 o confirmou: a candidata retirada lê "1º lugar" na ampla e nada sobre a reserva,
-  sem cartão da lista reservada, porque saiu do universo dela, e sem a linha da FR-7024. Ver
-  *Achados* (FR-7024).
+  enumerada. A jornada de 14/11 mostrou o efeito: a candidata retirada lia "1º lugar" na ampla e
+  nada sobre a reserva. Desde a decisão do usuário, o Resultado dela é visível e recorrível pela
+  publicação do marco que o leu (FR-7031, FR-7032).
+- **Antes de publicado o marco.** A retirada continua invisível ao titular, como todo Resultado de
+  Etapa antes da publicação do marco que a enumera. A ordem ainda não a aplicou a lista nenhuma
+  publicada (FR-7031).
+- **Etapa restrita depois do último marco.** Ela não é lida por marco nenhum e continua invisível,
+  como a eliminação nela. É o achado da Etapa posterior ao horizonte (FR-7027, FR-7031).
 - **A retirada na última Etapa enumerada.** Pela mesma razão, não acontece hoje: a Etapa restrita
   nunca é enumerada. A FR-7012 a descreve para a spec que vier a admitir a combinação.
 
@@ -589,6 +598,15 @@ compará-las por essa ordem.
   concorre. Uma linha DEVE dizer a Etapa, o rótulo do desfecho, a reserva perdida e que ele continua
   na ampla, e o cartão da lista reservada DEVE dizer que ele deixou de concorrer por ela e por quê. A
   visibilidade da linha DEVE ser a que a Etapa tem hoje para o titular (D-011).
+- **FR-7031**: O Resultado de uma **Etapa restrita** DEVE ser visível ao titular quando houver
+  publicação vigente de um marco do Perfil dele cuja **última Etapa enumerada vem depois** da Etapa
+  restrita. É o marco cuja ordem leu aquele Resultado (FR-7012), e a publicação dele é o fato
+  autorizador, como a enumeração já é para as Etapas que o marco enumera. Vale para a retirada e
+  para a eliminação na Etapa restrita. A Etapa não restrita que nenhum marco enumera continua como
+  hoje, à espera da spec da R-8 (D-012).
+- **FR-7032**: O Resultado que a FR-7031 torna visível DEVE ser recorrível pelo mesmo prazo, o
+  recursal da publicação vigente do marco que o leu, como o Resultado de uma Etapa enumerada é
+  recorrível pelo prazo do marco que a enumera.
 - **FR-7025**: Os painéis e relatórios da gestão que contam desfechos por Etapa DEVEM contar a retirada
   **à parte** da eliminação, e nunca somá-la a ela. A Mesa e o panorama da Etapa DEVEM mostrar a
   consequência pelo nome.
@@ -662,7 +680,8 @@ compará-las por essa ordem.
 - A regra de deliberação dos pareceres (P-3).
 - O vídeo assíncrono (camada B).
 - A análise documental de indígenas.
-- A visibilidade e a recorribilidade da Etapa que nenhum marco enumera (R-8).
+- A visibilidade e a recorribilidade da Etapa **não restrita** que nenhum marco enumera (R-8). A
+  da restrita foi antecipada aqui (FR-7031, FR-7032).
 - O efeito por motivo de indeferimento.
 - A migração da inscrição retirada para outra lista reservada.
 - O indeferimento na convocação com alcance por causa (QC4 do estudo de 07/11).
@@ -694,8 +713,8 @@ compará-las por essa ordem.
   por marco, e por isso o Resultado dela não é visível ao titular, nem a linha da FR-7024. Ele também
   não tem cartão da lista reservada, porque saiu do universo dela. O que ele lê é a posição na
   ampla, e nada que explique a reserva perdida, nem de onde recorrer. Com "elimina", o efeito de
-  hoje, o silêncio é o mesmo. A correção é da R-8, a visibilidade e a recorribilidade da Etapa fora
-  de marco, ou uma decisão de antecipá-la para a retirada. **É do usuário**.
+  hoje, o silêncio é o mesmo. **Resolvido para a Etapa restrita** pela decisão do usuário de 14/11
+  (FR-7031, FR-7032, D-012). A Etapa não restrita fora de marco continua para a R-8.
 - **O efeito por motivo.** O 28/2026 distingue o indeferido por fenótipo, que vai para a ampla, dos
   demais motivos do 6.9.14, sobre os quais silencia. O 57/2026 contradiz a si mesmo sobre o ausente,
   no 8.10 e no 8.11. As duas leituras são perguntas à CPVA, ao lado da P-3. Se a resposta for "por
@@ -810,3 +829,22 @@ O acompanhamento da `063` tem o degrau *"Eliminado"* acima da classificação. O
 classificado na ampla, e o degrau certo para ele é o da classificação, com a linha que explica a
 reserva perdida. *Descartado:* um degrau novo, *"Retirado da reserva"*, acima da classificação. Ele
 esconderia a informação que importa à pessoa, a posição na ampla, atrás da que ela já perdeu.
+
+### D-012 — A Etapa restrita fica visível pelo marco que a leu
+
+Decidido pelo usuário em 14/11, depois da jornada. A Etapa restrita nunca é enumerada por marco, e
+sem isto o candidato retirado não fica sabendo que perdeu a reserva, nem tem de onde recorrer.
+
+O fato autorizador é o que já existe: a publicação de um marco. Ele passa a alcançar, além das
+Etapas que o marco enumera, a Etapa restrita anterior à última enumerada. É a mesma condição pela
+qual a ordem do marco leu aquele Resultado (FR-7012): a publicação que aplicou a retirada a uma
+lista é a que a mostra a quem ela atingiu. O prazo de recurso é o dessa publicação, pela regra que
+já vale para a Etapa enumerada.
+
+*Descartados:*
+- **Um ato próprio de publicação do Resultado da Etapa.** Seria a R-8 inteira, com tela, ato e
+  prazo novos, para todas as Etapas.
+- **Mostrar ao titular assim que consolidado.** Seria divulgar antes do ato que a instituição
+  pratica para isso, contra a regra da `018` de que a visibilidade vem de um ato que já existe.
+- **Estender a toda Etapa anterior à última enumerada.** Seria a R-8 para as não restritas, que o
+  usuário não decidiu.

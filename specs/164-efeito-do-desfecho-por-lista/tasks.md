@@ -260,3 +260,19 @@ O que se viu:
   marco (o marco só enumera Etapa classificatória, e a `163` impede a restrita classificatória),
   então o Resultado dela não é visível ao titular. Registrado em *Achados* da spec, para decisão
   do usuário.
+
+## Phase 10: A visibilidade da Etapa restrita (decisão do usuário de 14/11, depois da jornada)
+
+- [x] T042 [US3] `etapas_lidas_pelo_marco` em `processo_seletivo/resultados/domain/efeito.py`. O
+  marco lê as Etapas que enumera e a Etapa restrita anterior à última enumerada (FR-7031, D-012).
+- [x] T043 [US3] Usar a função para ver e para recorrer:
+  - a visibilidade em `resultados_visiveis` (`processo_seletivo/resultados/application/selectors.py`);
+  - o prazo em `_janelas_pertinentes` (`processo_seletivo/recursos/application/interpor.py`)
+    (FR-7032).
+- [x] T044 [US3] O cartão do Resultado da Etapa no acompanhamento dizia "Eliminada" para a retirada;
+  agora diz "Deixou de concorrer pela reserva" (`portal/templates/portal/acompanhamento.html`). Foi
+  achado na jornada refeita.
+- [x] T045 [P] [US3] Testes em `tests/integration/portal/test_retirada_visivel_ao_titular.py`: antes
+  da publicação, depois dela, o recurso e o acompanhamento pelo canal do candidato.
+- [x] T046 Refazer a jornada no navegador: a linha da reserva perdida no topo, e o cartão da
+  Heteroidentificação com "Deixou de concorrer pela reserva" e o motivo.

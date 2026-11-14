@@ -165,6 +165,34 @@ def motivo_com_a_reserva(causa, conteudo, modality_id) -> str:
     return f"{causa}; {complemento_da_retirada(conteudo, modality_id)}"
 
 
+def etapas_lidas_pelo_marco(marco, etapas) -> list[str]:
+    """As Etapas cujo Resultado o titular vê pela publicação deste marco (164, FR-7031, D-012).
+
+    As que o marco enumera, como sempre; e a **Etapa restrita** anterior à última enumerada, que a
+    ordem do marco leu (FR-7012). A restrita nunca é enumerada — o marco só enumera Etapa
+    classificatória, e a `163` impede a restrita classificatória —, e sem isto o candidato retirado
+    da reserva não ficaria sabendo, nem teria de onde recorrer. A Etapa não restrita fora de marco
+    fica como está, para a spec da R-8.
+
+    `etapas` é `{identidade: Etapa}` do conteúdo que o ato cita.
+    """
+    enumeradas = [str(item) for item in (marco or {}).get("stages") or []]
+    ordens = [(etapas.get(item) or {}).get("order") or 0 for item in enumeradas if item in etapas]
+    if not ordens:
+        return enumeradas
+    limite = max(ordens)
+    restritas = [
+        str(identidade)
+        for identidade, etapa in etapas.items()
+        if str(identidade) not in enumeradas
+        and alcance.restrita(etapa)
+        and (etapa.get("order") or 0) < limite
+    ]
+    return enumeradas + sorted(
+        restritas, key=lambda item: (etapas.get(item) or {}).get("order") or 0
+    )
+
+
 __all__ = [
     "CAMPO_AUSENCIA",
     "CAMPO_DESFAVORAVEL",
@@ -182,6 +210,7 @@ __all__ = [
     "desfavoravel",
     "efeito_da_ausencia",
     "efeito_desfavoravel",
+    "etapas_lidas_pelo_marco",
     "frase_do_efeito",
     "mais_grave",
     "motivo_com_a_reserva",

@@ -14,6 +14,7 @@ consulta a mais não é gargalo.
 
 from collections import defaultdict
 
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 
 
@@ -287,7 +288,9 @@ def resultados_visiveis(inscricao):
             perfil.get("classificationMilestones") if perfil else None, publicacao.marco_id
         )
         rotulos = {str(item.get("id")): item for item in conteudo.get("stages") or []}
-        for etapa_id in (marco or {}).get("stages") or []:
+        # As enumeradas e, desde a 164, a Etapa restrita que a ordem do marco leu (FR-7031): ela
+        # nunca é enumerada, e a publicação que aplicou a retirada a uma lista é a que a mostra.
+        for etapa_id in efeito_do_desfecho.etapas_lidas_pelo_marco(marco, rotulos):
             # Um marco basta para autorizar: dois marcos que enumerem a mesma Etapa não a mostram
             # duas vezes. O primeiro a chegar carrega o rótulo, e a ordem é a de publicação.
             etapas_autorizadas.setdefault(str(etapa_id), rotulos.get(str(etapa_id)) or {})

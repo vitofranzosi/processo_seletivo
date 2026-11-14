@@ -59,7 +59,9 @@ foi conferido contra o requisito que o resolve:
 | Ato histórico | FR-7008 |
 | Prévia da classificação | FR-7026 |
 | Painéis e relatórios | FR-7025 |
-| Etapa que nenhum marco enumera | FR-7024; risco registrado |
+| Etapa que nenhum marco enumera (toda restrita) | FR-7031, FR-7032 |
+| Antes de publicado o marco | FR-7031 |
+| Etapa restrita depois do último marco | FR-7027, FR-7031 |
 
 ## Revisão do usuário de 14/11 (PR #543)
 

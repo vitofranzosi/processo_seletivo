@@ -14,6 +14,7 @@ arquivos de teste são:
 - **IL** — `tests/integration/classificacao/test_listas_com_retirada.py`
 - **IF** — `tests/integration/publicacoes/test_retificacao_do_efeito.py`
 - **GL** — `tests/test_leitores_da_consequencia.py`, o guardião da FR-7018
+- **IV** — `tests/integration/portal/test_retirada_visivel_ao_titular.py`
 - **G** — os guardiões que o campo novo atravessou:
   - `tests/contract/test_forma_publicada.py`;
   - `tests/contract/test_retificacoes_api.py`;
@@ -54,13 +55,15 @@ arquivos de teste são:
 | FR-7021 | idem: só a mudança do efeito resolvido impede | IF `test_ampliar_o_alcance_nao_muda_o_efeito`, `test_sem_desfavoravel_o_efeito_se_retifica` |
 | FR-7022 | a recusa roda de novo na publicação | IF `test_a_retificacao_elaborada_antes_e_recusada_na_publicacao` |
 | FR-7023 | `efeito.frase_do_efeito` em `pdf.py`, `apresentacao.py`, `revisao.py` | TC `test_o_documento_diz_o_efeito_declarado`, `test_o_acervo_sem_declaracao_lido_como_elimina_nao_ganha_frase_nova`; UE `test_as_frases_do_documento` |
-| FR-7024 | `portal/situacao.py`, `resultados/application/selectors.py` | US `test_a_retirada_nao_e_eliminacao`, `test_sem_ordem_publicada_a_linha_aparece_mesmo_assim`, `test_a_eliminacao_continua_eliminado` |
+| FR-7024 | `portal/situacao.py`, `resultados/application/selectors.py`, `acompanhamento.html` | IV `test_o_acompanhamento_diz_a_reserva_perdida`; US `test_a_retirada_nao_e_eliminacao`, `test_sem_ordem_publicada_a_linha_aparece_mesmo_assim`, `test_a_eliminacao_continua_eliminado` |
 | FR-7025 | `relatorio_do_edital.py`, `relatorio_pdf._eliminadas`, `resultados.html`, `conferencia_da_ordem.py` | TC `test_o_relatorio_conta_a_retirada_a_parte` |
 | FR-7026 | *por construção*: a prévia não gera retirada | os testes de equivalência da prévia, inalterados |
 | FR-7027 | `ocupacao/application/selectors._ordem_do_horizonte` | IL `test_a_retirada_depois_do_horizonte_nao_alcanca_a_reserva`, `test_retirada_depois_da_ultima_enumerada_nao_muda_a_ordem` |
 | FR-7028 | `recursos/domain/pejus.piora` (gravidade) | UE `test_a_vedacao_de_piora_segue_a_gravidade` |
 | FR-7029 | *por construção*: a reavaliação consolida por avaliação, e a regra aplica o efeito do desfavorável | UE `test_a_regra_aplica_o_efeito_ao_desfavoravel`, `test_a_vedacao_de_piora_segue_a_gravidade` |
 | FR-7030 | `sorteios/application/habilitacao.para_o_recorte` | IL `test_a_relacao_do_sorteio_da_reserva_nao_traz_a_retirada`, `test_sem_etapa_de_habilitacao_a_relacao_nao_muda` |
+| FR-7031 | `efeito.etapas_lidas_pelo_marco` em `resultados_visiveis` | IV `test_antes_da_publicacao_do_marco_a_retirada_nao_aparece`, `test_publicado_o_marco_a_retirada_fica_visivel_ao_titular` |
+| FR-7032 | a mesma função em `recursos/application/interpor._janelas_pertinentes` | IV `test_a_retirada_e_recorrivel_pelo_prazo_do_marco` |
 | UX-740 | `_etapa.html`, `telas.css` (`.so-eliminatoria`) | TC `test_a_etapa_restrita_nasce_retirando_da_reserva`, `test_a_folha_esconde_o_grupo_fora_da_etapa_restrita_e_eliminatoria` |
 | UX-741 | `_etapa.html` | TC `test_a_etapa_restrita_nasce_retirando_da_reserva` |
 | UX-742 | `portal/situacao._linha_da_retirada` | US `test_a_retirada_nao_e_eliminacao` |
