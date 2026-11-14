@@ -119,14 +119,14 @@ Tudo nesta seção é **constatado**.
 
 | Componente | O que existe | Evidência |
 |---|---|---|
-| Linguagem e framework | Python `>=3.13,<3.14`, Django 5.2.17, DRF 3.16.1, psycopg 3.3 (binary), openpyxl 3.1.5 | `backend/pyproject.toml:9-18`, `backend/uv.lock` |
-| Gerenciador de dependências | `uv`, com lock versionado; o Dockerfile fixa o uv 0.9 | `backend/uv.lock`, `Dockerfile:14` |
+| Linguagem e framework | Python `>=3.13,<3.14`, Django 5.2.17, DRF 3.16.1, psycopg 3.3 (binary), openpyxl 3.1.5 | `backend/pyproject.toml:9-24`, `backend/uv.lock` |
+| Gerenciador de dependências | `uv`, com lock versionado; o Dockerfile fixa o uv 0.9 | `backend/uv.lock`, `Dockerfile:15` |
 | SGBD | **Somente PostgreSQL**; SQLite só na suíte. O CI valida contra o PostgreSQL 18 | `config/settings/base.py:503-512`, `config/settings/test.py`, `.github/workflows/backend.yml` |
-| Papéis do banco | Dois papéis: migração (dono do esquema) e runtime (DML). O runtime **não** tem `UPDATE`/`DELETE` em 40 tabelas append-only, que também têm gatilhos | `processo_seletivo/seguranca/papeis.py:26-133`, `seguranca/management/commands/provisionar_papeis.py` |
+| Papéis do banco | Dois papéis: migração (dono do esquema) e runtime (DML). O runtime **não** tem `UPDATE`/`DELETE` em 40 tabelas append-only, que também têm gatilhos | `processo_seletivo/seguranca/papeis.py:22-194`, `seguranca/management/commands/provisionar_papeis.py` |
 | Preparação do banco | provisionar → migrar → provisionar de novo; a segunda passada é a que tranca. Depois, o registro das Unidades (060), com a role de runtime | `backend/Makefile` (`preparar`), `scripts/docker/entrypoint.sh` |
 | Settings | `base`, `development`, `test` e `production`. `production` **recusa subir** com qualquer pressuposto inseguro | `config/settings/production.py` |
 | Entrada WSGI | `config.wsgi` usa `production` por padrão; o **`manage.py` usa `development`** | `config/wsgi.py:14`, `manage.py:7` |
-| Servidor de aplicação | **Nenhum** entre as dependências. O Dockerfile roda `runserver` e se declara só de desenvolvimento | `pyproject.toml:9-18`, `Dockerfile:8-10,59` |
+| Servidor de aplicação | **Nenhum** entre as dependências. O Dockerfile roda `runserver` e se declara só de desenvolvimento | `pyproject.toml:9-24`, `Dockerfile:8-10,60` |
 | Workers, filas, agendador | **Não existem.** Prazos, fases do Cronograma e vigência de Retificação são calculados na leitura | ausência de celery, rq, huey, dramatiq e apscheduler; `inscricoes/domain/periodo.py`, `publicacoes/application/selectors.py` |
 | E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:255-266`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
 | Cache | Nenhum `CACHES`. O limite de pedidos de código é contado **no banco** | `identidade/application/desafio.py:14-16` |
@@ -135,13 +135,13 @@ Tudo nesta seção é **constatado**.
 | Anexos do Edital e PDFs publicados | Bytes **no banco**, em `BinaryField`. O PDF é gerado em Python puro, com fontes base-14, sem dependência de sistema | `editais/models/anexos.py:43`, `publicacoes/infrastructure/pdf.py`, `divulgacao/models.py` |
 | Exportação de matrículas | `.xlsx` montado em memória e **não guardado**; fica só o registro da geração | `matriculas/infrastructure/planilha.py`, `matriculas/models.py` |
 | Arquivos estáticos | 22 arquivos JS em `interface/static/interface/` e `portal/static/portal/`; desde a `089`, a folha comum da gestão — por área desde a `091`, em `interface/static/interface/gestao/` — e os tokens dos dois canais (`shared/static/shared/tokens.css`, por `STATICFILES_DIRS`); desde a `091`, o estilo de cada tela (`interface/telas/`, `interface/grupos/`) e o da página de erro (`shared/erro.css`). Só o portal ainda tem CSS no documento. **Não há `STATIC_ROOT`** — o `collectstatic` falha (ensaiado) | `config/settings/base.py` (`STATIC_URL`, `STATICFILES_DIRS`) |
-| Integrações externas | SMTP. Loteria Federal (`https://servicebus2.caixa.gov.br/...`), chamada **só por ação do gestor**. Base de CEP carregada de arquivo `.zip` local | `sorteios/infrastructure/fontes/loteria_federal.py:22`, `doc/runbook-base-de-cep.md` |
+| Integrações externas | SMTP. Loteria Federal (`https://servicebus2.caixa.gov.br/...`), chamada **só por ação do gestor**. Base de CEP carregada de arquivo `.zip` local | `sorteios/infrastructure/fontes/loteria_federal.py:24`, `doc/runbook-base-de-cep.md` |
 | Saúde | `/health` (não toca o banco), `/readiness` (banco e migrations pendentes, 503 se falhar), `/metrics` (exige autenticação da API) | `processo_seletivo/shared/api/operacional.py` |
 | Logs | JSON, uma linha por evento, no **stdout**, com `correlationId`. Não há arquivo de log | `config/settings/base.py:527-540`, `shared/observability.py` |
 | Correlação | `X-Correlation-ID` de entrada é aceito (ASCII até 100 caracteres), ecoado na resposta e gravado na auditoria | `shared/api/middleware.py` |
 | Auditoria funcional | `RegistroAuditoria`, append-only em três camadas (modelo, gatilho, privilégio), consultável em `/gestao/.../auditoria` e na API | `processo_seletivo/auditoria/` |
-| Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:729-730`, `interface/identidade.py:6-8` |
-| Autenticação do candidato | Sem senha: código de 6 dígitos por e-mail, validade de 10 min, 5 tentativas, 5 pedidos por hora por endereço e 30 por hora por origem | `identidade/domain/codigo.py`, `identidade/application/desafio.py:35-42` |
+| Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:753-754`, `interface/identidade.py:6-8` |
+| Autenticação do candidato | Sem senha: código de 6 dígitos por e-mail, validade de 10 min, 5 tentativas, 5 pedidos por hora por endereço e 30 por hora por origem | `identidade/domain/codigo.py`, `identidade/application/desafio.py:38-53` |
 | Autenticação da API admin | Adaptador de desenvolvimento, que produção recusa; **não há classe institucional** | `seguranca/api/authentication.py`, `production.py:298-328` |
 | CORS | Não existe, e não é necessário: a mesma origem serve tudo | ausência de `django-cors-headers` |
 | Seeds e fixtures obrigatórias | **Nenhuma.** `seed_demo` é só demonstração | `processos/management/commands/seed_demo.py:1-6` |
@@ -154,7 +154,7 @@ Tudo nesta seção é **constatado**.
   à rede institucional ou VPN (§27).
 - **"Criar o primeiro usuário administrativo"** não tem caminho. O `django.contrib.admin` não está
   instalado (`base.py:27-31`), o `createsuperuser` criaria um usuário que nada lê, e os papéis da
-  gestão são um dicionário fixo, escolhido no seletor (`interface/identidade.py:25-131`).
+  gestão são um dicionário fixo, escolhido no seletor (`interface/identidade.py:25-152`).
 
 ---
 
@@ -456,7 +456,7 @@ nmap -Pn -p 1-65535 <IP_DO_SERVIDOR>   # abertas: 80 e 443 (e 22 só se a máqui
 Com login só por chave, força bruta de senha no SSH não tem o que adivinhar, e restringir a porta
 22 à rede administrativa (§6.3) elimina a exposição — o que é mais forte do que banir depois de N
 tentativas. Para o portal, a aplicação já limita os pedidos de código por endereço e por origem, no
-banco (`desafio.py:35-42`).
+banco (`desafio.py:38-53`).
 
 **Recomendação: dispensável com o SSH restrito por origem.** Se o SSH precisar ficar aberto à
 Internet, ele reduz ruído no log:
@@ -485,7 +485,7 @@ Nada de compilador, nem de biblioteca de PDF ou imagem:
 
 - o `psycopg[binary]` traz a `libpq` na própria wheel (`uv.lock`);
 - o `openpyxl` é Python puro;
-- o PDF é escrito em Python puro, com fontes base-14 (`publicacoes/infrastructure/pdf.py:41-46`).
+- o PDF é escrito em Python puro, com fontes base-14 (`publicacoes/infrastructure/pdf.py:57-58`).
 
 ### 7.1 Pacotes do sistema
 
@@ -882,7 +882,7 @@ nomeia a variável.
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
 | `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:173-178`) |
 | `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:209-220`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:189-207`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:808-811`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:189-207`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:931-934`) |
 | `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:302-327`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
 | `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:337,350-355` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
@@ -1595,7 +1595,7 @@ proxy_set_header Connection "";
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 # SOBRESCREVE, e não acrescenta: o portal confia no PRIMEIRO item deste cabeçalho para o limite de
-# pedidos por origem (portal/views.py:808-811). Com $proxy_add_x_forwarded_for, um cliente escreveria
+# pedidos por origem (portal/views.py:931-934). Com $proxy_add_x_forwarded_for, um cliente escreveria
 # o primeiro item e contornaria o limite.
 proxy_set_header X-Forwarded-For $remote_addr;
 proxy_set_header X-Real-IP $remote_addr;
@@ -1818,13 +1818,13 @@ existe para impedir.
   recusado (`shared/arquivos.py:56-93`). **Não há antivírus** (§27).
 - **Integridade:** SHA-256 gravado no upload (`content_hash`), reconferido no envio da inscrição e
   a cada leitura da equipe. Divergência dá 409 e fica registrada na auditoria
-  (`interface/views.py:5103-5119`).
+  (`interface/views.py:6250-6263`).
 
 Autorização de download, rota a rota:
 
 | Quem | Rota | Regra |
 |---|---|---|
-| Candidato | `/selecoes/inscricoes/<uuid>/documentos/<uuid>/arquivo` | titularidade; 404 para quem não é o titular (`portal/views.py:1871-1884`) |
+| Candidato | `/selecoes/inscricoes/<uuid>/documentos/<uuid>/arquivo` | titularidade; 404 para quem não é o titular (`portal/views.py:2511-2524`) |
 | Comissão | `/gestao/inscricoes/<uuid>/documentos/<uuid>` | permissão `inscricao:consultar` e escopo institucional; o acesso é auditado |
 | Avaliador | `/gestao/minhas-etapas/.../documentos/<uuid>` | exige Atribuição; auditado |
 | Julgador de recurso | `/gestao/recursos/<uuid>/instrucao/<uuid>` | permissão, e o ato de instrução precisa alcançar o documento; auditado |
@@ -1917,9 +1917,9 @@ no log e **não** desfazem a ação do usuário.
 
 | Fluxo | Evidência | Efeito de SMTP fora do ar |
 |---|---|---|
-| **Código de acesso** (entrar, adicionar credencial, retomar) | `identidade/application/mensagem.py:87-137` | o candidato **não entra**; a tela mostra a mesma mensagem neutra de sempre |
-| Comprovante de inscrição, depois do commit | `inscricoes/application/mensagem.py:68-102` | a inscrição vale; o e-mail não chega |
-| Comunicação da convocação | `convocacao/application/comunicar.py:334-378` | registrada como `FALHA` |
+| **Código de acesso** (entrar, adicionar credencial, retomar) | `identidade/application/mensagem.py:94-149` | o candidato **não entra**; a tela mostra a mesma mensagem neutra de sempre |
+| Comprovante de inscrição, depois do commit | `inscricoes/application/mensagem.py:77-107` | a inscrição vale; o e-mail não chega |
+| Comunicação da convocação | `convocacao/application/comunicar.py:554-614` | registrada como `FALHA` |
 | Aviso complementar aos candidatos (066), **fora da requisição** | `avisos/application/despacho.py`, pelo timer `ps-avisos` (§16.4) | a tentativa fica em falha temporária e é retentada; nada se perde |
 
 **Não há recuperação de senha:** o candidato não tem senha. O código tem 6 dígitos, vale 10 minutos,
@@ -2033,7 +2033,7 @@ sudo systemctl start processoseletivo
 | 2 | OTP e e-mail | `/selecoes/acesso` com a caixa de teste da equipe | o código chega em menos de 1 min; digitado, entra. Fica um registro de identidade dessa caixa, aceitável e documentado |
 | 3 | Área do candidato | depois de entrar | abre, e "Sair" encerra |
 | 4 | CSRF atrás do proxy | o próprio item 2 (é um POST) | não dá 403. Com `DJANGO_TRUST_PROXY_SSL_HEADER` errado, daria |
-| 5 | Espera de reenvio | pedir um segundo código para a mesma caixa em menos de 60 s | nenhum código novo chega, e a tela mostra a mesma mensagem neutra (`desafio.py:36`) |
+| 5 | Espera de reenvio | pedir um segundo código para a mesma caixa em menos de 60 s | nenhum código novo chega, e a tela mostra a mesma mensagem neutra (`desafio.py:40`) |
 | 6 | Consulta a resultados e Editais | `/selecoes/` e a API pública | respondem, vazias até a primeira publicação |
 
 ### 17.3 Funcional em homologação — hoje bloqueado por B-1
@@ -2068,7 +2068,7 @@ dos que o dump referencia: pode sobrar arquivo, mas não faltar. Na ordem invers
 enviada no intervalo apontaria para um documento que não está no backup. A exceção é um rascunho
 cujo documento seja substituído exatamente nesse intervalo. A conferência da §19.4 aponta esses
 casos como `AUSENTE`, e eles são de rascunho, não de inscrição enviada — documento enviado é
-imutável (`inscricoes/models.py:367-387`).
+imutável (`inscricoes/models.py:369-389`).
 
 **Por que os segredos ficam fora.** O backup costuma ter retenção mais longa e mais gente com acesso
 do que a VM. Os segredos têm ciclo próprio, de rotação e revogação. O que é insubstituível — a
@@ -2600,7 +2600,7 @@ sudo systemctl enable --now ps-ceps.timer          # só se a base de CEP for us
 ```
 
 `limpar_terminais` apaga, por estado e não por idade, só desafio consumido, expirado ou esgotado, e
-preserva a reconciliação pendente (`identidade/application/desafio.py:268-293`). Não há comando
+preserva a reconciliação pendente (`identidade/application/desafio.py:369-394`). Não há comando
 equivalente para documentos e rascunhos antigos: o descarte deles depende da política (B-2).
 
 **Como verificar:**
@@ -2875,7 +2875,7 @@ Não é parecer jurídico. É o que a operação precisa garantir, ou decidir co
 |---|---|---|
 | **Acesso aos documentos** | Autorizado por titularidade ou por permissão com escopo; o acesso da equipe é auditado (§15.2) | Conceder papel é ato de gestão: revise os papéis a cada Processo. O banco e a raiz de arquivos só são acessíveis a administradores da VM, que devem ser poucos e nominais (§6.1) |
 | **Arquivos temporários** | Uploads e cópias acima de ~2 MB passam por `/tmp`; o `openpyxl` escreve a planilha em `/tmp` enquanto a monta | `PrivateTmp=yes` isola e apaga esses arquivos (§12.2). Os buffers do nginx ficam em `/var/lib/nginx`, só para `www-data` |
-| **Logs** | A aplicação não registra CPF, e-mail nem código (`identidade/application/mensagem.py:107-109`). Um traceback de SMTP pode conter o destinatário. O nginx registra IP e caminho. O PostgreSQL pode registrar valores em erro de constraint | `log_parameter_max_length = 0` (§9). Retenção definida (§20.2). Acesso aos logs só para administradores |
+| **Logs** | A aplicação não registra CPF, e-mail nem código (`identidade/application/mensagem.py:113-123`). Um traceback de SMTP pode conter o destinatário. O nginx registra IP e caminho. O PostgreSQL pode registrar valores em erro de constraint | `log_parameter_max_length = 0` (§9). Retenção definida (§20.2). Acesso aos logs só para administradores |
 | **Nunca em log** | senha (não existe), código de acesso (só hash), token (a API não tem) | não ligue `DEBUG`, o backend de e-mail de console, nem `log_statement = 'all'` no PostgreSQL |
 | **Backups** | Cifrados (restic). O dump local fica em claro, 0600, por 7 dias | a retenção do backup é também retenção de dado pessoal: alinhe à política (B-2). Descarte na produção **não** descarta nos backups até expirarem |
 | **Retenção e descarte** | **Não implementados** (B-2). Rascunhos, documentos, desafios com e-mail e sessões crescem sem limite | a limpeza de sessões e desafios é semanal (§21.4); para documentos e rascunhos, a política institucional é precondição |
@@ -2897,18 +2897,18 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **B-1 — A gestão não tem autenticação de produção.**
 
 - Evidência:
-  - `interface/views.py:729-730` responde 503 quando nenhum método de entrada está disponível — o
+  - `interface/views.py:753-754` responde 503 quando nenhum método de entrada está disponível — o
     seletor desligado e nenhum outro configurado;
   - `interface/identidade.py:6-8` diz que o seletor "não é fronteira de segurança";
   - `config/settings/production.py:94-98` recusa o seletor;
   - não há LDAP, OIDC, SAML, `RemoteUserMiddleware`, `LoginView` nem `AUTHENTICATION_BACKENDS`;
-  - os papéis são o dicionário fixo `PAPEIS` (`interface/identidade.py:25-131`).
+  - os papéis são o dicionário fixo `PAPEIS` (`interface/identidade.py:25-152`).
 - Efeito: ninguém cria, publica ou conduz Edital em produção, e não existe primeiro usuário
   administrativo.
 - Correção: um adaptador institucional que produza o `Actor` de `seguranca/domain.py`, com o papel
   vindo do diretório, e que **rotacione a sessão no login**. A `identificar` atual não chama
   `cycle_key()`. Registrado como RC-92, e como passo "Caminho de produção" em
-  `doc/decisoes-pendentes-da-consolidacao.md:603`.
+  `doc/decisoes-pendentes-da-consolidacao.md:609`.
 
 **B-2 — Não há política de retenção e descarte.**
 
@@ -2933,7 +2933,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 
 **I-2 — Não há servidor WSGI nas dependências.**
 
-- Evidência: `pyproject.toml:9-18`; o Dockerfile roda `runserver`.
+- Evidência: `pyproject.toml:9-24`; o Dockerfile roda `runserver`.
 - Paliativo: `gunicorn==26.2.0` instalado fora do lock (§8.3), **sem verificação de hash**.
 - Correção: um extra `prod` no `pyproject.toml`, travado no `uv.lock`.
 
@@ -2955,7 +2955,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **I-5 — Sessões e desafios sem limpeza.**
 
 - Evidência: não há `SESSION_*` nem agendamento de `clearsessions`; `limpar_terminais`
-  (`identidade/application/desafio.py:268`) só é chamada por teste.
+  (`identidade/application/desafio.py:369`) só é chamada por teste.
 - Paliativo: timer semanal (§21.4).
 - Relacionado: a sessão vale 2 semanas, e o "Sair" do portal remove a chave da sessão sem descartar a
   sessão (`portal/identidade.py:123-124`). Correção: `SESSION_COOKIE_AGE` explícito, e `flush()` no
@@ -2969,7 +2969,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 **I-7 — Lacunas na trilha de auditoria.**
 
 - Não são auditados: a entrada do candidato por código (`identidade/application/desafio.py`) e o
-  download do próprio documento (`portal/views.py:1871-1884`).
+  download do próprio documento (`portal/views.py:2511-2524`).
 - Os eventos de credencial são gravados com escopo vazio e ficam invisíveis na consulta
   (`identidade/application/credenciais.py`).
 - A exportação de matrículas fica fora de `RegistroAuditoria` (`matriculas/models.py`).
@@ -3002,7 +3002,7 @@ acesso, sem alternativa. Ação: SMTP institucional com redundância e monitorad
   Correção: `FILE_UPLOAD_PERMISSIONS = 0o640`.
 - **M-4 — Arquivo órfão possível** se a gravação cair antes do commit (`inscricoes/application/rascunho.py:467-521`).
   Nada reconcilia; o `ps-conferir-documentos` só olha na direção banco → disco.
-- **M-5 — Nome de anexo de rascunho em cabeçalho, via f-string sem escape** (`interface/views.py:1351`).
+- **M-5 — Nome de anexo de rascunho em cabeçalho, via f-string sem escape** (`interface/views.py:1664`).
   Só a equipe alcança, e o Django recusa quebra de linha em cabeçalho.
 - **M-6 — Não há antivírus nos uploads.** Mitigado por: só PDF por *magic bytes*, servido como
   `application/pdf`, nunca executado no servidor.
