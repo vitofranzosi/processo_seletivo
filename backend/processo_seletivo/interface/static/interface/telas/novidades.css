@@ -1,0 +1,57 @@
+/* As Novidades do GPS (168). Linha do tempo de cartões compactos na medida de leitura (UX-802): o
+   texto corrido não passa de --leitura, e a página não pede tela larga (UX-804). Só pares de cor que
+   o teste de contraste já confere: --verde-escuro sobre --verde-claro, --texto sobre --fundo e
+   --texto-fraco sobre --branco. A categoria se lê pelo texto, e a cor só a acompanha (UX-803). */
+
+.desde-a-ultima-visita,.filtros-das-novidades,.mes-de-novidades,.rodape-das-novidades,
+.paginas-das-novidades{max-width:var(--leitura)}
+
+.desde-a-ultima-visita{margin:1rem 0 1.5rem;padding:.9rem 1.1rem;border:1px solid var(--verde);
+  border-radius:6px;background:var(--verde-claro)}
+.desde-a-ultima-visita .ajuda{margin:.15rem 0 .5rem;color:var(--verde-escuro)}
+.desde-a-ultima-visita ul{margin:0;padding:0;list-style:none}
+.desde-a-ultima-visita li{padding:.2rem 0}
+
+.filtros-das-novidades{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0 .5rem}
+.filtros-das-novidades a{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;
+  border:1px solid var(--borda);border-radius:999px;background:var(--branco);color:var(--texto);
+  text-decoration:none;font-size:.875rem}
+.filtros-das-novidades a:hover{background:var(--fundo)}
+.filtros-das-novidades a[aria-current="page"]{border-color:var(--verde);background:var(--verde-claro);
+  color:var(--verde-escuro);font-weight:600}
+.quantidade-do-filtro{font-variant-numeric:tabular-nums;color:inherit}
+
+.mes-de-novidades{margin:1.75rem 0 0}
+.mes-de-novidades h2{padding-bottom:.35rem;border-bottom:1px solid var(--borda)}
+
+/* O filete à esquerda é a linha do tempo; cada cartão pendura nele pelo marcador. */
+.linha-do-tempo{list-style:none;margin:0;padding:0 0 0 1.1rem;border-left:2px solid var(--borda)}
+.novidade{position:relative;margin:1rem 0;padding:.75rem 1rem;border:1px solid var(--borda);
+  border-radius:6px;background:var(--branco);scroll-margin-top:1rem}
+.novidade::before{content:"";position:absolute;left:calc(-1.1rem - .4rem);top:1.1rem;width:.65rem;
+  height:.65rem;border-radius:50%;background:var(--branco);border:2px solid var(--verde)}
+.novidade:target{border-color:var(--verde)}
+.novidade h3{margin:.15rem 0 .3rem;font-size:1.05rem}
+.novidade p{margin:.3rem 0}
+.cabeca-da-novidade{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.82rem;
+  color:var(--texto-fraco)}
+.beneficio-da-novidade{color:var(--texto)}
+
+.categoria-da-novidade{display:inline-block;padding:0 .45rem;border:1px solid var(--borda);
+  border-radius:4px;background:var(--fundo);color:var(--texto);font-size:.75rem;font-weight:600;
+  letter-spacing:.02em}
+.categoria-da-novidade.c-novidade{border-color:var(--verde);background:var(--verde-claro);
+  color:var(--verde-escuro)}
+.categoria-da-novidade.c-melhoria{background:var(--branco)}
+.categoria-da-novidade.c-correcao{background:var(--fundo)}
+
+.como-usar{margin:.4rem 0 0}
+.como-usar summary{cursor:pointer;color:var(--verde-texto);font-size:.9rem;font-weight:600}
+.como-usar ol{margin:.3rem 0 .2rem;padding-left:1.3rem}
+.como-usar li{margin:.15rem 0}
+
+.acoes-da-novidade{display:flex;flex-wrap:wrap;gap:.4rem 1.25rem;font-size:.9rem}
+
+.paginas-das-novidades{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  gap:.5rem;margin:1.5rem 0 0;font-size:.9rem;color:var(--texto-fraco)}
+.rodape-das-novidades{margin-top:2rem;font-size:.85rem;color:var(--texto-fraco)}

@@ -1,0 +1,694 @@
+# As Novidades do GPS (spec 168). Uma tabela [[nota]] por capacidade entregue, da mais recente para a
+# mais antiga. O guia de curadoria está em doc/curadoria-das-novidades.md; leia-o antes de escrever.
+#
+# Campos obrigatórios: id, data, categoria, titulo, resumo, prs, specs.
+#   data       — o dia em que o último PR citado entrou na main (horário de Brasília), sem aspas.
+#   categoria  — "novidade", "melhoria" ou "correcao".
+#   prs, specs — rastreabilidade; nunca aparecem na página.
+# Opcionais: beneficio, onde, passos, destino (rota da barra), documentacao (âncora da Documentação do
+#   Sistema, sem #), requer_configuracao (configuração booleana), para_capacidade (quem lê).
+#
+# A regra que não se negocia: uma nota só entra depois de TODOS os PRs que ela cita estarem na main,
+# e descreve só o que eles entregaram. É o que garante que nenhum ambiente anuncie o que não roda.
+
+# ---- novembro de 2026 ------------------------------------------------------------------------
+
+[[nota]]
+id = "vitrine-em-andamento-e-encerradas"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "Página pública das seleções: em andamento e encerradas, separadas"
+resumo = """
+O Edital que fechou as inscrições mas ainda segue — com resultado a publicar, recurso aberto ou
+convocação — aparece em "Em andamento". Só o Edital encerrado vai para "Seleções encerradas", que
+agora se apresenta em páginas, da mais recente para a mais antiga.
+"""
+beneficio = "O candidato encontra a seleção que ainda está em curso sem confundi-la com as que já terminaram."
+documentacao = "vitrine-em-andamento-e-paginas"
+prs = [524, 526]
+specs = []
+
+[[nota]]
+id = "desfecho-explicado-ao-candidato"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "O candidato entende o resultado da convocação"
+resumo = """
+Na área do candidato, o registro do desfecho da convocação passa a vir numa frase simples, com o
+fundamento escrito pela comissão logo abaixo, recolhido. A convocação aberta diz por que a pessoa foi
+chamada, e a mensagem da convocação passa a dizer a data final do prazo, sem a expressão "contado do
+envio desta mensagem", que no reenvio parecia abrir prazo novo.
+"""
+beneficio = "Menos dúvidas e contatos com a comissão sobre o que o registro significa e até quando vale o prazo."
+documentacao = "desfecho-comunicado"
+prs = [525, 529, 533]
+specs = ["156"]
+
+[[nota]]
+id = "convocacao-depois-do-envio"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "Quem já enviou tudo não é mais tratado como recém-convocado"
+resumo = """
+Na área do candidato, a convocação só diz "Você foi convocado!" e adverte sobre o não atendimento
+enquanto houver algo a fazer. Sem providência pendente, o título passa a "Acompanhe sua convocação".
+O documento reenviado passou a ter um nome só, o mesmo na gestão e na área do candidato.
+"""
+documentacao = "convocacao-depois-do-envio"
+prs = [497, 514]
+specs = ["154"]
+
+[[nota]]
+id = "envio-de-varios-documentos"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "O candidato envia vários documentos de uma vez, sem perder a escolha"
+resumo = """
+Antes, enviar um documento recarregava a página e descartava os arquivos já escolhidos nos outros. Agora
+cada documento pedido tem o seu seletor, e um botão único no fim da lista envia todos. O mesmo arquivo
+escolhido para dois documentos é avisado no próprio cartão.
+"""
+beneficio = "Menos reenvios e menos documentos faltando por engano do candidato."
+documentacao = "envio-de-varios-documentos"
+prs = [496, 509, 516]
+specs = ["150"]
+
+[[nota]]
+id = "prevencao-nos-atos-irreversiveis"
+data = 2026-11-13
+categoria = "melhoria"
+titulo = "Conferência antes dos atos da convocação que não se desfazem"
+resumo = """
+Chamar uma pessoa da fila, chamar para regularizar e emitir o corte passam por uma página "Confira
+antes de…", que mostra o efeito antes do clique. O registro do desfecho oferece só as opções que cabem
+naquele momento e diz por que as outras ainda não cabem. O atalho de indeferimento por documento só
+aparece quando há pendência que o justifique.
+"""
+beneficio = "Evita o ato errado justamente onde não há como voltar atrás."
+onde = "Na convocação de cada lista e na tela do corte."
+documentacao = "conferencia-nos-atos-irreversiveis"
+prs = [489, 502, 520]
+specs = ["152"]
+
+[[nota]]
+id = "documentacao-com-links-e-titulo-corrigidos"
+data = 2026-11-13
+categoria = "correcao"
+titulo = "Links da Documentação do Sistema e título da tela Retificar"
+resumo = """
+Os links da Documentação do Sistema que levavam a uma página inexistente quando ela era aberta dentro da
+gestão foram corrigidos. A tela Retificar deixou de exibir o título "Retificaçãoões".
+"""
+destino = "interface:documentacao"
+prs = [532]
+specs = ["105"]
+
+[[nota]]
+id = "minhas-atividades"
+data = 2026-11-12
+categoria = "novidade"
+titulo = "Minhas atividades: o que é seu, em todos os Editais"
+resumo = """
+"Minhas Etapas" passou a se chamar "Minhas atividades" e reúne, numa página, o que é seu nos Editais das
+comissões que você integra: em "Para fazer agora", os atos de condução de quem preside, a conferência
+documental de quem está alocado e as avaliações pendentes; em "Em espera nos seus Editais", o que
+aguarda outra coisa, dito pelo que é.
+"""
+beneficio = "A presidência deixa de abrir Edital por Edital para descobrir o que falta fazer."
+onde = "Na barra lateral, em Minhas atividades. O endereço é o mesmo de antes."
+destino = "interface:minhas-etapas"
+documentacao = "minhas-atividades"
+prs = [506, 508, 511, 512]
+specs = ["160"]
+
+[[nota]]
+id = "convocar-e-publicar-no-gps"
+data = 2026-11-12
+categoria = "novidade"
+titulo = "Publicar as convocações no próprio GPS"
+resumo = """
+A comissão publica as convocações no GPS: um ato numerado por Edital, com página pública, documento
+oficial em PDF e a seção Convocações na página da seleção. Na convocação por publicação, a publicação
+é a convocação, e o prazo corre dela. Convocar e publicar podem ser feitos num gesto só.
+"""
+beneficio = "Dispensa a publicação manual da lista de convocados fora do sistema e mantém prazo e registro coerentes."
+onde = "Na página do Edital, em Publicação das convocações."
+passos = [
+  "Escolha as vagas e as listas que entram na publicação.",
+  "Confira a prévia: quem será convocado e quem só aparece como divulgação.",
+  "Escolha a autoridade signatária e publique.",
+]
+documentacao = "publicacao-das-convocacoes"
+prs = [470, 503, 504]
+specs = ["149", "159"]
+
+[[nota]]
+id = "conferencia-com-o-documento-a-vista"
+data = 2026-11-12
+categoria = "melhoria"
+titulo = "Conferir documentos com o arquivo ao lado do formulário"
+resumo = """
+Na página dos documentos da convocação, "Abrir" põe o PDF ao lado do formulário de conferência, em
+telas largas, sem alternar entre abas. Em telas estreitas, o arquivo continua abrindo em outra aba, e
+na volta a página oferece retomar a conferência do documento com o que já estava marcado.
+"""
+beneficio = "Conferência mais rápida e com menos risco de julgar o documento errado."
+onde = "Em cada convocação, na página Documentos da convocação."
+documentacao = "conferencia-com-o-documento-a-vista"
+prs = [494]
+specs = ["157"]
+
+[[nota]]
+id = "formalizacao-na-jornada-do-edital"
+data = 2026-11-12
+categoria = "melhoria"
+titulo = "A passagem dos aptos ao setor de formalização aparece na jornada do Edital"
+resumo = """
+Com pessoas aptas para formalização, a jornada guiada do Edital passou a dizer o que falta para o setor
+receber os documentos: definir os documentos que vão ao setor, designar quem os recebe e exportá-los.
+Cada providência aparece para o papel que a pratica, e a presidência do Processo também pode designar
+quem recebe.
+"""
+beneficio = "Nenhuma pessoa apta fica esquecida entre a convocação e a matrícula."
+onde = "Na página do Edital, no bloco Disponibilizar ao setor, e em O que fazer agora."
+documentacao = "passagem-ao-setor"
+prs = [486, 501]
+specs = ["153", "117"]
+
+[[nota]]
+id = "vaga-reservada-sem-ocupante"
+data = 2026-11-12
+categoria = "novidade"
+titulo = "Vaga reservada sem quem a ocupe: dita na tela, e declarável"
+resumo = """
+Quando ninguém mais na ordem de uma lista reservada pode ocupar a vaga, a Ocupação, a página do Edital
+e a Convocação passam a dizer isso com as mesmas palavras, e a comissão pode registrar a declaração de
+vaga não preenchida.
+"""
+beneficio = "A situação da vaga deixa de ser descoberta por dedução."
+documentacao = "vaga-sem-ocupante"
+prs = [495]
+specs = ["155"]
+
+[[nota]]
+id = "publicacao-das-inscricoes"
+data = 2026-11-12
+categoria = "novidade"
+titulo = "Publicar as inscrições: recebidas, resultado preliminar e homologação"
+resumo = """
+O GPS publica a relação das inscrições em três atos opcionais: a relação das inscrições recebidas,
+depois do fim do período; o resultado preliminar da análise, que abre o prazo de recurso; e a
+homologação. Cada um tem prévia, autoridade signatária e PDF oficial, e a relação se organiza por lista
+de concorrência.
+"""
+beneficio = "A publicação das inscrições sai do mesmo lugar em que a análise foi feita, sem montar listas à mão."
+onde = "Na página do Edital, em Publicações das inscrições."
+documentacao = "publicacao-das-inscricoes"
+prs = [469, 507, 510]
+specs = ["148"]
+
+[[nota]]
+id = "barema-da-etapa"
+data = 2026-11-11
+categoria = "novidade"
+titulo = "Barema da Etapa: pontuar critério a critério"
+resumo = """
+A Etapa pontuada pode publicar a sua lista de critérios de avaliação, com a pontuação máxima de cada
+um. Com o barema publicado, quem avalia pontua critério a critério na Mesa e o sistema calcula o total.
+Sem barema, tudo continua como antes.
+"""
+beneficio = "Acaba a planilha paralela para somar a ficha de títulos, e o total fica conferível."
+onde = "Na composição do Edital, no cartão da Etapa pontuada, seção Barema."
+passos = [
+  "No cartão da Etapa, use Acrescentar critério para cada item da ficha.",
+  "Publique o Edital: o barema sai no documento.",
+  "Na Mesa, a avaliação passa a pedir a pontuação de cada critério.",
+]
+documentacao = "barema-da-etapa"
+prs = [461, 462, 463]
+specs = ["146"]
+
+[[nota]]
+id = "pagina-do-processo"
+data = 2026-11-11
+categoria = "melhoria"
+titulo = "Página do Processo Seletivo reorganizada"
+resumo = """
+A página do Processo diz no topo em que situação ele está e onde está o conjunto dos Editais, e logo
+abaixo o que você pode fazer nele, lido do que você pode fazer em cada Edital.
+"""
+onde = "Em Processos Seletivos, ao abrir um Processo."
+documentacao = "pagina-do-processo"
+prs = [466]
+specs = ["147"]
+
+[[nota]]
+id = "centro-de-controle-do-edital"
+data = 2026-11-10
+categoria = "novidade"
+titulo = "Centro de Controle: a página do Edital publicado"
+resumo = """
+A página de um Edital publicado ou encerrado passou a ser o Centro de Controle: em que fase o Edital
+está, as providências em aberto e de quem é cada uma (com a marca SUA no que é seu), e o andamento da
+seleção. Cada providência leva à tela do ato, e depois do ato a tela volta ao Centro.
+"""
+beneficio = "Você identifica em segundos o que falta no Edital e por onde começar."
+onde = "Em Processos Seletivos, ao abrir um Edital publicado."
+documentacao = "centro-de-controle"
+prs = [415, 416, 417, 441, 443, 447, 451]
+specs = ["127", "135", "136", "138", "139"]
+
+[[nota]]
+id = "jornada-do-sorteio"
+data = 2026-11-10
+categoria = "melhoria"
+titulo = "A tela do sorteio segue os passos de quem o conduz"
+resumo = """
+A tela do sorteio foi reorganizada em passos: fixar os participantes de cada lista, obter a semente
+pública e realizar o sorteio. Os detalhes do método ficam recolhidos, e a ordem sorteada aparece na
+própria tela.
+"""
+beneficio = "Menos rolagem e menos risco de pular um passo no dia do sorteio."
+documentacao = "jornada-do-sorteio"
+prs = [452]
+specs = ["142"]
+
+[[nota]]
+id = "sorteio-no-cartao-da-vaga"
+data = 2026-11-10
+categoria = "melhoria"
+titulo = "Na página pública do Edital, o sorteio de cada vaga fica no cartão dela"
+resumo = """
+Quem vai participar de cada sorteio, com que número, e depois como o sorteio foi feito, aparecem no
+cartão da própria vaga, e não mais em blocos separados longe dela.
+"""
+documentacao = "sorteio-no-cartao-da-vaga"
+prs = [459]
+specs = ["145"]
+
+[[nota]]
+id = "convocacao-pelas-perguntas-de-quem-conduz"
+data = 2026-11-10
+categoria = "melhoria"
+titulo = "A convocação de cada lista começa pelo que fazer agora"
+resumo = """
+A tela da convocação de uma lista abre com o resumo "Neste recorte, agora": quantos titulares falta
+convocar, quantos aguardam resposta, quantos têm documento a conferir, e assim por diante, cada linha
+levando ao lugar certo. Convocar os titulares passa sempre por uma conferência antes do envio.
+"""
+beneficio = "O trabalho do dia aparece primeiro, e nenhuma comunicação sai sem que alguém a tenha lido."
+documentacao = "convocacao-pelas-perguntas"
+prs = [448, 453]
+specs = ["140", "143"]
+
+[[nota]]
+id = "sucessora-espera-o-reabilitado"
+data = 2026-11-10
+categoria = "correcao"
+titulo = "A nova ordem espera a avaliação de quem o recurso reabilitou"
+resumo = """
+Quando um recurso deferido devolve alguém à disputa e ainda falta avaliá-lo numa Etapa, o sistema
+deixou de oferecer a ordem sucessora e o corte antes dessa avaliação. Antes, era possível emitir atos
+que deixavam a pessoa de fora.
+"""
+documentacao = "sucessora-espera-o-reabilitado"
+prs = [449]
+specs = ["141"]
+
+[[nota]]
+id = "aviso-de-pendencia-documental"
+data = 2026-11-09
+categoria = "novidade"
+titulo = "Avisar por e-mail quem tem documento pendente"
+resumo = """
+A comissão pode avisar por e-mail as pessoas convocadas que têm documento pendente. A mensagem diz quais
+documentos precisam de atenção, e o motivo fica na área do candidato.
+"""
+beneficio = "O candidato fica sabendo da pendência antes de o prazo vencer."
+onde = "Na convocação de cada lista, em Acompanhar e conferir: Avisar as pessoas com documento pendente."
+documentacao = "aviso-de-pendencia"
+requer_configuracao = "AVISOS_AOS_CANDIDATOS"
+prs = [435]
+specs = ["134"]
+
+[[nota]]
+id = "orientacao-aponta-o-ato-certo"
+data = 2026-11-08
+categoria = "correcao"
+titulo = "A orientação depois da publicação aponta o ato certo"
+resumo = """
+Em Editais com mais de um marco de classificação, "O que fazer agora" apontava o ato errado em alguns
+pontos, e algumas telas, logo depois de um ato, destacavam a sucessão dele como próximo passo. As duas
+orientações foram corrigidas.
+"""
+documentacao = "marco-intermediario"
+prs = [414, 432]
+specs = ["126", "133"]
+
+[[nota]]
+id = "lista-de-processos-com-abas-e-busca"
+data = 2026-11-07
+categoria = "melhoria"
+titulo = "Lista de Processos com abas, busca e páginas"
+resumo = """
+A lista de Processos Seletivos abre em "Em andamento", com as abas Encerrados, Cancelados e Todos, uma
+busca e 20 Processos por página. A faixa "Ações disponíveis para você" fica no topo.
+"""
+beneficio = "Os Processos em curso deixam de se perder entre os encerrados."
+destino = "interface:lista"
+documentacao = "lista-de-processos-recortada"
+prs = [422]
+specs = ["129"]
+
+[[nota]]
+id = "lista-no-gesto-de-titulares"
+data = 2026-11-07
+categoria = "correcao"
+titulo = "Convocar os titulares de uma vez grava a lista de documentos"
+resumo = """
+Convocar todos os titulares num único ato criava as convocações sem a lista de documentos, e o aceite
+podia passar sem documento algum. A lista passou a ser gravada, e o aceite não passa sem ela.
+"""
+documentacao = "lista-no-gesto-de-titulares"
+prs = [425]
+specs = ["115"]
+
+[[nota]]
+id = "encerrar-processo-adverte"
+data = 2026-11-06
+categoria = "melhoria"
+titulo = "Encerrar o Processo avisa o que ainda está em aberto nos Editais"
+resumo = """
+A confirmação de Encerrar Processo passou a listar o que está em aberto nos Editais dele, como pessoas
+aptas cujos documentos ainda não foram disponibilizados ao setor. É um aviso, e não um impedimento.
+"""
+beneficio = "Encerrar corta convocações e envios de documentos; agora se vê o que será cortado antes."
+documentacao = "encerrar-processo-adverte"
+prs = [421]
+specs = ["130"]
+
+[[nota]]
+id = "ordem-sem-resultado-recusada"
+data = 2026-11-06
+categoria = "correcao"
+titulo = "A ordem por pontuação sem nenhum resultado é recusada"
+resumo = """
+Emitir a ordem de classificação antes de haver qualquer resultado gerava um ato que já nascia
+desatualizado. O sistema passou a recusar esse caso e dizer o motivo.
+"""
+documentacao = "ordem-sem-resultado"
+prs = [419]
+specs = ["128"]
+
+[[nota]]
+id = "correcao-da-convocacao"
+data = 2026-11-05
+categoria = "novidade"
+titulo = "Corrigir uma convocação em aberto e dar mais prazo"
+resumo = """
+Cada chamada em aberto com vencimento passou a ter "Corrigir esta convocação", para quem pode convocar.
+É o jeito de dar mais prazo a quem foi convocado. A correção mantém número de chamada, documentos e
+envios, e a convocação corrigida continua no histórico, com o motivo.
+"""
+beneficio = "Prorrogar prazo deixa de exigir solução fora do sistema."
+onde = "Na convocação de cada lista, no cartão da chamada."
+documentacao = "correcao-da-convocacao"
+prs = [385]
+specs = ["120"]
+
+[[nota]]
+id = "kit-de-divulgacao"
+data = 2026-11-05
+categoria = "novidade"
+titulo = "Kit de divulgação do Edital"
+resumo = """
+O Edital publicado tem um kit de divulgação montado a partir da versão vigente: a ficha com as
+informações oficiais, os textos para site, redes e mensagens e as peças visuais em formatos de post,
+story e banner, por família de curso, num pacote para baixar.
+"""
+beneficio = "Divulgar sem redigitar datas e vagas, e sem risco de divulgar informação diferente da publicada."
+onde = "Na página do Edital, em Kit de divulgação. Fica disponível depois da publicação."
+documentacao = "kit-de-divulgacao"
+prs = [361, 364, 377, 382, 383, 386, 387, 389, 391, 392, 393]
+specs = ["111", "119"]
+
+[[nota]]
+id = "documentos-na-convocacao-e-formalizacao"
+data = 2026-11-04
+categoria = "novidade"
+titulo = "Documentos na convocação e entrega ao setor de formalização"
+resumo = """
+A convocação pode pedir documentos: o candidato os envia pela área do candidato, e a comissão os
+confere no GPS. Depois, os documentos de quem ficou apto são disponibilizados ao setor que formaliza o
+vínculo, como o Registro Acadêmico, sem planilha nem e-mail com anexos.
+"""
+beneficio = "O documento chega uma vez, é conferido num lugar só e segue ao setor sem retrabalho."
+onde = "Na convocação de cada lista; o setor usa a seção Formalização da barra."
+destino = "interface:formalizacao"
+documentacao = "formalizacao"
+prs = [369, 373]
+specs = ["115", "117"]
+
+[[nota]]
+id = "concurso-conferido-na-caixa"
+data = 2026-11-04
+categoria = "melhoria"
+titulo = "O concurso da Loteria Federal é conferido antes de publicar"
+resumo = """
+Ao submeter, publicar ou retificar um Edital com sorteio, e ao fixar os participantes, o GPS confere na
+Caixa se o concurso declarado já foi realizado, e recusa o concurso que já passou.
+"""
+beneficio = "Um número de concurso digitado errado é descoberto na publicação, e não no dia do sorteio."
+documentacao = "sorteio-conferencia"
+prs = [372]
+specs = ["116"]
+
+[[nota]]
+id = "desempate-por-etapa-nao-somada"
+data = 2026-11-02
+categoria = "correcao"
+titulo = "Desempate pela nota de uma Etapa que não entra na soma"
+resumo = """
+O critério "Maior pontuação numa Etapa" não separava ninguém quando a Etapa citada não fazia parte da
+soma da nota final. O cálculo passou a ler essa nota só para desempatar.
+"""
+documentacao = "desempate-por-outra-etapa"
+prs = [365]
+specs = ["114"]
+
+[[nota]]
+id = "encerramento-seguro-do-edital"
+data = 2026-11-01
+categoria = "melhoria"
+titulo = "Encerrar o Edital confere o que ainda está em aberto"
+resumo = """
+Antes, encerrar o Edital só fechava as inscrições. Agora a confirmação mostra o que impediria uma
+conclusão regular — período de inscrições ou prazo de recurso ainda correndo, recurso por julgar,
+Retificação a meio caminho — e só oferece o botão quando nada disso existe. O que continua depois do
+encerramento é dito como aviso.
+"""
+documentacao = "encerramento-seguro"
+prs = [362]
+specs = ["113"]
+
+[[nota]]
+id = "reaproveitamento-leva-teto-e-requerimento"
+data = 2026-11-01
+categoria = "correcao"
+titulo = "Criar a partir de um Edital anterior leva o teto e o Requerimento"
+resumo = """
+Ao criar um Edital a partir de outro, o teto de inscrições e o Requerimento de Matrícula da origem
+passaram a ser copiados, como o restante da configuração.
+"""
+documentacao = "reaproveitar"
+prs = [360]
+specs = []
+
+# ---- outubro de 2026 -------------------------------------------------------------------------
+
+[[nota]]
+id = "cadastro-de-unidades"
+data = 2026-10-31
+categoria = "novidade"
+titulo = "Cadastro de unidades pela aplicação"
+resumo = """
+O registro de Unidades passou a ser administrado pela tela Unidades: cadastrar, alterar, desativar e
+reativar, com a conferência de como o cabeçalho sai no documento oficial.
+"""
+destino = "interface:unidades"
+documentacao = "cadastro-de-unidades"
+para_capacidade = "unidade:administrar"
+prs = [350, 351, 352]
+specs = ["110"]
+
+[[nota]]
+id = "trilha-da-unidade"
+data = 2026-10-31
+categoria = "novidade"
+titulo = "Trilha da unidade: os atos administrativos, para quem audita"
+resumo = """
+A seção Trilha da unidade mostra os atos administrativos da unidade, do mais recente para o mais
+antigo, com filtro por assunto: quando, o quê, por quem, o antes e o depois e o motivo.
+"""
+destino = "interface:trilha-da-unidade"
+documentacao = "trilha-da-unidade"
+para_capacidade = "auditoria:consultar"
+prs = [348]
+specs = ["108"]
+
+[[nota]]
+id = "acessos-da-unidade"
+data = 2026-10-30
+categoria = "novidade"
+titulo = "Acessos da unidade concedidos pela interface"
+resumo = """
+Quem administra acessos concede e revoga, pela interface, o acesso de cada pessoa à unidade e os seus
+papéis, sempre com motivo. Nada se apaga: o histórico de cada vínculo fica registrado.
+"""
+destino = "interface:acessos"
+documentacao = "gestao-de-acessos"
+para_capacidade = "acesso:consultar"
+prs = [346]
+specs = ["107"]
+
+[[nota]]
+id = "agenda-dos-editais"
+data = 2026-10-30
+categoria = "novidade"
+titulo = "Agenda dos Editais"
+resumo = """
+Os cronogramas publicados de todos os Editais da unidade, num mês e numa lista de próximos marcos.
+"""
+beneficio = "Quem coordena vários certames vê onde os marcos se acumulam antes de marcar uma data."
+destino = "interface:agenda"
+documentacao = "agenda"
+prs = [336]
+specs = ["101"]
+
+[[nota]]
+id = "retificacao-em-curso-encontravel"
+data = 2026-10-30
+categoria = "melhoria"
+titulo = "A Retificação em curso aparece onde se procura"
+resumo = """
+A página do Edital lista as Retificações em curso, com a situação e quem age a seguir. A lista de
+Processos marca o Edital que tem Retificação esperando alguém, e a tela Retificar avisa quando já existe
+uma em andamento.
+"""
+beneficio = "Quem homologa encontra a Retificação que outra pessoa submeteu."
+documentacao = "retificacao-em-curso"
+prs = [339, 340]
+specs = ["103", "104"]
+
+[[nota]]
+id = "documentacao-do-sistema-na-gestao"
+data = 2026-10-30
+categoria = "novidade"
+titulo = "Documentação do Sistema dentro da gestão"
+resumo = """
+A descrição completa do sistema, seção por seção, abre pela barra lateral, em Documentação do Sistema.
+Os links "Saiba mais" desta página levam a ela.
+"""
+destino = "interface:documentacao"
+prs = [344]
+specs = ["105"]
+
+[[nota]]
+id = "sorteio-viavel-desde-a-publicacao"
+data = 2026-10-30
+categoria = "correcao"
+titulo = "O Edital não publica um sorteio que seria recusado"
+resumo = """
+Um Edital que marcava a extração da Loteria para o mesmo dia do fim das inscrições era publicado, e o
+sorteio só era recusado no dia do certame. A publicação passou a impedir esse caso, e o sistema avisa
+antes de fixar os participantes.
+"""
+documentacao = "sorteio-viavel"
+prs = [337]
+specs = ["102"]
+
+[[nota]]
+id = "relatorio-consolidado"
+data = 2026-10-25
+categoria = "novidade"
+titulo = "Relatório consolidado da unidade"
+resumo = """
+O balanço de um conjunto de Editais num documento só: por período de publicação, por ano do número do
+Edital ou escolhendo um a um, até 60 Editais.
+"""
+onde = "Na Visão Geral, em Relatório consolidado."
+destino = "interface:visao-geral"
+documentacao = "relatorio-consolidado"
+prs = [331, 334]
+specs = ["100"]
+
+[[nota]]
+id = "relatorio-do-edital"
+data = 2026-10-25
+categoria = "novidade"
+titulo = "Relatório do Edital, em página e em PDF"
+resumo = """
+Para quem responde pela seleção sem operar o sistema, uma página e um PDF que dizem, de um Edital
+publicado, o que saiu e o que falta, com um anexo técnico.
+"""
+onde = "Na página do Edital, em Relatório do Edital."
+documentacao = "relatorio-do-edital"
+prs = [330, 332, 333]
+specs = ["099"]
+
+[[nota]]
+id = "previa-do-sorteio"
+data = 2026-10-21
+categoria = "novidade"
+titulo = "Simular o sorteio antes de publicar"
+resumo = """
+O marco por sorteio tem o botão Simular sorteio, que roda o algoritmo oficial sobre inscritos
+fictícios, com uma semente inventada e identificada como fictícia. Nada é gravado.
+"""
+onde = "Na composição do Edital, etapa Classificação, no cartão do marco por sorteio."
+documentacao = "previa-do-sorteio"
+prs = [327, 328]
+specs = ["098"]
+
+[[nota]]
+id = "vaga-acrescida"
+data = 2026-10-21
+categoria = "novidade"
+titulo = "Vaga acrescida depois da publicação"
+resumo = """
+Uma vaga que surge depois de publicado o Edital, como a matrícula não efetivada em outro Edital, entra
+pela Ocupação, com origem e motivo, e permite convocar do cadastro de reserva sem Retificação.
+"""
+onde = "Na Ocupação, no bloco da ampla concorrência: Vagas acrescidas e Conferir o acréscimo."
+documentacao = "vaga-acrescida"
+prs = [324]
+specs = ["097"]
+
+[[nota]]
+id = "previa-da-classificacao"
+data = 2026-10-20
+categoria = "novidade"
+titulo = "Simular a classificação antes de publicar"
+resumo = """
+Quem elabora o Edital vê o que a regra do marco faria antes de publicá-la — a ordem, os empates, o
+corte e a ocupação das vagas —, calculado pelo mesmo motor do certame sobre candidatos fictícios. Nada
+é gravado nem sai no documento.
+"""
+onde = "Na composição do Edital, etapa Classificação: Simular classificação."
+documentacao = "previa-da-classificacao"
+prs = [320, 321]
+specs = ["094", "095"]
+
+[[nota]]
+id = "nova-moldura-da-gestao"
+data = 2026-10-18
+categoria = "melhoria"
+titulo = "Nova barra lateral e cabeçalho da gestão"
+resumo = """
+A gestão ganhou uma barra lateral com as seções que cada pessoa alcança, agrupadas em Trabalho, Unidade
+e Ajuda, que se recolhe para dar espaço às telas largas, e um cabeçalho que diz onde você está. As telas
+de uso diário, de quem elabora e da presidência foram refeitas sobre essa moldura.
+"""
+documentacao = "barra-da-gestao"
+prs = [291, 292, 293, 294, 297, 298, 300, 301, 303, 304]
+specs = ["076", "077", "078", "079", "080", "084", "085", "087"]
