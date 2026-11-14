@@ -692,7 +692,7 @@
         <tr><td><strong>Valida</strong></td><td>A soma do quadro de vagas; a nota dentro da faixa publicada; tudo o que impede publicar um Edital (Perfil sem marco, marco que corta sem forma de convocação, Etapa que nunca terá Resultado…).</td></tr>
         <tr><td><strong>Exige confirmação</strong></td><td>Todo ato: publicar, consolidar, emitir ordem, cortar, apurar, convocar, registrar desfecho, aplicar a todos, exportar. A tela mostra antes o que vai acontecer — “nada foi gravado ainda” — e a confirmação carrega uma assinatura do que você viu: se o mundo mudou entre ver e confirmar, o ato é recusado.</td></tr>
         <tr><td><strong>Permite exceção</strong></td><td>Desmarcar um Perfil na prévia do “aplicar a todos”; convocar à frente de quem não foi chamado, justificando; digitar uma quantidade de cota diferente da sugerida (a Revisão só avisa).</td></tr>
-        <tr><td><strong>Impede</strong></td><td>Publicar com erro impeditivo (não existe “publicar mesmo assim”); consolidar Etapa com mais de uma avaliação por inscrição; emitir corte quando um empate atravessa a fronteira de uma regra estrita; convocar sem vaga faltante.</td></tr>
+        <tr><td><strong>Impede</strong></td><td>Publicar com erro impeditivo (não existe “publicar mesmo assim”); consolidar Etapa pontuada com mais de uma avaliação por inscrição, ou decisória sem regra de deliberação; emitir corte quando um empate atravessa a fronteira de uma regra estrita; convocar sem vaga faltante.</td></tr>
       </tbody>
     </table></div>
     <div class="aviso aviso-chave">
@@ -1419,7 +1419,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <ul>
         <li><strong>Análise documental</strong>: “Como esta Etapa é concluída” = <em>Com decisão, sem nota</em>; rótulos “Deferido”/“Indeferido”; <em>Eliminatória</em> marcada; vinculada ao Evento da análise.</li>
         <li><strong>Prova</strong>: <em>Com pontuação</em>; “Pontuação máxima” 100; “Nota mínima” 50; “Peso” 1; <em>Eliminatória</em> e <em>Classificatória</em>.</li>
-        <li>“Avaliações por inscrição”: deixe 1. Mais de uma não consolida — o Edital não tem como declarar a regra de combinação, e a publicação é impedida quando o Resultado daquela Etapa é necessário.</li>
+        <li>“Avaliações por inscrição”: deixe 1 na Etapa pontuada — com mais de uma ela não consolida, porque o Edital não tem como declarar como combinar notas. Na Etapa decisória, mais de uma é a comissão: o cartão pergunta <span class="rotulo-ui">Como a comissão chega ao resultado?</span>, e a maioria exige número ímpar. Ver <a href="#deliberacao">A deliberação da comissão</a>.</li>
       </ul>
       <div class="aviso aviso-nota"><span class="titulo">A consequência sai daqui</span><p>Nota abaixo da mínima numa Etapa eliminatória elimina; decisão desfavorável numa decisória eliminatória elimina. Etapa pontuada sem caráter eliminatório nunca elimina. Etapa decisória precisa ser eliminatória, senão não terá Resultado. <a href="#consolidacao">Tabela completa →</a></p></div>
       <div class="decisao">
@@ -1697,7 +1697,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>Como a Etapa conclui</td><td>Com pontuação (máxima, mínima) · com decisão (rótulos favorável/desfavorável)</td><td>Cartão da Etapa</td><td><a href="#etapas">Mais</a></td></tr>
         <tr><td>Caráter</td><td>Eliminatória · classificatória · os dois</td><td>Cartão da Etapa</td><td>Decisória precisa ser eliminatória para ter Resultado; para entrar num marco precisa ser classificatória.</td></tr>
         <tr><td>Peso</td><td>Número</td><td>Cartão da Etapa</td><td>Obrigatório quando um marco a soma. O peso mora na Etapa, não no marco.</td></tr>
-        <tr><td>Avaliações por inscrição</td><td>1 · mais de uma</td><td>Cartão da Etapa</td><td>Mais de uma <strong>não consolida</strong>: não há como declarar a regra de combinação. <span class="selo selo-lacun">Lacuna</span></td></tr>
+        <tr><td>Avaliações por inscrição</td><td>1 · mais de uma</td><td>Cartão da Etapa</td><td>Na decisória, mais de uma pede a <a href="#deliberacao">regra de deliberação</a> (maioria, só ímpar, ou unanimidade para um dos lados). Na pontuada, mais de uma <strong>não consolida</strong>: não há como declarar a combinação de notas. <span class="selo selo-parc">Parcial</span></td></tr>
         <tr><td>Datas da Etapa</td><td>Vínculo a um Evento</td><td>Cartão da Etapa</td><td>Informa; não bloqueia avaliação fora do período.</td></tr>
       </tbody>
     </table></div>
@@ -1814,7 +1814,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
         <tr><td>convocar do cadastro de reserva sem vaga imediata</td><td class="centro"><span class="m m-parc">◐</span></td><td>Vaga acrescida, na ocupação</td><td>Só na ampla de Perfil sem linha de Modalidade e sem reversão (097). Com cotas, fora do sistema.</td></tr>
         <tr><td>várias Etapas, com eliminação entre elas</td><td class="centro"><span class="m m-sim">✓</span></td><td>Etapas</td><td>Eliminado sai das seguintes automaticamente.</td></tr>
         <tr><td>só os N primeiros seguirem para a Etapa seguinte</td><td class="centro"><span class="m m-sim">✓</span></td><td>Corte que governa a Etapa</td><td>O corte é um ato emitido.</td></tr>
-        <tr><td>dupla avaliação por inscrição</td><td class="centro"><span class="m m-parc">◐</span></td><td>Avaliações por inscrição</td><td>Distribui, mas não consolida.</td></tr>
+        <tr><td>dupla avaliação por inscrição</td><td class="centro"><span class="m m-parc">◐</span></td><td>Avaliações por inscrição</td><td>A decisória delibera pela regra do Edital (165); a pontuada distribui, mas não consolida.</td></tr>
         <tr><td>ficha de avaliação diferente por curso</td><td class="centro"><span class="m m-nao">—</span></td><td>—</td><td>A Etapa é do Edital.</td></tr>
         <tr><td>comissão local por campus</td><td class="centro"><span class="m m-nao">—</span></td><td>—</td><td>Alocação é por Etapa, sem Perfil. Decisão pendente.</td></tr>
         <tr><td>publicar resultado parcial (só uma lista)</td><td class="centro"><span class="m m-sim">✓</span></td><td>Publicar por recorte</td><td>Cada recorte publica o seu; o gesto do marco publica vários.</td></tr>
@@ -2119,7 +2119,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Qualquer seleção com reserva legal de vagas.</td></tr>
       <tr><th>O que configurar</th><td>Modalidades com percentual, fundamento, versão e arredondamento; quadro de vagas; reversão; documento de autodeclaração com alcance “Modalidade em todos os Perfis”.</td></tr>
       <tr><th>Decisões</th><td>As quantidades (o percentual sugere); se a cota reverte e quando.</td></tr>
-      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. Heteroidentificação não existe no sistema: é conduzida fora dele. <a href="#reservas">Mais</a></td></tr>
+      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. A heteroidentificação entra como Etapa decisória restrita às Modalidades que alcança (163), com o efeito por lista do desfecho (164) e a deliberação da comissão (165) — as três em PRs empilhados, sem merge na <code>main</code>; o vídeo não existe. <a href="#deliberacao">Mais</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-reserva">Receita 7 — Suplentes e cadastro de reserva</h3>
@@ -2210,7 +2210,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td>Requerimento de Matrícula e exportação</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
         <tr><td>Cadastro de reserva (declarado)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
         <tr><td>Barema (146: critérios independentes)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
-        <tr><td>Heteroidentificação, submodalidades</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
+        <tr><td>Heteroidentificação (rito ao vivo, sem vídeo; 163 a 165, sem merge)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
+        <tr><td>Submodalidades</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
       </tbody>
     </table></div>
     <p class="miudo">Quais famílias entram no alvo do produto é decisão pendente (DP-10). <a href="#pg-evolucoes">O que ainda precisa evoluir</a></p>
@@ -6486,7 +6487,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
           <tr><td><span class="rotulo-ui">Nota mínima</span> <em>(opcional)</em></td><td><code>minimumScore</code></td><td>Critério de eliminação — só se a Etapa for eliminatória. Comparação decimal exata: nota <em>igual</em> à mínima habilita</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Pontuação máxima</span> <em>(opcional)</em></td><td><code>maximumScore</code></td><td>Teto validado na Mesa. Vazio = “o Edital não declara limite”. Com <a href="#barema-da-etapa">barema</a>, é a soma das máximas dos critérios, e a tela a mostra como leitura</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Peso</span> <em>(opcional até um marco enumerar esta Etapa)</em></td><td><code>weight</code></td><td>Mora na Etapa, e não no marco. Marco que enumera Etapa sem peso não calcula</td><td>Retificável</td></tr>
-          <tr><td><span class="rotulo-ui">Avaliações por inscrição</span> (<em>Padrão: 1</em>)</td><td><code>evaluationsPerRegistration</code></td><td>Quantas pessoas avaliam cada inscrição. <strong>Mais de uma não se consolida</strong> — ver <a href="#consolidacao-recusas">as recusas de Etapa inteira</a></td><td>Retificável</td></tr>
+          <tr><td><span class="rotulo-ui">Avaliações por inscrição</span> (<em>Padrão: 1</em>)</td><td><code>evaluationsPerRegistration</code></td><td>Quantas pessoas avaliam cada inscrição. Na decisória, mais de uma pede a regra de deliberação; na pontuada, <strong>mais de uma não se consolida</strong> — ver <a href="#consolidacao-recusas">as recusas de Etapa inteira</a></td><td>Retificável; na decisória, até o primeiro Resultado por avaliação (165)</td></tr>
+          <tr><td><span class="rotulo-ui">Como a comissão chega ao resultado?</span> (<em>sem padrão</em>)</td><td><code>deliberationRule</code></td><td>Só na decisória com mais de uma avaliação: maioria (só com número ímpar), unanimidade para o favorável ou unanimidade para o desfavorável. Ver <a href="#deliberacao">A deliberação da comissão</a></td><td>Retificável até o primeiro Resultado por avaliação, superados inclusive</td></tr>
           <tr><td><span class="rotulo-ui">Caráter</span>: <span class="rotulo-ui">Eliminatória</span></td><td><code>eliminatory</code></td><td>Sem o caráter, nota abaixo da mínima <strong>não elimina</strong>. Há uma caixa por forma; na decisória ela já nasce marcada, porque a decisória não eliminatória nunca se consolida</td><td>Retificável</td></tr>
           <tr><td><span class="rotulo-ui">Barema</span> <em>(opcional, só na Etapa com pontuação)</em></td><td><code>criteria</code></td><td>Os critérios que a comissão pontua um a um; o total vira a pontuação. Ver <a href="#barema-da-etapa">O barema da Etapa</a></td><td>Retificável: acrescentar, remover e alterar; a soma das máximas precisa continuar igual à máxima da Etapa</td></tr>
           <tr><td><span class="rotulo-ui">Caráter</span>: <span class="rotulo-ui">Classificatória</span></td><td><code>classificatory</code></td><td>Não decide nada localmente — é o <a href="#marco">marco</a> que enumera quais Etapas compõem a ordem</td><td>Retificável</td></tr>
@@ -6647,7 +6649,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <li>Não há motor de regras, fórmula, exclusividade, grupo de critérios nem biblioteca de baremas; <strong>não há barema por Perfil</strong> (a Etapa continua sendo do Edital — DP-10).</li>
         <li>O candidato <strong>não declara</strong> quantos títulos tem: a autopontuação e o teto por expectativa (173/2025) estão fora; a comissão a respeita fora do sistema.</li>
         <li>O desempate continua lendo a nota da Etapa ou um fato declarado, não uma parcela do barema.</li>
-        <li>Mais de uma avaliação por inscrição continua bloqueada na consolidação pela regra de combinação ausente, com ou sem barema.</li>
+        <li>Mais de uma avaliação por inscrição continua bloqueada na consolidação da Etapa pontuada, com ou sem barema: não há regra de combinação de notas. A decisória delibera (165).</li>
         <li>O sistema não calcula duração a partir de datas nem lê o conteúdo dos documentos: contar meses e vínculos concomitantes é juízo da comissão, que informa a quantidade.</li>
         <li>O detalhamento é <strong>só do titular</strong>: a lista pública e o resultado continuam com o total.</li>
         <li>A <strong>justificativa por critério</strong> não é obrigatória (P-2): sem a expectativa do candidato, o sistema não distingue “não reivindicou” de “reivindicou e foi recusado”.</li>
@@ -7038,7 +7040,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <li><span class="passo">2</span><span class="titulo">Dentro da Etapa, <span class="rotulo-ui">Minha Mesa</span></span>
         <p>Só as inscrições <em>atribuídas a ele</em>, com filtros <span class="rotulo-ui">no total</span> · <span class="rotulo-ui">não iniciadas</span> · <span class="rotulo-ui">em rascunho</span> · <span class="rotulo-ui">concluídas</span>, e a seção <span class="rotulo-ui">Atribuições retiradas de você</span> com o motivo, quando e por quem.</p></li>
       <li><span class="passo">3</span><span class="titulo">Abre a inscrição como instrumento de trabalho</span>
-        <p>Protocolo, nome, Perfil, Modalidade, <strong>CPF mascarado</strong> e os documentos, cada um sob o requisito que atende (a lista exigida gravada no envio). Ficam de fora e-mail e telefone. O nome fica: avaliação cega está fora do escopo. Cada documento aberto é registrado na trilha.</p></li>
+        <p>Protocolo, nome, Perfil, Modalidade, <strong>CPF mascarado</strong> e os documentos, cada um sob o requisito que atende (a lista exigida gravada no envio). Ficam de fora e-mail e telefone. O nome fica: avaliação cega está fora do escopo. Na Etapa colegiada o parecer é às cegas <em>entre os membros</em>, e não quanto ao candidato: a Mesa diz <em>“Os demais membros não veem o seu parecer, e você não vê o deles.”</em> (<a href="#deliberacao">165</a>). Cada documento aberto é registrado na trilha.</p></li>
       <li><span class="passo">4</span><span class="titulo"><span class="rotulo-ui">Salvar sem concluir</span>, quantas vezes quiser</span>
         <p>O estado é <code>RASCUNHO</code>.</p></li>
       <li><span class="passo">5</span><span class="titulo"><span class="rotulo-ui">Concluir avaliação</span></span>
@@ -7102,8 +7104,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h3>Perguntas frequentes sobre a mesa</h3>
     <details class="pergunta"><summary>Todos os membros veem todas as inscrições?</summary><div><p>Não. A autorização é composta: alocação na Etapa, atribuição ativa naquela inscrição e inscrição participante da Etapa. Faltando qualquer uma, a rota individual devolve <em>não encontrado</em> (404).</p></div></details>
     <details class="pergunta"><summary>A presidente vê a Mesa dos avaliadores?</summary><div><p>Não. Quem gere a comissão abre a página da Etapa com o aviso <em>“Você chegou aqui pela gestão da comissão, e não por atribuição: você não está alocado nesta Etapa.”</em>, sem Mesa e sem inscrições. Por essa porta, o caminho no topo é o da Alocação — <em>GPS › Processos Seletivos › código › Alocação por Etapa › Etapa</em>. O acompanhamento da gestão é pela tela de distribuição, pelos Resultados e pela trilha.</p></div></details>
-    <details class="pergunta"><summary>Existe mais de um avaliador por inscrição? <span class="selo selo-parc">Parcial</span></summary><div><p>O Edital pode declarar mais de uma avaliação por inscrição, e a distribuição respeita. Mas a <strong>consolidação recusa</strong> a Etapa inteira, e por isso a publicação do Edital também já recusa quando a Etapa é eliminatória ou usada por marco — ver <a href="#consolidacao-recusas">recusas de Etapa inteira</a>.</p></div></details>
-    <details class="pergunta"><summary>Como divergências entre avaliadores são tratadas? <span class="selo selo-lacun">Lacuna</span></summary><div><p>Não há mecanismo, porque não há dupla avaliação consolidável. A trilha registra cada conclusão e cada reabertura; a divergência se apura à mão.</p></div></details>
+    <details class="pergunta"><summary>Existe mais de um avaliador por inscrição? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa <strong>decisória</strong>, sim: o Edital declara a regra de deliberação, cada membro dá o parecer às cegas, e a consolidação aplica a regra — ver <a href="#deliberacao">A deliberação da comissão</a> (165, sem merge). Na Etapa <strong>pontuada</strong>, a distribuição respeita o número, mas a consolidação recusa a Etapa inteira, e por isso a publicação também recusa quando a Etapa é eliminatória ou usada por marco — ver <a href="#consolidacao-recusas">recusas de Etapa inteira</a>.</p></div></details>
+    <details class="pergunta"><summary>Como divergências entre avaliadores são tratadas? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa decisória, pela regra que o Edital publicou: a divergência é contada, e o desfecho sai da contagem — o motivo diz, por exemplo, <em>“2 de 3 pareceres Indeferido, por maioria”</em> (165, sem merge). Na pontuada não há mecanismo: a divergência de notas se apura à mão.</p></div></details>
     <details class="pergunta"><summary>O que impede atuar fora da própria Etapa?</summary><div><p>A composição é verificada no servidor a cada acesso. A listagem não a chama por linha: resolve o conjunto de Etapas autorizadas uma vez e filtra.</p></div></details>
 
     <h3>Um exemplo completo</h3>
@@ -7257,10 +7259,12 @@ Se já houver Resultado
     <div class="aviso aviso-risco">
       <span class="titulo">Quando a Etapa não pode ser consolidada — e por quê</span>
       <ul>
-        <li><strong>A Etapa prevê mais de uma avaliação</strong>: <em>“o Edital prevê 2 avaliações para
-          esta Etapa e não declara como combiná-las”</em>. Consolidar exigiria uma regra de combinação —
-          média, maior nota, terceira leitura — que ninguém publicou, e não há campo para publicá-la.
-          <span class="selo selo-lacun">Lacuna</span></li>
+        <li><strong>A Etapa prevê mais de uma avaliação e não tem regra</strong>: <em>“o Edital prevê 2
+          avaliações para esta Etapa e não declara como combiná-las”</em>. Na pontuada, consolidar
+          exigiria combinar notas — média, maior nota, terceira leitura —, e não há campo para
+          publicá-la. <span class="selo selo-lacun">Lacuna</span> Na decisória, o campo existe: é a
+          <a href="#deliberacao">regra de deliberação</a>, e a recusa sobra só para o acervo publicado
+          antes dela (165).</li>
         <li><strong>A Etapa é pontuada e eliminatória, e não publicou nota mínima</strong>: <em>“a Etapa
           é eliminatória e o Edital não publicou nota mínima”</em>.</li>
         <li><strong>A Etapa é decisória e não é eliminatória</strong>: <em>“a Etapa é decisória e o
@@ -7274,6 +7278,54 @@ Se já houver Resultado
         legítima, e não cai na segunda recusa: procurar um número que a norma nunca teve seria o
         sistema inventando a exigência.</p>
     </div>
+
+    <h3 id="deliberacao">A deliberação da comissão <span class="selo selo-prev">Previsto</span></h3>
+    <p class="miudo">Spec 165, implementada no PR #545, empilhado sobre a 164 (#543) e a 163 (#542):
+      nenhuma das três tem merge na <code>main</code>. É a terceira entrega da camada A do estudo da
+      verificação da autodeclaração (decisão P-3 de 13/11).</p>
+    <p>
+      A Etapa <strong>decisória</strong> com mais de uma avaliação por inscrição declara a
+      <strong>regra de deliberação</strong> no cartão (<span class="rotulo-ui">Como a comissão chega ao
+      resultado?</span>), uma de três, <strong>sem padrão</strong> — qual delas os Editais do Ifes usarão
+      é pergunta à CPVA:
+    </p>
+    <table>
+      <thead><tr><th>Regra</th><th>De onde vem</th><th>Com três pareceres, o resultado é favorável quando</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rotulo-ui">Resultado «Deferido» quando a maioria dos pareceres for «Deferido»</span></td><td>Ofício MEC 3/2025; IN 261</td><td>dois ou três são favoráveis</td></tr>
+        <tr><td><span class="rotulo-ui">… só quando todos os pareceres forem «Deferido»</span></td><td>Res. CS 61/2019, art. 15, III, b, lida à letra</td><td>os três são favoráveis</td></tr>
+        <tr><td><span class="rotulo-ui">«Indeferido» só quando todos os pareceres forem «Indeferido»</span></td><td>a leitura dos editais do Ifes</td><td>ao menos um é favorável</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li><strong>A maioria exige número ímpar</strong>: o empate não tem regra publicada, e a publicação o
+        recusa. A regra entra no documento oficial: <em>“Cada inscrição recebe 3 pareceres, registrados
+        por membros da comissão sem conhecer o dos demais. O resultado é «Deferido» quando…”</em></li>
+      <li><strong>Às cegas, no servidor.</strong> Quem tem parecer pendente sobre uma inscrição não
+        recebe o sentido nem o texto dos colegas sobre ela, em nenhuma tela — a presidência que também
+        dá parecer lê <em>“Oculto: você ainda tem parecer pendente sobre esta inscrição.”</em> nas
+        Conclusões preservadas e nos Impedimentos. A Mesa nunca mostra o parecer dos colegas.</li>
+      <li><strong>A exposição.</strong> Quem recebeu o parecer alheio sobre uma inscrição fica registrado
+        (tabela append-only) e não pode ser atribuído a ela, nem ter o próprio parecer reaberto: a
+        correção passa por inativar a Atribuição e atribuir a outro membro.</li>
+      <li><strong>A deliberação espera os N pareceres</strong>, sem antecipar o desfecho: a organização
+        da Etapa diz <em>“falta 1 de 3 pareceres”</em> e conta <em>“N aguardando pareceres”</em>. A
+        conferência mostra, por inscrição, <em>“Indeferido — 2 de 3 pareceres Indeferido, por
+        maioria”</em>.</li>
+      <li><strong>O Resultado deliberado</strong> tem a origem <code>DELIBERACAO</code>, cita os N
+        pareceres numa tabela append-only, a regra, a contagem e a versão cuja regra aplicou. A
+        consequência é a de sempre, com o efeito por lista da 164 (<em>retirada da reserva</em> ou
+        eliminação). A tela de Resultados diz <span class="rotulo-ui">Deliberação da comissão</span> e
+        quem deu os pareceres.</li>
+      <li><strong>Recurso.</strong> Ficam impedidos de julgar os autores dos pareceres e quem tem parecer
+        pendente. A correção fixada informa o desfecho; a <strong>reavaliação determinada não existe</strong>
+        contra Etapa colegiada (recusada antes de gravar): o rito dela é a P-5.</li>
+      <li><strong>O candidato</strong> lê a regra e a contagem no motivo, e o texto de cada parecer
+        desfavorável, sem autoria, enquanto pode recorrer. A parte pública traz só o desfecho.</li>
+      <li><strong>Retificação.</strong> A regra e o número de avaliações se retificam até o primeiro
+        Resultado por avaliação, superados inclusive. O Edital publicado antes, com Etapa decisória de
+        várias avaliações e sem regra, continua impedido até uma Retificação declarar a regra.</li>
+    </ul>
     <div class="aviso aviso-nota">
       <span class="titulo">As três primeiras são pegas antes de publicar</span>
       <p>A validação do Edital pergunta à mesma regra da consolidação. Se a Etapa é eliminatória, ou se
@@ -12828,7 +12880,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
         <rect class="cx-z" x="480" y="30" width="390" height="150" rx="10"/>
         <text class="rt-t" x="500" y="56">2 · Privilégio ausente</text>
         <text class="rt-p" x="500" y="78">O papel de runtime tem SELECT e INSERT nas</text>
-        <text class="rt-p" x="500" y="96">59 tabelas append-only — e nada mais.</text>
+        <text class="rt-p" x="500" y="96">59 tabelas append-only (61 com a 165) — e nada mais.</text>
         <text class="rt-p" x="500" y="122">Recusa antes, mesmo que o gatilho seja removido.</text>
         <text class="rt-p" x="500" y="152">Quem migra é outro papel, e nenhuma das duas</text>
         <text class="rt-p" x="500" y="168">camadas depende de a aplicação se comportar.</text>
@@ -12849,7 +12901,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
       <p><strong>Exemplo:</strong> o valor que a inscrição congelou no envio (<code>ValorDeFato</code>) estava na lista e não tinha gatilho — uma camada só. Desde 26/09 tem gatilho e recusa no modelo.</p>
       <details><summary>Em detalhes</summary>
         <p>
-          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 13/11), com 59 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
+          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 14/11, sem mudança desde 13/11), com 59 append-only; com a 165, sem merge, 96 gatilhos em 38 migrations sobre 75 tabelas, e 61 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
           ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e catorze
           que não são append-only mas travam o que ficou final ou não se exclui — o artefato de anexo
           congelado, a alteração normativa e a Retificação finais, o Requerimento de Matrícula enviado,
@@ -13168,7 +13220,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr class="grupo-linha"><td colspan="6">Etapas e avaliação</td></tr>
 <tr data-marca="impl"><td><a href="#etapas">Etapa com pontuação ou com decisão</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#etapas">Caráter eliminatório e classificatório, peso, mínima, máxima</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
-<tr data-marca="parc"><td><a href="#etapas">Mais de uma avaliação por inscrição</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Distribui; não consolida (sem regra de combinação).</td></tr>
+<tr data-marca="parc"><td><a href="#etapas">Mais de uma avaliação por inscrição</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>A decisória delibera pela regra do Edital (165, sem merge); a pontuada distribui e não consolida.</td></tr>
 <tr data-marca="impl"><td><a href="#barema-da-etapa">Barema da Etapa: critérios publicados e pontuação por critério (146)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Critérios independentes; a confirmação de que os títulos de cada Edital não são exclusivos espera a CPS/Cefor (P-1).</td></tr>
 <tr data-marca="lacun"><td><a href="#etapas">Ficha de avaliação por Perfil</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A Etapa é do Edital, e o barema também (DP-10).</td></tr>
 <tr data-marca="impl"><td><a href="#comissao">Comissão com presidente e membros</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só duas funções.</td></tr>
@@ -13363,7 +13415,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>A própria situação — rótulo, por quê, o que fazer —, a posição em cada lista, a situação em cada Etapa com o motivo, o prazo de recurso, os recursos, o comprovante, a convocação e o requerimento pedido nela. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
     <details class="pergunta"><summary>Quem pode publicar um resultado?</summary><div><p>Quem tem a permissão de publicar (papel Publicador). Quem emitiu a ordem não ganha, por isso, o poder de publicá-la. <a href="#pg-permissoes">Matriz de permissões</a></p></div></details>
     <details class="pergunta"><summary>Somos duas ou três pessoas. Dá para acumular papéis?</summary><div><p>Sim, com dois cuidados: a mesma pessoa não pode submeter, homologar <em>e</em> publicar o mesmo Edital; e quem julga recursos não pode ter avaliado, consolidado, ordenado ou publicado o que se contesta. Escolha primeiro quem vai julgar. <a href="#pg-permissoes">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); regra de combinação para dupla avaliação; barema de critérios exclusivos ou por Perfil, heteroidentificação e submodalidades; comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); combinação de notas para dupla avaliação pontuada; barema de critérios exclusivos ou por Perfil e submodalidades; a heteroidentificação por vídeo (o rito ao vivo e a deliberação da comissão estão em PRs sem merge, 163 a 165); comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
     <details class="pergunta"><summary>O sistema já está em produção?</summary><div><p>Não. Sem o seletor de identidade de desenvolvimento, que a configuração de produção recusa, a gestão responde <code>503</code>; a autenticação institucional (o LDAP do Ifes, resposta de 28/08) tem a gestão preparada desde 31/10, mas o adaptador do provedor não existe, e não há política de retenção dos dados pessoais. O caminho de implantação está escrito, e esses são os dois bloqueadores que ele declara. <a href="#estado-atual">Estado atual</a></p></div></details>
     <details class="pergunta"><summary>O candidato já pode tirar dúvidas com um assistente?</summary><div><p>Não. Existem, só na gestão, as respostas prontas sobre o Edital publicado, para validação interna (070), e um piloto com modelo de linguagem para participantes escolhidos (071), com um protótipo de como o painel apareceria na página pública. Na máquina de desenvolvimento, uma chave abre esse painel na própria página da seleção (074), para testar a visão do candidato; a produção recusa subir com ela. <a href="#assistente-do-edital">Mais</a></p></div></details>
     <details class="pergunta"><summary>Por que o PDF do Edital novo tem resumo e perguntas como títulos?</summary><div><p>Desde a 069, o Edital novo sai em linguagem simples: um resumo que remete aos itens, um sumário, as seções reunidas sob as perguntas do candidato e as frases do sistema reescritas sem mudar regra. O documento já publicado não se regenera, e o Edital que nasceu antes, mesmo retificado depois, mantém a forma plana. As frases novas esperam a aprovação do responsável pelo produto antes do primeiro Edital real. <a href="#publicacao">Mais</a></p></div></details>
@@ -14092,30 +14144,33 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       provedor do Ifes não foi integrado, e não há caminho de produção no ar.
     </p>
 
-    <h3>Os números de 13/11, contra os de 04/11</h3>
+    <h3>Os números de 14/11, contra os de 13/11</h3>
+    <p class="miudo">Cada número é o da <code>main</code> em <code>37ed0ad0</code>. Entre parênteses, quando
+      difere, o desta branch — a <code>main</code> com a 163, a 164 e a 165, nos PRs #542, #543 e #545, sem
+      merge.</p>
     <div class="numeros">
-      <div><b>162</b><span>pastas de especificação (eram 120 em 04/11; a página dizia 114, número de 02/11 que não foi recontado), até a 161 — as 133 e 134 em duas pastas cada</span></div>
-      <div><b>59</b><span>tabelas append-only (eram 53): as vagas não preenchidas (155), as publicações das inscrições (148) e das convocações (149), entre outras</span></div>
-      <div><b>91</b><span>gatilhos de banco (eram 83), em 36 migrations, sobre 73 tabelas</span></div>
-      <div><b>118</b><span>migrations (eram 107)</span></div>
-      <div><b>24</b><span>módulos de domínio (eram 23): o <code>treinamento</code> (134)</span></div>
-      <div><b>580</b><span>arquivos Python de aplicação (eram 515)</span></div>
-      <div><b>259</b><span>templates (eram 213)</span></div>
-      <div><b>1 220</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 062 + 17)</span></div>
-      <div><b>180</b><span>rotas da gestão (eram 166); o portal tem 42 (eram 38)</span></div>
+      <div><b>163</b><span>pastas de especificação (eram 162 em 13/11), até a 162 — as 133 e 134 em duas pastas cada (166 com a camada A)</span></div>
+      <div><b>59</b><span>tabelas append-only, sem mudança (61 com a 165: os pareceres da deliberação e a exposição ao parecer)</span></div>
+      <div><b>91</b><span>gatilhos de banco, sem mudança, em 36 migrations, sobre 73 tabelas (96, em 38 migrations, sobre 75 tabelas, com a 165)</span></div>
+      <div><b>119</b><span>migrations (eram 118; 126 com a camada A)</span></div>
+      <div><b>24</b><span>módulos de domínio (sem mudança)</span></div>
+      <div><b>583</b><span>arquivos Python de aplicação (eram 580; 587 com a camada A)</span></div>
+      <div><b>266</b><span>templates (eram 259; a camada A não acrescenta nenhum)</span></div>
+      <div><b>1 233</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 220 + 25; 1 260 + 25 com a camada A)</span></div>
+      <div><b>180</b><span>rotas da gestão (sem mudança); o portal tem 42 (sem mudança)</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
       <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code></dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> e <code>CREATE CONSTRAINT TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas. Os dois adiáveis da 165 são <code>CONSTRAINT TRIGGER</code>, e é por isso que a contagem os inclui pelo nome</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code>, sem o <code>interface</code>, que ganhou o seu na 089 e não é domínio (o <code>shared</code> não tem)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 165,6 mil linhas (eram 135,6 mil)</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte não foi rodada nesta revisão. A última medição registrada da suíte inteira contra PostgreSQL é a da 136: 17 698 passando, 12 pulados e nenhuma falha (09/11, com os grupos <code>navegador</code> e <code>assistente</code>). O CI roda em três fatias desde 11/11, e nenhuma delas mede o total</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 167,1 mil linhas (eram 165,6 mil; 170,4 mil com a camada A)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte rodou contra PostgreSQL em 14/11 na branch da 165, com a camada A inteira: 20 042 passando, 24 pulados e nenhuma falha (4 workers, 582s). Não rodou sobre a <code>main</code> nesta revisão</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 04/11, <code>a3e23b1f</code>, medida em 13/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data — menos as especificações, que davam 120 e a página mantinha em 114. As linhas de base anteriores (21/10, 30/10, 02/11) também reproduziam as suas</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 13/11, <code>214c8cd7</code>, medida em 14/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data. As linhas de base anteriores (21/10, 30/10, 02/11, 04/11) também reproduziam as suas</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -14156,14 +14211,14 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#mesa">Avaliação</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso</td>
+            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso. Na Etapa colegiada, o parecer é às cegas no servidor, e quem recebeu o parecer alheio não avalia a inscrição (165, sem merge)</td>
             <td>A reavaliação determinada se cumpre pelas telas, mas elas não orientam o próximo passo</td>
           </tr>
           <tr>
             <td><strong><a href="#consolidacao">Consolidação</a></strong></td>
             <td class="centro"><span class="selo selo-parc">Parcial</span></td>
-            <td>Uma decisão humana consolida todas as inscrições prontas da Etapa, com conferência que fixa o conjunto. A Etapa com duas avaliações por inscrição <strong>não se publica</strong> quando o resultado dela é necessário</td>
-            <td><strong>Leitura múltipla</strong>: a regra de combinação não existe; a publicação agora impede o beco, em vez de deixá-lo aparecer na consolidação</td>
+            <td>Uma decisão humana consolida todas as inscrições prontas da Etapa, com conferência que fixa o conjunto. A Etapa pontuada com duas avaliações por inscrição <strong>não se publica</strong> quando o resultado dela é necessário; a decisória delibera pela regra do Edital (165)</td>
+            <td><strong>Leitura múltipla pontuada</strong>: a combinação de notas não existe; a publicação impede o beco, em vez de deixá-lo aparecer na consolidação. A decisória tem a regra de deliberação (165)</td>
           </tr>
           <tr>
             <td><strong><a href="#progressao">Progressão e corte</a></strong></td>
@@ -14240,7 +14295,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#auditoria">Auditoria e imutabilidade</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (13/11) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
+            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (recontados em 14/11; 61 e 96 com a 165, sem merge) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
             <td>Quem audita o nível institucional é decisão pendente (108, 110)</td>
           </tr>
           <tr>
@@ -14851,7 +14906,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <thead><tr><th>O quê</th><th>Por quê</th></tr></thead>
       <tbody>
         <tr><td>Somar fora o barema que não é de critérios independentes e digitar o total</td><td>O barema da 146 só pontua critério a critério; “só o maior título” e o teto por expectativa do candidato não têm representação</td></tr>
-        <tr><td>Verificar a autodeclaração (heteroidentificação) fora</td><td>Não há Etapa aplicável só a quem declarou a Modalidade, nem comissão própria. A família está fora do alvo (DP-10), e o 28/2026 a tem</td></tr>
+        <tr><td>Verificar a autodeclaração por vídeo</td><td>O rito ao vivo já entra como Etapa (163 a 165, sem merge); o vídeo assíncrono pede ato do Conselho Superior, protocolo da CPVA e Edital que o cite (P-0 do estudo de 13/11)</td></tr>
         <tr><td>Conferir a prévia contra o Edital original na homologação</td><td>Decidido em 28/09: o setor redige fora e transcreve</td></tr>
         <tr><td>Avisar os convocados para heteroidentificação, entrevista ou títulos</td><td>Essas convocações não têm ato no sistema, e o aviso só aponta ato publicado (066)</td></tr>
         <tr><td>Publicar nos sítios do Ifes/Cefor; transmitir o sorteio; importar no Registro Acadêmico</td><td>São sistemas fora deste (a 148 e a 149 só registram a publicação feita fora)</td></tr>
@@ -14887,7 +14942,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-07</strong></td><td>As três recusas em <code>404</code> passam a <code>403</code>?</td><td>Decidido <em>quando</em> (com a preparação de produção); não executado, e nenhum commit a cita</td></tr>
         <tr><td><strong>DP-08</strong> (itens 1 e 3)</td><td>A spec 039 (catálogo de Modalidades no Edital) está encerrada? Para onde vai o alcance da Etapa por Perfil ou Modalidade?</td><td>Item 1: registrar o encerramento (a 039 segue <code>Draft</code>, e o inventário de 13/11 a dá como bloqueada por decisão sua). Item 3: espera a DP-10, e a 146 manda o barema por Perfil esperar o alcance</td></tr>
         <tr><td><strong>DP-09</strong></td><td>A proibição de prova nova no recurso continua?</td><td>Recomendação “manter”, sem decisão registrada depois de 26/09. O recurso não aceita anexo (spec 018, D-011)</td></tr>
-        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo? Hoje há o barema de critérios independentes (146); seguem fora o barema exclusivo ou por Perfil, a cota racial com heteroidentificação, a cascata de grupos e as submodalidades de PPI/PPIQ (AX-15, excluídas pela 044)</td><td>Decidir por família, com o Edital na mão. A 158, de cascata entre cotas, está em <code>Draft</code>, sem plano nem código, com as perguntas P-1 a P-8</td></tr>
+        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo? Hoje há o barema de critérios independentes (146), e a heteroidentificação foi decidida em 13/11 (camada A do estudo: 163, 164 e 165, sem merge); seguem fora o barema exclusivo ou por Perfil, a cascata de grupos e as submodalidades de PPI/PPIQ (AX-15, excluídas pela 044)</td><td>Decidir por família, com o Edital na mão. A 158, de cascata entre cotas, está em <code>Draft</code>, sem plano nem código, com as perguntas P-1 a P-8</td></tr>
         <tr><td><strong>DP-11</strong></td><td>A comissão local enxerga só o seu Perfil ou polo?</td><td>A resposta mudou só na conferência documental (115). Falta, na distribuição e na alocação de avaliação, a coluna e o filtro de Perfil — recomendação da DP-11 — ou o recorte de autorização</td></tr>
         <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta. O #530 (13/11) corrigiu 35 linhas à mão, sem decidir e sem guardião do campo; ver <a href="#evolucoes-higiene">Divergências entre código e documentação</a></td></tr>
         <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; <em>“só se o setor precisar”</em></td></tr>
@@ -14904,7 +14959,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Requerimento com o Processo encerrado</strong> (118, 029)</td><td>A atualização do Requerimento pedido na inscrição também fecha com o Processo final? (A parte da convocação fechou.)</td><td><code>doc/encaminhamento-requerimento-com-processo-encerrado-2026-11-04.md</code></td></tr>
         <tr><td><strong>Prazo final da convocação da vaga acrescida</strong> (097, D-005)</td><td>Quem declara o prazo final: o sistema ou a equipe?</td><td>A spec diz que é da equipe; nenhum prazo foi declarado</td></tr>
         <tr><td><strong>Lacunas de domínio da 063</strong></td><td>Ocupante da vaga, corte que chega ao candidato, ato de matrícula, consequência da convocação no Edital, vocabulário da fila, tipo de certame, origem do vencimento (L-1 a L-7)</td><td>Registradas na spec 063. A 117 e a 118 reafirmam que o sistema não diz <em>“matriculado”</em> (L-3); L-2 e L-4 a L-7: não conferi uma a uma</td></tr>
-        <tr><td><strong>Leitura múltipla</strong> (046, DP-06 opção C)</td><td>A regra de combinação das avaliações de uma Etapa com dupla leitura</td><td>Decidido esperar um Edital real de dupla leitura; hoje a Etapa não se consolida e não publica quando o resultado é necessário</td></tr>
+        <tr><td><strong>Leitura múltipla pontuada</strong> (046, DP-06 opção C)</td><td>A combinação das notas de uma Etapa pontuada com dupla leitura</td><td>Decidido esperar um Edital real de dupla leitura; hoje a Etapa pontuada não se consolida e não publica quando o resultado é necessário. A decisória tem a regra de deliberação (165)</td></tr>
         <tr><td><strong>Ficha de avaliação por curso</strong> (AX-4) e <strong>polo como eixo próprio</strong> (AX-5, AX-6)</td><td>O que o barema varia por curso; se Polo, Curso, Área e Campus viram entidades</td><td>Pergunta de produto, junto da DP-10; hoje só há <code>locality</code> em texto livre no Perfil</td></tr>
         <tr><td><strong>Avisos de composição fora da Atenção</strong></td><td>Onde passa a fronteira entre o painel de Atenção e os avisos de composição</td><td>Deliberado até decidir (<code>interface/supervisao.py</code>, <code>ESPECIES</code>)</td></tr>
         <tr><td><strong>Superadas por decisão, e mantidas</strong></td><td>O recurso sem anexo de prova (DP-09); a prática do sorteio nos Editais (D-G3); o caminho do topo sem link na lista e em Minhas atividades, e o que sai na impressão (088)</td><td>Executadas como decididas; o que resta de D-G3 é ato do Cefor</td></tr>
@@ -15015,7 +15070,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>Não trocar <code>404</code> por <code>403</code> em bloco: quatro das recusas em <code>404</code> protegem vínculo enumerável e estão certas.</li>
         <li>Não silenciar os sinais do painel para limpá-lo, nem juntar a ele os avisos de composição sem decidir a fronteira: são naturezas diferentes. O Centro de Controle (136, 138) é superfície nova, e esta conferência não o leu contra a regra.</li>
         <li>Não modelar responsável individual: o que falta é a capacidade a pedir, e o produto já sabe dizê-la. A presidência vem do vínculo, e a equipe inicial acumula papéis. <strong>Tensão:</strong> a 115 aloca pessoa à conferência por Perfil e a 117 designa pessoa à formalização, mas como base de permissão; a 161 adia a <em>responsabilidade por frente</em> para uma terceira entrega, <em>“só com evidência da comissão real”</em>.</li>
-        <li>Não criar submodalidade, cascata ou heteroidentificação, nem estender o barema a critérios exclusivos ou por Perfil, antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma. <strong>Tensão:</strong> a 158 é spec de cascata entre cotas (<code>Draft</code>) e recomenda compor os subgrupos como Modalidades distintas, sem estrutura nova — sinal de que a família entrou em pauta.</li>
+        <li>Não criar submodalidade ou cascata, nem estender o barema a critérios exclusivos ou por Perfil, antes de a família entrar no alvo: a Constituição pede nada de estrutura antes de haver Edital que a consuma. <strong>Tensão:</strong> a 158 é spec de cascata entre cotas (<code>Draft</code>) e recomenda compor os subgrupos como Modalidades distintas, sem estrutura nova — sinal de que a família entrou em pauta. A heteroidentificação já entrou: o usuário a decidiu em 13/11, e a camada A está em 163 a 165.</li>
         <li>Não mover a Modalidade para o Edital: ela continua sendo do Perfil (decisão de 25/09).</li>
         <li>Não tratar <span class="rotulo-ui">Aplicar a todos</span> como herança: é materialização. Herdar no conteúdo publicado faria uma Retificação do padrão alterar N Perfis sem dizer.</li>
         <li>Não reduzir a validação por haver padrões: a Retificação, a API e as exceções continuam produzindo qualquer configuração.</li>
