@@ -102,12 +102,25 @@ que ele produz.**
 As decisões D-001 a D-009 são as que a redação exigiu, e cada uma registra a alternativa descartada.
 Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-3 lhe deu.
 
+### Session 2026-11-14 (/speckit-clarify)
+
+- Q: Quando a autoridade recursal defere um recurso contra o Resultado de uma Etapa colegiada e
+  manda reavaliar, quem faz a reavaliação? → A: **Ninguém, nesta entrega.** Na Etapa colegiada, o
+  deferimento que corrige o Resultado é a **correção fixada**: a autoridade recursal informa o sentido,
+  e o sistema deriva a consequência pela regra publicada. A **reavaliação determinada** fica
+  indisponível, recusada antes de gravar e explicada na interface. O indeferimento e as demais espécies
+  da `018` mantêm as regras de cabimento delas. A correção cria Resultado sucessor sem alterar os
+  pareceres antigos nem simular votação nova. Se a CPVA de fato quiser uma nova avaliação, isso fica
+  fora desta entrega, e o sistema não a converte em correção fixada: quem reavalia, com que composição
+  e por que procedimento é a P-5 (FR-7070, FR-7071, FR-7072, D-007).
+
 ### Session 2026-11-14 (revisão do PR #545, pedida pelo usuário)
 
 Seis achados, corrigidos sem mudar nenhuma decisão:
 - **A reavaliação travava em "pareceres a mais".** Os pareceres antigos continuam elegíveis, e três
-  antigos com três novos davam seis. → No cumprimento, contam só os concluídos depois da decisão
-  (FR-7062, FR-7071).
+  antigos com três novos davam seis. → No cumprimento, contavam só os concluídos depois da decisão.
+  *Superado pela resposta do clarify acima*: a reavaliação na Etapa colegiada saiu desta entrega, e a
+  regra da contagem ficou registrada como condição para a P-5 (*Achados*).
 - **A FR-7065 contradizia a invariante de proveniência da `013`**: uma Avaliação por Resultado, e a
   versão dela. → A spec declara que a revê, e dá a redação nova (FR-7065, D-006).
 - **O julgador com parecer pendente** julgaria sem ver o que julga. → Fica impedido também (FR-7069).
@@ -257,31 +270,40 @@ cada um mostra.
 
 ---
 
-### User Story 5 — O recurso reabre a deliberação inteira (Priority: P2)
+### User Story 5 — O recurso corrige o desfecho, e não refaz a votação (Priority: P2)
 
 Maria recorre. Ana, Bruno e Carla ficam impedidos de julgar, porque concluíram pareceres naquela
-Etapa sobre ela. A CPVA defere, determinando reavaliação. A Heteroidentificação de Maria precisa de três
-pareceres novos, de membros que não deram parecer na deliberação anterior, sob a mesma regra e às
-cegas. Os três pareceres antigos continuam registrados, e não contam.
+Etapa sobre ela. A CPVA, julgando com `recurso:julgar`, defere e informa o sentido *"Deferido"*. O
+sistema deriva a consequência pela regra publicada e cria o Resultado sucessor. Os três pareceres
+continuam registrados como estavam, e nada no sucessor finge que houve uma votação nova.
 
-**Why this priority**: a reavaliação da `018` pede uma Avaliação nova. Numa Etapa colegiada, o desfecho
-é da comissão, e trocar um parecer só deixaria a decisão nova presa à antiga.
+A CPVA não consegue determinar reavaliação: a tela não oferece a espécie na Etapa colegiada, e o
+pedido que chegar assim é recusado antes de gravar qualquer decisão.
 
-**Independent Test**: determinar reavaliação contra um Resultado deliberado, concluir os pareceres
-novos, consolidar, e conferir a sucessão e a vedação de piora.
+**Why this priority**: o recurso contra o desfecho da verificação é obrigação da Res. CS 61/2019,
+art. 17, que põe a decisão na CPVA. A reavaliação colegiada pediria uma segunda comissão e um rito que a
+P-5 ainda não definiu.
+
+**Independent Test**: julgar recursos contra um Resultado deliberado com cada espécie de decisão da
+`018`, e conferir o sucessor, a recusa da reavaliação e os pareceres intactos.
 
 **Acceptance Scenarios**:
 
-1. **Given** a reavaliação determinada, **When** a presidência distribui, **Then** só membros que não
-   deram parecer sobre Maria naquela Etapa podem receber a atribuição.
-2. **Given** dois pareceres novos concluídos de três, **When** a presidência abre a consolidação,
-   **Then** Maria não está pronta, e a linha diz quantos pareceres novos faltam.
-3. **Given** os três pareceres novos, **When** a presidência consolida, **Then** nasce o Resultado
-   sucessor, citando a decisão, e a vedação de piora compara as consequências como compara hoje.
-4. **Given** uma decisão de correção fixada, **When** o julgador decide, **Then** ele fixa o desfecho
-   (*"Deferido"* ou *"Indeferido"*), e não pareceres individuais, e a consequência sai da regra.
-5. **Given** a comissão sem três membros elegíveis para a reavaliação, **When** a presidência tenta
-   distribuir, **Then** a pendência é nomeada como hoje, e nenhum parecer antigo é aproveitado.
+1. **Given** o recurso admitido contra o Resultado deliberado de Maria, **When** a CPVA defere com
+   correção fixada e informa *"Deferido"*, **Then** nasce o Resultado sucessor *habilitada*, citando a
+   decisão, e os três pareceres não mudam.
+2. **Given** o mesmo recurso, **When** a CPVA tenta deferir determinando reavaliação, **Then** a decisão
+   é recusada antes de ser gravada, e a mensagem diz que a reavaliação de Etapa colegiada não está
+   disponível e que o recurso pode ser decidido por correção fixada.
+3. **Given** a tela de julgamento de um recurso contra Resultado de Etapa colegiada, **When** a CPVA a
+   abre, **Then** a reavaliação determinada não aparece entre as espécies, e uma frase diz por quê.
+4. **Given** o mesmo recurso, **When** a CPVA o indefere, **Then** o Resultado continua vigente, como
+   hoje.
+5. **Given** a correção fixada que tornaria a situação de Maria pior que a do Resultado recorrido,
+   **When** a CPVA conclui o julgamento, **Then** o desfecho é indeferimento, pela vedação de piora da
+   `018`.
+6. **Given** um recurso contra Resultado de Etapa com **uma** avaliação por inscrição, **When** a CPVA
+   determina reavaliação, **Then** tudo segue como hoje.
 
 ---
 
@@ -339,11 +361,10 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   só sobra em conteúdo anterior a esta feature. Ali, a inscrição fica não consolidável, o sistema não
   escolhe quais pareceres contam, e a saída é a de hoje: a presidência inativa a Atribuição excedente
   por ato nomeado, com motivo, pela FR-092 da `012`, a partir da linha da inscrição (FR-7062).
-- **A reavaliação e os pareceres antigos.** Os pareceres da deliberação anterior continuam elegíveis
-  pelo contrato da `012`, e nada os inativa. No cumprimento da reavaliação, a contagem considera só os
-  pareceres concluídos depois da decisão, como a FR-068 da `018` faz com a avaliação única. Sem isso, três
-  antigos e três novos dariam seis pareceres, e a inscrição travaria em "pareceres a mais" (FR-7062,
-  FR-7071).
+- **A reavaliação na Etapa colegiada.** Não existe nesta entrega. A decisão que a determinasse é
+  recusada antes de gravar, e a tela de julgamento não a oferece (FR-7071). O sistema não converte a
+  vontade de reavaliar em correção fixada: se a CPVA quer uma nova avaliação, o recurso espera a P-5 ou
+  é decidido por outra espécie, por escolha dela.
 - **Membro impedido depois de concluir.** A inativação da Atribuição por ato nomeado torna o parecer
   inelegível, pela FR-092 da `012`. A deliberação conta só os elegíveis, e a inscrição espera outro
   parecer (FR-7061, FR-7062).
@@ -377,10 +398,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   `164`, e a lista fechada de motivos não é precondição (FR-7061; *Achados*).
 - **O recurso.** Todos os membros que deram parecer ficam impedidos de julgá-lo, e também quem tem
   parecer pendente sobre aquela inscrição naquela Etapa, que julgaria sem ver o que julga (FR-7069). A correção
-  fixada fixa o desfecho (FR-7070). A reavaliação é uma deliberação nova inteira, de membros que não
-  deram parecer antes (FR-7071), e a vedação de piora a alcança (FR-7072).
-- **Reavaliação sem membros elegíveis suficientes.** A pendência é nomeada como hoje, e nenhum parecer
-  antigo é reaproveitado (FR-7071).
+  fixada fixa o desfecho e cria o sucessor sem tocar os pareceres (FR-7070); a vedação de piora a alcança
+  (FR-7072). O indeferimento e as demais espécies da `018` seguem as regras delas (FR-7071).
 - **A Etapa restrita.** Só as inscrições que a Etapa alcança recebem pareceres, pela regra da `163`. O
   Resultado deliberado é visível e recorrível pelo marco que o leu, pela regra da `164` (FR-7076).
 - **A parte pública.** Não traz a regra, a contagem nem os pareceres (FR-7078).
@@ -449,10 +468,7 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   quais contam. A linha DEVE dizer quantos pareceres há e quantos a Etapa prevê, e a tela da presidência
   DEVE oferecer, a partir dela, a inativação da Atribuição excedente por ato nomeado, com motivo, pela
   FR-092 da `012`. A deliberação NÃO DEVE ser antecipada quando os pareceres presentes já tornam o
-  desfecho inevitável (D-005). **No cumprimento de decisão que determinou reavaliação**, a contagem DEVE
-  considerar só os pareceres concluídos depois da decisão, como a FR-068 da `018` faz com a avaliação
-  única: os anteriores continuam registrados e elegíveis para a leitura histórica, e não contam nem
-  como faltantes nem como excedentes.
+  desfecho inevitável (D-005).
 - **FR-7063**: Cada parecer DEVE passar pela conferência de compatibilidade entre a versão sob a qual foi
   concluído e a vigente, como a conclusão única passa hoje. Um parecer incompatível DEVE deixar a
   inscrição não pronta, com a frase de hoje.
@@ -498,19 +514,30 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   regra de impedimento da `018` aplicada a cada um. **Também** DEVE ficar impedido quem tem parecer
   pendente sobre aquela inscrição naquela Etapa, pela FR-7056: julgaria sem ver o que julga, e o
   impedimento DEVE valer enquanto a pendência existir.
-- **FR-7070**: A **correção fixada** numa Etapa colegiada DEVE fixar o **desfecho** (o sentido), e não
-  pareceres individuais. A consequência DEVE continuar derivada da regra da versão que a decisão cita,
-  pela FR-059 da `018`.
-- **FR-7071**: A **reavaliação determinada** numa Etapa colegiada DEVE exigir uma **deliberação nova
-  inteira**: o número de pareceres que a Etapa prevê, todos novos, de membros que não concluíram parecer
-  sobre aquela inscrição naquela Etapa, às cegas pela FR-7056, sob a regra vigente. Os pareceres
-  anteriores DEVEM continuar registrados e NÃO DEVEM contar: a contagem do cumprimento é só a dos
-  concluídos depois da decisão, pela FR-7062. Sem membros elegíveis suficientes, a
-  pendência DEVE ser nomeada como hoje (D-007).
-- **FR-7072**: A vedação de piora da `018` DEVE alcançar o Resultado da deliberação nova como alcança
-  o da reavaliação de hoje (FR-073 da `018`), pelas duas perguntas que ela faz, cada uma bastando: a
-  consequência mais grave, na ordem de gravidade que a `164` lhe deu, e a pontuação menor, pela FR-070
-  da `018`. Na Etapa decisória não há pontuação, e só a primeira se aplica.
+- **FR-7070**: No deferimento que corrige o Resultado de uma Etapa colegiada, a espécie DEVE ser a
+  **correção fixada**: a autoridade recursal informa o **desfecho** (o sentido favorável ou
+  desfavorável), e não pareceres individuais, e a consequência DEVE ser derivada da regra da versão que a
+  decisão cita, pela FR-059 da `018`. A correção DEVE criar o Resultado sucessor pelo mecanismo da
+  `018`, citando a decisão. Ela NÃO DEVE alterar, inativar nem substituir os pareceres originais, e o
+  sucessor NÃO DEVE se apresentar como deliberação nem trazer contagem de pareceres: o fundamento dele
+  é a decisão recursal.
+- **FR-7071**: A **reavaliação determinada** NÃO DEVE estar disponível contra Resultado de Etapa
+  colegiada nesta entrega (D-007):
+  - a tela de julgamento NÃO DEVE oferecê-la, e DEVE dizer por quê;
+  - o comando DEVE recusá-la **antes de gravar** qualquer decisão, com mensagem que diga que ela não está
+    disponível e que o recurso pode ser decidido por correção fixada. Nenhuma decisão impossível de
+    cumprir DEVE existir;
+  - o sistema NÃO DEVE converter a determinação de reavaliar em correção fixada, nem em outra espécie.
+
+  O indeferimento, a inadmissão e as demais espécies da `018` DEVEM manter as regras de cabimento
+  delas. A motivação da decisão, os impedimentos da FR-7069, a vedação de piora e a preservação dos
+  pareceres continuam valendo. Na Etapa de **uma** avaliação, a reavaliação determinada DEVE continuar
+  como hoje.
+- **FR-7072**: A vedação de piora da `018` DEVE alcançar a correção fixada contra Resultado deliberado,
+  pelas duas perguntas que ela faz, cada uma bastando: a consequência mais grave, na ordem de gravidade
+  que a `164` lhe deu, e a pontuação menor, pela FR-070 da `018`. Na Etapa decisória não há pontuação, e
+  só a primeira se aplica. Concluindo o julgamento por situação pior, o desfecho DEVE ser indeferimento,
+  pela FR-072 da `018`.
 
 #### A Retificação
 
@@ -568,8 +595,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **Resultado da Etapa**: o Resultado por avaliação passa a poder ter como fonte **vários** pareceres,
   com a regra, a contagem e a versão cuja regra aplicou, e a invariante de proveniência da `013` é
   revista pela FR-7065. As consequências são as de hoje.
-- **Decisão de recurso**: a correção fixada fixa o desfecho da deliberação; a reavaliação determinada
-  exige deliberação nova.
+- **Decisão de recurso**: contra Resultado de Etapa colegiada, a correção fixada informa o desfecho e
+  cria o sucessor sem tocar os pareceres; a reavaliação determinada não é admitida nesta entrega.
 
 ## Success Criteria *(mandatory)*
 
@@ -614,6 +641,7 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - A lista fechada de motivos (R-5).
 - A visibilidade e a recorribilidade da Etapa não restrita que nenhum marco enumera (R-8).
 - O recurso colegiado e a nova entrevista síncrona (P-5).
+- A reavaliação determinada contra Resultado de Etapa colegiada (D-007).
 - A composição da CLVA (P-4).
 - A combinação de notas de Etapa pontuada com mais de uma avaliação.
 - A deliberação na prévia da classificação.
@@ -633,6 +661,11 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 
 ## Achados (registro, e não escopo)
 
+- **A reavaliação colegiada, para a P-5.** Quando o rito existir, os pareceres da deliberação anterior
+  continuarão elegíveis pelo contrato da `012`, e nada os inativa. A contagem do cumprimento precisará
+  considerar só os pareceres concluídos depois da decisão, como a FR-068 da `018` faz com a avaliação
+  única. Sem isso, três antigos e três novos dariam seis pareceres, e a inscrição travaria em "pareceres
+  a mais". Achado da revisão do PR #545.
 - **A combinação de notas.** A Etapa pontuada com mais de uma avaliação continua impedida. Média, soma,
   descarte da maior e da menor e diferença máxima entre avaliadores são decisões que nenhum Edital lido
   para esta spec escreve. O barema por curso pode precisar delas.
@@ -707,13 +740,24 @@ conclusão única já passa hoje. O ramo de uma avaliação não muda (FR-7065).
 - exigir que todos os pareceres tenham a versão da regra, que obrigaria a refazer pareceres depois de
   uma Retificação que trocou só a regra, e o parecer não depende dela.
 
-### D-007 — A reavaliação é uma deliberação nova
+### D-007 — Na Etapa colegiada, o recurso corrige o desfecho, e não reavalia
 
-A `018` impede quem concluiu a Avaliação original de concluir a reavaliação. Aplicada a cada um dos N,
-a regra já pede membros novos. Trocar só um parecer deixaria a decisão nova formada em maioria pela
-antiga, que o recurso deferiu. *Descartados:* (a) reavaliar só os pareceres desfavoráveis, que poria a
-regra a trabalhar sobre um painel montado depois de conhecido o desfecho; (b) devolver aos mesmos
-membros, que a `018` proíbe.
+Decidido pelo usuário em 14/11, no `/speckit-clarify`. A `018` impede quem concluiu a Avaliação original
+de concluir a reavaliação. Aplicada a cada um dos N, a reavaliação pediria N membros novos, e a CLVA do
+Ato 15/2021, com quatro membros e um deles o acolhedor, não teria como reavaliar ninguém. O estudo já
+recomendava que a primeira entrega usasse o julgador da `018`, e o art. 17 da Res. CS 61/2019 põe a
+decisão na CPVA. Quem reavalia, com que composição e por que procedimento é a P-5.
+
+A recusa é **antes de gravar**, porque uma decisão de reavaliação gravada e impossível de cumprir
+deixaria a inscrição com uma pendência que nada resolve. E ela **não converte**: se a CPVA quer uma nova
+avaliação, a correção fixada não é a mesma coisa, e decidir por ela é escolha da CPVA, e não do sistema.
+
+*Descartados:*
+- **deliberação nova inteira**, de membros que não deram parecer, que exigiria uma segunda comissão
+  antes de a P-5 definir o rito;
+- **reavaliar só os pareceres desfavoráveis**, que poria a regra a trabalhar sobre um painel montado
+  depois de conhecido o desfecho;
+- **devolver aos mesmos membros**, que a `018` proíbe.
 
 ### D-008 — A regra e o número de avaliações se retificam até o primeiro Resultado
 

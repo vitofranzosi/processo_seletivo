@@ -44,7 +44,7 @@ foi conferido contra o requisito que o resolve:
 | O acervo publicado | FR-7054, D-002 |
 | Pareceres a menos | FR-7062 |
 | Pareceres a mais | FR-7062, FR-7073 (FR-092 da `012`) |
-| A reavaliação e os pareceres antigos | FR-7062, FR-7071 |
+| A reavaliação na Etapa colegiada | FR-7071, D-007; *Achados* (condição para a P-5) |
 | Membro impedido depois de concluir | FR-7061, FR-7062 (FR-092 da `012`) |
 | Pareceres sob versões diferentes | FR-7063, FR-7065, FR-7074 |
 | Retificação da regra antes de qualquer Resultado | FR-7073, FR-7074 |
@@ -58,7 +58,6 @@ foi conferido contra o requisito que o resolve:
 | O não comparecimento | FR-7064 |
 | Motivos diferentes no mesmo sentido | FR-7061; *Achados* |
 | O recurso | FR-7069 a FR-7072, FR-7081 |
-| Reavaliação sem membros elegíveis suficientes | FR-7071 |
 | A Etapa restrita | FR-7076; regra de alcance da `163` |
 | A parte pública | FR-7078 |
 | A prévia da classificação | FR-7080 |
@@ -75,6 +74,10 @@ foi conferido contra o requisito que o resolve:
   `013` (FR-7065, D-006), o julgador com parecer pendente (FR-7069), a saída de "pareceres a mais"
   (FR-7062, FR-7073), a autoria só para a gestão (FR-7081, cenário 5 da US3) e a base sobre a correção da
   `164` (FR-7066, FR-7072). A faixa usada passa a ir até a FR-7081.
+- **Iteração 3, `/speckit-clarify`.** Pergunta 1 respondida pelo usuário (opção B): na Etapa colegiada,
+  o recurso corrige por correção fixada, e a reavaliação determinada é recusada antes de gravar. Revistos
+  a US5, os casos-limite do recurso, a FR-7062 (sai a contagem do cumprimento), as FR-7070 a FR-7072, a
+  entidade da decisão de recurso, a D-007 e *Achados*.
 - **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
   usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
 - **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"
