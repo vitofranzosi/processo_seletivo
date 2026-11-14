@@ -60,7 +60,7 @@ cada caso aponta o requisito que o governa:
 | Caso-limite | Requisito |
 |---|---|
 | Habilitação sem configuração completa, por envio montado à mão | FR-7501, FR-7514, FR-7517 |
-| Configuração retirada com uma frente habilitada, e a volta dela | FR-7504 |
+| Configuração retirada com uma frente habilitada: estados explícitos de hoje, sem chamada | FR-7504 |
 | Configuração incompleta não derruba a inicialização | FR-7503 |
 | Serviço externo em produção com o piloto desligado | FR-7505; SC-2453 |
 | Banco de testes levado para produção com Editais habilitados | FR-7519; SC-2453 |

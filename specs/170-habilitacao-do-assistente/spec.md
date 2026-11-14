@@ -314,7 +314,8 @@ o painel.
 **Acceptance Scenarios**:
 
 1. **Given** `ASSISTENTE_PILOTO=true` fora de produção e nenhum registro, **When** quem tem o papel
-   abre o assistente, **Then** ele atende, se a configuração estiver completa.
+   abre o assistente, **Then** ele atende como hoje: com a configuração completa, a pergunta chega
+   ao modelo; sem ela, termina no estado explícito da `071`.
 2. **Given** `ASSISTENTE_NA_PAGINA_DO_EDITAL=true` fora de produção, **When** um visitante abre a
    página de qualquer seleção, **Then** o painel aparece, como na `074`.
 
@@ -326,9 +327,10 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
 
 - **Habilitação pedida sem configuração completa**, por envio montado à mão: o pedido é recusado com
   o que falta, e nada é gravado (FR-7501, FR-7514, FR-7517).
-- **Configuração retirada com uma frente habilitada**: o registro continua habilitado, nada atende, e
-  a página diz as duas coisas. Quando a configuração volta, a frente volta a atender sem novo ato
-  (FR-7504).
+- **Configuração retirada com uma frente habilitada**: o registro continua habilitado. As sugestões
+  respondem sem o modelo, e a pergunta livre termina no estado explícito da `071`, sem chamada, como a
+  `074` já prevê. A página do administrador diz as duas coisas. Quando a configuração volta, a
+  pergunta livre volta a chegar ao modelo sem novo ato (FR-7504).
 - **Configuração incompleta**: o sistema inicia normalmente, e o assistente não atende (FR-7503).
 - **Serviço externo declarado em produção, com o piloto desligado**: hoje passa; depois desta
   feature, a inicialização é recusada (FR-7505).
@@ -368,7 +370,8 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
 - **FR-7501**: A configuração do serviço MUST ser **completa** quando todas estas condições valem:
   - o serviço declarado é um dos conhecidos;
   - o endereço e o modelo estão declarados;
-  - o arquivo do tokenizer existe e pode ser lido;
+  - o arquivo do tokenizer existe, e a biblioteca que o lê, do grupo opcional `assistente`, está
+    instalada;
   - a credencial está presente, se o serviço a exigir.
 
   A conferência MUST ser feita no servidor a cada requisição que a usa, e MUST NOT contatar o
@@ -377,9 +380,12 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
   serviço está disponível, porque não verifica a conexão. Abri-la MUST NOT chamar o modelo.
 - **FR-7503**: Configuração incompleta MUST NOT impedir a inicialização. Um servidor sem assistente é
   legítimo, e um assistente mal configurado não pode derrubar as inscrições.
-- **FR-7504**: Sem configuração completa, nenhuma frente MUST atender, qualquer que seja o registro.
-  O registro MUST NOT ser alterado por isso. Quando a configuração voltar, a frente habilitada MUST
-  voltar a atender sem novo ato.
+- **FR-7504**: A configuração completa MUST ser exigida no ato de habilitar (FR-7514, FR-7517), e
+  não a cada conversa. Se ela ficar incompleta depois, a frente habilitada MUST continuar como a
+  `071` e a `074` já se comportam sem serviço: as sugestões respondem sem o modelo, e a pergunta
+  livre termina no estado explícito (`SEM_TOKENIZER`, serviço não configurado), sem chamada. O
+  registro MUST NOT ser alterado por isso, e a página do administrador MUST dizer que a frente está
+  habilitada com a configuração incompleta. A FR-7502 continua valendo para a página.
 - **FR-7505**: Em produção, as recusas de serviço externo e de tempo-limite acima de 110 s MUST valer
   sempre que houver serviço declarado, independentemente de qualquer chave. Hoje elas só valem com
   `ASSISTENTE_PILOTO` ligado. A mensagem de cada uma MUST continuar nomeando a variável.
@@ -387,15 +393,17 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
 #### As chaves de demonstração local
 
 - **FR-7506**: `ASSISTENTE_PILOTO` MUST passar a ser um atalho de demonstração local. Ligado fora de
-  produção, ele dispensa o registro de habilitação do piloto, e só isso: o papel, o alcance do Edital
-  e a configuração continuam exigidos. Produção MUST recusar subir com ele ligado, com uma mensagem
-  que diz que a habilitação é um ato na administração institucional.
+  produção, ele dispensa o registro de habilitação do piloto, e só isso: o papel e o alcance do
+  Edital continuam exigidos, e sem configuração vale o estado explícito de hoje. Produção MUST
+  recusar subir com ele ligado, com uma mensagem que diz que a habilitação é um ato na administração
+  institucional.
 - **FR-7507**: `ASSISTENTE_NA_PAGINA_DO_EDITAL` MUST continuar a chave de demonstração da `074`, sem
   mudança, e produção MUST continuar recusando-a (a FR-1683 da `074`).
 - **FR-7508**: O percurso pela interface MUST funcionar com as duas chaves desligadas. Fora de
   produção, a habilitação registrada MUST bastar para as duas frentes.
-- **FR-7509**: O comando de avaliação do piloto MUST exigir a configuração completa, e não a
-  habilitação nem a chave. A avaliação é operação da equipe, e não uso por pessoas.
+- **FR-7509**: O comando de avaliação do piloto MUST NOT depender da habilitação nem da chave. A
+  avaliação é operação da equipe, e não uso por pessoas. Sem configuração, cada caso termina no
+  estado explícito, como hoje.
 
 #### Quem habilita
 
@@ -428,7 +436,6 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
   oferecida, e um pedido montado à mão MUST ser recusado com o que falta.
 - **FR-7515**: O piloto MUST atender quando valem todas estas condições:
   - há habilitação vigente, ou o atalho de demonstração está ligado fora de produção;
-  - a configuração está completa;
   - valem as duas condições da FR-1460 da `071`: o alcance do Edital e a permissão do piloto.
 
   A tela, a entrada na página do Edital e o protótipo da Fase C MUST aplicar a mesma regra, e a
@@ -451,10 +458,10 @@ Cada caso aqui é requisito, e aponta o requisito que o governa.
   responder 404, mesmo com uma habilitação no registro. A conferência MUST acontecer a cada
   requisição.
 - **FR-7520**: Fora de produção, a página pública de um Edital MUST oferecer o painel quando há
-  habilitação vigente do Edital, ou a chave de demonstração ligada, e a configuração está completa,
-  tudo conferido a cada requisição. Fora disso, a página e as rotas MUST se comportar como na `074`
-  com a chave desligada, salvo o aviso da FR-7524. Um Edital habilitado sem página pública MUST
-  aparecer assim na página do administrador.
+  habilitação vigente do Edital, ou a chave de demonstração ligada, conferidas a cada requisição.
+  Sem configuração completa, vale a FR-7504. Fora disso, a página e as rotas MUST se comportar como
+  na `074` com a chave desligada, salvo o aviso da FR-7524. Um Edital habilitado sem página pública
+  MUST aparecer assim na página do administrador.
 - **FR-7521**: O painel e os envios MUST continuar os da `074` (a FR-1681 da `074`), com os limites da
   FR-1685 da `074`: tamanho da pergunta, turnos por conversa, teto de chamadas simultâneas, conversas
   por sessão e limite de gasto da credencial. Nenhuma arquitetura de conversa nova.
@@ -594,8 +601,7 @@ regra da FR-7515 ou da FR-7520:
   (`interface/prototipo_do_assistente.py`);
 - `interface/views.py`, `pode_conversar_com_o_assistente`: a entrada na página do Edital;
 - `portal/assistente.py`, `_edital_com_pagina` e `painel`: as rotas e o fragmento da página pública;
-- `duvidas/management/commands/avaliar_assistente.py`: passa a exigir a configuração completa
-  (FR-7509).
+- `duvidas/management/commands/avaliar_assistente.py`: deixa de conferir a chave (FR-7509).
 
 ### O que a `071` e a `074` deixam de valer
 
