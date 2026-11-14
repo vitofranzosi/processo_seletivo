@@ -4,8 +4,10 @@
 
 **Created**: 2026-11-14
 
-**Status**: Draft. Só a spec, sem plano nem código. Uma pergunta ao usuário (Q-1) continua aberta, e o
-requisito que depende dela está escrito com a recomendação e diz que depende dela.
+**Status**: Draft. Só a spec, sem plano nem código. Revista em 14/11 depois da revisão do usuário no PR
+#543: o horizonte de leitura por marco ficou explícito, a Retificação passou a ser impedida desde o
+primeiro Resultado desfavorável, e a Q-1 foi fechada pelo usuário, com o contrato recursal completado.
+Nenhuma pergunta aberta.
 
 **Input**: a decisão **P-2** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-2):
@@ -97,15 +99,21 @@ ampla também. A `163` registrou isso como risco e deixou a correção para esta
 As decisões D-001 a D-011 são as que a redação exigiu, e cada uma registra a alternativa descartada.
 Nenhuma toma decisão normativa do Ifes: todas deixam ao Edital a escolha que ele já faz por escrito.
 
-### Pergunta ao usuário
+### Session 2026-11-14 (revisão do usuário no PR #543)
 
-- **Q-1 — O não comparecimento tem o mesmo efeito do desfecho desfavorável?** É a P-6 do estudo, que
-  o README deixou entre as que podem esperar. Os Editais divergem: o 57/2026 diz as duas coisas, "fica
-  na ampla" no 8.10 e "elimina" no 8.11; o 28/2026 manda o indeferido por fenótipo para a ampla e
-  silencia sobre o ausente. *Recomendação desta spec, e é a que a FR-7004 traz:* o Edital declara o
-  efeito do não comparecimento à parte, e o padrão é **o mesmo que ele declarou para o desfecho
-  desfavorável** (D-007). *Alternativas:* (a) um efeito só para os dois casos, sem declaração à parte;
-  (b) o não comparecimento sempre elimina, como a Ocorrência da `013` faz hoje.
+- **Q-1 — O não comparecimento tem o mesmo efeito do desfecho desfavorável?** É a P-6 do estudo. →
+  **O Edital declara o efeito da ausência à parte, e o padrão é "o mesmo efeito" do desfecho
+  desfavorável.** A escolha fica no Edital, e os Editais divergem: o 57/2026 diz "fica na ampla" no
+  8.10 e "elimina" no 8.11; o 28/2026 manda o indeferido por fenótipo para a ampla e silencia sobre o
+  ausente. *Descartados:* um efeito só para os dois casos; e o ausente sempre eliminado, como a
+  Ocorrência da `013` faz hoje. *(FR-7004, FR-7009, D-007.)* A mesma revisão pediu que o recurso
+  cobrisse o caso em que a ausência elimina e o desfavorável só retira, preservando a vedação de piora
+  da `018` (FR-7019, FR-7028, FR-7029).
+- **Quais marcos a retirada alcança?** A revisão apontou que a ordem, a faixa e a ocupação não diziam
+  quais Resultados consideram. → Cada regra diz, pelo **horizonte do marco** (FR-7011 a FR-7014,
+  FR-7027). A Etapa posterior ao horizonte continua em *Achados*.
+- **"Primeiro Resultado" ou "Resultado vigente"?** → **O primeiro.** O impedimento de retificar o
+  efeito é histórico, e não cai quando os Resultados desfavoráveis são superados (FR-7020, D-008).
 
 ---
 
@@ -188,6 +196,14 @@ Análise documental, a ocupação e a fila de convocação de cada lista.
    todas as listas, fora das Etapas seguintes, fora da ocupação e da convocação.
 6. **Given** o candidato `PPI` com desfecho favorável, **When** a presidência consolida, **Then** nada
    muda em relação a hoje.
+7. **Given** uma variante do Edital em que o marco enumera só a Prova, e o corte dele governa a Análise
+   documental, com a Heteroidentificação entre as duas, **When** a ordem do marco é calculada antes da
+   Heteroidentificação, e Maria é retirada depois, **Then** a ordem não muda, e Maria continua com
+   posição na lista `PPI` dela. Mas a participação na Análise documental, a ocupação e a fila da lista
+   `PPI` já leem a retirada, porque a Heteroidentificação vem antes do horizonte do marco.
+8. **Given** uma variante em que a Heteroidentificação vem depois da Análise documental, que é o
+   horizonte do marco, **When** Maria é retirada, **Then** nada muda nas listas desse marco, como nada
+   mudaria com uma eliminação.
 
 ---
 
@@ -240,6 +256,16 @@ obsolescência da ordem e a volta à lista reservada.
    desfavorável que a Etapa admite é a *retirada da reserva*.
 3. **Given** o recurso indeferido, **When** a decisão é registrada, **Then** o Resultado de retirada
    continua vigente, e nada muda nas listas.
+4. **Given** a Etapa cuja ausência elimina e cujo desfavorável retira, e o Resultado de eliminação de
+   Maria por ausência, **When** o recurso é deferido com reavaliação determinada e a comissão conclui
+   desfavorável, **Then** o sucessor é *retirada da reserva*, por avaliação: é menos grave que a
+   eliminação, e o fundamento deixou de ser a ausência.
+5. **Given** a Etapa cuja ausência retira e cujo desfavorável elimina, e o Resultado de retirada de
+   Maria por ausência, **When** a reavaliação determinada conclui desfavorável, **Then** a nova Avaliação
+   é registrada, e o Resultado dela não é consolidado como sucessor: seria eliminação, mais grave que a
+   retirada.
+6. **Given** o Resultado de eliminação por ausência, **When** a decisão fixa *retirada da reserva*,
+   **Then** o sucessor nasce, porque a retirada é um dos efeitos que a Etapa declara e é menos grave.
 
 ---
 
@@ -257,11 +283,11 @@ aplicado faria dois candidatos com o mesmo desfecho terem efeitos diferentes.
 
 **Acceptance Scenarios**:
 
-1. **Given** a Etapa sem nenhum Resultado desfavorável vigente, **When** uma Retificação troca o
+1. **Given** a Etapa que nunca registrou Resultado desfavorável, **When** uma Retificação troca o
    efeito, **Then** ela passa, e todo desfecho consolidado depois dela segue o efeito novo.
-2. **Given** a Etapa com Resultado desfavorável vigente, **When** uma Retificação troca o efeito,
-   **Then** ela é recusada, e a mensagem nomeia a Etapa e diz quantos Resultados desfavoráveis
-   impedem.
+2. **Given** a Etapa com Resultado desfavorável registrado, **When** uma Retificação troca o efeito,
+   **Then** ela é recusada, e a mensagem nomeia a Etapa e diz quantos Resultados desfavoráveis ela já
+   registrou.
 3. **Given** a Etapa restrita com Resultado de retirada, **When** uma Retificação a devolve a *"Todas
    as inscrições"*, **Then** ela é recusada pela mesma razão: a Etapa para todas não tem efeito de
    retirada, e devolvê-la mudaria o efeito.
@@ -270,6 +296,37 @@ aplicado faria dois candidatos com o mesmo desfecho terem efeitos diferentes.
    Ou a consolidação aplica o efeito vigente e a Retificação é recusada na publicação, ou a
    Retificação é publicada e a consolidação aplica o efeito novo. Nunca um Resultado com o efeito de
    uma versão que não era a vigente no ato.
+5. **Given** a Etapa cujos três Resultados desfavoráveis foram todos superados por recurso deferido,
+   **When** uma Retificação troca o efeito, **Then** ela continua recusada: o efeito já foi aplicado a
+   alguém, e a mensagem conta os três.
+
+---
+
+### User Story 6 — O ausente segue o efeito que o Edital declarou para a ausência (Priority: P2)
+
+Quem elabora o 57/2026 lê o 8.11 e marca, no não comparecimento, *"É eliminado do processo
+seletivo"*, mantendo *"Deixa de concorrer pela reserva"* no desfecho desfavorável. João (`PPI`, C2) não
+comparece. A presidência registra a Ocorrência, e João é eliminado de todas as listas. Maria, indeferida
+pela comissão, só deixa a reserva.
+
+**Why this priority**: os Editais divergem sobre o ausente, e o 57/2026 diverge de si mesmo. Sem a
+declaração à parte, um dos dois Editais lidos não se compõe.
+
+**Independent Test**: compor a Etapa com efeitos diferentes, registrar uma ausência e um desfecho
+desfavorável, e conferir os dois Resultados, o documento e o acompanhamento de cada um.
+
+**Acceptance Scenarios**:
+
+1. **Given** a Etapa sem escolha no não comparecimento, **When** a presidência registra a ausência de
+   João, **Then** o Resultado tem o mesmo efeito do desfecho desfavorável, e o motivo diz que o
+   fundamento é a ausência.
+2. **Given** a ausência marcada como *"É eliminado"*, **When** a presidência registra a ausência de João,
+   **Then** o Resultado é *eliminada*, e João vê *"Eliminado"* no acompanhamento.
+3. **Given** a mesma Etapa, **When** o Edital é publicado, **Then** o documento diz numa frase o que o
+   desfecho desfavorável produz, e noutra o que a ausência produz. Com os dois iguais, diz numa frase
+   só, que nomeia os dois casos.
+4. **Given** a conclusão desfavorável de Maria por avaliação, **When** a presidência consolida, **Then**
+   o Resultado aplica o efeito do desfecho desfavorável, e nunca o da ausência.
 
 ---
 
@@ -279,7 +336,10 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 
 - **O não comparecimento.** A Ocorrência de ausência numa Etapa restrita produz o efeito que o Edital
   declara para o não comparecimento. O padrão é o mesmo efeito do desfecho desfavorável (FR-7004,
-  Q-1). Numa Etapa para todas as inscrições, a Ocorrência continua eliminando, como hoje.
+  FR-7009). Numa Etapa para todas as inscrições, a Ocorrência continua eliminando, como hoje.
+- **Recurso contra ausência que elimina, numa Etapa cujo desfavorável retira.** A reavaliação
+  determinada produz, se desfavorável, a retirada, que é menos grave. O inverso, a retirada por
+  ausência que viraria eliminação pela reavaliação, é vedado (FR-7028, FR-7029).
 - **O efeito por motivo.** O 28/2026 manda para a ampla só o indeferido *por fenótipo*, e lista outros
   motivos de indeferimento: o formulário, a recusa às orientações, a recusa a ser filmado. Esta spec
   declara o efeito **por Etapa**, e não por motivo. Todo desfecho desfavorável por avaliação tem o
@@ -293,10 +353,13 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   reservada, como a eliminada sai hoje de todos. Ela continua no universo da ampla. Quando a Etapa
   restrita **é** a última enumerada, a inscrição fica no universo reservado, sem posição e com o
   motivo, como a eliminada fica hoje (FR-7012).
-- **Retirada numa Etapa posterior ao marco.** Quando a Etapa restrita vem **depois** da última Etapa
-  que o marco enumera, a retirada não muda a ordem daquele marco, como a eliminação de hoje também
-  não muda (FR-7012). A heteroidentificação *"dos sorteados"* do 57/2026 cairia aí, e nem a eliminação
-  de hoje chega à ocupação e à convocação desse marco. Fica em *Achados*, e não é escopo.
+- **Retirada entre a última Etapa enumerada e o horizonte.** A ordem do marco não a lê, e a inscrição
+  pode continuar com posição na lista reservada já publicada. A participação na Etapa governada, a
+  ocupação, a fila, a situação da vaga e a publicação dos convocados a leem (FR-7012 a FR-7014,
+  FR-7017).
+- **Retirada depois do horizonte.** Quando a Etapa restrita vem depois do horizonte do marco, a retirada
+  não produz efeito nas listas dele, como a eliminação de hoje também não produz (FR-7027). A
+  heteroidentificação *"dos sorteados"* do 57/2026 cairia aí. Fica em *Achados*, e não é escopo.
 - **A faixa do corte já emitida.** O corte que governa a Análise documental foi emitido antes da
   Heteroidentificação, e Maria estava na faixa `PPI` e fora da faixa da ampla. Retirada, ela não
   participa da Análise documental. A faixa `PPI` **não** se reabre para o seguinte. A vaga reservada
@@ -306,14 +369,17 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   habilitada na Análise documental. A ocupação da lista `PPI` lê *"progrediu na faixa `PPI` e foi
   habilitada na Etapa governada"*, e a contaria. Ela **não** é contada na reserva, nem oferecida pela
   fila da reserva (FR-7014).
+- **Retificação depois de todo desfavorável superado.** Continua impedida: o impedimento conta os
+  Resultados desfavoráveis registrados, vigentes ou superados (FR-7020).
 - **Concorrência concomitante e o 8.9 do 57/2026.** O candidato `PPI` classificado dentro das vagas da
   ampla ocupa a ampla, e não é contado na reserva. Isso não muda. A retirada não altera a ocupação da
   ampla de ninguém (FR-7014).
-- **Já convocado pela reserva.** Pela regra acima, a retirada só chega à ordem do marco que a lê antes
-  de a ordem ser emitida. O caminho para uma convocação pela reserva existir antes de um Resultado de
-  retirada é a superação, quando um recurso ou uma regularização muda o Resultado depois da
-  convocação. Ele segue o tratamento que a superação de um Resultado tem hoje: a ordem fica obsoleta,
-  e nenhum mecanismo novo de desfazimento é criado (FR-7016).
+- **Já convocado pela reserva.** Até o horizonte, a convocação pela reserva só acontece depois do
+  Resultado da Etapa restrita, porque a fila espera a Etapa governada, e a Etapa governada espera as
+  anteriores. O caminho para uma convocação pela reserva existir antes de um Resultado de retirada é a
+  superação, quando um recurso ou uma regularização muda o Resultado depois da convocação. Ele segue o
+  tratamento que a superação de um Resultado tem hoje: os atos ficam obsoletos, e nenhum mecanismo novo
+  de desfazimento é criado (FR-7016).
 - **Recurso que devolve a reserva.** A decisão que fixa *habilitada* sucede o Resultado de retirada. A
   inscrição volta à lista reservada pelo mesmo caminho de obsolescência que o deferimento de uma
   eliminação já percorre (FR-7019).
@@ -363,8 +429,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   avaliação nela, qualquer que seja o motivo registrado. Só o não comparecimento tem declaração à
   parte (FR-7004).
 - **FR-7004**: A Etapa restrita e eliminatória DEVE declarar também o **efeito do não comparecimento**,
-  com as mesmas duas formas. O padrão DEVE ser o mesmo efeito declarado para o desfecho desfavorável
-  (D-007). *Depende da Q-1.*
+  com as mesmas duas formas. O padrão DEVE ser *"o mesmo efeito"* declarado para o desfecho
+  desfavorável, e acompanhá-lo enquanto quem elabora não escolher outro (D-007).
 - **FR-7005**: O efeito DEVE fazer parte do conteúdo normativo publicado do Edital, num degrau novo da
   versão canônica. O conteúdo publicado antes desse degrau DEVE ser lido como **elimina** nos dois
   efeitos, sem invenção. O resumo canônico de toda Publicação existente DEVE continuar o mesmo (D-002).
@@ -382,10 +448,17 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   inscrição continua na ampla. Lido depois, ele DEVE significar o mesmo, por si, ainda que uma
   Retificação posterior mude o efeito.
 - **FR-7009**: A Ocorrência de não comparecimento numa Etapa restrita DEVE produzir a consequência que
-  o efeito do não comparecimento declara: **retirada da reserva** ou **eliminada**. Numa Etapa que
-  alcança todas as inscrições, ela DEVE continuar produzindo **eliminada**.
+  o efeito do não comparecimento declara: **retirada da reserva** ou **eliminada**. O motivo DEVE dizer
+  que o fundamento é a ausência. Numa Etapa que alcança todas as inscrições, ela DEVE continuar
+  produzindo **eliminada**. O desfecho desfavorável **por avaliação** NUNCA DEVE aplicar o efeito da
+  ausência, e a Ocorrência NUNCA DEVE aplicar o do desfecho desfavorável.
 
 #### O que acontece em cada lista
+
+O **horizonte de um marco** é a Etapa até a qual ele lê Resultados para formar as suas listas. É a
+Etapa que o corte do marco governa, quando ele governa alguma. Quando o marco não tem corte, ou tem um
+corte que declara não governar Etapa, o horizonte é a última Etapa que o marco enumera. Os requisitos
+abaixo dizem, cada um, quais Resultados de retirada consideram, e a FR-7027 os amarra.
 
 - **FR-7010**: A retirada DEVE tirar a inscrição **só** da lista reservada da Modalidade que ela
   declarou. A inscrição DEVE continuar na ampla, com tudo o que a ampla lhe daria sem a Etapa. Ela
@@ -393,19 +466,33 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **FR-7011**: Para as Etapas seguintes, a retirada NÃO DEVE excluir a inscrição, como a eliminação
   exclui. Ela DEVE satisfazer a exigência de habilitação na Etapa anterior, como a habilitação
   satisfaz (D-004). Uma eliminação, anterior ou posterior, DEVE continuar valendo para todas as listas,
-  e a retirada não a atenua.
-- **FR-7012**: Na ordem de cada marco, a retirada DEVE produzir **na lista reservada** da Modalidade da
-  inscrição exatamente o efeito que a eliminação na mesma Etapa produz hoje em todas as listas: fora do
-  universo, quando a Etapa precede a última que o marco enumera, enumerada ou não; sem posição, com a
-  consequência e o motivo, quando ela é a última que o marco enumera; nenhum, quando ela vem depois
-  da última que o marco enumera. **Na ampla, a retirada NÃO DEVE produzir efeito nenhum** (D-005).
-- **FR-7013**: Na faixa do corte que governa uma Etapa seguinte, a inscrição retirada DEVE ser contada
-  só pela faixa da ampla, e não pela faixa da lista reservada que perdeu. Estar na faixa reservada não
-  a faz participar da Etapa governada.
-- **FR-7014**: A inscrição retirada NÃO DEVE ser contada como ocupante da lista reservada, nem oferecida
-  pela fila de convocação dela, ainda que tenha progredido na faixa reservada e sido habilitada na
-  Etapa governada. Na ampla, ela DEVE ser contada e oferecida como qualquer inscrição da ampla, e a
-  regra de hoje da concorrência concomitante DEVE continuar valendo.
+  e a retirada não a atenua. Esta regra considera o Resultado de retirada de **toda** Etapa anterior à
+  Etapa em questão, como a progressão de hoje considera a eliminação.
+- **FR-7012**: A **ordem** de um marco DEVE considerar só os Resultados de retirada das Etapas até a
+  última que ele enumera, inclusive. Na lista reservada da Modalidade da inscrição, ela DEVE produzir
+  exatamente o efeito que a eliminação na mesma Etapa produz hoje em todas as listas:
+  - fora do universo, quando a Etapa precede a última enumerada, enumerada ou não;
+  - sem posição, com a consequência e o motivo, quando ela é a última enumerada.
+
+  A ordem NÃO DEVE considerar a retirada em Etapa posterior à última enumerada. **Na ampla, a retirada
+  NÃO DEVE produzir efeito nenhum** (D-005).
+- **FR-7013**: A **participação na Etapa governada** pelo corte de um marco DEVE considerar os
+  Resultados de retirada das Etapas anteriores a ela. A inscrição com uma dessas retiradas DEVE ser
+  contada só pela faixa da ampla daquele marco, e não pela faixa da lista reservada que perdeu. Estar na
+  faixa reservada não a faz participar da Etapa governada.
+- **FR-7014**: A **ocupação** da lista reservada de um marco, a **fila de convocação** dela, a
+  **situação da vaga** sem ocupante (`155`) e a **publicação dos convocados** (`149`) DEVEM considerar
+  os Resultados de retirada das Etapas até o horizonte do marco, inclusive. A inscrição com uma dessas
+  retiradas NÃO DEVE ser contada como ocupante da lista reservada, nem oferecida pela fila dela, ainda
+  que tenha progredido na faixa reservada e sido habilitada na Etapa governada. Na ampla, ela DEVE ser
+  contada e oferecida como qualquer inscrição da ampla, e a regra de hoje da concorrência concomitante
+  DEVE continuar valendo.
+- **FR-7027**: A retirada numa Etapa **posterior ao horizonte** de um marco NÃO DEVE produzir efeito
+  nas listas desse marco: nem na ordem, nem na faixa, nem na ocupação, na fila, na situação da vaga ou
+  na publicação dos convocados. É o mesmo alcance que a eliminação tem hoje, e o caso fica em
+  *Achados*. Toda regra desta seção DEVE ler os Resultados **vigentes** no instante do ato. A reprodução
+  de ato já emitido DEVE ler os Resultados pela proveniência que ele gravou, como a FR-062 da `018`
+  manda.
 - **FR-7015**: A vaga reservada que fica sem ocupante por causa de uma retirada DEVE seguir o caminho
   que a vaga reservada sem ocupante já segue: suplência, continuação da ordem quando o Edital a
   admite, e destinação pela `155`. Esta spec NÃO DEVE criar caminho próprio para ela, nem reabrir a
@@ -414,27 +501,55 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   regularização, DEVE tornar obsoletos os atos que leram o Resultado anterior (ordem, corte, apuração),
   pelos mesmos mecanismos de obsolescência que existem hoje. Esta spec NÃO DEVE criar mecanismo de
   desfazimento de convocação.
-- **FR-7017**: A publicação dos convocados (`149`) e a publicação da ordem DEVEM listar a inscrição
-  retirada só nas listas em que ela ainda concorre. A parte pública NÃO DEVE trazer o motivo da
-  retirada. Ele vai só ao titular, como o motivo da eliminação vai hoje.
+- **FR-7017**: A publicação da ordem DEVE listar a inscrição retirada só nas listas em que ela ainda
+  concorre pela FR-7012, e a publicação dos convocados, só nas listas em que ela ainda concorre pela
+  FR-7014. Por isso a ordem já publicada de um marco cujo horizonte vem depois da Etapa restrita pode
+  ainda trazer a inscrição na lista reservada, sem que ela seja convocada por ela. A parte pública NÃO
+  DEVE trazer o motivo da retirada. Ele vai só ao titular, como o motivo da eliminação vai hoje.
 - **FR-7018**: Nenhuma leitura da consequência de Resultado da Etapa DEVE tratar a **retirada** como
   *eliminada* ou como *habilitada* por omissão. Toda superfície que hoje distingue as duas DEVE dizer o
   que faz com a terceira, e um guardião DEVE recusar a leitura que a ignore.
 
 #### Recurso
 
+As consequências têm uma **ordem de gravidade**: *habilitada* é a menos grave, *retirada da reserva*
+vem depois, e *eliminada* é a mais grave. A vedação de piora da `018` (FR-070 a FR-073) passa a
+compará-las por essa ordem.
+
 - **FR-7019**: O Resultado de retirada DEVE ser recorrível como o Resultado de eliminação é. A decisão
-  recursal que fixa consequência DEVE poder fixar só as que a Etapa admite pela versão que o Resultado
-  citou: *habilitada* e o efeito desfavorável declarado. A decisão que fixa *habilitada* DEVE suceder
-  o Resultado de retirada pelo mecanismo da `018`, e a inscrição DEVE voltar à lista reservada.
+  que **fixa** a consequência DEVE poder fixar só *habilitada* e os dois efeitos que a Etapa declara na
+  versão que o Resultado atacado citou: o do desfecho desfavorável e o do não comparecimento. A decisão
+  que fixa *habilitada* DEVE suceder o Resultado pelo mecanismo da `018`, e a inscrição DEVE voltar à
+  lista reservada.
+- **FR-7028**: O recurso do próprio candidato NÃO DEVE produzir sucessor de consequência mais grave que a
+  do superado, pela ordem de gravidade. Isso vale para a correção fixada e para o Resultado da
+  reavaliação determinada. Por exemplo:
+  - a retirada NÃO DEVE virar eliminação por recurso;
+  - a eliminação por ausência PODE virar retirada, quando a reavaliação determinada conclui
+    desfavorável e o efeito do desfavorável é retirar;
+  - a retirada por ausência NÃO DEVE virar eliminação, quando a reavaliação conclui desfavorável e o
+    efeito do desfavorável é eliminar. Nesse caso, a nova Avaliação é registrada e o Resultado dela não
+    é consolidado como sucessor (FR-073 da `018`).
+
+  Concluindo o julgamento por consequência mais grave, o desfecho DEVE ser indeferimento, como a FR-072
+  da `018` manda.
+- **FR-7029**: O Resultado produzido pela reavaliação determinada num recurso contra Ocorrência de
+  ausência DEVE aplicar o efeito do **desfecho desfavorável**, e não o da ausência. A pessoa foi
+  avaliada, e a ausência deixou de ser o fundamento.
 
 #### A Retificação
 
-- **FR-7020**: A Retificação que **muda o efeito** de uma Etapa DEVE ser impedida enquanto a Etapa
-  tiver ao menos um Resultado vigente desfavorável, por avaliação, Ocorrência ou recurso. Isso vale
-  para a troca entre as duas formas, para a troca do efeito do não comparecimento, para a Etapa que
-  volta a alcançar todas as inscrições e para a que deixa de ser eliminatória. A mensagem DEVE nomear
-  a Etapa e dizer quantos Resultados desfavoráveis impedem (D-008).
+- **FR-7020**: A Retificação que **muda o efeito** de uma Etapa DEVE ser impedida desde o **primeiro**
+  Resultado desfavorável registrado nela, por avaliação, Ocorrência ou recurso. O impedimento DEVE
+  continuar ainda que todos esses Resultados tenham sido superados depois, inclusive por recurso
+  deferido. Ele vale para:
+  - a troca entre as duas formas;
+  - a troca do efeito do não comparecimento;
+  - a Etapa que volta a alcançar todas as inscrições;
+  - a Etapa que deixa de ser eliminatória.
+
+  A mensagem DEVE nomear a Etapa e dizer quantos Resultados desfavoráveis ela já registrou, vigentes
+  ou superados (D-008).
 - **FR-7021**: A Retificação que não muda o efeito, como a que amplia o alcance, NÃO DEVE ser impedida
   por esta spec. As inscrições que passam a ser alcançadas DEVEM receber o efeito declarado.
 - **FR-7022**: A Retificação do efeito e a consolidação ou a Ocorrência na mesma Etapa DEVEM ser
@@ -444,8 +559,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 #### O que o documento, a gestão e o candidato leem
 
 - **FR-7023**: O documento do Edital DEVE dizer, na Etapa que declara o efeito, o que o desfecho
-  desfavorável produz e, quando diferente, o que o não comparecimento produz, em todas as redações em
-  que descreve a Etapa. A Etapa sem declaração DEVE sair com o texto que sairia antes desta feature
+  desfavorável produz e o que o não comparecimento produz, em todas as redações em que descreve a
+  Etapa. Quando os dois são o mesmo, DEVE dizê-lo numa frase só, que nomeie os dois casos; quando
+  diferem, numa frase para cada um. A Etapa sem declaração DEVE sair com o texto que sairia antes desta feature
   (D-010). A Revisão, a página pública do Edital e a tela de Retificação DEVEM dizer o efeito com as
   mesmas palavras.
 - **FR-7024**: O acompanhamento NÃO DEVE apresentar como *"Eliminado"* o titular cujo único desfecho
@@ -464,8 +580,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **UX-740**: A pergunta do efeito DEVE aparecer só na Etapa restrita e eliminatória, como duas opções
   exclusivas escritas pelo que acontece com a pessoa: *"Deixa de concorrer pela reserva e continua na
   ampla concorrência"* e *"É eliminado do processo seletivo"*. A primeira DEVE vir marcada.
-- **UX-741**: A pergunta do não comparecimento DEVE vir logo abaixo, com a opção *"O mesmo efeito"* como
-  padrão, de modo que quem não precisa distinguir não precise ler duas perguntas.
+- **UX-741**: A pergunta do não comparecimento DEVE vir logo abaixo, com três opções: *"O mesmo efeito"*,
+  marcada por padrão, *"Deixa de concorrer pela reserva e continua na ampla concorrência"* e *"É
+  eliminado do processo seletivo"*. Quem não precisa distinguir não precisa mudar nada.
 - **UX-742**: O texto ao candidato DEVE usar *"deixou de concorrer pela reserva «Modalidade»"* e
   *"continua concorrendo pela ampla concorrência"*. NÃO DEVE usar *"eliminado"*, *"desclassificado"* nem
   *"excluído"* para a retirada.
@@ -479,7 +596,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   Resultado desfavorável.
 - **Resultado da Etapa**: ganha a terceira consequência, **retirada da reserva**, ao lado de
   *habilitada* e *eliminada*. Continua imutável, sucedido só pela `018`.
-- **Decisão de recurso**: pode fixar a consequência nova, nos limites da FR-7019.
+- **Decisão de recurso**: pode fixar a consequência nova, nos limites da FR-7019, e a vedação de piora
+  passa a comparar as três consequências pela ordem de gravidade (FR-7028).
 - **Lista de concorrência**: a ampla, sem Modalidade, e a reservada de cada Modalidade. A retirada
   tira a inscrição da reservada da sua Modalidade e não a tira da ampla.
 
@@ -496,8 +614,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   **idênticas** às que o sistema de antes desta feature produz para o mesmo cenário.
 - **SC-2333**: **Zero** titulares cujo único desfecho desfavorável é retirada veem *"Eliminado"* no
   acompanhamento.
-- **SC-2334**: **100%** das Retificações que mudariam o efeito de Etapa com Resultado desfavorável são
-  recusadas, e nenhuma linha de Resultado muda.
+- **SC-2334**: **100%** das Retificações que mudariam o efeito de Etapa que já registrou Resultado
+  desfavorável são recusadas, inclusive quando todos eles foram superados por recurso, e nenhuma linha
+  de Resultado muda.
 - **SC-2335**: O guardião da FR-7018 acha **zero** leituras da consequência que ignorem a retirada.
 - **SC-2336**: *(humano)* Uma pessoa da CPS ou da comissão de heteroidentificação, lendo só o
   documento publicado do Edital de exemplo, responde corretamente o que acontece com o candidato
@@ -527,8 +646,7 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - O efeito por motivo de indeferimento.
 - A migração da inscrição retirada para outra lista reservada.
 - O indeferimento na convocação com alcance por causa (QC4 do estudo de 07/11).
-- O alcance, na ocupação e na convocação, da Etapa posterior à última Etapa que o marco enumera
-  (*Achados*).
+- O efeito, nas listas de um marco, da Etapa posterior ao horizonte dele (*Achados*).
 - O aviso por e-mail do desfecho (avisos complementares da `066`).
 - O cenário de retirada na prévia da classificação.
 
@@ -547,10 +665,10 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 
 ## Achados (registro, e não escopo)
 
-- **A Etapa posterior ao marco não chega às listas dele.** A ocupação e a convocação leem os Resultados
-  da Etapa **governada** pelo corte, e a ordem lê as Etapas até a última que o marco enumera. Uma Etapa
-  depois disso, e não governada, não alcança a ordem, a ocupação nem a convocação daquele marco. A
-  eliminação de hoje também não alcança. A heteroidentificação *"dos sorteados dentro do número de
+- **A Etapa posterior ao horizonte não chega às listas do marco.** A ocupação e a convocação leem os
+  Resultados da Etapa **governada** pelo corte, e a ordem lê as Etapas até a última que o marco
+  enumera. Uma Etapa depois do horizonte não alcança a ordem, a ocupação nem a convocação daquele
+  marco. A eliminação de hoje também não alcança. A heteroidentificação *"dos sorteados dentro do número de
   vagas"* do 57/2026 vem depois do sorteio, e cairia aí. É decisão do usuário se e como ela entra.
 - **O efeito por motivo.** O 28/2026 distingue o indeferido por fenótipo, que vai para a ampla, dos
   demais motivos do 6.9.14, sobre os quais silencia. O 57/2026 contradiz a si mesmo sobre o ausente,
@@ -604,7 +722,14 @@ caminho novo é inventado, e o lugar em que a eliminação de hoje não chega fi
 retirada, registrado em *Achados*. O único acréscimo é a FR-7014, porque a ocupação conta pela faixa e
 pela Etapa governada, e a inscrição retirada pode estar habilitada nela pela ampla. É o caso em que
 "fazer o que a eliminação faz" não basta, porque a eliminação nunca chega habilitada à Etapa governada.
-*Descartado:* uma regra própria de alcance temporal para a retirada.
+
+O alcance é dito pelo **horizonte do marco**, e cada regra diz quais Resultados considera. A ordem lê
+até a última Etapa enumerada; a faixa, a ocupação, a fila, a situação da vaga e a publicação dos
+convocados leem até o horizonte. A diferença entre os dois não é invenção desta spec: é a que já
+existe entre a ordem e a ocupação, e a eliminação na Etapa governada também não muda a ordem.
+*Descartados:* uma regra própria de alcance temporal para a retirada; e fazer a retirada entre a
+última enumerada e o horizonte reabrir a ordem, que trataria a retirada como mais forte que a
+eliminação.
 
 ### D-006 — Da reserva vai-se para a ampla, e não para outra reserva
 
@@ -615,18 +740,29 @@ marcador semântico que a `039` não criou.
 
 ### D-007 — O não comparecimento tem efeito à parte, com o mesmo padrão
 
-Os Editais divergem sobre o ausente, e o 57/2026 diverge de si mesmo. Um efeito só obrigaria o Edital
-que elimina o ausente e mantém o indeferido na ampla a escolher uma cláusula e trair a outra. Dois
-efeitos com o mesmo padrão não pesam para quem não precisa distinguir (UX-741). É a recomendação da
-Q-1, e não decisão fechada. *Descartados:* (a) um efeito só; (b) o ausente sempre eliminado, como a
-Ocorrência da `013` faz hoje, que contraria o 8.10 do 57/2026.
+Decidido pelo usuário em 14/11, na revisão do PR #543 (Q-1). Os Editais divergem sobre o ausente, e o
+57/2026 diverge de si mesmo. Um efeito só obrigaria o Edital que elimina o ausente e mantém o indeferido
+na ampla a escolher uma cláusula e trair a outra. Dois efeitos com o mesmo padrão não pesam para quem
+não precisa distinguir (UX-741).
+
+A consequência que mais pesa está no recurso. Com dois efeitos, a reavaliação pode trocar o fundamento
+de ausência para avaliação, e com ele o efeito. A vedação de piora da `018` passa a comparar pela ordem
+de gravidade, e a reavaliação aplica o efeito do desfavorável (FR-7028, FR-7029). *Descartados:* (a) um
+efeito só; (b) o ausente sempre eliminado, como a Ocorrência da `013` faz hoje, que contraria o 8.10 do
+57/2026.
 
 ### D-008 — O efeito se retifica até o primeiro Resultado desfavorável
 
 Depois de aplicado, o efeito decidiu a vida de alguém. Trocá-lo daria a dois candidatos com o mesmo
 desfecho efeitos diferentes, e reescrever o Resultado já consolidado é proibido. É a razão que a `163`
 deu para recusar o estreitamento do alcance sobre inscrição avaliada, aplicada ao efeito. O Resultado
-favorável não impede, porque o efeito não o tocou. *Descartados:* **não retificável**, que deixaria sem
+favorável não impede, porque o efeito não o tocou.
+
+**O impedimento é histórico, e não depende do Resultado vigente.** O desfavorável superado por recurso
+também foi um ato praticado sob aquele efeito: o recurso foi julgado contra ele, e a reprodução do ato
+o lê. Se o impedimento caísse quando todos fossem superados, a mesma Etapa teria tido dois efeitos ao
+longo do certame, e o fato de alguém ter recorrido decidiria quando a regra pode mudar. A revisão de
+14/11 apontou a ambiguidade entre "primeiro" e "vigente", e esta é a leitura que fica. *Descartados:* **não retificável**, que deixaria sem
 correção o erro de composição mais provável, a divergência entre a cláusula e a opção marcada; e
 **retificável com efeito só para o futuro**, que é a desigualdade acima.
 

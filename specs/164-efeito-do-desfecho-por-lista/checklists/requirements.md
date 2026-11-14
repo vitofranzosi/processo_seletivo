@@ -36,11 +36,14 @@ foi conferido contra o requisito que o resolve:
 
 | Caso-limite | Requisito |
 |---|---|
-| Não comparecimento | FR-7004, FR-7009 (Q-1) |
+| Não comparecimento | FR-7004, FR-7009 |
+| Recurso contra ausência que elimina, desfavorável que retira | FR-7028, FR-7029 |
 | Efeito por motivo | FR-7003; *Achados* |
 | Eliminado depois em outra Etapa | FR-7011 |
 | Retirada antes da última Etapa do marco, ou nela | FR-7012 |
-| Retirada depois da última Etapa do marco | FR-7012; *Achados* |
+| Retirada entre a última enumerada e o horizonte | FR-7012 a FR-7014, FR-7017 |
+| Retirada depois do horizonte | FR-7027; *Achados* |
+| Retificação depois de todo desfavorável superado | FR-7020 |
 | Faixa do corte já emitida | FR-7013, FR-7015 |
 | Habilitada na Etapa governada pela faixa da ampla | FR-7014 |
 | Concorrência concomitante e o 8.9 | FR-7014 |
@@ -57,12 +60,25 @@ foi conferido contra o requisito que o resolve:
 | Painéis e relatórios | FR-7025 |
 | Etapa que nenhum marco enumera | FR-7024; risco registrado |
 
+## Revisão do usuário de 14/11 (PR #543)
+
+A primeira versão deste checklist marcava tudo como cumprido com uma pergunta aberta, a Q-1, fora do
+formato `[NEEDS CLARIFICATION]`. A revisão apontou que isso não tornava o requisito inequívoco, e
+achou mais duas ambiguidades. As três foram resolvidas na spec:
+
+- [x] **Quais marcos a retirada alcança.** A FR-7012 dizia que a Etapa posterior ao marco não muda a
+  ordem, e a FR-7014 proibia a ocupação reservada sem dizer até onde. Agora cada regra diz quais
+  Resultados considera, pelo horizonte do marco (FR-7011 a FR-7014, FR-7017, FR-7027).
+- [x] **"Primeiro Resultado" × "Resultado vigente".** A D-008 dizia o primeiro, e a FR-7020 dizia o
+  vigente. Ficou o primeiro, com cenário de recurso que supera todos (FR-7020, SC-2334, D-008).
+- [x] **Q-1 e o contrato recursal.** Fechada pelo usuário: o efeito da ausência é declarado à parte, e
+  o padrão é "o mesmo efeito". O recurso ganhou a ordem de gravidade e a regra da reavaliação contra
+  ausência (FR-7019, FR-7028, FR-7029). A resposta também mexeu na FR-7009, na FR-7023, na UX-741, nos
+  cenários das histórias 4 e 6 e na D-007.
+
 ## Notes
 
-- **Uma pergunta ao usuário fica aberta, de propósito: a Q-1**, sobre o efeito do não comparecimento
-  (a P-6 do estudo). Ela não é marcador `[NEEDS CLARIFICATION]`. A FR-7004 está escrita com a
-  recomendação e diz que depende da Q-1. Responder de outro modo muda só a FR-7004, a UX-741 e a
-  D-007.
+- **Nenhuma pergunta aberta.** A Q-1 foi fechada pelo usuário em 14/11.
 - **"Sem detalhes de implementação"** foi lido como neste repositório: a spec nomeia conceitos do
   domínio (Resultado da Etapa, consequência, faixa do corte, versão canônica, contrato de
   mutabilidade), e não tabelas, módulos nem funções. O mapa do código que sustentou as premissas
