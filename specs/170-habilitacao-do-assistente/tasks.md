@@ -36,11 +36,11 @@ PostgreSQL.
 
 ## Fase 3 — A página (US1 a US3)
 
-- [ ] T014 As views, as rotas e os templates da página "Assistente do Edital", no molde de Unidades
+- [x] T014 As views, as rotas e os templates da página "Assistente do Edital", no molde de Unidades
   (FR-7502, FR-7511, FR-7513, UX-810 a UX-812).
-- [ ] T015 A seção na barra, ao lado de Unidades.
-- [ ] T016 A linha da página do Edital na gestão (FR-7522, UX-814).
-- [ ] T017 Testes da página: configuração sem segredo, sem chamada, recusas (SC-2450).
+- [x] T015 A seção na barra, ao lado de Unidades.
+- [x] T016 A linha da página do Edital na gestão (FR-7522, UX-814).
+- [x] T017 Testes da página: configuração sem segredo, sem chamada, recusas (SC-2450).
 
 ## Fase 4 — O percurso e a documentação
 
