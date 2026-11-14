@@ -12652,11 +12652,18 @@ def _alvo_da_correcao(peca, digitado=None):
                 # consequência diretamente (FR-059).
                 "forma": "" if vigente.forma == "" else forma_publicada(etapa),
                 "sentidos": rotulos(etapa),
+                # A Etapa colegiada (165, FR-7071): a reavaliação não está disponível contra ela.
+                "colegiada": vigente.origem == "DELIBERACAO"
+                or deliberacao_da_etapa.colegiada(etapa),
                 **_fichas_do_julgamento(vigente, etapa_id, digitado, vigente_do_edital),
             }
         )
     return {
         "alcancaveis": alcancaveis,
+        # **Sem a espécie, e com a razão** (165, FR-7071, contrato `frases.md`): quando toda Etapa
+        # alcançável é colegiada, a tela não oferece o que o comando recusaria. Com Etapas dos dois
+        # tipos, a opção fica, e o comando recusa a que não cabe.
+        "sem_reavaliacao": bool(alcancaveis) and all(a["colegiada"] for a in alcancaveis),
         "etapas_do_objeto": etapas_do_objeto,
         "tem_ficha": any(alvo.get("ficha_corrigir") for alvo in alcancaveis),
     }
@@ -12866,6 +12873,14 @@ def _parecer_atacado(peca):
     from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
 
     resultado = peca.resultado_atacado
+    if resultado is not None and resultado.origem == "DELIBERACAO":
+        # **A autoridade recursal lê todos os pareceres, com a autoria** (165, FR-7081): a
+        # restrição da FR-7077 é da apresentação ao candidato, e não reduz o que ela vê.
+        return "\n\n".join(
+            f"Parecer de {avaliacao.identity_subject} ({avaliacao.sentido.lower()}): {texto}"
+            for avaliacao, texto in recursos_selectors.textos_da_deliberacao(resultado)
+            if texto
+        )
     if resultado is None or resultado.avaliacao_id is None:
         return ""
     conclusoes = list(

@@ -718,7 +718,19 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
 
     lido = {}
     for linha in linhas:
-        texto = parecer_que_fundamenta(linha, conclusoes.get(linha.avaliacao_id, ()))
+        textos = []
+        if linha.origem == ResultadoEtapa.Origem.DELIBERACAO:
+            # **Os pareceres desfavoráveis da deliberação, sem autoria** (165, FR-7077, D-009): é
+            # contra eles que se recorre. Os favoráveis ficam na contagem do motivo, e o nome de
+            # quem escreveu não vai a lugar nenhum desta leitura.
+            textos = [
+                texto
+                for avaliacao, texto in textos_da_deliberacao(linha)
+                if avaliacao.sentido == "DESFAVORAVEL" and texto
+            ]
+            texto = "\n\n".join(textos)
+        else:
+            texto = parecer_que_fundamenta(linha, conclusoes.get(linha.avaliacao_id, ()))
         if not texto:
             lido[linha.pk] = {"estado": AUSENTE, "texto": "", "aviso": NAO_HOUVE_PARECER}
             continue
@@ -727,7 +739,7 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
         # foi lido com `resultado_atacado_id__in`: peça contra outro resultado, e peça contra a
         # publicação, não entram no conjunto e não reabrem este parecer.
         if prazo == PRAZO_ABERTO or linha.pk in pendentes:
-            lido[linha.pk] = {"estado": VISIVEL, "texto": texto, "aviso": ""}
+            lido[linha.pk] = {"estado": VISIVEL, "texto": texto, "textos": textos, "aviso": ""}
             continue
         aviso = POR_QUE_NAO_APARECE if prazo == PRAZO_NAO_ADMITIDO else POR_QUE_SAIU
         lido[linha.pk] = {"estado": ENCERRADO, "texto": "", "aviso": aviso}
@@ -756,6 +768,32 @@ def parecer_que_fundamenta(resultado, conclusoes=()):
             return (conclusao.parecer or "").strip()
     avaliacao = resultado.avaliacao
     return (avaliacao.parecer or "").strip() if avaliacao is not None else ""
+
+
+def textos_da_deliberacao(resultado):
+    """`[(avaliação, texto)]` dos pareceres que formaram o Resultado deliberado (165, FR-7077).
+
+    **O texto é o da conclusão que fundamentou o Resultado**, pela regra de `parecer_que_fundamenta`
+    aplicada a cada parecer: uma reabertura posterior não troca o que o titular lê. A autoria viaja
+    na Avaliação, e é quem chama que decide se a mostra — a autoridade recursal, sim; o titular,
+    nunca (FR-7081).
+    """
+    from processo_seletivo.avaliacoes.models import ConclusaoAvaliacao
+    from processo_seletivo.resultados.application.selectors import pareceres_da_deliberacao
+
+    pareceres = pareceres_da_deliberacao(resultado)
+    conclusoes = _conclusoes_por_avaliacao(ConclusaoAvaliacao, [item.id for item in pareceres])
+    textos = []
+    for avaliacao in pareceres:
+        texto = ""
+        for conclusao in conclusoes.get(avaliacao.id, ()):
+            if conclusao.concluida_em <= resultado.consolidado_em:
+                texto = (conclusao.parecer or "").strip()
+                break
+        else:
+            texto = (avaliacao.parecer or "").strip()
+        textos.append((avaliacao, texto))
+    return textos
 
 
 def _conclusoes_por_avaliacao(modelo, avaliacao_ids):

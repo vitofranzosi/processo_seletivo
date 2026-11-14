@@ -1090,6 +1090,15 @@ def impedidos_por_recurso(pendentes):
             if resultado.avaliacao_id is not None:
                 conjunto.add(resultado.avaliacao.concluida_por)
             conjunto.add(resultado.consolidado_por)
+            # Os autores dos pareceres da deliberação (165, FR-7069): todos impedidos.
+            if resultado.origem == "DELIBERACAO":
+                from processo_seletivo.resultados.application.selectors import (
+                    pareceres_da_deliberacao,
+                )
+
+                conjunto |= {
+                    avaliacao.identity_subject for avaliacao in pareceres_da_deliberacao(resultado)
+                }
         publicacao = peca.publicacao_atacada
         if publicacao is not None:
             conjunto.add(publicacao.ato.emitido_por)

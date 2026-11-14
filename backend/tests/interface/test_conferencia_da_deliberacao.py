@@ -28,9 +28,7 @@ def test_a_conferencia_mostra_a_deliberacao(client, seletor_ligado, cenario):
     """UX-752, FR-7067."""
     identificar(client, "maria", ["gestor"])
     maria = cenario["inscricoes"][0]
-    url = reverse(
-        "interface:consolidar-resultados", args=[cenario["edital"].id, cenario["hetero"]]
-    )
+    url = reverse("interface:consolidar-resultados", args=[cenario["edital"].id, cenario["hetero"]])
 
     corpo = client.post(url, {"inscricao_id": [str(maria.id)]}).content.decode()
 

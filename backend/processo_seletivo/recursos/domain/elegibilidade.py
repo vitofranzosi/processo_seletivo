@@ -10,6 +10,8 @@ resultado.consolidado_por  == ator?   →  consolidou o Resultado, ou constatou 
 ato.emitido_por            == ator?   →  emitiu o ato de ordenação atacado
 publicacao.publicado_por   == ator?   →  praticou a publicação atacada
 Impedimento(ator, inscricao) existe?  →  o impedimento declarado da 012
+parecer da deliberação      == ator?   →  concluiu um dos pareceres que formaram o Resultado (165)
+Atribuição ativa sem conclusão?        →  tem parecer pendente sobre o par (165)
 ```
 
 **Cinco perguntas por ato de julgamento, e nenhuma por linha de listagem.** A listagem mostra
@@ -27,6 +29,8 @@ CONSOLIDOU = "consolidou"
 EMITIU = "emitiu"
 PUBLICOU = "publicou"
 DECLARADO = "declarado"
+DELIBEROU = "deliberou"
+PENDENTE = "pendente"
 
 RAZOES = {
     AVALIOU: "Você concluiu a Avaliação que fundamentou o resultado atacado.",
@@ -34,6 +38,10 @@ RAZOES = {
     EMITIU: "Você emitiu o ato de ordenação atacado.",
     PUBLICOU: "Você praticou a publicação atacada.",
     DECLARADO: "Há impedimento declarado seu quanto a esta inscrição.",
+    DELIBEROU: "Você concluiu um dos pareceres que formaram o resultado atacado.",
+    PENDENTE: (
+        "Você tem parecer pendente sobre esta inscrição nesta Etapa, e não vê o que julgaria."
+    ),
 }
 
 BARRADO = "appeal_judge_barred"
@@ -67,6 +75,14 @@ def impedimento(ator, recurso, *, etapa_id=None):
             return AVALIOU
         if resultado.consolidado_por == subject:
             return CONSOLIDOU
+        # **Todo membro da deliberação**, e não um só (165, FR-7069): o Resultado colegiado é
+        # de cada um dos N, e a regra da `018` aplicada a cada um impede todos.
+        if _deliberou(resultado, subject):
+            return DELIBEROU
+        # **E quem tem parecer pendente sobre o par** (165, FR-7069): o às cegas lhe esconde os
+        # pareceres alheios, e ele julgaria sem ver o que julga.
+        if _pendente(resultado, subject):
+            return PENDENTE
 
     publicacao = recurso.publicacao_atacada
     if publicacao is not None:
@@ -80,6 +96,32 @@ def impedimento(ator, recurso, *, etapa_id=None):
     ).exists():
         return DECLARADO
     return None
+
+
+def _deliberou(resultado, subject):
+    from processo_seletivo.resultados.models import ParecerDaDeliberacao, ResultadoEtapa
+
+    if resultado.origem != ResultadoEtapa.Origem.DELIBERACAO:
+        return False
+    return ParecerDaDeliberacao.objects.filter(
+        resultado=resultado, avaliacao__identity_subject=subject
+    ).exists()
+
+
+def _pendente(resultado, subject):
+    from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao
+
+    return (
+        Atribuicao.objects.filter(
+            membro__identity_subject=subject,
+            edital_id=resultado.edital_id,
+            etapa_id=resultado.etapa_id,
+            inscricao_id=resultado.inscricao_id,
+            ativo=True,
+        )
+        .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+        .exists()
+    )
 
 
 def _resultados_alcancados(recurso, etapa_id):
