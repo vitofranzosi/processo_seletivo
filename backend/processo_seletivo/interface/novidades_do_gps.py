@@ -8,6 +8,7 @@ filtro ou página inválidos caem no padrão.
 from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.decorators.http import require_http_methods
 
 from processo_seletivo.interface import identidade, navegacao
@@ -16,12 +17,8 @@ from processo_seletivo.novidades import catalogo, leitura
 POR_PAGINA = 12
 
 
-def _secao_do_destino(rota):
-    return next((s for s in navegacao.SECOES + navegacao.SECOES_DE_ACESSO if s.rota == rota), None)
-
-
 def _cartao(nota, ator, documentacao):
-    secao = _secao_do_destino(nota.destino) if nota.destino else None
+    secao = navegacao.secao_da_rota(nota.destino) if nota.destino else None
     return {
         "nota": nota,
         # O link só a quem a barra o oferece (FR-7412): o destino que a autorização recusa é o
@@ -44,10 +41,11 @@ def _meses(cartoes):
 
 
 def _endereco(categoria="", pagina=1):
-    partes = [f"categoria={categoria}"] if categoria else []
+    parametros = {"categoria": categoria} if categoria else {}
     if pagina > 1:
-        partes.append(f"pagina={pagina}")
-    return reverse("interface:novidades") + (f"?{'&'.join(partes)}" if partes else "")
+        parametros["pagina"] = pagina
+    consulta = urlencode(parametros)
+    return reverse("interface:novidades") + (f"?{consulta}" if consulta else "")
 
 
 @require_http_methods(["GET"])

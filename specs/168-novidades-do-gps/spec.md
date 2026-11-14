@@ -64,7 +64,7 @@ melhoria pessoalmente.
   filtro por categoria;
 - o item **Novidades** na barra, com a contagem discreta do que a pessoa ainda não viu;
 - o bloco **Desde sua última visita** no topo da página;
-- o arquivo versionado das notas, a validação dele e o histórico inicial, de 17/10 a 14/11/2026;
+- o arquivo versionado das notas, a validação dele e o histórico inicial, de 15/09 a 14/11/2026 (`D-010`);
 - um roteiro assistido, fora da aplicação, que prepara o rascunho das notas a partir dos PRs
   mergeados desde a última atualização.
 
@@ -198,7 +198,7 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
 ### Edge Cases
 
 - **Primeira visita de uma identidade.** Não há "desde a última visita". A página não mostra o bloco
-  e diz, numa frase, que reúne as mudanças desde 17/10/2026. A barra conta todas as notas, com teto
+  e diz, numa frase, desde quando reúne as mudanças. A barra conta todas as notas, com teto
   de exibição "9+".
 - **Identidade de demonstração compartilhada.** O seletor permite que duas pessoas declarem a mesma
   identidade; elas compartilham o que foi visto. É a natureza da demonstração, e não se corrige aqui.
@@ -246,11 +246,11 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
   release que ele roda, sem consulta a serviço externo em execução.
 - **FR-7410**: A nota PODE declarar uma configuração de que depende; se ela estiver desligada no
   ambiente, a nota NÃO DEVE aparecer, nem contar na barra ou no filtro.
-- **FR-7411**: A nota PODE declarar a capacidade de quem a lê; a quem não a tem, a nota NÃO DEVE
-  aparecer, nem contar.
-- **FR-7412**: O link para a tela DEVE aparecer só a quem alcança a seção dela pela barra, ou só a quem
-  tem a capacidade que a nota declara para o link; sem isso, o cartão continua com o texto de onde a
-  capacidade mora.
+- **FR-7411**: A nota PODE declarar uma ou mais capacidades de quem a lê, e basta uma; a quem não
+  tem nenhuma, a nota NÃO DEVE aparecer, nem contar.
+- **FR-7412**: O destino do link DEVE ser uma seção da barra, e o link DEVE aparecer só a quem
+  alcança essa seção; sem isso, o cartão continua com o texto de onde a capacidade mora. Tela que não
+  é seção da barra se diz no texto de onde, sem link (revisão de 14/11, `D-004`).
 
 **Descoberta**
 
@@ -275,25 +275,28 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
 - **FR-7420**: As notas DEVEM morar num arquivo de texto estruturado, versionado no repositório e
   empacotado com a aplicação, uma entrada por nota.
 - **FR-7421**: Cada nota DEVE ter identificador estável e único, título, data de integração, categoria,
-  resumo e ao menos uma referência a PR mergeado; PODE ter benefício, onde, passos, destino, âncora da
-  Documentação do Sistema, configuração de que depende, capacidade de quem a lê e capacidade do link.
+  resumo e ao menos uma referência a PR mergeado; PODE ter benefício, onde, passos, destino (seção da
+  barra), âncora da Documentação do Sistema, configuração de que depende e capacidades de quem a lê.
 - **FR-7422**: A suíte DEVE validar o arquivo: campos obrigatórios, categorias, datas, identificadores
   únicos, ordem, destinos que existem entre as rotas da gestão, âncoras que existem na Documentação do
   Sistema, configurações e capacidades conhecidas, specs citadas que existem, e o vocabulário proibido
   pela FR-7407.
 - **FR-7423**: Uma nota NÃO DEVE entrar no arquivo antes de todos os PRs que ela cita estarem na
   `main`. A nota de spec parcialmente entregue DEVE descrever só a parte mergeada.
-- **FR-7424**: O repositório DEVE ter um roteiro, fora da aplicação, que lista os PRs mergeados depois
-  da referência mais recente do arquivo, agrupados por spec, marcando os que só tocam documentação, e
-  escreve um rascunho para curadoria sem alterar o arquivo das notas.
+- **FR-7424**: Todo PR mergeado na `main` desde o início da janela DEVE ter um destino, e um só:
+  citado por uma nota, registrado como sem nota com o motivo, ou só de documentação. O repositório
+  DEVE ter um roteiro, fora da aplicação, que seleciona os PRs **pela data do merge** — e não pelo
+  número —, lista como pendente o que não tem destino, agrupado por spec, e escreve um rascunho sem
+  alterar arquivo nenhum do repositório. *Revista em 14/11: a primeira versão cortava pelo maior
+  número citado, e perdia o PR aberto antes e mergeado depois.*
 - **FR-7425**: O repositório DEVE ter um guia curto de curadoria: o que vira nota, o que não vira, como
   agrupar, como escrever, e a lista de conferência da revisão.
 
 **O conteúdo inicial**
 
-- **FR-7426**: O arquivo DEVE nascer com as notas das capacidades entregues entre 17/10 e
+- **FR-7426**: O arquivo DEVE nascer com as notas das capacidades entregues entre 15/09 e
   14/11/2026, conferidas contra o código da `main` e contra a Documentação do Sistema, sem nota de PR
-  só de especificação ou documentação.
+  só de especificação ou documentação, e sem PR de produto da janela sem destino.
 
 ### Requisitos de experiência
 
@@ -343,8 +346,7 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
   mesma pessoa, no seletor e no modo institucional.
 - Quem cura as notas é quem desenvolve, ou alguém por quem a pessoa responsável pelo produto responda,
   e a aprovação é a do PR.
-- O conteúdo inicial começa em 17/10/2026, com a moldura atual da gestão (`076`): as telas anteriores
-  foram refeitas, e notas sobre elas descreveriam o que já não existe.
+- O conteúdo inicial começa em 15/09/2026, 60 dias antes da primeira entrega (`D-010`).
 
 ---
 
@@ -374,10 +376,13 @@ até a validação de LGPD ligar a chave.
 
 ### D-004 — A nota pode ser de um público; o link, de quem alcança a tela
 
-Uma nota sobre a administração de acessos não interessa a quem não administra acessos; ela declara a
-capacidade de quem a lê (FR-7411). A maioria das notas não declara nada e é para todos. O link segue a
-barra: só quem alcança a seção vê "Abrir" (FR-7412). Oferecer um destino que a autorização recusa é o
-defeito que a barra da `076` foi desenhada para não ter.
+Uma nota sobre a administração de acessos não interessa a quem não administra acessos; ela declara as
+capacidades de quem a lê, e basta uma (FR-7411) — quem administra na unidade e quem administra na
+instituição têm capacidades diferentes, e os dois usam a tela. A maioria das notas não declara nada e
+é para todos. O link segue a barra: o destino é uma seção dela, e só quem alcança a seção vê "Abrir"
+(FR-7412). Oferecer um destino que a autorização recusa é o defeito que a barra da `076` foi desenhada
+para não ter; uma capacidade própria do link seria uma segunda regra de autorização, fora da barra, e
+a revisão de código de 14/11 a retirou da spec em vez de implementá-la.
 
 ### D-005 — A contagem não custa consulta às telas
 
@@ -412,11 +417,16 @@ curadoria humana. Um agente pode ajudar a redigir na mesma sessão em que o rote
 Misturar o entregue com o planejado na mesma página é o que faria a página anunciar o que não existe. Um
 roadmap, se vier, será outra página, com outra fonte (as specs aprovadas), e outra spec.
 
-### D-010 — O conteúdo inicial começa na moldura atual
+### D-010 — O conteúdo inicial cobre 60 dias, descritos como o produto é hoje
 
-O usuário pediu 60 a 90 dias. Antes de 17/10 a gestão tinha outra moldura (a `076` refez a barra e o
-cabeçalho, e a `077` a `092` refizeram as telas): notas daquele período descreveriam telas que já não
-existem. O conteúdo inicial cobre de 17/10 a 14/11/2026, e a página o diz na primeira visita.
+O usuário pediu 60 a 90 dias. A primeira versão começou em 17/10, com a moldura atual da gestão, e a
+segunda revisão de 14/11 apontou que a troca da moldura não basta para deixar de fora as capacidades
+daquele período que ainda existem. O usuário decidiu estender (P-4). O conteúdo inicial cobre de 15/09
+a 14/11/2026, e a página o diz na primeira visita.
+
+**A nota de setembro descreve a capacidade como ela existe hoje**, e não a tela em que ela nasceu:
+boa parte daquelas telas foi refeita a partir de 17/10. A capacidade que foi depois substituída ou
+removida não ganha nota; o PR dela vai para o registro, com o motivo.
 
 ---
 
@@ -428,5 +438,7 @@ Nenhuma bloqueia o MVP; todas são de governança.
   capacidade (ou num PR de curadoria semanal), e que você aprove. Outra pessoa da equipe deve aprovar?
 - **P-2 — Cadência.** Uma curadoria por semana, antes da implantação na homologação? Ou a cada
   implantação?
+- **P-4 — O período do histórico inicial.** *Respondida em 14/11: estender.* O histórico cobre de
+  15/09 a 14/11 (`D-010`).
 - **P-3 — Versão.** O guia de implantação recomenda uma tag anotada por release (`vAAAA.MM.N`). Se ela
   for adotada, a página pode agrupar por versão em vez de mês. Adotar?

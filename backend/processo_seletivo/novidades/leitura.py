@@ -30,10 +30,14 @@ TETO_DA_CONTAGEM = 9
 
 
 def disponivel(nota, ator):
-    """Se a nota existe para este ator neste ambiente (FR-7410, FR-7411)."""
+    """Se a nota existe para este ator neste ambiente (FR-7410, FR-7411).
+
+    O público é uma ou mais capacidades, e basta uma: a nota da gestão de acessos interessa a quem
+    administra na unidade e a quem administra na instituição, que têm capacidades diferentes.
+    """
     if nota.requer_configuracao and not getattr(settings, nota.requer_configuracao, False):
         return False
-    return not (nota.para_capacidade and not ator.can(nota.para_capacidade))
+    return not nota.para_capacidade or any(ator.can(c) for c in nota.para_capacidade)
 
 
 def disponiveis(ator, notas=None):
@@ -42,13 +46,23 @@ def disponiveis(ator, notas=None):
 
 
 def ao_entrar(request, ator):
-    """Na entrada da gestão: guarda na sessão o que a identidade ainda não viu.
+    """Na entrada da gestão: a sessão é nova, e guarda o que a identidade ainda não viu.
 
-    Chamada pela entrada de demonstração, pela institucional e pela troca de unidade — a troca muda
-    as capacidades, e com elas as notas disponíveis. Uma consulta, na entrada, e nenhuma depois.
+    Chamada pela camada de identidade, onde a sessão da gestão nasce — a entrada de demonstração e a
+    institucional —, e não por cada view de entrada: um caminho novo de entrar herda a contagem sem
+    lembrar de pedi-la. Uma consulta, na entrada, e nenhuma depois.
     """
     for chave in (NAO_VISTAS, DESTA_VISITA, VISITA_ANTERIOR):
         request.session.pop(chave, None)
+    recontar(request, ator)
+
+
+def recontar(request, ator):
+    """Recalcula só a contagem — a troca de unidade muda as capacidades, e não a visita.
+
+    O bloco "Desde sua última visita" fica como estava (FR-7417): a sessão é a mesma.
+    """
+    request.session.pop(NAO_VISTAS, None)
     if ator is None:
         return
     try:

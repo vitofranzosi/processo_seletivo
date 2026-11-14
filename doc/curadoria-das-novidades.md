@@ -5,7 +5,7 @@ as notas da página **Novidades do GPS**. O arquivo é
 [`backend/processo_seletivo/novidades/novidades.toml`](../backend/processo_seletivo/novidades/novidades.toml),
 e publicar uma nota é editar esse arquivo e abrir um PR.
 
-## A regra que não se negocia
+## As duas regras que não se negociam
 
 **Uma nota só entra depois de todos os PRs que ela cita estarem na `main`, e descreve só o que eles
 entregaram.** A nota viaja com o código: o ambiente que roda um commit mostra as notas daquele
@@ -16,6 +16,12 @@ PR integrado não é capacidade entregue. Spec, plano, tarefas, estudo e auditor
 Spec entregue pela metade vira nota da metade que entrou: a `152` tem cinco de seis histórias, e a
 nota fala das cinco.
 
+**Todo PR mergeado desde o início da janela tem um destino, e um só.** Ele é citado por uma nota de
+`novidades.toml`, ou está em `[[sem_nota]]` de
+[`curadoria.toml`](../backend/processo_seletivo/novidades/curadoria.toml) com o motivo, ou é só de
+documentação. Documentação desatualizada não é motivo para deixar uma capacidade de fora: confira no
+código e na tela, e escreva a nota. A suíte recusa PR com dois destinos.
+
 ## O caminho
 
 1. **Rascunho.** De `backend/`, com o `gh` autenticado:
@@ -24,18 +30,22 @@ nota fala das cinco.
    uv run python scripts/rascunhar_novidades.py --saida /tmp/rascunho-das-novidades.md
    ```
 
-   O roteiro lista os PRs mergeados depois do maior PR citado no arquivo, agrupados pela spec, marca
-   os que só tocam documentação e escreve um esqueleto `[[nota]]` por grupo, com a data do último
-   merge no horário de Brasília. Ele não escreve no arquivo das notas.
-2. **Curadoria.** Para cada grupo, decida: vira nota, junta-se a outra, ou fica de fora. Escreva a
-   nota no topo do arquivo — a ordem é da mais recente para a mais antiga.
+   O roteiro lê todo PR mergeado desde o `inicio` do registro — **pela data do merge, e não pelo
+   número**: o número diz quando o PR foi aberto, e um PR antigo entra muitas vezes depois de um
+   novo — e lista como pendente o que não tem destino, agrupado pela spec, com um esqueleto
+   `[[nota]]` por grupo e a data do último merge no horário de Brasília. Os só de documentação ele
+   conta à parte. Ele não escreve em arquivo nenhum do repositório.
+2. **Curadoria.** Para cada grupo, decida: vira nota, junta-se a uma que já existe (acrescente o PR
+   e atualize a data), ou fica de fora — e então vai para `[[sem_nota]]` do registro, com o motivo.
+   A ordem do arquivo é da mais recente para a mais antiga. Rode o roteiro de novo: o rascunho deve
+   dizer "Nada pendente".
 3. **Validação.** `uv run pytest tests/novidades` confere a forma, as rotas, as âncoras, as
    configurações, as capacidades, as specs citadas, o vocabulário e que nenhum PR está em duas
    notas.
 4. **Revisão no PR.** A pessoa que revisa lê a nota como quem opera, com a lista abaixo.
 
-PR que ficou de fora de propósito não volta no rascunho seguinte só se o arquivo citar um PR maior
-que ele. Para não perdê-lo de vista, anote-o na descrição do PR de curadoria.
+O registro é o que torna a curadoria verificável: quem revisa o PR vê, no diff, o que virou nota e o
+que ficou de fora e por quê.
 
 ## O que vira nota
 
@@ -71,6 +81,8 @@ divulgação, onze PRs e uma nota. Um PR nunca está em duas notas — a suíte 
 
 ## Lista da revisão
 
+- [ ] O rascunho, rodado de novo, diz "Nada pendente"?
+- [ ] Cada PR em `[[sem_nota]]` tem um motivo que convence quem opera?
 - [ ] Todos os PRs citados estão mergeados na `main`?
 - [ ] A nota descreve só o que esses PRs entregaram, e não o que a spec promete?
 - [ ] Os rótulos citados existem na tela, com essa grafia?

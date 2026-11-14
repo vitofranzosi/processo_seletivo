@@ -32,12 +32,13 @@ backend/processo_seletivo/novidades/        app novo
   catalogo.py       leitura e forma do arquivo; CatalogoInvalido
   leitura.py        disponibilidade, contagem da sessão, registro da visita
   novidades.toml    as notas
+  curadoria.toml    o registro: o início da janela e os PRs deixados sem nota, com o motivo
 backend/processo_seletivo/interface/
   novidades_do_gps.py                 a view
   templates/interface/novidades.html  a página
   static/interface/telas/novidades.css
   navegacao.py      o item Novidades e a contagem no item
-  views.py          ao_entrar() na entrada de demonstração, na institucional e na troca de unidade
+  identidade.py     ao_entrar() na entrada de demonstração e na institucional; recontar() na troca
   templates/interface/base.html       o ícone e a contagem no item
   static/interface/gestao/moldura.css a contagem, e o ponto na barra recolhida
 backend/scripts/rascunhar_novidades.py      o roteiro de curadoria (fora da aplicação)
@@ -50,11 +51,15 @@ doc/curadoria-das-novidades.md              o guia
   (`test_montar_a_barra_nao_consulta_o_banco`). A entrada da gestão grava na sessão os identificadores
   não vistos; a barra cruza a lista com as notas disponíveis, que estão em memória. A sessão aberta
   antes da implantação fica sem número até a próxima entrada.
-- **R-002 — Os ganchos estão nas views de entrada, e não em `identidade.identificar()`.** A função é
-  chamada por centenas de fixtures; consultar o banco dentro dela mudaria o custo de toda a suíte e de
-  casos sem banco. As views de entrada são o caminho real do ator.
+- **R-002 — A contagem nasce na camada de identidade.** `identidade.identificar()`,
+  `entrar_institucional()` e `trocar_unidade()` chamam `leitura.ao_entrar()` (sessão nova) ou
+  `leitura.recontar()` (troca de unidade, que não apaga o bloco da visita). Na primeira versão os
+  ganchos estavam nas três views de entrada; a revisão de código de 14/11 os levou para onde a sessão
+  nasce, para que um caminho novo de entrar não fique sem contagem em silêncio. Nenhum teste chama
+  essas funções fora das views.
 - **R-003 — O arquivo é relido só quando muda.** O carregador guarda o resultado pela data de
-  modificação: em produção, a release é imutável e o arquivo é lido uma vez por processo.
+  modificação, e a falha também: em produção, a release é imutável e o arquivo é lido uma vez por
+  processo; com o arquivo inválido, o erro não é reinterpretado a cada tela.
 - **R-004 — O que pede o resto do sistema se confere na suíte, não no carregador.** Rotas, âncoras da
   Documentação do Sistema (que não vai para o servidor), configurações, capacidades e specs: o
   carregador confere só a forma, para a página não quebrar em produção.

@@ -202,7 +202,6 @@ from processo_seletivo.interface import supervisao as supervisao_do_processo
 from processo_seletivo.interface import visao_geral as visao_institucional
 from processo_seletivo.interface.conducao import CONDUCAO_DA_RETIFICACAO
 from processo_seletivo.interface.templatetags import interface_extras
-from processo_seletivo.novidades import leitura as leitura_das_novidades
 from processo_seletivo.portal.arquivos import (
     ArquivoIndisponivel,
     copia_verificada,
@@ -776,9 +775,6 @@ def identificar(request):
             # ainda assim precisa entrar para ver `Minhas Etapas`. Exigir papel aqui tornava esse
             # ator, que é metade da feature, impossível de representar.
             identidade.identificar(request, subject=subject, papeis=papeis)
-            # O que esta identidade ainda não viu, para a barra (168, FR-7415): uma consulta aqui, e
-            # nenhuma nas telas.
-            leitura_das_novidades.ao_entrar(request, identidade.ator_da_sessao(request))
             # O destino pedido antes da identificação, se for da gestão (`FR-1696`); senão, o
             # lugar de sempre.
             return redirect(
@@ -882,7 +878,6 @@ def retorno_institucional(request):
                 403,
             )
         raise _recusa_da_entrada()
-    leitura_das_novidades.ao_entrar(request, identidade.ator_da_sessao(request))
     return redirect(ida.get("proximo") or reverse("interface:lista"))
 
 
@@ -902,8 +897,6 @@ def unidade_ativa(request):
     identidade.trocar_unidade(
         request, request.POST.get("unidade", ""), correlation_id=request.correlation_id
     )
-    # Outra unidade, outras capacidades: as notas que esta pessoa alcança mudam (168, `D-004`).
-    leitura_das_novidades.ao_entrar(request, identidade.ator_da_sessao(request))
     return redirect(reverse("interface:lista"))
 
 

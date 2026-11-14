@@ -177,6 +177,26 @@ def test_quem_volta_ve_o_que_chegou_e_o_bloco_dura_a_sessao(client, seletor_liga
 
 
 @pytest.mark.django_db
+def test_trocar_de_unidade_reconta_sem_apagar_o_bloco_da_visita(client, seletor_ligado, notas):
+    """FR-7417: a troca de unidade muda as capacidades, e não a sessão — o bloco fica."""
+    from django.utils import timezone
+
+    LeituraDasNovidades.objects.create(
+        subject="gustavo.gestor", vistas=["a"], ultima_visita=timezone.now()
+    )
+    notas(*TRES)
+    identificar(client, "gustavo.gestor", ["gestor"])
+    _pagina(client)
+    pedido = RequestFactory().get("/gestao/")
+    pedido.session = client.session
+    leitura.recontar(pedido, navegacao.identidade.ator_da_sessao(pedido))
+    pedido.session.save()
+    corpo = _pagina(client)
+    assert 'class="desde-a-ultima-visita"' in corpo
+    assert "Nada novo" not in corpo
+
+
+@pytest.mark.django_db
 def test_nota_vista_que_volta_a_ser_alcancavel_nao_reaparece_como_nova(
     client, seletor_ligado, notas
 ):
@@ -215,6 +235,21 @@ def test_a_nota_de_um_publico_so_aparece_para_ele(client, seletor_ligado, notas)
     notas(*TRES, _nota("acessos", "2026-10-01", para_capacidade="acesso:consultar"))
     identificar(client, "gustavo.gestor", ["gestor"])
     assert "Título acessos" not in _pagina(client)
+
+
+@pytest.mark.django_db
+def test_basta_uma_das_capacidades_do_publico(client, seletor_ligado, notas):
+    """FR-7411: a nota de vários públicos aparece a quem tem qualquer uma das capacidades."""
+    notas(
+        *TRES,
+        '[[nota]]\nid = "vg"\ndata = 2026-10-01\ncategoria = "novidade"\n'
+        'titulo = "Título vg"\nresumo = "R."\nprs = [9]\nspecs = []\n'
+        'para_capacidade = ["acesso:administrar", "visao:consultar"]\n',
+    )
+    identificar(client, "gustavo.gestor", ["gestor"])
+    assert "Título vg" in _pagina(client)
+    identificar(client, "eva.elaboradora", ["elaborador"])
+    assert "Título vg" not in _pagina(client)
 
 
 @pytest.mark.django_db
@@ -293,5 +328,6 @@ def test_o_conteudo_real_abre_sem_jargao_na_tela(client, seletor_ligado):
     identificar(client, "gustavo.gestor", ["gestor", "auditor"])
     corpo = _pagina(client)
     conteudo = corpo.split('<main id="conteudo"')[1]
-    assert "Minhas atividades: o que é seu, em todos os Editais" in conteudo
+    # A primeira nota do arquivo, e não um título fixo: a curadoria acrescenta no topo toda semana.
+    assert catalogo.notas()[0].titulo in conteudo
     assert not re.search(r"#\d{3}|\bPR\b|FR-\d", re.sub(r'href="[^"]*"', "", conteudo))

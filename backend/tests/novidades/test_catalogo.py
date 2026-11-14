@@ -37,10 +37,12 @@ def _visivel(nota):
 
 
 def test_o_arquivo_tem_o_conteudo_inicial():
-    """FR-7426: o histórico nasce de 17/10 a 14/11/2026, da mais recente para a mais antiga."""
+    """FR-7426: o histórico começa em 15/09 (`D-010`), e cresce para a frente.
+
+    Sem teto de data: a próxima curadoria acrescenta notas mais novas no topo, e isso é o esperado.
+    """
     assert len(NOTAS) >= 30
-    assert NOTAS[0].data <= datetime.date(2026, 11, 14)
-    assert NOTAS[-1].data >= datetime.date(2026, 10, 17)
+    assert NOTAS[-1].data >= datetime.date(2026, 9, 15)
 
 
 @pytest.mark.parametrize("nota", NOTAS, ids=lambda n: n.id)
@@ -60,9 +62,8 @@ def test_a_nota_cabe_num_cartao(nota):
 
 def test_o_destino_e_uma_secao_da_barra():
     """FR-7412: o link segue o predicado da seção, e só seção da barra tem predicado."""
-    rotas = {s.rota for s in navegacao.SECOES + navegacao.SECOES_DE_ACESSO}
     for nota in NOTAS:
-        assert not nota.destino or nota.destino in rotas, (nota.id, nota.destino)
+        assert not nota.destino or navegacao.secao_da_rota(nota.destino), (nota.id, nota.destino)
 
 
 def test_a_ancora_existe_na_documentacao_do_sistema():
@@ -88,7 +89,8 @@ def test_a_capacidade_existe():
         for permissao in permissoes
     }
     for nota in NOTAS:
-        assert not nota.para_capacidade or nota.para_capacidade in conhecidas, nota.id
+        for capacidade in nota.para_capacidade:
+            assert capacidade in conhecidas, (nota.id, capacidade)
 
 
 def test_a_spec_citada_existe():
@@ -96,6 +98,23 @@ def test_a_spec_citada_existe():
     for nota in NOTAS:
         for spec in nota.specs:
             assert spec in pastas, (nota.id, spec)
+
+
+def test_o_registro_da_curadoria_da_a_cada_pr_um_destino_so():
+    """FR-7424: o PR deixado sem nota tem motivo, aparece uma vez, e não é também citado."""
+    import tomllib
+
+    registro = tomllib.loads((catalogo.ARQUIVO.parent / "curadoria.toml").read_text("utf-8"))
+    assert isinstance(registro["inicio"], datetime.date)
+    assert registro["inicio"] <= NOTAS[-1].data
+    citados = {pr for nota in NOTAS for pr in nota.prs}
+    vistos = set()
+    for grupo in registro["sem_nota"]:
+        assert grupo["motivo"].strip(), grupo
+        for pr in grupo["prs"]:
+            assert isinstance(pr, int) and pr not in vistos, pr
+            assert pr not in citados, f"o PR {pr} tem nota e está dispensado"
+            vistos.add(pr)
 
 
 def test_um_pr_conta_uma_novidade_so():
@@ -144,6 +163,31 @@ def test_a_nota_malformada_e_recusada_dizendo_onde(troca, mensagem):
     """SC-2505: o erro diz qual nota e qual campo."""
     with pytest.raises(catalogo.CatalogoInvalido, match=re.escape(mensagem)):
         catalogo.ler(VALIDA.replace(*troca))
+
+
+def test_o_publico_e_uma_capacidade_ou_uma_lista():
+    (uma,) = catalogo.ler(VALIDA + 'para_capacidade = "acesso:consultar"\n')
+    assert uma.para_capacidade == ("acesso:consultar",)
+    (lista,) = catalogo.ler(VALIDA + 'para_capacidade = ["a:b", "c:d"]\n')
+    assert lista.para_capacidade == ("a:b", "c:d")
+    with pytest.raises(catalogo.CatalogoInvalido, match="'para_capacidade' deve ser"):
+        catalogo.ler(VALIDA + "para_capacidade = [1]\n")
+
+
+def test_a_falha_de_leitura_se_guarda_ate_o_arquivo_mudar(tmp_path, monkeypatch):
+    """A barra não reinterpreta um arquivo inválido a cada tela."""
+    arquivo = tmp_path / "novidades.toml"
+    arquivo.write_text("[[nota]]\nid = 'x'\n", encoding="utf-8")
+    monkeypatch.setattr(catalogo, "ARQUIVO", arquivo)
+    catalogo._LIDO.clear()
+    lidas = []
+    original = catalogo.ler
+    monkeypatch.setattr(catalogo, "ler", lambda texto: lidas.append(1) or original(texto))
+    for _ in range(3):
+        with pytest.raises(catalogo.CatalogoInvalido):
+            catalogo.notas()
+    assert len(lidas) == 1
+    catalogo._LIDO.clear()
 
 
 def test_id_repetido_e_recusado():

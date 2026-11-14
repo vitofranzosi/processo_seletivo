@@ -71,8 +71,9 @@ class Nota:
     documentacao: str = ""
     # O nome de uma configuração booleana; desligada, a nota não existe neste ambiente (`D-003`).
     requer_configuracao: str = ""
-    # A capacidade de quem lê; sem ela, a nota não aparece para a pessoa (`D-004`).
-    para_capacidade: str = ""
+    # As capacidades de quem lê, e basta uma; sem nenhuma, a nota não aparece para a pessoa
+    # (`D-004`). No arquivo, um texto ou uma lista de textos.
+    para_capacidade: tuple = ()
 
 
 def _texto(numero, entrada, campo, *, obrigatorio):
@@ -83,6 +84,17 @@ def _texto(numero, entrada, campo, *, obrigatorio):
     if obrigatorio and not valor:
         raise CatalogoInvalido(f"nota {numero} ({entrada.get('id')}): '{campo}' está vazio")
     return valor
+
+
+def _capacidades(numero, entrada):
+    valor = entrada.get("para_capacidade", [])
+    valores = [valor] if isinstance(valor, str) else valor
+    if not isinstance(valores, list) or not all(isinstance(v, str) and v.strip() for v in valores):
+        raise CatalogoInvalido(
+            f"nota {numero} ({entrada.get('id')}): "
+            "'para_capacidade' deve ser texto ou lista de textos"
+        )
+    return tuple(v.strip() for v in valores)
 
 
 def _nota(numero, entrada):
@@ -136,7 +148,7 @@ def _nota(numero, entrada):
         destino=_texto(numero, entrada, "destino", obrigatorio=False),
         documentacao=_texto(numero, entrada, "documentacao", obrigatorio=False),
         requer_configuracao=_texto(numero, entrada, "requer_configuracao", obrigatorio=False),
-        para_capacidade=_texto(numero, entrada, "para_capacidade", obrigatorio=False),
+        para_capacidade=_capacidades(numero, entrada),
     )
 
 
@@ -171,12 +183,23 @@ _LIDO = {}
 
 
 def notas():
-    """As notas do arquivo da release. Relidas só quando o arquivo muda — em produção, nunca."""
+    """As notas do arquivo da release. Relidas só quando o arquivo muda — em produção, nunca.
+
+    **A falha também se guarda**, pela mesma marca: com o arquivo inválido, a barra e a página o
+    releriam e reinterpretariam a cada tela, e o erro é o mesmo até o arquivo mudar.
+    """
     try:
         marca = (ARQUIVO, ARQUIVO.stat().st_mtime_ns)
     except OSError as erro:
         raise CatalogoInvalido(f"o arquivo das notas não existe: {ARQUIVO}") from erro
     if marca not in _LIDO:
+        try:
+            lido = ler(ARQUIVO.read_text(encoding="utf-8"))
+        except CatalogoInvalido as erro:
+            lido = erro
         _LIDO.clear()
-        _LIDO[marca] = ler(ARQUIVO.read_text(encoding="utf-8"))
-    return _LIDO[marca]
+        _LIDO[marca] = lido
+    resultado = _LIDO[marca]
+    if isinstance(resultado, CatalogoInvalido):
+        raise resultado
+    return resultado

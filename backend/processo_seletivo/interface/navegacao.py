@@ -171,6 +171,11 @@ def _secoes_da_barra():
 TELAS_LARGAS = frozenset({"interface:alocacoes"})
 
 
+def secao_da_rota(rota):
+    """A seção da barra daquela rota, ou None — a mesma lista que a barra percorre."""
+    return next((secao for secao in _secoes_da_barra() if secao.rota == rota), None)
+
+
 def secao_do_caminho(caminho, enderecos=None):
     """A seção a que pertence a tela daquele endereço — a de prefixo mais longo.
 
