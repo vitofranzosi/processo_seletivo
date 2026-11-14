@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+A política é a de `shared/politica_de_conteudo.py`, diretiva por diretiva, mais uma exceção:
+`media-src 'self' blob:`. É o que a POC quer provar que basta: a prévia da câmera vem de um
+MediaStream (que não passa por media-src) e a revisão vem de um `blob:` (que passa). Sem a exceção,
+a revisão some em silêncio, e a aba "Medição" lista a violação.
+`img-src` não ganhou nada, e `connect-src` continua 'self': nada sai do aparelho.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'; media-src 'self' blob:">
+<title>POC da verificação por vídeo</title>
+<link rel="stylesheet" href="poc.css">
+<script src="poc.js" defer></script>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <span class="marca">Seleções Ifes <span>· prova de conceito</span></span>
+  <span class="aviso-sintetico">Dados sintéticos · nada sai deste aparelho</span>
+</header>
+
+<nav class="abas" aria-label="Visões da prova de conceito">
+  <button type="button" data-visao="candidato" aria-current="page">Candidato</button>
+  <button type="button" data-visao="comissao">Comissão</button>
+  <button type="button" data-visao="medicao">Medição</button>
+</nav>
+
+<p class="anuncio" id="anuncio" aria-live="polite"></p>
+
+<main id="conteudo" tabindex="-1">
+
+<!-- ====================== CANDIDATO ====================== -->
+<div data-visao-corpo="candidato">
+
+<section class="tela" id="tela-inicio" data-tela>
+  <p class="fraco">Edital 900/2026 (sintético) · Curso de teste</p>
+  <label class="perfil">Candidato de teste
+    <select id="perfil">
+      <option value="maior">Candidata sintética, 24 anos</option>
+      <option value="menor">Candidato sintético, 16 anos</option>
+    </select>
+  </label>
+  <div class="cartao atencao">
+    <span class="rotulo amarelo">Falta um passo seu</span>
+    <h2 tabindex="-1">Verificação da autodeclaração</h2>
+    <p>Você se inscreveu na vaga para pessoas pretas e pardas. Essa vaga tem um passo a mais: a
+    comissão confirma sua autodeclaração.</p>
+  </div>
+  <div class="cartao">
+    <h3>Escolha como fazer</h3>
+    <p class="fraco">Até 02/07/2026, 23h59. As duas formas valem igual.</p>
+    <div id="opcao-video">
+      <button type="button" class="botao" data-ir="tela-acolhimento" data-trilha="ESCOLHA_VIDEO">Gravar um vídeo curto</button>
+      <p class="fraco">Cerca de 1 minuto, pelo celular ou computador.</p>
+    </div>
+    <p class="fraco" id="aviso-menor" hidden>Para quem tem menos de 18 anos, a verificação é só ao
+    vivo: a norma pede que o responsável acompanhe em tempo real.</p>
+    <button type="button" class="botao secundario" data-ir="tela-ao-vivo" data-trilha="ESCOLHA_AO_VIVO">Prefiro entrevista ao vivo</button>
+    <p class="fraco">Por videoconferência ou no campus, em dia e hora marcados pela comissão.</p>
+  </div>
+</section>
+
+<section class="tela" id="tela-ao-vivo" data-tela hidden>
+  <div class="cartao espera">
+    <span class="rotulo roxo">Entrevista ao vivo</span>
+    <h2 tabindex="-1">Combinado: entrevista ao vivo</h2>
+    <p>A comissão vai marcar dia e hora e avisar você aqui e por e-mail. Você não precisa fazer
+    mais nada agora.</p>
+  </div>
+  <button type="button" class="botao secundario" data-ir="tela-inicio">Voltar ao início</button>
+</section>
+
+<section class="tela" id="tela-acolhimento" data-tela hidden>
+  <p class="passo-de">1 de 4</p>
+  <h2 tabindex="-1">Antes de gravar</h2>
+  <p>A comissão vai olhar <strong>só a sua aparência</strong>: cor da pele, cabelo e traços do
+  rosto. Não importam a família, documentos antigos ou o que você fala.</p>
+  <div class="cartao">
+    <h3>Prepare-se</h3>
+    <ul>
+      <li>Lugar claro, de frente para a luz</li>
+      <li>Sem boné, chapéu, lenço ou óculos escuros</li>
+      <li>Sem maquiagem e sem filtro</li>
+      <li>Documento com foto por perto</li>
+    </ul>
+  </div>
+  <div class="cartao">
+    <h3>Seus dados</h3>
+    <p class="fraco">O vídeo fica só no sistema do Ifes. Só a comissão vê, e cada visualização fica
+    registrada. Nenhum programa analisa seu rosto. Você pode assistir ao seu vídeo depois de
+    enviar.</p>
+  </div>
+  <label class="caixa"><input type="checkbox" id="usar-sintetica"> Usar imagem de teste em vez da
+  câmera (para testar esta página sem gravar ninguém)</label>
+  <button type="button" class="botao" id="abrir-camera">Testar a câmera</button>
+  <button type="button" class="link" data-ir="tela-falha">Não consigo usar a câmera</button>
+</section>
+
+<section class="tela" id="tela-teste" data-tela hidden>
+  <p class="passo-de">2 de 4</p>
+  <h2 tabindex="-1">Teste rápido</h2>
+  <div class="camera">
+    <video id="previa" autoplay muted playsinline aria-label="Imagem ao vivo da câmera"></video>
+    <div class="oval" aria-hidden="true"></div>
+  </div>
+  <p class="checagem" id="checa-camera">Câmera: aguardando</p>
+  <p class="checagem" id="checa-microfone">Microfone: fale algo</p>
+  <div class="medidor" role="meter" aria-label="Nível do som" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="nivel"></i></div>
+  <p class="fraco">Seu rosto deve caber no oval. A linha é só um guia e <strong>não aparece no
+  vídeo</strong>.</p>
+  <button type="button" class="botao" id="ir-gravar">Está tudo certo, gravar</button>
+  <button type="button" class="link" data-ir="tela-falha">Não consigo usar a câmera</button>
+</section>
+
+<section class="tela" id="tela-permissao" data-tela hidden>
+  <h2 tabindex="-1">Não conseguimos abrir a câmera</h2>
+  <p id="motivo-permissao"></p>
+  <div class="cartao"><h3>Como liberar</h3><p id="como-liberar" class="fraco"></p></div>
+  <button type="button" class="botao" id="tentar-de-novo">Tentar de novo</button>
+  <button type="button" class="botao secundario" data-ir="tela-falha">Prefiro entrevista ao vivo</button>
+</section>
+
+<section class="tela" id="tela-gravacao" data-tela hidden>
+  <p class="passo-de">3 de 4</p>
+  <h2 tabindex="-1" class="visualmente-oculto">Gravação</h2>
+  <div class="camera">
+    <video id="previa-gravacao" autoplay muted playsinline aria-hidden="true"></video>
+    <div class="oval" aria-hidden="true"></div>
+    <span class="gravando" id="selo-gravando" hidden>● gravando</span>
+    <span class="tempo" id="tempo">0:00</span>
+    <div class="fala"><strong>Agora:</strong> <span id="passo-atual"></span><br>
+      <span class="proximo" id="passo-proximo"></span></div>
+  </div>
+  <p class="alerta" id="aviso-teto" hidden></p>
+  <button type="button" class="botao" id="comecar">Começar a gravar</button>
+  <button type="button" class="botao" id="proximo" hidden>Próximo passo</button>
+  <button type="button" class="botao secundario" id="recomecar" hidden>Parar e recomeçar</button>
+  <div class="roteiro-completo">
+    <ol class="passos" id="lista-de-passos"></ol>
+    <p class="fraco">Sem pressa. Os passos avançam quando você toca em “Próximo”. Não há tempo
+    mínimo; o vídeo para sozinho em <span id="teto"></span>.</p>
+  </div>
+  <button type="button" class="link" data-ir="tela-falha">Não consigo usar a câmera</button>
+</section>
+
+<section class="tela" id="tela-revisao" data-tela hidden>
+  <p class="passo-de">4 de 4</p>
+  <h2 tabindex="-1">Confira seu vídeo</h2>
+  <video id="revisao" controls playsinline></video>
+  <p class="fraco" id="dados-da-tomada"></p>
+  <fieldset class="cartao">
+    <legend>Antes de enviar</legend>
+    <label class="caixa"><input type="checkbox"> Dá para ver bem meu rosto</label>
+    <label class="caixa"><input type="checkbox"> Dá para ouvir minha voz</label>
+    <label class="caixa"><input type="checkbox"> Fiz os 4 passos</label>
+  </fieldset>
+  <p class="fraco">Se não ficou bom, grave de novo quantas vezes quiser. Só o vídeo que você enviar
+  chega à comissão. Os outros são apagados deste aparelho.</p>
+  <label class="caixa fraco"><input type="checkbox" id="simular-queda"> (teste) Simular queda de
+  rede no meio do envio</label>
+  <button type="button" class="botao" id="enviar">Enviar este vídeo</button>
+  <button type="button" class="botao secundario" id="regravar">Gravar de novo</button>
+</section>
+
+<section class="tela" id="tela-envio" data-tela hidden>
+  <h2 tabindex="-1">Enviando…</h2>
+  <div class="medidor grande" role="progressbar" aria-label="Progresso do envio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progresso"></i></div>
+  <p id="estado-envio" class="fraco"></p>
+  <ol id="partes" class="partes"></ol>
+  <div id="falha-envio" hidden>
+    <p class="alerta">Não conseguimos enviar depois de 3 tentativas. Isso não conta contra você.</p>
+    <button type="button" class="botao" data-ir="tela-falha">Pedir entrevista ao vivo</button>
+  </div>
+</section>
+
+<section class="tela" id="tela-recusa" data-tela hidden>
+  <h2 tabindex="-1">O vídeo não pôde ser aceito</h2>
+  <p id="motivo-recusa"></p>
+  <button type="button" class="botao" id="voltar-gravar">Gravar de novo</button>
+</section>
+
+<section class="tela" id="tela-comprovante" data-tela hidden>
+  <div class="cartao ok">
+    <span class="rotulo verde">Recebido</span>
+    <h2 tabindex="-1">Seu vídeo chegou</h2>
+    <p class="fraco" id="recebido-em"></p>
+  </div>
+  <dl class="recibo" id="recibo"></dl>
+  <div class="cartao">
+    <h3>E agora?</h3>
+    <p class="fraco">A comissão analisa até 02/07. O resultado sai no seu acompanhamento e por
+    e-mail. Se ela precisar ver você ao vivo, vai marcar uma entrevista. <strong>Isso não é
+    reprovação.</strong></p>
+  </div>
+  <details class="cartao"><summary>Assistir ao vídeo que enviei</summary>
+    <video id="meu-video" controls playsinline></video></details>
+  <p class="fraco">A câmera foi desligada. Para ver o lado da comissão, abra a aba “Comissão”.</p>
+</section>
+
+<section class="tela" id="tela-falha" data-tela hidden>
+  <div class="cartao espera">
+    <span class="rotulo roxo">Sem problema</span>
+    <h2 tabindex="-1">Vamos fazer ao vivo</h2>
+    <p>Registramos que a câmera ou o envio não funcionou. A comissão vai marcar uma entrevista ao
+    vivo, por videoconferência ou no campus. Uma falha técnica nunca conta como ausência.</p>
+  </div>
+  <label>O que aconteceu? (opcional)
+    <textarea id="relato" rows="3"></textarea></label>
+  <button type="button" class="botao" id="registrar-falha">Confirmar</button>
+  <button type="button" class="botao secundario" data-ir="tela-inicio">Voltar</button>
+</section>
+
+</div>
+
+<!-- ====================== COMISSÃO ====================== -->
+<div data-visao-corpo="comissao" hidden>
+  <p class="trilha-nav">GPS › Minhas atividades › Minha Mesa › Inscrição SIM-0001</p>
+  <h2 tabindex="-1" id="titulo-comissao">Inscrição SIM-0001</h2>
+  <p class="fraco">Edital 900/2026 (sintético) · Verificação da autodeclaração · você é o membro 1 de 3</p>
+  <p id="sem-envio" class="cartao atencao">Nenhum vídeo enviado ainda. Grave e envie na visão
+  “Candidato”.</p>
+  <div class="mesa" id="mesa" hidden>
+    <div class="painel-video">
+      <button type="button" class="botao" id="abrir-video">Abrir o vídeo</button>
+      <div id="reprodutor" hidden>
+        <video id="video-comissao" playsinline controlslist="nodownload noremoteplayback" disablepictureinpicture></video>
+        <div class="controles">
+          <button type="button" id="voltar-10">◀◀ 10 s</button>
+          <button type="button" id="tocar">▶ Tocar</button>
+          <button type="button" id="avancar-10">10 s ▶▶</button>
+          <button type="button" id="velocidade" aria-pressed="false">0,5×</button>
+        </div>
+        <p class="fraco">Ir para o passo:</p>
+        <div class="marcas" id="marcas"></div>
+        <button type="button" class="link" id="fechar-video">Fechar o vídeo</button>
+      </div>
+      <p class="fraco" id="dados-do-recebido"></p>
+    </div>
+    <div class="painel-parecer">
+      <dl class="ficha">
+        <dt>Candidato</dt><dd><strong>Candidata sintética</strong></dd>
+        <dt>Lista</dt><dd>Pretos e pardos</dd>
+        <dt>Idade</dt><dd>maior de 18</dd>
+      </dl>
+      <form id="form-parecer">
+        <fieldset>
+          <legend>Seu parecer</legend>
+          <label class="caixa"><input type="radio" name="parecer" value="confirmo"> Confirmo: a pessoa apresenta traços de pessoa preta ou parda</label>
+          <label class="caixa"><input type="radio" name="parecer" value="nao_da"> Não dá para confirmar pelo vídeo</label>
+          <p class="fraco">A comissão não indefere pelo vídeo. A segunda opção leva o caso à
+          entrevista ao vivo e não conta como voto contra.</p>
+        </fieldset>
+        <fieldset id="motivos">
+          <legend>Motivo <span class="fraco">(obrigatório na 2ª opção)</span></legend>
+          <label class="caixa"><input type="checkbox" name="motivo" value="imagem"> Imagem ou luz insuficiente</label>
+          <label class="caixa"><input type="checkbox" name="motivo" value="encoberto"> Rosto coberto ou com filtro</label>
+          <label class="caixa"><input type="checkbox" name="motivo" value="duvida"> Dúvida sobre os traços</label>
+          <label class="caixa"><input type="checkbox" name="motivo" value="identidade"> Identidade não conferida</label>
+        </fieldset>
+        <p class="alerta" id="erro-parecer" hidden></p>
+        <button type="submit" class="botao">Registrar meu parecer</button>
+      </form>
+      <div id="deliberacao" hidden>
+        <h3>Pareceres do painel</h3>
+        <label>Os outros dois membros (cenário de teste)
+          <select id="cenario">
+            <option value="cc">os dois confirmam</option>
+            <option value="cn">um confirma, um não dá</option>
+            <option value="nn">os dois: não dá</option>
+          </select></label>
+        <label>Regra do Edital
+          <select id="regra">
+            <option value="maioria">confirma por maioria</option>
+            <option value="unanimidade">confirma só por unanimidade</option>
+            <option value="recusa_unanime">recusa só por unanimidade</option>
+          </select></label>
+        <ul id="pareceres" class="pareceres"></ul>
+        <div id="desfecho" class="cartao"></div>
+      </div>
+    </div>
+  </div>
+  <h3>Trilha (só nesta aba, apagada ao fechar)</h3>
+  <ol id="trilha" class="trilha-eventos"></ol>
+</div>
+
+<!-- ====================== MEDIÇÃO ====================== -->
+<div data-visao-corpo="medicao" hidden>
+  <h2 tabindex="-1">Medição deste navegador</h2>
+  <p class="fraco">Preencha uma linha da matriz por navegador. O JSON não contém vídeo nem
+  imagem, só os números.</p>
+  <table class="medicao"><tbody id="tabela-medicao"></tbody></table>
+  <button type="button" class="botao" id="copiar-medicao">Copiar JSON</button>
+  <button type="button" class="botao secundario" id="baixar-medicao">Baixar JSON</button>
+  <p class="fraco" id="copiado" aria-live="polite"></p>
+</div>
+
+</main>
+</body>
+</html>

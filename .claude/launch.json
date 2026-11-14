@@ -663,6 +663,21 @@
       ],
       "port": 8197,
       "url": "http://localhost:8197"
+    },
+    {
+      "name": "poc-verificacao-video",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8091",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "doc/estudo-verificacao-da-autodeclaracao-2026-11-13/poc"
+      ],
+      "port": 8091,
+      "url": "http://localhost:8091"
     }
   ]
 }
