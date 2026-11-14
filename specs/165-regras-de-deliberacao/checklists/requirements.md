@@ -1,0 +1,77 @@
+# Specification Quality Checklist: As regras de deliberação dos pareceres
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-11-14
+**Feature**: [spec.md](../spec.md)
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+## Casos-limite como requisitos
+
+Os casos-limite não entram na matriz de FR- e SC-, e nenhuma ferramenta os cobra. Por isso cada um
+foi conferido contra o requisito que o resolve:
+
+| Caso-limite | Requisito |
+|---|---|
+| O empate | FR-7052, D-003 |
+| O desfecho inevitável antes do último parecer | FR-7062, D-005 |
+| Uma avaliação por inscrição | FR-7053, FR-7068 |
+| Etapa pontuada com mais de uma avaliação | FR-7053; *Achados* |
+| Etapa decisória não eliminatória com regra | FR-7064 (FR-047 da `013`) |
+| O acervo publicado | FR-7054, D-002 |
+| Pareceres a menos | FR-7062 |
+| Pareceres a mais | FR-7062 |
+| Membro impedido depois de concluir | FR-7061, FR-7062 (FR-092 da `012`) |
+| Pareceres sob versões diferentes | FR-7063, FR-7065, FR-7074 |
+| Retificação da regra antes de qualquer Resultado | FR-7073, FR-7074 |
+| Retificação da regra ou do número depois do primeiro Resultado | FR-7073, D-008 |
+| Presidência ou auditoria que também é membro | FR-7056 |
+| A conferência da consolidação | FR-7056, FR-7067 |
+| A reabertura | FR-7058 |
+| O membro que leu antes de concluir | FR-7056, FR-7057 |
+| Às cegas não é anonimização do candidato | FR-7059 |
+| A trilha | FR-7060 |
+| O não comparecimento | FR-7064 |
+| Motivos diferentes no mesmo sentido | FR-7061; *Achados* |
+| O recurso | FR-7069 a FR-7072 |
+| Reavaliação sem membros elegíveis suficientes | FR-7071 |
+| A Etapa restrita | FR-7076; regra de alcance da `163` |
+| A parte pública | FR-7078 |
+| A prévia da classificação | FR-7080 |
+| Rótulos ausentes | FR-7066, FR-7075 |
+
+## Notas da validação
+
+- **Iteração 1.** A primeira redação da FR-7060 prometia que a trilha não permitiria inferir o sentido
+  de um parecer. Sob uma regra de unanimidade, a consequência do Resultado às vezes basta para deduzi-lo,
+  como hoje a de uma avaliação única basta. A FR-7060 foi reescrita para o que é verificável: a trilha
+  da conclusão sem sentido nem texto, e a da consolidação sem regra nem contagem.
+- **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
+  usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
+- **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"
+  são o vocabulário de domínio do projeto, e as specs `163` e `164` os usam do mesmo modo.
+- **Citações.** A `163` e a `164` são citadas só pelo assunto, porque não estão na `main`. Os requisitos
+  citados de outras features (`012`, `013`, `018`, `036`) foram conferidos na spec de cada uma.
