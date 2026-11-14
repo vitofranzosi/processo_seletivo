@@ -91,7 +91,7 @@ def test_o_ato_vai_a_trilha_com_o_motivo_e_a_situacao(configuracao_completa):
     evento = RegistroAuditoria.objects.get(aggregate_id=ato.id)
     assert (evento.operation, evento.permission) == ("HABILITAR_ASSISTENTE", nomes.HABILITAR)
     assert (evento.institution_scope, evento.reason) == (ESCOPO_INSTITUCIONAL, "Sessão de teste")
-    assert (evento.previous_state, evento.new_state) == ("", "HABILITADA")
+    assert (evento.previous_state, evento.new_state) == ("", "HABILITADO")
 
 
 def test_sem_motivo_recusa_e_nada_e_gravado(configuracao_completa):

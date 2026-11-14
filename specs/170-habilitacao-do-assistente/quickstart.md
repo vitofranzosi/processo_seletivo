@@ -51,8 +51,14 @@ credencial vem de um arquivo fora do repositório, e o tokenizer em `ASSISTENTE_
    encerrado, e o painel do provedor não registra a chamada.
 6. Habilite o A de novo e pergunte: a conversa é nova.
 
-Registre uma captura de cada passo. Pelo `.claude/launch.json`, a entrada da demonstração é uma
-linha nova. Não sobrescreva o arquivo, porque ele é versionado.
+Registre uma captura de cada passo. A entrada `habilitacao-do-assistente-170` do
+`.claude/launch.json` sobe esse ambiente na porta 8170, sobre o banco `ps_170_demo`, sem nenhuma das
+duas chaves de demonstração. O banco se prepara com `make preparar DB_NAME=ps_170_demo
+POSTGRES_DB=ps_170_demo` e o corpus da `071` (`scripts/publicar_corpus_do_piloto.py`).
+
+**Cookies entre portas.** O navegador não separa os cookies de `localhost` por porta: outro
+servidor local, ou outra aba com outra identidade, troca a sessão. Para o visitante sem login, use
+uma janela anônima, e não outra aba da janela em que a Administradora entrou.
 
 ## D — Antes do deploy em cada ambiente instalado
 

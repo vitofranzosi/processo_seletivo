@@ -290,7 +290,9 @@ def _travar(frente, edital_id):
 
 
 def _situacao(habilitada):
-    return "HABILITADA" if habilitada else "DESABILITADA"
+    # No gênero de "o assistente", e não no feminino: o feminino em maiúsculas é a grafia da
+    # consequência do Resultado, e o guardião dos leitores dela (164) a procura em todo o código.
+    return "HABILITADO" if habilitada else "DESABILITADO"
 
 
 def _praticar(ator, *, frente, edital_id, habilitar, motivo, correlation_id):

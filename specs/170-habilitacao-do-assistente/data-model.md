@@ -27,7 +27,7 @@ O estado de uma frente é o último ato dela: o do piloto, ou o da página públ
 Sem ato nenhum, a frente está desabilitada (negar por padrão).
 
 ```text
-(nenhum ato) ──habilitar──▶ HABILITADA ──desabilitar──▶ DESABILITADA ──habilitar──▶ HABILITADA …
+(nenhum ato) ──habilitar──▶ HABILITADO ──desabilitar──▶ DESABILITADO ──habilitar──▶ HABILITADO …
                                │  ▲                          │
                                └──┘ habilitar: recusado (nada muda)
 ```

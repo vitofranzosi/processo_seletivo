@@ -66,9 +66,9 @@ SITUACOES = {
     "revogado": "Revogado",
     # A designação para a formalização (117), no feminino do objeto.
     "revogada": "Revogada",
-    # A página pública aberta ou fechada ao assistente (170).
-    "HABILITADA": "Habilitada",
-    "DESABILITADA": "Desabilitada",
+    # O assistente na página pública, habilitado ou desabilitado (170).
+    "HABILITADO": "Habilitado",
+    "DESABILITADO": "Desabilitado",
 }
 
 # Os dados da unidade e da autoridade que a alteração mostra, com antes e depois (`FR-3163`). São os
