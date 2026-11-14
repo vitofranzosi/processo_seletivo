@@ -85,6 +85,11 @@ documento do Edital.
 - **P-2 e P-3** foram decididas no mesmo dia, e são das specs seguintes. Esta spec não as antecipa:
   o desfecho de uma Etapa restrita produz, nesta entrega, exatamente o efeito que produz hoje
   (D-010).
+- Q: Uma Retificação que tira um código do alcance encontra inscrições desse código já atribuídas
+  na Etapa. O que o sistema faz? → A: **Recusa** enquanto alguma inscrição que sairia tiver
+  Atribuição ou Resultado na Etapa; a presidência remove antes as Atribuições abertas, com motivo.
+  Descartados: encerrar as Atribuições abertas pela própria Retificação, e congelar o alcance na
+  primeira Atribuição. *(Clarify de 13/11; FR-6980, D-006.)*
 
 ### Session 2026-11-13 (decisões desta spec, abertas à revisão do usuário)
 
@@ -234,6 +239,10 @@ Atribuição na Etapa.
    `PcD`, **Then** ela passa, e a partir da publicação as inscrições `PcD` participam da Etapa.
 2. **Given** o mesmo Edital, sem nenhuma Atribuição na Etapa, **When** uma Retificação tira `PPI` e
    põe `PcD`, **Then** ela passa.
+6. **Given** uma Retificação em elaboração que estreita o alcance, **When** a presidência atribui,
+   ao mesmo tempo, uma inscrição que sairia dele, **Then** um dos dois atos prevalece por inteiro: ou
+   a Atribuição é feita e a Retificação é recusada na publicação, ou a Retificação é publicada e a
+   Atribuição é recusada por fora do alcance — nunca as duas.
 3. **Given** o mesmo Edital com Atribuições de inscrições `PPI` na Etapa, **When** uma Retificação
    tira `PPI` do alcance, **Then** ela é recusada, e a mensagem nomeia a Etapa, o código e quantas
    inscrições seriam excluídas tendo Atribuição ou Resultado.
