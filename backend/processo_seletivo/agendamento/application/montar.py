@@ -29,8 +29,8 @@ from processo_seletivo.comissoes.application import exigir_base_de_comissao, nao
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.shared.canonical import canonical_sha256
 
-AGENDAMENTO = "agenda.agendamento"
-PREENCHIMENTO_APLICADO = "agenda.preenchimento_aplicado"
+AGENDAMENTO = nomes.AGENDAMENTO
+PREENCHIMENTO_APLICADO = nomes.PREENCHIMENTO_APLICADO
 
 
 @dataclass

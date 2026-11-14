@@ -30,6 +30,7 @@ from django.utils.http import urlencode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.agendamento.domain.nomes import ROTULOS_DA_TRILHA as ROTULOS_DA_AGENDA
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
@@ -5705,6 +5706,7 @@ OPERACOES = {
     # vocabulário da feature, e dizem só o que o GPS fez — nenhum diz obtido, encaminhado ou
     # recebido.
     **ROTULOS_DA_FORMALIZACAO,
+    **ROTULOS_DA_AGENDA,
 }
 AGREGADOS = {
     "ProcessoSeletivo": "Processo Seletivo",

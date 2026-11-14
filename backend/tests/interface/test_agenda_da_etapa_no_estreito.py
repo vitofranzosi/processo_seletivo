@@ -29,7 +29,9 @@ def test_nada_escrito_em_linha(nome):
     texto = (TEMPLATES / nome).read_text()
 
     assert not re.search(r"\sstyle=", texto)
-    assert "<style" not in texto and "<script" not in texto
+    assert "<style" not in texto
+    # Só o arquivo do htmx, servido da própria origem: script escrito no documento a CSP recusa.
+    assert not re.search(r"<script(?![^>]*\bsrc=)", texto)
     assert not re.search(r"\son[a-z]+=", texto)
     assert "hx-on" not in texto and "js:" not in texto
 
@@ -53,3 +55,9 @@ def test_a_grade_vira_lista_so_dentro_da_consulta_estreita():
 def test_o_painel_vem_antes_da_grade_no_estreito():
     """UX-761: o painel ao lado no desktop, e acima da grade em telas estreitas."""
     assert ".painel-de-acao{order:-1;}" in _bloco_da_consulta(FOLHA.read_text(), "64rem")
+
+
+@pytest.mark.parametrize("nome", ["agenda_configurar.html", "agenda_montar.html"])
+def test_as_paginas_carregam_o_htmx(nome):
+    """O simulador e o painel dependem dele; sem o arquivo, a tela cai no caminho sem script."""
+    assert "interface/htmx.min.js" in (TEMPLATES / nome).read_text()

@@ -16,4 +16,5 @@ a política de conteúdo os recusaria em silêncio.
   <p class="sub">{{ etapa.name }} · {% if periodo %}período no cronograma: {{ periodo_por_extenso }}{% else %}esta Etapa não tem período publicado no cronograma{% endif %}</p>
 </header>
 {% include "interface/_agenda_formulario.html" %}
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
 {% endblock %}

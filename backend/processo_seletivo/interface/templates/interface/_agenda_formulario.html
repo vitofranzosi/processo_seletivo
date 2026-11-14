@@ -77,7 +77,7 @@
     <h2 id="capacidade-titulo" class="oculto">Capacidade</h2>
     {% comment %} O simulador reage ao formulário a cada campo, sem gravar (T-006): o servidor deriva
        os horários pela mesma função da montagem. {% endcomment %}
-    <div id="calculo" aria-live="polite" hx-post="{% url 'interface:agenda-capacidade' edital.id etapa_id %}" hx-trigger="input delay:250ms from:#form-da-agenda" hx-include="#form-da-agenda" hx-swap="innerHTML">{% include "interface/_agenda_capacidade.html" %}</div>
+    <div id="calculo" aria-live="polite" hx-post="{% url 'interface:agenda-capacidade' edital.id etapa_id %}" hx-trigger="input delay:250ms from:#form-da-agenda, change from:#form-da-agenda" hx-include="#form-da-agenda" hx-swap="innerHTML">{% include "interface/_agenda_capacidade.html" %}</div>
     <noscript><p><button type="submit" class="acao" name="acao" value="calcular">Calcular</button></p></noscript>
     <div class="acao-do-simulador">
       <button type="submit" class="botao" name="acao" value="salvar">Salvar e montar a agenda</button>

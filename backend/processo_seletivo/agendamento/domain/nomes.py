@@ -16,6 +16,16 @@ MANUAL = "MANUAL"
 AUTOMATICA = "AUTOMATICA"
 ORIGENS = (MANUAL, AUTOMATICA)
 
+# As operações da trilha (FR-7256, T-019), e como a tela da trilha as nomeia.
+CONFIGURACAO_SALVA = "agenda.configuracao_salva"
+AGENDAMENTO = "agenda.agendamento"
+PREENCHIMENTO_APLICADO = "agenda.preenchimento_aplicado"
+ROTULOS_DA_TRILHA = {
+    CONFIGURACAO_SALVA: "Configuração da agenda da Etapa salva",
+    AGENDAMENTO: "Agendamento à mão na agenda da Etapa",
+    PREENCHIMENTO_APLICADO: "Preenchimento automático da agenda da Etapa aplicado",
+}
+
 # --- §1 de `contracts/recusas.md`: a configuração ----------------------------------------------
 DURACAO_NAO_POSITIVA = "duracao_nao_positiva"
 INTERVALO_NEGATIVO = "intervalo_negativo"

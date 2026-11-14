@@ -125,7 +125,7 @@
 /* A prévia no painel: veredito, a tabela dia × banca, e a relação nominal recolhida. */
 .distribuicao-da-previa{width:100%;margin:0 0 .75rem;font-size:.875rem}
 .relacao-nominal summary{cursor:pointer;color:var(--verde-texto);font-size:.875rem}
-.relacao-nominal ol{margin:.5rem 0 0;padding-left:1.25rem;font-size:.8125rem;max-height:14rem;overflow:auto}
+.relacao-nominal ol{position:relative;margin:.5rem 0 0;padding-left:1.25rem;font-size:.8125rem;max-height:14rem;overflow:auto}
 .relacao-nominal li span{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
 
 /* ------------------------------------------------------------ larguras */

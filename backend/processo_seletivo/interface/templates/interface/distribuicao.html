@@ -56,11 +56,11 @@ de a lista fechar — a agenda acompanha a participação, e não guarda lista p
   {% if agenda_da_etapa.existe %}
   <p><span class="situacao s-EM_ELABORACAO">Agenda em montagem</span> Nada é público até a agenda ser conferida e publicada.</p>
   <p>{{ agenda_da_etapa.com_horario }} de {{ agenda_da_etapa.participantes }} pessoa{{ agenda_da_etapa.participantes|pluralize:"s" }} com horário · {{ agenda_da_etapa.horarios }} horário{{ agenda_da_etapa.horarios|pluralize:"s" }}{% if agenda_da_etapa.falta %} · <strong>faltam {{ agenda_da_etapa.falta }}</strong>{% endif %}</p>
-  <p class="acoes-do-painel"><a class="botao" href="{% url 'interface:agenda-montar' edital.id etapa.id %}">Montar a agenda</a> <a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Ajustar a configuração</a></p>
+  <p><a class="acao" href="{% url 'interface:agenda-montar' edital.id etapa.id %}">Montar a agenda</a> <a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Ajustar a configuração</a></p>
   {% else %}
   <p><strong>Esta Etapa ainda não tem agenda.</strong></p>
   <p>Se a Etapa exige que cada pessoa compareça num dia e horário, configure os dias, as janelas e as bancas. Dá para fazer isso antes de a lista de participantes estar fechada: a agenda acompanha a lista.</p>
-  <p class="acoes-do-painel"><a class="botao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Configurar a agenda</a></p>
+  <p><a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Configurar a agenda</a></p>
   {% endif %}
 </section>
 

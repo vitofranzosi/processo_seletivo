@@ -22,6 +22,7 @@ from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.agendamento.domain import recusas
 from processo_seletivo.agendamento.domain.horarios import Banca, Configuracao, derivar, zona
+from processo_seletivo.agendamento.domain.nomes import CONFIGURACAO_SALVA
 from processo_seletivo.agendamento.domain.preenchimento import Pessoa, chave_da_pessoa
 from processo_seletivo.agendamento.models import AgendaDaEtapa, Agendamento
 from processo_seletivo.comissoes.domain.etapas import conteudo_vigente, evento_vigente
@@ -29,8 +30,6 @@ from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.resultados.application import prontidao
 from processo_seletivo.resultados.application.selectors import ha_resultado_em
 from processo_seletivo.resultados.domain.progressao import etapas_anteriores
-
-CONFIGURACAO_SALVA = "agenda.configuracao_salva"
 
 # Os motivos de quem não participa, um por causa da partição (FR-7217).
 ELIMINADA = "foi eliminada numa Etapa anterior"

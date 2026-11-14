@@ -247,7 +247,7 @@ section h2{margin-bottom:.75rem}
 .sem-horario-ainda{margin:0 0 .75rem;color:var(--amarelo);font-weight:600;font-size:.875rem}
 .busca-do-painel{margin:0 0 .5rem}
 .busca-do-painel input{width:100%;}
-.lista-com-rolagem{max-height:22rem;overflow:auto;border:1px solid var(--borda);border-radius:4px}
+.lista-com-rolagem{position:relative;max-height:22rem;overflow:auto;border:1px solid var(--borda);border-radius:4px}
 .pessoas-do-painel{list-style:none;margin:0;padding:0}
 .pessoas-do-painel li+li{border-top:1px solid var(--fundo)}
 .pessoa-do-painel,.pessoas-do-painel label{display:block;width:100%;text-align:left;padding:.45rem .75rem;
