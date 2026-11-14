@@ -127,8 +127,18 @@ def _agrupar(declaradas):
     return sorted(resumo, key=lambda item: -item["quantas"])
 
 
-def _edital_do_processo(processo, edital_id):
-    edital = Edital.objects.filter(
+def _edital_do_processo(processo, edital_id, *, travar=False):
+    """O Edital do Processo, travado quando o ato vai criar Atribuição (163, T-008).
+
+    **A trava é a que a publicação da Retificação também toma.** A participação lê o alcance da
+    versão vigente, e uma Retificação que estreita o alcance confere, sob esta mesma trava, se
+    alguma inscrição que sairia já tem Atribuição: sem ela, as duas podiam passar ao mesmo tempo, e
+    a Atribuição ficaria para uma inscrição que a norma já não alcança (FR-6980). A ordem é a mesma
+    nos dois — o Processo antes, o Edital depois; a publicação não trava o Processo —, e por isso
+    não há ciclo.
+    """
+    consulta = Edital.objects.select_for_update() if travar else Edital.objects
+    edital = consulta.filter(
         pk=identificador(edital_id),
         processo=processo,
         institution_scope=processo.institution_scope,
@@ -303,7 +313,7 @@ def distribuir(
         },
         idempotency_key=idempotency_key,
     ) as ctx:
-        edital = _edital_do_processo(ctx.processo, edital_id)
+        edital = _edital_do_processo(ctx.processo, edital_id, travar=True)
         if ctx.repetido:
             return ctx.desfecho_anterior
         _exigir_conjunto_fechado(edital)
@@ -531,7 +541,7 @@ def confirmar_rodizio(
         },
         idempotency_key=idempotency_key,
     ) as ctx:
-        edital = _edital_do_processo(ctx.processo, edital_id)
+        edital = _edital_do_processo(ctx.processo, edital_id, travar=True)
         if ctx.repetido:
             return ctx.desfecho_anterior
         # **Dentro da transação, e não só na proposta.** Guarda em `propor_rodizio` é consultiva:

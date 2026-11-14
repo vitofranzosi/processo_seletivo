@@ -671,7 +671,10 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # regularização, com o desfecho de convocação como fonte jurídica própria. Não é a 017
         # acrescentando migration a um app que ela lê: é outra feature, e a alternativa recusada
         # foi afrouxar a constraint para admitir sucessor sem fonte (019, R-005).
-        "resultados": 6,
+        # **Sobe para 7 com a 164**: a `resultados/0007` acrescenta a terceira consequência,
+        # `RETIRADA_DA_RESERVA`, à constraint de valores. A constraint foi **estendida**, não
+        # afrouxada: ela continua recusando todo texto que nenhuma regra produz (164, D-003).
+        "resultados": 7,
         # **Sobe para 11 com a 018**: a `editais/0011` acrescenta `janela_recursal` ao marco
         # classificatório — o degrau 8. É elaboração, e não divulgação: quem declara o prazo é o
         # Edital, e é por isso que o campo mora aqui e não na 017 (FR-020, FR-030).
@@ -748,7 +751,13 @@ def test_a_017_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # `ck_perfil_reserve_limit_compatible` — o cadastro limitado deixa de exigir número, porque
         # ele passa a vir do corte do marco que convoca (FR-6931). Só afrouxa: nenhuma linha
         # existente viola a condição nova, e `PerfilVaga` é elaboração, fora do `M`.
-        "editais": 28,
+        # **Sobe para 29 com a 163**: a `editais/0029` acrescenta `alcance` à Etapa — os códigos de
+        # Modalidade que ela alcança, `NULL` para "todas as inscrições" (FR-6960). Nasce sem
+        # preenchimento, porque `NULL` é o que toda Etapa significava; elaboração, fora do `M`.
+        # **Sobe para 30 com a 164**: a `editais/0030` acrescenta à Etapa o efeito do desfecho
+        # desfavorável e o do não comparecimento (FR-7000, FR-7004). Nascem vazios — "não
+        # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
+        "editais": 30,
         # **Sobe para 9 com a 054**: a `publicacoes/0009` acrescenta `signatory_appointment` à
         # `Publicacao` — o ato de nomeação de quem assina, que o fecho do Edital oficial imprime ao
         # lado do nome e do cargo. Não é a 022 tocando o que lê: é outra feature, registrando no ato
@@ -980,7 +989,12 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 28 com a 162**: a `editais/0028` afrouxa a metade limitada de
         # `ck_perfil_reserve_limit_compatible` — o número do cadastro limitado passa a vir do corte
         # (FR-6931). Não é a 022 tocando o que lê: só afrouxa, nenhuma linha muda.
-        "editais": 28,
+        # **Sobe para 29 com a 163**: a `editais/0029` acrescenta o alcance da Etapa (FR-6960). Não
+        # é a 022 tocando o que lê: coluna anulável, sem preenchimento, nenhuma linha muda.
+        # **Sobe para 30 com a 164**: a `editais/0030` acrescenta à Etapa o efeito do desfecho
+        # desfavorável e o do não comparecimento (FR-7000, FR-7004). Nascem vazios — "não
+        # declarado" —, que é o que toda Etapa significava; elaboração, fora do `M`.
+        "editais": 30,
         # **Sobe para 5 com a 044**: a `inscricoes/0005` cria a lista exigida — o que foi pedido a
         # cada inscrição, gravado no envio, append-only nas duas camadas. Não é a 022 tocando o que
         # lê: é a Constituição pedindo que os documentos exigidos se **reproduzam**, em vez de se
@@ -1038,13 +1052,19 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 3 com a 146**: a `recursos/0003` acrescenta à `DecisaoRecurso` o detalhamento
         # da correção fixada numa Etapa com barema. Uma coluna com default `[]`, que não reescreve
         # linha nem dispara o append-only; o total segue em `pontuacao`, e a 022 lê o de sempre.
-        "recursos": 3,
+        # **Sobe para 4 com a 164**: a `recursos/0004` estende `ck_decisao_consequencia` à
+        # consequência nova. A decisão continua derivando a consequência da regra publicada (018,
+        # FR-059); a constraint só aceita o valor que a regra agora produz.
+        "recursos": 4,
         # **Sobe para 6 com a 019**: a `resultados/0006` acrescenta a quinta linha legítima de
         # `ck_resultado_origem` — o sucessor por regularização — e a fonte jurídica própria dele.
         # Não é a 022 tocando o que lê: é outra feature, e a constraint foi **estendida**, não
         # afrouxada. Admitir sucessor sem fonte destruiria a garantia que ela existe para dar
         # (019, R-005, D-008).
-        "resultados": 6,
+        # **Sobe para 7 com a 164**: a `resultados/0007` acrescenta a terceira consequência,
+        # `RETIRADA_DA_RESERVA`, à constraint de valores. A constraint foi **estendida**, não
+        # afrouxada: ela continua recusando todo texto que nenhuma regra produz (164, D-003).
+        "resultados": 7,
     }
     assert set(esperadas) == set(APPS_QUE_A_022_NAO_TOCA)
     for app, quantas in esperadas.items():

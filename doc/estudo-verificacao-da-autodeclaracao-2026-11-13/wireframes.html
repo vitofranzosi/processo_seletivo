@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificação da autodeclaração</title>
+<!--
+Wireframes do estudo de 13/11/2026. Desenham as telas reais que mudariam, e não telas novas
+soltas: o acompanhamento do portal (`portal/situacao.py`), a Mesa (`mesa_inscricao.html`), Minhas
+atividades (`minhas_etapas.html`, 160), o Centro de Controle (`centro_do_edital.html`, 136/138) e a
+composição de Etapas (`compor_etapas.html`). As cores são as de `shared/tokens.css`.
+Nada aqui é dado real: nomes, protocolos e datas são sintéticos.
+-->
+<style>
+:root{
+  --verde:#15803d;--verde-texto:#146c37;--verde-escuro:#0b5a2a;--verde-claro:#e7f5ec;
+  --texto:#1c1c1c;--fraco:#555;--borda:#d4d4d4;--fundo:#f8f8f8;--papel:#fff;
+  --amarelo:#8a5300;--amarelo-fundo:#fdf5e5;--vermelho:#a91b1b;--vermelho-fundo:#fbe9e9;--cinza:#eee;
+  --roxo:#5b4a9e;--roxo-fundo:#efecf9;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --verde:#3fae68;--verde-texto:#8fd6a6;--verde-escuro:#0f3d22;--verde-claro:#183524;
+  --texto:#e8eaed;--fraco:#a9afb8;--borda:#3a3f46;--fundo:#15181c;--papel:#1e2227;
+  --amarelo:#f0b46a;--amarelo-fundo:#3a2c18;--vermelho:#f19a9a;--vermelho-fundo:#3b1d1d;--cinza:#2a2e34;
+  --roxo:#c3b8f2;--roxo-fundo:#2a2640;}}
+:root[data-theme="dark"]{
+  --verde:#3fae68;--verde-texto:#8fd6a6;--verde-escuro:#0f3d22;--verde-claro:#183524;
+  --texto:#e8eaed;--fraco:#a9afb8;--borda:#3a3f46;--fundo:#15181c;--papel:#1e2227;
+  --amarelo:#f0b46a;--amarelo-fundo:#3a2c18;--vermelho:#f19a9a;--vermelho-fundo:#3b1d1d;--cinza:#2a2e34;
+  --roxo:#c3b8f2;--roxo-fundo:#2a2640;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--texto);font:15px/1.5 "Open Sans","Segoe UI",system-ui,sans-serif}
+header.estudo{max-width:1180px;margin:0 auto;padding:20px 16px 4px}
+header.estudo h1{font-size:20px;margin:0 0 4px}
+header.estudo p{margin:0 0 6px;color:var(--fraco);max-width:80ch}
+nav.abas{display:flex;flex-wrap:wrap;gap:6px;max-width:1180px;margin:10px auto 0;padding:0 16px}
+nav.abas button{font:inherit;border:1px solid var(--borda);background:var(--papel);color:var(--texto);padding:6px 12px;border-radius:999px;cursor:pointer}
+nav.abas button[aria-selected="true"]{background:var(--verde);border-color:var(--verde);color:#fff}
+main{max-width:1180px;margin:0 auto;padding:12px 16px 48px}
+section.tela{display:none}section.tela.ativa{display:block}
+.nota{background:var(--roxo-fundo);color:var(--texto);border-left:4px solid var(--roxo);padding:8px 12px;border-radius:6px;margin:0 0 14px;font-size:14px;max-width:90ch}
+.nota b{color:var(--roxo)}
+/* celulares lado a lado */
+.fila{display:flex;gap:18px;overflow-x:auto;padding:4px 2px 12px;scroll-snap-type:x mandatory}
+.celular{flex:0 0 300px;scroll-snap-align:start;border:1px solid var(--borda);border-radius:22px;background:var(--papel);overflow:hidden;display:flex;flex-direction:column;min-height:560px}
+.celular .legenda{font-size:12px;color:var(--fraco);padding:6px 12px;border-bottom:1px solid var(--borda);background:var(--fundo)}
+.topo{background:var(--verde-escuro);color:#fff;padding:8px 12px;font-size:13px;display:flex;justify-content:space-between}
+.corpo{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.corpo h2{font-size:17px;margin:0}
+.corpo h3{font-size:15px;margin:0}
+.corpo p{margin:0}
+.fraco{color:var(--fraco);font-size:13px}
+.cartao{border:1px solid var(--borda);border-radius:8px;padding:10px 12px;background:var(--papel)}
+.cartao.atencao{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo)}
+.cartao.ok{border-left:4px solid var(--verde);background:var(--verde-claro)}
+.cartao.espera{border-left:4px solid var(--roxo);background:var(--roxo-fundo)}
+.rotulo{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--cinza);color:var(--texto)}
+.rotulo.amarelo{background:var(--amarelo-fundo);color:var(--amarelo);border:1px solid var(--amarelo)}
+.rotulo.verde{background:var(--verde-claro);color:var(--verde-texto);border:1px solid var(--verde)}
+.rotulo.roxo{background:var(--roxo-fundo);color:var(--roxo);border:1px solid var(--roxo)}
+.botao{display:block;text-align:center;background:var(--verde);color:#fff;border-radius:6px;padding:9px 12px;font-weight:600;text-decoration:none}
+.botao.sec{background:transparent;color:var(--verde-texto);border:1px solid var(--verde)}
+.botao.mudo{background:var(--cinza);color:var(--fraco)}
+.link{color:var(--verde-texto);text-decoration:underline;font-size:13px}
+ol.passos,ul.lista{margin:0;padding-left:18px}
+ol.passos li,ul.lista li{margin:2px 0}
+.camera{position:relative;background:#2b2f35;border-radius:10px;aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;color:#cfd3d8;font-size:12px;overflow:hidden}
+.camera .moldura-rosto{position:absolute;width:56%;height:52%;border:2px dashed rgba(255,255,255,.7);border-radius:50%;top:14%}
+.camera .gravando{position:absolute;top:8px;left:8px;background:#c62828;color:#fff;font-size:11px;padding:2px 8px;border-radius:999px}
+.camera .tempo{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:999px}
+.camera .fala{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:8px 10px;line-height:1.4}
+.medidor{height:6px;background:var(--cinza);border-radius:3px;overflow:hidden}
+.medidor i{display:block;height:100%;width:62%;background:var(--verde)}
+.check{display:flex;gap:6px;align-items:baseline;font-size:13px}
+.check::before{content:"✓";color:var(--verde-texto);font-weight:700}
+.check.nao::before{content:"!";color:var(--amarelo)}
+.recibo{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--fundo);border:1px dashed var(--borda);border-radius:6px;padding:8px;word-break:break-all}
+.rodape{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+/* gestão */
+.gestao{border:1px solid var(--borda);border-radius:10px;overflow:hidden;background:var(--papel);display:grid;grid-template-columns:180px 1fr;margin:0 0 18px}
+.barra{background:var(--fundo);border-right:1px solid var(--borda);padding:12px;font-size:13px}
+.barra b{display:block;color:var(--fraco);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px}
+.barra a{display:block;padding:4px 6px;border-radius:6px;color:var(--texto);text-decoration:none}
+.barra a.atual{background:var(--verde-claro);color:var(--verde-texto);font-weight:600}
+.conteudo{padding:14px 18px;min-width:0}
+.conteudo h2{font-size:18px;margin:0 0 2px}
+.trilha{font-size:12px;color:var(--fraco);margin:0 0 6px}
+.sub{color:var(--fraco);font-size:13px;margin:0 0 12px}
+ul.itens{list-style:none;margin:0;padding:0}
+ul.itens li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--borda)}
+ul.itens li .fraco{display:block}
+.mesa{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}
+.video{background:#202328;border-radius:8px;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#cfd3d8;font-size:13px;position:relative}
+.video .controles{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);padding:6px 10px;font-size:12px;display:flex;justify-content:space-between}
+dl.ficha{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 10px;font-size:14px}
+dl.ficha dt{color:var(--fraco)}dl.ficha dd{margin:0}
+fieldset{border:1px solid var(--borda);border-radius:8px;padding:8px 12px;margin:0 0 10px}
+legend{font-weight:600;font-size:14px;padding:0 4px}
+label.op{display:flex;gap:8px;align-items:baseline;padding:3px 0;font-size:14px}
+textarea{width:100%;min-height:70px;font:inherit;border:1px solid var(--borda);border-radius:6px;padding:6px;background:var(--papel);color:var(--texto)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-top:1px solid var(--borda);vertical-align:top}
+th{color:var(--fraco);font-weight:600;border-top:0}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.numero{font-size:22px;font-weight:700}
+@media (max-width:760px){.gestao{grid-template-columns:1fr}.barra{display:none}.mesa{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="estudo">
+  <h1>Verificação da autodeclaração, com vídeo opcional</h1>
+  <p>Wireframes do estudo de 13/11/2026. São as telas reais do GPS que mudariam: nenhuma tela nova
+  fica solta fora da navegação que já existe. Os dados são sintéticos.</p>
+  <p>O desenho supõe as regras de segurança propostas no estudo. O vídeo é <b>opção do candidato</b>,
+  e a entrevista ao vivo continua disponível. Pelo vídeo, a comissão só pode <b>confirmar</b>. Fora isso, o
+  caso vai para a entrevista ao vivo.</p>
+</header>
+<nav class="abas" role="tablist">
+  <button role="tab" aria-selected="true" data-aba="candidato">1. Candidato (celular)</button>
+  <button role="tab" aria-selected="false" data-aba="comissao">2. Comissão</button>
+  <button role="tab" aria-selected="false" data-aba="operador">3. Operador e presidência</button>
+  <button role="tab" aria-selected="false" data-aba="recurso">4. Recurso</button>
+</nav>
+<main>
+
+<!-- ============================ CANDIDATO ============================ -->
+<section class="tela ativa" id="candidato">
+<p class="nota"><b>Onde mora.</b> Não há área nova no portal. A verificação entra como mais um degrau de
+<code>situacao_da_inscricao</code> (Situação → Por quê → O que fazer), e a gravação é uma página
+filha da inscrição (<code>/selecoes/inscricao/&lt;id&gt;/verificacao/</code>), com a titularidade
+conferida como nas outras. O envio só acontece no último passo. Antes dele, nada sai do celular.</p>
+<div class="fila">
+
+  <div class="celular">
+    <div class="legenda">A · Acompanhamento: o próximo passo</div>
+    <div class="topo"><span>Seleções Ifes</span><span>Maria S.</span></div>
+    <div class="corpo">
+      <p class="fraco">Edital 28/2026 · Informática na Educação</p>
+      <div class="cartao atencao">
+        <span class="rotulo amarelo">Falta um passo seu</span>
+        <h3 style="margin-top:6px">Verificação da autodeclaração</h3>
+        <p class="fraco">Você se inscreveu na vaga para pessoas pretas e pardas. Essa vaga tem um
+        passo a mais: a comissão confirma sua autodeclaração.</p>
+      </div>
+      <div class="cartao">
+        <h3>Escolha como fazer</h3>
+        <p class="fraco">Até 02/07/2026, 23h59. As duas formas valem igual.</p>
+        <a class="botao" href="#">Gravar um vídeo curto</a>
+        <p class="fraco">Cerca de 2 minutos, pelo celular ou computador.</p>
+        <a class="botao sec" href="#">Prefiro entrevista ao vivo</a>
+        <p class="fraco">Por videoconferência, em dia e hora marcados pela comissão.</p>
+      </div>
+      <a class="link" href="#">O que diz o Edital sobre este passo (item 6.9)</a>
+      <div class="rodape"><p class="fraco">Se você não fizer nenhum dos dois, a comissão marca a entrevista ao vivo e avisa você.</p></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">B · Antes de começar (acolhimento)</div>
+    <div class="topo"><span>‹ Voltar</span><span>1 de 4</span></div>
+    <div class="corpo">
+      <h2>Antes de gravar</h2>
+      <p>A comissão vai olhar <b>só a sua aparência</b>: cor da pele, cabelo e traços do rosto.
+      Não importa a família, os documentos antigos nem o que você fala.</p>
+      <div class="cartao">
+        <h3>Prepare-se</h3>
+        <ul class="lista">
+          <li>Lugar claro, de frente para a luz</li>
+          <li>Sem boné, chapéu, lenço ou óculos escuros</li>
+          <li>Sem maquiagem e sem filtro</li>
+          <li>Documento com foto por perto</li>
+        </ul>
+      </div>
+      <div class="cartao">
+        <h3>Seus dados</h3>
+        <p class="fraco">O vídeo fica só no sistema do Ifes. Só a comissão vê, e cada visualização
+        fica registrada. Nenhum programa analisa seu rosto. <a class="link" href="#">Saiba mais</a></p>
+      </div>
+      <p class="fraco">Esta opção não aparece para quem tem menos de 18 anos: a norma pede que o responsável acompanhe ao vivo.</p>
+      <div class="rodape"><a class="botao" href="#">Testar a câmera</a></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">C · Teste da câmera e do microfone</div>
+    <div class="topo"><span>‹ Voltar</span><span>2 de 4</span></div>
+    <div class="corpo">
+      <h2>Teste rápido</h2>
+      <div class="camera"><div class="moldura-rosto"></div><span>imagem ao vivo da câmera frontal</span></div>
+      <div class="check">Câmera funcionando</div>
+      <div><div class="check">Microfone funcionando</div><div class="medidor" aria-label="nível do som"><i></i></div></div>
+      <div class="check nao">Seu rosto deve caber no oval. A linha é só um guia e não aparece no vídeo.</div>
+      <p class="fraco">O navegador pediu permissão? Toque em <b>Permitir</b>. Se negou sem querer,
+      <a class="link" href="#">veja como liberar</a>.</p>
+      <div class="rodape"><a class="botao" href="#">Está tudo certo, gravar</a>
+      <a class="link" href="#">Não consigo usar a câmera</a></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">D · Gravação guiada (contínua)</div>
+    <div class="topo"><span>Gravando</span><span>3 de 4</span></div>
+    <div class="corpo">
+      <div class="camera"><div class="moldura-rosto"></div><span class="gravando">● gravando</span><span class="tempo">0:41</span>
+        <div class="fala"><b>Agora:</b> vire devagar o rosto para a direita, depois para a esquerda.<br><span style="opacity:.8">Próximo: mostre o documento por 3 segundos.</span></div>
+      </div>
+      <ol class="passos fraco">
+        <li>Diga seu nome completo e a data de hoje</li>
+        <li><b>Vire o rosto devagar para cada lado</b></li>
+        <li>Mostre o documento com foto</li>
+        <li>Diga: “Eu me autodeclaro (preto ou pardo)”</li>
+      </ol>
+      <p class="fraco">Sem pressa. Os passos avançam quando você toca em “Próximo”. Não há tempo mínimo.</p>
+      <div class="rodape"><a class="botao" href="#">Próximo passo</a><a class="botao sec" href="#">Parar e recomeçar</a></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">E · Revisão antes do envio</div>
+    <div class="topo"><span>‹ Voltar</span><span>4 de 4</span></div>
+    <div class="corpo">
+      <h2>Confira seu vídeo</h2>
+      <div class="camera" style="aspect-ratio:3/4"><span>▶ reprodução do vídeo gravado (1:52)</span></div>
+      <div class="cartao">
+        <p class="check">Dá para ver bem seu rosto?</p>
+        <p class="check">Dá para ouvir sua voz?</p>
+        <p class="check">Você fez os 4 passos?</p>
+      </div>
+      <p class="fraco">Se não ficou bom, grave de novo quantas vezes quiser. Só o vídeo que você
+      enviar chega à comissão. Os outros são apagados do seu aparelho.</p>
+      <div class="rodape"><a class="botao" href="#">Enviar este vídeo</a><a class="botao sec" href="#">Gravar de novo</a></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">F · Envio e comprovante</div>
+    <div class="topo"><span>Seleções Ifes</span><span>Maria S.</span></div>
+    <div class="corpo">
+      <div class="cartao ok"><span class="rotulo verde">Recebido</span>
+        <h3 style="margin-top:6px">Seu vídeo chegou</h3>
+        <p class="fraco">13/06/2026, 19h42. Duração 1:52.</p></div>
+      <div class="recibo">Comprovante VA-28-0417<br>resumo: 7f3a…c91e</div>
+      <a class="link" href="#">Baixar comprovante (PDF)</a>
+      <div class="cartao"><h3>E agora?</h3>
+        <p class="fraco">A comissão analisa até 02/07. O resultado sai no seu acompanhamento e por e-mail.
+        Se ela precisar ver você ao vivo, vai marcar uma entrevista. Isso não é reprovação.</p></div>
+      <p class="fraco">Enviou por engano? Você pode pedir para trocar o vídeo enquanto a comissão não começar a análise.</p>
+      <div class="rodape"><a class="botao sec" href="#">Voltar ao acompanhamento</a></div>
+    </div>
+  </div>
+
+  <div class="celular">
+    <div class="legenda">G · Resultado no acompanhamento</div>
+    <div class="topo"><span>Seleções Ifes</span><span>Maria S.</span></div>
+    <div class="corpo">
+      <p class="fraco">Três finais possíveis (um por vez):</p>
+      <div class="cartao ok"><span class="rotulo verde">Confirmada</span>
+        <p style="margin-top:6px">A comissão confirmou sua autodeclaração. Você segue na vaga para
+        pessoas pretas e pardas.</p></div>
+      <div class="cartao espera"><span class="rotulo roxo">Entrevista ao vivo</span>
+        <p style="margin-top:6px">A comissão quer conversar com você. <b>Quinta, 25/06, 14h20</b>,
+        por videoconferência.</p><a class="link" href="#">Como entrar na sala</a></div>
+      <div class="cartao atencao"><span class="rotulo amarelo">Não confirmada</span>
+        <p style="margin-top:6px">Só depois da entrevista ao vivo. Você continua na ampla concorrência.</p>
+        <a class="link" href="#">Ver o motivo e como recorrer (até 06/07)</a></div>
+    </div>
+  </div>
+
+</div>
+<p class="nota"><b>Acessibilidade.</b> Toda instrução da gravação está em texto e também é lida pelo
+leitor de tela. Os passos avançam pelo toque, e não por relógio. Quem não fala pode mostrar o cartão
+com o nome escrito ou falar em Libras. O link “Não consigo usar a câmera” leva à entrevista ao vivo
+ou à presencial, e não faz o candidato perder nada. No computador, a mesma página ocupa uma coluna
+de largura de leitura, e a câmera fica ao lado dos passos.</p>
+</section>
+
+<!-- ============================ COMISSÃO ============================ -->
+<section class="tela" id="comissao">
+<p class="nota"><b>Onde mora.</b> Em <b>Minhas atividades</b> (160) e na <b>Mesa</b> (012): é a mesma
+mesa da Etapa decisória. O painel do documento mostra o vídeo, e o painel da avaliação registra o
+parecer. Não há fila paralela: a fila é a Atribuição.</p>
+
+<div class="gestao">
+  <div class="barra"><b>Trabalho</b><a class="atual" href="#">Minhas atividades</a><a href="#">Agenda</a><b>Editais</b><a href="#">Processos</a></div>
+  <div class="conteudo">
+    <h2>Minhas atividades</h2>
+    <p class="sub">O que é seu agora, em todos os Editais.</p>
+    <div class="cartao">
+      <h3>Edital 28/2026 · Verificação da autodeclaração <small class="fraco">CLVA Cefor</small></h3>
+      <ul class="itens">
+        <li><span><b>12 vídeos aguardam seu parecer</b><span class="fraco">Envio até 02/07 · análise até 02/07</span></span><a class="botao" href="#">Abrir a mesa</a></li>
+        <li><span>3 entrevistas ao vivo com você<span class="fraco">Qui 25/06 · 14h00, 14h20, 14h40</span></span><a class="link" href="#">Ver agenda</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="gestao">
+  <div class="barra"><b>Trabalho</b><a class="atual" href="#">Minhas atividades</a><a href="#">Agenda</a></div>
+  <div class="conteudo">
+    <p class="trilha">GPS › Minhas atividades › Minha Mesa › Inscrição 0417</p>
+    <h2>Inscrição 0417</h2>
+    <p class="sub">Edital 28/2026 · Verificação da autodeclaração · 4 de 12</p>
+    <div class="mesa">
+      <div>
+        <div class="video">▶ vídeo do candidato · 1:52<div class="controles"><span>◀◀ 10s · ▶ · ▶▶ 10s · 0,5×</span><span>tela cheia</span></div></div>
+        <p class="fraco" style="margin-top:6px">Enviado 13/06, 19h42 · roteiro v2 · resumo conferido ·
+        aberto por você hoje, 10h03 (registrado). <b>Sem botão de baixar.</b></p>
+        <p class="fraco">Passos do roteiro: nome e data (0:00) · perfil (0:18) · documento (0:52) · declaração (1:20)</p>
+      </div>
+      <div>
+        <dl class="ficha"><dt>Candidato</dt><dd><b>Maria S.</b></dd><dt>Lista</dt><dd>Pretos e pardos</dd><dt>Idade</dt><dd>maior de 18</dd></dl>
+        <fieldset><legend>Seu parecer</legend>
+          <label class="op"><input type="radio" name="p" checked> Confirmo: apresenta traços de pessoa preta ou parda</label>
+          <label class="op"><input type="radio" name="p"> Não dá para confirmar pelo vídeo</label>
+          <p class="fraco">A comissão não indefere pelo vídeo. A segunda opção leva o caso à
+          entrevista ao vivo, e não conta como voto contra.</p>
+        </fieldset>
+        <fieldset><legend>Motivo <span class="fraco">(obrigatório na 2ª opção)</span></legend>
+          <label class="op"><input type="checkbox"> Imagem ou luz insuficiente</label>
+          <label class="op"><input type="checkbox"> Rosto coberto ou com filtro</label>
+          <label class="op"><input type="checkbox"> Dúvida sobre os traços</label>
+          <label class="op"><input type="checkbox"> Identidade não conferida</label>
+          <textarea aria-label="Observação">Observação (opcional)</textarea>
+        </fieldset>
+        <a class="botao" href="#">Registrar e ir para a próxima</a>
+        <p class="fraco" style="margin-top:6px">Você só vê os pareceres dos outros membros depois de registrar o seu.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="nota"><b>Por que o parecer é individual e às cegas.</b> Para pedir unanimidade (ou maioria, conforme a
+norma), o parecer de cada membro precisa ser independente. O GPS já tem isso: <code>Avaliacao</code> por
+membro e <code>evaluations_per_registration</code> = tamanho do painel. Falta a <b>regra de
+combinação</b>, que hoje recusa com <code>REGRA_DE_COMBINACAO_AUSENTE</code>.</p>
+</section>
+
+<!-- ============================ OPERADOR ============================ -->
+<section class="tela" id="operador">
+<p class="nota"><b>Onde mora.</b> A habilitação fica na <b>composição das Etapas</b> do Edital, como
+dado normativo que vai para o snapshot. O acompanhamento fica no <b>Centro de Controle</b>, como mais
+uma natureza de <code>andamento.py</code>. Não há tela de configuração própria.</p>
+
+<div class="gestao">
+  <div class="barra"><b>Edital 28/2026</b><a href="#">Centro</a><a class="atual" href="#">Etapas</a><a href="#">Cronograma</a><a href="#">Perfis</a></div>
+  <div class="conteudo">
+    <p class="trilha">GPS › Edital 28/2026 › Etapas</p>
+    <h2>Etapa: Verificação da autodeclaração</h2>
+    <p class="sub">Etapa decisória. Vale só para quem se inscreveu nas listas escolhidas.</p>
+    <fieldset><legend>Quem passa por esta Etapa</legend>
+      <label class="op"><input type="checkbox" checked> Pretos e pardos (L2, L6)</label>
+      <label class="op"><input type="checkbox"> Indígenas: <span class="fraco">outra Etapa, de análise documental</span></label>
+    </fieldset>
+    <fieldset><legend>Se não confirmar</legend>
+      <label class="op"><input type="radio" name="e" checked> Sai da lista reservada e fica na ampla concorrência</label>
+      <label class="op"><input type="radio" name="e"> É eliminado do Edital</label>
+    </fieldset>
+    <fieldset><legend>Deliberação</legend>
+      <p class="fraco">Painel de <b>3</b> entrevistadores (o acolhedor não dá parecer) · regra:
+      <select><option>confirma por maioria</option><option>confirma só por unanimidade</option><option>recusa só por unanimidade</option></select></p>
+      <p class="fraco">A regra é a que o Edital publicar. As três leituras estão em uso, e a escolha é da norma, e não da tela.</p>
+    </fieldset>
+    <fieldset><legend>Como acontece</legend>
+      <label class="op"><input type="checkbox" checked disabled> Entrevista ao vivo (videoconferência ou presencial)</label>
+      <label class="op"><input type="checkbox" disabled> Vídeo gravado pelo candidato, como opção (só confirma)</label>
+      <p class="fraco" style="color:var(--amarelo)">Indisponível: a Res. CS 61/2019 prevê entrevista, e nenhum ato do Ifes autoriza o vídeo enviado pelo candidato. Quando houver, o Edital o citará aqui.</p>
+    </fieldset>
+    <p class="fraco">Período: evento “Realização do procedimento complementar” do cronograma (15/06 a 02/07).</p>
+  </div>
+</div>
+
+<div class="gestao">
+  <div class="barra"><b>Edital 28/2026</b><a class="atual" href="#">Centro</a><a href="#">Etapas</a></div>
+  <div class="conteudo">
+    <p class="trilha">GPS › Edital 28/2026 › Centro de Controle</p>
+    <h2>Verificação da autodeclaração</h2>
+    <p class="sub">Fase: avaliação · 15/06 a 02/07</p>
+    <div class="grade">
+      <div class="cartao"><span class="fraco">Alcançados</span><div class="numero">41</div><span class="fraco">listas L2 e L6</span></div>
+      <div class="cartao"><span class="fraco">Escolheram vídeo</span><div class="numero">29</div><span class="fraco">26 enviados, 3 não</span></div>
+      <div class="cartao"><span class="fraco">Ao vivo</span><div class="numero">12 + 4</div><span class="fraco">escolha + encaminhados</span></div>
+      <div class="cartao"><span class="fraco">Deliberados</span><div class="numero">18</div><span class="fraco">de 41</span></div>
+    </div>
+    <h3 style="margin:14px 0 4px;font-size:15px">Precisa de você</h3>
+    <ul class="itens">
+      <li><span><b>Marcar 16 entrevistas ao vivo</b><span class="fraco">12 por escolha, 4 encaminhados da análise de vídeo</span></span><a class="botao" href="#">Montar agenda</a></li>
+      <li><span>8 inscrições com pareceres completos aguardam deliberação<span class="fraco">a regra já confere a unanimidade; você confirma</span></span><a class="link" href="#">Deliberar</a></li>
+      <li><span>3 escolheram vídeo e ainda não enviaram<span class="fraco">o prazo termina em 2 dias; aviso automático já saiu</span></span><a class="link" href="#">Ver quem</a></li>
+      <li><span>1 relato de falha técnica<span class="fraco">upload interrompido 3 vezes; o candidato pediu entrevista ao vivo</span></span><a class="link" href="#">Ver</a></li>
+    </ul>
+    <h3 style="margin:14px 0 4px;font-size:15px">Para encerrar a Etapa</h3>
+    <ul class="itens">
+      <li><span>Todos os alcançados com resultado ou ocorrência<span class="fraco">faltam 23</span></span><span class="rotulo amarelo">pendente</span></li>
+      <li><span>Publicar o resultado preliminar<span class="fraco">só nomes e “confirmada/não confirmada”, nunca o vídeo</span></span><span class="rotulo">depois</span></li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ============================ RECURSO ============================ -->
+<section class="tela" id="recurso">
+<p class="nota"><b>Onde mora.</b> No recurso que já existe (018): ele ataca o Resultado da Etapa, é
+julgado por quem tem <code>recurso:julgar</code> (a CPVA), e quem deu parecer fica impedido. Hoje o
+julgador abre o vídeo por <b>ato de instrução</b>. A segunda instância e o próprio colegiado da CPVA são
+pendências registradas no estudo.</p>
+<div class="gestao">
+  <div class="barra"><b>Recursos</b><a class="atual" href="#">Para julgar</a></div>
+  <div class="conteudo">
+    <p class="trilha">GPS › Recursos › Edital 28/2026 › Recurso 0417-1</p>
+    <h2>Recurso contra a verificação: Inscrição 0417</h2>
+    <p class="sub">Interposto em 04/07 · julgamento pela CPVA</p>
+    <div class="mesa">
+      <div>
+        <div class="video">▶ gravação da entrevista ao vivo · 6:10</div>
+        <p class="fraco" style="margin-top:6px">Também disponível: vídeo assíncrono enviado em 13/06 (1:52).
+        Cada abertura fica registrada.</p>
+      </div>
+      <div>
+        <div class="cartao"><h3>O que a comissão decidiu</h3>
+          <p class="fraco">Não confirmada pela regra do Edital (os 3 entrevistadores não confirmaram), depois da entrevista ao vivo de 25/06.</p>
+          <p class="fraco">Fundamento: “traços fenotípicos não predominantemente…”</p></div>
+        <div class="cartao" style="margin-top:8px"><h3>O que o candidato alega</h3>
+          <p class="fraco">“A iluminação da sala da entrevista estava ruim…”</p></div>
+        <p class="fraco" style="margin-top:8px">Você não participou da CLVA neste Edital. Se tivesse participado, esta tela seria recusada.</p>
+        <a class="botao" href="#">Julgar</a>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+</main>
+<script>
+document.querySelectorAll('nav.abas button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('nav.abas button').forEach(function(x){x.setAttribute('aria-selected','false')});
+    b.setAttribute('aria-selected','true');
+    document.querySelectorAll('section.tela').forEach(function(s){s.classList.toggle('ativa',s.id===b.dataset.aba)});
+  });
+});
+</script>
+</body>
+</html>

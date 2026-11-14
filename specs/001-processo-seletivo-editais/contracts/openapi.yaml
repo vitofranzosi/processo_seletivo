@@ -1121,7 +1121,8 @@ components:
       required:
         [id, name, order, weight, eliminatory, classificatory, minimumScore,
          evaluationsPerRegistration, maximumScore, forma, rotuloFavoravel,
-         rotuloDesfavoravel, scheduleEventId, criteria]
+         rotuloDesfavoravel, scheduleEventId, criteria, modalityCodes,
+         unfavorableOutcomeEffect, absenceEffect]
       properties:
         id: { $ref: '#/components/schemas/Id' }
         name: { type: string }
@@ -1166,6 +1167,23 @@ components:
         criteria:
           type: array
           items: { $ref: '#/components/schemas/CriterioDeAvaliacaoPublicado' }
+        # O alcance (163, degrau 22). `null` é "todas as inscrições", que é o que toda Etapa
+        # publicada antes do degrau significava; a lista, ordenada e sem repetição, são os códigos
+        # de Modalidade que a Etapa alcança em todos os Perfis que os têm. Lista vazia, código
+        # inexistente e papel que decide por todos são recusados na publicação (FR-6962 a FR-6965).
+        modalityCodes:
+          type: [array, 'null']
+          items: { type: string }
+        # O efeito do desfecho (164, degrau 23). Explícito só na Etapa restrita e eliminatória;
+        # `null` em toda outra Etapa e no acervo, onde a Etapa restrita e eliminatória se lê
+        # "elimina", que é o que ela produzia (D-002 da 164). Em `absenceEffect`, `null` é "o mesmo
+        # efeito". A declaração em Etapa sem reserva é recusada na publicação (FR-7002).
+        unfavorableOutcomeEffect:
+          type: [string, 'null']
+          enum: [RESERVE_REMOVAL, ELIMINATION, null]
+        absenceEffect:
+          type: [string, 'null']
+          enum: [RESERVE_REMOVAL, ELIMINATION, null]
     CriterioDeAvaliacaoPublicado:
       type: object
       description: >-

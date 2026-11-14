@@ -26,13 +26,17 @@ ETAPA_V4 = {
 ETAPA_V5 = {**ETAPA_V4, "evaluationsPerRegistration": 1, "maximumScore": None}
 
 # E na forma vigente, que não precisa de degrau nenhum. O nome ficou o da 6, e a forma vigente
-# ganhou desde então o barema do degrau 21 (146): a lista vazia, que é o que a ausência dele diz.
+# ganhou desde então o barema do degrau 21 (146), a lista vazia, e o alcance do degrau 22 (163),
+# nulo, e o efeito do degrau 23 (164), nulo: todos dizem o que a ausência deles diz.
 ETAPA_V6 = {
     **ETAPA_V5,
     "forma": "PONTUADA",
     "rotuloFavoravel": None,
     "rotuloDesfavoravel": None,
     "criteria": [],
+    "modalityCodes": None,
+    "unfavorableOutcomeEffect": None,
+    "absenceEffect": None,
 }
 
 

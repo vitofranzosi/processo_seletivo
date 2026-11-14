@@ -508,7 +508,7 @@ def _etapas(r):
                     nome,
                     str(etapa.avaliadas),
                     str(etapa.habilitadas),
-                    str(etapa.eliminadas) if etapa.elimina else "não elimina",
+                    _eliminadas(etapa),
                     str(etapa.por_ocorrencia),
                 ]
             )
@@ -766,3 +766,16 @@ def documento(relatorio, *, emissao):
 def compor(relatorio, *, emissao) -> bytes:
     """Os bytes do documento. Mesmo relatório e mesma emissão, mesmos bytes (FR-2520)."""
     return documento(relatorio, emissao=emissao).compor()
+
+
+def _eliminadas(etapa):
+    """A célula das eliminadas, com as retiradas da reserva ao lado só quando há (164, FR-7025).
+
+    Sem retirada, o texto de antes: o relatório de todo Edital sem Etapa que retire não muda.
+    """
+    if not etapa.elimina:
+        return "não elimina"
+    if not etapa.retiradas:
+        return str(etapa.eliminadas)
+    plural = "retirada da reserva" if etapa.retiradas == 1 else "retiradas da reserva"
+    return f"{etapa.eliminadas}; {etapa.retiradas} {plural}"

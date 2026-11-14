@@ -209,6 +209,92 @@
     </fieldset>
   </div>
   {% comment %}
+  O alcance (163, UX-730, UX-731). Duas opções exclusivas, e a lista só com a segunda — esconder é
+  da folha, pela regra das dependentes da forma: onde `:has` não existir, a lista aparece sempre, e
+  `ler_etapas` ignora as marcas quando a opção é "todas". Um código por linha, e não uma Modalidade
+  por Perfil: o alcance vale onde o código existe (D-001).
+  {% endcomment %}
+  {% opcoes_do_alcance modalidades_do_alcance etapa_linha as alcance %}
+  <div class="campos">
+    <fieldset class="opcoes">
+      <legend>A quem a Etapa se aplica</legend>
+      {% recusa_de recusas "etapa" indice "modalityCodes" as recusado %}
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-modalityCodes">{{ recusado }}</span>{% endif %}
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-alcance-todas"
+               name="etapa-{{ indice }}-alcance" value="TODAS"
+               {% if not alcance.restrita %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-alcance-todas">Todas as inscrições</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-alcance-restrita"
+               name="etapa-{{ indice }}-alcance" value="RESTRITA"
+               {% if alcance.restrita %}checked{% endif %}
+               {% if recusado %}aria-describedby="recusa-etapa-{{ indice }}-modalityCodes"{% endif %}>
+        <label for="etapa-{{ indice }}-alcance-restrita">Só as inscrições destas Modalidades</label>
+      </p>
+      <div class="campos dependentes so-restrita">
+        {% for opcao in alcance.opcoes %}
+        <label for="etapa-{{ indice }}-modalityCodes-{{ forloop.counter0 }}">
+          <input type="checkbox" id="etapa-{{ indice }}-modalityCodes-{{ forloop.counter0 }}"
+                 name="etapa-{{ indice }}-modalityCodes" value="{{ opcao.codigo }}"
+                 {% if opcao.marcada %}checked{% endif %}>
+          {{ opcao.denominacao }} ({{ opcao.codigo }}){% if opcao.ampla %} — é a ampla concorrência, que não restringe Etapa{% elif opcao.inexistente %} — nenhum Perfil tem mais esta Modalidade{% elif opcao.onde %} — {{ opcao.onde }}{% endif %}
+        </label>
+        {% empty %}
+        <p class="aviso">Nenhum Perfil deste Edital tem Modalidade além da ampla concorrência.</p>
+        {% endfor %}
+        {% if alcance.sem_alcancado %}<p class="aviso">Em {{ alcance.sem_alcancado }}, nenhuma Modalidade marcada existe: lá a Etapa não alcança ninguém.</p>{% endif %}
+      </div>
+    </fieldset>
+  </div>
+  {% comment %}
+  O efeito do desfecho (164, UX-740, UX-741). Só na Etapa restrita e eliminatória: a folha esconde o
+  grupo quando a Etapa alcança todas ou não é eliminatória, e onde `:has` não existir ele aparece
+  sempre, com o servidor ignorando as opções da Etapa que não declara efeito. O desfavorável nasce em
+  "deixa de concorrer pela reserva" (FR-7001); a ausência, em "o mesmo efeito" (FR-7004).
+  {% endcomment %}
+  <div class="campos dependentes so-restrita so-eliminatoria">
+    <fieldset class="opcoes">
+      <legend>O que acontece com quem tem desfecho desfavorável nesta Etapa?</legend>
+      {% recusa_de recusas "etapa" indice "unfavorableOutcomeEffect" as recusado_efeito %}
+      {% if recusado_efeito %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-unfavorableOutcomeEffect">{{ recusado_efeito }}</span>{% endif %}
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDesfavoravel-retira"
+               name="etapa-{{ indice }}-efeitoDesfavoravel" value="RESERVE_REMOVAL"
+               {% if etapa_linha.unfavorableOutcomeEffect != "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDesfavoravel-retira">Deixa de concorrer pela reserva e continua na ampla concorrência</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDesfavoravel-elimina"
+               name="etapa-{{ indice }}-efeitoDesfavoravel" value="ELIMINATION"
+               {% if etapa_linha.unfavorableOutcomeEffect == "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDesfavoravel-elimina">É eliminado do processo seletivo</label>
+      </p>
+    </fieldset>
+    <fieldset class="opcoes">
+      <legend>E com quem não comparecer?</legend>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-mesmo"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value=""
+               {% if not etapa_linha.absenceEffect %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-mesmo">O mesmo efeito</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-retira"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value="RESERVE_REMOVAL"
+               {% if etapa_linha.absenceEffect == "RESERVE_REMOVAL" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-retira">Deixa de concorrer pela reserva e continua na ampla concorrência</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-elimina"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value="ELIMINATION"
+               {% if etapa_linha.absenceEffect == "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-elimina">É eliminado do processo seletivo</label>
+      </p>
+    </fieldset>
+  </div>
+  {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
   só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
   esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema

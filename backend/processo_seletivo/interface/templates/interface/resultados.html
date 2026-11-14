@@ -33,6 +33,8 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
     <span>somente habilitadas</span></a>
   <a href="?consequencia=eliminada" {% if consequencia == "eliminada" %}aria-current="page"{% endif %}>
     <span>somente eliminadas</span></a>
+  <a href="?consequencia=retirada_da_reserva" {% if consequencia == "retirada_da_reserva" %}aria-current="page"{% endif %}>
+    <span>somente retiradas da reserva</span></a>
 </nav>
 
 {% if linhas %}

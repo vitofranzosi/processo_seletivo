@@ -22,17 +22,21 @@ from processo_seletivo.avaliacoes.application.distribuicao import resultado_decl
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
     E_TAMBEM_FORA,
     FORA_DA_FAIXA,
+    FORA_DO_ALCANCE,
+    FORA_DO_ALCANCE_RECUSA,
     FORA_DO_CORTE,
     NAO_PARTICIPA,
     PRONTA,
     REAVALIACAO,
     panorama_da_etapa,
 )
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.domain.regra import consequencia
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
@@ -110,6 +114,11 @@ def _inscricoes_da_selecao(edital, ids, panorama):
         # que não aconteceu: ele foi considerado, tem posição na ordem, e a norma publicada o
         # deixou de fora (014, FR-210, UX-025, E2E14-008).
         cortadas = [i for i in fora if panorama["estados"].get(i.id, (None,))[0] == FORA_DO_CORTE]
+        # A 163, pela mesma razão: quem a Etapa não alcança ouve isso, e não a eliminação (FR-6976).
+        if any(panorama["estados"].get(i.id, (None,))[0] == FORA_DO_ALCANCE for i in fora):
+            raise DomainError(
+                "inscricao_fora_da_etapa", FORA_DO_ALCANCE_RECUSA, 422, campo="inscricao_id"
+            )
         raise DomainError(
             "inscricao_fora_da_etapa",
             (
@@ -195,7 +204,7 @@ class Consolidavel:
         return f"Consolidavel({self.inscricao}, {self.efeito!r})"
 
 
-def _planejar(etapa, panorama, inscricoes):
+def _planejar(etapa, panorama, inscricoes, conteudo=None):
     """O que a consolidação fará com cada inscrição da seleção — sem fazer nada.
 
     **Uma regra só para o ato e para a tela que o precede.** Consolidar é irreversível e a V1 não
@@ -218,6 +227,14 @@ def _planejar(etapa, panorama, inscricoes):
             recusas.append(Recusa(inscricao, SEM_REAVALIACAO))
             continue
         efeito, causa = consequencia(etapa, conclusao)
+        if efeito == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA:
+            # **O motivo diz a reserva perdida e a ampla mantida** (164, FR-7008): lido depois, por
+            # si, ele precisa dizer o que aconteceu, e "a avaliação concluiu Indeferido" deixaria o
+            # titular achando que saiu do certame. A regra não conhece a inscrição; quem a conhece
+            # completa a frase, sem consulta — a denominação vem do conteúdo já lido.
+            causa = efeito_do_desfecho.motivo_com_a_reserva(
+                causa, nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
+            )
         if cumprindo is not None and _pioraria(cumprindo, efeito, conclusao):
             # **A vedação de piora alcança este caminho** (FR-073). A nova Avaliação fica
             # registrada — ela é o juízo do avaliador, e apagá-la seria mentir sobre o que ele
@@ -264,7 +281,7 @@ def _plano_do_lote(edital, etapa_id, ids):
         if not ids:
             raise DomainError("nada_pronto", NADA_PRONTO, 422)
     inscricoes = _inscricoes_da_selecao(edital, ids, panorama)
-    return (etapa, *_planejar(etapa, panorama, inscricoes))
+    return (etapa, *_planejar(etapa, panorama, inscricoes, conteudo))
 
 
 def _selecao_exigida(inscricao_ids):

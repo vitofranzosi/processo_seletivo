@@ -2055,6 +2055,10 @@ def compor_etapa(request, edital_id, etapa):
             "documentos_do_barema": (
                 forms.documentos_para_o_barema(edital) if etapa == "etapas" else []
             ),
+            # O que o alcance oferece (163, UX-731), pela mesma razão: só no passo das Etapas.
+            "modalidades_do_alcance": (
+                forms.modalidades_para_o_alcance(edital) if etapa == "etapas" else None
+            ),
             "secoes": (
                 _reexibir_secoes(edital, digitados, snapshot_da_etapa)
                 if etapa == "conteudo" and digitados is not None
@@ -3694,6 +3698,7 @@ def fragmento_etapa(request, edital_id):
             "indice": _indice_de_linha(request),
             "eventos": forms.eventos_do_edital(edital),
             "documentos_do_barema": forms.documentos_para_o_barema(edital),
+            "modalidades_do_alcance": forms.modalidades_para_o_alcance(edital),
             "edital": edital,
         },
     )
@@ -6889,8 +6894,8 @@ def consolidar_resultados(request, edital_id, etapa_id):
                     # Centenas de linhas não se conferem uma a uma: o total por consequência é
                     # o que a presidência compara com o que esperava da Etapa, antes de descer
                     # à tabela. Sai do mesmo plano que o ato relê, e não de uma contagem à parte.
-                    "por_consequencia": sorted(
-                        Counter(item.efeito for item in consolidaveis).items()
+                    "por_consequencia": _por_consequencia(
+                        Counter(item.efeito for item in consolidaveis)
                     ),
                     "chave_idempotencia": chave,
                 },
@@ -13713,3 +13718,21 @@ def autoridades(request):
         },
         status=status,
     )
+
+
+# Os nomes das consequências na confirmação da consolidação, no singular e no plural (164, UX-743).
+# "retirada da reserva" não se pluraliza pelo filtro do template, que poria o "s" no fim.
+NOMES_DAS_CONSEQUENCIAS = {
+    "HABILITADA": ("habilitada", "habilitadas"),
+    "RETIRADA_DA_RESERVA": ("retirada da reserva", "retiradas da reserva"),
+    "ELIMINADA": ("eliminada", "eliminadas"),
+}
+
+
+def _por_consequencia(contagem):
+    """ "3 habilitadas, 1 retirada da reserva" — a presidência vê o efeito antes de confirmar."""
+    return [
+        f"{contagem[chave]} {NOMES_DAS_CONSEQUENCIAS[chave][0 if contagem[chave] == 1 else 1]}"
+        for chave in NOMES_DAS_CONSEQUENCIAS
+        if contagem.get(chave)
+    ]

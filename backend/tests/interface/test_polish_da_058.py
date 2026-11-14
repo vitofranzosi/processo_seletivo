@@ -231,12 +231,16 @@ def _etapa(**numeros):
         forma="PONTUADA",
         rotulo_favoravel="",
         rotulo_desfavoravel="",
+        efeito_desfavoravel="",
+        efeito_da_ausencia="",
         evento_id=None,
         weight=None,
         minimum_score=None,
         maximum_score=None,
         # O barema (146): a Etapa sem critério, que é a destas linhas.
         criterios=SimpleNamespace(all=lambda: []),
+        # O alcance (163): a Etapa para todas as inscrições.
+        alcance=None,
     )
     return SimpleNamespace(**{**campos, **numeros})
 

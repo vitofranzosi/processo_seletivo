@@ -42,7 +42,7 @@ alocação da comissão, e fica **dentro** do período que o Evento publica.
   (`classificacao/domain/universo.py:49-55`), Regularização (`resultados/models.py:57-66`), nova
   geração do Corte, e quando a Etapa anterior passa a ter Resultado.
 - **[F]** Hoje toda Etapa vale para toda inscrição enviada. O **alcance por Modalidade**, que a
-  heteroidentificação pede, é a `163` (PR #542, sem merge).
+  heteroidentificação pede, é a `163` (#542, mergeada em 14/11, depois deste diagnóstico).
 
 **Consequência [P].** A agenda **não tem lista própria**: lê a projeção, e mostra a diferença entre
 o que está agendado e quem participa — "sem horário" e "agendada que não participa mais". A
@@ -135,7 +135,8 @@ Três conclusões:
 - **[F]** A `066` registrou "agendamento fica fora" do MVP de avisos (`specs/066-avisos-complementares/spec.md:101`).
 - **[F]** O estudo da verificação da autodeclaração (PR #541) deixou de fora a "agenda individual
   da entrevista ao vivo", "porque serve a qualquer entrevista, e não só a esta". As specs `163`
-  (alcance), `164` (efeito por lista) e `165` (deliberação), em PRs sem merge, fazem da
+  (alcance), `164` (efeito por lista) e `165` (deliberação) — as duas primeiras mergeadas em 14/11, a
+  terceira no #545 — fazem da
   heteroidentificação uma Etapa. **O agendamento é a peça que faltava a elas**, e não concorre com
   nenhuma.
 
@@ -148,6 +149,6 @@ Três conclusões:
 | Ato de comparecimento à Etapa | `registro-convocacao-para-etapas` | **este estudo**, como publicação da agenda |
 | Aviso de horário | FR-084 fechada; origens da `066` | **este estudo**, origem nova, com revisão da FR-084 |
 | Degrau "seu horário" no acompanhamento | `portal/situacao.py` | **este estudo** |
-| Etapa só para quem declarou a Modalidade | `prontidao.py` sem filtro | `163` (PR #542) |
+| Etapa só para quem declarou a Modalidade | `prontidao.py` sem filtro | `163` (#542, mergeada) |
 | Natureza da Etapa (entrevista × análise) | `EtapaAvaliacao` sem campo | **não é preciso**: a agenda existe ou não; ver `02-proposta.md` §2.1 |
 | Presença registrada | Ocorrência existe | **não é preciso** |

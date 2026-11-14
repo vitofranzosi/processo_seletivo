@@ -48,6 +48,16 @@ DEGRAUS = {
     # Lista e não `None`, pela convenção das coleções do degrau 7 — uma segunda grafia da ausência
     # é o que a versão canônica existe para não admitir.
     21: {"criteria": []},
+    # **O degrau 22 é o alcance** (163, D-002, FR-6966). `None` diz "todas as inscrições", e é
+    # verdade sobre todo Edital anterior: a capacidade não existia, e toda Etapa alcançava todas.
+    # `None`, e não a lista de todos os códigos, porque a lista mudaria de sentido na primeira
+    # Retificação que acrescentasse Modalidade.
+    22: {"modalityCodes": None},
+    # **O degrau 23 é o efeito do desfecho** (164, D-002, FR-7005). `None` nos dois é verdade sobre
+    # todo Edital anterior: a capacidade não existia. E a leitura do nulo, na Etapa restrita e
+    # eliminatória, é "elimina" — o que ela produzia quando foi publicada —, e não o padrão novo,
+    # que só vale para o que se compõe (`resultados/domain/efeito.py`).
+    23: {"unfavorableOutcomeEffect": None, "absenceEffect": None},
 }
 
 # **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção
@@ -433,6 +443,9 @@ def diz_o_mesmo_que_a_ausencia(etapa):
         return False
     # O barema (146), pela mesma régua: ausente e vazio dizem "nenhum critério publicado".
     if etapa.get("criteria") not in (None, []):
+        return False
+    # O alcance (163), pela mesma régua: ausente e nulo dizem "todas as inscrições".
+    if etapa.get("modalityCodes") is not None:
         return False
     return etapa.get("rotuloFavoravel") is None and etapa.get("rotuloDesfavoravel") is None
 

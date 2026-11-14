@@ -76,7 +76,10 @@ MENSAGENS = {
     "análise das inscrições. Sem ela não há resultado preliminar a publicar.",
     "inscricoes_etapa_a_escolher": "O Edital tem mais de uma Etapa decisória eliminatória: escolha "
     "qual delas é a análise das inscrições.",
-    "inscricoes_etapa_invalida": "A Etapa escolhida não é decisória eliminatória neste Edital.",
+    # "Que alcance todas" é da 163 (FR-6987): a Etapa restrita é decisória e eliminatória, e sem a
+    # terceira condição a frase diria a quem a escolheu uma coisa falsa sobre ela.
+    "inscricoes_etapa_invalida": "A Etapa escolhida não é decisória eliminatória para todas as "
+    "inscrições neste Edital.",
     "inscricoes_etapa_divergente": "Esta cadeia já publicou a análise de outra Etapa; a publicação "
     "seguinte usa a mesma.",
     "inscricoes_analise_incompleta": "{n} inscrição(ões) ainda sem conclusão consolidada na Etapa "

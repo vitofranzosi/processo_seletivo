@@ -281,6 +281,25 @@ class StageSerializer(serializers.Serializer):
         max_length=100, required=False, allow_null=True, allow_blank=True
     )
     scheduleEventId = serializers.UUIDField(required=False, allow_null=True)
+    # O alcance (163, FR-6960). `null` e ausência são "todas as inscrições" (D-002). A lista vazia
+    # **passa** por aqui de propósito: quem a recusa, com a mensagem que diz como corrigir, é
+    # `validate_stage` — a interface administrativa não atravessa este serializer (FR-6962).
+    modalityCodes = serializers.ListField(
+        child=serializers.CharField(max_length=100, allow_blank=True),
+        required=False,
+        allow_null=True,
+        allow_empty=True,
+        default=None,
+    )
+    # O efeito do desfecho (164, FR-7000, FR-7004). `null` e ausência são "não declarado". O valor
+    # fora das escolhas **passa** por aqui, pela razão do alcance acima: quem o recusa, com a
+    # mensagem do contrato, é `validate_stage`.
+    unfavorableOutcomeEffect = serializers.CharField(
+        max_length=20, required=False, allow_null=True, allow_blank=True, default=None
+    )
+    absenceEffect = serializers.CharField(
+        max_length=20, required=False, allow_null=True, allow_blank=True, default=None
+    )
     # O barema (146, FR-5213). **Ausente é sem critérios**, e o preço é o de todo campo deste
     # contrato: quem lê o rascunho e o reenvia sem a chave apaga a ficha. É a regra que a API já
     # tem para as outras coleções, e a única grafia que a FR-5213 admite.

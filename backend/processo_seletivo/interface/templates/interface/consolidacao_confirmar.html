@@ -43,7 +43,7 @@ promete o que se pretende, e aquela responde pelo que foi feito.
     as da página que a listagem mostrava. Quem aguarda reavaliação determinada por recurso não entra
     neste conjunto: é consolidada pela seleção, uma a uma.</p>
   {% endif %}
-  <p><strong>{% for efeito, quantas in por_consequencia %}{{ quantas }} {{ efeito|lower }}{{ quantas|pluralize }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>.</p>
+  <p><strong>{% for frase in por_consequencia %}{{ frase }}{% if not forloop.last %}, {% endif %}{% endfor %}</strong>.</p>
   <div class="tabela-rolavel">
     <table class="tabela">
       <caption class="oculto">Inscrições que virarão Resultado</caption>

@@ -118,6 +118,13 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
 </div>
 {% endif %}
 
+{% comment %}
+O recorte do alcance (163, UX-732): numa Etapa que só alcança algumas Modalidades, o total menor não
+pode parecer perda de inscrição. A frase diz o número ao lado do total, e só aparece onde há recorte.
+{% endcomment %}
+{% if resumo.fora_do_alcance %}
+<p>{% if resumo.alcancadas %}<strong>{{ resumo.alcancadas }}</strong> {{ resumo.alcancadas|plural:"inscrição alcançada,inscrições alcançadas" }}, de {{ resumo.total }}: a Etapa só se aplica a algumas Modalidades.{% else %}Nenhuma inscrição alcançada: nenhuma das {{ resumo.total }} se inscreveu numa Modalidade a que a Etapa se aplica.{% endif %}</p>
+{% endif %}
 <nav class="filtros-da-mesa" aria-label="Filtrar por prontidão para consolidar">
   <a href="?prontidao=pronta" {% if prontidao == "pronta" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.prontas }}</strong> <span>prontas para consolidar</span></a>
@@ -148,6 +155,10 @@ são três linhas. A informação — "o que impede" — some no meio da repeti�
   {% if resumo.fora_do_corte %}
   <a href="?prontidao=fora-do-corte" {% if prontidao == "fora-do-corte" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.fora_do_corte }}</strong> <span>fora do corte</span></a>
+  {% endif %}
+  {% if resumo.fora_do_alcance %}
+  <a href="?prontidao=fora-do-alcance" {% if prontidao == "fora-do-alcance" %}aria-current="page"{% endif %}>
+    <strong>{{ resumo.fora_do_alcance }}</strong> <span>fora do alcance desta Etapa</span></a>
   {% endif %}
 </nav>
 

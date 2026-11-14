@@ -21,7 +21,7 @@ decide o que a resposta mostra sem ser mostrado; e `EXCLUIDO`, com o motivo.
 from __future__ import annotations
 
 #: A versão do conteúdo publicado que esta tabela classifica (`shared/canonical.py`).
-VERSAO_DO_ESQUEMA = 21
+VERSAO_DO_ESQUEMA = 23
 
 LOCALIZACAO = "LOCALIZACAO"
 #: O campo decide **o que** a resposta mostra, sem ser mostrado: a aplicabilidade do documento, o
@@ -199,6 +199,20 @@ COBERTURA = {
     # setor de seleção, e não desta feature.
     "/stages/*/criteria": BAREMA,
     "/stages/*/criteria/**": BAREMA,
+    # O alcance da Etapa (163). A resposta sobre as Etapas ainda mostra todas a todos, sem ler a
+    # Modalidade de quem pergunta; o candidato lê o alcance no PDF. Filtrar pela Modalidade é
+    # decisão da pergunta P-07 com o setor de seleção, e não desta feature.
+    "/stages/*/modalityCodes": excluido(
+        "alcance da Etapa por Modalidade (163); a resposta sobre as Etapas ainda não o lê"
+    ),
+    # O efeito do desfecho da Etapa (164), pela mesma razão: a resposta sobre as Etapas ainda não o
+    # lê, e o candidato o lê no PDF. Dizê-lo é decisão da pergunta P-07, e não desta feature.
+    "/stages/*/unfavorableOutcomeEffect": excluido(
+        "efeito do desfecho da Etapa (164); a resposta sobre as Etapas ainda não o lê"
+    ),
+    "/stages/*/absenceEffect": excluido(
+        "efeito do não comparecimento (164); a resposta sobre as Etapas ainda não o lê"
+    ),
     "/stages/*/rotuloFavoravel": ("P-07",),
     "/stages/*/rotuloDesfavoravel": ("P-07",),
     "/stages/*/scheduleEventId": excluido(

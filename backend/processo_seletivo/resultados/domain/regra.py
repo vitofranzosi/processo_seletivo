@@ -21,6 +21,7 @@ from processo_seletivo.avaliacoes.domain.previsao import (
     forma_publicada,
     rotulos,
 )
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 HABILITADA = "HABILITADA"
 ELIMINADA = "ELIMINADA"
@@ -112,7 +113,7 @@ def consequencia(etapa, conclusao):
     minima = nota_minima(etapa)
     if eliminatoria(etapa) and minima is not None and pontuacao < minima:
         return (
-            ELIMINADA,
+            _desfavoravel(etapa),
             f"pontuação inferior à nota mínima da Etapa ({_numero(pontuacao)} < {_numero(minima)})",
         )
     if eliminatoria(etapa) and minima is not None:
@@ -127,6 +128,16 @@ def consequencia(etapa, conclusao):
     return (HABILITADA, "a Etapa não tem caráter eliminatório")
 
 
+def _desfavoravel(etapa):
+    """A consequência do desfecho desfavorável, pelo efeito que a Etapa declara (164, FR-7007).
+
+    `ELIMINADA` em toda Etapa que não declara efeito — a que alcança todas as inscrições, e o acervo
+    restrito anterior ao degrau 23 —, que é o que ela produzia. A retirada só onde o Edital a
+    escreveu, e nunca por escolha de quem consolida.
+    """
+    return efeito_do_desfecho.consequencia_do_efeito(efeito_do_desfecho.efeito_desfavoravel(etapa))
+
+
 def _consequencia_decisoria(etapa, sentido):
     """O sentido vira consequência **porque a Etapa é eliminatória**, e não por si (013, D-008).
 
@@ -139,5 +150,8 @@ def _consequencia_decisoria(etapa, sentido):
     """
     favoravel, desfavoravel = rotulos(etapa)
     if sentido == Sentido.DESFAVORAVEL:
-        return (ELIMINADA, f"a avaliação concluiu {desfavoravel or 'em sentido desfavorável'}")
+        return (
+            _desfavoravel(etapa),
+            f"a avaliação concluiu {desfavoravel or 'em sentido desfavorável'}",
+        )
     return (HABILITADA, f"a avaliação concluiu {favoravel or 'em sentido favorável'}")

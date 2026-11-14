@@ -24,6 +24,7 @@ elabora; o que este módulo garante é que nenhuma delas fique de fora.
 import re
 from datetime import datetime
 
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.editais.domain import cadastro_de_reserva, quadro
 from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import secoes as catalogo
@@ -65,6 +66,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     teto_de_inscricoes,
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
 
@@ -367,6 +369,13 @@ def _etapa(etapa, snapshot):
         linhas.append(Rotulada("Conclusão", "com pontuação"))
     if etapa.get("evaluationsPerRegistration") is not None:
         linhas.append(Rotulada("Avaliações por inscrição", etapa["evaluationsPerRegistration"]))
+    # O alcance (163, FR-6984), com as palavras do documento, e só quando ele restringe: a Etapa
+    # para todas não ganha linha, como não ganha frase no documento (D-008).
+    if frase := alcance_da_etapa.frase_do_alcance(snapshot, etapa):
+        linhas.append(Rotulada("Alcance", frase))
+    # O efeito do desfecho (164, FR-7023), com as palavras do documento, só onde é declarado.
+    if frase := efeito_do_desfecho.frase_do_efeito(etapa):
+        linhas.append(Rotulada("Efeito", frase))
     vinculado = next(
         (
             evento
@@ -1043,6 +1052,11 @@ _LIDOS_POR_COLECAO = {
         "forma",
         "rotuloFavoravel",
         "rotuloDesfavoravel",
+        # O alcance (163, FR-6984): a linha "Alcance" de `_etapa`, só na Etapa restrita.
+        "modalityCodes",
+        # O efeito do desfecho (164, FR-7023): a linha "Efeito" de `_etapa`, só onde é declarado.
+        "unfavorableOutcomeEffect",
+        "absenceEffect",
     ),
     "sections": ("title", "order", "type", "content", "source"),
     # A ordem é a da lista: o conteúdo publica os Anexos na ordem editorial, e a conferência os

@@ -68,11 +68,80 @@ def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
             campo="minimumScore",
             identidade=stage.get("id", ""),
         )
+    _validate_alcance(stage)
+    _validate_efeito(stage)
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(
             "A Etapa referencia um Evento que não existe no Cronograma deste Edital."
         )
+
+
+# Os valores que a gravação aceita para os dois efeitos (164), na grafia publicada; `None` e `""`
+# são "não declarado".
+EFEITOS = (None, "", "RESERVE_REMOVAL", "ELIMINATION")
+
+
+def _validate_efeito(stage: dict) -> None:
+    """A forma dos dois efeitos do desfecho, na gravação (164, contrato `recusas.md`).
+
+    Que só a Etapa restrita e eliminatória os declare é da publicação (`efeito_sem_reserva`): o
+    rascunho pode estar no meio da composição, com o alcance marcado antes do caráter.
+    """
+    nome = _nome_da_etapa(stage)
+    for campo, texto in (
+        ("unfavorableOutcomeEffect", "do desfecho desfavorável"),
+        ("absenceEffect", "do não comparecimento"),
+    ):
+        if stage.get(campo) not in EFEITOS:
+            raise StageValidationError(
+                f"O efeito {texto} da Etapa «{nome}» não é um dos previstos.",
+                campo=campo,
+                identidade=stage.get("id", ""),
+            )
+
+
+def _validate_alcance(stage: dict) -> None:
+    """A forma do alcance, na gravação (163, FR-6962). O que ele **aponta** é da publicação.
+
+    Código que nenhum Perfil tem não é recusado aqui: o rascunho pode estar pela metade, e quem
+    renomeou uma Modalidade não pode ter a gravação dos Perfis travada por uma Etapa (FR-6963). A
+    lista vazia, sim: ela não é alcance pela metade, é contradição — "só estas", e nenhuma.
+    """
+    codigos = stage.get("modalityCodes")
+    if codigos is None:
+        return
+    nome = _nome_da_etapa(stage)
+    identidade = stage.get("id", "")
+    if not isinstance(codigos, (list, tuple)):
+        raise StageValidationError(
+            f"O alcance da Etapa «{nome}» tem um código de Modalidade inválido.",
+            campo="modalityCodes",
+            identidade=identidade,
+        )
+    if not codigos:
+        raise StageValidationError(
+            f"A Etapa «{nome}» está marcada para alcançar só algumas Modalidades, mas nenhuma foi "
+            'escolhida. Marque ao menos uma, ou escolha "Todas as inscrições".',
+            campo="modalityCodes",
+            identidade=identidade,
+        )
+    vistos = set()
+    for codigo in codigos:
+        texto = codigo.strip() if isinstance(codigo, str) else ""
+        if not texto or len(texto) > 100:
+            raise StageValidationError(
+                f"O alcance da Etapa «{nome}» tem um código de Modalidade inválido.",
+                campo="modalityCodes",
+                identidade=identidade,
+            )
+        if texto in vistos:
+            raise StageValidationError(
+                f"O alcance da Etapa «{nome}» repete a Modalidade «{texto}».",
+                campo="modalityCodes",
+                identidade=identidade,
+            )
+        vistos.add(texto)
 
 
 def validate_stages(

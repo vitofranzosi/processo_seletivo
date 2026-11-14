@@ -256,6 +256,10 @@ FORMAS = ("PONTUADA", "DECISORIA")
 ROTULO = "A Etapa pontuada não publica rótulos de resultado em "
 NOTA = "A Etapa decisória não publica nota em "
 
+# Os dois efeitos do desfecho, na grafia publicada (164). Literais aqui pela razão das `FORMAS`:
+# este módulo confere a string publicada, e importar o domínio de `resultados` inverteria a direção.
+EFEITOS_PUBLICADOS = ("RESERVE_REMOVAL", "ELIMINATION")
+
 ETAPA_PUBLICADA = (
     Campo("id", str, formato="uuid"),
     Campo("name", str),
@@ -285,6 +289,15 @@ ETAPA_PUBLICADA = (
     # cada item é `CRITERIO_PUBLICADO`, conferida em `_coerencia_do_barema` pela régua do marco —
     # aqui se declara que a coleção existe e que cada item é objeto.
     Campo("criteria", list, tipo_do_item=dict),
+    # O alcance (163, degrau 22). `null` é "todas as inscrições"; a lista é de códigos de
+    # Modalidade. Que ela não seja vazia e que os códigos existam é coerência, e mora em
+    # `_coerencia_do_alcance`.
+    Campo("modalityCodes", list, admite_nulo=True, tipo_do_item=str),
+    # O efeito do desfecho (164, degrau 23). `null` é "sem efeito declarado" — e, na Etapa restrita
+    # e eliminatória, conteúdo de antes do degrau, lido "elimina". O `None` entre os valores é o do
+    # contrato (`enum` com `null`). Que só essa Etapa o declare é coerência: `_coerencia_do_efeito`.
+    Campo("unfavorableOutcomeEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
+    Campo("absenceEffect", str, admite_nulo=True, valores=(*EFEITOS_PUBLICADOS, None)),
 )
 
 # Um critério do barema na forma publicada (146, FR-5201). Os decimais na forma canônica da Etapa;
@@ -1600,6 +1613,213 @@ def _coerencia_do_barema(snapshot: dict) -> list[ValidationFinding]:
 BAREMA_INCOERENTE = "stage_criteria_inconsistent"
 
 
+def _coerencia_do_efeito(snapshot: dict) -> list[ValidationFinding]:
+    """Só a Etapa restrita e eliminatória declara efeito do desfecho (164, FR-7002).
+
+    A publicação nunca grava efeito em outra Etapa (`resultados/domain/efeito.publicar`); o achado
+    pega o que chega por Retificação — a Etapa que volta a alcançar todas, ou que deixa de ser
+    eliminatória, com o efeito ainda escrito. "Retira da reserva" nela não teria reserva de onde
+    tirar ninguém, e "elimina" repetiria o caráter com outra palavra.
+    """
+    from processo_seletivo.editais.domain import alcance
+
+    findings = []
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict):
+            continue
+        declarados = [
+            campo
+            for campo in ("unfavorableOutcomeEffect", "absenceEffect")
+            if etapa.get(campo) is not None
+        ]
+        if not declarados:
+            continue
+        nome = _nome(etapa, "name") or "sem nome"
+        invalidos = [c for c in declarados if etapa.get(c) not in EFEITOS_PUBLICADOS]
+        if invalidos:
+            findings.append(
+                _impeditivo(
+                    "efeito_invalido",
+                    f"O efeito do desfecho da Etapa «{nome}» não é um dos previstos.",
+                    f"/stages/id={etapa.get('id', '')}/{invalidos[0]}",
+                )
+            )
+            continue
+        if alcance.restrita(etapa) and etapa.get("eliminatory") is True:
+            continue
+        motivo = (
+            "alcança todas as inscrições" if not alcance.restrita(etapa) else "não é eliminatória"
+        )
+        findings.append(
+            _impeditivo(
+                "efeito_sem_reserva",
+                f"A Etapa «{nome}» declara o efeito do desfecho, mas ela {motivo}. Só a Etapa "
+                "eliminatória restrita a algumas Modalidades declara efeito: só ela tem reserva de "
+                "onde tirar alguém.",
+                f"/stages/id={etapa.get('id', '')}/{declarados[0]}",
+            )
+        )
+    return findings
+
+
+def _coerencia_do_alcance(snapshot: dict) -> list[ValidationFinding]:
+    """O que o alcance de cada Etapa aponta, e o papel que ela ocupa (163, FR-6963 a FR-6965).
+
+    **Na publicação e na Retificação, e não na gravação.** O rascunho pode estar pela metade — quem
+    renomeia uma Modalidade não pode ter a gravação dos Perfis travada por uma Etapa —, e o que não
+    pode estar pela metade é o Edital publicado (FR-6963). A forma do alcance, sim, é da gravação:
+    `etapas._validate_alcance`.
+
+    **Os papéis proibidos são os que decidem por todos** (D-005). A Etapa restrita só avalia quem
+    ela alcança; classificar, ponderar, desempatar, ser a nota medida por um marco, ser a Etapa cujo
+    `HABILITADA` a ocupação conta ou a que habilita ao sorteio decidiria pelos outros com um juízo
+    que eles não receberam.
+    """
+    from processo_seletivo.editais.domain import alcance
+
+    findings = []
+    perfis = _perfis_bem_formados(snapshot)
+    modalidades = [
+        (perfil, modalidade)
+        for perfil in perfis
+        for modalidade in perfil.get("competitionModalities") or []
+        if isinstance(modalidade, dict)
+    ]
+    ja_conferidos = {
+        str(documento.get("modalityCode")).strip()
+        for documento in snapshot.get("documentRequirements") or []
+        if isinstance(documento, dict) and documento.get("modalityCode")
+    }
+    papeis = _papeis_das_etapas(snapshot, perfis)
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict) or not alcance.restrita(etapa):
+            continue
+        codigos = etapa.get("modalityCodes")
+        if not isinstance(codigos, list):
+            continue
+        nome = _nome(etapa, "name") or "sem nome"
+        caminho = f"/stages/id={etapa.get('id', '')}/modalityCodes"
+        for codigo in sorted({str(item).strip() for item in codigos if isinstance(item, str)}):
+            com_o_codigo = [
+                (perfil, modalidade)
+                for perfil, modalidade in modalidades
+                if str(modalidade.get("code") or "").strip() == codigo
+            ]
+            if not com_o_codigo:
+                findings.append(
+                    _impeditivo(
+                        "alcance_codigo_inexistente",
+                        f"A Etapa «{nome}» alcança a Modalidade «{codigo}», que nenhum Perfil "
+                        "deste Edital tem.",
+                        caminho,
+                    )
+                )
+                continue
+            for perfil, modalidade in com_o_codigo:
+                ampla = perfil.get("generalCompetitionModalityId")
+                if ampla and str(ampla) == str(modalidade.get("id")):
+                    findings.append(
+                        _impeditivo(
+                            "alcance_alcanca_a_ampla",
+                            f"A Etapa «{nome}» alcança a Modalidade «{codigo}», que é a ampla "
+                            f"concorrência no Perfil «{_nome(perfil, 'code', 'name')}». A ampla "
+                            'não restringe Etapa: escolha "Todas as inscrições" ou outra '
+                            "Modalidade.",
+                            caminho,
+                        )
+                    )
+                    break
+            if codigo in ja_conferidos:
+                # A coerência da `044` já acusou este código, com a mensagem do documento: um
+                # segundo achado diria dois problemas onde há um.
+                continue
+            por_denominacao = {}
+            for perfil, modalidade in com_o_codigo:
+                denominacao = str(modalidade.get("name") or "").strip()
+                por_denominacao.setdefault(denominacao, []).append(_nome(perfil, "code", "name"))
+            if len(por_denominacao) > 1:
+                partes = "; ".join(
+                    f"«{denominacao}» em {', '.join(sorted(rotulos))}"
+                    for denominacao, rotulos in sorted(por_denominacao.items())
+                )
+                findings.append(
+                    _impeditivo(
+                        "alcance_denominacao_divergente",
+                        f"A Modalidade «{codigo}», que a Etapa «{nome}» alcança, tem denominações "
+                        f"diferentes entre os Perfis: {partes}. Use a mesma denominação em todos.",
+                        "/profiles",
+                    )
+                )
+                ja_conferidos.add(codigo)
+        for papel in papeis.get(str(etapa.get("id")), []):
+            findings.append(
+                _impeditivo(
+                    "alcance_em_papel_de_todos",
+                    f"A Etapa «{nome}» alcança só algumas Modalidades e não pode {papel}: o que "
+                    "ela decide valeria para quem ela não avalia.",
+                    f"/stages/id={etapa.get('id', '')}",
+                )
+            )
+    return findings
+
+
+def _papeis_das_etapas(snapshot: dict, perfis: list[dict]) -> dict:
+    """`{identidade da Etapa: [papel, ...]}` — os papéis que decidem por todas as listas (D-005)."""
+    from processo_seletivo.classificacao.domain import faixa
+
+    papeis: dict[str, list[str]] = {}
+
+    def anotar(etapa_id, papel):
+        lista = papeis.setdefault(str(etapa_id), [])
+        if papel not in lista:
+            lista.append(papel)
+
+    for etapa in snapshot.get("stages") or []:
+        if not isinstance(etapa, dict):
+            continue
+        if etapa.get("classificatory"):
+            anotar(etapa.get("id"), "ser classificatória")
+        if etapa.get("weight") is not None:
+            anotar(etapa.get("id"), "ter peso")
+    publicadas = {
+        str(etapa.get("id")): etapa
+        for etapa in snapshot.get("stages") or []
+        if isinstance(etapa, dict)
+    }
+    for perfil in perfis:
+        for marco in _marcos_bem_formados(perfil):
+            nomeado = _marco_nomeado(marco)
+            for etapa_id in marco.get("stages") or []:
+                publicada = publicadas.get(str(etapa_id)) or {}
+                # A classificatória já está anotada, e duas frases para o mesmo problema seriam
+                # ruído: a "pontuada e medida" é a que o marco enumera sem a declarar
+                # classificatória.
+                if publicada.get("forma") != "DECISORIA" and not publicada.get("classificatory"):
+                    anotar(etapa_id, f"ser pontuada e medida pelo marco {nomeado}")
+            for criterio in marco.get("tiebreakers") or []:
+                if isinstance(criterio, dict):
+                    alvo = (criterio.get("parameters") or {}).get("stageId")
+                    if alvo:
+                        anotar(
+                            alvo,
+                            f"ser a Etapa comparada pelo critério de desempate do marco {nomeado}",
+                        )
+            governada = faixa.etapa_governada(marco.get("cutRule"))
+            if governada:
+                anotar(governada, f"ser a Etapa que o corte do marco {nomeado} governa")
+            metodo = (
+                marcos.metodo_que_governa(
+                    snapshot, perfil_id=perfil.get("id"), marco_id=marco["id"]
+                )
+                if marco.get("id")
+                else None
+            )
+            habilitacao = (metodo or {}).get("qualifyingStageId")
+            if habilitacao:
+                anotar(habilitacao, f"ser a Etapa de habilitação ao sorteio do marco {nomeado}")
+    return papeis
+
+
 def _decimal_ou_none(valor):
     """Valor fora da forma decimal não é assunto daqui: a forma declarada já o reporta."""
     try:
@@ -1694,6 +1914,8 @@ def validate_for_publication(
     findings.extend(_topologia_das_secoes(snapshot, topologia))
     findings.extend(_coerencia_das_etapas(snapshot))
     findings.extend(_coerencia_do_barema(snapshot))
+    findings.extend(_coerencia_do_alcance(snapshot))
+    findings.extend(_coerencia_do_efeito(snapshot))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))

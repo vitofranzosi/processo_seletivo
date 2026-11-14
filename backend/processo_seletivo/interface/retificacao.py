@@ -63,6 +63,11 @@ OCULTO = "oculto"
 # inventar controle. Linha vazia não vira requisito vazio — some, porque `""` publicado seria
 # afirmação de que existe uma exigência sem texto.
 LISTA_DE_TEXTO = "lista_de_texto"
+# O alcance da Etapa (163, FR-6967): os códigos de Modalidade, um por linha, e a caixa **vazia** é
+# "todas as inscrições" — o `null` publicado, e não a lista vazia, que a publicação recusa. É a
+# diferença para `LISTA_DE_TEXTO`, em que vazio é lista vazia; por isso um tipo próprio. A lista sai
+# ordenada e sem repetição, como a composição a grava (T-002).
+ALCANCE = "alcance"
 
 # (sufixo do caminho, rótulo, tipo) — aplicado a cada Perfil e a cada Evento.
 CAMPOS_PERFIL = [
@@ -426,7 +431,28 @@ CAMPOS_ETAPA = [
     ("forma", "Forma da conclusão", TEXTO),
     ("rotuloFavoravel", "Rótulo do resultado favorável", TEXTO),
     ("rotuloDesfavoravel", "Rótulo do resultado desfavorável", TEXTO),
+    # O alcance (163, FR-6967, FR-6979, FR-6980): estreitar sobre inscrição já atribuída é recusado
+    # na gravação e na publicação, por `retificacoes.py`.
+    ("modalityCodes", "Modalidades que a Etapa alcança", ALCANCE),
+    # O efeito do desfecho (164, FR-7006, FR-7020): trocá-lo depois do primeiro Resultado
+    # desfavorável é recusado na gravação e na publicação, por `retificacoes.py`. A opção vazia é o
+    # `null` publicado: na Etapa que não declara efeito, e na ausência, "o mesmo efeito".
+    ("unfavorableOutcomeEffect", "Efeito do desfecho desfavorável", REFERENCIA),
+    ("absenceEffect", "Efeito do não comparecimento", REFERENCIA),
 ]
+EFEITOS_DO_DESFAVORAVEL = (
+    # **O vazio publicado não é o padrão da composição** (164, D-002): na Etapa restrita e
+    # eliminatória, `null` é o acervo de antes do degrau 23, lido "elimina". Dizê-lo "Não declarado"
+    # faria quem retifica escolher a eliminação achando que escolhia nada.
+    ("", "Não declarado (na Etapa restrita e eliminatória, lido como eliminação)"),
+    ("RESERVE_REMOVAL", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
+    ("ELIMINATION", "É eliminado do processo seletivo"),
+)
+EFEITOS_DA_AUSENCIA = (
+    ("", "O mesmo efeito do desfecho desfavorável"),
+    ("RESERVE_REMOVAL", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
+    ("ELIMINATION", "É eliminado do processo seletivo"),
+)
 # O barema da Etapa (146, FR-5210): todo campo do critério, com os rótulos da seção Barema da
 # composição. A igualdade da soma com a máxima da Etapa não é campo — é a conferência do conteúdo
 # consolidado que a cobra, e por isso acrescentar um critério pede alterar a máxima no mesmo ato.
@@ -791,6 +817,8 @@ def _linhas(bruto):
 def _para_formulario(valor, tipo):
     if tipo == BOOLEANO:
         return "1" if valor else "0"
+    if tipo == ALCANCE:
+        return "" if valor is None else "\n".join(sorted(str(item) for item in valor))
     if tipo == LISTA_DE_TEXTO:
         # **Item com quebra de linha dentro não tem representação nesta caixa**, e por isso ele não
         # se publica: a forma publicada declara `requirements` como lista de texto, e a conferência
@@ -1624,6 +1652,10 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 CAMPOS_ETAPA,
                 tipo="Etapa",
                 nome=nome,
+                opcoes={
+                    "unfavorableOutcomeEffect": EFEITOS_DO_DESFAVORAVEL,
+                    "absenceEffect": EFEITOS_DA_AUSENCIA,
+                },
             )
         )
         # O barema da Etapa, um cartão por critério, logo abaixo dela (146, FR-5210). Removível:
@@ -1920,6 +1952,9 @@ def _converter(bruto, tipo, rotulo, opcoes=()):
     bruto = (bruto or "").strip()
     if tipo == BOOLEANO:
         return bruto == "1"
+    if tipo == ALCANCE:
+        codigos = sorted({linha.strip() for linha in _linhas(bruto) if linha.strip()})
+        return codigos or None
     if tipo == LISTA_DE_TEXTO:
         # Lista vazia e ausência são coisas diferentes, e as duas são legítimas: um Perfil pode não
         # exigir nada. O que não é legítimo é o item em branco — `""` publicado afirmaria que
@@ -2320,6 +2355,10 @@ def diferencas(conteudo, dados, *, resumo_do_artefato=None, descricao_do_artefat
                 continue
             if campo["tipo"] == INSTANTE:
                 if _mesmo_instante(anterior, novo_valor):
+                    continue
+            elif campo["tipo"] == ALCANCE:
+                # O conjunto, e não a grafia: a ordem e a repetição não são alteração (T-002).
+                if (novo_valor or None) == (sorted(anterior) if anterior else None):
                     continue
             elif campo["tipo"] == LISTA_DE_TEXTO:
                 # **Comparar pela ida e volta, e não pelo valor cru** (026, achado da revisão).

@@ -256,6 +256,8 @@ def _recusar_o_que_o_ato_acrescenta(edital, base, content):
     except ValueError as exc:
         raise _recusa_de_caminho(exc) from exc
     _recusar_corte_sobre_etapa_com_resultado(edital, base, content)
+    _recusar_alcance_estreitado_sobre_atribuicao(edital, base, content)
+    _recusar_efeito_mudado_apos_desfavoravel(edital, base, content)
     _recusar_criterio_que_a_composicao_recusaria(base, content)
     _recusar_modalidade_que_a_composicao_recusaria(base, content)
 
@@ -360,6 +362,131 @@ def _recusar_corte_sobre_etapa_com_resultado(edital, base, content):
                 f"Etapa '{nomes.get(etapa, etapa)}', que o corte governaria, já tem Resultado "
                 "registrado: o corte excluiria dela quem já foi avaliado. Declare a regra sem "
                 "governar Etapa, ou governando uma Etapa ainda sem Resultado.",
+                422,
+            )
+
+
+def _recusar_alcance_estreitado_sobre_atribuicao(edital, base, content):
+    """O alcance não se estreita sobre inscrição já atribuída ou avaliada (163, FR-6980, D-006).
+
+    É a razão da regra de corte que nasce sobre Etapa com Resultado, logo acima, aplicada ao
+    alcance: estreitar tiraria da Etapa um ato praticado sob a norma publicada. **Ampliar passa**
+    — só acrescenta pendentes (FR-6979) —, e estreitar sem nenhuma Atribuição também. A Atribuição
+    aberta se remove antes, pela distribuição, com motivo; a concluída e o Resultado não se removem,
+    e por isso depois deles o estreitamento fica impossível. Foi a decisão do usuário no clarify de
+    13/11: recusar, e não encerrar em silêncio o trabalho da comissão.
+
+    Roda na elaboração, na edição e na publicação, sob o bloqueio do Edital que a distribuição
+    também toma: ou a Atribuição entra antes e a publicação é recusada, ou a Retificação é publicada
+    antes e a distribuição já lê o alcance novo — nunca as duas.
+    """
+    from django.db.models import Exists, OuterRef, Q
+
+    from processo_seletivo.avaliacoes.models import Atribuicao
+    from processo_seletivo.editais.domain import alcance
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    antes = {
+        str(etapa.get("id")): etapa for etapa in base.get("stages") or [] if isinstance(etapa, dict)
+    }
+    for etapa in content.get("stages") or []:
+        if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
+            continue
+        anterior = antes[str(etapa.get("id"))]
+        depois = alcance.modalidades_alcancadas(content, etapa)
+        if depois is None:
+            continue
+        era = alcance.modalidades_alcancadas(base, anterior)
+        if era is None:
+            saem = ~Q(modality_id__in=list(depois)) | Q(modality_id__isnull=True)
+            codigos = "que ela deixa de alcançar"
+        else:
+            perdidas = era - depois
+            if not perdidas:
+                continue
+            saem = Q(modality_id__in=list(perdidas))
+            perdidos = sorted((alcance.codigos(anterior) or set()) - alcance.codigos(etapa))
+            codigos = ", ".join(f"«{codigo}»" for codigo in perdidos) or "que ela deixa de alcançar"
+        etapa_id = etapa.get("id")
+        quantas = (
+            Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
+            .filter(saem)
+            .filter(
+                Exists(
+                    Atribuicao.objects.filter(
+                        inscricao_id=OuterRef("pk"), etapa_id=etapa_id, ativo=True
+                    )
+                )
+                | Exists(
+                    ResultadoEtapa.vigentes.filter(inscricao_id=OuterRef("pk"), etapa_id=etapa_id)
+                )
+            )
+            .count()
+        )
+        if quantas:
+            quem = (
+                "1 inscrição dessas Modalidades já tem"
+                if quantas == 1
+                else f"{quantas} inscrições dessas Modalidades já têm"
+            )
+            raise DomainError(
+                "stage_scope_narrowed_over_assigned",
+                f"A Retificação tiraria do alcance da Etapa «{etapa.get('name') or ''}» as "
+                f"Modalidades {codigos}, e {quem} Atribuição ou Resultado nessa Etapa. Remova "
+                "antes as Atribuições abertas, pela distribuição; inscrição com avaliação "
+                "concluída ou Resultado não sai do alcance.",
+                422,
+            )
+
+
+def _recusar_efeito_mudado_apos_desfavoravel(edital, base, content):
+    """O efeito do desfecho não muda depois do primeiro Resultado desfavorável (164, FR-7020).
+
+    Depois de aplicado, o efeito decidiu a vida de alguém: trocá-lo daria a dois candidatos com o
+    mesmo desfecho efeitos diferentes, e o Resultado já consolidado não se reescreve. **O
+    impedimento é histórico** (D-008): conta o superado também, porque o desfavorável superado por
+    recurso foi praticado sob aquele efeito — o recurso foi julgado contra ele. Se o impedimento
+    caísse quando todos fossem superados, o fato de alguém ter recorrido decidiria quando a regra
+    pode mudar. A contagem mora no seletor do histórico (`desfavoraveis_registrados`), que é onde a
+    varredura de vigência admite ver o superado.
+
+    Compara o efeito **resolvido** (`resultados/domain/efeito.py`), e não o campo cru: devolver a
+    Etapa a todas as inscrições, ou torná-la não eliminatória, muda o efeito tanto quanto trocar a
+    opção, e o nulo do acervo já é "elimina". Roda na elaboração e na publicação, sob o bloqueio do
+    Processo que a consolidação e a Ocorrência também tomam (FR-7022).
+    """
+    from processo_seletivo.resultados.application.selectors import desfavoraveis_registrados
+    from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
+
+    antes = {
+        str(etapa.get("id")): etapa for etapa in base.get("stages") or [] if isinstance(etapa, dict)
+    }
+    for etapa in content.get("stages") or []:
+        if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
+            continue
+        anterior = antes[str(etapa.get("id"))]
+        mudou = (
+            efeito_do_desfecho.efeito_desfavoravel(anterior),
+            efeito_do_desfecho.efeito_da_ausencia(anterior),
+        ) != (
+            efeito_do_desfecho.efeito_desfavoravel(etapa),
+            efeito_do_desfecho.efeito_da_ausencia(etapa),
+        )
+        if not mudou:
+            continue
+        quantos = desfavoraveis_registrados(edital=edital, etapa_id=etapa.get("id"))
+        if quantos:
+            registrados = (
+                "1 resultado desfavorável"
+                if quantos == 1
+                else f"{quantos} resultados desfavoráveis"
+            )
+            raise DomainError(
+                "stage_effect_changed_after_unfavorable",
+                f"A Retificação mudaria o efeito do desfecho da Etapa «{etapa.get('name') or ''}», "
+                f"que já registrou {registrados}, contando os superados por recurso. O efeito "
+                "aplicado a alguém não muda mais nesta Etapa.",
                 422,
             )
 

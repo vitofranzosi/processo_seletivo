@@ -125,6 +125,11 @@ CAMPOS = {
         "evaluationsPerRegistration": "Avaliações por inscrição",
         "rotuloFavoravel": "Rótulo favorável",
         "rotuloDesfavoravel": "Rótulo desfavorável",
+        # O alcance (163), com o rótulo da tela da Retificação.
+        "modalityCodes": "Modalidades que a Etapa alcança",
+        # O efeito do desfecho (164), com os rótulos da tela da Retificação.
+        "unfavorableOutcomeEffect": "Efeito do desfecho desfavorável",
+        "absenceEffect": "Efeito do não comparecimento",
     },
     "sections": {"title": "Título", "content": "Texto", "order": "Ordem"},
     "attachments": {

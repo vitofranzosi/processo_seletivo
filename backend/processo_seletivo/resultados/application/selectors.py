@@ -14,6 +14,7 @@ consulta a mais não é gargalo.
 
 from collections import defaultdict
 
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 
 
@@ -37,6 +38,41 @@ def habilitadas_em(*, edital, etapa_id):
             edital=edital,
             etapa_id=etapa_id,
             consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+        ).values_list("inscricao_id", flat=True)
+    )
+
+
+def desfavoraveis_registrados(*, edital, etapa_id):
+    """Quantos Resultados desfavoráveis a Etapa já registrou, superados inclusive (164, FR-7020).
+
+    É a pergunta do histórico, e não do efeito: o impedimento de retificar o efeito do desfecho
+    conta o que foi praticado sob ele, e o desfavorável superado por recurso foi. Por isso
+    `objects`, que é o que este módulo admite para o histórico do par.
+    """
+    return ResultadoEtapa.objects.filter(
+        edital=edital,
+        etapa_id=etapa_id,
+        consequencia__in=(
+            ResultadoEtapa.Consequencia.ELIMINADA,
+            ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+        ),
+    ).count()
+
+
+def seguem_de(*, edital, etapa_id):
+    """Identidades com Resultado que deixa seguir: habilitada ou retirada da reserva (164).
+
+    É o conjunto que a exigência de habilitação da anterior lê. `habilitadas_em` continua dizendo só
+    `HABILITADA`, que é o que os demais leitores perguntam.
+    """
+    return set(
+        ResultadoEtapa.vigentes.filter(
+            edital=edital,
+            etapa_id=etapa_id,
+            consequencia__in=(
+                ResultadoEtapa.Consequencia.HABILITADA,
+                ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+            ),
         ).values_list("inscricao_id", flat=True)
     )
 
@@ -252,7 +288,9 @@ def resultados_visiveis(inscricao):
             perfil.get("classificationMilestones") if perfil else None, publicacao.marco_id
         )
         rotulos = {str(item.get("id")): item for item in conteudo.get("stages") or []}
-        for etapa_id in (marco or {}).get("stages") or []:
+        # As enumeradas e, desde a 164, a Etapa restrita que a ordem do marco leu (FR-7031): ela
+        # nunca é enumerada, e a publicação que aplicou a retirada a uma lista é a que a mostra.
+        for etapa_id in efeito_do_desfecho.etapas_lidas_pelo_marco(marco, rotulos):
             # Um marco basta para autorizar: dois marcos que enumerem a mesma Etapa não a mostram
             # duas vezes. O primeiro a chegar carrega o rótulo, e a ordem é a de publicação.
             etapas_autorizadas.setdefault(str(etapa_id), rotulos.get(str(etapa_id)) or {})
@@ -290,6 +328,9 @@ def resultados_visiveis(inscricao):
             "ordem": (etapas_autorizadas.get(str(resultado.etapa_id)) or {}).get("order") or 0,
             "consequencia": resultado.consequencia,
             "habilitada": resultado.consequencia == ResultadoEtapa.Consequencia.HABILITADA,
+            # A retirada da reserva não é habilitação nem eliminação (164, FR-7024): quem a lê no
+            # acompanhamento não pode dizer "Eliminado" a quem continua na ampla.
+            "retirada": resultado.consequencia == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
             "motivo": resultado.motivo,
             # Só quando a forma a tiver: a Etapa decisória não produz número, e a Ocorrência não
             # produz grandeza nenhuma. Inventar um zero afirmaria o que ninguém mediu.

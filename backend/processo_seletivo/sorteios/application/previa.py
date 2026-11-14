@@ -16,7 +16,11 @@ from processo_seletivo.editais.domain.recortes import recortes_do_perfil
 from processo_seletivo.inscricoes.models import Inscricao
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.shared.api.problems import DomainError
-from processo_seletivo.sorteios.application.habilitacao import habilitadas_na_etapa
+from processo_seletivo.sorteios.application.habilitacao import (
+    habilitadas_na_etapa,
+    para_o_recorte,
+    retiradas_antes,
+)
 from processo_seletivo.sorteios.application.selectors import relacao_vigente
 from processo_seletivo.sorteios.domain import metodo as dominio_do_metodo
 from processo_seletivo.sorteios.domain import projecao, substituicao, viabilidade
@@ -38,6 +42,9 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
     # sem o filtro da Etapa de habilitação: onde o Edital declara uma, a comissão via um número e
     # congelava outro, sem que nada explicasse a diferença.
     habilitadas = habilitadas_na_etapa(edital, metodo)
+    # As retiradas da reserva antes da Etapa de habilitação, uma vez para todos os recortes (164,
+    # FR-7030): a prévia percorre todas as listas do Perfil, e cada uma as perguntaria de novo.
+    retiradas = retiradas_antes(edital, metodo, versao.content) if habilitadas is not None else None
     ocorrencia_da_vez, proxima_referencia, descartadas, recusa = _ocorrencia_declarada(metodo)
     # **Os recortes precisam ser distinguíveis na tela** (021, D-006). O primeiro é o recorte sem
     # lista — todos os inscritos do Perfil —, e os demais são as modalidades declaradas, com o
@@ -55,7 +62,17 @@ def recortes_do_marco(*, edital, perfil_id, marco_id, at=None):
         if lista is not None
     ]
     recortes = [
-        _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo)
+        _recorte(
+            edital,
+            perfil_id,
+            marco_id,
+            lista_id,
+            nome,
+            submetidas,
+            habilitadas,
+            metodo,
+            retiradas=retiradas,
+        )
         for lista_id, nome in listas
     ]
     congelar_agora_inviavel = _congelar_agora_inviavel(
@@ -301,12 +318,27 @@ def _diagnostico_da_relacao(vigente, sorteio, metodo_vigente):
     }
 
 
-def _recorte(edital, perfil_id, marco_id, lista_id, nome, submetidas, habilitadas, metodo=None):
+def _recorte(
+    edital,
+    perfil_id,
+    marco_id,
+    lista_id,
+    nome,
+    submetidas,
+    habilitadas,
+    metodo=None,
+    *,
+    retiradas=None,
+):
     vigente = relacao_vigente(
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     projetados = projecao.numerar(
-        projecao.elegiveis(submetidas, lista_id=lista_id, habilitadas=habilitadas)
+        projecao.elegiveis(
+            submetidas,
+            lista_id=lista_id,
+            habilitadas=para_o_recorte(edital, metodo, habilitadas, lista_id, retiradas=retiradas),
+        )
     )
     # **O sorteio é do recorte, e não da relação vigente.** Lê-lo de `vigente.sorteios` funcionava
     # até alguém publicar a relação nova: dali em diante a vigente é a sucessora, que ainda não tem

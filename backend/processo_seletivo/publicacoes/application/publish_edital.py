@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.classificacao.domain import faixa
-from processo_seletivo.editais.domain import secoes
+from processo_seletivo.editais.domain import alcance, secoes
 from processo_seletivo.editais.domain.validation import (
     ATO_DE_PUBLICACAO,
     blocking_findings,
@@ -22,6 +22,7 @@ from processo_seletivo.publicacoes.models import (
     Publicacao,
     RevisaoEdital,
 )
+from processo_seletivo.resultados.domain import efeito
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -67,8 +68,11 @@ def _criteria(etapa) -> list[dict]:
 
 
 def _stages(edital: Edital) -> list[dict]:
-    return [
-        {
+    itens = []
+    # Os critérios numa consulta só, e não uma por Etapa: o conteúdo é montado em toda
+    # submissão, prévia e conferência.
+    for etapa in edital.etapas.prefetch_related("criterios"):
+        item = {
             "id": str(etapa.id),
             "name": etapa.name,
             "order": etapa.order,
@@ -92,11 +96,17 @@ def _stages(edital: Edital) -> list[dict]:
             "scheduleEventId": None if etapa.evento_id is None else str(etapa.evento_id),
             # O barema (146, degrau 21). Lista sempre presente, vazia na Etapa sem critério.
             "criteria": _criteria(etapa),
+            # O alcance (163, degrau 22): `None` é "todas as inscrições"; a forma restrita sai
+            # ordenada, para o resumo não depender da ordem em que alguém marcou (T-002).
+            "modalityCodes": alcance.normalizar(etapa.alcance),
         }
-        # Os critérios numa consulta só, e não uma por Etapa: o conteúdo é montado em toda
-        # submissão, prévia e conferência.
-        for etapa in edital.etapas.prefetch_related("criterios")
-    ]
+        # **O efeito do desfecho** (164, degrau 23). Depende do alcance e do caráter que acabaram de
+        # entrar no dicionário, e por isso vem depois: explícito só na Etapa restrita e
+        # eliminatória, com o vazio do rascunho virando "retira da reserva" (FR-7001); `null` em
+        # toda outra Etapa, que é a grafia do acervo (research T-002).
+        item.update(efeito.publicar(item, etapa.efeito_desfavoravel, etapa.efeito_da_ausencia))
+        itens.append(item)
+    return itens
 
 
 def _sections(edital: Edital) -> list[dict]:
