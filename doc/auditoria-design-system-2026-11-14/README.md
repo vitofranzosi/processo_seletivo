@@ -8,6 +8,10 @@ proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão so
 > quê, está em [06-revisao.md](06-revisao.md). Em resumo: o diagnóstico ficou menos categórico, a
 > medida de largura deixou de ser meta, os ganhos dos protótipos passaram a ser indicativos, as
 > afirmações de acessibilidade se limitam à triagem feita, e o piloto foi reescrito.
+>
+> **Depois da terceira rodada veio a P0** ([08-p0.md](08-p0.md)): as correções críticas no produto, e
+> a nova referência medida sobre elas, contra a qual o piloto se compara. As medidas dos documentos
+> 01 a 05 continuam as de 14/11 sobre `37ed0ad0`.
 
 | Entregável | Arquivo |
 |---|---|
@@ -19,6 +23,7 @@ proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão so
 | F. Plano de convergência | [05-roadmap.md](05-roadmap.md) |
 | Registro da revisão | [06-revisao.md](06-revisao.md) |
 | Estados da Ocupação que a suíte já monta | [07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md) |
+| P0, correções críticas, e a referência do piloto | [08-p0.md](08-p0.md) e [`referencia-p0/`](referencia-p0/) |
 | Capturas | [`capturas/`](capturas/), 94 imagens |
 | Medições e scripts | [`medicoes/`](medicoes/), com o resultado por tela em [`telas.csv`](medicoes/telas.csv) |
 
