@@ -135,8 +135,8 @@ Três conclusões:
 - **[F]** A `066` registrou "agendamento fica fora" do MVP de avisos (`specs/066-avisos-complementares/spec.md:101`).
 - **[F]** O estudo da verificação da autodeclaração (PR #541) deixou de fora a "agenda individual
   da entrevista ao vivo", "porque serve a qualquer entrevista, e não só a esta". As specs `163`
-  (alcance), `164` (efeito por lista) e `165` (deliberação) — as duas primeiras mergeadas em 14/11, a
-  terceira no #545 — fazem da
+  (alcance), `164` (efeito por lista) e `165` (deliberação) — as três mergeadas em 14/11, depois deste
+  diagnóstico — fazem da
   heteroidentificação uma Etapa. **O agendamento é a peça que faltava a elas**, e não concorre com
   nenhuma.
 

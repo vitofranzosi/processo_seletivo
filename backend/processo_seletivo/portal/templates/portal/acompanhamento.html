@@ -171,7 +171,14 @@ As duas coisas são possíveis porque as projeções são duas (FR-017, FR-059).
     descreve. Num resultado favorável o dicionário não tem entrada, e nada nesta tela muda.
   {% endcomment %}
   {% with parecer=parecer_por_resultado|dicionario_simples:etapa.id %}
-  {% if parecer.texto %}
+  {% if parecer.textos %}
+  {% comment %} A deliberação (165, FR-7077, UX-753): cada parecer desfavorável, à parte do motivo e
+     sem o nome de quem o escreveu. A regra e a contagem estão no motivo, logo acima. {% endcomment %}
+  <div class="parecer" role="group" aria-label="Fundamentação da comissão">
+    <p class="rotulo-do-parecer">Fundamentação dos pareceres que decidiram o resultado</p>
+    {% for texto in parecer.textos %}<p class="texto-do-parecer">{{ texto|linebreaksbr }}</p>{% endfor %}
+  </div>
+  {% elif parecer.texto %}
   <div class="parecer" role="group" aria-label="Fundamentação da avaliação">
     <p class="rotulo-do-parecer">Fundamentação escrita por quem avaliou</p>
     <p class="texto-do-parecer">{{ parecer.texto|linebreaksbr }}</p>

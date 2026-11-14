@@ -70,6 +70,7 @@ def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
         )
     _validate_alcance(stage)
     _validate_efeito(stage)
+    _validate_regra_de_deliberacao(stage)
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(
@@ -99,6 +100,31 @@ def _validate_efeito(stage: dict) -> None:
                 campo=campo,
                 identidade=stage.get("id", ""),
             )
+
+
+# Os valores que a gravação aceita para a regra de deliberação (165), na grafia publicada; `None` e
+# `""` são "não declarada".
+REGRAS_DE_DELIBERACAO = (
+    None,
+    "",
+    "MAJORITY",
+    "UNANIMOUS_FOR_FAVORABLE",
+    "UNANIMOUS_FOR_UNFAVORABLE",
+)
+
+
+def _validate_regra_de_deliberacao(stage: dict) -> None:
+    """A forma da regra de deliberação, na gravação (165, contrato `recusas.md`).
+
+    Que só a Etapa decisória com várias avaliações a declare, e que a maioria peça número ímpar,
+    é da publicação: o rascunho pode estar no meio da composição, com a regra antes do número.
+    """
+    if stage.get("deliberationRule") not in REGRAS_DE_DELIBERACAO:
+        raise StageValidationError(
+            f"A regra de deliberação da Etapa «{_nome_da_etapa(stage)}» não é uma das previstas.",
+            campo="deliberationRule",
+            identidade=stage.get("id", ""),
+        )
 
 
 def _validate_alcance(stage: dict) -> None:

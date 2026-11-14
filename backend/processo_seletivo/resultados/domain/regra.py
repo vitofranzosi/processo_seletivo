@@ -21,6 +21,7 @@ from processo_seletivo.avaliacoes.domain.previsao import (
     forma_publicada,
     rotulos,
 )
+from processo_seletivo.resultados.domain import deliberacao
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 HABILITADA = "HABILITADA"
@@ -70,7 +71,11 @@ def impedimento_da_regra(etapa):
     "decisória sem efeito" seria deixar a consequência para quem implementa decidir.
     """
     previstas = avaliacoes_previstas(etapa)
-    if previstas > 1:
+    # **A Etapa colegiada tem a regra que faltava** (165, FR-7050, FR-7064): decisória, com várias
+    # avaliações e a regra de deliberação publicada. Ela segue para as conferências da decisória,
+    # abaixo — a regra diz o sentido, e não o que o desfavorável produz. A pontuada com várias, e a
+    # decisória do acervo sem regra, continuam impedidas: combinar notas é outra decisão.
+    if previstas > 1 and not deliberacao.colegiada(etapa):
         return (
             REGRA_DE_COMBINACAO_AUSENTE,
             f"o Edital prevê {previstas} avaliações para esta Etapa e não declara como combiná-las",
@@ -107,6 +112,11 @@ def consequencia(etapa, conclusao):
     Na forma pontuada, a comparação é decimal e nunca de ponto flutuante: nota **exatamente igual**
     à mínima habilita, e é o caso em que o arredondamento binário decidiria a vida de alguém.
     """
+    if isinstance(conclusao, deliberacao.Deliberacao):
+        # A deliberação (165): o sentido sai da regra, e o motivo diz a regra e a contagem
+        # (FR-7066). O que o desfavorável produz é o de sempre, pelo efeito da Etapa (FR-7064).
+        consequencia_, _ = _consequencia_decisoria(etapa, conclusao.sentido)
+        return (consequencia_, deliberacao.motivo(etapa, conclusao))
     if forma_publicada(etapa) == Forma.DECISORIA:
         return _consequencia_decisoria(etapa, conclusao.sentido)
     pontuacao = conclusao.pontuacao

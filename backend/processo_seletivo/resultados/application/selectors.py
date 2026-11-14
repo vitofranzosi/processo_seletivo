@@ -59,6 +59,79 @@ def desfavoraveis_registrados(*, edital, etapa_id):
     ).count()
 
 
+def resultados_por_avaliacao_registrados(*, edital, etapa_id):
+    """Quantos Resultados por avaliação a Etapa já registrou, superados inclusive (165, FR-7073).
+
+    Os de uma avaliação e os deliberados: a regra decide também o favorável (D-008), e por isso o
+    impedimento de retificá-la conta todos, e não só os desfavoráveis. `objects`, pela razão de
+    `desfavoraveis_registrados`: é a pergunta do histórico.
+    """
+    return ResultadoEtapa.objects.filter(
+        edital=edital,
+        etapa_id=etapa_id,
+        origem__in=(ResultadoEtapa.Origem.AVALIACAO, ResultadoEtapa.Origem.DELIBERACAO),
+    ).count()
+
+
+def pareceres_da_deliberacao(resultado):
+    """As Avaliações que formaram a deliberação, na ordem de conclusão (165, FR-7065).
+
+    Vazio para todo Resultado que não é deliberado. Quem lê a autoria — a presidência, a auditoria,
+    a autoridade recursal — a lê daqui; quem não pode lê-la, o titular, recebe só o texto, por
+    `recursos.application.selectors.pareceres_do_titular` (FR-7081).
+    """
+    from processo_seletivo.avaliacoes.models import Avaliacao
+
+    if getattr(resultado, "origem", None) != ResultadoEtapa.Origem.DELIBERACAO:
+        return []
+    return list(
+        Avaliacao.objects.filter(deliberacao__resultado=resultado)
+        .select_related("atribuicao")
+        .order_by("concluida_em", "id")
+    )
+
+
+def pareceristas_das_deliberacoes(resultados):
+    """`{resultado_id: [subject]}` dos Resultados deliberados de uma página, numa consulta (165).
+
+    A gestão vê quem deu cada parecer (FR-7081); a tela de Resultados precisa disso para não dizer
+    "ninguém avaliou" de um Resultado que três pessoas formaram. Vazio, sem consulta, quando a
+    página não tem Resultado deliberado.
+    """
+    from processo_seletivo.resultados.models import ParecerDaDeliberacao
+
+    deliberados = [r.pk for r in resultados if r.origem == ResultadoEtapa.Origem.DELIBERACAO]
+    if not deliberados:
+        return {}
+    autores = {}
+    for resultado_id, subject in (
+        ParecerDaDeliberacao.objects.filter(resultado_id__in=deliberados)
+        .order_by("avaliacao__concluida_em", "avaliacao_id")
+        .values_list("resultado_id", "avaliacao__identity_subject")
+    ):
+        autores.setdefault(resultado_id, []).append(subject)
+    return autores
+
+
+def reproduzir_deliberacao(resultado):
+    """A deliberação refeita a partir do que o Resultado gravou (165, FR-7065, SC-2351).
+
+    Lê os pareceres ligados e a regra da versão que o Resultado cita — e não a vigente: é a norma
+    sob a qual o ato foi praticado. Quem a compara com o Resultado prova que ele se reproduz.
+    """
+    from processo_seletivo.avaliacoes.domain.previsao import etapa_do_conteudo
+    from processo_seletivo.resultados.domain import deliberacao
+
+    etapa = etapa_do_conteudo(resultado.versao.content, resultado.etapa_id)
+    pareceres = pareceres_da_deliberacao(resultado)
+    return deliberacao.Deliberacao(
+        regra=deliberacao.regra_publicada(etapa),
+        sentidos=tuple(str(item.sentido) for item in pareceres),
+        pareceres=tuple(item.id for item in pareceres),
+        versao_id=resultado.versao_id,
+    )
+
+
 def seguem_de(*, edital, etapa_id):
     """Identidades com Resultado que deixa seguir: habilitada ou retirada da reserva (164).
 

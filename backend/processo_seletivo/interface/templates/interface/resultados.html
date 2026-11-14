@@ -74,7 +74,7 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         texto, e texto à direita sozinho, numa coluna que mistura os dois, parece desalinhado.
         {% endcomment %}
         <td{% if resultado.forma == "PONTUADA" %} class="numero"{% endif %}>{% if resultado.forma == "DECISORIA" %}{% if resultado.sentido == "DESFAVORAVEL" %}{{ rotulo_desfavoravel }}{% else %}{{ rotulo_favoravel }}{% endif %}{% elif resultado.forma == "PONTUADA" %}{{ resultado.pontuacao|pontuacao }}{% else %}<span class="ajuda">não avaliada</span>{% endif %}</td>
-        <td>{% if resultado.origem == "OCORRENCIA" %}Ocorrência{% else %}Avaliação{% endif %}</td>
+        <td>{% if resultado.origem == "OCORRENCIA" %}Ocorrência{% elif resultado.origem == "DELIBERACAO" %}Deliberação da comissão{% else %}Avaliação{% endif %}</td>
         <td>{{ resultado.get_consequencia_display }}</td>
         <td class="motivo-da-prontidao">
           {{ resultado.motivo }}
@@ -132,7 +132,8 @@ além de tornar indistinguíveis, para a varredura de vocabulário, a página qu
         na coluna ao lado, que é a presidência que o constatou (D-1).
         {% endcomment %}
         <td>{% if resultado.avaliacao_id %}{% nome_de_pessoa resultado.avaliacao.concluida_por %}<br>
-          <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span>{% else %}<span class="ajuda">ninguém: não houve avaliação</span>{% endif %}</td>
+          <span class="ajuda">em {{ resultado.avaliacao.concluida_em|date:"d/m/Y H:i" }}</span>{% elif resultado.pareceristas %}{% for subject in resultado.pareceristas %}{% nome_de_pessoa subject %}{% if not forloop.last %}, {% endif %}{% endfor %}<br>
+          <span class="ajuda">pareceres da comissão, pela regra publicada</span>{% else %}<span class="ajuda">ninguém: não houve avaliação</span>{% endif %}</td>
         <td>{% nome_de_pessoa resultado.consolidado_por %}<br>
           <span class="ajuda">em {{ resultado.consolidado_em|date:"d/m/Y H:i" }}</span></td>
         {% comment %}

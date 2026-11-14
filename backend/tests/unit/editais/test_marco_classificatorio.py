@@ -39,6 +39,7 @@ def etapa(identificador, *, classificatory, weight="1.0000"):
         "modalityCodes": None,
         "unfavorableOutcomeEffect": None,
         "absenceEffect": None,
+        "deliberationRule": None,
     }
 
 

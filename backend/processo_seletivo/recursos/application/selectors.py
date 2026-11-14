@@ -716,9 +716,22 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
         ConclusaoAvaliacao, [linha.avaliacao_id for linha in linhas if linha.avaliacao_id]
     )
 
+    deliberacoes = textos_das_deliberacoes(linhas)
     lido = {}
     for linha in linhas:
-        texto = parecer_que_fundamenta(linha, conclusoes.get(linha.avaliacao_id, ()))
+        textos = []
+        if linha.origem == ResultadoEtapa.Origem.DELIBERACAO:
+            # **Os pareceres desfavoráveis da deliberação, sem autoria** (165, FR-7077, D-009): é
+            # contra eles que se recorre. Os favoráveis ficam na contagem do motivo, e o nome de
+            # quem escreveu não vai a lugar nenhum desta leitura.
+            textos = [
+                texto
+                for avaliacao, texto in deliberacoes.get(linha.pk, [])
+                if avaliacao.sentido == "DESFAVORAVEL" and texto
+            ]
+            texto = "\n\n".join(textos)
+        else:
+            texto = parecer_que_fundamenta(linha, conclusoes.get(linha.avaliacao_id, ()))
         if not texto:
             lido[linha.pk] = {"estado": AUSENTE, "texto": "", "aviso": NAO_HOUVE_PARECER}
             continue
@@ -727,7 +740,7 @@ def pareceres_do_titular(inscricao, resultados, *, agora=None):
         # foi lido com `resultado_atacado_id__in`: peça contra outro resultado, e peça contra a
         # publicação, não entram no conjunto e não reabrem este parecer.
         if prazo == PRAZO_ABERTO or linha.pk in pendentes:
-            lido[linha.pk] = {"estado": VISIVEL, "texto": texto, "aviso": ""}
+            lido[linha.pk] = {"estado": VISIVEL, "texto": texto, "textos": textos, "aviso": ""}
             continue
         aviso = POR_QUE_NAO_APARECE if prazo == PRAZO_NAO_ADMITIDO else POR_QUE_SAIU
         lido[linha.pk] = {"estado": ENCERRADO, "texto": "", "aviso": aviso}
@@ -756,6 +769,48 @@ def parecer_que_fundamenta(resultado, conclusoes=()):
             return (conclusao.parecer or "").strip()
     avaliacao = resultado.avaliacao
     return (avaliacao.parecer or "").strip() if avaliacao is not None else ""
+
+
+def textos_das_deliberacoes(resultados):
+    """`{resultado_id: [(avaliação, texto)]}` dos Resultados deliberados, em duas consultas (165).
+
+    **O texto é o da conclusão que fundamentou o Resultado**, pela regra de `parecer_que_fundamenta`
+    aplicada a cada parecer: uma reabertura posterior não troca o que o titular lê. A autoria viaja
+    na Avaliação, e é quem chama que decide se a mostra — a autoridade recursal, sim; o titular,
+    nunca (FR-7081). Duas consultas para o lote, e não duas por Resultado: o acompanhamento tem
+    orçamento, e um titular pode ter Resultado deliberado em mais de uma Etapa.
+    """
+    from processo_seletivo.avaliacoes.models import Avaliacao, ConclusaoAvaliacao
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    deliberados = {
+        resultado.pk: resultado
+        for resultado in resultados
+        if resultado.origem == ResultadoEtapa.Origem.DELIBERACAO
+    }
+    if not deliberados:
+        return {}
+    pareceres = list(
+        Avaliacao.objects.filter(deliberacao__resultado_id__in=deliberados)
+        .select_related("deliberacao")
+        .order_by("concluida_em", "id")
+    )
+    conclusoes = _conclusoes_por_avaliacao(ConclusaoAvaliacao, [item.id for item in pareceres])
+    textos = {identidade: [] for identidade in deliberados}
+    for avaliacao in pareceres:
+        resultado = deliberados[avaliacao.deliberacao.resultado_id]
+        texto = (avaliacao.parecer or "").strip()
+        for conclusao in conclusoes.get(avaliacao.id, ()):
+            if conclusao.concluida_em <= resultado.consolidado_em:
+                texto = (conclusao.parecer or "").strip()
+                break
+        textos[resultado.pk].append((avaliacao, texto))
+    return textos
+
+
+def textos_da_deliberacao(resultado):
+    """`[(avaliação, texto)]` de um Resultado deliberado — o lote de um só."""
+    return textos_das_deliberacoes([resultado]).get(resultado.pk, [])
 
 
 def _conclusoes_por_avaliacao(modelo, avaliacao_ids):

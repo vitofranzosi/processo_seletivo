@@ -19,7 +19,7 @@ from processo_seletivo.editais.domain.marcos import POR_SORTEIO
 from processo_seletivo.editais.domain.perfis import identidade_da_linha_geral, listas_reservadas
 from processo_seletivo.editais.models.cronograma import EventoCronograma
 from processo_seletivo.publicacoes.infrastructure import pdf
-from processo_seletivo.resultados.domain import efeito
+from processo_seletivo.resultados.domain import deliberacao, efeito
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.decimais import no_campo as _no_campo
 from processo_seletivo.shared.tempo import ZONA as ZONA_INSTITUCIONAL
@@ -878,7 +878,19 @@ def ler_etapas(dados):
             }
         )
         etapas[-1].update(_efeito(dados, base, etapas[-1]))
+        etapas[-1]["deliberationRule"] = _regra_de_deliberacao(dados, base, etapas[-1])
     return _renumerar(etapas)
+
+
+def _regra_de_deliberacao(dados, base, etapa):
+    """A regra enviada (165, UX-750), na grafia publicada; `None` fora da Etapa colegiada.
+
+    **Lida só na decisória com mais de uma avaliação**, pela razão do efeito: sem `:has`, o grupo
+    aparece sempre, e uma opção esquecida ali não pode declarar regra onde ela não vale.
+    """
+    if not deliberacao.decisoria_com_varias(etapa):
+        return None
+    return _texto(dados, f"{base}-regraDeDeliberacao") or None
 
 
 #: As duas opções do alcance na composição (163, UX-730).
@@ -1758,6 +1770,8 @@ def etapas_do_edital(edital):
             "unfavorableOutcomeEffect": efeito.da_coluna(etapa.efeito_desfavoravel)
             or efeito.PUBLICADO[efeito.RETIRA_DA_RESERVA],
             "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia) or "",
+            # A regra de deliberação (165): o vazio é "não declarada", e nada nasce marcado.
+            "deliberationRule": deliberacao.da_coluna(etapa.regra_de_deliberacao) or "",
             # O barema (146), no formato que o cartão desenha: números sem zeros à direita.
             "criteria": [
                 {
@@ -1879,6 +1893,8 @@ def etapas_persistidas(edital):
             # ele apagaria a escolha de quem elaborou.
             "unfavorableOutcomeEffect": efeito.da_coluna(etapa.efeito_desfavoravel),
             "absenceEffect": efeito.da_coluna(etapa.efeito_da_ausencia),
+            # A regra de deliberação (165), pela mesma razão do efeito.
+            "deliberationRule": deliberacao.da_coluna(etapa.regra_de_deliberacao),
             # **E o barema, pela razão de tudo nesta lista** (146, risco 2 do plano): sem ele,
             # gravar Perfis, Cronograma ou Inscrição depois de compor a ficha a apagaria em
             # silêncio — `replace_draft` recria as Etapas, e a `CASCADE` leva os critérios junto.

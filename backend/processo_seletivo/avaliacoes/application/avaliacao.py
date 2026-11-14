@@ -499,6 +499,14 @@ def _recusar_se_fundamenta_resultado(avaliacao):
         ResultadoEtapa.objects.filter(avaliacao=avaliacao).select_related("inscricao").first()
     )
     if resultado is None:
+        # **O parecer que formou uma deliberação também fundamenta** (165, T-012). Reabri-lo
+        # trocaria, depois do ato, o texto que o titular lê e a contagem que o Resultado grava.
+        resultado = (
+            ResultadoEtapa.objects.filter(pareceres_da_deliberacao__avaliacao=avaliacao)
+            .select_related("inscricao")
+            .first()
+        )
+    if resultado is None:
         return
     protocolo = resultado.inscricao.protocolo or str(resultado.inscricao_id)
     nome_da_etapa = _nome_da_etapa(resultado)
@@ -533,6 +541,28 @@ def _recusar_se_fundamenta_resultado(avaliacao):
         "novo, sem alterar este.",
         409,
     )
+
+
+PARECER_EXPOSTO = (
+    "O parecer não pode ser reaberto: quem o deu já teve acesso aos pareceres dos colegas sobre "
+    "esta inscrição. Para corrigi-lo, inative a Atribuição e atribua a inscrição a outro membro."
+)
+
+
+def _recusar_se_o_autor_foi_exposto(avaliacao):
+    """A reabertura devolveria à pendência quem já sabe o que os colegas decidiram (165, FR-7083).
+
+    O caminho de correção é o de hoje para trocar quem avalia: a inativação da Atribuição por ato
+    nomeado, com motivo, e a atribuição a outro membro não exposto (FR-092 da `012`).
+    """
+    from processo_seletivo.avaliacoes.application import cegas
+
+    atribuicao = avaliacao.atribuicao
+    autor = avaliacao.identity_subject or avaliacao.concluida_por
+    if cegas.pares_expostos(
+        atribuicao.edital_id, atribuicao.etapa_id, [autor], [atribuicao.inscricao_id]
+    ):
+        raise DomainError("parecer_exposto", PARECER_EXPOSTO, 409)
 
 
 def _reavaliacao_pendente(resultado):
@@ -620,6 +650,7 @@ def reabrir(
                 "Só uma avaliação concluída pode ser reaberta.",
                 409,
             )
+        _recusar_se_o_autor_foi_exposto(avaliacao)
         compare_and_swap(
             Avaliacao.objects,
             pk=avaliacao.pk,

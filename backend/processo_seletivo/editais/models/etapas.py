@@ -14,6 +14,16 @@ EFEITOS_DO_DESFECHO = [
     ("ELIMINA", "É eliminado do processo seletivo"),
 ]
 
+# As três regras de deliberação que a P-3 oferece (165, D-001): o Edital escolhe uma, sem padrão.
+REGRAS_DE_DELIBERACAO = [
+    ("MAIORIA", "Favorável quando a maioria dos pareceres é favorável"),
+    ("UNANIMIDADE_PARA_O_FAVORAVEL", "Favorável só quando todos os pareceres são favoráveis"),
+    (
+        "UNANIMIDADE_PARA_O_DESFAVORAVEL",
+        "Desfavorável só quando todos os pareceres são desfavoráveis",
+    ),
+]
+
 
 class EtapaAvaliacao(models.Model):
     """Fase pela qual os candidatos passam.
@@ -80,6 +90,13 @@ class EtapaAvaliacao(models.Model):
     efeito_da_ausencia = models.CharField(
         max_length=20, blank=True, default="", choices=EFEITOS_DO_DESFECHO
     )
+    # **A regra de deliberação** (165, FR-7050). Só a Etapa decisória com mais de uma avaliação por
+    # inscrição a declara, e o vazio é "não declarada" — **sem padrão** (D-002): a escolha entre as
+    # três é da CPVA, e a coluna não responde por ela. A publicação recusa a Etapa colegiada sem
+    # regra, e não grava regra nas demais (research T-002).
+    regra_de_deliberacao = models.CharField(
+        max_length=40, blank=True, default="", choices=REGRAS_DE_DELIBERACAO
+    )
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(
@@ -130,6 +147,17 @@ class EtapaAvaliacao(models.Model):
             models.CheckConstraint(
                 condition=Q(efeito_da_ausencia__in=("", "RETIRA_DA_RESERVA", "ELIMINA")),
                 name="ck_etapa_efeito_da_ausencia",
+            ),
+            models.CheckConstraint(
+                condition=Q(
+                    regra_de_deliberacao__in=(
+                        "",
+                        "MAIORIA",
+                        "UNANIMIDADE_PARA_O_FAVORAVEL",
+                        "UNANIMIDADE_PARA_O_DESFAVORAVEL",
+                    )
+                ),
+                name="ck_etapa_regra_de_deliberacao",
             ),
         ]
 

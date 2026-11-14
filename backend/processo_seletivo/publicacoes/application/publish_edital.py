@@ -22,7 +22,7 @@ from processo_seletivo.publicacoes.models import (
     Publicacao,
     RevisaoEdital,
 )
-from processo_seletivo.resultados.domain import efeito
+from processo_seletivo.resultados.domain import deliberacao, efeito
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
@@ -105,6 +105,10 @@ def _stages(edital: Edital) -> list[dict]:
         # eliminatória, com o vazio do rascunho virando "retira da reserva" (FR-7001); `null` em
         # toda outra Etapa, que é a grafia do acervo (research T-002).
         item.update(efeito.publicar(item, etapa.efeito_desfavoravel, etapa.efeito_da_ausencia))
+        # **A regra de deliberação** (165, degrau 24): explícita só na Etapa decisória com várias
+        # avaliações, e `null` nas demais (research T-002). Sem padrão: o vazio continua `null`, e
+        # é a conferência que recusa a Etapa colegiada sem regra (FR-7051).
+        item.update(deliberacao.publicar(item, etapa.regra_de_deliberacao))
         itens.append(item)
     return itens
 

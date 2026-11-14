@@ -25,7 +25,7 @@ R-26 e modelo mínimo), protótipo navegável e plano de entregas.
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-084 da `010`"). Uma decisão de outra feature é citada pelo assunto e pela feature.
 > **A `163`, a `164` e a `165` são citadas só pelo assunto.** Quando esta spec foi escrita, nenhuma
-> estava na `main`; a `163` e a `164` entraram no mesmo dia (#542, #543), e a `165` segue no #545.
+> estava na `main`; as três entraram no mesmo dia, depois dela (#542, #543, #545).
 
 ---
 

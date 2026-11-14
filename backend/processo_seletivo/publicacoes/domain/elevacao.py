@@ -58,6 +58,10 @@ DEGRAUS = {
     # eliminatória, é "elimina" — o que ela produzia quando foi publicada —, e não o padrão novo,
     # que só vale para o que se compõe (`resultados/domain/efeito.py`).
     23: {"unfavorableOutcomeEffect": None, "absenceEffect": None},
+    # **O degrau 24 é a regra de deliberação** (165, FR-7054). `None` é verdade sobre todo Edital
+    # anterior: a capacidade não existia, e a Etapa com várias avaliações era impedida. Ler o nulo
+    # como uma das regras mudaria norma publicada sem Retificação (D-002).
+    24: {"deliberationRule": None},
 }
 
 # **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção

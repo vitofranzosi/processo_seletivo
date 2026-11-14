@@ -44,6 +44,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
 from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
+from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
@@ -4482,6 +4483,10 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 # das demais é o que recompõe o acervo byte a byte (SC-2330).
                 if frase := efeito_do_desfecho.frase_do_efeito(etapa):
                     composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                # A regra de deliberação (165, FR-7075): só a Etapa colegiada; a frase vazia das
+                # demais é o que recompõe o acervo byte a byte (SC-2350).
+                if frase := deliberacao_da_etapa.frase_da_regra(etapa):
+                    composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
                 tabela_do_barema(composicao, etapa, snapshot, tabelas)
                 continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
@@ -4516,6 +4521,9 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             # O efeito do desfecho (164, FR-7023), pela mesma régua: só quando declarado.
             if frase := efeito_do_desfecho.frase_do_efeito(etapa):
                 pares.append(["Efeito", frase])
+            # A regra de deliberação (165, FR-7075), pela mesma régua: só quando declarada.
+            if frase := deliberacao_da_etapa.frase_da_regra(etapa):
+                pares.append(["Deliberação", frase])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

@@ -145,6 +145,7 @@ def julgar(
         # se **recorreu**, e responde outra pergunta.
         versao = selecao_publica(edital_id=peca.inscricao.edital_id)
         protegido = _protegido(peca, especie, etapa_id, assinatura_do_resultado)
+        _recusar_reavaliacao_colegiada(especie, protegido, versao, etapa_id)
         efeito, motivo_da_regra, conclusao = _conclusao(
             peca, versao, especie, etapa_id, pontuacao, sentido, criterios
         )
@@ -207,6 +208,32 @@ def julgar(
             )
         finish(reserva, decisao, 201)
         return decisao, sucessor
+
+
+REAVALIACAO_COLEGIADA = (
+    "A reavaliação determinada não está disponível contra o Resultado de uma Etapa colegiada. O "
+    "recurso pode ser decidido por correção fixada, informando o desfecho."
+)
+
+
+def _recusar_reavaliacao_colegiada(especie, protegido, versao, etapa_id):
+    """Na Etapa colegiada, o recurso corrige o desfecho, e não reavalia (165, FR-7071, D-007).
+
+    **Antes de gravar**: a reserva de idempotência nasceu nesta transação e some com a recusa, e
+    nenhuma decisão impossível de cumprir chega a existir. **E sem converter**: se quem julga quer
+    uma nova avaliação, a correção fixada não é a mesma coisa, e escolher outra espécie é dele. Quem
+    reavalia, com que composição e por que procedimento é a P-5.
+    """
+    from processo_seletivo.avaliacoes.domain.previsao import etapa_do_conteudo
+    from processo_seletivo.resultados.domain import deliberacao
+
+    if especie != DecisaoRecurso.Especie.REAVALIACAO_DETERMINADA:
+        return
+    colegiada = getattr(protegido, "origem", None) == ResultadoEtapa.Origem.DELIBERACAO or (
+        deliberacao.colegiada(etapa_do_conteudo(versao.content, etapa_id))
+    )
+    if colegiada:
+        raise DomainError("reavaliacao_colegiada_indisponivel", REAVALIACAO_COLEGIADA, 422)
 
 
 def _especie(valor):
