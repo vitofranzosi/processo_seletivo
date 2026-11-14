@@ -1069,7 +1069,6 @@ O bloco do assistente, **só se esta máquina for atender o piloto do assistente
 Sem ele, nada muda: o assistente fica desligado.
 
 ```
-ASSISTENTE_PILOTO=false
 ASSISTENTE_SERVICO=ollama
 ASSISTENTE_ENDERECO=http://<HOST_DO_OLLAMA>:11434
 ASSISTENTE_MODELO=<MODELO>
@@ -1080,8 +1079,8 @@ ASSISTENTE_TETO_SIMULTANEO=2
 ASSISTENTE_TOKENIZER=/var/lib/processoseletivo/assistente/tokenizer.json
 ```
 
-- **`ASSISTENTE_SERVICO` é `ollama`, em minúsculas.** Produção recusa qualquer outro com o piloto
-  ligado, e o OpenRouter é só do desenvolvimento.
+- **`ASSISTENTE_SERVICO` é `ollama`, em minúsculas.** Produção recusa qualquer outro sempre que houver
+  serviço declarado, e o OpenRouter é só do desenvolvimento.
 - **`ASSISTENTE_ENDERECO` vai na raiz**, sem `/api` no fim: o sistema acrescenta o caminho.
 - **`ASSISTENTE_MODELO`** é o nome exato que `ollama list` mostra na L4, e
   **`ASSISTENTE_QUANTIZACAO`** é a quantização como o Ollama a escreve, por exemplo `Q4_K_M`. Os
@@ -1095,8 +1094,16 @@ ASSISTENTE_TOKENIZER=/var/lib/processoseletivo/assistente/tokenizer.json
   `processoseletivo`. E **a release precisa da biblioteca do tokenizer**: no `ps-construir` (§8.3),
   a linha do `uv sync` ganha `--extra assistente` — o mesmo grupo de dependências que a máquina da
   equipe instala. Sem as duas coisas, toda pergunta termina em "falta o tokenizer do modelo".
-- **`ASSISTENTE_PILOTO=true`** liga o assistente para quem tem o papel do piloto. É decisão do
-  piloto, e não da implantação: os passos 5, 6 e 9 funcionam com ele desligado.
+- **Nenhuma variável liga o assistente.** Com o bloco completo, o assistente continua desligado até o
+  Administrador institucional habilitá-lo na página "Assistente do Edital" da gestão, com motivo. É
+  decisão institucional, e não da implantação: os passos 5, 6 e 9 funcionam sem ela. A página diz
+  se a configuração está completa, mas não testa a conexão — isso é deste roteiro. A página pública
+  da seleção não abre em produção. **`ASSISTENTE_PILOTO=true` é recusado**: era a chave que ligava o
+  piloto, e passou a ser um atalho só da máquina de desenvolvimento. Se o arquivo de ambiente de uma
+  instalação antiga a tiver, apague a linha.
+- **Antes do deploy desta versão**, liste quem tem o papel de Administrador institucional: ele passa
+  a poder habilitar o assistente. Se houver alguém, a ampliação precisa de autorização expressa, ou
+  o papel é retirado antes, como na passagem do registro de Unidades.
 
 #### 2. Pré-voo
 

@@ -130,6 +130,10 @@
   // da conversa, as duas mudam juntas.
   function trocarConversa(html) {
     var nova = new DOMParser().parseFromString(html, "text/html");
+    // Sem conversa na resposta, a página não tem mais o painel: o assistente foi encerrado nesta
+    // seleção (170, FR-7524). Trocar nada deixaria a pessoa esperando; a página que o servidor
+    // mandou, com o aviso, é a que ela precisa ver.
+    if (!nova.getElementById("pd-conversa")) return false;
     ["pd-conversa", "pd-versao"].forEach(function (id) {
       var veio = nova.getElementById(id);
       if (veio) document.getElementById(id).replaceWith(veio);
@@ -137,6 +141,7 @@
     var titulos = conversa().querySelectorAll(".pd-troca .pd-pergunta");
     conversa().scrollTop = conversa().scrollHeight;
     if (titulos.length) focar(titulos[titulos.length - 1]);
+    return true;
   }
 
   // Delegado no painel: a conversa é trocada a cada resposta, e os formulários dela com ela.
@@ -164,7 +169,10 @@
       .then(function (resposta) {
         if (!resposta.ok) throw new Error(String(resposta.status));
         return resposta.text().then(function (html) {
-          trocarConversa(html);
+          if (!trocarConversa(html)) {
+            window.location.assign(resposta.url);
+            return;
+          }
           history.replaceState(null, "", resposta.url);
         });
       })

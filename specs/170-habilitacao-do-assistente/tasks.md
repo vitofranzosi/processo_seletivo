@@ -44,8 +44,8 @@ PostgreSQL.
 
 ## Fase 4 — O percurso e a documentação
 
-- [ ] T018 O teste de navegador do percurso (SC-2451).
-- [ ] T019 `CLAUDE.md`/`AGENTS.md`, guia de implantação, `.env.example`, notas na `071` e na `074`,
+- [x] T018 O teste de navegador do percurso (SC-2451).
+- [x] T019 `CLAUDE.md`/`AGENTS.md`, guia de implantação, `.env.example`, notas na `071` e na `074`,
   README e `rastreabilidade.md` (FR-7536, FR-7537).
 - [ ] T020 `make lint check test-pg`.
 - [ ] T021 A demonstração com o serviço real, com capturas (SC-2457).

@@ -6,7 +6,8 @@
 **Created**: 2026-11-14
 
 **Status**: Especificada em 14/11. Revista no mesmo dia com as respostas do usuário às perguntas Q-1
-a Q-4 e com o recorte da entrega. Planejada; a implementação espera a aprovação do plano.
+a Q-4 e com o recorte da entrega. Planejada, com o plano aprovado pelo usuário, e implementada em
+14/11 (#553, sem merge). O SC-2457, a demonstração com o serviço real, é critério humano.
 
 **Input**: a decisão do usuário de 14/11/2026, ao discutir a verificação por vídeo da `166`: *"a
 habilitação poderia ser via interface no sistema; o mesmo se aplica ao assistente de IA"*. Ele pediu
