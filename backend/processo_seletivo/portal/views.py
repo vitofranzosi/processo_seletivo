@@ -93,7 +93,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.portal import assistente as assistente_do_edital
 from processo_seletivo.portal import desfecho as desfecho_em_frases
 from processo_seletivo.portal import identidade as identidade_do_candidato
-from processo_seletivo.portal import leitura, obrigacoes
+from processo_seletivo.portal import leitura, obrigacoes, passo_da_etapa
 from processo_seletivo.portal import requerimento as formulario_do_requerimento
 from processo_seletivo.portal import situacao as situacao_da_inscricao
 from processo_seletivo.portal.arquivos import entregar_ao_titular
@@ -122,7 +122,6 @@ from processo_seletivo.shared.arquivos import tamanho_legivel
 from processo_seletivo.shared.http import marcar_como_privada, resposta_privada
 from processo_seletivo.sorteios.application.selectors import sorteios_do_edital
 from processo_seletivo.unidades.application import identificacao
-from processo_seletivo.verificacao.application import disponibilidade as verificacao_por_video
 
 # O limite da coluna, aplicado antes de a gravação chegar ao banco.
 LIMITE_DO_TELEFONE = 30
@@ -2083,12 +2082,6 @@ def acompanhamento(request, inscricao_id):
         "portal/acompanhamento.html",
         {
             "inscricao": registro,
-            # **A verificação por vídeo** (166, FR-7145): o acesso à página, e não o degrau da
-            # situação, que é da entrega 4. Sem Etapa que admita o vídeo no conteúdo já lido,
-            # nenhuma consulta a mais.
-            "verificacoes": verificacao_por_video.situacoes_do_titular(
-                registro, conteudo=versao.content
-            ),
             "selecao": _selecao(versao),
             # **A situação antes de tudo** (063, FR-1166): Situação → Por quê → O que fazer, saída
             # de uma função pura sobre o que esta view já leu — nenhuma consulta a mais (D-007).
@@ -2108,6 +2101,15 @@ def acompanhamento(request, inscricao_id):
                 politica_do_requerimento=politica,
                 obrigacoes=obrigacoes_da_convocacao,
                 inscricao_publicada=_inscricao_publicada(registro),
+                # **O passo que falta numa Etapa restrita** (168, FR-7300): derivado aqui, sobre o
+                # conteúdo vigente já lido; sem Etapa restrita que alcance a inscrição, nenhuma
+                # consulta (FR-7311). Absorve o cartão de acesso ao vídeo da `166` (FR-7314).
+                passos=passo_da_etapa.passos_da_inscricao(
+                    registro,
+                    conteudo=versao.content,
+                    resultados_visiveis=resultados_das_etapas,
+                    agora=agora,
+                ),
             ),
             # **A convocação, aberta ou concluída** (059, `FR-1093`). Mostrá-la aqui **não** grava
             # leitura na trilha: a trilha responde "a pessoa abriu a convocação?", e a resposta

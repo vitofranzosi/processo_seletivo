@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from processo_seletivo.editais.domain.perfis import RecusaDeCampo
 
@@ -49,3 +50,36 @@ def validate_schedule(events: list[dict]) -> None:
         raise ScheduleValidationError("Eventos não podem repetir ordem no Cronograma.")
     for event in events:
         validate_event(event)
+
+
+def periodo_da_etapa(conteudo, etapa) -> tuple:
+    """`(inicio, fim)` do Evento que a Etapa aponta, no conteúdo dado; `(None, None)` sem ele.
+
+    **Do conteúdo que quem chama já leu, e não relido** (168, T-002): o degrau do acompanhamento,
+    as pendências do Centro e a linha de avaliar leem o período de toda Etapa da página, e reler a
+    versão vigente custaria uma consulta por Etapa. Nasceu na `166`, dentro do app do vídeo, e veio
+    para cá quando a `168` precisou dele para toda Etapa (achado A-2 da `168`).
+
+    O Evento cancelado não é período: a Etapa que aponta para ele não tem quando acontecer.
+    """
+    alvo = str((etapa or {}).get("scheduleEventId") or "")
+    evento = next(
+        (
+            item
+            for item in (conteudo or {}).get("schedule") or []
+            if alvo and isinstance(item, dict) and str(item.get("id")) == alvo
+        ),
+        None,
+    )
+    if not evento or evento.get("status") == CANCELADO:
+        return None, None
+    inicio = _instante(evento.get("startAt"))
+    fim = _instante(evento.get("endAt"))
+    return inicio, fim
+
+
+def _instante(valor):
+    """O instante do conteúdo publicado (texto) ou do rascunho (`datetime`)."""
+    if not valor:
+        return None
+    return valor if hasattr(valor, "tzinfo") else parse_datetime(str(valor))

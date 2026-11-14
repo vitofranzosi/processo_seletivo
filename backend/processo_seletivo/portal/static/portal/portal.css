@@ -1362,7 +1362,7 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 /* Celular primeiro: coluna única, botões de largura cheia, a câmera em retrato, e os botões da
    gravação dentro da primeira tela a 375 px (UX-771). Nenhuma cor sozinha diz estado: o passo atual
    é negrito e marcado, o feito é riscado, e o selo diz "Gravando" por extenso. */
-.verificacao,.verificacao-estado,.verificacao-no-acompanhamento,.comprovante-do-video{max-width:var(--leitura);}
+.verificacao,.verificacao-estado,.comprovante-do-video{max-width:var(--leitura);}
 .verificacao-tela{margin:0 0 1.5rem;}
 .verificacao-tela p{margin:.5rem 0;}
 .opcoes-do-meio{display:grid;gap:.75rem;margin:1rem 0;}
@@ -1397,8 +1397,6 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .dados-do-video dt{font-weight:600;margin-top:.4rem;}
 .dados-do-video dd{margin:0;min-width:0;}
 .resumo-do-video{word-break:break-all;}
-.verificacao-no-acompanhamento{margin:1.5rem 0;padding:1rem;border:1px solid var(--borda);border-radius:6px;
-  background:var(--branco);}
 @media (min-width:48rem){
   .opcoes-do-meio{grid-template-columns:1fr 1fr;}
   .dados-do-video{grid-template-columns:auto 1fr;column-gap:1rem;}

@@ -15,8 +15,8 @@ from uuid import UUID
 
 from django.conf import settings
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 
+from processo_seletivo.editais.domain.cronograma import periodo_da_etapa
 from processo_seletivo.verificacao.domain import admissao
 from processo_seletivo.verificacao.models import (
     AberturaDoVideo,
@@ -73,25 +73,8 @@ def _uuid(valor):
 
 
 def periodo(conteudo, etapa) -> tuple:
-    """`(inicio, fim)` do Evento que a Etapa aponta, no conteúdo dado; `(None, None)` sem ele.
-
-    Do conteúdo que quem chama já leu, e não relido (achado 8 do code review do #547): o vigente
-    custava uma consulta da Versão Consolidada a mais por Etapa, em toda rota do envio.
-    """
-    alvo = str(etapa.get("scheduleEventId") or "")
-    evento = next(
-        (
-            item
-            for item in (conteudo or {}).get("schedule") or []
-            if alvo and isinstance(item, dict) and str(item.get("id")) == alvo
-        ),
-        None,
-    )
-    if not evento:
-        return None, None
-    inicio = parse_datetime(evento["startAt"]) if evento.get("startAt") else None
-    fim = parse_datetime(evento["endAt"]) if evento.get("endAt") else None
-    return inicio, fim
+    """`(inicio, fim)` do Evento que a Etapa aponta; mora em `editais` desde a `168` (T-002)."""
+    return periodo_da_etapa(conteudo, etapa)
 
 
 def video_vigente(*, edital, etapa_id, inscricao_id):
@@ -227,19 +210,3 @@ def dentro_da_tolerancia(situacao_) -> bool:
         and situacao_.fim
         and situacao_.inicio <= agora <= situacao_.fim + TOLERANCIA
     )
-
-
-def situacoes_do_titular(inscricao, *, conteudo) -> list[Situacao]:
-    """As situações da inscrição em toda Etapa que admite o vídeo e a alcança (FR-7145).
-
-    `conteudo` é o que a tela já leu: sem Etapa que admita o vídeo nele — toda Etapa de hoje —,
-    nenhuma consulta a mais, e o orçamento do acompanhamento não muda.
-    """
-    if not settings.VERIFICACAO_POR_VIDEO or not etapas_que_admitem(conteudo):
-        return []
-    resultado = []
-    for etapa in etapas_que_admitem(conteudo):
-        item = situacao(inscricao=inscricao, etapa=etapa, conteudo=conteudo)
-        if item is not None:
-            resultado.append(item)
-    return resultado

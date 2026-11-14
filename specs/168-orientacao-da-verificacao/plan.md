@@ -63,7 +63,7 @@ sobe uma.
 **Project Type**: aplicação web, backend com templates.
 
 **Performance Goals**: zero consulta a mais no acompanhamento e no Centro quando nenhuma Etapa restrita
-existe. Por Etapa restrita: até 4 consultas no acompanhamento (participação reduzida, parecer,
+existe. Por Etapa restrita: até 6 consultas no acompanhamento (participação reduzida, parecer,
 Resultado) e até 4 no Centro (carga por membro, avisados).
 
 **Constraints**: a CSP sem `unsafe-inline`; tudo em português; `situacao_da_inscricao` continua pura;

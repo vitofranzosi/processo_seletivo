@@ -470,7 +470,8 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
   por membro alocado: o nome e quantas Atribuições ativas dele estão sem parecer concluído naquela Etapa.
   NUNCA o sentido de parecer algum, nem de quem são os pareceres já concluídos de uma inscrição.
 - **FR-7322**: Na Etapa restrita, a Etapa DEVE aparecer no Centro pelo nome publicado, com a frase do
-  alcance já usada na distribuição ("alcança só …: N de M inscrições"), e nenhuma pendência desta spec
+  alcance já usada na distribuição ("N inscrições alcançadas, de M: a Etapa só se aplica a algumas
+  Modalidades"), e nenhuma pendência desta spec
   DEVE existir quando nenhuma inscrição é alcançada.
 - **FR-7323**: Na Etapa restrita publicada, enquanto o período não termina e há inscrições do universo
   da FR-7318 que nunca receberam o aviso do passo confirmado, o Centro DEVE mostrar a pendência "Avisar N
