@@ -41,6 +41,24 @@ def habilitadas_em(*, edital, etapa_id):
     )
 
 
+def seguem_de(*, edital, etapa_id):
+    """Identidades com Resultado que deixa seguir: habilitada ou retirada da reserva (164).
+
+    É o conjunto que a exigência de habilitação da anterior lê. `habilitadas_em` continua dizendo só
+    `HABILITADA`, que é o que os demais leitores perguntam.
+    """
+    return set(
+        ResultadoEtapa.vigentes.filter(
+            edital=edital,
+            etapa_id=etapa_id,
+            consequencia__in=(
+                ResultadoEtapa.Consequencia.HABILITADA,
+                ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+            ),
+        ).values_list("inscricao_id", flat=True)
+    )
+
+
 def eliminadas_ate(*, edital, etapas_ids):
     """Identidades eliminadas em **qualquer** das Etapas dadas.
 

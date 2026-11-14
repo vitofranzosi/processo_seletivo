@@ -53,6 +53,11 @@ DEGRAUS = {
     # `None`, e não a lista de todos os códigos, porque a lista mudaria de sentido na primeira
     # Retificação que acrescentasse Modalidade.
     22: {"modalityCodes": None},
+    # **O degrau 23 é o efeito do desfecho** (164, D-002, FR-7005). `None` nos dois é verdade sobre
+    # todo Edital anterior: a capacidade não existia. E a leitura do nulo, na Etapa restrita e
+    # eliminatória, é "elimina" — o que ela produzia quando foi publicada —, e não o padrão novo,
+    # que só vale para o que se compõe (`resultados/domain/efeito.py`).
+    23: {"unfavorableOutcomeEffect": None, "absenceEffect": None},
 }
 
 # **O degrau 7 não é de Etapa, e é o primeiro que não é.** A leva da `015` acrescentou uma coleção

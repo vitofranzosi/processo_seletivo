@@ -33,8 +33,12 @@ LINHA_PPI = "00000000-0000-4000-8000-000000001634"
 LINHA_PCD = "00000000-0000-4000-8000-000000001635"
 
 
-def rascunho_com_alcance(seed, *, alcance=("PPI",)):
-    """O rascunho do Edital acima. `alcance=None` publica a mesma Etapa para todas."""
+def rascunho_com_alcance(seed, *, alcance=("PPI",), efeito=None, efeito_da_ausencia=None):
+    """O rascunho do Edital acima. `alcance=None` publica a mesma Etapa para todas.
+
+    `efeito` e `efeito_da_ausencia` são os da `164`, na grafia publicada; `None` é "não declarado",
+    que a publicação grava como "retira da reserva" na Etapa restrita (FR-7001).
+    """
     rascunho = rascunho_com_etapas(seed, avaliacoes=1, maxima="100.0000", minima=NOTA_MINIMA)
     analise, prova = etapas(seed, avaliacoes=1, maxima="100.0000", minima=NOTA_MINIMA)
     rascunho["stages"] = [
@@ -50,6 +54,8 @@ def rascunho_com_alcance(seed, *, alcance=("PPI",)):
             "rotuloFavoravel": "Confirmada",
             "rotuloDesfavoravel": "Não confirmada",
             "modalityCodes": None if alcance is None else list(alcance),
+            "unfavorableOutcomeEffect": efeito,
+            "absenceEffect": efeito_da_ausencia,
         },
         {**prova, "order": 3},
     ]
@@ -68,7 +74,16 @@ def rascunho_com_alcance(seed, *, alcance=("PPI",)):
 
 
 def montar_com_alcance(
-    gestor, api_client, manager_headers, *, seed, codigo, alcance=("PPI",), avaliador="joao"
+    gestor,
+    api_client,
+    manager_headers,
+    *,
+    seed,
+    codigo,
+    alcance=("PPI",),
+    avaliador="joao",
+    efeito=None,
+    efeito_da_ausencia=None,
 ):
     """Publica, constitui a comissão e aloca o avaliador nas três Etapas."""
     edital = publish_original(
@@ -79,7 +94,9 @@ def montar_com_alcance(
             "title": f"Processo {codigo}",
             "firstEdital": {"number": codigo, "year": 2026, "title": f"Edital {codigo}"},
         },
-        draft=rascunho_com_alcance(seed, alcance=alcance),
+        draft=rascunho_com_alcance(
+            seed, alcance=alcance, efeito=efeito, efeito_da_ausencia=efeito_da_ausencia
+        ),
     )
     processo = edital.processo
     membros = constituir(

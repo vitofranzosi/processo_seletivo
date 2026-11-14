@@ -291,6 +291,15 @@ class StageSerializer(serializers.Serializer):
         allow_empty=True,
         default=None,
     )
+    # O efeito do desfecho (164, FR-7000, FR-7004). `null` e ausência são "não declarado". O valor
+    # fora das escolhas **passa** por aqui, pela razão do alcance acima: quem o recusa, com a
+    # mensagem do contrato, é `validate_stage`.
+    unfavorableOutcomeEffect = serializers.CharField(
+        max_length=20, required=False, allow_null=True, allow_blank=True, default=None
+    )
+    absenceEffect = serializers.CharField(
+        max_length=20, required=False, allow_null=True, allow_blank=True, default=None
+    )
     # O barema (146, FR-5213). **Ausente é sem critérios**, e o preço é o de todo campo deste
     # contrato: quem lê o rascunho e o reenvia sem a chave apaga a ficha. É a regra que a API já
     # tem para as outras coleções, e a única grafia que a FR-5213 admite.

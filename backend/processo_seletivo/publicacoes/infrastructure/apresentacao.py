@@ -37,6 +37,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure import pdf as composicao_pdf
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 # Natureza dos itens numerados que só esta apresentação tem (R-003): a subseção textual (membro) e
 # a gerada (requisitos, atribuições, regras de classificação, dados do sorteio).
@@ -671,6 +672,9 @@ def _parte(composicao, snapshot, plano_, secao, parte, tabelas):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
         # O alcance (163, FR-6983), pela régua da apresentação plana: só a Etapa restrita.
         if frase := alcance_da_etapa.frase_do_alcance(snapshot, parte.etapa):
+            _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
+        # O efeito do desfecho (164, FR-7023), logo depois do alcance que o torna possível.
+        if frase := efeito_do_desfecho.frase_do_efeito(parte.etapa):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
         # O barema logo depois da frase da Etapa, pelo mesmo compositor da apresentação plana
         # (146, FR-5209). Sem critério, nada é escrito.

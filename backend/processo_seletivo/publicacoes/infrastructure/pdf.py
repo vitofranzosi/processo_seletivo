@@ -44,6 +44,7 @@ from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
 )
 from processo_seletivo.publicacoes.infrastructure import brasao, humano
 from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 LARGURA, ALTURA = 595, 842  # A4 em pontos
 MARGEM = 56
@@ -4477,6 +4478,10 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 # todas sai com o texto de antes, e é o que recompõe o acervo byte a byte (D-008).
                 if frase := alcance_da_etapa.frase_do_alcance(snapshot, etapa):
                     composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                # O efeito do desfecho (164, FR-7023): só a Etapa que o declara; a frase vazia
+                # das demais é o que recompõe o acervo byte a byte (SC-2330).
+                if frase := efeito_do_desfecho.frase_do_efeito(etapa):
+                    composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
                 tabela_do_barema(composicao, etapa, snapshot, tabelas)
                 continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
@@ -4508,6 +4513,9 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
             if alcance_da_etapa.restrita(etapa):
                 nomes = alcance_da_etapa.nomes_do_alcance(snapshot, etapa)
                 pares.append(["Alcance", f"Somente candidatos inscritos em {nomes}"])
+            # O efeito do desfecho (164, FR-7023), pela mesma régua: só quando declarado.
+            if frase := efeito_do_desfecho.frase_do_efeito(etapa):
+                pares.append(["Efeito", frase])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

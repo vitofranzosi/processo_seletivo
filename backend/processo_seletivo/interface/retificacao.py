@@ -434,7 +434,22 @@ CAMPOS_ETAPA = [
     # O alcance (163, FR-6967, FR-6979, FR-6980): estreitar sobre inscrição já atribuída é recusado
     # na gravação e na publicação, por `retificacoes.py`.
     ("modalityCodes", "Modalidades que a Etapa alcança", ALCANCE),
+    # O efeito do desfecho (164, FR-7006, FR-7020): trocá-lo depois do primeiro Resultado
+    # desfavorável é recusado na gravação e na publicação, por `retificacoes.py`. A opção vazia é o
+    # `null` publicado: na Etapa que não declara efeito, e na ausência, "o mesmo efeito".
+    ("unfavorableOutcomeEffect", "Efeito do desfecho desfavorável", REFERENCIA),
+    ("absenceEffect", "Efeito do não comparecimento", REFERENCIA),
 ]
+EFEITOS_DO_DESFAVORAVEL = (
+    ("", "Não declarado"),
+    ("RESERVE_REMOVAL", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
+    ("ELIMINATION", "É eliminado do processo seletivo"),
+)
+EFEITOS_DA_AUSENCIA = (
+    ("", "O mesmo efeito do desfecho desfavorável"),
+    ("RESERVE_REMOVAL", "Deixa de concorrer pela reserva e continua na ampla concorrência"),
+    ("ELIMINATION", "É eliminado do processo seletivo"),
+)
 # O barema da Etapa (146, FR-5210): todo campo do critério, com os rótulos da seção Barema da
 # composição. A igualdade da soma com a máxima da Etapa não é campo — é a conferência do conteúdo
 # consolidado que a cobra, e por isso acrescentar um critério pede alterar a máxima no mesmo ato.
@@ -1634,6 +1649,10 @@ def campos_editaveis(conteudo, *, descricao_do_artefato=None):
                 CAMPOS_ETAPA,
                 tipo="Etapa",
                 nome=nome,
+                opcoes={
+                    "unfavorableOutcomeEffect": EFEITOS_DO_DESFAVORAVEL,
+                    "absenceEffect": EFEITOS_DA_AUSENCIA,
+                },
             )
         )
         # O barema da Etapa, um cartão por critério, logo abaixo dela (146, FR-5210). Removível:

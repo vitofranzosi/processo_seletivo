@@ -42,6 +42,7 @@ from processo_seletivo.publicacoes.application.selectors import effective_versio
 from processo_seletivo.resultados.application.consolidacao import Recusa
 from processo_seletivo.resultados.application.prontidao import participacao
 from processo_seletivo.resultados.application.selectors import inscricoes_com_resultado
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.models import ResultadoEtapa
 from processo_seletivo.shared.api.problems import DomainError
 
@@ -177,6 +178,13 @@ def registrar_ocorrencia(
         inscricoes = _participantes_da_selecao(edital, etapa["id"], ids, participantes)
         ja_resolvidas = inscricoes_com_resultado(edital=edital, etapa_id=etapa["id"])
 
+        # **O efeito da ausência** (164, FR-7009): na Etapa restrita, o que o Edital declarou para o
+        # não comparecimento — por padrão, o mesmo do desfavorável —; nas demais, `ELIMINADA`, a
+        # decisão desta feature que continua valendo. A Etapa vem do conteúdo vigente no ato, que é
+        # a norma que fundamenta a constatação.
+        consequencia = efeito_do_desfecho.consequencia_do_efeito(
+            efeito_do_desfecho.efeito_da_ausencia(etapa)
+        )
         criados, recusas = [], []
         for inscricao in inscricoes:
             if inscricao.id in ja_resolvidas:
@@ -197,8 +205,14 @@ def registrar_ocorrencia(
                 forma="",
                 pontuacao=None,
                 sentido="",
-                consequencia=ResultadoEtapa.Consequencia.ELIMINADA,
-                motivo=texto,
+                consequencia=consequencia,
+                motivo=(
+                    efeito_do_desfecho.motivo_com_a_reserva(
+                        texto, versao.content, inscricao.modality_id
+                    )
+                    if consequencia == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA
+                    else texto
+                ),
                 consolidado_em=ctx.now,
                 consolidado_por=actor.subject,
             )

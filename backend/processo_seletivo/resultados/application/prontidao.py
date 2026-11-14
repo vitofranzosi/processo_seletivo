@@ -39,9 +39,10 @@ from processo_seletivo.resultados.application.selectors import (
     conteudos_das_versoes,
     eliminadas_ate,
     ha_resultado_em,
-    habilitadas_em,
     inscricoes_com_resultado,
+    seguem_de,
 )
+from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.domain.compatibilidade import incompatibilidade
 from processo_seletivo.resultados.domain.progressao import etapas_anteriores
 from processo_seletivo.resultados.domain.regra import impedimento_da_regra
@@ -51,6 +52,10 @@ from processo_seletivo.resultados.models import ResultadoEtapa
 # apenas um. `PENDENTE` e `CONSOLIDADO` da spec aparecem aqui como ausência e presença de linha —
 # não há coluna de workflow, e ela não diria nada que a existência do Resultado já não diga.
 ELIMINADA_ANTES = "eliminada-antes"
+# **O que satisfaz a exigência de habilitação da anterior** (164, FR-7011). A retirada da reserva
+# não é eliminação: a inscrição continua na ampla, e as Etapas seguintes são da ampla também.
+# Tratá-la como não habilitada a pararia na Etapa seguinte, e a ampla seria letra morta.
+SEGUEM = ("HABILITADA", "RETIRADA_DA_RESERVA")
 AGUARDANDO_ANTERIOR = "aguardando-anterior"
 CONSOLIDADA = "consolidada"
 PRONTA = "pronta"
@@ -133,7 +138,11 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None, conteudo=None):
         .annotate(
             na_faixa=ExpressionWrapper(
                 _dentro_da_faixa(
-                    faixas, OuterRef("pk"), OuterRef("profile_id"), OuterRef("modality_id")
+                    faixas,
+                    OuterRef("pk"),
+                    OuterRef("profile_id"),
+                    OuterRef("modality_id"),
+                    _que_retiram(vigentes, etapa_id),
                 ),
                 output_field=BooleanField(),
             ),
@@ -177,7 +186,7 @@ def participacao_detalhada(*, edital, etapa_id, vigentes=None, conteudo=None):
     for exigir, incluir, excluir in casos:
         if exigir is None:
             continue
-        habilitadas = habilitadas_em(edital=edital, etapa_id=exigir)
+        habilitadas = seguem_de(edital=edital, etapa_id=exigir)
         aguardando |= {
             identidade
             for identidade in submetidas - eliminadas - habilitadas
@@ -377,7 +386,7 @@ def _do_recorte(faixas, perfil, modalidade):
     return faixas.filter(perfil_id=perfil).filter(Q(lista_id__isnull=True) | Q(lista_id=modalidade))
 
 
-def _dentro_da_faixa(faixas, referencia, perfil, modalidade):
+def _dentro_da_faixa(faixas, referencia, perfil, modalidade, retiram=()):
     """A condição inteira, **incluindo a dormência e o recorte** — sem perguntar antes se há corte.
 
     **A correlação com o Perfil é o que impede o corte de um alcançar os outros.** A Etapa é do
@@ -396,15 +405,50 @@ def _dentro_da_faixa(faixas, referencia, perfil, modalidade):
     # Um queryset já correlacionado, usado como `corte__in=...`, vira subconsulta de subconsulta: o
     # `OuterRef` passaria a resolver contra `ItemDoCorte`, e o Django recusa com `FieldError`. Aqui
     # cada `OuterRef` sobe exatamente um nível, que é o que ele sabe fazer.
-    return ~Exists(_do_recorte(faixas, perfil, modalidade)) | Exists(
-        ItemDoCorte.objects.filter(
-            Q(corte__lista_id__isnull=True) | Q(corte__lista_id=modalidade),
-            inscricao_id=referencia,
-            corte__in=faixas,
-            corte__perfil_id=perfil,
-            consequencia=ItemDoCorte.Consequencia.PROGREDIU,
+    if not retiram:
+        return ~Exists(_do_recorte(faixas, perfil, modalidade)) | Exists(
+            ItemDoCorte.objects.filter(
+                Q(corte__lista_id__isnull=True) | Q(corte__lista_id=modalidade),
+                inscricao_id=referencia,
+                corte__in=faixas,
+                corte__perfil_id=perfil,
+                consequencia=ItemDoCorte.Consequencia.PROGREDIU,
+            )
         )
+    # **A retirada da reserva conta só pela faixa da ampla** (164, FR-7013). Quem uma Etapa
+    # anterior tirou da lista reservada não concorre mais por ela, e estar na faixa dela não o faz
+    # participar da Etapa governada; a faixa da ampla, sim. As três metades ficam na mesma
+    # subconsulta correlacionada: nenhuma consulta a mais, e só onde alguma anterior retira — sem
+    # isso a condição é a de antes, palavra por palavra.
+    progrediu = ItemDoCorte.objects.filter(
+        inscricao_id=referencia,
+        corte__in=faixas,
+        corte__perfil_id=perfil,
+        consequencia=ItemDoCorte.Consequencia.PROGREDIU,
     )
+    retirada = ResultadoEtapa.vigentes.filter(
+        inscricao_id=referencia,
+        etapa_id__in=list(retiram),
+        consequencia=ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA,
+    )
+    return (
+        ~Exists(_do_recorte(faixas, perfil, modalidade))
+        | Exists(progrediu.filter(corte__lista_id__isnull=True))
+        | (Exists(progrediu.filter(corte__lista_id=modalidade)) & ~Exists(retirada))
+    )
+
+
+def _que_retiram(vigentes, etapa_id):
+    """As Etapas anteriores que podem retirar da reserva — as que declaram o efeito (164).
+
+    Vazio em todo Edital sem Etapa restrita e eliminatória que retire, e é isso que deixa a condição
+    da faixa idêntica à de antes nele (`_dentro_da_faixa`).
+    """
+    return [
+        identidade
+        for identidade, etapa in etapas_anteriores(vigentes, etapa_id)
+        if efeito_do_desfecho.pode_retirar(etapa)
+    ]
 
 
 def _anteriores_e_gate(edital, etapa_id, vigentes=None, conteudo=None):
@@ -425,7 +469,7 @@ def _anteriores_e_gate(edital, etapa_id, vigentes=None, conteudo=None):
         vigentes = {UUID(str(etapa["id"])): etapa for etapa in conteudo.get("stages") or []}
     anteriores = [identidade for identidade, _ in etapas_anteriores(vigentes, etapa_id)]
     casos, proprio = _casos_da_progressao(edital, etapa_id, vigentes, conteudo)
-    return anteriores, casos, conteudo, proprio
+    return anteriores, casos, conteudo, proprio, _que_retiram(vigentes, etapa_id)
 
 
 def _casos_da_progressao(edital, etapa_id, vigentes=None, conteudo=None):
@@ -564,7 +608,9 @@ def restringir_a_participantes(
     anterior satisfaz as duas metades separadamente, e sairia do conjunto de uma Etapa em que
     deveria estar. `Exists` amarra Etapa e consequência na mesma linha, que é o que a regra diz.
     """
-    anteriores, casos, lido, proprio = _anteriores_e_gate(edital, etapa_id, vigentes, conteudo)
+    anteriores, casos, lido, proprio, retiram = _anteriores_e_gate(
+        edital, etapa_id, vigentes, conteudo
+    )
     conteudo = conteudo or lido
     referencia = OuterRef(f"{prefixo}_id") if prefixo else OuterRef("pk")
     campo = f"{prefixo}__modality_id" if prefixo else "modality_id"
@@ -600,7 +646,7 @@ def restringir_a_participantes(
                 ResultadoEtapa.vigentes.filter(
                     inscricao_id=referencia,
                     etapa_id=exigir,
-                    consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+                    consequencia__in=SEGUEM,
                 )
             )
             parte = habilitada if parte is None else parte & habilitada
@@ -623,6 +669,7 @@ def restringir_a_participantes(
             referencia,
             perfil,
             modalidade,
+            retiram,
         )
     )
     return consulta
@@ -634,7 +681,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
     Duas perguntas de existência no pior caso, e nenhuma listagem passa por aqui: o docstring de
     `autorizacao.py` registra que listagem usa a forma em conjunto, e é ela que está acima.
     """
-    anteriores, casos, conteudo, proprio = _anteriores_e_gate(edital, etapa_id, vigentes)
+    anteriores, casos, conteudo, proprio, retiram = _anteriores_e_gate(edital, etapa_id, vigentes)
     modalidade = None
     if proprio is not None or len(casos) > 1:
         modalidade = (
@@ -659,6 +706,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
                 OuterRef("pk"),
                 OuterRef("profile_id"),
                 OuterRef("modality_id"),
+                retiram,
             )
         )
         .exists()
@@ -673,7 +721,7 @@ def participa_da_etapa(*, edital, etapa_id, inscricao_id, vigentes=None):
     return ResultadoEtapa.vigentes.filter(
         inscricao_id=inscricao_id,
         etapa_id=exigir,
-        consequencia=ResultadoEtapa.Consequencia.HABILITADA,
+        consequencia__in=SEGUEM,
     ).exists()
 
 

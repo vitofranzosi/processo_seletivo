@@ -249,6 +249,52 @@
     </fieldset>
   </div>
   {% comment %}
+  O efeito do desfecho (164, UX-740, UX-741). Só na Etapa restrita e eliminatória: a folha esconde o
+  grupo quando a Etapa alcança todas ou não é eliminatória, e onde `:has` não existir ele aparece
+  sempre, com o servidor ignorando as opções da Etapa que não declara efeito. O desfavorável nasce em
+  "deixa de concorrer pela reserva" (FR-7001); a ausência, em "o mesmo efeito" (FR-7004).
+  {% endcomment %}
+  <div class="campos dependentes so-restrita so-eliminatoria">
+    <fieldset class="opcoes">
+      <legend>O que acontece com quem tem desfecho desfavorável nesta Etapa?</legend>
+      {% recusa_de recusas "etapa" indice "unfavorableOutcomeEffect" as recusado_efeito %}
+      {% if recusado_efeito %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-unfavorableOutcomeEffect">{{ recusado_efeito }}</span>{% endif %}
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDesfavoravel-retira"
+               name="etapa-{{ indice }}-efeitoDesfavoravel" value="RESERVE_REMOVAL"
+               {% if etapa_linha.unfavorableOutcomeEffect != "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDesfavoravel-retira">Deixa de concorrer pela reserva e continua na ampla concorrência</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDesfavoravel-elimina"
+               name="etapa-{{ indice }}-efeitoDesfavoravel" value="ELIMINATION"
+               {% if etapa_linha.unfavorableOutcomeEffect == "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDesfavoravel-elimina">É eliminado do processo seletivo</label>
+      </p>
+    </fieldset>
+    <fieldset class="opcoes">
+      <legend>E com quem não comparecer?</legend>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-mesmo"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value=""
+               {% if not etapa_linha.absenceEffect %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-mesmo">O mesmo efeito</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-retira"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value="RESERVE_REMOVAL"
+               {% if etapa_linha.absenceEffect == "RESERVE_REMOVAL" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-retira">Deixa de concorrer pela reserva e continua na ampla concorrência</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-efeitoDaAusencia-elimina"
+               name="etapa-{{ indice }}-efeitoDaAusencia" value="ELIMINATION"
+               {% if etapa_linha.absenceEffect == "ELIMINATION" %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-efeitoDaAusencia-elimina">É eliminado do processo seletivo</label>
+      </p>
+    </fieldset>
+  </div>
+  {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
   só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
   esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema

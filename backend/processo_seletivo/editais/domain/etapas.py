@@ -69,11 +69,36 @@ def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
             identidade=stage.get("id", ""),
         )
     _validate_alcance(stage)
+    _validate_efeito(stage)
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(
             "A Etapa referencia um Evento que não existe no Cronograma deste Edital."
         )
+
+
+# Os valores que a gravação aceita para os dois efeitos (164), na grafia publicada; `None` e `""`
+# são "não declarado".
+EFEITOS = (None, "", "RESERVE_REMOVAL", "ELIMINATION")
+
+
+def _validate_efeito(stage: dict) -> None:
+    """A forma dos dois efeitos do desfecho, na gravação (164, contrato `recusas.md`).
+
+    Que só a Etapa restrita e eliminatória os declare é da publicação (`efeito_sem_reserva`): o
+    rascunho pode estar no meio da composição, com o alcance marcado antes do caráter.
+    """
+    nome = _nome_da_etapa(stage)
+    for campo, texto in (
+        ("unfavorableOutcomeEffect", "do desfecho desfavorável"),
+        ("absenceEffect", "do não comparecimento"),
+    ):
+        if stage.get(campo) not in EFEITOS:
+            raise StageValidationError(
+                f"O efeito {texto} da Etapa «{nome}» não é um dos previstos.",
+                campo=campo,
+                identidade=stage.get("id", ""),
+            )
 
 
 def _validate_alcance(stage: dict) -> None:
