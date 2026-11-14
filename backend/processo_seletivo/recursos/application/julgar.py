@@ -40,6 +40,7 @@ cumprimento se prova pela citação que o ato sucessor carrega, quando ele é pu
 from django.db import IntegrityError, transaction
 
 from processo_seletivo.avaliacoes.application.trilha import auditar
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.publicacoes.application.selectors import selecao_publica
 from processo_seletivo.recursos.application.porta import exigir_elegibilidade, travar
 from processo_seletivo.recursos.domain.consequencia import derivar
@@ -150,7 +151,10 @@ def julgar(
         if efeito == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA:
             # O motivo diz a reserva perdida e a ampla mantida (164, FR-7008), como na consolidação.
             motivo_da_regra = efeito_do_desfecho.motivo_com_a_reserva(
-                motivo_da_regra, versao.content, peca.inscricao.modality_id
+                motivo_da_regra,
+                nome_da_modalidade(
+                    versao.content, peca.inscricao.profile_id, peca.inscricao.modality_id
+                ),
             )
         _recusar_se_piora(especie, protegido, efeito, conclusao)
 

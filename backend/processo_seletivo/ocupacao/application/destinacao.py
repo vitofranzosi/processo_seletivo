@@ -194,7 +194,7 @@ def _condicao(*, edital, perfil_id, marco_id, lista_id, versao, efetivas):
         edital=edital, perfil_id=perfil_id, marco_id=marco_id, lista_id=lista_id
     )
     habilitadas = selectors.habilitadas_pelo_corte(
-        edital=edital, corte=corte, progrediram=progrediram
+        edital=edital, corte=corte, progrediram=progrediram, conteudo=versao.content
     )
     efeitos = efeitos_de_ocupacao.efeitos_lidos_por(
         efeitos_de_ocupacao.efeitos_do_recorte(

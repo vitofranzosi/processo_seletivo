@@ -74,7 +74,6 @@ INVENTARIO = {
     # O que se lê.
     "interface/relatorio_do_edital.py": f"{TRATA_AS_TRES}: as retiradas contadas à parte",
     "interface/views.py": f"{TRATA_AS_TRES}: os nomes das três na confirmação da consolidação",
-    "interface/conferencia_da_ordem.py": f"{TRATA_AS_TRES}: os nomes das três",
     "interface/previa_da_classificacao.py": (
         "a prévia não simula retirada (FR-7026): os candidatos fictícios só são eliminados"
     ),

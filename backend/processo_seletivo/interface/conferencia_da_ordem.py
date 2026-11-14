@@ -17,11 +17,15 @@ sempre que há Resultado vigente da Etapa, com ou sem pontuação (`universo_cla
 
 from processo_seletivo.classificacao.domain import universo_classificavel
 
-ROTULOS_DA_CONSEQUENCIA = {
-    "HABILITADA": "Habilitada",
-    "ELIMINADA": "Eliminada",
-    "RETIRADA_DA_RESERVA": "Retirada da reserva",
-}
+
+def _rotulo_da_consequencia(consequencia):
+    """O nome da consequência, e não o enum (164): o rótulo do próprio modelo, uma grafia só."""
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    try:
+        return ResultadoEtapa.Consequencia(consequencia).label
+    except ValueError:
+        return consequencia
 
 
 def resumo(proposta):
@@ -68,7 +72,7 @@ def resumo(proposta):
             {
                 "motivo": motivo,
                 # O nome, e não o enum (164): "retirada_da_reserva" em minúsculas não é palavra.
-                "consequencia": ROTULOS_DA_CONSEQUENCIA.get(consequencia, consequencia),
+                "consequencia": _rotulo_da_consequencia(consequencia),
                 "protocolos": protocolos,
             }
             for (motivo, consequencia), protocolos in grupos.items()

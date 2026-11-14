@@ -519,7 +519,7 @@ def habilitadas_na_etapa(*, edital, etapa_id):
     }
 
 
-def habilitadas_pelo_corte(*, edital, corte, progrediram):
+def habilitadas_pelo_corte(*, edital, corte, progrediram, conteudo=None):
     """Quem o recorte conta como habilitado, lido pela Etapa que o corte **declarou** governar.
 
     **O corte que declara não governar Etapa é legítimo** (014, `FR-224`): é o marco terminal —
@@ -537,14 +537,16 @@ def habilitadas_pelo_corte(*, edital, corte, progrediram):
     apuração não conta — ou o inverso.
     """
     if corte is not None and corte.etapa_governada_id is None:
-        return set(progrediram) - retiradas_da_reserva(edital=edital, corte=corte)
+        return set(progrediram) - retiradas_da_reserva(
+            edital=edital, corte=corte, conteudo=conteudo
+        )
     etapa = corte.etapa_governada_id if corte is not None else None
     return habilitadas_na_etapa(edital=edital, etapa_id=etapa) - retiradas_da_reserva(
-        edital=edital, corte=corte
+        edital=edital, corte=corte, conteudo=conteudo
     )
 
 
-def retiradas_da_reserva(*, edital, corte):
+def retiradas_da_reserva(*, edital, corte, conteudo=None):
     """Quem a lista **reservada** deste corte não conta, por retirada até o horizonte (164).
 
     O horizonte do marco é a Etapa que o corte governa; sem ela, a última que o marco enumera
@@ -556,7 +558,8 @@ def retiradas_da_reserva(*, edital, corte):
 
     **Um dono só**, pela razão de `habilitadas_pelo_corte`: a apuração, a situação da vaga, o
     acréscimo e a fila perguntam todos por ela. Na ampla e sem corte, conjunto vazio sem consulta;
-    na reservada, uma consulta, e o conteúdo só é lido quando há retirada a situar.
+    na reservada, uma consulta, e o conteúdo só é lido quando há retirada a situar e quem chama
+    não o passou — a apuração, a destinação e a fila já o têm, e o passam.
     """
     if corte is None or corte.lista_id is None:
         return set()
@@ -572,7 +575,7 @@ def retiradas_da_reserva(*, edital, corte):
         return set()
     from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
 
-    conteudo = conteudo_vigente(edital)
+    conteudo = conteudo if conteudo is not None else conteudo_vigente(edital)
     ordem = {
         str(etapa.get("id")): etapa.get("order") or 0 for etapa in conteudo.get("stages") or []
     }
@@ -590,16 +593,16 @@ def _ordem_do_horizonte(conteudo, corte, ordem):
     Governando Etapa, a dela: a retirada **antes** dela conta. Sem Etapa governada, a da última
     enumerada **mais um**: a retirada **nela** também conta, porque a ordem do marco já a leu.
     """
+    from processo_seletivo.classificacao.domain.universo import por_identidade
+
     if corte.etapa_governada_id is not None:
         return ordem.get(str(corte.etapa_governada_id), 0)
-    for perfil in conteudo.get("profiles") or []:
-        if str(perfil.get("id")) != str(corte.perfil_id):
-            continue
-        for marco in perfil.get("classificationMilestones") or []:
-            if str(marco.get("id")) == str(corte.marco_id):
-                enumeradas = [ordem.get(str(item), 0) for item in marco.get("stages") or []]
-                return (max(enumeradas) if enumeradas else 0) + 1
-    return 0
+    perfil = por_identidade(conteudo.get("profiles"), corte.perfil_id)
+    marco = por_identidade(
+        perfil.get("classificationMilestones") if perfil else None, corte.marco_id
+    )
+    enumeradas = [ordem.get(str(item), 0) for item in (marco or {}).get("stages") or []]
+    return (max(enumeradas) + 1) if enumeradas else 0
 
 
 def _quantidade(linha):

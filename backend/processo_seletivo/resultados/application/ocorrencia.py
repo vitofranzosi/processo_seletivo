@@ -38,6 +38,7 @@ from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.comissoes.application import comando_de_comissao, nao_encontrado
 from processo_seletivo.comissoes.application.comissao import identificador
 from processo_seletivo.comissoes.domain.etapas import etapas_vigentes
+from processo_seletivo.inscricoes.application.rascunho import nome_da_modalidade
 from processo_seletivo.publicacoes.application.selectors import effective_version
 from processo_seletivo.resultados.application.consolidacao import Recusa
 from processo_seletivo.resultados.application.prontidao import participacao
@@ -208,7 +209,10 @@ def registrar_ocorrencia(
                 consequencia=consequencia,
                 motivo=(
                     efeito_do_desfecho.motivo_com_a_reserva(
-                        texto, versao.content, inscricao.modality_id
+                        texto,
+                        nome_da_modalidade(
+                            versao.content, inscricao.profile_id, inscricao.modality_id
+                        ),
                     )
                     if consequencia == ResultadoEtapa.Consequencia.RETIRADA_DA_RESERVA
                     else texto

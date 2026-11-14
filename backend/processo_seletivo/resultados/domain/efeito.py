@@ -141,28 +141,16 @@ def frase_do_efeito(etapa) -> str:
     )
 
 
-def nome_da_reserva(conteudo, modality_id) -> str:
-    """A denominação da Modalidade da inscrição no conteúdo, ou `""` sem achado."""
-    alvo = str(modality_id) if modality_id else ""
-    if not alvo:
-        return ""
-    for perfil in (conteudo or {}).get("profiles") or []:
-        for modalidade in perfil.get("competitionModalities") or []:
-            if str(modalidade.get("id")) == alvo:
-                return modalidade.get("name") or modalidade.get("code") or ""
-    return ""
+def motivo_com_a_reserva(causa, nome_da_reserva) -> str:
+    """O motivo do Resultado de retirada: a causa, e depois a reserva perdida (FR-7008, FR-7009).
 
-
-def complemento_da_retirada(conteudo, modality_id) -> str:
-    """O fim do motivo do Resultado de retirada (FR-7008): a reserva perdida e a ampla mantida."""
-    nome = nome_da_reserva(conteudo, modality_id)
-    reserva = f"pela reserva {nome}" if nome else "pela reserva de vagas"
-    return f"deixa de concorrer {reserva} e continua na ampla concorrência"
-
-
-def motivo_com_a_reserva(causa, conteudo, modality_id) -> str:
-    """O motivo do Resultado de retirada: a causa, e depois a reserva perdida (FR-7008, FR-7009)."""
-    return f"{causa}; {complemento_da_retirada(conteudo, modality_id)}"
+    Recebe o **nome** já resolvido: a denominação da Modalidade da inscrição tem dono, e é
+    `inscricoes.application.rascunho.nome_da_modalidade`, que quem chama — a consolidação, a
+    Ocorrência e o recurso — usa. Uma segunda busca aqui divergiria dela no primeiro caso em que a
+    regra de qual nome mostrar mudasse.
+    """
+    reserva = f"pela reserva {nome_da_reserva}" if nome_da_reserva else "pela reserva de vagas"
+    return f"{causa}; deixa de concorrer {reserva} e continua na ampla concorrência"
 
 
 def etapas_lidas_pelo_marco(marco, etapas) -> list[str]:
@@ -203,7 +191,6 @@ __all__ = [
     "HABILITADA",
     "RETIRADA_DA_RESERVA",
     "RETIRA_DA_RESERVA",
-    "complemento_da_retirada",
     "consequencia_do_efeito",
     "da_coluna",
     "declara_efeito",
@@ -214,7 +201,6 @@ __all__ = [
     "frase_do_efeito",
     "mais_grave",
     "motivo_com_a_reserva",
-    "nome_da_reserva",
     "para_coluna",
     "pode_retirar",
     "publicar",
