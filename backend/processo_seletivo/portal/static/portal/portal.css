@@ -1373,9 +1373,11 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .acolhimento li,.autoconferencia li{margin:.35rem 0;}
 .maioridade{margin:1rem 0;padding:.75rem 1rem;border:1px solid var(--borda);border-radius:6px;}
 .maioridade label{display:block;margin:.4rem 0;}
-.moldura-da-camera{position:relative;width:100%;max-width:24rem;aspect-ratio:3/4;margin:.5rem 0;
-  background:var(--texto);border-radius:6px;overflow:hidden;}
+.moldura-da-camera{position:relative;width:100%;max-width:24rem;aspect-ratio:3/4;max-height:45vh;
+  margin:.5rem 0;background:var(--texto);border-radius:6px;overflow:hidden;}
+.botoes-da-gravacao{display:grid;gap:.5rem;margin:.5rem 0;}
 .previa{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+.previa.sem-espelho{transform:none;}
 .oval{position:absolute;left:18%;top:10%;width:64%;height:62%;border:3px dashed rgba(255,255,255,.8);
   border-radius:50%;pointer-events:none;}
 .selo-gravando{position:absolute;left:.5rem;top:.5rem;padding:.2rem .5rem;border-radius:4px;

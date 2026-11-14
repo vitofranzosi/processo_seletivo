@@ -1,4 +1,4 @@
-{% comment %}
+{% load l10n %}{% comment %}
 **O vídeo da verificação, no painel do documento** (166, FR-7128 a FR-7133, UX-774). Abrir é ato: o
 botão registra **uma** abertura, e o vídeo toca dali em diante, avançando e voltando sem registrar de
 novo (D-007). Não há botão de baixar, e o reprodutor recusa o "baixar" do próprio navegador onde ele
@@ -17,7 +17,7 @@ aceita a recusa — o que não impede captura de tela, e a tela não promete que
   </div>
   <p class="ajuda">Ir ao passo do roteiro:</p>
   <ul class="passos-do-video">
-    {% for marca in video_da_mesa.marcas %}<li><button type="button" class="acao" data-saltar="{{ marca.instante }}">{{ marca.titulo }}</button></li>{% endfor %}
+    {% for marca in video_da_mesa.marcas %}<li><button type="button" class="acao" data-saltar="{{ marca.instante|unlocalize }}">{{ marca.titulo }}</button></li>{% endfor %}
   </ul>
   {% else %}
   <p class="ajuda">Duração: {{ video_da_mesa.video.duracao|floatformat:0 }} segundos. Abrir fica registrado na trilha da sua avaliação.</p>

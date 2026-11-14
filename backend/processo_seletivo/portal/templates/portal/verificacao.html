@@ -123,14 +123,16 @@ isso (FR-7117).
   </div>
   <p class="passo-atual" data-passo-atual aria-live="assertive"></p>
   <p class="passo-proximo" data-passo-proximo></p>
+  {% comment %} Os botões logo abaixo do passo, e não depois da lista: no celular eles ficam na primeira
+  tela, e quem grava não rola a página no meio da tomada (UX-771). {% endcomment %}
+  <p class="botoes-da-gravacao"><button type="button" class="principal" data-comecar>Começar a gravar</button>
+    <button type="button" class="principal" data-proximo hidden>Próximo passo</button>
+    <button type="button" class="secundario" data-recomecar hidden>Parar e recomeçar</button></p>
   <p class="tempo-da-gravacao"><span data-tempo>0:00</span> de até {{ teto_minutos }}:00</p>
   <p class="aviso" data-aviso-gravacao hidden></p>
   <ol class="passos-do-roteiro" data-passos>
     {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"><strong>{{ passo.titulo }}.</strong> {{ passo.instrucao }}</li>{% endfor %}
   </ol>
-  <p><button type="button" class="principal" data-comecar>Começar a gravar</button></p>
-  <p><button type="button" class="principal" data-proximo hidden>Próximo passo</button></p>
-  <p><button type="button" class="secundario" data-recomecar hidden>Parar e recomeçar</button></p>
   <p class="nao-consigo"><button type="button" class="link-do-meio" data-ir="nao-consigo">Não consigo usar a câmera</button></p>
 </section>
 

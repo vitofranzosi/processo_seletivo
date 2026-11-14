@@ -11,6 +11,8 @@
   if (!video) return;
 
   function para(segundos) {
+    // O instante vem do atributo, em segundos com ponto; um valor que não é número não move nada.
+    if (!Number.isFinite(segundos)) return;
     var fim = Number.isFinite(video.duration) ? video.duration : segundos;
     video.currentTime = Math.max(0, Math.min(segundos, fim));
   }

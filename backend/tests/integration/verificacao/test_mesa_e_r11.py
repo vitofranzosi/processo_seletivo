@@ -128,6 +128,9 @@ def test_abrir_registra_um_evento_por_abertura_e_os_pedidos_nao_registram(
     mesa = client.get(f"{pagina}?abertura={aberta.id}")
     corpo = mesa.content.decode()
     assert "nodownload" in corpo
+    # O instante dos saltos com ponto, e não com a vírgula da localização: `Number("1,2")` é `NaN`,
+    # e o salto não movia o vídeo (achado da jornada no navegador).
+    assert 'data-saltar="1.2"' in corpo
     assert "Confirmo" in corpo
     assert "Não dá para confirmar pelo vídeo" in corpo
     assert "baixar=1" not in corpo.split('id="video"')[1].split("</section>")[0]

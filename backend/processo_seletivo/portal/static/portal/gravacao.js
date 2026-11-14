@@ -282,6 +282,11 @@
       mostrar("permissao");
       return;
     }
+    // A câmera aparece espelhada, como toda "selfie"; a imagem de teste não é rosto, e espelhá-la só
+    // inverteria o texto. O arquivo gravado nunca é espelhado: é o `MediaStream`, e não a prévia.
+    Array.prototype.forEach.call(pagina.querySelectorAll(".previa"), function (previa) {
+      previa.classList.toggle("sem-espelho", Boolean(sintetica && sintetica.checked));
+    });
     q("[data-previa]").srcObject = estado.stream;
     q("[data-previa-gravacao]").srcObject = estado.stream;
     q("[data-checagem-camera]").textContent = "Câmera funcionando.";
