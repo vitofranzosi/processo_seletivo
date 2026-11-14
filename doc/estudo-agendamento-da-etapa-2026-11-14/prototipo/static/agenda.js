@@ -378,62 +378,132 @@
     preencher("#agenda-da-etapa", html);
   }
 
+  /* ---------------------------------------------------------------- componentes comuns */
+
+  /* O medidor real da gestão (`telas.css`, `.medidor`), com as larguras de `.largura-N` da
+     `minhas-etapas.css`: a CSP não deixa a largura ir em `style=""`. */
+  function medidor(feitos, total, rotuloRestante, detalhe, completo) {
+    var pct = total ? Math.min(100, Math.round(feitos / total * 100)) : 0;
+    return '<div class="medidor' + (completo ? " completo" : "") + '">' +
+      '<p class="numeros"><span class="restante">' + rotuloRestante + '</span><span class="taxa">' + pct + "%</span></p>" +
+      '<div class="trilha-do-medidor" aria-hidden="true"><div class="feito largura-' + pct + '"></div></div>' +
+      (detalhe ? '<p class="detalhe">' + detalhe + "</p>" : "") + "</div>";
+  }
+
+  /* O seletor de horário livre: dia, depois os horários livres de cada banca, como opções. Serve
+     à alocação à mão e à remarcação — uma interação só, e nunca um botão repetido em cada linha da
+     grade (redesign de 14/11). */
+  function seletorDeHorario(nome, livres, diaInicial, escolhido) {
+    var porDia = {};
+    livres.forEach(function (h) { (porDia[h.data] = porDia[h.data] || []).push(h); });
+    var dias = Object.keys(porDia).sort();
+    if (!dias.length) return '<p class="aviso">Não há horário livre. Acrescente um dia, uma janela ou uma banca na <a href="configurar.html">configuração</a>.</p>';
+    var dia = dias.indexOf(diaInicial) >= 0 ? diaInicial : dias[0];
+    var abas = '<div class="dias-do-seletor" role="group" aria-label="Dia">' + dias.map(function (d) {
+      return '<button type="button" class="dia-do-seletor" data-dia-do-seletor="' + d + '" aria-pressed="' + (d === dia) + '">' +
+        dataPorExtenso(d, true) + ' <span class="contagem">' + porDia[d].length + "</span></button>";
+    }).join("") + "</div>";
+    var bancas = estado.config.bancas;
+    var grupos = bancas.map(function (b) {
+      var opcoes = porDia[dia].filter(function (h) { return h.banca === b.id; });
+      if (!opcoes.length) return "";
+      return '<fieldset class="horarios-livres"><legend>' + (bancas.length > 1 ? esc(b.nome) : "Horários livres") + "</legend>" +
+        opcoes.map(function (h) {
+          return '<label class="opcao-de-horario"><input type="radio" name="' + nome + '" value="' + h.id + '"' +
+            (escolhido === h.id ? " checked" : "") + "><span>" + h.inicio + "</span></label>";
+        }).join("") + "</fieldset>";
+    }).join("");
+    return abas + grupos;
+  }
+
+  function livresAgora() {
+    var ocupado = mapaDeOcupacao();
+    return horarios(estado.config).filter(function (h) { return !ocupado[h.id]; });
+  }
+
   /* ---------------------------------------------------------------- página: configurar */
 
   function paginaConfigurar() {
     var form = document.querySelector("#form-da-agenda");
+
     function desenhar() {
       var cfg = estado.config;
       form.querySelector("[name=modalidade][value=" + cfg.modalidade + "]").checked = true;
       form.querySelector("[name=duracao]").value = cfg.duracao;
       form.querySelector("[name=intervalo]").value = cfg.intervalo;
       form.querySelector("[name=orientacoes]").value = cfg.orientacoes;
+      var lista = horarios(cfg);
       var dias = cfg.dias.map(function (dia, i) {
+        var doDia = lista.filter(function (h) { return h.data === dia.data; }).length;
         var janelas = dia.janelas.map(function (j, k) {
-          return '<li class="janela"><label><span class="oculto">Início da janela ' + (k + 1) + "</span>" +
-            '<input type="time" step="300" data-dia="' + i + '" data-janela="' + k + '" data-ponta="0" value="' + j[0] + '"></label>' +
-            '<span aria-hidden="true">–</span><label><span class="oculto">Fim da janela ' + (k + 1) + "</span>" +
-            '<input type="time" step="300" data-dia="' + i + '" data-janela="' + k + '" data-ponta="1" value="' + j[1] + '"></label>' +
-            (dia.janelas.length > 1 ? ' <button type="button" class="acao" data-remover-janela="' + i + ":" + k + '">Remover</button>' : "") + "</li>";
+          return '<span class="janela"><input type="time" step="300" aria-label="Início da janela ' + (k + 1) + " de " + dataPorExtenso(dia.data, true) +
+            '" data-dia="' + i + '" data-janela="' + k + '" data-ponta="0" value="' + j[0] + '"><span aria-hidden="true">–</span>' +
+            '<input type="time" step="300" aria-label="Fim da janela ' + (k + 1) + '" data-dia="' + i + '" data-janela="' + k + '" data-ponta="1" value="' + j[1] + '">' +
+            (dia.janelas.length > 1 ? '<button type="button" class="remover" data-remover-janela="' + i + ":" + k + '" aria-label="Remover a janela ' + j.join("–") + '">×</button>' : "") + "</span>";
         }).join("");
-        return '<fieldset class="dia-de-atendimento"><legend>' + dataPorExtenso(dia.data) + "</legend>" +
-          '<ul class="janelas">' + janelas + "</ul>" +
-          '<p class="acoes"><button type="button" class="acao" data-acrescentar-janela="' + i + '">Acrescentar janela</button>' +
-          (cfg.dias.length > 1 ? ' <button type="button" class="acao" data-remover-dia="' + i + '">Remover o dia</button>' : "") + "</p></fieldset>";
+        return '<li class="linha-de-dia"><span class="rotulo-do-dia">' + dataPorExtenso(dia.data, true) + "</span>" +
+          '<span class="janelas-do-dia">' + janelas + '<button type="button" class="acao" data-acrescentar-janela="' + i + '">+ janela</button></span>' +
+          '<span class="horarios-do-dia">' + plural(doDia, "horário", "horários") + "</span>" +
+          (cfg.dias.length > 1 ? '<button type="button" class="remover" data-remover-dia="' + i + '" aria-label="Remover ' + dataPorExtenso(dia.data) + '">×</button>' : '<span></span>') + "</li>";
       }).join("");
       preencher("#dias", dias);
       var remota = cfg.modalidade === "remota";
-      var bancas = cfg.bancas.map(function (b, i) {
-        return '<li class="banca"><p class="campo"><label for="banca-nome-' + i + '">Nome</label>' +
-          '<input id="banca-nome-' + i + '" data-banca="' + i + '" data-campo="nome" value="' + esc(b.nome) + '"></p>' +
-          '<p class="campo"><label for="banca-acesso-' + i + '">' + (remota ? "Endereço da sala virtual" : "Local") + "</label>" +
-          '<input id="banca-acesso-' + i + '" data-banca="' + i + '" data-campo="acesso" value="' + esc(b.acesso) + '" aria-describedby="ajuda-acesso">' +
-          "</p>" + (cfg.bancas.length > 1 ? '<button type="button" class="acao" data-remover-banca="' + i + '">Remover</button>' : "") + "</li>";
-      }).join("");
-      preencher("#bancas", bancas);
+      preencher("#cabecalho-bancas", "<span>Nome</span><span>" + (remota ? "Endereço da sala virtual" : "Local") + "</span><span></span>");
+      preencher("#bancas", cfg.bancas.map(function (b, i) {
+        return '<li class="linha-de-banca"><input aria-label="Nome da banca ' + (i + 1) + '" data-banca="' + i + '" data-campo="nome" value="' + esc(b.nome) + '">' +
+          '<input aria-label="' + (remota ? "Endereço da sala" : "Local") + " da banca " + (i + 1) + '" data-banca="' + i + '" data-campo="acesso" value="' + esc(b.acesso) + '" placeholder="' + (remota ? "https://…" : "Sala, prédio") + '">' +
+          (cfg.bancas.length > 1 ? '<button type="button" class="remover" data-remover-banca="' + i + '" aria-label="Remover ' + esc(b.nome) + '">×</button>' : "<span></span>") + "</li>";
+      }).join(""));
       preencher("#ajuda-acesso-texto", remota
-        ? "O endereço da sala vai só para a área de cada pessoa e para o e-mail dela. A página pública mostra o nome da banca, nunca o endereço."
+        ? "O endereço da sala vai só para a área de cada pessoa e para o e-mail dela; a página pública mostra só o nome da banca."
         : "O local aparece na área de cada pessoa, no e-mail e na página pública.");
       calcular();
+    }
+
+    /* Sugestões que resolvem a falta num clique: o próximo dia dentro do período do cronograma,
+       uma banca a mais, ou intervalo nenhum. Cada uma diz quantos horários acrescenta. */
+    function sugestoes(falta) {
+      var cfg = estado.config, lista = [];
+      var porDia = cfg.dias.length ? horarios({ dias: [cfg.dias[cfg.dias.length - 1]], duracao: cfg.duracao, intervalo: cfg.intervalo, bancas: cfg.bancas }).length : 0;
+      var ultimo = cfg.dias.length ? cfg.dias[cfg.dias.length - 1].data : null;
+      if (ultimo) {
+        var q = ultimo.split("-");
+        var prox = new Date(Date.UTC(+q[0], +q[1] - 1, +q[2] + 1)).toISOString().slice(0, 10);
+        if (prox <= C.evento.fim) lista.push({ acao: "dia", rotulo: "Acrescentar " + dataPorExtenso(prox, true), ganho: porDia });
+      }
+      var semBanca = horarios(cfg).length / Math.max(1, cfg.bancas.length);
+      lista.push({ acao: "banca", rotulo: "Acrescentar uma banca", ganho: semBanca });
+      if (cfg.intervalo > 0) {
+        var semIntervalo = horarios({ dias: cfg.dias, duracao: cfg.duracao, intervalo: 0, bancas: cfg.bancas }).length - horarios(cfg).length;
+        if (semIntervalo > 0) lista.push({ acao: "intervalo", rotulo: "Tirar o intervalo", ganho: semIntervalo });
+      }
+      return lista.map(function (s) {
+        return '<li><button type="button" class="acao sugestao' + (s.ganho >= falta ? " resolve" : "") + '" data-sugestao="' + s.acao + '">' +
+          s.rotulo + ' <span class="ganho">+' + s.ganho + "</span></button></li>";
+      }).join("");
     }
 
     function calcular() {
       var cfg = estado.config;
       var problemas = problemasDaConfiguracao(cfg);
       var lista = horarios(cfg);
-      var porBanca = cfg.bancas.length ? lista.length / cfg.bancas.length : 0;
       var r = resumoDaCapacidade();
       var html = "";
       if (problemas.length) {
-        html += '<div class="erro" role="alert"><strong>Corrija antes de continuar:</strong><ul>' +
+        html += '<div class="veredito invalido" role="alert"><p class="titulo-do-veredito">Corrija para continuar</p><ul>' +
           problemas.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul></div>";
+      } else if (r.falta) {
+        html += '<div class="veredito falta"><p class="titulo-do-veredito">Faltam ' + plural(r.falta, "horário", "horários") + "</p>" +
+          "<p>" + r.total + " pessoas participam, e a agenda tem " + r.capacidade + " horários.</p>" +
+          '<p class="resolver">Resolva com um clique:</p><ul class="sugestoes">' + sugestoes(r.falta) + "</ul></div>";
+      } else {
+        html += '<div class="veredito cabe"><p class="titulo-do-veredito">Cabem todas as ' + r.total + " pessoas</p>" +
+          "<p>Sobram " + plural(r.capacidade - r.total, "horário", "horários") + " para remarcações e inclusões.</p></div>";
       }
-      html += '<p class="capacidade"><strong class="numero-grande">' + lista.length + "</strong> horários: " +
-        plural(porBanca, "atendimento", "atendimentos") + " por banca × " + plural(cfg.bancas.length, "banca", "bancas") +
-        ", em " + plural(cfg.dias.length, "dia", "dias") + ". Um atendimento começa a cada " + (cfg.duracao + cfg.intervalo) + " minutos.</p>";
-      html += r.falta
-        ? '<p class="aviso"><strong>Faltam ' + plural(r.falta, "horário", "horários") + "</strong> para as " + r.total + " pessoas que hoje participam da Etapa.</p>"
-        : '<p class="sucesso">Cabem as ' + r.total + " pessoas que hoje participam da Etapa, e sobram " + plural(r.capacidade - r.total, "horário", "horários") + ".</p>";
+      html += medidor(Math.min(lista.length, r.total), r.total, "<strong>" + lista.length + "</strong> horários para " + r.total + " pessoas", null, !r.falta && !problemas.length);
+      var porBanca = cfg.bancas.length ? lista.length / cfg.bancas.length : 0;
+      html += '<p class="conta-da-capacidade">' + porBanca + " por banca × " + plural(cfg.bancas.length, "banca", "bancas") +
+        " · um atendimento a cada " + (cfg.duracao + cfg.intervalo) + " min</p>";
       sobras(cfg).forEach(function (s) { html += '<p class="ajuda">' + esc(s) + "</p>"; });
       preencher("#calculo", html);
       form.querySelector("[data-salvar]").disabled = problemas.length > 0;
@@ -444,18 +514,20 @@
       if (el.name === "duracao") cfg.duracao = parseInt(el.value, 10) || 0;
       else if (el.name === "intervalo") cfg.intervalo = el.value === "" ? 0 : parseInt(el.value, 10);
       else if (el.name === "orientacoes") cfg.orientacoes = el.value;
-      else if (el.name === "modalidade") { cfg.modalidade = el.value; desenhar(); gravar(estado); return; }
-      else if (el.hasAttribute("data-janela")) {
-        cfg.dias[+el.dataset.dia].janelas[+el.dataset.janela][+el.dataset.ponta] = el.value;
-      } else if (el.hasAttribute("data-banca")) cfg.bancas[+el.dataset.banca][el.dataset.campo] = el.value;
+      else if (el.name === "modalidade") return;
+      else if (el.hasAttribute("data-janela")) cfg.dias[+el.dataset.dia].janelas[+el.dataset.janela][+el.dataset.ponta] = el.value;
+      else if (el.hasAttribute("data-banca")) cfg.bancas[+el.dataset.banca][el.dataset.campo] = el.value;
       gravar(estado);
       calcular();
     });
     form.addEventListener("change", function (ev) {
       if (ev.target.name === "modalidade") { estado.config.modalidade = ev.target.value; gravar(estado); desenhar(); }
+      else if (ev.target.hasAttribute("data-janela")) desenhar();
     });
     form.addEventListener("click", function (ev) {
-      var el = ev.target, cfg = estado.config, d;
+      var el = ev.target.closest("button");
+      if (!el) return;
+      var cfg = estado.config, d;
       if (el.hasAttribute("data-acrescentar-janela")) {
         d = cfg.dias[+el.dataset.acrescentarJanela];
         var ultima = d.janelas[d.janelas.length - 1];
@@ -466,17 +538,19 @@
         cfg.dias[+p[0]].janelas.splice(+p[1], 1);
       } else if (el.hasAttribute("data-remover-dia")) {
         cfg.dias.splice(+el.dataset.removerDia, 1);
-      } else if (el.hasAttribute("data-acrescentar-dia")) {
-        var datas = cfg.dias.map(function (x) { return x.data; });
-        var ultimaData = datas.length ? datas[datas.length - 1] : C.evento.inicio;
-        var q = ultimaData.split("-");
-        var prox = new Date(Date.UTC(+q[0], +q[1] - 1, +q[2] + (datas.length ? 1 : 0)));
-        var iso = prox.toISOString().slice(0, 10);
+      } else if (el.hasAttribute("data-acrescentar-dia") || el.dataset.sugestao === "dia") {
+        var ultimaData = cfg.dias.length ? cfg.dias[cfg.dias.length - 1].data : null;
+        var iso = C.evento.inicio;
+        if (ultimaData) {
+          var q = ultimaData.split("-");
+          iso = new Date(Date.UTC(+q[0], +q[1] - 1, +q[2] + 1)).toISOString().slice(0, 10);
+        }
         var modelo = cfg.dias.length ? cfg.dias[cfg.dias.length - 1].janelas : [["08:00", "12:00"]];
         cfg.dias.push({ data: iso, janelas: JSON.parse(JSON.stringify(modelo)) });
-      } else if (el.hasAttribute("data-acrescentar-banca")) {
-        var n = cfg.bancas.length + 1;
-        cfg.bancas.push({ id: "b" + Date.now(), nome: "Banca " + n, acesso: "" });
+      } else if (el.hasAttribute("data-acrescentar-banca") || el.dataset.sugestao === "banca") {
+        cfg.bancas.push({ id: "b" + Date.now(), nome: "Banca " + (cfg.bancas.length + 1), acesso: "" });
+      } else if (el.dataset.sugestao === "intervalo") {
+        cfg.intervalo = 0;
       } else if (el.hasAttribute("data-remover-banca")) {
         cfg.bancas.splice(+el.dataset.removerBanca, 1);
       } else return;
@@ -486,8 +560,7 @@
     form.addEventListener("submit", function (ev) {
       ev.preventDefault();
       if (problemasDaConfiguracao(estado.config).length) return;
-      /* Mudar a configuração não move ninguém em silêncio (R-07): quem estava num horário que
-         deixou de existir volta para "sem horário", e a tela da montagem diz quem foi. */
+      /* Mudar a configuração não move ninguém em silêncio (R-07). */
       var existentes = {};
       horarios(estado.config).forEach(function (h) { existentes[h.id] = true; });
       var devolvidas = [];
@@ -496,187 +569,279 @@
       });
       estado.configurada = true;
       if (devolvidas.length) {
-        avisar("aviso", "<strong>A configuração foi salva, e " + plural(devolvidas.length, "pessoa voltou", "pessoas voltaram") +
+        avisar("aviso", "<strong>Configuração salva, e " + plural(devolvidas.length, "pessoa voltou", "pessoas voltaram") +
           " para \"sem horário\"</strong>, porque o horário delas deixou de existir: " + esc(devolvidas.join(", ")) + ".");
       } else {
-        avisar("sucesso", "Configuração salva. A agenda continua em montagem: nada é público até você conferir e publicar.");
+        avisar("sucesso", "Configuração salva. A agenda continua em rascunho: nada é público até você conferir e publicar.");
       }
       mudou();
       window.location.href = "montar.html";
     });
     if (estado.publicada) {
-      preencher("#trava-publicada", '<p class="imutavel">A agenda já foi publicada. Você pode acrescentar dias, janelas ou bancas para abrir horários novos; um horário já publicado só muda pela remarcação da pessoa.</p>');
+      preencher("#trava-publicada", '<p class="imutavel">A agenda já foi publicada. Você pode acrescentar dias, janelas ou bancas para abrir horários novos; um horário publicado só muda pela remarcação da pessoa.</p>');
     }
     desenhar();
   }
 
-  /* ---------------------------------------------------------------- página: montar */
+  /* ---------------------------------------------------------------- página: montar (workspace) */
 
-  var selecionada = null;
+  /* O painel à direita é onde se age; a grade é o que se vê (redesign de 14/11). O painel tem
+     quatro estados: a lista de quem está sem horário; uma pessoa escolhida; um horário livre
+     escolhido; e a prévia do preenchimento. Nenhum botão se repete pelas linhas da grade. */
+  var contexto = { tipo: "lista" };
 
   function paginaMontar() {
     var diaAtual = parametros.get("dia");
     if (!estado.configurada) { window.location.href = "etapa.html"; return; }
+    var busca = "";
 
-    function desenhar() {
+    function desenharResumo() {
       var r = resumoDaCapacidade();
+      var completo = !r.sem && r.total > 0;
+      var html = '<div class="progresso-da-agenda">' +
+        medidor(r.agendadas, r.total, "<strong>" + r.agendadas + "</strong> de " + r.total + " com horário",
+          null, completo) +
+        '<p class="fatos-da-agenda"><span>' + r.capacidade + " horários</span><span>" +
+        (r.falta ? '<strong class="falta">faltam ' + r.falta + "</strong>" : "sobram " + Math.max(0, r.capacidade - r.total)) + "</span>" +
+        (r.sem ? '<span><a href="#painel" data-ver-sem-horario>' + plural(r.sem, "pessoa sem horário", "pessoas sem horário") + "</a></span>" : "") +
+        "</p></div>";
+      if (r.falta) html += '<p class="aviso"><strong>Faltam ' + plural(r.falta, "horário", "horários") + ".</strong> Acrescente um dia, uma janela ou uma banca. <a href=\"configurar.html\">Ajustar a configuração</a></p>";
+      preencher("#resumo", html);
+      var preencherBotao = document.querySelector("[data-preencher]");
+      preencherBotao.hidden = !!estado.publicada || !r.sem;
+      preencherBotao.disabled = !r.sem || !r.livres;
+      preencherBotao.className = r.sem && r.livres ? "botao" : "botao secundario";
+      var conferir = document.querySelector("[data-ir-conferir]");
+      conferir.className = r.sem && r.livres && !estado.publicada ? "botao secundario" : "botao";
+      conferir.textContent = estado.publicada ? "Ver a agenda publicada" : "Conferir e publicar";
+      conferir.setAttribute("href", estado.publicada ? "publicada.html" : "conferir.html");
+      preencher("#estado-da-agenda", estado.publicada ? '<span class="situacao s-PUBLICADO">Publicada</span>' : '<span class="situacao s-EM_ELABORACAO">Rascunho</span>');
+    }
+
+    function desenharGrade() {
       var lista = horarios(estado.config);
       var ocupado = mapaDeOcupacao();
       var dias = estado.config.dias.map(function (d) { return d.data; });
       if (!diaAtual || dias.indexOf(diaAtual) < 0) diaAtual = dias[0];
-      preencher("#mensagem", mensagem());
-      preencher("#resumo", faixaDeResumo(r) + avisoDeCapacidade(r, true));
-
-      var abas = dias.map(function (d) {
+      preencher("#dias-da-agenda", dias.map(function (d) {
         var doDia = lista.filter(function (h) { return h.data === d; });
         var ocup = doDia.filter(function (h) { return ocupado[h.id]; }).length;
         return '<li><a href="?dia=' + d + '"' + (d === diaAtual ? ' aria-current="page"' : "") + ">" +
           dataPorExtenso(d, true) + ' <span class="contagem">' + ocup + "/" + doDia.length + "</span></a></li>";
-      }).join("");
-      preencher("#dias-da-agenda", abas);
-
+      }).join(""));
       var bancas = estado.config.bancas;
       var doDia = lista.filter(function (h) { return h.data === diaAtual; });
-      var porInicio = {};
-      var ordem = [];
+      var porInicio = {}, ordem = [];
       doDia.forEach(function (h) {
         if (!porInicio[h.inicio]) { porInicio[h.inicio] = {}; ordem.push(h.inicio); }
         porInicio[h.inicio][h.banca] = h;
       });
-      var cab = "<tr><th scope=\"col\">Horário</th>" + bancas.map(function (b) {
-        return '<th scope="col">' + esc(b.nome) + "</th>";
-      }).join("") + "</tr>";
+      var escolhido = contexto.tipo === "horario" ? contexto.horario : contexto.tipo === "pessoa" && estado.alocacoes[contexto.pessoa] ? estado.alocacoes[contexto.pessoa].horario : null;
+      var cab = '<tr><th scope="col" class="coluna-hora">Horário</th>' + bancas.map(function (b) { return '<th scope="col">' + esc(b.nome) + "</th>"; }).join("") + "</tr>";
       var corpo = ordem.map(function (ini) {
-        var linha = '<tr><th scope="row">' + ini + '<span class="ate">até ' + porInicio[ini][bancas[0].id].fim + "</span></th>";
+        var linha = '<tr><th scope="row" class="coluna-hora">' + ini + "</th>";
         bancas.forEach(function (b) {
           var h = porInicio[ini][b.id];
           var pid = ocupado[h.id];
-          var rotuloBanca = bancas.length > 1 ? '<span class="banca-no-estreito">' + esc(b.nome) + "</span>" : "";
+          var marcado = escolhido === h.id ? " escolhido" : "";
+          var naBanca = bancas.length > 1 ? '<span class="banca-no-estreito">' + esc(b.nome) + " · </span>" : "";
           if (pid) {
             var p = pessoa(pid);
-            var origem = estado.alocacoes[pid].origem === "automatica" ? "preenchida automaticamente" : "escolhida à mão";
-            var publicadaAqui = estado.publicada && estado.publicada.itens[pid] === h.id;
-            linha += '<td class="ocupado' + (selecionada === pid ? " em-movimento" : "") + '">' + rotuloBanca +
-              '<span class="quem">' + esc(p.nome) + '</span><span class="inscricao">' + p.protocolo + " · " + origem + "</span>" +
-              (publicadaAqui
-                ? '<span class="acoes"><a class="acao" href="remarcar.html?pessoa=' + pid + '">Remarcar</a></span>'
-                : '<span class="acoes"><button type="button" class="acao" data-mover="' + pid + '">' + (selecionada === pid ? "Escolha o novo horário" : "Mudar de horário") + "</button>" +
-                  '<button type="button" class="acao" data-liberar="' + pid + '">Liberar</button></span>') + "</td>";
-          } else if (selecionada) {
-            linha += '<td class="livre escolhendo">' + rotuloBanca + '<button type="button" class="acao" data-ocupar="' + h.id + '">Agendar ' +
-              esc(pessoa(selecionada).nome.split(" ")[0]) + " aqui</button></td>";
+            linha += '<td><button type="button" class="vaga ocupada' + marcado + '" data-abrir-pessoa="' + pid + '" aria-label="' + ini + ", " + esc(b.nome) + ": " + esc(p.nome) + '">' +
+              naBanca + '<span class="quem">' + esc(p.nome) + '</span><span class="inscricao">' + p.protocolo + "</span>" +
+              (estado.alocacoes[pid].origem === "manual" ? '<span class="origem" title="escolhida à mão">à mão</span>' : "") + "</button></td>";
           } else {
-            linha += '<td class="livre">' + rotuloBanca + '<span class="livre-rotulo">Livre</span></td>';
+            linha += '<td><button type="button" class="vaga livre' + marcado + '" data-abrir-horario="' + h.id + '" aria-label="' + ini + ", " + esc(b.nome) + ': livre">' +
+              naBanca + '<span class="livre-rotulo">Livre</span></button></td>';
           }
         });
         return linha + "</tr>";
       }).join("");
-      preencher("#grade", '<caption>' + dataPorExtenso(diaAtual) + " · " + doDia.length + " horários, " +
-        doDia.filter(function (h) { return ocupado[h.id]; }).length + " ocupados</caption><thead>" + cab + "</thead><tbody>" + corpo + "</tbody>");
+      preencher("#grade", '<caption class="oculto">' + dataPorExtenso(diaAtual) + "</caption><thead>" + cab + "</thead><tbody>" + corpo + "</tbody>");
+    }
 
-      var sem = semHorario();
-      var semHtml;
-      if (!participantes().length) {
-        semHtml = '<p class="vazio">Ninguém participa desta Etapa ainda. A lista sai do resultado da ' + esc(C.anterior) + ".</p>";
-      } else if (!sem.length) {
-        semHtml = '<p class="sucesso">Todas as ' + participantes().length + " pessoas têm horário. O próximo passo é conferir.</p>";
+    function listaDeSemHorario(nomeDoCampo) {
+      var sem = ordemDoPreenchimento(semHorario()).filter(function (p) {
+        return !busca || p.nome.toLowerCase().indexOf(busca) >= 0 || p.protocolo.toLowerCase().indexOf(busca) >= 0;
+      });
+      if (!sem.length) return '<p class="nenhuma">' + (busca ? "Ninguém sem horário com esse nome ou protocolo." : "") + "</p>";
+      return '<ul class="pessoas-do-painel">' + sem.map(function (p) {
+        return nomeDoCampo
+          ? '<li><label><input type="radio" name="' + nomeDoCampo + '" value="' + p.id + '"><span class="quem">' + esc(p.nome) + '</span><span class="inscricao">' + p.protocolo + "</span></label></li>"
+          : '<li><button type="button" class="pessoa-do-painel" data-abrir-pessoa="' + p.id + '"><span class="quem">' + esc(p.nome) + '</span><span class="inscricao">' + p.protocolo + "</span></button></li>";
+      }).join("") + "</ul>";
+    }
+
+    function campoDeBusca() {
+      return '<p class="busca-do-painel"><label class="oculto" for="busca-no-painel">Procurar por nome ou protocolo</label>' +
+        '<input type="search" id="busca-no-painel" placeholder="Procurar por nome ou protocolo" value="' + esc(busca) + '" autocomplete="off"></p>';
+    }
+
+    function desenharPainel() {
+      var html;
+      var r = resumoDaCapacidade();
+      if (contexto.tipo === "previa") {
+        html = painelDaPrevia();
+      } else if (contexto.tipo === "pessoa") {
+        var p = pessoa(contexto.pessoa);
+        var atual = estado.alocacoes[p.id] && estado.alocacoes[p.id].horario;
+        var publicadoAqui = estado.publicada && estado.publicada.itens[p.id];
+        html = '<header class="cabecalho-do-painel"><button type="button" class="voltar" data-voltar aria-label="Voltar à lista">←</button><div>' +
+          '<h2 id="painel-titulo">' + esc(p.nome) + '</h2><p class="inscricao">' + p.protocolo + "</p></div></header>";
+        if (publicadoAqui) {
+          html += '<p class="horario-atual">' + rotuloDoHorario(atual) + '</p><p class="ajuda">A agenda já foi publicada: mudar o horário é uma remarcação, com motivo, e só esta pessoa é avisada.</p>' +
+            '<p class="acoes-do-painel"><a class="botao" href="remarcar.html?pessoa=' + p.id + '">Remarcar</a></p>';
+        } else {
+          html += (atual ? '<p class="horario-atual">Agora: ' + rotuloDoHorario(atual) + "</p>" : '<p class="sem-horario-ainda">Sem horário</p>') +
+            '<form class="alocacao" data-form-pessoa><h3>' + (atual ? "Mudar para" : "Escolha um horário livre") + "</h3>" +
+            seletorDeHorario("horario-escolhido", livresAgora(), contexto.dia || diaAtual, contexto.escolhido) +
+            '<p class="acoes-do-painel"><button type="submit" class="botao">' + (atual ? "Mudar de horário" : "Agendar") + "</button>" +
+            (atual ? ' <button type="button" class="acao perigoso" data-liberar="' + p.id + '">Liberar o horário</button>' : "") + "</p></form>";
+        }
+      } else if (contexto.tipo === "horario") {
+        var h = horarioPorId(contexto.horario);
+        html = '<header class="cabecalho-do-painel"><button type="button" class="voltar" data-voltar aria-label="Voltar à lista">←</button><div>' +
+          '<h2 id="painel-titulo">' + h.inicio + " · " + dataPorExtenso(h.data, true) + '</h2><p class="inscricao">' + esc(h.bancaNome) + " · livre, até " + h.fim + "</p></div></header>";
+        html += semHorario().length
+          ? '<form class="alocacao" data-form-horario><h3>Quem vai para este horário?</h3>' + campoDeBusca() +
+            '<div class="lista-com-rolagem">' + listaDeSemHorario("pessoa-escolhida") + "</div>" +
+            '<p class="acoes-do-painel"><button type="submit" class="botao">Agendar aqui</button></p></form>'
+          : '<p class="ajuda">Todas as pessoas já têm horário. Para mudar alguém para cá, escolha a pessoa na grade.</p>';
       } else {
-        semHtml = '<fieldset class="escolha-de-pessoa"><legend class="oculto">Escolha uma pessoa e depois um horário livre</legend><ul class="sem-horario">' +
-          ordemDoPreenchimento(sem).map(function (p) {
-            return '<li><label><input type="radio" name="pessoa" value="' + p.id + '"' + (selecionada === p.id ? " checked" : "") + ">" +
-              '<span class="quem">' + esc(p.nome) + '</span><span class="inscricao">' + p.protocolo + "</span></label></li>";
-          }).join("") + "</ul></fieldset>";
+        var sem = semHorario();
+        html = '<header class="cabecalho-do-painel"><div><h2 id="painel-titulo">Sem horário <span class="contagem">' + sem.length + "</span></h2></div></header>";
+        if (!participantes().length) html += '<p class="vazio">Ninguém participa desta Etapa ainda. A lista sai do resultado da ' + esc(C.anterior) + ".</p>";
+        else if (!sem.length) html += '<div class="veredito cabe"><p class="titulo-do-veredito">Todas as ' + participantes().length + " pessoas têm horário</p><p>" + (estado.publicada ? "Clique numa pessoa na grade para remarcá-la." : "O próximo passo é conferir e publicar, no alto da página.") + "</p></div>";
+        else html += '<p class="ajuda">Escolha uma pessoa para ver os horários livres, ou clique num horário livre da grade.</p>' + campoDeBusca() +
+          '<div class="lista-com-rolagem">' + listaDeSemHorario(null) + "</div>";
       }
-      preencher("#sem-horario-titulo", "Pessoas sem horário (" + sem.length + ")");
-      preencher("#sem-horario", semHtml);
-      preencher("#instrucao-manual", selecionada
-        ? "Agora escolha um horário <strong>Livre</strong> na grade para " + esc(pessoa(selecionada).nome) + '. <button type="button" class="acao" data-cancelar-escolha>Cancelar</button>'
-        : "Escolha uma pessoa e depois um horário livre na grade. Para trocar alguém de horário, use \"Mudar de horário\" na grade.");
-
-      /* A ação principal é a que falta fazer: preencher enquanto há gente sem horário, conferir
-         depois. Publicada a agenda, o preenchimento em bloco sai de cena (R-19): quem chega
-         depois é agendado um a um, com aviso só para essa pessoa. */
-      var botaoPreencher = document.querySelector("[data-preencher]");
-      if (botaoPreencher) {
-        botaoPreencher.hidden = !!estado.publicada;
-        botaoPreencher.disabled = !sem.length || !r.livres;
-        botaoPreencher.className = sem.length && r.livres ? "botao" : "botao secundario";
-      }
-      desenharPrevia();
-      var conferir = document.querySelector("[data-ir-conferir]");
-      if (conferir) conferir.className = sem.length && r.livres && !estado.publicada ? "botao secundario" : "botao";
-      if (conferir) conferir.textContent = estado.publicada ? "Ver a agenda publicada" : "Conferir antes de publicar";
-      if (conferir) conferir.setAttribute("href", estado.publicada ? "publicada.html" : "conferir.html");
+      preencher("#painel", html);
     }
 
-    function desenharPrevia() {
-      var alvo = document.querySelector("#previa");
-      if (!estado.previa) { alvo.hidden = true; alvo.innerHTML = ""; return; }
+    /* A prévia responde primeiro "posso aplicar?": quantos, onde, o que sobra e o que falta; a
+       relação nominal fica recolhida (redesign de 14/11). */
+    function painelDaPrevia() {
       var p = estado.previa;
-      var linhas = p.pares.slice(0, 8).map(function (par) {
-        return "<li>" + esc(pessoa(par.pessoa).nome) + " → " + rotuloDoHorario(par.horario, true) + "</li>";
-      }).join("");
-      alvo.hidden = false;
-      alvo.innerHTML = '<h2 id="previa-titulo">Prévia do preenchimento</h2>' +
-        "<p><strong>" + plural(p.pares.length, "pessoa receberá", "pessoas receberão") + " horário.</strong> " +
-        (p.restam ? plural(p.restam, "pessoa continuará", "pessoas continuarão") + " sem horário, porque os horários livres acabam. " : "") +
-        "Quem já tem horário não muda. Nada foi gravado ainda.</p>" +
-        '<ol class="pares">' + linhas + (p.pares.length > 8 ? '<li class="mais">e mais ' + (p.pares.length - 8) + "</li>" : "") + "</ol>" +
-        '<p class="ajuda">Ordem: pessoas por nome, e pelo protocolo no empate; horários do mais cedo ao mais tarde, ' +
-        (estado.config.bancas.length > 1 ? "as bancas lado a lado em cada horário. " : "") + "Ajustes à mão continuam possíveis depois.</p>" +
-        '<p class="acoes"><button type="button" class="botao" data-aplicar>Aplicar o preenchimento</button> <button type="button" class="acao" data-descartar>Descartar a prévia</button></p>';
+      var porDiaBanca = {}, dias = [];
+      p.pares.forEach(function (par) {
+        var h = horarioPorId(par.horario);
+        if (!porDiaBanca[h.data]) { porDiaBanca[h.data] = {}; dias.push(h.data); }
+        porDiaBanca[h.data][h.banca] = (porDiaBanca[h.data][h.banca] || 0) + 1;
+      });
+      var bancas = estado.config.bancas;
+      var tabela = '<table class="tabela distribuicao-da-previa"><thead><tr><th scope="col">Dia</th>' +
+        bancas.map(function (b) { return '<th scope="col" class="numero">' + esc(b.nome) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        dias.map(function (d) {
+          return '<tr><th scope="row">' + dataPorExtenso(d, true) + "</th>" + bancas.map(function (b) {
+            return '<td class="numero">' + (porDiaBanca[d][b.id] || 0) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") + "</tbody></table>";
+      var livres = livresAgora().length - p.pares.length;
+      var html = '<header class="cabecalho-do-painel"><div><h2 id="painel-titulo">Preencher automaticamente</h2><p class="inscricao">Prévia: nada foi gravado</p></div></header>' +
+        '<div class="veredito ' + (p.restam ? "falta" : "cabe") + '"><p class="titulo-do-veredito">' + plural(p.pares.length, "pessoa recebe", "pessoas recebem") + " horário</p>" +
+        (p.restam ? "<p>" + plural(p.restam, "pessoa continua", "pessoas continuam") + " sem horário: faltam horários livres. <a href=\"configurar.html\">Ajustar a configuração</a></p>"
+          : "<p>Ninguém fica sem horário. Quem já tinha horário não muda.</p>") + "</div>" +
+        tabela +
+        '<p class="ajuda">Ficam livres ' + plural(Math.max(0, livres), "horário", "horários") + ". Ordem: pessoas por nome (protocolo no empate), horários do mais cedo ao mais tarde" +
+        (bancas.length > 1 ? ", bancas lado a lado" : "") + ".</p>" +
+        '<details class="relacao-nominal"><summary>Ver quem vai para cada horário (' + p.pares.length + ")</summary><ol>" +
+        p.pares.map(function (par) { return "<li><span>" + rotuloDoHorario(par.horario, true) + "</span> " + esc(pessoa(par.pessoa).nome) + "</li>"; }).join("") +
+        "</ol></details>" +
+        '<p class="acoes-do-painel"><button type="button" class="botao" data-aplicar>Aplicar</button> <button type="button" class="acao" data-descartar>Cancelar</button></p>';
+      return html;
     }
+
+    function desenhar() {
+      preencher("#mensagem", mensagem());
+      desenharResumo();
+      desenharGrade();
+      desenharPainel();
+    }
+
+    function focarPainel() {
+      var painel = document.querySelector("#painel");
+      if (window.matchMedia("(max-width: 64rem)").matches) painel.scrollIntoView({ block: "start" });
+      var alvo = painel.querySelector("h2");
+      if (alvo) { alvo.setAttribute("tabindex", "-1"); alvo.focus({ preventScroll: true }); }
+    }
+
+    function ocupar(pid, h) {
+      /* Dois operadores no mesmo horário (R-11): quem chega depois é recusado pela unicidade. */
+      if (estado.concorrente === h) {
+        var outra = semHorario().filter(function (x) { return x.id !== pid; }).pop();
+        if (outra) estado.alocacoes[outra.id] = { horario: h, origem: "manual" };
+        estado.concorrente = null;
+        avisar("erro", "<strong>Esse horário acabou de ser ocupado</strong> por outra pessoa da comissão, noutra sessão. A grade foi atualizada; escolha outro.");
+        mudou();
+        desenhar();
+        return false;
+      }
+      var tinha = estado.alocacoes[pid];
+      estado.alocacoes[pid] = { horario: h, origem: "manual" };
+      avisar("sucesso", (tinha ? "Horário trocado: " : "Agendamento feito: ") + esc(pessoa(pid).nome) + ", " + rotuloDoHorario(h) + ".");
+      estado.previa = null;
+      mudou();
+      return true;
+    }
+
+    document.addEventListener("input", function (ev) {
+      if (ev.target.id === "busca-no-painel") {
+        busca = ev.target.value.trim().toLowerCase();
+        var alvo = document.querySelector(".lista-com-rolagem");
+        if (alvo) alvo.innerHTML = listaDeSemHorario(contexto.tipo === "horario" ? "pessoa-escolhida" : null);
+      }
+    });
 
     document.addEventListener("change", function (ev) {
-      if (ev.target.name === "pessoa") { selecionada = ev.target.value; desenhar(); }
+      if (ev.target.name === "horario-escolhido") { contexto.escolhido = ev.target.value; desenharGrade(); }
+    });
+
+    document.addEventListener("submit", function (ev) {
+      var form = ev.target;
+      if (form.hasAttribute("data-form-pessoa")) {
+        ev.preventDefault();
+        var h = form.querySelector("[name=horario-escolhido]:checked");
+        if (!h) { avisar("aviso", "Escolha um horário livre antes de agendar."); desenhar(); return; }
+        if (ocupar(contexto.pessoa, h.value)) { contexto = { tipo: "lista" }; desenhar(); }
+      } else if (form.hasAttribute("data-form-horario")) {
+        ev.preventDefault();
+        var p = form.querySelector("[name=pessoa-escolhida]:checked");
+        if (!p) { avisar("aviso", "Escolha quem vai para este horário."); desenhar(); return; }
+        if (ocupar(p.value, contexto.horario)) { contexto = { tipo: "lista" }; desenhar(); }
+      }
     });
 
     document.addEventListener("click", function (ev) {
-      var el = ev.target.closest("button");
+      var el = ev.target.closest("button, a[data-ver-sem-horario]");
       if (!el) return;
-      if (el.hasAttribute("data-ocupar")) {
-        var h = el.getAttribute("data-ocupar");
-        /* Dois operadores no mesmo horário (R-11): quem chega depois é recusado pela unicidade
-           do horário, e a tela diz quem ocupou e mostra a grade atual. */
-        if (estado.concorrente === h) {
-          var outra = semHorario().filter(function (x) { return x.id !== selecionada; }).pop();
-          if (outra) estado.alocacoes[outra.id] = { horario: h, origem: "manual" };
-          estado.concorrente = null;
-          avisar("erro", "<strong>Esse horário acabou de ser ocupado</strong> por outra pessoa da comissão, noutra sessão. A grade foi atualizada; escolha outro horário para " +
-            esc(pessoa(selecionada).nome) + ".");
-          mudou();
-          desenhar();
-          return;
-        }
-        delete estado.alocacoes[selecionada];
-        estado.alocacoes[selecionada] = { horario: h, origem: "manual" };
-        avisar("sucesso", esc(pessoa(selecionada).nome) + " agendada para " + rotuloDoHorario(h) + ".");
-        selecionada = null;
-        estado.previa = null;
-        mudou();
-        desenhar();
+      if (el.hasAttribute("data-abrir-pessoa")) {
+        contexto = { tipo: "pessoa", pessoa: el.getAttribute("data-abrir-pessoa"), dia: diaAtual };
+        desenhar(); focarPainel();
+      } else if (el.hasAttribute("data-abrir-horario")) {
+        contexto = { tipo: "horario", horario: el.getAttribute("data-abrir-horario") };
+        desenhar(); focarPainel();
+      } else if (el.hasAttribute("data-dia-do-seletor")) {
+        contexto.dia = el.getAttribute("data-dia-do-seletor");
+        contexto.escolhido = null;
+        desenharPainel();
+      } else if (el.hasAttribute("data-voltar") || el.hasAttribute("data-ver-sem-horario")) {
+        if (el.tagName === "A") ev.preventDefault();
+        contexto = { tipo: "lista" };
+        desenhar(); focarPainel();
       } else if (el.hasAttribute("data-liberar")) {
         var pid = el.getAttribute("data-liberar");
-        var nome = pessoa(pid).nome;
         delete estado.alocacoes[pid];
-        avisar("sucesso", "Horário liberado. " + esc(nome) + " voltou para \"Pessoas sem horário\".");
+        avisar("sucesso", "Horário liberado. " + esc(pessoa(pid).nome) + " voltou para \"Sem horário\".");
         estado.previa = null;
-        mudou();
-        desenhar();
-      } else if (el.hasAttribute("data-mover")) {
-        selecionada = el.getAttribute("data-mover");
-        desenhar();
-      } else if (el.hasAttribute("data-cancelar-escolha")) {
-        selecionada = null;
-        desenhar();
-      } else if (el.hasAttribute("data-preencher")) {
+        contexto = { tipo: "lista" };
+        mudou(); desenhar();
+      } else if (el.hasAttribute("data-preencher") || el.hasAttribute("data-preencher-painel")) {
         estado.previa = previaDoPreenchimento();
         gravar(estado);
-        desenhar();
-        document.querySelector("#previa").focus();
+        contexto = { tipo: "previa" };
+        desenhar(); focarPainel();
       } else if (el.hasAttribute("data-aplicar")) {
-        /* A prévia leva a versão da agenda. Se a agenda mudou desde ela, a aplicação recusa, em
-           vez de gravar pares calculados sobre um estado que não existe mais (R-10). */
+        /* A prévia leva a versão da agenda (R-10). */
         if (estado.previa.versao !== estado.versao) {
           avisar("aviso", "A agenda mudou desde a prévia. Veja a prévia nova antes de aplicar.");
           estado.previa = previaDoPreenchimento();
@@ -684,8 +849,7 @@
           desenhar();
           return;
         }
-        var ocupado = mapaDeOcupacao();
-        var aplicados = 0;
+        var ocupado = mapaDeOcupacao(), aplicados = 0;
         estado.previa.pares.forEach(function (par) {
           if (!ocupado[par.horario] && !estado.alocacoes[par.pessoa]) {
             estado.alocacoes[par.pessoa] = { horario: par.horario, origem: "automatica" };
@@ -693,23 +857,24 @@
           }
         });
         estado.previa = null;
-        avisar("sucesso", plural(aplicados, "pessoa recebeu", "pessoas receberam") + " horário. Confira a grade dia a dia; você ainda pode ajustar qualquer uma à mão.");
-        mudou();
-        desenhar();
+        contexto = { tipo: "lista" };
+        avisar("sucesso", plural(aplicados, "pessoa recebeu", "pessoas receberam") + " horário. Ajuste qualquer uma clicando nela na grade.");
+        mudou(); desenhar();
+        window.scrollTo({ top: 0 });
       } else if (el.hasAttribute("data-descartar")) {
         estado.previa = null;
-        gravar(estado);
-        desenhar();
+        contexto = { tipo: "lista" };
+        gravar(estado); desenhar();
       } else if (el.hasAttribute("data-simular-concorrente")) {
-        var ocup = mapaDeOcupacao();
-        var livre = horarios(estado.config).filter(function (x) { return !ocup[x.id] && x.data === diaAtual; })[0];
+        var livre = livresAgora().filter(function (x) { return x.data === diaAtual; })[0];
         if (livre) {
           estado.concorrente = livre.id;
           gravar(estado);
-          preencher("#mensagem", '<p class="ajuda">Simulação armada: outra sessão vai ocupar ' + rotuloDoHorario(livre.id) + " no instante em que você escolher esse horário.</p>");
+          preencher("#mensagem", '<p class="ajuda">Simulação armada: outra sessão vai ocupar ' + rotuloDoHorario(livre.id) + " no instante em que você o escolher.</p>");
         }
       }
     });
+    if (estado.previa) contexto = { tipo: "previa" };
     desenhar();
   }
 
@@ -753,6 +918,17 @@
       "<div><dt>Atendimento</dt><dd>" + estado.config.duracao + " minutos, com " + estado.config.intervalo + " de intervalo · " +
       plural(estado.config.bancas.length, "banca", "bancas") + " · " + (estado.config.modalidade === "remota" ? "por videoconferência" : "presencial") + "</dd></div>" +
       "<div><dt>Pessoas</dt><dd>" + r.agendadas + " de " + r.total + " com horário · " + r.capacidade + " horários, " + Math.max(0, r.livres) + " ficam livres</dd></div>");
+    var semH = semHorario().length, semSala = estado.config.bancas.filter(function (b) { return !b.acesso.trim(); }).length;
+    var itens = [
+      { ok: !semH, texto: r.agendadas + " de " + r.total + " pessoas com horário" },
+      { ok: !problemasDaConfiguracao(estado.config).length, texto: "Dias dentro do período do cronograma" },
+      { ok: !semSala, texto: estado.config.modalidade === "remota" ? "Toda banca com endereço de sala" : "Toda banca com local" },
+      { ok: null, texto: "Autoridade signatária, escolhida no fim da página" }
+    ];
+    preencher("#prontidao", '<ul class="lista-de-prontidao">' + itens.map(function (i) {
+      return '<li class="' + (i.ok === true ? "pronto" : i.ok === false ? "pendente" : "a-fazer") + '"><span class="marca-de-prontidao" aria-hidden="true">' +
+        (i.ok === true ? "✓" : i.ok === false ? "!" : "·") + '</span><span class="oculto">' + (i.ok === true ? "Pronto: " : i.ok === false ? "Pendente: " : "A fazer: ") + "</span>" + i.texto + "</li>";
+    }).join("") + "</ul>");
     if (imp.length) {
       preencher("#impedimentos", '<h2 id="impedimentos-titulo">Antes de publicar, resolva</h2>' + imp.map(function (i) {
         return "<div class=\"impedimento\"><h3>" + esc(i.titulo) + "</h3><p>" + esc(i.texto) + "</p>" +
@@ -873,13 +1049,13 @@
     var r = resumoDaCapacidade();
     var contagem = { enviado: 0, na_fila: 0, falhou: 0 };
     Object.keys(estado.avisos).forEach(function (pid) { contagem[estado.avisos[pid]]++; });
-    preencher("#estado-publicado", '<p><span class="situacao s-PUBLICADO">Publicada</span> em ' + estado.publicada.em + ", assinada por " + esc(estado.publicada.autoridade) +
-      (estado.remarcacoes.length ? " · " + plural(estado.remarcacoes.length, "remarcação", "remarcações") + " depois" : "") + ".</p>" +
-      '<ul class="resumo"><li><strong>' + Object.keys(itens).length + "</strong> horários publicados</li>" +
-      "<li><strong>" + contagem.enviado + "</strong> avisos enviados</li>" +
-      "<li><strong>" + contagem.na_fila + "</strong> na fila</li>" +
-      '<li class="' + (contagem.falhou ? "pendente" : "") + '"><strong>' + contagem.falhou + "</strong> não entregues</li></ul>");
-
+    var total = Object.keys(itens).length;
+    preencher("#estado-publicado", '<p class="sub"><span class="situacao s-PUBLICADO">Publicada</span> em ' + estado.publicada.em + ", assinada por " + esc(estado.publicada.autoridade) +
+      (estado.remarcacoes.length ? " · " + plural(estado.remarcacoes.length, "mudança individual", "mudanças individuais") + " depois" : "") + ".</p>" +
+      '<div class="progresso-da-agenda">' + medidor(contagem.enviado, total, "<strong>" + contagem.enviado + "</strong> de " + total + " avisos enviados", null, contagem.enviado === total) +
+      '<p class="fatos-da-agenda"><span>' + plural(total, "horário publicado", "horários publicados") + "</span>" +
+      (contagem.na_fila ? "<span>" + contagem.na_fila + " na fila</span>" : "") +
+      (contagem.falhou ? '<span><strong class="falta">' + plural(contagem.falhou, "não entregue", "não entregues") + "</strong></span>" : "") + "</p></div>");
     var falhas = Object.keys(estado.avisos).filter(function (pid) { return estado.avisos[pid] === "falhou"; });
     preencher("#falhas", falhas.length
       ? '<div class="aviso"><p><strong>' + plural(falhas.length, "aviso não foi entregue", "avisos não foram entregues") + ".</strong> A agenda continua publicada e vale para " +
@@ -937,46 +1113,52 @@
     if (!p) { window.location.href = "publicada.html"; return; }
     var atual = estado.publicada ? estado.publicada.itens[pid] : (estado.alocacoes[pid] || {}).horario;
     var inclusao = !atual;
+    var dia = atual ? horarioPorId(atual).data : null, escolhido = null;
     textos();
-    preencher("#titulo-da-remarcacao", inclusao ? "Agendar uma pessoa depois da publicação" : "Remarcar uma pessoa");
-    preencher("#quem", "<div><dt>Pessoa</dt><dd>" + esc(p.nome) + " · " + p.protocolo + "</dd></div>" +
-      "<div><dt>Horário publicado</dt><dd>" + (atual ? rotuloDoHorario(atual) : "nenhum: passou a participar depois da publicação") + "</dd></div>");
-    var ocupado = mapaDeOcupacao();
-    var livres = horarios(estado.config).filter(function (h) { return !ocupado[h.id]; });
-    var porDia = {};
-    livres.forEach(function (h) { (porDia[h.data] = porDia[h.data] || []).push(h); });
-    var opcoes = Object.keys(porDia).sort().map(function (d) {
-      return '<optgroup label="' + dataPorExtenso(d) + '">' + porDia[d].map(function (h) {
-        return '<option value="' + h.id + '">' + dataPorExtenso(h.data, true) + " · " + h.inicio + (estado.config.bancas.length > 1 ? " · " + esc(h.bancaNome) : "") + "</option>";
-      }).join("") + "</optgroup>";
-    }).join("");
-    var select = document.querySelector("[name=novo]");
-    select.innerHTML = '<option value="">— escolha um horário livre —</option>' + opcoes;
-    if (!livres.length) {
-      preencher("#sem-livres", '<p class="aviso">Não há horário livre. Acrescente uma janela, um dia ou uma banca na <a href="configurar.html">configuração</a>: os horários publicados não mudam.</p>');
+    preencher("#titulo-da-remarcacao", inclusao ? "Agendar " + esc(p.nome.split(" ")[0]) : "Remarcar " + esc(p.nome.split(" ")[0]));
+    preencher("#quem", '<p class="quem-grande">' + esc(p.nome) + ' <span class="inscricao">' + p.protocolo + "</span></p>" +
+      '<p class="horario-atual">' + (atual ? "Horário publicado: <strong>" + rotuloDoHorario(atual) + "</strong>" : "Sem horário: passou a participar depois da publicação") + "</p>");
+
+    function desenharSeletor() {
+      preencher("#seletor", seletorDeHorario("novo", livresAgora(), dia, escolhido));
+      var resumo = escolhido
+        ? (atual ? "<span class=\"de\">" + rotuloDoHorario(atual, true) + "</span> → " : "") + "<strong>" + rotuloDoHorario(escolhido) + "</strong>"
+        : "Escolha um horário livre.";
+      preencher("#resumo-da-troca", resumo);
     }
+
+    document.addEventListener("click", function (ev) {
+      var el = ev.target.closest("[data-dia-do-seletor]");
+      if (!el) return;
+      dia = el.getAttribute("data-dia-do-seletor");
+      escolhido = null;
+      desenharSeletor();
+    });
+    document.addEventListener("change", function (ev) {
+      if (ev.target.name === "novo") { escolhido = ev.target.value; desenharSeletor(); }
+    });
     preencher("#botao-remarcar", inclusao ? "Agendar e avisar esta pessoa" : "Remarcar e avisar esta pessoa");
     document.querySelector("#form-remarcar").addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var novo = select.value;
       var motivo = document.querySelector("[name=motivo]").value.trim();
       var erros = [];
-      if (!novo) erros.push("Escolha o novo horário.");
+      if (!escolhido) erros.push("Escolha o novo horário.");
       if (!motivo) erros.push("Escreva o motivo. Ele fica na trilha e não aparece para o candidato.");
       if (erros.length) {
         preencher("#erros", '<div class="erro" role="alert"><ul>' + erros.map(function (e) { return "<li>" + e + "</li>"; }).join("") + "</ul></div>");
         return;
       }
-      if (atual) estado.remarcacoes.push({ pessoa: pid, de: atual, deRotulo: rotuloDoHorario(atual), para: novo, motivo: motivo, em: "14/11" });
-      else estado.remarcacoes.push({ pessoa: pid, de: null, deRotulo: "", para: novo, motivo: motivo, em: "14/11", inclusao: true });
-      estado.alocacoes[pid] = { horario: novo, origem: "manual" };
-      if (estado.publicada) estado.publicada.itens[pid] = novo;
+      if (atual) estado.remarcacoes.push({ pessoa: pid, de: atual, deRotulo: rotuloDoHorario(atual), para: escolhido, motivo: motivo, em: "14/11" });
+      else estado.remarcacoes.push({ pessoa: pid, de: null, deRotulo: "", para: escolhido, motivo: motivo, em: "14/11", inclusao: true });
+      estado.alocacoes[pid] = { horario: escolhido, origem: "manual" };
+      if (estado.publicada) estado.publicada.itens[pid] = escolhido;
       estado.avisos[pid] = "na_fila";
-      avisar("sucesso", "<strong>" + esc(p.nome) + (atual ? " foi remarcada" : " foi agendada") + "</strong> para " + rotuloDoHorario(novo) +
-        ". Só ela recebe aviso; a página pública mostra o horário novo" + (atual ? ", com a marca \"remarcado em 14/11\"" : "") + ".");
+      avisar("sucesso", "<strong>" + (atual ? "Remarcação feita" : "Agendamento feito") + ":</strong> " + esc(p.nome) + ", " + rotuloDoHorario(escolhido) +
+        ". Só essa pessoa recebe aviso; a página pública mostra o horário novo" + (atual ? ", com a marca \"remarcado em 14/11\"" : "") + ".");
       mudou();
       window.location.href = "publicada.html";
     });
+    desenharSeletor();
   }
 
   /* ---------------------------------------------------------------- portal */

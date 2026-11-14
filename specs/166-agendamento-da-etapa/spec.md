@@ -111,12 +111,12 @@ configurar 23/11 com 08:00–12:00 e 13:00–17:00, 10 minutos com 5 de interval
 
 ### User Story 2 — A comissão monta a agenda sem planilha (Priority: P1)
 
-Na tela "Montar a agenda", o alto mostra quantos participam, quantos horários há, quantos têm
-horário, quantos estão sem horário e quantos horários estão livres. Uma aba por dia mostra a grade
-horário × banca. Ao lado, "Pessoas sem horário". A comissão pede "Preencher horários livres", vê a
-prévia — quem vai para onde, quantas sobram e a ordem usada — e aplica. Depois ajusta à mão:
-escolhe uma pessoa na lista e um horário livre na grade, ou muda alguém de horário, ou libera um
-horário.
+Na tela "Montar a agenda", um resumo só diz quantas pessoas já têm horário, quantos horários há e
+quanto sobra ou falta. Uma aba por dia mostra a grade horário × banca, e ao lado fica o painel de
+ação, que começa pela lista "Sem horário". A comissão pede "Preencher automaticamente", vê no painel a
+prévia — quantas pessoas recebem horário, a distribuição por dia e banca, o que sobra e a ordem
+usada — e aplica. Depois ajusta à mão: clica numa pessoa e escolhe, no painel, um horário livre de
+qualquer dia; ou clica num horário livre e escolhe quem vai para ele; ou libera um horário.
 
 **Why this priority**: é a escala que hoje vive na planilha. É o que o pedido mede: sair de uma
 lista de 43 pessoas para uma agenda montada.
@@ -136,10 +136,12 @@ mantém ali depois do preenchimento.
    muda de horário, e o horário dela não é dado a outra.
 4. **Given** a prévia aberta, **When** outra sessão muda a agenda antes da aplicação, **Then** a
    aplicação é recusada com "a agenda mudou desde a prévia", e a prévia nova aparece.
-5. **Given** uma pessoa escolhida na lista "Pessoas sem horário", **When** a comissão escolhe
-   "Agendar aqui" num horário livre, **Then** a pessoa passa a ocupar o horário e sai da lista.
-6. **Given** uma pessoa agendada, **When** a comissão escolhe "Mudar de horário" e depois um horário
-   livre, **Then** a pessoa passa ao horário novo e o anterior fica livre.
+5. **Given** uma pessoa escolhida na lista "Sem horário", **When** a comissão escolhe no painel um
+   horário livre e confirma, **Then** a pessoa passa a ocupar o horário e sai da lista; e, partindo
+   de um horário livre da grade, escolher a pessoa e "Agendar aqui" dá o mesmo resultado.
+6. **Given** uma pessoa agendada, **When** a comissão a escolhe na grade, escolhe no painel um horário
+   livre de outro dia e confirma "Mudar de horário", **Then** a pessoa passa ao horário novo e o
+   anterior fica livre.
 7. **Given** uma pessoa agendada, **When** a comissão escolhe "Liberar", **Then** o horário fica
    livre e a pessoa volta para "Pessoas sem horário".
 8. **Given** duas pessoas da comissão escolhendo o mesmo horário livre ao mesmo tempo, **When** as
@@ -428,13 +430,15 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 - **UX-760**: A capacidade MUST estar à vista enquanto se configura, ao lado dos campos no desktop e
   depois deles no celular, e MUST mudar a cada campo digitado.
-- **UX-761**: A montagem MUST mostrar um dia por vez, em abas com a contagem de ocupados por dia, e
-  a lista "Pessoas sem horário" ao lado da grade no desktop e acima dela em telas estreitas.
+- **UX-761**: A montagem MUST mostrar um dia por vez, em abas com a contagem de ocupados por dia, um
+  resumo único de progresso no alto, e um painel de ação ao lado da grade no desktop e acima dela em
+  telas estreitas. A ação acontece no painel; a grade MUST NOT repetir texto de ação em cada linha.
 - **UX-762**: O ajuste à mão MUST funcionar sem arrastar: escolher uma pessoa e depois um horário,
   com teclado, leitor de tela e toque. Arrastar MAY existir como atalho, nunca como único caminho.
 - **UX-763**: No celular, a grade MUST virar lista cronológica, com a banca dentro de cada horário.
-- **UX-764**: A ação principal da montagem MUST ser a que falta fazer: "Preencher horários livres"
-  enquanto há pessoa sem horário e horário livre; "Conferir antes de publicar" depois.
+- **UX-764**: A ação principal da montagem MUST ser a que falta fazer: "Preencher automaticamente"
+  enquanto há pessoa sem horário e horário livre; "Conferir e publicar" depois. Nenhuma ação MUST
+  aparecer duas vezes na mesma tela.
 - **UX-765**: O estado vazio da agenda MUST dizer para que ela serve e que pode ser configurada antes
   de a lista fechar.
 - **UX-766**: Toda recusa e todo impedimento MUST dizer o que fazer, e não só o que está errado.

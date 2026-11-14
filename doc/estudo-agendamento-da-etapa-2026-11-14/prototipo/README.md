@@ -43,6 +43,14 @@ Dois achados do próprio protótipo, já corrigidos nele: o portal tem uma class
 (caixa com borda) que as peças novas não podem reusar; e o `display` das listas vence o `hidden`, o
 que a busca precisa forçar.
 
+## O redesign de 14/11
+
+A segunda rodada reescreveu configurar, montar, a prévia, a remarcação, a prontidão da conferência e
+o resumo da agenda publicada, sem mudar regra. As decisões e o antes e depois estão em
+[`../04-redesign.md`](../04-redesign.md); as capturas, em [`capturas/antes/`](capturas/antes/) e
+[`capturas/depois/`](capturas/depois/). Verificado em 1440 × 900, 1366 × 768 e 375 × 812, com uma e
+com duas bancas, sem erro no console e sem rolagem horizontal no celular.
+
 ## O que não está no protótipo
 
 - o cancelamento da R-22 (só a sinalização da inclusão, R-21);

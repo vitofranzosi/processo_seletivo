@@ -1,5 +1,11 @@
 /* Protótipo do agendamento da Etapa — só as peças novas. Tudo o mais vem das folhas reais da gestão,
-   servidas sem cópia. Cores só por token (`shared/tokens.css`); nenhum estilo em linha, pela CSP. */
+   servidas sem cópia. Cores só por token (`shared/tokens.css`); nenhum estilo em linha, pela CSP.
+
+   Redesign de 14/11. Três regras guiam a folha:
+   - uma superfície por assunto: seção branca com borda, e nada de caixa dentro de caixa;
+   - o espaçamento é a escala que a gestão já usa (.5, .75, 1, 1.5rem), sem valor avulso;
+   - o que reaproveita peça real não a redesenha: `.medidor`, `.situacao`, `.botao`, `.acao`,
+     `.aviso`, `.vazio` e `.tabela` vêm das folhas da gestão como estão. */
 
 .prototipo-faixa{margin:0 0 1rem;padding:.5rem .75rem;border:1px dashed var(--texto-fraco);
   border-radius:4px;font-size:.8125rem;color:var(--texto-fraco);max-width:none}
@@ -8,80 +14,206 @@
 .prototipo-controle summary{cursor:pointer;font-weight:600}
 .roteiro li{margin-bottom:.4rem}
 .roteiro-cenarios .cartao{flex:1 1 22rem}
-
-/* O resumo da agenda: o número que pede ação ganha a cor da pendência, e não a do sucesso. */
-.resumo-da-agenda li.pendente,.resumo li.pendente{border-color:var(--amarelo);background:var(--amarelo-fundo)}
+.resumo li.pendente{border-color:var(--amarelo);background:var(--amarelo-fundo)}
 .resumo li.pendente strong{color:var(--amarelo)}
-
-/* Configurar: o formulário à esquerda e a capacidade sempre à vista, à direita. No estreito, a
-   capacidade desce para depois dos campos, com o botão — é o fim natural do formulário. */
-.configuracao-colunas{display:grid;grid-template-columns:minmax(0,1fr) 20rem;gap:1.5rem;align-items:start}
-.configuracao-campos fieldset{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
-  padding:1rem 1.25rem;margin:0 0 1rem}
-.configuracao-campos legend{font-weight:600;padding:0 .35rem}
-.painel-da-capacidade{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);
-  border-radius:6px;padding:1rem 1.25rem}
-.painel-da-capacidade h2{margin-top:0}
-.painel-da-capacidade .erro ul{margin:.4rem 0 0;padding-left:1.1rem}
-.numero-grande{display:block;font-size:2rem;line-height:1.1;font-weight:600;color:var(--verde-texto)}
-.capacidade{margin:0 0 1rem}
-.duracao-e-intervalo{display:flex;gap:1.5rem;flex-wrap:wrap}
-.com-unidade{display:inline-flex;align-items:center;gap:.4rem}
-.com-unidade input{width:5.5rem}
-.radios{display:flex;gap:1.25rem;flex-wrap:wrap}
-.radios label{display:inline-flex;align-items:center;gap:.35rem;font-weight:400;white-space:nowrap}
-.dia-de-atendimento{border:1px solid var(--borda);border-radius:4px;padding:.6rem .9rem;margin:0 0 .75rem}
-.dia-de-atendimento legend{font-weight:600;font-size:.9375rem}
-.janelas{list-style:none;padding:0;margin:0 0 .5rem;display:flex;flex-direction:column;gap:.4rem}
-.janela{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
-.bancas{list-style:none;padding:0;margin:0 0 .5rem;display:flex;flex-direction:column;gap:.75rem}
-.banca{display:grid;grid-template-columns:10rem minmax(0,1fr) auto;gap:.75rem;align-items:end;
-  border-bottom:1px solid var(--fundo);padding-bottom:.75rem}
-.banca .campo{margin:0}
-.banca input{width:100%}
-.configuracao-campos textarea{width:100%}
-.configuracao-campos .salvar,.painel-da-capacidade .salvar{margin:1rem 0 .5rem}
-
-/* Montar: cabeçalho com as duas ações principais, grade à esquerda e "sem horário" à direita. */
-.cabecalho-da-montagem{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap}
-.cabecalho-da-montagem .sub{margin-bottom:1rem}
-.acoes-da-montagem{display:flex;gap:.5rem;flex-wrap:wrap;margin:.25rem 0 1rem}
-.montagem{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:1.5rem;align-items:start}
-.lado-sem-horario{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);
-  border-radius:6px;padding:1rem;max-height:calc(100vh - 2rem);overflow:auto}
-.lado-sem-horario h2{margin-top:0}
-.escolha-de-pessoa{border:0;padding:0;margin:0}
-.sem-horario{list-style:none;margin:0;padding:0}
-.sem-horario li{border-bottom:1px solid var(--fundo)}
-.sem-horario label{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:.5rem;padding:.4rem .25rem;
-  cursor:pointer;font-weight:400}
-.sem-horario input{grid-row:span 2;margin-top:.3rem}
-.sem-horario label:has(input:checked){background:var(--verde-claro);border-radius:4px}
-.quem{font-weight:600;display:block}
 .inscricao{display:block;font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
-.dias-da-agenda{display:flex;gap:.25rem;list-style:none;padding:0;margin:0 0 .75rem;flex-wrap:wrap;
-  border-bottom:1px solid var(--borda)}
-.dias-da-agenda a{display:inline-block;padding:.45rem .8rem;border:1px solid transparent;border-bottom:0;
-  border-radius:4px 4px 0 0;text-decoration:none;color:var(--verde-texto)}
-.dias-da-agenda a[aria-current]{background:var(--branco);border-color:var(--borda);color:var(--texto);
-  font-weight:600;margin-bottom:-1px}
-.dias-da-agenda .contagem{font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
-.grade-da-agenda{width:100%}
-.grade-da-agenda th[scope=row]{white-space:nowrap;font-variant-numeric:tabular-nums;vertical-align:top}
-.grade-da-agenda .ate{display:block;font-size:.75rem;font-weight:400;color:var(--texto-fraco)}
-.grade-da-agenda td{vertical-align:top;min-width:12rem}
-.grade-da-agenda td.ocupado{background:var(--branco)}
-.grade-da-agenda td.ocupado .acoes{margin-top:.35rem}
-.grade-da-agenda td.em-movimento{background:var(--amarelo-fundo)}
-.grade-da-agenda td.livre{background:var(--fundo)}
-.grade-da-agenda td.livre.escolhendo{background:var(--verde-claro)}
-.livre-rotulo{color:var(--texto-fraco);font-size:.875rem}
-.banca-no-estreito{display:none}
-.previa-do-preenchimento .pares{margin:.5rem 0;padding-left:1.4rem;columns:2;column-gap:2rem;font-size:.9375rem}
-.previa-do-preenchimento .mais{list-style:none;color:var(--texto-fraco)}
-.previa-do-preenchimento:focus{outline:2px solid var(--verde);outline-offset:2px}
+.quem{font-weight:600;display:block}
+.cabecalho-da-tela{margin-bottom:1.5rem}
+.cabecalho-da-tela .sub{margin-bottom:0}
 
-/* Conferência e publicada. */
+/* ------------------------------------------------------------ configurar */
+
+.configuracao-colunas{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:1.5rem;align-items:start}
+.secao-da-configuracao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.25rem 1.5rem;margin:0 0 1rem}
+.secao-da-configuracao>header{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.secao-da-configuracao h2{margin:0}
+.secao-da-configuracao>.ajuda{margin:0 0 .75rem}
+.secao-da-configuracao>p:last-child{margin-bottom:0}
+.numero-da-secao{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
+  background:var(--verde-claro);color:var(--verde-escuro);font-weight:600;font-size:.8125rem}
+.campos-em-linha{display:flex;flex-wrap:wrap;gap:1rem 2rem;align-items:flex-end}
+.campos-em-linha .campo{margin:0}
+.campos-em-linha label,.segmentado legend{display:block;font-size:.8125rem;font-weight:600;margin-bottom:.35rem;padding:0}
+.com-unidade{display:inline-flex;align-items:center;gap:.4rem;color:var(--texto-fraco)}
+.com-unidade input{width:5rem;font-variant-numeric:tabular-nums}
+
+/* Duas opções que se excluem: controle segmentado, e não dois rádios soltos. Continua sendo rádio,
+   para o teclado e o leitor de tela. */
+.segmentado{border:0;padding:0;margin:0;display:inline-flex;flex-wrap:wrap}
+.segmentado legend{width:100%}
+.segmentado label{position:relative;margin:0}
+.segmentado input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.segmentado span{display:inline-block;padding:.45rem .9rem;border:1px solid var(--borda);background:var(--branco);
+  font-size:.875rem;white-space:nowrap}
+.segmentado label:first-of-type span{border-radius:4px 0 0 4px}
+.segmentado label:last-of-type span{border-radius:0 4px 4px 0;margin-left:-1px}
+.segmentado input:checked+span{background:var(--verde-claro);border-color:var(--verde);color:var(--verde-escuro);
+  font-weight:600;position:relative}
+.segmentado input:focus-visible+span{outline:2px solid var(--verde);outline-offset:2px}
+
+/* Um dia por linha: o rótulo, as janelas como pares de horas, e quantos horários ele dá. */
+.lista-de-dias,.lista-de-bancas{list-style:none;margin:0 0 .75rem;padding:0;border-top:1px solid var(--borda)}
+.linha-de-dia{display:grid;grid-template-columns:7rem minmax(0,1fr) 6.5rem 2rem;gap:.75rem;align-items:center;
+  padding:.6rem 0;border-bottom:1px solid var(--borda)}
+.rotulo-do-dia{font-weight:600}
+.janelas-do-dia{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.janela{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .25rem .15rem .4rem;
+  border:1px solid var(--borda);border-radius:4px;background:var(--fundo)}
+.janela input[type=time]{border:0;background:transparent;font-variant-numeric:tabular-nums;padding:0;width:auto;box-shadow:none;height:2rem}
+.horarios-do-dia{font-size:.8125rem;color:var(--texto-fraco);text-align:right;font-variant-numeric:tabular-nums}
+.remover{border:0;background:transparent;color:var(--texto-fraco);font-size:1.1rem;line-height:1;
+  width:1.75rem;height:1.75rem;border-radius:4px;cursor:pointer}
+.remover:hover{background:var(--vermelho-fundo);color:var(--vermelho)}
+.cabecalho-de-bancas{display:grid;grid-template-columns:11rem minmax(0,1fr) 2rem;gap:.75rem;
+  font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.04em;padding-bottom:.35rem}
+.linha-de-banca{display:grid;grid-template-columns:11rem minmax(0,1fr) 2rem;gap:.75rem;align-items:center;
+  padding:.5rem 0;border-bottom:1px solid var(--borda)}
+.linha-de-banca input{width:100%}
+.secao-da-configuracao textarea{width:100%}
+
+/* O simulador: o veredito primeiro, em palavras; depois o medidor real; depois a conta. */
+.simulador{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.25rem 1.5rem}
+.simulador h2{margin-top:0}
+.veredito{border-radius:6px;padding:.9rem 1rem;margin:0 0 1rem;border-left:4px solid}
+.veredito p{margin:0 0 .35rem;font-size:.875rem}
+.veredito p:last-child{margin-bottom:0}
+.veredito .titulo-do-veredito{font-size:1.15rem;font-weight:600;margin-bottom:.25rem}
+.veredito.cabe{background:var(--sucesso-fundo);border-color:var(--sucesso)}
+.veredito.cabe .titulo-do-veredito{color:var(--sucesso)}
+.veredito.falta{background:var(--amarelo-fundo);border-color:var(--amarelo)}
+.veredito.falta .titulo-do-veredito{color:var(--amarelo)}
+.veredito.invalido{background:var(--vermelho-fundo);border-color:var(--vermelho)}
+.veredito.invalido .titulo-do-veredito{color:var(--vermelho)}
+.veredito ul{margin:.25rem 0 0;padding-left:1.1rem;font-size:.875rem}
+.veredito .resolver{margin-top:.6rem;font-weight:600}
+.sugestoes{list-style:none;padding:0;margin:.35rem 0 0;display:flex;flex-direction:column;gap:.35rem}
+.sugestoes .acao{display:flex;justify-content:space-between;width:100%;font-size:.875rem;padding:.4rem .7rem}
+.sugestao.resolve{border-width:2px;font-weight:600}
+.ganho{font-variant-numeric:tabular-nums;color:var(--verde-texto);font-weight:600}
+.conta-da-capacidade{margin:0 0 1rem;font-size:.8125rem;color:var(--texto-fraco)}
+.acao-do-simulador{border-top:1px solid var(--borda);padding-top:1rem;margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.acao-do-simulador .botao{flex:1 1 100%;padding:.6rem 1rem;font-size:.9375rem}
+.acao-do-simulador .ajuda{margin:0}
+
+/* ------------------------------------------------------------ montar (workspace) */
+
+.cabecalho-do-workspace{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.titulo-do-workspace h1{display:inline;margin-right:.6rem}
+.titulo-do-workspace .sub{margin:.35rem 0 0}
+.acoes-do-workspace{display:flex;gap:.5rem;flex-wrap:wrap;margin:0}
+.acoes-do-workspace .botao{padding:.55rem 1rem}
+
+/* Um resumo só, no lugar de cinco números de mesmo peso: o progresso, e os dois fatos que
+   contam ao lado dele. */
+.progresso-da-agenda{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(0,1fr);gap:.5rem 2rem;align-items:center;
+  background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:.9rem 1.25rem;margin:0 0 1rem}
+.progresso-da-agenda .medidor{margin:0}
+.fatos-da-agenda{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;margin:0;font-size:.9375rem;color:var(--texto-fraco)}
+.fatos-da-agenda span+span::before{content:"·";margin-right:1.25rem;color:var(--borda)}
+.fatos-da-agenda .falta{color:var(--amarelo)}
+
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 22rem;gap:1.5rem;align-items:start}
+.agenda-do-dia{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem 1rem}
+.dias-da-agenda{display:flex;gap:.25rem;list-style:none;padding:0;margin:0 0 .5rem;flex-wrap:wrap}
+.dias-da-agenda a{display:inline-block;padding:.4rem .8rem;border-radius:4px;text-decoration:none;color:var(--texto);font-size:.9375rem}
+.dias-da-agenda a:hover{background:var(--fundo)}
+.dias-da-agenda a[aria-current]{background:var(--verde-claro);color:var(--verde-escuro);font-weight:600}
+.dias-da-agenda .contagem,.contagem{font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;font-weight:400}
+
+/* A grade compacta: uma linha por horário, a célula inteira é o botão. Ocupada mostra quem; livre
+   fica quieta. Escolhida, ganha o contorno — e nenhum texto novo aparece pela grade. */
+.grade-compacta{width:100%;border-collapse:collapse}
+.grade-compacta th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco);
+  text-align:left;font-weight:600;padding:.4rem .5rem;border-bottom:1px solid var(--borda)}
+.grade-compacta .coluna-hora{width:4.5rem;font-variant-numeric:tabular-nums}
+.grade-compacta tbody th{font-size:.875rem;text-transform:none;letter-spacing:0;color:var(--texto);font-weight:600;
+  border-bottom:1px solid var(--fundo);vertical-align:middle}
+.grade-compacta td{padding:.15rem .25rem;border-bottom:1px solid var(--fundo)}
+.vaga{display:flex;align-items:baseline;gap:.5rem;width:100%;min-height:2.25rem;text-align:left;border:1px solid transparent;
+  border-radius:4px;background:transparent;padding:.3rem .5rem;cursor:pointer;font:inherit;color:inherit}
+.vaga:hover{background:var(--fundo);border-color:var(--borda)}
+.vaga:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+.vaga .quem{display:inline;font-weight:600;font-size:.9375rem}
+.vaga .inscricao{display:inline}
+.vaga .origem{margin-left:auto;font-size:.6875rem;color:var(--texto-fraco);border:1px solid var(--borda);border-radius:999px;padding:0 .4rem}
+.vaga.livre .livre-rotulo{color:var(--texto-fraco);font-size:.875rem}
+.vaga.livre:hover .livre-rotulo::after{content:" — escolher quem";color:var(--verde-texto)}
+.vaga.escolhido{border-color:var(--verde);background:var(--verde-claro)}
+.banca-no-estreito{display:none}
+
+/* O painel de ação: o lugar onde se age. */
+.painel-de-acao{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;max-height:calc(100vh - 2rem);overflow:auto}
+.cabecalho-do-painel{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.75rem}
+.cabecalho-do-painel h2{margin:0;font-size:1.05rem}
+.cabecalho-do-painel h2:focus{outline:none}
+.voltar{border:1px solid var(--borda);background:var(--branco);border-radius:4px;width:2rem;height:2rem;cursor:pointer;flex:none}
+.voltar:hover{background:var(--fundo)}
+.busca-do-painel{margin:0 0 .5rem}
+.busca-do-painel input{width:100%}
+.lista-com-rolagem{max-height:22rem;overflow:auto;border:1px solid var(--borda);border-radius:4px}
+.pessoas-do-painel{list-style:none;margin:0;padding:0}
+.pessoas-do-painel li+li{border-top:1px solid var(--fundo)}
+.pessoa-do-painel,.pessoas-do-painel label{display:block;width:100%;text-align:left;border:0;background:transparent;
+  padding:.45rem .75rem;cursor:pointer;font:inherit;color:inherit}
+.pessoas-do-painel label{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:.5rem}
+.pessoas-do-painel label input{grid-row:span 2;margin-top:.3rem}
+.pessoa-do-painel:hover,.pessoas-do-painel label:hover{background:var(--fundo)}
+.pessoas-do-painel label:has(input:checked){background:var(--verde-claro)}
+.horario-atual{margin:0 0 .75rem;font-size:.9375rem}
+.sem-horario-ainda{margin:0 0 .75rem;color:var(--amarelo);font-weight:600;font-size:.875rem}
+.alocacao h3{font-size:.875rem;margin:0 0 .5rem}
+.acoes-do-painel{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:1rem 0 0}
+
+/* O seletor de horário: dia, depois os horários livres como opções. */
+.dias-do-seletor{display:flex;flex-wrap:wrap;gap:.25rem;margin:0 0 .75rem}
+.dia-do-seletor{border:1px solid var(--borda);background:var(--branco);border-radius:4px;padding:.3rem .6rem;cursor:pointer;font-size:.8125rem}
+.dia-do-seletor[aria-pressed=true]{background:var(--verde-claro);border-color:var(--verde);color:var(--verde-escuro);font-weight:600}
+.horarios-livres{border:0;padding:0;margin:0 0 .75rem;display:flex;flex-wrap:wrap;gap:.35rem}
+.horarios-livres legend{font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.04em;
+  padding:0;margin-bottom:.35rem;width:100%}
+.opcao-de-horario{position:relative}
+.opcao-de-horario input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opcao-de-horario span{display:inline-block;min-width:3.75rem;text-align:center;padding:.35rem .5rem;border:1px solid var(--borda);
+  border-radius:4px;font-variant-numeric:tabular-nums;font-size:.875rem;background:var(--branco)}
+.opcao-de-horario input:hover+span{border-color:var(--verde)}
+.opcao-de-horario input:checked+span{background:var(--verde);border-color:var(--verde);color:var(--branco);font-weight:600}
+.opcao-de-horario input:focus-visible+span{outline:2px solid var(--verde);outline-offset:2px}
+
+/* A prévia no painel: veredito, a tabela dia × banca, e a relação nominal recolhida. */
+.distribuicao-da-previa{width:100%;margin:0 0 .75rem;font-size:.875rem}
+.distribuicao-da-previa td.numero,.distribuicao-da-previa th.numero{text-align:right;font-variant-numeric:tabular-nums}
+.relacao-nominal summary{cursor:pointer;color:var(--verde-texto);font-size:.875rem}
+.relacao-nominal ol{margin:.5rem 0 0;padding-left:1.25rem;font-size:.8125rem;max-height:14rem;overflow:auto}
+.relacao-nominal li span{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------------------ remarcar */
+
+.colunas-da-remarcacao{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:1.5rem;align-items:start}
+.quem-grande{font-size:1.15rem;font-weight:600;margin:0 0 .25rem}
+.quem-grande .inscricao{display:inline;margin-left:.4rem;font-weight:400}
+.colunas-da-remarcacao h2{margin:1.25rem 0 .75rem}
+.resumo-da-remarcacao h2{margin:0 0 .75rem}
+.troca{font-size:1rem;margin:0 0 .75rem}
+.troca .de{text-decoration:line-through;color:var(--texto-fraco)}
+.efeitos{margin:0;padding-left:1.1rem;font-size:.875rem}
+.efeitos li{margin-bottom:.35rem}
+.acao-do-simulador .perigoso{flex:1 1 100%}
+
+/* ------------------------------------------------------------ conferência e publicada */
+
+/* A conferência começa respondendo "posso publicar?", em quatro linhas. */
+.lista-de-prontidao{list-style:none;margin:0 0 1.5rem;padding:.75rem 1rem;background:var(--branco);border:1px solid var(--borda);
+  border-radius:6px;display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.5rem 1.5rem}
+.lista-de-prontidao li{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem}
+.marca-de-prontidao{display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;font-size:.75rem;font-weight:700;flex:none}
+.pronto .marca-de-prontidao{background:var(--sucesso-fundo);color:var(--sucesso)}
+.pendente .marca-de-prontidao{background:var(--amarelo-fundo);color:var(--amarelo)}
+.pendente{font-weight:600}
+.a-fazer .marca-de-prontidao{background:var(--cinza-fundo);color:var(--texto-fraco)}
+
 .impedimentos{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo)}
 .impedimentos h2{color:var(--amarelo)}
 .impedimento{margin-bottom:1rem}
@@ -95,6 +227,7 @@
 .horarios-publicos .quem .inscricao{display:inline;margin-left:.4rem}
 .horarios-publicos .banca{color:var(--texto-fraco);font-size:.875rem}
 .horarios-publicos .mais{color:var(--texto-fraco);border-bottom:0}
+.horarios-publicos li[hidden],.dia-publico[hidden]{display:none}
 .remarcado{display:inline-block;font-size:.75rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;
   background:var(--amarelo-fundo);color:var(--amarelo)}
 .estado-do-aviso{display:inline-block;font-size:.75rem;font-weight:600;padding:.15rem .55rem;border-radius:12px}
@@ -105,27 +238,41 @@
 .texto-do-aviso{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8125rem;white-space:normal;
   background:var(--fundo);padding:.75rem;border-radius:4px}
 
+/* ------------------------------------------------------------ larguras */
+
+/* Notebook: até 80rem a barra lateral e o painel disputam a largura; o painel encolhe antes de a
+   grade apertar. */
+@media (max-width:80rem){
+  .workspace{grid-template-columns:minmax(0,1fr) 19rem}
+  .configuracao-colunas,.colunas-da-remarcacao{grid-template-columns:minmax(0,1fr) 18rem}
+  .linha-de-dia{grid-template-columns:6rem minmax(0,1fr) 2rem}
+  .horarios-do-dia{display:none}
+}
 @media (max-width:64rem){
-  .configuracao-colunas,.montagem{grid-template-columns:minmax(0,1fr)}
-  .painel-da-capacidade,.lado-sem-horario{position:static;max-height:none}
-  .lado-sem-horario{order:-1}
+  .configuracao-colunas,.workspace,.colunas-da-remarcacao{grid-template-columns:minmax(0,1fr)}
+  .simulador,.painel-de-acao{position:static;max-height:none}
+  .painel-de-acao{order:-1}
+  .progresso-da-agenda{grid-template-columns:minmax(0,1fr)}
 }
 
-/* No celular, a grade vira lista cronológica: cada horário é um bloco, e a banca aparece dentro
-   dele, porque não há mais coluna que a nomeie. A marcação é a mesma — nenhum segundo desenho para
-   manter em sincronia. */
+/* Celular: a grade vira lista cronológica, com a banca dentro de cada horário. A marcação é a
+   mesma — nenhum segundo desenho para manter em sincronia. */
 @media (max-width:40rem){
-  .grade-da-agenda thead{display:none}
-  .grade-da-agenda,.grade-da-agenda tbody,.grade-da-agenda tr,.grade-da-agenda th,.grade-da-agenda td{display:block;width:auto}
-  .grade-da-agenda tr{border:1px solid var(--borda);border-radius:6px;margin-bottom:.6rem;overflow:hidden}
-  .grade-da-agenda th[scope=row]{background:var(--cinza-fundo);padding:.4rem .75rem}
-  .grade-da-agenda th[scope=row] .ate{display:inline;margin-left:.4rem}
-  .grade-da-agenda td{min-width:0;border-top:1px solid var(--borda)}
-  .banca-no-estreito{display:block;font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.04em}
-  .banca{grid-template-columns:minmax(0,1fr)}
-  .previa-do-preenchimento .pares{columns:1}
-  .acoes-da-montagem{width:100%}
+  .grade-compacta thead{display:none}
+  .grade-compacta,.grade-compacta tbody,.grade-compacta tr,.grade-compacta th,.grade-compacta td{display:block;width:auto}
+  .grade-compacta tr{display:grid;grid-template-columns:3.5rem minmax(0,1fr);border-bottom:1px solid var(--borda);padding:.25rem 0}
+  .grade-compacta tbody th{border:0;padding:.55rem .25rem 0;grid-row:span 4}
+  .grade-compacta td{border:0;grid-column:2}
+  .vaga{flex-direction:column;align-items:flex-start;gap:0}
+  .vaga .origem{margin-left:0}
+  .banca-no-estreito{display:inline;font-size:.75rem;color:var(--texto-fraco)}
+  .linha-de-dia{grid-template-columns:minmax(0,1fr) 2rem}
+  .rotulo-do-dia{grid-column:1 / -1}
+  .linha-de-banca,.cabecalho-de-bancas{grid-template-columns:minmax(0,1fr) 2rem}
+  .linha-de-banca input:first-of-type{grid-column:1 / -1}
+  .cabecalho-de-bancas{display:none}
+  .acoes-do-workspace{width:100%}
+  .acoes-do-workspace .botao{flex:1 1 auto;text-align:center}
+  .secao-da-configuracao,.simulador{padding:1rem}
+  .lista-com-rolagem{max-height:16rem}
 }
-
-/* `hidden` perde para o `display` de cima; a busca precisa dele. */
-.horarios-publicos li[hidden],.dia-publico[hidden]{display:none}

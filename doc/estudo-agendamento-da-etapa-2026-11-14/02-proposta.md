@@ -29,8 +29,9 @@ ausência já é Ocorrência.
    com a grade horário × banca. Ao lado, "Pessoas sem horário". Duas formas de alocar:
    - **"Preencher horários livres"** mostra uma **prévia** (quem vai para onde, quantas sobram, a
      ordem usada), e só "Aplicar" grava;
-   - **à mão:** escolher uma pessoa na lista e clicar "Agendar Fulana aqui" num horário livre; numa
-     ocupada, "Mudar de horário" ou "Liberar". Sem arrastar nada.
+   - **à mão:** clicar numa pessoa e escolher, no painel, um horário livre de qualquer dia; ou
+     clicar num horário livre e escolher quem vai para ele. Sem arrastar nada. *(Redesenhado na
+     segunda rodada: ver [04-redesign.md](04-redesign.md).)*
 3. **Conferir** (tela "Confira antes de publicar a agenda", a mesma moldura da `140`). O que impede,
    em destaque e com o caminho para resolver; o que será publicado; a prévia exata da página
    pública; a mensagem de cada pessoa; a autoridade signatária. Nada é gravado aqui.
@@ -212,12 +213,13 @@ heteroidentificação.
 - **Uma aba por dia**, e não a semana numa tela: com 3 dias de 32 horários, a grade inteira passa
   de 100 linhas. A aba mostra "32/32" ocupados.
 - **"Pessoas sem horário" fixa ao lado** no desktop, e acima da grade em telas menores que 64rem.
-- **Escolher pessoa, depois horário.** Rádio na lista e botão "Agendar Fulana aqui" em cada horário
-  livre. Funciona com teclado, leitor de tela e toque; arrastar seria um extra, nunca o caminho.
+- **A grade é o que se vê; o painel é onde se age.** Clicar numa pessoa ou num horário livre abre
+  o painel com as escolhas; nenhum botão se repete pela grade. Funciona com teclado, leitor de tela e
+  toque; arrastar seria um extra, nunca o caminho. (Segunda rodada, [04-redesign.md](04-redesign.md).)
 - **No celular, a grade vira lista cronológica** com a banca dentro de cada bloco — a mesma
   marcação, só CSS.
-- **A ação principal é a que falta fazer**: "Preencher horários livres" enquanto há gente sem
-  horário; "Conferir antes de publicar" depois.
+- **A ação principal é a que falta fazer**: "Preencher automaticamente" enquanto há gente sem
+  horário; "Conferir e publicar" depois.
 - **Estados vazios ensinam**: "Esta Etapa ainda não tem agenda" diz para que serve e que dá para
   configurar antes de a lista fechar.
 - **Mensagens dizem o que fazer**: "A janela 12:00–12:05 não comporta um atendimento de 10 minutos.

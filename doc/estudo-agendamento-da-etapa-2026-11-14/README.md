@@ -31,9 +31,14 @@ aviso. Nada muda na Etapa, no Edital, na avaliação ou no resultado.
 3. [Protótipo navegável](prototipo/README.md), com as folhas reais e a CSP de produção:
    configurar, montar (automático e à mão), conferir, publicar, remarcar, página pública, área do
    candidato e e-mail. Catorze verificações no Chromium do painel.
-4. [Plano de entregas](03-plano-de-entregas.md): o marco de aprovação visual, as entregas A a D, os
+4. [Redesign da experiência](04-redesign.md), segunda rodada do mesmo dia: diagnóstico crítico do
+   protótipo, nove decisões (veredito antes do detalhe, a falta resolvida no simulador, a montagem
+   como workspace com painel de ação, o seletor de horário único), antes e depois por tarefa, e as
+   quatro limitações do design system registradas fora do escopo. Capturas em
+   [prototipo/capturas/](prototipo/capturas/).
+5. [Plano de entregas](03-plano-de-entregas.md): o marco de aprovação visual, as entregas A a D, os
    riscos e os testes.
-5. [Especificação](../../specs/166-agendamento-da-etapa/spec.md), pelo Spec Kit.
+6. [Especificação](../../specs/166-agendamento-da-etapa/spec.md), pelo Spec Kit.
 
 ## Pontos de integração
 

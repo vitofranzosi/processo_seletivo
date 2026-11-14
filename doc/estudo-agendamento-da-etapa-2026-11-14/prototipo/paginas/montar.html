@@ -2,36 +2,31 @@
 titulo: Montar a agenda
 trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <span aria-current="page">Montar a agenda</span>
 moldura: gestao
+folhas: interface/telas/minhas-etapas.css
 -->
-<header class="cabecalho-da-montagem">
-  <div>
-    <h1>Montar a agenda</h1>
-    <p class="sub"><span data-texto="etapa"></span> · em montagem: nada é público até você conferir e publicar.</p>
+<header class="cabecalho-do-workspace">
+  <div class="titulo-do-workspace">
+    <h1>Montar a agenda</h1><span id="estado-da-agenda"></span>
+    <p class="sub"><span data-texto="etapa"></span> · <span data-texto="edital"></span></p>
   </div>
-  <p class="acoes-da-montagem">
-    <button type="button" class="botao secundario" data-preencher>Preencher horários livres</button>
-    <a class="botao" href="conferir.html" data-ir-conferir>Conferir antes de publicar</a>
+  <p class="acoes-do-workspace">
+    <button type="button" class="botao" data-preencher>Preencher automaticamente</button>
+    <a class="botao secundario" href="conferir.html" data-ir-conferir>Conferir e publicar</a>
   </p>
 </header>
 <div id="mensagem" aria-live="polite"></div>
 <div id="resumo"></div>
-<section id="previa" class="consequencias previa-do-preenchimento" aria-labelledby="previa-titulo" tabindex="-1" hidden></section>
 
-<div class="montagem">
-  <section class="grade-e-dias" aria-labelledby="grade-titulo">
+<div class="workspace">
+  <section class="agenda-do-dia" aria-labelledby="grade-titulo">
     <h2 id="grade-titulo" class="oculto">Grade de horários</h2>
     <nav aria-label="Dias da agenda"><ul class="dias-da-agenda" id="dias-da-agenda"></ul></nav>
-    <p class="ajuda" id="instrucao-manual"></p>
     <div class="tabela-rolavel">
-      <table class="tabela grade-da-agenda" id="grade"></table>
+      <table class="grade-compacta" id="grade"></table>
     </div>
-    <p class="acoes"><a class="acao" href="configurar.html">Ajustar dias, janelas ou bancas</a></p>
+    <p class="ajuda">Clique numa pessoa para mudá-la de horário, ou num horário livre para escolher quem vai para ele. <a href="configurar.html">Ajustar dias, horários ou bancas</a></p>
   </section>
-
-  <aside class="lado-sem-horario" aria-labelledby="sem-horario-titulo">
-    <h2 id="sem-horario-titulo">Pessoas sem horário</h2>
-    <div id="sem-horario"></div>
-  </aside>
+  <aside class="painel-de-acao" id="painel" aria-labelledby="painel-titulo" aria-live="polite"></aside>
 </div>
 
 <details class="prototipo-controle">
