@@ -626,4 +626,42 @@ existe.
 
 ## Decisões
 
-*(preenchidas pelo clarify e pelo plano)*
+O detalhe e as alternativas descartadas estão em [research.md](research.md).
+
+### D-001 — A admissão do vídeo é declaração publicada da Etapa
+
+Coluna de elaboração e campo do conteúdo publicado; o Edital anterior se lê "não admite"
+(FR-7102).
+
+### D-002 — Só na Etapa colegiada, com alcance e período, e com a chave
+
+Sem colegiado não há regra a aplicar ao vídeo; sem alcance, a ampla gravaria; sem fim, a R-12 não
+tem quando valer (FR-7103, FR-7104).
+
+### D-003 — A maioridade é declarada pelo candidato
+
+Sem data de nascimento nova; padrão provisório da P-7 (FR-7109).
+
+### D-004 — O parecer pelo vídeo é a Avaliação da `012`, e o meio é derivado
+
+Em modo vídeo = vídeo vigente e sem encaminhamento. Nenhuma coluna nova na Avaliação (FR-7136).
+
+### D-005 — O encaminhamento é ato da presidência, sem contagem, pela reabertura da `012`
+
+(FR-7138, FR-7140, FR-7141).
+
+### D-006 — A R-11 mora no plano da consolidação e no ato que grava
+
+(FR-7138, FR-7139).
+
+### D-007 — Abrir é ato; a entrega em intervalos não registra
+
+(FR-7130, FR-7131).
+
+### D-008 — Retenção sem valor, contada do encerramento do Edital
+
+(FR-7146, FR-7147).
+
+### D-009 — A desistência do vídeo enviado não existe nesta entrega
+
+(Edge Cases).
