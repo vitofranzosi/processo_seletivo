@@ -197,12 +197,14 @@ def _pioraria(cumprindo, efeito, conclusao):
 class Consolidavel:
     """Uma inscrição que virará Resultado, com o que dela já está decidido."""
 
-    def __init__(self, inscricao, conclusao, cumprindo, efeito, causa):
+    def __init__(self, inscricao, conclusao, cumprindo, efeito, causa, linha=""):
         self.inscricao = inscricao
         self.conclusao = conclusao
         self.cumprindo = cumprindo
         self.efeito = efeito
         self.causa = causa
+        # A linha da deliberação na conferência (165, UX-752): vazia fora da Etapa colegiada.
+        self.linha_da_deliberacao = linha
 
     def __repr__(self):
         return f"Consolidavel({self.inscricao}, {self.efeito!r})"
@@ -260,7 +262,12 @@ def _planejar(etapa, panorama, inscricoes, conteudo=None):
             # ordenada seria a porta dos fundos da *non reformatio*.
             recusas.append(Recusa(inscricao, PIORARIA))
             continue
-        consolidaveis.append(Consolidavel(inscricao, conclusao, cumprindo, efeito, causa))
+        linha = (
+            deliberacao.linha_da_conferencia(etapa, conclusao)
+            if isinstance(conclusao, deliberacao.Deliberacao)
+            else ""
+        )
+        consolidaveis.append(Consolidavel(inscricao, conclusao, cumprindo, efeito, causa, linha))
     return consolidaveis, recusas
 
 
