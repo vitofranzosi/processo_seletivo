@@ -24,14 +24,14 @@ PostgreSQL.
 
 ## Fase 2 — Os leitores (US2 a US6)
 
-- [ ] T009 A tela do piloto, a entrada e o protótipo leem `piloto_atende`, e a conversa leva a marca
+- [x] T009 A tela do piloto, a entrada e o protótipo leem `piloto_atende`, e a conversa leva a marca
   da habilitação (FR-7515, FR-7525).
-- [ ] T010 O painel e as rotas da página pública leem `pagina_publica_atende`; o aviso de encerrado
+- [x] T010 O painel e as rotas da página pública leem `pagina_publica_atende`; o aviso de encerrado
   (FR-7519, FR-7520, FR-7524, UX-813, R-9).
-- [ ] T011 `avaliar_assistente` deixa de conferir a chave (FR-7509).
-- [ ] T012 `production.py`: recusa `ASSISTENTE_PILOTO`; serviço e tempo-limite sem depender da chave
+- [x] T011 `avaliar_assistente` deixa de conferir a chave (FR-7509).
+- [x] T012 `production.py`: recusa `ASSISTENTE_PILOTO`; serviço e tempo-limite sem depender da chave
   (FR-7505, FR-7506).
-- [ ] T013 Testes do portal, da gestão e da configuração de produção; as suítes da `071` e da `074`
+- [x] T013 Testes do portal, da gestão e da configuração de produção; as suítes da `071` e da `074`
   sem mudança (SC-2453, SC-2455, SC-2456).
 
 ## Fase 3 — A página (US1 a US3)

@@ -18,9 +18,6 @@ FRENTES = (PILOTO, PAGINA_PUBLICA)
 OPERACAO_HABILITAR = "HABILITAR_ASSISTENTE"
 OPERACAO_DESABILITAR = "DESABILITAR_ASSISTENTE"
 
-# A marca da conversa com o atalho de demonstração ligado (R-5): sem ato, a conversa não muda.
-MARCA_DA_DEMONSTRACAO = "demonstracao"
-
 # As recusas (contracts/tela.md).
 MOTIVO_OBRIGATORIO = "motivo_obrigatorio"
 CONFIGURACAO_INCOMPLETA = "configuracao_incompleta"

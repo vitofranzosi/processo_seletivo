@@ -121,6 +121,7 @@ from processo_seletivo.divulgacao.domain.conteudo import compor as compor_divulg
 from processo_seletivo.divulgacao.domain.conteudo import nome_da_lista
 from processo_seletivo.divulgacao.domain.publicabilidade import aferir as aferir_publicabilidade
 from processo_seletivo.divulgacao.models import Natureza
+from processo_seletivo.duvidas.application import habilitacao as habilitacao_do_assistente
 from processo_seletivo.duvidas.application.perguntar import PERMISSAO as PERMISSAO_DO_PILOTO
 from processo_seletivo.editais.application import anexos as anexos_command
 from processo_seletivo.editais.application import teto as teto_command
@@ -4105,8 +4106,15 @@ class LeituraDoEdital:
     documentos: list
     pode_ver_avisos: bool
     pode_conversar_com_o_assistente: bool
+    assistente_na_pagina_publica: object
     conducao_do_imutavel: str
     conferencia_do_ato: list
+
+
+def _assistente_na_pagina_publica(edital):
+    if habilitacao_do_assistente.em_producao():
+        return None
+    return {"ato": habilitacao_do_assistente.estado_do_edital(edital.id)}
 
 
 def _leitura_do_edital(request, ator, edital):
@@ -4147,8 +4155,11 @@ def _leitura_do_edital(request, ator, edital):
         pode_ver_avisos=_pode_ver_avisos(ator, edital),
         # O piloto do assistente (071), só para quem participa dele, e só com o piloto ligado:
         # a mesma regra que a tela aplica, para que a entrada não leve a uma recusa.
-        pode_conversar_com_o_assistente=settings.ASSISTENTE_PILOTO
+        pode_conversar_com_o_assistente=habilitacao_do_assistente.piloto_atende()
         and ator.can(PERMISSAO_DO_PILOTO),
+        # A página pública deste Edital aberta ao assistente, ou não (170, FR-7522): o que a página
+        # pública, aberta a todos, já mostra. `None` em produção, onde ela não abre (FR-7519).
+        assistente_na_pagina_publica=_assistente_na_pagina_publica(edital),
         # **O aviso de conteúdo imutável cala quando a ação está oferecida** (037, `FR-541b`):
         # dizer "peça a alguém" ao lado do botão que a pessoa pode clicar ensina a desconfiar
         # da tela. A pergunta é a **mesma** que decidiu se `Retificar` entrou em `conjunto`, e
@@ -4259,6 +4270,7 @@ def _desenhar_o_detalhe(request, leitura, *, pagina_anterior=False):
             "impedido_por_segregacao": leitura.segregacao,
             "pode_ver_avisos": leitura.pode_ver_avisos,
             "pode_conversar_com_o_assistente": leitura.pode_conversar_com_o_assistente,
+            "assistente_na_pagina_publica": leitura.assistente_na_pagina_publica,
             "conducao_do_imutavel": leitura.conducao_do_imutavel,
             "proximo_passo": acoes.proximo_passo(edital, ator, segregacao=leitura.segregacao),
             # **Quem vê o "Andamento da seleção" é quem via o cartão "Classificação"** (127, D-004,

@@ -46,8 +46,9 @@ livre termina no estado explícito de hoje, sem chamada.
 
 ## A marca da conversa (R-5)
 
-A chave da conversa na sessão é `edital_id:marca`. A marca é o `id` do ato de habilitação vigente,
-ou `demonstracao` com o atalho. Nenhuma coluna muda na `TrocaDoPiloto`.
+Com um ato vigente, a chave da conversa na sessão é `edital_id:marca`, e a marca é o `id` do ato.
+Com o atalho de demonstração, a chave é a de hoje, só `edital_id`. Nenhuma coluna muda na
+`TrocaDoPiloto`.
 
 ## Os requisitos da abertura
 

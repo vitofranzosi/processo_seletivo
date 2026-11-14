@@ -345,12 +345,14 @@ AVISOS_ALERTA_DE_PENDENTE_MIN = int(os.getenv("AVISOS_ALERTA_DE_PENDENTE_MIN", "
 AVISOS_JANELA_DE_DESPACHO_HORAS = int(os.getenv("AVISOS_JANELA_DE_DESPACHO_HORAS", "24"))
 
 
-# O piloto interno do assistente do Edital (071, `R-009`). **Desligado por padrão**, e é produção
-# quem herda o padrão: o piloto roda na máquina da equipe, em sessões acompanhadas (`D-012`). Um
-# serviço por configuração, `ollama` ou `openrouter`, e nenhuma troca entre eles (`FR-1499`).
+# O piloto interno do assistente do Edital (071, `R-009`). **Desde a 170, um atalho de
+# demonstração local** (FR-7506): o piloto se liga pelo ato do Administrador institucional, e esta
+# chave o dispensa fora de produção, que recusa subir com ela. Um serviço por configuração, `ollama`
+# ou `openrouter`, e nenhuma troca entre eles (`FR-1499`).
 ASSISTENTE_PILOTO = os.getenv("ASSISTENTE_PILOTO", "false").lower() == "true"
 ASSISTENTE_SERVICO = os.getenv("ASSISTENTE_SERVICO", "").strip()
-# O painel do assistente na página pública da seleção, só no desenvolvimento local (074, `FR-1680`):
+# O painel do assistente na página pública da seleção, por chave, só no desenvolvimento local (074,
+# `FR-1680`); a 170 o abre também pelo ato, Edital a Edital, e nunca em produção:
 # o candidato conversa sem a identidade da gestão, e é por isso que produção recusa subir com ele
 # (`production.py`). Independente do piloto: as sugestões respondem sem modelo, e a pergunta livre
 # cai num estado explícito quando o serviço não está configurado.

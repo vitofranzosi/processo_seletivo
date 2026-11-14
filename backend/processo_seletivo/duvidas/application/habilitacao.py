@@ -100,11 +100,10 @@ def pagina_publica_atende(edital_id):
 
 
 def marca(frente, edital_id=None):
-    """A marca da conversa (R-5): o ato vigente, ou a demonstração. Ato novo, conversa nova."""
+    """A marca da conversa (R-5): o ato vigente, e ato novo é conversa nova. Sem ato — com o atalho
+    de demonstração —, nenhuma marca, e a conversa fica na chave de sempre, só do Edital."""
     ato = _habilitado(frente, edital_id)
-    if ato is not None:
-        return str(ato.id)
-    return nomes.MARCA_DA_DEMONSTRACAO
+    return str(ato.id) if ato is not None else ""
 
 
 # --- A permissão --------------------------------------------------------------------------------

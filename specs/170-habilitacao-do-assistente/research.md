@@ -54,8 +54,9 @@ produção.
 
 ## R-5 — A conversa nova pela marca da habilitação
 
-**Decisão.** A chave da conversa na sessão passa de `edital_id` para `edital_id:marca`, em que a marca
-é o identificador do ato de habilitação vigente, ou `demonstracao` com o atalho. O mesmo vale para o
+**Decisão.** Com um ato vigente, a chave da conversa na sessão passa de `edital_id` para
+`edital_id:marca`, em que a marca é o identificador do ato. Com o atalho de demonstração não há
+marca, e a chave é a de hoje — o que mantém sem mudança as suítes da `071` e da `074`. O mesmo vale para o
 teto de conversas da `074`. `conversa_da_sessao` recebe a marca como argumento.
 
 **Por quê.** Uma habilitação nova muda a marca, e com ela a conversa: o histórico, que é lido pela

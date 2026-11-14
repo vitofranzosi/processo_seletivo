@@ -140,7 +140,7 @@ def test_o_atalho_atende_sem_ato_fora_de_producao_e_nunca_em_producao(settings):
     """FR-7506: o atalho dispensa o registro, e só fora de produção."""
     settings.ASSISTENTE_PILOTO = True
     assert habilitacao.piloto_atende() is True
-    assert habilitacao.marca(nomes.PILOTO) == nomes.MARCA_DA_DEMONSTRACAO
+    assert habilitacao.marca(nomes.PILOTO) == ""
 
     settings.AMBIENTE_DE_PRODUCAO = True
     assert habilitacao.piloto_atende() is False
@@ -235,7 +235,7 @@ def test_habilitar_de_novo_muda_a_marca_da_conversa(configuracao_completa, edita
     habilitacao.desabilitar(ADMINISTRADORA, motivo="Fechar", **kwargs)
     habilitacao.habilitar(ADMINISTRADORA, motivo="Abrir de novo", **kwargs)
 
-    assert habilitacao.marca(**kwargs) not in (primeira, nomes.MARCA_DA_DEMONSTRACAO)
+    assert habilitacao.marca(**kwargs) not in (primeira, "")
 
 
 # --- O registro ----------------------------------------------------------------------------------

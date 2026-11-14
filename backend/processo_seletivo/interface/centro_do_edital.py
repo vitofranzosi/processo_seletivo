@@ -61,6 +61,7 @@ def desenhar(request, leitura):
             "pode_ver_avisos": leitura.pode_ver_avisos,
             # O que só o detalhe oferecia ao Edital publicado, nas mesmas condições (138, FR-4871).
             "pode_conversar_com_o_assistente": leitura.pode_conversar_com_o_assistente,
+            "assistente_na_pagina_publica": leitura.assistente_na_pagina_publica,
             "conducao_do_imutavel": leitura.conducao_do_imutavel,
             # O retorno do ato que acabou de acontecer (138, FR-4865): publicar e encerrar chegam
             # aqui.

@@ -30,7 +30,9 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.duvidas.application import habilitacao
 from processo_seletivo.duvidas.application.consultar import SemVersaoVigente, contexto
+from processo_seletivo.duvidas.domain import habilitacao as nomes_da_habilitacao
 from processo_seletivo.interface import painel_do_assistente as painel_
 from processo_seletivo.interface.assistente import _edital_do_piloto
 from processo_seletivo.portal import views as portal
@@ -40,7 +42,8 @@ ROTA = "interface:assistente-prototipo"
 
 
 def _conversa(request, edital_id, **opcoes):
-    return painel_.conversa_da_sessao(request, edital_id, CHAVE_DA_SESSAO, **opcoes)
+    marca = habilitacao.marca(nomes_da_habilitacao.PILOTO)
+    return painel_.conversa_da_sessao(request, edital_id, CHAVE_DA_SESSAO, marca=marca, **opcoes)
 
 
 def _destino(edital):
