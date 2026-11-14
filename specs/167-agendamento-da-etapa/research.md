@@ -240,17 +240,37 @@ individual (`D-006`).
 **Descartado.** Reusar `PublicacaoDeConvocados`: ela tem número por Edital, vínculo com convocação e
 comunicação, e efeitos que a agenda não tem (`D-005`).
 
-## T-013 — Sem documento PDF nesta spec
+## T-013 — Um documento PDF por ato, gravado no ato, no molde da `149` (`D-012`)
 
-**Decisão.** A publicação da agenda **não** gera PDF. O ato é o conteúdo público em bytes canônicos,
-com o resumo, a autoridade e o veículo (FR-7224), e a página pública o mostra.
+**Decisão.** Cada `AtoDaAgenda` — publicação, remarcação, inclusão, cancelamento — tem um documento
+PDF, gerado **uma vez**, na mesma transação do ato, e gravado em `DocumentoDoAtoDaAgenda`
+(append-only, `OneToOne` com o ato, `bytes`, `content_type`, `documento_hash`). É o molde de
+`DocumentoDaPublicacaoDeConvocados` (`convocacao/models.py:756`), que é o de `DocumentoDoResultado`:
 
-**Por quê.** A FR-7224 enumera o que o ato registra, e o PDF não está lá; a `149` tem documento porque
-a FR-5710 dela o pede. Inventar o requisito aqui contraria a regra de que requisito se escreve na spec.
+- `agendamento/infrastructure/documento.py::render_agenda_pdf(conteudo)` recebe o conteúdo já
+  composto — o mesmo objeto que virou `conteudo_publico` (T-014) — e devolve bytes, **sem consultar
+  o banco**, pela `Composicao` e por `render_documento` de `publicacoes/infrastructure/pdf.py`, com
+  `_tabela` por dia, como `convocacao/infrastructure/documento.py`. Timbre da unidade congelada,
+  identificação, a agenda por dia (horário, banca quando há mais de uma, identificação da FR-7225),
+  orientações, autoridade e veículo, e o resumo de integridade. O instante impresso é o do ato, e não
+  o da geração.
+- O documento do ato individual tem só a linha da pessoa afetada: na remarcação, o horário novo e a
+  frase de que substitui o publicado antes; na inclusão, o horário; no cancelamento, a frase de que o
+  horário deixa de valer. Nunca o motivo (FR-7246), e nunca o endereço da sala (FR-7226).
+- O portal serve os bytes gravados, e nada recomposto, como `portal/views.py:3800`: `ETag` com o
+  `documento_hash` e `attachment`. Endereço público, como o da 149, porque o conteúdo é o público.
 
-**Ponto para o usuário.** No piloto, o PDF do sistema é o documento oficial. Se a agenda publicada no
-GPS como veículo também precisar dele, é uma revisão da FR-7224, que custaria uma tabela append-only a
-mais (o `M` iria a 64) e o compositor comum; o PR registra a pergunta, e a entrega B não a pressupõe.
+**Por quê a tabela.** O dado a preservar são **os bytes do documento tal como foi publicado**. O
+`conteudo_publico` do ato já é imutável, mas o compositor não é: fonte, margem e cabeçalho mudam
+entre versões, e recompor daria, para o mesmo ato, um arquivo diferente do que circulou — o mesmo
+motivo pelo qual a `149` e a `017` guardam os delas. Uma tabela do próprio app, e não coluna no ato,
+porque a ausência de documento fica sendo a ausência de linha, e porque o ato é gravado antes do
+documento que cita o resumo dele. O `M` vai a **68** (três append-only na B).
+
+**Descartado.** Gerar sob demanda do `conteudo_publico` (o arquivo mudaria com o compositor);
+reusar `DocumentoPublicado` de `publicacoes` (é o documento do Edital, com versão e Retificação); um
+documento "consolidado do vigente", regenerado a cada ato (não seria ato de ninguém; a página pública
+já mostra o vigente, FR-7248).
 
 ## T-014 — O conteúdo público: por dia, por horário, só o que a FR-7225 permite
 
@@ -367,9 +387,13 @@ página, depois da identificação (FR-7229).
   que precisa aceitar a origem nova — `recusar_reenvio_da_pendencia` só barra a `PENDENCIA`. No
   correio, `_html` dá o estado visual "informacao".
 - **Com `AVISOS_AOS_CANDIDATOS` desligada** (o padrão de produção até a validação de LGPD da `066`),
-  a publicação acontece e **nenhum aviso é criado**; a tela da agenda publicada diz que os avisos por
-  e-mail estão desligados nesta instalação e que a agenda vale pela publicação. É o FR-1282 da `066`
-  (`avisos/application/comando.py:33`), que vale para toda origem dela.
+  a publicação acontece e **nenhum aviso é criado**; a conferência, a confirmação e a tela da agenda
+  publicada dizem que os avisos por e-mail estão desligados nesta instalação e que a agenda vale pela
+  publicação. É o FR-1282 da `066` (`avisos/application/comando.py:33`), que vale para toda origem
+  dela, e é a decisão `D-011`: nenhuma chave própria da agenda. Ligar a chave depois não cria aviso
+  de ato anterior, porque o aviso nasce no ato, e não de uma varredura.
+- **Com a chave ligada**, a conferência mostra quantos avisos a publicação criará, a lista de
+  destinatários (pessoa e protocolo, sem e-mail) e a prévia de um aviso composto (FR-7222).
 
 **FR-084.** O texto da `010` (`specs/010-area-do-candidato/spec.md:572`) já foi revisto pela `156`
 (11/11) para **seis** situações, com vigência na implementação dela — e a `156` ainda não tem código.
@@ -438,7 +462,9 @@ domínio (`exigir_base_de_comissao` ou `comando_de_comissao`), porque a view nã
 
 **Por quê.** "Quem pode gerir a Etapa" é, no código, quem pode gerir a comissão do Processo — a
 permissão `comissao:gerir` ou a presidência. A presidência publica porque tem a base; a spec não pede
-porta mais estreita para a publicação.
+porta mais estreita para a publicação, e o usuário confirmou isso em 14/11 (`D-013`): nenhum papel
+novo. A autoridade signatária é outra responsabilidade: quem publica a escolhe entre as vigentes
+(`contexto_do_ato`), e o ato registra o autor e a autoridade separadamente.
 
 ## T-022 — Migrations e guardiões, por entrega
 
@@ -447,7 +473,7 @@ porta mais estreita para a publicação.
 | Entrega | Migration | Guardiões que mudam |
 |---|---|---|
 | A | `agendamento/0001_agenda_da_etapa` (quatro tabelas operacionais) | `APPS` de `tests/migrations/test_migrations.py` ganha `agendamento`; `INSTALLED_APPS` com o comentário de fronteira |
-| B | `agendamento/0002_atos_da_agenda` (duas append-only, gatilho `ato_da_agenda_append_only`, `horario_publicado_append_only` e `horario_publicado_coerente`) | `TABELAS_APPEND_ONLY` em `seguranca/papeis.py` (65 → **67**); `TRIGGERS_POR_APP["agendamento"]`; `CLAUDE.md` e README com o `M` novo |
+| B | `agendamento/0002_atos_da_agenda` (três append-only, gatilhos `ato_da_agenda_append_only`, `horario_publicado_append_only`, `documento_do_ato_da_agenda_append_only` e `horario_publicado_coerente`) | `TABELAS_APPEND_ONLY` em `seguranca/papeis.py` (65 → **68**); `TRIGGERS_POR_APP["agendamento"]`; `CLAUDE.md` e README com o `M` novo |
 | C | `avisos/0003_origem_agenda` | `TRIGGERS_POR_APP["avisos"]` se o gatilho mudar; `test_situacoes_de_mensagem.py` |
 
 O gatilho append-only é SQL na própria migration, com `RunPython` só em PostgreSQL, como a

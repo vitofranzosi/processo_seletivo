@@ -120,10 +120,10 @@ por nome; agendar à mão uma pessoa às 08:15 de 24/11 antes de preencher a man
 
 ## Phase 6: Foundational da B (bloqueia a US3)
 
-- [ ] T037 Criar em `processo_seletivo/agendamento/models.py` a classe `_AppendOnly` do app e os modelos `AtoDaAgenda` e `HorarioPublicado`, com os campos e as constraints do data-model (`uq_ato_da_agenda_uma_publicacao` parcial, `ck_ato_da_agenda_motivo`, `ck_ato_da_agenda_veiculo`, `ck_ato_da_agenda_signatario`, `uq_horario_publicado_por_ato`, `uq_horario_publicado_substituido_uma_vez`, `uq_horario_publicado_aviso`, `ck_horario_publicado_forma`); `HorarioPublicado.aviso` já existe na B, sempre nulo até a C (FR-7224, FR-7241)
-- [ ] T038 Escrever `processo_seletivo/agendamento/migrations/0002_atos_da_agenda.py` com o SQL dos gatilhos `ato_da_agenda_append_only`, `horario_publicado_append_only` e `horario_publicado_coerente` (data-model), por `RunPython` só em PostgreSQL, como `convocacao/migrations/0007_publicacao_de_convocados.py` (T-022)
-- [ ] T039 Acrescentar as duas tabelas a `TABELAS_APPEND_ONLY` em `processo_seletivo/seguranca/papeis.py` (65 → 67), `TRIGGERS_POR_APP["agendamento"]` em `tests/migrations/test_migrations.py`, e o `M` novo no `CLAUDE.md` ("eram **61** … são **63** com os atos da agenda da `167`") (T-022)
-- [ ] T040 [P] Testes em `tests/integration/agendamento/test_atos_imutaveis.py`: `UPDATE` e `DELETE` recusados pelo gatilho nas duas tabelas e pela falta de privilégio da role de runtime; `save` de linha existente e `delete` recusados pela classe; o gatilho de coerência recusa `substitui` de outra inscrição ou outra agenda, `banca` de outra agenda e `CANCELADO` fora de ato de cancelamento (FR-7224, FR-7241)
+- [ ] T037 Criar em `processo_seletivo/agendamento/models.py` a classe `_AppendOnly` do app e os modelos `AtoDaAgenda`, `HorarioPublicado` e `DocumentoDoAtoDaAgenda` (T-013), com os campos e as constraints do data-model (`uq_ato_da_agenda_uma_publicacao` parcial, `ck_ato_da_agenda_motivo`, `ck_ato_da_agenda_veiculo`, `ck_ato_da_agenda_signatario`, `uq_horario_publicado_por_ato`, `uq_horario_publicado_substituido_uma_vez`, `uq_horario_publicado_aviso`, `ck_horario_publicado_forma`); `HorarioPublicado.aviso` já existe na B, sempre nulo até a C (FR-7224, FR-7241)
+- [ ] T038 Escrever `processo_seletivo/agendamento/migrations/0002_atos_da_agenda.py` com o SQL dos gatilhos `ato_da_agenda_append_only`, `horario_publicado_append_only`, `documento_do_ato_da_agenda_append_only` e `horario_publicado_coerente` (data-model), por `RunPython` só em PostgreSQL, como `convocacao/migrations/0007_publicacao_de_convocados.py` (T-022)
+- [ ] T039 Acrescentar as três tabelas a `TABELAS_APPEND_ONLY` em `processo_seletivo/seguranca/papeis.py` (65 → 68), `TRIGGERS_POR_APP["agendamento"]` em `tests/migrations/test_migrations.py`, e o `M` novo no `CLAUDE.md` e no `AGENTS.md` ("eram **65** … são **68** com os atos da agenda e os documentos deles, da `167`") (T-022)
+- [ ] T040 [P] Testes em `tests/integration/agendamento/test_atos_imutaveis.py`: `UPDATE` e `DELETE` recusados pelo gatilho nas três tabelas e pela falta de privilégio da role de runtime; `save` de linha existente e `delete` recusados pela classe; o gatilho de coerência recusa `substitui` de outra inscrição ou outra agenda, `banca` de outra agenda e `CANCELADO` fora de ato de cancelamento (FR-7224, FR-7241)
 - [ ] T041 [P] Criar `processo_seletivo/agendamento/domain/conteudo.py::compor(...)` com o formato de T-014: `NOME_E_PROTOCOLO`, ou `PROTOCOLO` quando `editais.domain.alcance.restrita(etapa)`; banca por horário só com mais de uma; local só na forma presencial; nada de sala, CPF, e-mail, telefone, Modalidade ou desfecho (FR-7225, FR-7226, `D-009`)
 - [ ] T042 [P] Testes de unidade em `tests/unit/agendamento/test_conteudo.py`: as duas identificações; a banca com uma e com duas; o local presencial e o vazio remoto; para as fixtures, nenhum endereço de sala, CPF inteiro ou parcial, e-mail, telefone ou código de Modalidade nos `canonical_bytes` (SC-2394, FR-7225, FR-7226)
 
@@ -156,6 +156,11 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 - [ ] T054 [US3] Na área do candidato, o bloco `portal/_horario_da_inscricao.html` na página `portal:inscricao`, como `candidato.html` do protótipo, com o botão "Entrar na sala virtual" só ali (T-017, FR-7228, FR-7229)
 - [ ] T055 [P] [US3] As regras novas do portal em `processo_seletivo/portal/static/portal/portal.css`, sem reusar a classe `.protocolo` (o achado do protótipo) e sem deixar o `display` vencer o `hidden`
 - [ ] T056 [US3] Na montagem e na página publicada, o aviso de horário publicado fora do período vigente, quando o Evento foi retificado depois da publicação (Edge Cases)
+- [ ] T086 [P] [US3] Criar `processo_seletivo/agendamento/infrastructure/documento.py::render_agenda_pdf(conteudo)` no molde de `processo_seletivo/convocacao/infrastructure/documento.py`: `Composicao`, `render_documento` e `_tabela` de `publicacoes/infrastructure/pdf.py`, sem consultar o banco, com o timbre da unidade congelada, a agenda por dia, as orientações, a autoridade, o veículo e o resumo; e os testes em `tests/unit/agendamento/test_documento.py` — o texto extraído diz o que o conteúdo diz, sem endereço de sala, CPF, e-mail, telefone, Modalidade ou motivo, e só o protocolo na Etapa restrita (T-013, FR-7224, FR-7226, SC-2399, `D-012`)
+- [ ] T087 [US3] Em `processo_seletivo/agendamento/application/publicar.py`, gerar o documento e gravar o `DocumentoDoAtoDaAgenda` na mesma transação do ato, como `convocacao/application/publicar.py:630`; no portal, a rota `agendas/<uuid:agenda_id>/atos/<uuid:ato_id>/documento.pdf`, que serve os bytes gravados com `ETag` e `attachment`, como `portal/views.py:3800`, e a linha do inventário da `033`; "Documento da publicação" na página pública e na agenda publicada da gestão; testes em `tests/portal/test_documento_da_agenda.py` — o servido é o gravado, ainda que o compositor mude depois, e a ausência de linha é 404 (FR-7224, SC-2399, US3 cenário 10)
+- [ ] T088 [US3] Na conferência e na confirmação, os avisos: com `AVISOS_AOS_CANDIDATOS` ligada, quantos avisos a publicação criará, os destinatários (pessoa e protocolo, sem e-mail) e a prévia de um aviso; desligada, a frase de que os avisos estão desligados nesta instalação e de que a agenda vale pela publicação, sem chave própria da agenda; testes em `tests/interface/test_agenda_da_etapa_conferir.py` com a chave nos dois estados (FR-7222, FR-7230, `D-011`)
+- [ ] T089 [US3] Autorização da publicação em `tests/integration/agendamento/test_publicacao.py`: quem gere a comissão publica, a presidência inclusive; o integrante sem escopo no Edital é negado pelo servidor na confirmação, ainda que tenha aberto a tela antes; o ato registra o autor e a autoridade signatária escolhida como dados distintos (FR-7255, US3 cenário 11, `D-013`)
+- [ ] T090 [US3] Coordenação com a `168` no acompanhamento: `horarios_da_inscricao` (T050) é a fonte única do horário no portal. Se a `168` já estiver na base, o bloco de T054 entra no degrau dela, na Etapa restrita que ela trata, e não como segundo cartão (o requisito da `168` que faz do degrau o lugar do horário); fora dela, o bloco é o da `167`. Se não estiver, o PR registra a regra para quem implementar a `168`, e um teste de portal prende "um cartão por Etapa" na inscrição (plan, *Coordenação com a 168*)
 - [ ] T057 [US3] Depois da publicação: `agendar`, `liberar` e `preencher` em `processo_seletivo/agendamento/application/montar.py` recusam `agenda_publicada`; a montagem publicada fica só de leitura e leva à agenda publicada; e `processo_seletivo/agendamento/application/configurar.py` recusa `horario_publicado_removido` e `parametro_publicado_alterado`, aceitando só acrescentar dia, janela ou banca (T-015, FR-7208, FR-7240)
 
 ---
@@ -164,8 +169,8 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 
 - [ ] T058 [P] Acrescentar os templates da B a `tests/interface/test_vocabulario_da_agenda_da_etapa.py` e a `tests/portal/test_vocabulario_das_telas_publicas.py`; e a `tests/interface/test_agenda_da_etapa_no_estreito.py` (SC-2397)
 - [ ] T059 [P] Testes do que a agenda não faz, em `tests/integration/agendamento/test_fronteira.py`: nenhuma operação da agenda grava `ResultadoEtapa`, `Ocorrencia`, `Avaliacao` ou prazo; as orientações são só texto; nenhum campo de presença (FR-7250, FR-7251, FR-7252)
-- [ ] T060 Provisionamento: `make preparar` num banco vazio informa "67 de 67"; `tests/integration/test_database_permissions.py` passa com as duas tabelas novas
-- [ ] T061 Jornada no navegador do cenário A até a publicação e do cenário B (duas bancas, Etapa restrita a `PPI`, página pública só com protocolo), em 1440, 1366 e 375 px; capturas em `specs/167-agendamento-da-etapa/capturas/b/` (SC-2397)
+- [ ] T060 Provisionamento: `make preparar` num banco vazio informa "68 de 68"; `tests/integration/test_database_permissions.py` passa com as três tabelas novas
+- [ ] T061 Jornada no navegador do cenário A até a publicação e do cenário B (duas bancas, Etapa restrita a `PPI`, página pública e documento só com protocolo), abrindo o PDF da publicação, em 1440, 1366 e 375 px; capturas em `specs/167-agendamento-da-etapa/capturas/b/` (SC-2397)
 - [ ] T062 `make lint check` e a suíte inteira; README (a linha da `167` e o `M`) e o PR da B
 
 ---
@@ -174,7 +179,7 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 
 ## Phase 9: Foundational da C (bloqueia US4 e US5)
 
-- [ ] T063 Acrescentar `AGENDA` a `processo_seletivo/avisos/domain/nomes.py` e escrever `processo_seletivo/avisos/migrations/0003_origem_agenda.py`: as escolhas, `ck_aviso_origem_conhecida` e `ck_aviso_ato_da_origem` refeitos com o ramo da agenda, `marco_id` anulável e `ck_aviso_marco_da_origem` (T-018, data-model)
+- [ ] T063 Acrescentar `AGENDA` a `processo_seletivo/avisos/domain/nomes.py` e escrever a migration da origem em `processo_seletivo/avisos/migrations/`: as escolhas, `ck_aviso_origem_conhecida` e `ck_aviso_ato_da_origem` refeitos com o ramo da agenda, `marco_id` anulável e `ck_aviso_marco_da_origem` (T-018, data-model). **Antes, conferir a `168` na base** (plan, *Coordenação com a 168*): se a `avisos/0003_origem_passo` já estiver lá, esta é a `0004`, `marco_id` já é anulável, o CHECK passa a "marco nulo só em `PASSO` e `AGENDA`", e o aviso da agenda preenche o `etapa_id` dela; se não, esta é a `0003`, e o PR registra a regra para a `168`
 - [ ] T064 Revisar a FR-084 em `specs/010-area-do-candidato/spec.md`: **sete** situações, a sétima o aviso de agenda como origem do aviso complementar, sem envio novo, com a frase de que a decisão humana é a confirmação da publicação, da remarcação ou da inclusão; preservar a redação da revisão da `156` como as anteriores foram preservadas (`D-010`, FR-7230)
 - [ ] T065 Reler `tests/test_situacoes_de_mensagem.py` no dia, acrescentar o par do despacho para a agenda a `SITUACOES`, a constante `REVISAO_DA_FR_084_PELA_167` em `processo_seletivo/avisos/application/despacho.py` e o teste da revisão, de acordo com o que a `156` já tiver implementado (T-018)
 - [ ] T066 [P] Criar `processo_seletivo/agendamento/domain/mensagem.py`: o assunto e o corpo por pessoa — publicação e remarcação, como `email.html` do protótipo: dia, hora, duração, banca quando há mais de uma, local ou endereço da sala, orientações, protocolo, a frase de que vale a agenda publicada, e na remarcação que o horário anterior não vale mais (FR-7231, FR-7244)
@@ -191,7 +196,7 @@ protocolo na página pública, e ver na área dela o dia, a hora, a banca, a sal
 
 ### Tests for User Story 4
 
-- [ ] T068 [P] [US4] Testes de integração em `tests/integration/agendamento/test_avisos_da_agenda.py`: a publicação cria um `Aviso` e um `DestinatarioDoAviso` por pessoa, ligados ao `HorarioPublicado`; a confirmação não envia; `despachar` envia uma mensagem por pessoa e nenhuma pessoa recebe duas; a confirmação repetida não cria aviso; a falha de envio deixa o ato intacto; com `AVISOS_AOS_CANDIDATOS` desligada, a publicação acontece sem aviso; o reenvio da `066` aceita a origem nova (FR-7230, FR-7232, FR-7233, SC-2395, SC-2396, US4 cenários 1 a 3)
+- [ ] T068 [P] [US4] Testes de integração em `tests/integration/agendamento/test_avisos_da_agenda.py`: a publicação cria um `Aviso` e um `DestinatarioDoAviso` por pessoa, ligados ao `HorarioPublicado`; a confirmação não envia; `despachar` envia uma mensagem por pessoa e nenhuma pessoa recebe duas; a confirmação repetida não cria aviso; a falha de envio deixa o ato intacto; com `AVISOS_AOS_CANDIDATOS` desligada, a publicação acontece sem aviso, e ligá-la depois e rodar o despacho não cria nem envia aviso daquela publicação (US4 cenário 5, `D-011`); o reenvio da `066` aceita a origem nova (FR-7230, FR-7232, FR-7233, SC-2395, SC-2396, US4 cenários 1 a 3)
 - [ ] T069 [P] [US4] Testes de interface em `tests/interface/test_agenda_da_etapa_publicada.py`: o resumo dos avisos num número só, "na fila", "não entregue" com a pessoa, a frase de que a agenda vale e o caminho do reenvio; com a chave desligada, a frase dos avisos desligados (FR-7233, UX-766)
 
 ### Implementation for User Story 4
@@ -221,6 +226,7 @@ anterior, o novo, o autor e o motivo.
 ### Implementation for User Story 5
 
 - [ ] T077 [US5] Criar `processo_seletivo/agendamento/application/atos_individuais.py`: `remarcar`, `incluir` e `cancelar` dentro de `comando_de_comissao`, com a trava da agenda, as recusas de `contracts/recusas.md` §5, o `AtoDaAgenda` com motivo e conteúdo da linha, o `HorarioPublicado` com `substitui`, a atualização do `Agendamento` na mesma transação e o aviso da pessoa (FR-7241 a FR-7244, FR-7247)
+- [ ] T091 [US5] Em `processo_seletivo/agendamento/application/atos_individuais.py`, o documento de cada remarcação, inclusão e cancelamento, gravado na mesma transação do ato, com a linha da pessoa e sem o motivo; na página pública, os documentos em ordem — o da publicação primeiro e intacto — e a frase de que a agenda vigente é a publicação com os atos posteriores; testes em `tests/integration/agendamento/test_atos_individuais.py` e `tests/portal/test_documento_da_agenda.py` (FR-7248, SC-2399, US5 cenário 9)
 - [ ] T078 [US5] Acrescentar a `processo_seletivo/interface/agenda_da_etapa.py` as views `remarcar` (que é também a inclusão) e `cancelar`, com as rotas e o inventário; criar `agenda_remarcar.html` como `remarcar.html` do protótipo e `agenda_cancelar.html` na mesma moldura; "Agendar esta pessoa" e "Cancelar o agendamento" em `agenda_publicada.html`
 
 ---
@@ -229,12 +235,15 @@ anterior, o novo, o autor e o motivo.
 
 - [ ] T079 [P] Acrescentar os templates da C à varredura de vocabulário e ao teste do estreito (SC-2397)
 - [ ] T080 Jornada no navegador: publicar, `manage.py despachar_avisos` à mão, ver os e-mails no terminal do comando, remarcar com motivo, despachar de novo e ver um e-mail só, no celular; capturas em `specs/167-agendamento-da-etapa/capturas/c/`
-- [ ] T081 Escrever `specs/167-agendamento-da-etapa/rastreabilidade.md` com uma linha para cada identificador em negrito da spec — FR-7200 a FR-7256, SC-2390 a SC-2398, UX-760 a UX-767 —, cada uma com a tarefa e o teste; os SC-2390 e SC-2398, humanos, marcados como pendentes de validação
+- [ ] T081 Escrever `specs/167-agendamento-da-etapa/rastreabilidade.md` com uma linha para cada identificador em negrito da spec — FR-7200 a FR-7256, SC-2390 a SC-2399, UX-760 a UX-767 —, cada uma com a tarefa e o teste; os SC-2390 e SC-2398, humanos, marcados como pendentes de validação
 - [ ] T082 `make lint check` e a suíte inteira; README e Visão do Sistema; o PR da C
 
 ---
 
-# Entrega D — Orientação *(opcional)*
+# Entrega D — Orientação *(opcional; fora desta implementação)*
+
+Decisão do usuário em 14/11: a implementação faz A, B e C, e a D fica para quando a comissão de uso a
+pedir. As tarefas ficam como registro.
 
 ## Phase 13: Orientação
 
@@ -257,9 +266,16 @@ anterior, o novo, o autor e o motivo.
 - Setup (T001–T003) → Foundational da A (T004–T013) → US1 (T014–T022) → US2 (T023–T032) → fechamento.
 - US2 depende da US1 para ter configuração; os testes de cada história podem ser escritos antes da
   implementação dela.
-- Foundational da B (T037–T042) → US3 (T043–T057) → fechamento.
+- Foundational da B (T037–T042) → US3 (T043–T057, T086–T090) → fechamento. T086 corre ao lado de
+  T048–T050; T087 depende de T049 e T086.
 - Foundational da C (T063–T067) → US4 (T068–T072) e US5 (T073–T078), que podem correr em paralelo
-  depois de T070, porque a US5 usa a criação de aviso dela.
+  depois de T070, porque a US5 usa a criação de aviso dela. T091 depende de T077 e de T086.
+
+### As tarefas T086 a T091
+
+Acrescentadas em 14/11 pelas decisões `D-011` a `D-013` (a segunda rodada, sobre os pontos do plano).
+Levam números depois dos existentes para não renumerar a A, já feita, nem a B, em curso; o lugar de
+cada uma na execução é o da fase em que está escrita.
 
 ### Paralelo
 
@@ -293,9 +309,9 @@ publicar. É o que o pedido mede no SC-2390, até a conferência.
 ### Incremental
 
 1. **A** → demonstrar configurar e montar → PR.
-2. **B** → demonstrar publicar e o candidato encontrar o horário → PR. O `M` vai a 67.
+2. **B** → demonstrar publicar e o candidato encontrar o horário → PR. O `M` vai a 68.
 3. **C** → demonstrar avisar e remarcar → PR. A FR-084 revista.
-4. **D**, quando a comissão de uso pedir.
+4. **D**, fora desta implementação: quando a comissão de uso pedir.
 
 ### Armadilhas a lembrar em cada sessão
 
