@@ -36,5 +36,5 @@
   mecanismo; o modelo de tabelas está no estudo (`02-proposta.md` §2.5), e não aqui, de propósito.
 - "Despacho de avisos" e "origem" são vocabulário de domínio já usado pela `066`, e não detalhe de
   implementação.
-- Antes do `/speckit-plan`: aprovar a experiência pelo protótipo do estudo, que é o marco 0 do plano
-  de entregas.
+- A experiência pelo protótipo do estudo (marco 0 do plano de entregas) foi aprovada pelo usuário em
+  14/11. A spec está pronta para o `/speckit-plan`.

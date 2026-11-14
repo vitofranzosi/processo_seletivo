@@ -5,9 +5,9 @@
 **Created**: 2026-11-14
 
 **Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia, sem plan nem tasks. As três
-perguntas ao usuário foram respondidas no mesmo dia (ver *Clarifications*). A experiência visual
-espera a aprovação do protótipo pela comissão, que o estudo põe como marco anterior a qualquer
-implementação.
+perguntas ao usuário foram respondidas no mesmo dia (ver *Clarifications*), e a experiência visual —
+o protótipo da segunda rodada do estudo — foi aprovada pelo usuário em 14/11, o marco anterior à
+implementação. Pronta para o plan. Pendentes: os SC-2390 e SC-2398, humanos.
 
 **Input**: o pedido de 14/11/2026 para especificar o agendamento de participantes em Etapas que
 exigem comparecimento em dia e horário — entrevista, verificação da autodeclaração, arguição —, como
@@ -512,7 +512,9 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 - **A zona temporal é a institucional.** O horário é o do dia e da janela, na zona do domínio.
 - **O prazo de justificativa da ausência** que alguns Editais contam do horário fica com o Edital; o
   GPS mostra o horário, e não calcula prazo.
-- **A experiência visual é aprovada antes da implementação**, pelo protótipo do estudo.
+- **A experiência visual é a do protótipo do estudo**, na segunda rodada (`04-redesign.md`), aprovada
+  pelo usuário em 14/11. A implementação segue as telas dele; ajuste visual que mude a interação
+  volta ao protótipo antes.
 
 ## Out of Scope
 

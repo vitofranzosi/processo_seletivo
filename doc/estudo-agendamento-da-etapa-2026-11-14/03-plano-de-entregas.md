@@ -5,6 +5,8 @@ VI), e não só com domínio. A complexidade é relativa: P, M ou G.*
 
 ## Marco 0 — a experiência aprovada, antes de qualquer código
 
+**Cumprido em 14/11:** o usuário aprovou o protótipo da segunda rodada (`04-redesign.md`).
+
 O protótipo (`prototipo/`) é percorrido pela comissão com um caso real. O critério de saída é a
 pergunta do pedido: **"consigo sair de uma lista de 43 pessoas para uma agenda conferida e publicada
 sem abrir uma planilha?"**, mais a confirmação da Q-1 do README (Q-2, Q-3 e Q-5 já decididas). Ajustes de tela entram aqui, e

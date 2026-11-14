@@ -93,6 +93,7 @@ passa entrevistando.**
 
 ## Próximo passo proposto
 
-1. **Marco 0:** percorrer o protótipo com a comissão, num caso real de entrevista ou de
-   heteroidentificação, e confirmar a Q-1.
-2. Com a experiência aprovada, plan, tasks e a entrega A da spec `167`, uma sessão por entrega.
+1. ~~**Marco 0:** aprovar a experiência pelo protótipo.~~ **Aprovado pelo usuário em 14/11**, na
+   versão da segunda rodada. A Q-1 (bancas simultâneas) segue como premissa da spec.
+2. Plan, tasks e a entrega A da spec `167`, uma sessão por entrega. O teste com um caso real da
+   comissão continua valendo como validação do SC-2390, que é humano, e não bloqueia o plan.
