@@ -130,7 +130,7 @@ Tudo nesta seção é **constatado**.
 | Workers, filas, agendador | **Não existem.** Prazos, fases do Cronograma e vigência de Retificação são calculados na leitura | ausência de celery, rq, huey, dramatiq e apscheduler; `inscricoes/domain/periodo.py`, `publicacoes/application/selectors.py` |
 | E-mail | SMTP **síncrono**, dentro da requisição: código de acesso, comprovante e convocação. O aviso aos candidatos (066) sai **fora** da requisição, por timer (§16.4). Só STARTTLS (`EMAIL_USE_TLS`), sem `EMAIL_USE_SSL`; `EMAIL_TIMEOUT` desde a 066 | `config/settings/base.py:186-197`, `identidade/application/mensagem.py`, `convocacao/application/comunicar.py` |
 | Cache | Nenhum `CACHES`. O limite de pedidos de código é contado **no banco** | `identidade/application/desafio.py:14-16` |
-| Sessões | Backend de banco padrão, cookie único `sessionid`, validade de 2 semanas. Nada limpa sessões expiradas | ausência de `SESSION_ENGINE` e `SESSION_COOKIE_AGE`; `production.py:242-247` |
+| Sessões | Backend de banco padrão, cookie único `sessionid`, validade de 2 semanas. Nada limpa sessões expiradas | ausência de `SESSION_ENGINE` e `SESSION_COOKIE_AGE`; `production.py:342-347` |
 | Documentos do candidato | Disco, em `ARQUIVOS_CANDIDATOS_RAIZ`, como `inscricoes/<uuid>/<uuid>.pdf`. O arquivo nunca tem URL, e todo download passa pela aplicação | `inscricoes/storage.py:27-72`, `portal/arquivos.py` |
 | Anexos do Edital e PDFs publicados | Bytes **no banco**, em `BinaryField`. O PDF é gerado em Python puro, com fontes base-14, sem dependência de sistema | `editais/models/anexos.py:43`, `publicacoes/infrastructure/pdf.py`, `divulgacao/models.py` |
 | Exportação de matrículas | `.xlsx` montado em memória e **não guardado**; fica só o registro da geração | `matriculas/infrastructure/planilha.py`, `matriculas/models.py` |
@@ -142,7 +142,7 @@ Tudo nesta seção é **constatado**.
 | Auditoria funcional | `RegistroAuditoria`, append-only em três camadas (modelo, gatilho, privilégio), consultável em `/gestao/.../auditoria` e na API | `processo_seletivo/auditoria/` |
 | Autenticação da gestão | **Seletor de identidade de desenvolvimento**; em produção, 503 | `interface/views.py:729-730`, `interface/identidade.py:6-8` |
 | Autenticação do candidato | Sem senha: código de 6 dígitos por e-mail, validade de 10 min, 5 tentativas, 5 pedidos por hora por endereço e 30 por hora por origem | `identidade/domain/codigo.py`, `identidade/application/desafio.py:35-42` |
-| Autenticação da API admin | Adaptador de desenvolvimento, que produção recusa; **não há classe institucional** | `seguranca/api/authentication.py`, `production.py:199-228` |
+| Autenticação da API admin | Adaptador de desenvolvimento, que produção recusa; **não há classe institucional** | `seguranca/api/authentication.py`, `production.py:298-328` |
 | CORS | Não existe, e não é necessário: a mesma origem serve tudo | ausência de `django-cors-headers` |
 | Seeds e fixtures obrigatórias | **Nenhuma.** `seed_demo` é só demonstração | `processos/management/commands/seed_demo.py:1-6` |
 | Docker | `Dockerfile` e `compose.yaml` **só para desenvolvimento** | `Dockerfile:8-10`, `compose.yaml:11-13` |
@@ -868,27 +868,27 @@ nomeia a variável.
 | Variável | Classe | Valor em produção | Evidência e observação |
 |---|---|---|---|
 | `DJANGO_SETTINGS_MODULE` | obrigatória, comum | `config.settings.production` | O `manage.py` cai em `development` sem ela (`manage.py:7`); o `wsgi.py` já usa `production` |
-| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:74-82`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
-| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:84-89`) |
+| `DJANGO_SECRET_KEY` | **obrigatória, segredo persistente** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se tiver menos de 50 caracteres ou for valor de desenvolvimento (`production.py:75-85`). **Assina os códigos de verificação dos comprovantes** (`inscricoes/domain/autenticidade.py:17,61`) |
+| `DJANGO_ALLOWED_HOSTS` | obrigatória, comum | `<DOMINIO>` | Recusa se vazio ou `*` (`production.py:87-92`) |
 | `DB_NAME`, `DB_HOST`, `DB_PORT` | comum | `processo_seletivo`, `127.0.0.1`, `5432` | `base.py:352-361` |
 | `DB_ROLE` | comum | `runtime` | `migration` só via `ps-manage --migracao` (`base.py:343-351`) |
 | `DB_RUNTIME_USER` | comum | `processo_seletivo_runtime` | — |
-| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:259-263`) |
+| `DB_RUNTIME_PASSWORD` | **obrigatória, segredo** | `<GERAR_SEGREDO_ALEATORIO>` | Recusa se vazia (`production.py:330-334`) |
 | `DB_MIGRATION_USER`, `DB_MIGRATION_PASSWORD` | segredo | `processo_seletivo_owner`, `<GERAR_SEGREDO_ALEATORIO>` | **Só** em `migracao.env`: a aplicação em serviço não enxerga |
-| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:128-136`) |
-| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:147-161`) |
-| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `EMAIL_HOST` obrigatória com o backend SMTP; as outras, comuns | `<SMTP_HOST>`, `587`, `true` | Recusa `EMAIL_HOST` vazio com o backend SMTP (`production.py:168-176`). Só STARTTLS: uma porta de SSL implícito, como costuma ser a 465, **não funciona** (`base.py:186-197`) |
+| `ARQUIVOS_CANDIDATOS_RAIZ` | obrigatória, comum | `/var/lib/processoseletivo/arquivos` | Recusa se ausente, relativa ou dentro do código (`production.py:134-147`) |
+| `DJANGO_EMAIL_BACKEND` | obrigatória, comum | `django.core.mail.backends.smtp.EmailBackend` | Recusa console, arquivo, memória e nulo (`production.py:149-172`) |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USE_TLS` | `EMAIL_HOST` obrigatória com o backend SMTP; as outras, comuns | `<SMTP_HOST>`, `587`, `true` | Recusa `EMAIL_HOST` vazio com o backend SMTP (`production.py:179-187`). Só STARTTLS: uma porta de SSL implícito, como costuma ser a 465, **não funciona** (`base.py:186-197`) |
 | `EMAIL_HOST_USER` | comum | `<SMTP_USUARIO>` | Trocar de servidor: §16.5; testar: §10.4 |
 | `EMAIL_HOST_PASSWORD` | segredo | do cofre | Rotação: §16.5; testar: §10.4 |
-| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:162-167`) |
-| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:202-209`) |
-| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:190-198`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:808-811`) |
-| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:228-257`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
-| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:266,279-284` |
+| `DEFAULT_FROM_EMAIL` | obrigatória, comum | `<REMETENTE>` | Recusa se vazio (`production.py:173-178`) |
+| `PORTAL_ATENDIMENTO` | obrigatória, comum | e-mail, telefone ou página do atendimento | Recusa se vazio; aparece em duas telas do candidato (`production.py:209-220`) |
+| `PORTAL_ATRAS_DE_PROXY` | obrigatória, comum | `true` | Recusa sem declaração (`production.py:189-207`). Com `true`, o portal lê o **primeiro** item do `X-Forwarded-For` (`portal/views.py:808-811`) |
+| `API_AUTHENTICATION_CLASSES` | obrigatória, comum | `rest_framework.authentication.RemoteUserAuthentication` | **Provisório, e nega tudo.** Passa na barreira (`production.py:302-327`) e **não autentica ninguém**, porque não há `RemoteUserBackend`: a API admin e o `/metrics` respondem 403 (ensaiado). Troque pela classe institucional quando existir |
+| `DJANGO_SECURE_SSL_REDIRECT` | obrigatória `true` | `true` | `production.py:337,350-355` |
 | `DJANGO_SECURE_HSTS_SECONDS` | obrigatória, pelo menos 1 ano | `31536000` | idem |
 | `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
 | `DJANGO_SECURE_HSTS_PRELOAD` | opcional | **`false`** | O padrão do código é `true`. Veja §13.4 |
-| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:287-288`) |
+| `DJANGO_TRUST_PROXY_SSL_HEADER` | obrigatória **nesta topologia** | `true` | Sem ela, `request.is_secure()` é falso atrás do nginx: o redirecionamento HTTPS entra em laço e o CSRF recusa todo POST (`production.py:358-359`) |
 | `ARQUIVOS_CANDIDATOS_LIMITE_BYTES` | opcional | padrão, 10 MiB | Se mudar, ajuste o `client_max_body_size` de `/selecoes/` (§14) |
 | `EDITAL_ANEXOS_LIMITE_BYTES` | opcional | padrão, 5 MiB | Se mudar, ajuste o de `/gestao/` |
 | `SORTEIO_FONTE_TIMEOUT_SEGUNDOS`, `SORTEIO_FONTE_TENTATIVAS` | opcional | padrão, 10 e 3 | `base.py:144-145` |
@@ -901,7 +901,7 @@ nomeia a variável.
 - `TEST_DB_ENGINE`.
 
 Não existe `DJANGO_DEBUG`: código nenhum o lê, e `production` fixa `DEBUG = False`
-(`production.py:60`). O `.env.example` o trazia até 14/10/2026 (M-8). As `POSTGRES_*` só servem ao `compose.yaml`.
+(`production.py:62`). O `.env.example` o trazia até 14/10/2026 (M-8). As `POSTGRES_*` só servem ao `compose.yaml`.
 
 ### 10.2 Onde ficam e como se geram
 
@@ -1531,7 +1531,7 @@ sudo certbot renew --dry-run                               # "Congratulations, a
 
 ### 13.4 HSTS: o que o código obriga e o que se escolhe
 
-`production.py` **exige** `SECURE_SSL_REDIRECT` e HSTS de pelo menos um ano (`production.py:237-255`).
+`production.py` **exige** `SECURE_SSL_REDIRECT` e HSTS de pelo menos um ano (`production.py:350-355`).
 O cabeçalho sai da aplicação, pelo `SecurityMiddleware`, e só em resposta HTTPS — ensaiado:
 `Strict-Transport-Security: max-age=31536000`.
 
@@ -1803,7 +1803,7 @@ Recomenda-se também um teste externo de TLS, como o SSL Labs, com nota A espera
 | **Comprovante, prévia do Edital e `.xlsx` de matrícula** | gerados a cada pedido | não são guardados | pela aplicação, com `no-store` | não |
 
 **Não há `MEDIA_URL` nem `MEDIA_ROOT`**, e **não se deve criar** `location` no nginx para
-`/var/lib/processoseletivo/arquivos`. É exatamente o que a barreira de `production.py:124-132`
+`/var/lib/processoseletivo/arquivos`. É exatamente o que a barreira de `production.py:134-147`
 existe para impedir.
 
 ### 15.2 Auditoria do acesso aos documentos (constatado)
@@ -2854,7 +2854,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 | Banco | `sudo -u postgres psql -c 'show listen_addresses'`; `select … from pg_hba_file_rules` | `localhost`; só as 3 regras da §9 |
 | Papéis do banco | §11.2 | nenhum superusuário; runtime sem `DELETE` na auditoria |
 | Cabeçalhos | `curl -sI https://<DOMINIO>/selecoes/` | HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy: same-origin`, COOP |
-| Cookies | DevTools, depois de entrar no portal | `sessionid` e `csrftoken` com `Secure`, `HttpOnly`, `SameSite=Lax` (`production.py:242-247`) |
+| Cookies | DevTools, depois de entrar no portal | `sessionid` e `csrftoken` com `Secure`, `HttpOnly`, `SameSite=Lax` (`production.py:342-347`) |
 | CSRF | §17.2, item 4; `Origin` forjado → 403 (ensaiado) | — |
 | CORS | `curl -sI -H 'Origin: https://evil.example' https://<DOMINIO>/api/v1/public/editais/…` | nenhum `Access-Control-Allow-Origin` |
 | Documentos privados | §15.3 | sem URL; `www-data` não lê |
@@ -2900,7 +2900,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
   - `interface/views.py:729-730` responde 503 quando nenhum método de entrada está disponível — o
     seletor desligado e nenhum outro configurado;
   - `interface/identidade.py:6-8` diz que o seletor "não é fronteira de segurança";
-  - `config/settings/production.py:93-97` recusa o seletor;
+  - `config/settings/production.py:94-98` recusa o seletor;
   - não há LDAP, OIDC, SAML, `RemoteUserMiddleware`, `LoginView` nem `AUTHENTICATION_BACKENDS`;
   - os papéis são o dicionário fixo `PAPEIS` (`interface/identidade.py:25-131`).
 - Efeito: ninguém cria, publica ou conduz Edital em produção, e não existe primeiro usuário
@@ -2926,7 +2926,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 
 **I-1 — Não há classe de autenticação institucional para a API admin.**
 
-- Evidência: `production.py:199-228`; a única subclasse de `BaseAuthentication` é o adaptador de
+- Evidência: `production.py:298-328`; a única subclasse de `BaseAuthentication` é o adaptador de
   desenvolvimento (`seguranca/api/authentication.py`).
 - Paliativo: `RemoteUserAuthentication`, que passa na barreira e **não autentica ninguém**. A API
   admin e o `/metrics` ficam fechados (ensaiado: 403).
@@ -2963,7 +2963,7 @@ evidência. Nenhum foi corrigido neste documento: governança é do usuário.
 
 **I-6 — HSTS com subdomínios e preload ligados por padrão.**
 
-- Evidência: `production.py:238-240`; o `.env.example` também traz `true`.
+- Evidência: `production.py:338-340`; o `.env.example` também traz `true`.
 - Paliativo: `false` no `app.env` (§13.4).
 
 **I-7 — Lacunas na trilha de auditoria.**
