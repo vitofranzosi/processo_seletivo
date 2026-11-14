@@ -6,9 +6,14 @@ traria uma cópia do JSON inteiro do Edital por Resultado sem alterar a contagem
 """
 
 from collections import defaultdict
+from functools import reduce
+from operator import or_
+
+from django.db.models import Q
 
 from processo_seletivo.classificacao.domain import universo_classificavel
 from processo_seletivo.classificacao.domain.desempate import etapas_que_a_ordem_le, ordenar
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.editais.domain.recortes import normalizar_recorte
 from processo_seletivo.inscricoes.models import Inscricao, ValorDeFato
 from processo_seletivo.publicacoes.application.selectors import effective_version
@@ -55,7 +60,7 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     # grava —, nunca na progressão acima nem no que decide quem tem posição (`preparar`, FR-3548).
     lidas = etapas_que_a_ordem_le(marco)
 
-    consulta = _universo(edital, perfil, etapas, etapa_do_marco)
+    consulta = _universo(edital, perfil, etapas, etapa_do_marco, enumeradas=enumeradas)
     # **O filtro do recorte reservado, e ele é o único acréscimo ao universo** (`FR-492`). Fica na
     # própria consulta, junto do resto: filtrar em memória depois de ler leria o Perfil inteiro por
     # recorte, e o projeto tem orçamento de consulta verificado por teste.
@@ -164,7 +169,7 @@ def calcular_ordem(*, edital, perfil_id, marco_id, lista_id=None, at=None):
     }
 
 
-def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None):
+def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None, enumeradas=()):
     """As inscrições que concorrem no marco, antes do filtro do recorte.
 
     A progressão é aplicada no próprio queryset: nenhuma lista integral é lida uma segunda vez só
@@ -174,20 +179,62 @@ def _universo(edital, perfil, etapas, etapa_do_marco, *, conteudo=None):
 
     `conteudo`, quando quem chama já o leu, poupa à condição do corte a releitura do conteúdo
     vigente (135, a revisão do PR #441).
+
+    `enumeradas` são as Etapas do marco, e só pesam quando a última delas é restrita (163).
     """
     consulta = Inscricao.objects.filter(
         edital=edital,
         profile_id=perfil["id"],
         status=Inscricao.Status.SUBMETIDA,
     )
-    return restringir_a_participantes(
-        consulta,
-        edital=edital,
-        etapa_id=etapa_do_marco["id"],
-        vigentes={_uuid_da_etapa(chave): valor for chave, valor in etapas.items()},
-        prefixo="",
-        conteudo=conteudo,
+    vigentes = {_uuid_da_etapa(chave): valor for chave, valor in etapas.items()}
+    if not alcance_da_etapa.restrita(etapa_do_marco):
+        return restringir_a_participantes(
+            consulta,
+            edital=edital,
+            etapa_id=etapa_do_marco["id"],
+            vigentes=vigentes,
+            prefixo="",
+            conteudo=conteudo,
+        )
+    return _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, conteudo=conteudo)
+
+
+def _universo_por_alcance(consulta, edital, etapas, vigentes, enumeradas, *, conteudo=None):
+    """Quando a última Etapa enumerada é restrita, cada inscrição é decidida pela última que a
+    alcança (163, FR-6985).
+
+    Perguntar só à última, como antes, devolveria só as inscrições que ela alcança — com a
+    Heteroidentificação por última enumerada, a ordem da ampla sairia vazia. Da última para a
+    primeira, cada Etapa decide sobre as Modalidades que alcança e que nenhuma posterior decidiu; a
+    sobra, que nenhuma enumerada alcança, entra como entraria num marco sem Etapa: a inscrição
+    submetida do Perfil. Uma consulta, por disjunção de subconsultas — nenhuma lista materializada.
+    """
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+
+    conteudo = conteudo if conteudo is not None else conteudo_vigente(edital)
+    ordenadas = sorted(
+        (etapas[item] for item in enumeradas if item in etapas),
+        key=lambda etapa: etapa.get("order") or 0,
+        reverse=True,
     )
+    partes = []
+    decididas = frozenset()
+    for etapa in ordenadas:
+        parte = restringir_a_participantes(
+            consulta, edital=edital, etapa_id=etapa["id"], vigentes=vigentes, prefixo=""
+        )
+        if decididas:
+            parte = parte.exclude(modality_id__in=list(decididas))
+        partes.append(Q(pk__in=parte.values("pk")))
+        alcancadas = alcance_da_etapa.modalidades_alcancadas(conteudo, etapa)
+        if alcancadas is None:
+            break
+        decididas = decididas | alcancadas
+    else:
+        sobra = consulta.exclude(modality_id__in=list(decididas)) if decididas else consulta
+        partes.append(Q(pk__in=sobra.values("pk")))
+    return consulta.filter(reduce(or_, partes))
 
 
 def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
@@ -228,7 +275,14 @@ def listas_sem_concorrente(*, edital, conteudo, perfil_id, marco_id):
         return set()
     concorrem = {
         str(modalidade)
-        for modalidade in _universo(edital, perfil, etapas, etapa_do_marco, conteudo=conteudo)
+        for modalidade in _universo(
+            edital,
+            perfil,
+            etapas,
+            etapa_do_marco,
+            conteudo=conteudo,
+            enumeradas=[str(item) for item in marco.get("stages") or []],
+        )
         .order_by()
         .values_list("modality_id", flat=True)
         .distinct()

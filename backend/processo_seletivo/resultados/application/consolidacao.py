@@ -27,6 +27,8 @@ from processo_seletivo.processos.models import Edital
 from processo_seletivo.resultados.application.prontidao import (
     E_TAMBEM_FORA,
     FORA_DA_FAIXA,
+    FORA_DO_ALCANCE,
+    FORA_DO_ALCANCE_RECUSA,
     FORA_DO_CORTE,
     NAO_PARTICIPA,
     PRONTA,
@@ -110,6 +112,11 @@ def _inscricoes_da_selecao(edital, ids, panorama):
         # que não aconteceu: ele foi considerado, tem posição na ordem, e a norma publicada o
         # deixou de fora (014, FR-210, UX-025, E2E14-008).
         cortadas = [i for i in fora if panorama["estados"].get(i.id, (None,))[0] == FORA_DO_CORTE]
+        # A 163, pela mesma razão: quem a Etapa não alcança ouve isso, e não a eliminação (FR-6976).
+        if any(panorama["estados"].get(i.id, (None,))[0] == FORA_DO_ALCANCE for i in fora):
+            raise DomainError(
+                "inscricao_fora_da_etapa", FORA_DO_ALCANCE_RECUSA, 422, campo="inscricao_id"
+            )
         raise DomainError(
             "inscricao_fora_da_etapa",
             (
