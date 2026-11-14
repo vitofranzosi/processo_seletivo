@@ -97,6 +97,10 @@ class EtapaAvaliacao(models.Model):
     regra_de_deliberacao = models.CharField(
         max_length=40, blank=True, default="", choices=REGRAS_DE_DELIBERACAO
     )
+    # **A admissão do vídeo gravado pelo candidato** (166, FR-7102, D-001). Só a Etapa decisória e
+    # colegiada, com alcance e período, a declara, e só com a chave `VERIFICACAO_POR_VIDEO` ligada;
+    # quem recusa o resto é a publicação (FR-7103, FR-7104). `False` é o que toda Etapa significava.
+    admite_video = models.BooleanField(default=False)
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(

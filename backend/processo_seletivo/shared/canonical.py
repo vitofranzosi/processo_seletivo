@@ -184,7 +184,11 @@ from uuid import UUID
 # `stages`, `null` ou `"MAJORITY"`/`"UNANIMOUS_FOR_FAVORABLE"`/`"UNANIMOUS_FOR_UNFAVORABLE"`. A
 # publicação a grava só na Etapa decisória com mais de uma avaliação; o `null` nela é o acervo, e se
 # lê "sem regra" — a Etapa continua impedida na consolidação, como era (D-002).
-SCHEMA_VERSION = 24
+#
+# **O degrau 25 é a admissão do vídeo** (166, FR-7102): `videoOption` em cada item de `stages`,
+# `true` ou `false`, sempre presente. O acervo se lê `false`: a capacidade não existia, e nenhum
+# Edital anterior deu ao candidato o vídeo como meio (D-001).
+SCHEMA_VERSION = 25
 
 
 def _default(value):

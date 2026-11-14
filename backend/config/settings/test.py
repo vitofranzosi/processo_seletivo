@@ -25,6 +25,11 @@ ASSISTENTE_SERVICO = ""
 # Os casos da `074` a ligam por `settings`.
 ASSISTENTE_NA_PAGINA_DO_EDITAL = False
 
+# A verificação por vídeo (166) **ligada**, e fixada aqui pela razão do painel acima: os casos da
+# chave desligada a desligam por `settings`. O prazo de retenção continua sem valor (P-10).
+VERIFICACAO_POR_VIDEO = True
+VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = None
+
 # A peça do kit (111) ligada, e fixada aqui pela razão do painel acima: o `.env` não decide a suíte.
 # Os casos da chave desligada a desligam por `settings` (EC-21).
 KIT_DE_DIVULGACAO_PECA = True

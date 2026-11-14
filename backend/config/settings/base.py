@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     # construídas. As duas direções de dependência são reais e opostas, e o ciclo se quebra com
     # import local, como `reabrir` já faz com `comando_de_comissao` (013, T-001).
     "processo_seletivo.resultados",
+    "processo_seletivo.verificacao",
     # A ordem entre participantes (015): o ato de ordenação e suas posições. App próprio pela mesma
     # razão que separou `resultados` de `avaliacoes` — ordenar não é resultado de Etapa: o ato tem
     # universo declarado, autoridade, sucessão e imutabilidade próprios, e é sobre ele que a 016
@@ -358,6 +359,26 @@ ASSISTENTE_NA_PAGINA_DO_EDITAL = (
 )
 # Quantas conversas a página pública abre por sessão e Edital (074, `FR-1685`): o limite de turnos é
 # por conversa, e "Nova conversa" sem teto daria turnos novos sem fim.
+# A verificação da autodeclaração por vídeo (166, `FR-7100`). **Desligada por padrão, e recusada em
+# produção** (`production.py`): nenhuma norma do Ifes autoriza hoje o vídeo assíncrono, e a porta do
+# piloto — ato do Conselho Superior, protocolo da CPVA e Edital que o cite — é a P-0, aberta
+# (`doc/verificacao-por-video-porta-do-piloto.md`).
+VERIFICACAO_POR_VIDEO = os.getenv("VERIFICACAO_POR_VIDEO", "false").lower() == "true"
+# O teto do vídeo inteiro, **próprio** (`FR-7122`): o envio vai em partes de até 8 MiB, e os limites
+# dos demais envios — os 10 MiB do PDF, os 12 MB do nginx — não mudam. 64 MiB dão folga para três
+# minutos de câmera real, cuja taxa a matriz de navegadores ainda vai medir (A-5 do estudo).
+VERIFICACAO_POR_VIDEO_LIMITE_BYTES = int(
+    os.getenv("VERIFICACAO_POR_VIDEO_LIMITE_BYTES", str(64 * 1024 * 1024))
+)
+# O prazo de retenção do arquivo de vídeo, em dias, contado do encerramento do Edital (166,
+# `FR-7146`). **Sem valor padrão**: é a P-10, que pede o arquivo institucional e o encarregado de
+# dados. Vazio é `None`, e o comando de eliminação recusa — inventar um número aqui seria o sistema
+# decidindo a guarda de dado sensível por quem não decidiu.
+VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = (
+    int(os.getenv("VERIFICACAO_POR_VIDEO_RETENCAO_DIAS"))
+    if os.getenv("VERIFICACAO_POR_VIDEO_RETENCAO_DIAS", "").strip()
+    else None
+)
 ASSISTENTE_CONVERSAS_POR_SESSAO = int(os.getenv("ASSISTENTE_CONVERSAS_POR_SESSAO", "3"))
 ASSISTENTE_ENDERECO = os.getenv("ASSISTENTE_ENDERECO", "").strip().rstrip("/")
 ASSISTENTE_MODELO = os.getenv("ASSISTENTE_MODELO", "").strip()
