@@ -192,6 +192,29 @@ def test_cabecalho_e_numero_dividem_a_borda_nas_duas_tabelas(da_visao_geral):
     assert cobre, [s for s, _ in regras]
 
 
+def test_a_folha_da_visao_geral_so_usa_cor_de_token():
+    """P0 do estudo de design system (14/11): a Visão Geral tinha paleta própria, e era a única
+    tela da gestão com texto abaixo de 4,5:1 — 155 trechos, quase todos `#9aa3ad` sobre `#f8f8f8`,
+    a 2,41:1.
+
+    `test_contraste_atende_wcag_aa` confere os pares de `tokens.css`, e por isso não via cor
+    literal. Este fecha a porta por onde ela entrou: cor nesta folha é `var(--…)`.
+    """
+    folha = (TEMPLATES / "interface/static/interface/telas/visao-geral.css").read_text()
+    sem_comentario = re.sub(r"/\*.*?\*/", "", folha, flags=re.S)
+
+    assert re.findall(r"#[0-9a-fA-F]{3,8}\b", sem_comentario) == []
+
+
+def test_a_tabela_da_visao_geral_rola_na_moldura_comum():
+    """P0: a moldura própria só rolava abaixo de 40 rem, e a 768 px o documento media 880 px. A
+    comum, `.tabela-rolavel`, rola em toda largura."""
+    modelo = (GESTAO / "visao_geral.html").read_text()
+
+    assert '<div class="tabela-rolavel">\n<table class="tabela-da-visao">' in modelo
+    assert "rolagem-da-tabela" not in modelo
+
+
 def test_a_consulta_estreita_nao_alcanca_a_tabela_aninhada(da_visao_geral):
     """`FR-627` — seletor descendente atravessa `<table>` dentro de `<table>`.
 

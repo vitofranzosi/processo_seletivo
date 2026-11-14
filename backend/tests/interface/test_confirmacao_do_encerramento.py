@@ -55,6 +55,8 @@ def test_recurso_aguardando_impede_e_o_gestor_ve_a_contagem_e_a_quem_pedir(peca)
 
     impedimentos = bloco(corpo, "Antes de encerrar, resolva 1 pendência.")
     assert "1 recurso aguarda decisão." in impedimentos
+    # A espécie no texto, e não só no vermelho (P0 do estudo de design system; WCAG 1.4.1).
+    assert "<strong>Impedimento:</strong> <strong>Antes de encerrar, resolva" in corpo
     assert "Peça a quem julga recursos." in impedimentos
     assert "Ir aos recursos" not in impedimentos
     assert CONFIRMAR not in corpo
@@ -124,6 +126,10 @@ def test_sem_impedimento_as_advertencias_vem_a_parte_e_o_confirmar_aparece(
 
     continuam = bloco(corpo, "Continuam depois do encerramento")
     assert "em revisão, não poderá mais prosseguir." in continuam
+    # O que deixa o ato seguir diz a espécie também, e não só o amarelo (P0; WCAG 1.4.1).
+    assert "<strong>Atenção:</strong> <strong>Continuam depois do encerramento</strong>" in corpo
+    # E a medida de leitura das confirmações viaja com a tela (P0.3).
+    assert "interface/grupos/confirmacao-de-ato.css" in corpo
     assert "Abrir a Retificação" in continuam
     assert "Antes de encerrar" not in corpo
     assert CONFIRMAR in corpo
