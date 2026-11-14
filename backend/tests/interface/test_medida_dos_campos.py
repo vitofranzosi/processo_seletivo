@@ -392,8 +392,9 @@ def test_nenhuma_descricao_se_perdeu_ao_sair_de_vista(etapa):
     a quem usa leitor de tela.
     """
     ocultos = dict(re.findall(r'<span class="oculto" id="([^"]+)">(.*?)</span>', etapa, re.S))
-    # Oito desde a 165: a da regra de deliberação, que o grupo de rádios aponta (UX-750).
-    assert len(ocultos) == 8, f"esperava oito descrições preservadas, achei {len(ocultos)}"
+    # Oito desde a 165: a da regra de deliberação, que o grupo de rádios aponta (UX-750). Nove
+    # desde a 166: a da admissão do vídeo, que a caixa aponta.
+    assert len(ocultos) == 9, f"esperava nove descrições preservadas, achei {len(ocultos)}"
 
     for nome in ("scheduleEventId", "minimumScore", "maximumScore", "weight"):
         controle = re.search(

@@ -1,12 +1,14 @@
 # Feature Specification: A verificação da autodeclaração por vídeo, só em desenvolvimento
 
-**Feature Branch**: `claude/166-verificacao-por-video`, sobre a `claude/165-regras-de-deliberacao-9f8a47`
-em `09443456`, que tem a `165` implementada sobre a `164` e a `163`
+**Feature Branch**: `claude/166-verificacao-por-video`, nascida da `claude/165-regras-de-deliberacao-9f8a47`
+em `09443456`, com a `origin/main` mergeada depois do merge da `165`
 
 **Created**: 2026-11-14
 
-**Status**: Draft — fluxo completo do Spec Kit pedido na mesma sessão (specify, clarify, plan, tasks,
-analyze e implementação). Nada aqui ativa o vídeo fora do desenvolvimento.
+**Status**: Especificada, esclarecida (cinco perguntas, respondidas pela recomendação e abertas à
+revisão do usuário), planejada, analisada e implementada em 14/11, com a `origin/main` mergeada depois
+do merge da `165` (#545). PR sem merge. Nada aqui ativa o vídeo fora do desenvolvimento. Pendentes: o
+SC-2377 (humano) e as decisões P-0, P-7, P-8 e P-10.
 
 **Input**: as entregas 5 a 8 do plano do estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541): o lado do candidato, o lado da
