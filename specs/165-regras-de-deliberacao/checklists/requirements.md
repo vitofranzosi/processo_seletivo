@@ -43,7 +43,8 @@ foi conferido contra o requisito que o resolve:
 | Etapa decisória não eliminatória com regra | FR-7064 (FR-047 da `013`) |
 | O acervo publicado | FR-7054, D-002 |
 | Pareceres a menos | FR-7062 |
-| Pareceres a mais | FR-7062 |
+| Pareceres a mais | FR-7062, FR-7073 (FR-092 da `012`) |
+| A reavaliação e os pareceres antigos | FR-7062, FR-7071 |
 | Membro impedido depois de concluir | FR-7061, FR-7062 (FR-092 da `012`) |
 | Pareceres sob versões diferentes | FR-7063, FR-7065, FR-7074 |
 | Retificação da regra antes de qualquer Resultado | FR-7073, FR-7074 |
@@ -56,7 +57,7 @@ foi conferido contra o requisito que o resolve:
 | A trilha | FR-7060 |
 | O não comparecimento | FR-7064 |
 | Motivos diferentes no mesmo sentido | FR-7061; *Achados* |
-| O recurso | FR-7069 a FR-7072 |
+| O recurso | FR-7069 a FR-7072, FR-7081 |
 | Reavaliação sem membros elegíveis suficientes | FR-7071 |
 | A Etapa restrita | FR-7076; regra de alcance da `163` |
 | A parte pública | FR-7078 |
@@ -69,6 +70,11 @@ foi conferido contra o requisito que o resolve:
   de um parecer. Sob uma regra de unanimidade, a consequência do Resultado às vezes basta para deduzi-lo,
   como hoje a de uma avaliação única basta. A FR-7060 foi reescrita para o que é verificável: a trilha
   da conclusão sem sentido nem texto, e a da consolidação sem regra nem contagem.
+- **Iteração 2, revisão do PR #545.** Seis achados corrigidos: a contagem no cumprimento da
+  reavaliação (FR-7062, FR-7071, caso-limite novo), a revisão declarada da invariante de proveniência da
+  `013` (FR-7065, D-006), o julgador com parecer pendente (FR-7069), a saída de "pareceres a mais"
+  (FR-7062, FR-7073), a autoria só para a gestão (FR-7081, cenário 5 da US3) e a base sobre a correção da
+  `164` (FR-7066, FR-7072). A faixa usada passa a ir até a FR-7081.
 - **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
   usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
 - **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"

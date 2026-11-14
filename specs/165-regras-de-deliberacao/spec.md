@@ -1,13 +1,13 @@
 # Feature Specification: As regras de deliberação dos pareceres
 
 **Feature Branch**: `claude/165-regras-de-deliberacao-9f8a47`, sobre a `claude/164-efeito-do-desfecho-por-lista`
-em `443c84f0`
+em `df54d2c1`, que tem a correção da revisão de código da `164`
 
 **Created**: 2026-11-14
 
 **Status**: Especificada em 14/11. Só a spec: plano e implementação esperam o pedido do usuário. PR só
 de documento, empilhado sobre o da `164` (#543), que está sobre o da `163` (#542). Nenhum dos dois
-tem merge.
+tem merge. Revista no mesmo dia pela revisão do PR #545, com seis achados.
 
 **Input**: a decisão **P-3** do usuário em 13/11/2026, no estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541, regra R-4):
@@ -101,6 +101,23 @@ que ele produz.**
 
 As decisões D-001 a D-009 são as que a redação exigiu, e cada uma registra a alternativa descartada.
 Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-3 lhe deu.
+
+### Session 2026-11-14 (revisão do PR #545, pedida pelo usuário)
+
+Seis achados, corrigidos sem mudar nenhuma decisão:
+- **A reavaliação travava em "pareceres a mais".** Os pareceres antigos continuam elegíveis, e três
+  antigos com três novos davam seis. → No cumprimento, contam só os concluídos depois da decisão
+  (FR-7062, FR-7071).
+- **A FR-7065 contradizia a invariante de proveniência da `013`**: uma Avaliação por Resultado, e a
+  versão dela. → A spec declara que a revê, e dá a redação nova (FR-7065, D-006).
+- **O julgador com parecer pendente** julgaria sem ver o que julga. → Fica impedido também (FR-7069).
+- **"Pareceres a mais" não tinha saída.** → A Retificação que o produziria é impedida (FR-7073), e o
+  resíduo de conteúdo antigo sai pela inativação da Atribuição por ato nomeado (FR-7062).
+- **"Nunca quem deu cada um" × a identificação dos pareceres.** → A autoria fica com a presidência e a
+  auditoria, e nunca chega ao titular nem à parte pública (FR-7081).
+- **A base da spec** passou a ser a correção da revisão de código da `164`: a vedação de piora voltou a
+  recusar a nota menor qualquer que seja a consequência, e o motivo da retirada recebe o nome da
+  reserva já resolvido (FR-7066, FR-7072).
 
 ---
 
@@ -209,7 +226,8 @@ a consequência e o motivo com a tabela publicada.
    possa mudá-lo.
 5. **Given** o Resultado de Maria, **When** alguém o lê depois, por si, **Then** ele diz a regra
    aplicada, quantos pareceres houve em cada sentido, a versão cuja regra foi aplicada, e quais
-   pareceres o formaram. Nunca quem deu cada um.
+   pareceres o formaram. A presidência e a auditoria veem quem deu cada um, como veem hoje; o titular e
+   a parte pública, nunca.
 6. **Given** um Edital com uma avaliação por inscrição, **When** a presidência consolida, **Then** tudo
    segue como hoje.
 
@@ -316,9 +334,16 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   continua sem regra e impedida, como hoje, até uma Retificação declarar a regra. Nada se lê por padrão
   (FR-7054, D-002).
 - **Pareceres a menos.** A inscrição não está pronta, e a linha diz quantos faltam (FR-7062).
-- **Pareceres a mais.** Uma Retificação reduziu o número de avaliações antes do primeiro Resultado, e
-  uma inscrição tem mais conclusões elegíveis que o novo número. Ela fica não consolidável, como hoje, e
-  o sistema não escolhe quais pareceres contam (FR-7062).
+- **Pareceres a mais.** Uma Retificação que reduzisse o número de avaliações abaixo das conclusões que
+  uma inscrição já tem é impedida, e a mensagem diz quantas inscrições ficariam assim (FR-7073). O caso
+  só sobra em conteúdo anterior a esta feature. Ali, a inscrição fica não consolidável, o sistema não
+  escolhe quais pareceres contam, e a saída é a de hoje: a presidência inativa a Atribuição excedente
+  por ato nomeado, com motivo, pela FR-092 da `012`, a partir da linha da inscrição (FR-7062).
+- **A reavaliação e os pareceres antigos.** Os pareceres da deliberação anterior continuam elegíveis
+  pelo contrato da `012`, e nada os inativa. No cumprimento da reavaliação, a contagem considera só os
+  pareceres concluídos depois da decisão, como a FR-068 da `018` faz com a avaliação única. Sem isso, três
+  antigos e três novos dariam seis pareceres, e a inscrição travaria em "pareceres a mais" (FR-7062,
+  FR-7071).
 - **Membro impedido depois de concluir.** A inativação da Atribuição por ato nomeado torna o parecer
   inelegível, pela FR-092 da `012`. A deliberação conta só os elegíveis, e a inscrição espera outro
   parecer (FR-7061, FR-7062).
@@ -350,7 +375,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **Motivos diferentes no mesmo sentido.** Ana indefere por fenótipo e Bruno por recusa à filmagem. A
   regra combina **sentidos**, e os dois contam como *"Indeferido"*. O efeito é um por Etapa, pela
   `164`, e a lista fechada de motivos não é precondição (FR-7061; *Achados*).
-- **O recurso.** Todos os membros que deram parecer ficam impedidos de julgá-lo (FR-7069). A correção
+- **O recurso.** Todos os membros que deram parecer ficam impedidos de julgá-lo, e também quem tem
+  parecer pendente sobre aquela inscrição naquela Etapa, que julgaria sem ver o que julga (FR-7069). A correção
   fixada fixa o desfecho (FR-7070). A reavaliação é uma deliberação nova inteira, de membros que não
   deram parecer antes (FR-7071), e a vedação de piora a alcança (FR-7072).
 - **Reavaliação sem membros elegíveis suficientes.** A pendência é nomeada como hoje, e nenhum parecer
@@ -420,8 +446,13 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **FR-7062**: A inscrição DEVE estar **pronta** para consolidar só com **exatamente** o número de
   pareceres elegíveis que a Etapa prevê. Com menos, ela DEVE estar não pronta, e a linha DEVE dizer
   quantos faltam. Com mais, ela DEVE estar não consolidável, como hoje, e o sistema NÃO DEVE escolher
-  quais contam. A deliberação NÃO DEVE ser antecipada quando os pareceres presentes já tornam o desfecho
-  inevitável (D-005).
+  quais contam. A linha DEVE dizer quantos pareceres há e quantos a Etapa prevê, e a tela da presidência
+  DEVE oferecer, a partir dela, a inativação da Atribuição excedente por ato nomeado, com motivo, pela
+  FR-092 da `012`. A deliberação NÃO DEVE ser antecipada quando os pareceres presentes já tornam o
+  desfecho inevitável (D-005). **No cumprimento de decisão que determinou reavaliação**, a contagem DEVE
+  considerar só os pareceres concluídos depois da decisão, como a FR-068 da `018` faz com a avaliação
+  única: os anteriores continuam registrados e elegíveis para a leitura histórica, e não contam nem
+  como faltantes nem como excedentes.
 - **FR-7063**: Cada parecer DEVE passar pela conferência de compatibilidade entre a versão sob a qual foi
   concluído e a vigente, como a conclusão única passa hoje. Um parecer incompatível DEVE deixar a
   inscrição não pronta, com a frase de hoje.
@@ -432,11 +463,28 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **FR-7065**: O Resultado deliberado DEVE identificar **todos** os pareceres que formaram a
   deliberação, a **regra** aplicada, a **contagem** de cada sentido e a **versão normativa** cuja regra
   foi aplicada. A reprodução do ato, lendo esses pareceres e essa versão, DEVE chegar à mesma
-  consequência (D-006).
+  consequência (D-006). Isso **revê a invariante de proveniência da `013`**, a da decisão sobre o
+  Resultado sem Avaliação, que hoje diz: o Resultado por avaliação cita exatamente uma Avaliação, e a
+  versão dele coincide com a da Avaliação fonte. A redação nova DEVE ser:
+  - o Resultado por avaliação de **uma** avaliação continua citando exatamente uma Avaliação, com a
+    versão dela, como hoje;
+  - o Resultado **deliberado** cita os N pareceres que contaram, e a versão dele é a vigente no ato,
+    cuja regra foi aplicada. Cada parecer citado DEVE ter sido concluído sob versão compatível com ela,
+    pela FR-7063, e a versão de um parecer PODE diferir da do Resultado;
+  - um parecer DEVE fundamentar no máximo um Resultado, nos dois ramos, como hoje uma Avaliação
+    fundamenta no máximo um.
+
+  A garantia de banco que hoje confere essa coerência DEVE passar a conferir a redação nova, com a mesma
+  força: nenhum Resultado deliberado sem pareceres, nenhum parecer de outra inscrição ou de outra Etapa,
+  e nenhuma versão de outro Edital.
 - **FR-7066**: O motivo do Resultado deliberado DEVE citar o rótulo publicado do desfecho, a regra e a
   contagem, por exemplo *"a comissão deliberou Indeferido por maioria: 2 de 3 pareceres Indeferido"*.
-  Na retirada da reserva, ele DEVE ser completado como a `164` completa. Ele NÃO DEVE nomear quem deu
-  cada parecer. Lido depois, por si, ele DEVE significar o mesmo.
+  Na retirada da reserva, ele DEVE ser completado como a `164` completa: a causa, e depois a reserva
+  perdida e a ampla mantida. Ele NÃO DEVE nomear quem deu cada parecer. Lido depois, por si, ele DEVE
+  significar o mesmo.
+- **FR-7081**: A **autoria** de cada parecer DEVE continuar visível à presidência e à auditoria, nas
+  telas da gestão, com a restrição da FR-7056. Ela NÃO DEVE aparecer ao titular, no acompanhamento, no
+  parecer entregue pela FR-7077 nem no motivo, e NÃO DEVE aparecer na parte pública.
 - **FR-7067**: A consolidação deliberada DEVE ser o ato da presidência que existe hoje, em lote, sob o
   mesmo invólucro. A conferência que precede a confirmação e o ato DEVEM usar o mesmo cálculo, e a
   conferência DEVE mostrar, por inscrição, o desfecho deliberado e a contagem.
@@ -447,17 +495,22 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 
 - **FR-7069**: O Resultado deliberado DEVE ser recorrível como o Resultado de hoje. **Todo** membro que
   concluiu parecer sobre aquela inscrição naquela Etapa DEVE ficar impedido de julgar o recurso, pela
-  regra de impedimento da `018` aplicada a cada um.
+  regra de impedimento da `018` aplicada a cada um. **Também** DEVE ficar impedido quem tem parecer
+  pendente sobre aquela inscrição naquela Etapa, pela FR-7056: julgaria sem ver o que julga, e o
+  impedimento DEVE valer enquanto a pendência existir.
 - **FR-7070**: A **correção fixada** numa Etapa colegiada DEVE fixar o **desfecho** (o sentido), e não
   pareceres individuais. A consequência DEVE continuar derivada da regra da versão que a decisão cita,
   pela FR-059 da `018`.
 - **FR-7071**: A **reavaliação determinada** numa Etapa colegiada DEVE exigir uma **deliberação nova
   inteira**: o número de pareceres que a Etapa prevê, todos novos, de membros que não concluíram parecer
   sobre aquela inscrição naquela Etapa, às cegas pela FR-7056, sob a regra vigente. Os pareceres
-  anteriores DEVEM continuar registrados e NÃO DEVEM contar. Sem membros elegíveis suficientes, a
+  anteriores DEVEM continuar registrados e NÃO DEVEM contar: a contagem do cumprimento é só a dos
+  concluídos depois da decisão, pela FR-7062. Sem membros elegíveis suficientes, a
   pendência DEVE ser nomeada como hoje (D-007).
-- **FR-7072**: A vedação de piora da `018`, na ordem de gravidade que a `164` lhe deu, DEVE alcançar o
-  Resultado da deliberação nova como alcança o da reavaliação de hoje (FR-073 da `018`).
+- **FR-7072**: A vedação de piora da `018` DEVE alcançar o Resultado da deliberação nova como alcança
+  o da reavaliação de hoje (FR-073 da `018`), pelas duas perguntas que ela faz, cada uma bastando: a
+  consequência mais grave, na ordem de gravidade que a `164` lhe deu, e a pontuação menor, pela FR-070
+  da `018`. Na Etapa decisória não há pontuação, e só a primeira se aplica.
 
 #### A Retificação
 
@@ -465,7 +518,9 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   inscrição** de uma Etapa decisória, DEVE ser impedida desde o **primeiro** Resultado por avaliação
   registrado nela, favorável ou desfavorável, vigente ou superado. A mensagem DEVE nomear a Etapa e dizer
   quantos Resultados por avaliação ela já tem. Antes disso, a Retificação DEVE passar, e os pareceres já
-  concluídos DEVEM continuar valendo (D-008).
+  concluídos DEVEM continuar valendo (D-008), salvo um caso: a Retificação que **reduz** o número de
+  avaliações abaixo das conclusões elegíveis que alguma inscrição já tem DEVE ser impedida, e a mensagem
+  DEVE dizer quantas inscrições ficariam com pareceres a mais.
 - **FR-7074**: A Retificação da regra e a consolidação na mesma Etapa DEVEM ser serializadas: o
   Resultado DEVE aplicar a regra da versão vigente no instante do ato, e a Retificação DEVE ser recusada
   se, ao ser publicada, a FR-7073 a impedir.
@@ -511,7 +566,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   número de avaliações dela passa a ter a mesma restrição.
 - **Avaliação (parecer)**: não muda. O que muda é quem a vê enquanto a de outro membro está pendente.
 - **Resultado da Etapa**: o Resultado por avaliação passa a poder ter como fonte **vários** pareceres,
-  com a regra, a contagem e a versão cuja regra aplicou. As consequências são as de hoje.
+  com a regra, a contagem e a versão cuja regra aplicou, e a invariante de proveniência da `013` é
+  revista pela FR-7065. As consequências são as de hoje.
 - **Decisão de recurso**: a correção fixada fixa o desfecho da deliberação; a reavaliação determinada
   exige deliberação nova.
 
@@ -637,8 +693,19 @@ Hoje o Resultado por avaliação cita uma Avaliação, e a versão dela. Com N p
 escolher qual valeu. E a versão da regra pode não ser a de nenhum parecer: a Retificação antes do
 primeiro Resultado troca a regra e mantém os pareceres. A reprodução do ato precisa dos dois, os
 pareceres e a regra, e o Princípio II da Constituição pede que o ato se reproduza pelo que gravou.
-*Descartados:* citar o último parecer concluído; e gravar só a contagem, que não diz quais pareceres
-contaram.
+
+Isso **revê uma invariante da `013`**, e a spec o diz em vez de contorná-la. A decisão da `013` sobre o
+Resultado sem Avaliação fez da versão um campo do Resultado e mandou a garantia de banco conferir que,
+na origem por avaliação, ela coincide com a da fonte. A razão era a reprodutibilidade: a norma que
+fundamentou é a da Avaliação. Com N pareceres, a norma que fundamentou é a da regra aplicada, e cada
+parecer só precisa ter sido concluído sob versão compatível com ela, que é a conferência que a
+conclusão única já passa hoje. O ramo de uma avaliação não muda (FR-7065).
+
+*Descartados:*
+- citar o último parecer concluído, que escolhe um;
+- gravar só a contagem, que não diz quais pareceres contaram;
+- exigir que todos os pareceres tenham a versão da regra, que obrigaria a refazer pareceres depois de
+  uma Retificação que trocou só a regra, e o parecer não depende dela.
 
 ### D-007 — A reavaliação é uma deliberação nova
 
