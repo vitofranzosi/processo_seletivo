@@ -21,6 +21,9 @@ DA_167 = [
     "agenda_montar.html",
     "_agenda_grade.html",
     "_agenda_painel.html",
+    # A entrega B: conferir e a agenda publicada.
+    "agenda_conferir.html",
+    "agenda_publicada.html",
 ]
 
 

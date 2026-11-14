@@ -513,9 +513,9 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
-    # A agenda da Etapa (167): configurar, montar, conferir e publicar. Segmento próprio, `agenda-da-etapa`, e nunca
-    # `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`, pela decisão de rotas da
-    # 011. A porta é a da Distribuição, e as recusas que a montagem diz estão no contrato.
+    # A agenda da Etapa (167): configurar, montar, conferir e publicar. Segmento próprio,
+    # `agenda-da-etapa`, e nunca `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`,
+    # pela decisão de rotas da 011. A porta é a da Distribuição, e as recusas estão no contrato.
     *[
         path(
             f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}",

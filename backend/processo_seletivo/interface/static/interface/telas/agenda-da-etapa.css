@@ -195,6 +195,7 @@
 .horarios-publicos li{display:flex;gap:1rem;align-items:baseline;padding:.3rem 0;
   border-bottom:1px solid var(--borda);flex-wrap:wrap;}
 .horarios-publicos .hora{font-variant-numeric:tabular-nums;font-weight:600;min-width:3.5rem;}
+.horarios-publicos .banca{color:var(--texto-fraco);font-size:.875rem;}
 .horarios-publicos .mais{color:var(--texto-fraco);border-bottom:0;}
 .numero-de-inscricao{font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;}
 
