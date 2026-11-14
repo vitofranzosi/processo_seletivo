@@ -501,7 +501,8 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 
 #### O parecer às cegas
 
-- **FR-7056**: Enquanto uma pessoa tiver **parecer pendente** sobre uma inscrição numa Etapa, isto é,
+- **FR-7056**: Enquanto uma pessoa tiver **parecer pendente** sobre uma inscrição numa **Etapa
+  colegiada** (decisória, com mais de uma avaliação por inscrição e regra declarada), isto é,
   Atribuição ativa sem conclusão vigente, o sistema NÃO DEVE lhe entregar o **sentido** nem o **texto**
   dos pareceres de outros membros sobre aquela inscrição naquela Etapa, qualquer que seja o papel que
   ela acumula:
@@ -524,7 +525,7 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   condição de parecer pendente, e a FR-7056 DEVE voltar a valer para ele. A reabertura de parecer que
   já fundamentou Resultado DEVE seguir a regra que vale hoje para a avaliação consolidada, e a de
   parecer cujo autor já foi exposto segue a FR-7083.
-- **FR-7082**: O sistema DEVE guardar, por pessoa, inscrição e Etapa, o fato de ter **entregado** a uma
+- **FR-7082**: Na Etapa colegiada, o sistema DEVE guardar, por pessoa, inscrição e Etapa, o fato de ter **entregado** a uma
   pessoa o sentido ou o texto de parecer de outro membro sobre aquela inscrição: a **exposição**. Ela
   DEVE ser registrada em toda entrega que a FR-7056 controla, e só pelo fato, sem o conteúdo entregue
   (FR-054 da `012`). A distribuição DEVE **recusar** atribuir a inscrição, naquela Etapa, a pessoa já
