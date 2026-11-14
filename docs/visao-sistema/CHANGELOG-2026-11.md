@@ -527,3 +527,48 @@ A spec 162 viaja no PR #537, sobre a `main` em `84cbeeb5`, e esta atualização 
 - nenhuma tela foi percorrida, e o roteiro manual da 162 (T046) não rodou;
 - os números de *Maturidade* não foram recontados: o selo do cadastro de reserva não mudou, e a tabela de capacidades ganhou um ✓;
 - o SC-2304, humano, segue aberto.
+
+## Acréscimo de 14/11: a 165, a deliberação da comissão
+
+A spec 165 viaja no PR #545, empilhado sobre a 164 (#543) e a 163 (#542), e esta atualização vai junto, no mesmo PR. Nenhuma das três tem merge na `main`. Por isso o texto diz *sem merge* onde descreve a camada A da heteroidentificação, e a página passa a descrever a `main` quando as três entrarem. As frases sobre a 163 e a 164 são as mínimas que a 165 pressupõe: o alcance da Etapa e o efeito por lista. Os PRs delas não mexeram na Visão.
+
+- **Seção nova:** *A deliberação da comissão* (`#deliberacao`), dentro da consolidação. Ela descreve:
+  - as três regras, sem padrão, e a maioria só com número ímpar;
+  - a frase no documento oficial;
+  - o às cegas no servidor e a exposição;
+  - a espera pelos N pareceres e a conferência;
+  - o Resultado `DELIBERACAO`;
+  - o recurso sem reavaliação colegiada;
+  - o que o candidato lê;
+  - a Retificação.
+- **Corrigido**, porque a Etapa decisória com várias avaliações passou a consolidar. A recusa por falta de regra de combinação sobra para a pontuada e para o acervo sem regra:
+  - o *Impede* do panorama;
+  - a dica do tutorial sobre *Avaliações por inscrição*;
+  - a tabela de configuração;
+  - a matriz de capacidades e a de maturidade;
+  - as duas perguntas da Mesa (*Existe mais de um avaliador por inscrição?* e *Como divergências entre avaliadores são tratadas?*, que passou de *Lacuna* a *Parcial*);
+  - as recusas de Etapa inteira;
+  - a linha da leitura múltipla nas decisões e nas lacunas;
+  - *O que o sistema ainda não faz?*.
+- **Heteroidentificação:** saiu de *não existe no sistema*. Mudaram:
+  - os *Limites* das reservas;
+  - a linha da tabela de capacidades, que se dividiu em heteroidentificação, *Parcial*, e submodalidades;
+  - a lacuna da verificação, que agora é só a do vídeo;
+  - a DP-10, com a família decidida em 13/11;
+  - a restrição de não criar estrutura antes de a família entrar no alvo.
+- **A Mesa:** o parecer às cegas entre os membros, com a frase da tela; a avaliação cega quanto ao candidato continua fora.
+- **Os campos da Etapa:** `deliberationRule` entrou, e `evaluationsPerRegistration` ganhou a restrição da Retificação.
+- **As 61 tabelas append-only** no diagrama da imutabilidade (eram 59). Somam-se os pareceres da deliberação e a exposição ao parecer.
+
+**Como foi conferido:**
+
+- as frases e os rótulos vêm do código da branch: `resultados/domain/deliberacao.py`, `avaliacoes/application/cegas.py`, os templates `_etapa.html`, `mesa_inscricao.html`, `conclusoes.html`, `consolidacao_confirmar.html` e `resultados.html`, e as recusas de `retificacoes.py` e `julgar.py`;
+- a suíte inteira rodou contra PostgreSQL: 20 042 passando e 24 pulados;
+- a jornada da gestão e a do candidato foram percorridas no navegador, num banco de demonstração;
+- a página passou pelos guardiões de documentação (`test_documentacao_do_sistema.py`), não tem `id` repetido nem âncora sem destino, e foi aberta pela entrada `visao-do-sistema` (porta 8090): `#deliberacao` leva à seção.
+
+**Não verificado:**
+
+- os números de *Maturidade* não foram recontados;
+- o parágrafo de revisões do rodapé não foi estendido: ele registra revisões contra a `main`, e a 165 ainda não está lá;
+- o SC-2356, humano, segue aberto.
