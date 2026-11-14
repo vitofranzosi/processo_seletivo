@@ -78,6 +78,10 @@ foi conferido contra o requisito que o resolve:
   o recurso corrige por correção fixada, e a reavaliação determinada é recusada antes de gravar. Revistos
   a US5, os casos-limite do recurso, a FR-7062 (sai a contagem do cumprimento), as FR-7070 a FR-7072, a
   entidade da decisão de recurso, a D-007 e *Achados*.
+- **Iteração 4, `/speckit-clarify`.** Pergunta 2 respondida pelo usuário (opção A): o titular lê a regra,
+  a contagem e o texto de cada parecer desfavorável, sem autoria, nas condições da `036`. Revistos a US4
+  (seis cenários), a FR-7066 (motivo sem texto de parecer), as FR-7076 e FR-7077, a FR-7081 (a autoridade
+  recursal vê tudo), a D-009, e acrescido o UX-754 (orientação de preenchimento).
 - **Nenhum marcador de esclarecimento.** A única escolha normativa aberta, qual regra os Editais do Ifes
   usarão, é da CPVA e não bloqueia a spec: a spec oferece as três e não marca nenhuma (D-002).
 - **Vocabulário de implementação.** "Degrau da versão canônica", "contrato de mutabilidade" e "guardião"

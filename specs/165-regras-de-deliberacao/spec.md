@@ -113,6 +113,16 @@ Nenhuma escolhe entre as três regras: todas deixam ao Edital a escolha que a P-
   pareceres antigos nem simular votação nova. Se a CPVA de fato quiser uma nova avaliação, isso fica
   fora desta entrega, e o sistema não a converte em correção fixada: quem reavalia, com que composição
   e por que procedimento é a P-5 (FR-7070, FR-7071, FR-7072, D-007).
+- Q: Quando o resultado deliberado é desfavorável, o que o candidato lê sobre os pareceres? → A: **A
+  regra aplicada, a contagem dos dois sentidos e o texto de cada parecer desfavorável, sem identificação
+  dos membros.** Os favoráveis aparecem só na contagem. A exibição segue as condições da `036`: prazo
+  recursal aberto, ou recurso do titular contra aquele Resultado ainda pendente. Com quatro condições:
+  o motivo (desfecho, regra e contagem) e os textos dos pareceres ficam separados, sem concatenação; os
+  textos são os das conclusões que fundamentaram aquele Resultado, e uma reabertura posterior não os
+  substitui; "sem autoria" oculta identificadores e metadados dos membros, mas não garante anonimato
+  quando o próprio texto identifica alguém, e por isso a orientação de preenchimento o considera,
+  preservando o original; e a restrição é só da apresentação ao candidato, sem reduzir o que a
+  autoridade recursal vê (FR-7066, FR-7076, FR-7077, FR-7081, UX-754, D-009).
 
 ### Session 2026-11-14 (revisão do PR #545, pedida pelo usuário)
 
@@ -249,23 +259,34 @@ a consequência e o motivo com a tabela publicada.
 ### User Story 4 — O candidato entende como a comissão decidiu (Priority: P2)
 
 No acompanhamento, Maria lê que, na Heteroidentificação, a comissão decidiu *"Indeferido"* por
-maioria, com dois dos três pareceres. Enquanto o prazo de recurso estiver aberto, ela lê o texto de
-cada parecer *"Indeferido"*, sem o nome de quem o escreveu, e pode recorrer. A lista pública não diz
-nada disso: traz só o desfecho, como hoje.
+maioria, com dois dos três pareceres *"Indeferido"* e um *"Deferido"*. Enquanto o prazo de recurso
+estiver aberto, ou enquanto o recurso dela contra esse Resultado estiver pendente, ela lê, à parte do
+motivo, o texto de cada parecer *"Indeferido"*, sem o nome nem outro dado de quem o escreveu, e pode
+recorrer. A lista pública não diz nada disso: traz só o desfecho, como hoje.
 
 **Why this priority**: o recurso se escreve contra a fundamentação, e a regra muda o que conta como
 fundamentação. Sob a maioria, dois pareceres fundamentam; sob *"confirma só por unanimidade"*, um basta.
 
-**Independent Test**: abrir o acompanhamento e a publicação do marco sob cada regra e conferir o que
-cada um mostra.
+**Independent Test**: abrir o acompanhamento e a publicação do marco sob cada regra, dentro e fora das
+condições da `036`, e conferir o que cada um mostra.
 
 **Acceptance Scenarios**:
 
 1. **Given** o Resultado deliberado de Maria, visível pela regra de hoje, **When** ela abre o
-   acompanhamento, **Then** a linha diz o desfecho, a regra e a contagem, sem autoria.
+   acompanhamento, **Then** a linha diz o desfecho, a regra e a contagem dos dois sentidos, sem
+   autoria.
 2. **Given** o prazo de recurso aberto, **When** ela abre o parecer, **Then** lê o texto de cada parecer
-   desfavorável da deliberação, sem autoria, e não lê o texto dos favoráveis.
-3. **Given** a publicação do marco, **When** qualquer pessoa a lê, **Then** ela não traz a regra, a
+   desfavorável da deliberação, separado do motivo, sem nome nem outro dado dos membros, e não lê o
+   texto dos favoráveis.
+3. **Given** o prazo encerrado e o recurso de Maria contra esse Resultado ainda pendente, **When** ela
+   abre o parecer, **Then** continua lendo os textos. Encerrados os dois, eles somem, e a tela diz por
+   quê, como na `036`.
+4. **Given** um dos pareceres desfavoráveis reaberto pela presidência depois do Resultado, **When**
+   Maria abre o parecer, **Then** lê o texto da conclusão que fundamentou o Resultado, e não o do estado
+   atual da Avaliação.
+5. **Given** o recurso de Maria em julgamento, **When** a CPVA abre o recurso, **Then** ela vê todos os
+   pareceres da deliberação, favoráveis e desfavoráveis, com a autoria.
+6. **Given** a publicação do marco, **When** qualquer pessoa a lê, **Then** ela não traz a regra, a
    contagem, o texto nem a autoria de nenhum parecer.
 
 ---
@@ -496,10 +517,12 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **FR-7066**: O motivo do Resultado deliberado DEVE citar o rótulo publicado do desfecho, a regra e a
   contagem, por exemplo *"a comissão deliberou Indeferido por maioria: 2 de 3 pareceres Indeferido"*.
   Na retirada da reserva, ele DEVE ser completado como a `164` completa: a causa, e depois a reserva
-  perdida e a ampla mantida. Ele NÃO DEVE nomear quem deu cada parecer. Lido depois, por si, ele DEVE
-  significar o mesmo.
-- **FR-7081**: A **autoria** de cada parecer DEVE continuar visível à presidência e à auditoria, nas
-  telas da gestão, com a restrição da FR-7056. Ela NÃO DEVE aparecer ao titular, no acompanhamento, no
+  perdida e a ampla mantida. Ele NÃO DEVE nomear quem deu cada parecer, e NÃO DEVE conter o texto de
+  parecer nenhum: o texto vai à parte, pela FR-7077. Lido depois, por si, ele DEVE significar o mesmo.
+- **FR-7081**: A **autoria** de cada parecer DEVE continuar visível à presidência, à auditoria e à
+  autoridade recursal autorizada, nas telas da gestão e do julgamento, com a restrição da FR-7056. A
+  autoridade recursal DEVE ver todos os pareceres da deliberação, favoráveis inclusive, com o texto e a
+  autoria: a restrição da FR-7077 é da apresentação ao candidato, e NÃO DEVE reduzir o que ela vê. Ela NÃO DEVE aparecer ao titular, no acompanhamento, no
   parecer entregue pela FR-7077 nem no motivo, e NÃO DEVE aparecer na parte pública.
 - **FR-7067**: A consolidação deliberada DEVE ser o ato da presidência que existe hoje, em lote, sob o
   mesmo invólucro. A conferência que precede a confirmação e o ato DEVEM usar o mesmo cálculo, e a
@@ -559,11 +582,19 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   rótulos publicados. A Etapa sem regra DEVE sair com o texto de antes desta feature. A Revisão, a
   página pública do Edital e a tela de Retificação DEVEM dizer a regra com as mesmas palavras.
 - **FR-7076**: O acompanhamento DEVE mostrar ao titular, na linha do Resultado deliberado, o desfecho,
-  a regra e a contagem, sem autoria. A visibilidade DEVE ser a que o Resultado da Etapa já tem para o
-  titular, inclusive a da Etapa restrita pela `164`.
+  a regra e a contagem dos dois sentidos, sem autoria. A visibilidade DEVE ser a que o Resultado da Etapa
+  já tem para o titular, inclusive a da Etapa restrita pela `164`.
 - **FR-7077**: O parecer entregue ao titular pela FR-522 da `036` DEVE ser, no Resultado deliberado
-  desfavorável, o **texto de cada parecer desfavorável** da deliberação, sem autoria, nas mesmas
-  condições de prazo. Os pareceres favoráveis DEVEM aparecer só na contagem (D-009).
+  desfavorável, o **texto de cada parecer desfavorável** da deliberação (D-009):
+  - nas **mesmas condições** da `036`: prazo recursal aberto para aquele Resultado, ou recurso do titular
+    contra ele ainda pendente; encerradas as duas, os textos somem, e a tela diz por quê;
+  - **à parte do motivo**, como a `036` já os separa, e nunca concatenados a ele;
+  - **os das conclusões que fundamentaram aquele Resultado**, citadas por ele pela FR-7065. Uma reabertura
+    posterior NÃO DEVE substituir o texto apresentado;
+  - **sem autoria**: sem nome, identificador, instante nem outro metadado que identifique o membro. O
+    sistema NÃO DEVE alterar o texto original para isso.
+
+  Os pareceres favoráveis DEVEM aparecer só na contagem.
 - **FR-7078**: A parte pública, a publicação do marco inclusive, NÃO DEVE trazer a regra aplicada a uma
   pessoa, a contagem, o texto nem a autoria de parecer nenhum. Ela DEVE trazer só o desfecho, como hoje.
 - **FR-7079**: A prontidão e a organização da Etapa DEVEM contar as inscrições **aguardando pareceres**
@@ -585,6 +616,10 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
   «desfecho», por «regra»"*, e, antes da confirmação, quantas inscrições terão cada desfecho.
 - **UX-753**: O texto ao candidato DEVE dizer *"a comissão decidiu"*, e nunca *"o avaliador"* nem o nome
   de um membro.
+- **UX-754**: Na Mesa da Etapa colegiada, a orientação de preenchimento do parecer DEVE dizer que o texto
+  desfavorável será lido pelo candidato sem o nome de quem o escreveu, e que ele não deve conter o
+  nome, a assinatura nem outro dado que identifique o membro. A orientação NÃO DEVE bloquear a
+  conclusão: o anonimato pelo texto é responsabilidade de quem escreve, e o sistema guarda o original.
 
 ### Key Entities
 
@@ -770,11 +805,26 @@ marcada; e retificável só para o futuro, que é a desigualdade acima.
 
 ### D-009 — Ao titular, o texto de cada parecer desfavorável, sem autoria
 
-A `036` entrega ao titular o parecer que fundamenta o desfavorável, porque é contra ele que se recorre.
-Com N pareceres, a fundamentação do desfavorável são os pareceres desfavoráveis: sob a maioria, dois de
-três; sob *"confirma só por unanimidade"*, às vezes um só. A contagem diz ao titular que houve
-divergência, o que é argumento de recurso, e a ausência de nome protege quem deu o parecer sem tirar
-nada da defesa. A parte pública não recebe nada disso, como a R-9 do estudo pede. *Descartados:* (a) só o
-desfecho e a regra, sem contagem nem texto, que deixaria o titular sem ter contra o que recorrer; (b)
-todos os textos, que entregaria o favorável, que a regra da `012` não obriga a escrever e que ninguém
-escreveu para o candidato ler; (c) os textos com autoria, que expõe o membro e não ajuda o recurso.
+Decidido pelo usuário em 14/11, no `/speckit-clarify`. A `036` entrega ao titular o parecer que
+fundamenta o desfavorável, porque é contra ele que se recorre. Com N pareceres, a fundamentação do
+desfavorável são os pareceres desfavoráveis: sob a maioria, dois de três; sob *"confirma só por
+unanimidade"*, às vezes um só. A contagem diz ao titular que houve divergência, o que é argumento de
+recurso, e a ausência de nome protege quem deu o parecer sem tirar nada da defesa. A parte pública não
+recebe nada disso, como a R-9 do estudo pede.
+
+Quatro condições acompanham a decisão:
+- **motivo e parecer continuam separados**, como na `036`. O motivo é a regra aplicada à contagem; o
+  parecer é a razão que alguém escreveu, e é contra ele que se recorre;
+- **o texto é o que fundamentou o Resultado.** Uma reabertura posterior, pela regra de hoje, não troca
+  em silêncio o que o titular leu;
+- **"sem autoria" é sobre metadados, e não garante anonimato.** O texto pode identificar quem o
+  escreveu, e o sistema não o reescreve: a orientação de preenchimento avisa (UX-754), e o original fica;
+- **a restrição é da apresentação ao candidato.** A autoridade recursal vê todos os pareceres, com a
+  autoria (FR-7081).
+
+*Descartados:*
+- **sem a contagem**, que esconderia do titular a divergência, que é argumento de recurso;
+- **todos os textos**, que exporia o favorável, que a regra da `012` não obriga a escrever e que ninguém
+  escreveu para o candidato ler, sem necessidade demonstrada nesta entrega;
+- **só o desfecho e a regra**, que deixaria o titular sem ter contra o que recorrer;
+- **os textos com autoria**, que expõe o membro e não ajuda o recurso.
