@@ -135,7 +135,7 @@ pode parecer perda de inscrição. A frase diz o número ao lado do total, e só
   número conta, que é quem ainda não pode ser consolidado, quase sempre por falta de avaliação.
   {% endcomment %}
   <a href="?prontidao=nao-consolidavel" {% if prontidao == "nao-consolidavel" %}aria-current="page"{% endif %}>
-    <strong>{{ resumo.nao_consolidaveis }}</strong> <span>ainda não consolidáveis</span></a>
+    <strong>{{ resumo.nao_consolidaveis }}</strong> <span>ainda não consolidáveis{% if resumo.aguardando_pareceres %}, {{ resumo.aguardando_pareceres }} aguardando pareceres{% endif %}</span></a>
   <a href="?prontidao=consolidada" {% if prontidao == "consolidada" %}aria-current="page"{% endif %}>
     <strong>{{ resumo.consolidadas }}</strong> <span>já consolidadas</span></a>
   {% if resumo.aguardando_anterior %}

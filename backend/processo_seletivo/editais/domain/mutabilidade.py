@@ -471,6 +471,11 @@ CONTRATO: dict[tuple[str, str], Mutabilidade] = {
     # Retificação recusar a troca depois do primeiro Resultado desfavorável, superado ou não.
     ("stages", "unfavorableOutcomeEffect"): retificavel(),
     ("stages", "absenceEffect"): retificavel(),
+    # **A regra de deliberação, retificável até o primeiro Resultado por avaliação** (165, FR-7055,
+    # FR-7073, D-008). A divergência entre o item do Edital e a opção marcada precisa de correção
+    # formal; o que protege quem já teve desfecho é a Retificação recusar a troca depois do primeiro
+    # Resultado, favorável ou desfavorável, superado ou não.
+    ("stages", "deliberationRule"): retificavel(),
     # ---- criteria (o barema da Etapa, 146) ----------------------------------------------------
     # **Todos retificáveis, menos a identidade** (FR-5210). O barema é a regra contra a qual a
     # comissão pontua, e um título errado, uma máxima trocada ou o documento que não comprova o que

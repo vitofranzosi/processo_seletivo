@@ -672,6 +672,7 @@ fieldset.opcoes>.ajuda{margin:0 0 .6rem}
 fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked) .so-pontuada,
 fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked) .so-decisoria,
 fieldset.etapa:has(input[name$="-alcance"][value="TODAS"]:checked) .so-restrita,
+fieldset.etapa:has(input[name$="-evaluationsPerRegistration"]:placeholder-shown) .so-colegiada,
 fieldset.etapa:has(input[name$="-forma"][value="PONTUADA"]:checked):has(input[name$="-eliminatory"]:not(:checked)) .so-eliminatoria,
 fieldset.etapa:has(input[name$="-forma"][value="DECISORIA"]:checked):has(input[name$="-eliminatoryDecisoria"]:not(:checked)) .so-eliminatoria,
 fieldset.marco:has(input[name$="-appealDeclaration"]:checked:not([value="admite"])) .so-admite,

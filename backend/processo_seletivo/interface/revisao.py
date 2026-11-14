@@ -66,6 +66,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     teto_de_inscricoes,
 )
 from processo_seletivo.requerimentos.domain import nomes as nomes_do_requerimento
+from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 
 RESERVA = {"NONE": "não há", "LIMITED": "limitado", "UNLIMITED": "ilimitado"}
@@ -376,6 +377,9 @@ def _etapa(etapa, snapshot):
     # O efeito do desfecho (164, FR-7023), com as palavras do documento, só onde é declarado.
     if frase := efeito_do_desfecho.frase_do_efeito(etapa):
         linhas.append(Rotulada("Efeito", frase))
+    # A regra de deliberação (165, FR-7075), com as palavras do documento, só onde é declarada.
+    if frase := deliberacao_da_etapa.frase_da_regra(etapa):
+        linhas.append(Rotulada("Deliberação", frase))
     vinculado = next(
         (
             evento
@@ -1057,6 +1061,8 @@ _LIDOS_POR_COLECAO = {
         # O efeito do desfecho (164, FR-7023): a linha "Efeito" de `_etapa`, só onde é declarado.
         "unfavorableOutcomeEffect",
         "absenceEffect",
+        # A regra de deliberação (165, FR-7075): a linha "Deliberação" de `_etapa`.
+        "deliberationRule",
     ),
     "sections": ("title", "order", "type", "content", "source"),
     # A ordem é a da lista: o conteúdo publica os Anexos na ordem editorial, e a conferência os

@@ -130,6 +130,8 @@ CAMPOS = {
         # O efeito do desfecho (164), com os rótulos da tela da Retificação.
         "unfavorableOutcomeEffect": "Efeito do desfecho desfavorável",
         "absenceEffect": "Efeito do não comparecimento",
+        # A regra de deliberação (165), com o rótulo da tela da Retificação.
+        "deliberationRule": "Regra de deliberação",
     },
     "sections": {"title": "Título", "content": "Texto", "order": "Ordem"},
     "attachments": {

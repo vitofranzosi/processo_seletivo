@@ -1063,22 +1063,40 @@ def impedidos_por_recurso(pendentes):
     reintroduziria o custo por linha que a `018` recusou: são cinco perguntas por par, e a pergunta
     da supervisão não é "este ator pode?", é "existe alguém?" (`FR-031`, `D-008`).
 
-    Duas consultas, e as duas independentes do número de recursos: uma traz as autorias alcançadas
+    Duas consultas — três, quando há Resultado deliberado atacado (165) —, e todas independentes do
+    número de recursos: uma traz as autorias alcançadas
     pelas peças, outra os impedimentos declarados nas inscrições delas.
     """
     if not pendentes:
         return {}
-    detalhados = Recurso.objects.filter(id__in=[peca.id for peca in pendentes]).select_related(
-        "resultado_atacado",
-        "resultado_atacado__avaliacao",
-        "publicacao_atacada",
-        "publicacao_atacada__ato",
+    detalhados = list(
+        Recurso.objects.filter(id__in=[peca.id for peca in pendentes]).select_related(
+            "resultado_atacado",
+            "resultado_atacado__avaliacao",
+            "publicacao_atacada",
+            "publicacao_atacada__ato",
+        )
     )
     declarados = {}
     for inscricao_id, subject in Impedimento.objects.filter(
         inscricao_id__in={peca.inscricao_id for peca in pendentes}
     ).values_list("inscricao_id", "identity_subject"):
         declarados.setdefault(inscricao_id, set()).add(subject)
+    # Os autores dos pareceres de cada Resultado deliberado atacado (165), numa consulta para o
+    # lote, e só quando há algum: a tela sem Etapa colegiada continua custando o que custava.
+    from processo_seletivo.resultados.models import ParecerDaDeliberacao
+
+    deliberados = {
+        peca.resultado_atacado_id
+        for peca in detalhados
+        if peca.resultado_atacado is not None and peca.resultado_atacado.origem == "DELIBERACAO"
+    }
+    deliberaram = {}
+    if deliberados:
+        for resultado_id, subject in ParecerDaDeliberacao.objects.filter(
+            resultado_id__in=deliberados
+        ).values_list("resultado_id", "avaliacao__identity_subject"):
+            deliberaram.setdefault(resultado_id, set()).add(subject)
 
     impedidos = {}
     for peca in detalhados:
@@ -1090,6 +1108,9 @@ def impedidos_por_recurso(pendentes):
             if resultado.avaliacao_id is not None:
                 conjunto.add(resultado.avaliacao.concluida_por)
             conjunto.add(resultado.consolidado_por)
+            # Os autores dos pareceres da deliberação (165, FR-7069): todos impedidos, lidos
+            # para o lote numa consulta só, antes do laço.
+            conjunto |= deliberaram.get(resultado.pk, set())
         publicacao = peca.publicacao_atacada
         if publicacao is not None:
             conjunto.add(publicacao.ato.emitido_por)

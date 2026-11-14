@@ -24,6 +24,7 @@ from uuid import UUID
 from django.db.models import BooleanField, Exists, ExpressionWrapper, OuterRef, Q
 
 from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
+from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 
 # **Só `classificacao.models`, e nunca `classificacao.application.*`.**
 # `classificacao/application/calculo.py` já importa **este** arquivo: o primeiro import do pacote de
@@ -42,6 +43,7 @@ from processo_seletivo.resultados.application.selectors import (
     inscricoes_com_resultado,
     seguem_de,
 )
+from processo_seletivo.resultados.domain import deliberacao
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
 from processo_seletivo.resultados.domain.compatibilidade import incompatibilidade
 from processo_seletivo.resultados.domain.progressao import etapas_anteriores
@@ -105,6 +107,25 @@ Conclusao = namedtuple(
 )
 
 SEM_CONCLUSAO = "ainda não há avaliação concluída para esta inscrição"
+# **A Etapa colegiada espera os N pareceres** (165, FR-7062, D-005). Continua sendo
+# `NAO_CONSOLIDAVEL` — o estado de quem ainda não pode ser consolidado —, com o motivo que diz
+# quanto falta, e as contagens a separam das demais (FR-7079). Um estado novo obrigaria toda tela
+# que lê a partição a aprender um nome para a mesma pergunta: "por que esta não está pronta?".
+FALTAM_PARECERES = "{verbo} {faltam} de {previstos} pareceres"
+
+
+class FaltamPareceres(str):
+    """O motivo de quem espera pareceres, marcado pelo tipo, e não pela redação (FR-7079).
+
+    É uma `str`, e continua sendo o motivo que toda tela lê; a contagem pergunta pelo tipo, e uma
+    revisão de redação da frase não a zera em silêncio.
+    """
+
+
+PARECERES_DEMAIS = (
+    "há {quantos} pareceres concluídos onde o Edital prevê {previstos}, e o sistema não escolhe "
+    "quais contam"
+)
 CONCLUSOES_DEMAIS = (
     "há {quantas} avaliações concluídas onde o Edital prevê uma, e o sistema não escolhe qual vale"
 )
@@ -833,6 +854,8 @@ def _estado_do_participante(identidade, etapa, resultados, elegiveis, bloqueio, 
     if bloqueio is not None:
         return (NAO_CONSOLIDAVEL, bloqueio[1])
     conclusoes = elegiveis.get(identidade, [])
+    if deliberacao.colegiada(etapa):
+        return _estado_colegiado(etapa, conclusoes)
     if not conclusoes:
         return (NAO_CONSOLIDAVEL, SEM_CONCLUSAO)
     if len(conclusoes) > 1:
@@ -845,6 +868,49 @@ def _estado_do_participante(identidade, etapa, resultados, elegiveis, bloqueio, 
     if divergencia is not None:
         return (NAO_CONSOLIDAVEL, divergencia[1])
     return (PRONTA, "pronta para consolidar")
+
+
+def _estado_colegiado(etapa, conclusoes):
+    """Na Etapa colegiada: pronta com exatamente N pareceres compatíveis (165, FR-7062, FR-7063).
+
+    Nenhuma antecipação: com dois de três "Indeferido" sob "confirma só por unanimidade", o terceiro
+    não muda o desfecho, e mesmo assim a inscrição espera. O Edital publicou N pareceres, e não
+    "até decidir" — e a tela que dissesse "já decidido" contaria a quem ainda vai avaliar que alguém
+    indeferiu (D-005).
+    """
+    previstos = avaliacoes_previstas(etapa)
+    if len(conclusoes) < previstos:
+        return (
+            NAO_CONSOLIDAVEL,
+            FaltamPareceres(
+                FALTAM_PARECERES.format(
+                    verbo="falta" if previstos - len(conclusoes) == 1 else "faltam",
+                    faltam=previstos - len(conclusoes),
+                    previstos=previstos,
+                )
+            ),
+        )
+    if len(conclusoes) > previstos:
+        return (
+            NAO_CONSOLIDAVEL,
+            PARECERES_DEMAIS.format(quantos=len(conclusoes), previstos=previstos),
+        )
+    for conclusao in conclusoes:
+        divergencia = incompatibilidade(
+            conteudo=conclusao.conteudo, etapa_id=etapa["id"], etapa_vigente=etapa
+        )
+        if divergencia is not None:
+            return (NAO_CONSOLIDAVEL, divergencia[1])
+    return (PRONTA, "pronta para consolidar")
+
+
+def aguardando_pareceres(panorama) -> int:
+    """Quantas inscrições da Etapa colegiada esperam pareceres (165, FR-7079)."""
+    return sum(
+        1
+        for estado, motivo in panorama["estados"].values()
+        if estado == NAO_CONSOLIDAVEL and isinstance(motivo, FaltamPareceres)
+    )
 
 
 def contagens(panorama):
@@ -874,6 +940,9 @@ def contagens(panorama):
         "consolidadas": por_estado[CONSOLIDADA],
         "prontas": por_estado[PRONTA],
         "nao_consolidaveis": por_estado[NAO_CONSOLIDAVEL],
+        # **Contida em `nao_consolidaveis`**, e não somada à partição (165, FR-7079): a inscrição
+        # que espera pareceres continua não consolidável, e a tela diz quantas delas só esperam.
+        "aguardando_pareceres": aguardando_pareceres(panorama),
         "reavaliacoes": por_estado[REAVALIACAO],
         # **Sem esta contagem a partição deixava de fechar** (014, FR-210, UX-026). O estado já
         # existia no panorama, mas nenhuma tela o contava: a Mesa da Etapa governada mostrava

@@ -77,6 +77,12 @@ class ResultadoEtapa(models.Model):
         # satisfazer o esquema mentiria sobre a origem, pela mesma razão que a D-1 recusou
         # registrar a ausência como conclusão decisória (018, decisão C §1.2).
         RECURSO = "RECURSO"
+        # **`DELIBERACAO` é a sexta, e ela cita vários pareceres** (165, T-005, D-006). O Resultado
+        # de uma Etapa colegiada não tem uma Avaliação fonte: tem N, combinadas pela regra que o
+        # Edital publicou. Apontar `avaliacao` para uma delas seria escolher qual valeu; os
+        # pareceres moram em `ParecerDaDeliberacao`, e a origem diz, por si, a quem lê o Resultado
+        # que a fonte é outra.
+        DELIBERACAO = "DELIBERACAO"
 
     # `objects` continua vendo **tudo**, superados inclusive: a reprodução histórica depende
     # disso. `vigentes` é o caminho de toda leitura de efeito — progressão, participação,
@@ -171,6 +177,14 @@ class ResultadoEtapa(models.Model):
     # `resultado_sucessor` para esta tabela, e o desfecho e o Resultado nascem na mesma transação.
     # O par é mutuamente referente, com a chave estrangeira no lado que **pode** depender.
     desfecho_de_convocacao_id = models.UUIDField(null=True, blank=True)
+    # **A regra e a contagem da deliberação** (165, FR-7065), presentes só nessa origem. A regra na
+    # grafia publicada, como a versão que a contém; a contagem para o motivo, a conferência e a
+    # reprodução, e para o gatilho que a confere contra os pareceres ligados (T-006).
+    # `db_default` além de `default`: quem grava por SQL cru — os testes de imutabilidade, e quem
+    # chegue por fora — não conhece a coluna, e o vazio é o que ela significa fora da deliberação.
+    regra_de_deliberacao = models.CharField(max_length=40, blank=True, default="", db_default="")
+    favoraveis = models.PositiveSmallIntegerField(null=True, blank=True)
+    desfavoraveis = models.PositiveSmallIntegerField(null=True, blank=True)
 
     class Meta:
         constraints = [
@@ -271,8 +285,31 @@ class ResultadoEtapa(models.Model):
                     origem="REGULARIZACAO",
                     avaliacao__isnull=True,
                     resultado_anterior__isnull=False,
+                )
+                # **A sexta linha, a raiz por deliberação** (165, T-005). Não cita Avaliação —
+                # cita N pareceres, em `ParecerDaDeliberacao` — e não é sucessora: a reavaliação
+                # colegiada não existe nesta entrega (D-007).
+                | Q(
+                    origem="DELIBERACAO",
+                    avaliacao__isnull=True,
+                    resultado_anterior__isnull=True,
+                    forma=Forma.DECISORIA,
                 ),
                 name="ck_resultado_origem",
+            ),
+            # **O que a deliberação carrega, e só ela** (165, data-model). Regra e contagem fora
+            # da deliberação seriam um Resultado afirmando uma votação que não houve; dentro dela,
+            # a ausência seria uma deliberação que não se reproduz.
+            models.CheckConstraint(
+                condition=Q(
+                    origem="DELIBERACAO",
+                    favoraveis__isnull=False,
+                    desfavoraveis__isnull=False,
+                )
+                & ~Q(regra_de_deliberacao="")
+                | ~Q(origem="DELIBERACAO")
+                & Q(regra_de_deliberacao="", favoraveis__isnull=True, desfavoraveis__isnull=True),
+                name="ck_resultado_deliberacao",
             ),
             # O que a coluna `NOT NULL` garantia sozinha, dito agora por forma. A trigger confere o
             # Resultado contra a fonte; esta confere que ele é internamente coerente, e as duas
@@ -320,3 +357,39 @@ class ResultadoEtapa(models.Model):
         raise ValueError(
             "Resultado da Etapa não é excluído: ele é a consequência registrada de um ato."
         )
+
+
+class ParecerDaDeliberacao(models.Model):
+    """Um parecer que formou a deliberação de um Resultado (165, FR-7065, T-005).
+
+    **Append-only**, nas três camadas de sempre: `save` só cria, o gatilho recusa `UPDATE` e
+    `DELETE`, e o papel de runtime não tem o privilégio. A Avaliação é **única** na tabela, e o
+    gatilho a recusa também quando ela já é a `avaliacao` de algum Resultado: um parecer fundamenta
+    no máximo um Resultado, nos dois ramos, como uma Avaliação sempre fundamentou.
+
+    A coerência que a chave estrangeira não diz — a Avaliação concluída, da mesma inscrição, do
+    mesmo Edital e da mesma Etapa — é do gatilho `parecer_da_deliberacao_coerente`; a contagem
+    contra o Resultado, do gatilho adiável `resultado_deliberado_completo` (T-006).
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    resultado = models.ForeignKey(
+        ResultadoEtapa, on_delete=models.PROTECT, related_name="pareceres_da_deliberacao"
+    )
+    avaliacao = models.OneToOneField(
+        Avaliacao, on_delete=models.PROTECT, related_name="deliberacao"
+    )
+
+    class Meta:
+        db_table = "resultados_parecer_da_deliberacao"
+
+    def __str__(self):
+        return f"{self.resultado_id} — {self.avaliacao_id}"
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValueError("O parecer da deliberação é imutável.")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError("O parecer da deliberação não é excluído: ele fundamenta um Resultado.")
