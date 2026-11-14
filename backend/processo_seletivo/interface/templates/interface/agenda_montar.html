@@ -17,11 +17,18 @@ decisões 4 a 8). A ação principal é a que falta fazer, e nenhuma aparece dua
     <h1>Montar a agenda</h1><span class="situacao s-EM_ELABORACAO">Rascunho</span>
     <p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}</p>
   </div>
+  {% comment %}
+  UX-764: a ação principal é a que falta. Com gente sem horário e horário livre, é preencher; com
+  todos agendados, é conferir e publicar. As duas nunca disputam o mesmo lugar.
+  {% endcomment %}
   {% if pode_preencher %}
   <form class="acoes-do-workspace" method="post" action="{% url 'interface:agenda-preencher' edital.id etapa_id %}">
     {% csrf_token %}
     <button type="submit" class="botao" hx-post="{% url 'interface:agenda-preencher' edital.id etapa_id %}" hx-target="#painel" hx-swap="innerHTML">Preencher automaticamente</button>
+    <a class="acao" href="{% url 'interface:agenda-conferir' edital.id etapa_id %}">Conferir e publicar</a>
   </form>
+  {% else %}
+  <p class="acoes-do-workspace"><a class="botao" href="{% url 'interface:agenda-conferir' edital.id etapa_id %}">Conferir e publicar</a></p>
   {% endif %}
 </header>
 

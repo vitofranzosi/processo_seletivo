@@ -1,4 +1,4 @@
-"""As telas da agenda da Etapa na gestão: configurar e montar (167, entrega A, T-020, T-021).
+"""As telas da agenda da Etapa na gestão: configurar, montar, conferir e publicar (167, T-020).
 
 **A porta é a da Distribuição**, `views._etapa_para_distribuir`, chamada daqui e não copiada
 (T-021): o Edital fora do escopo é 404, sem a base da gestão da comissão é a recusa da gramática das
@@ -21,17 +21,20 @@ se faz sem arrastar (UX-762).
 
 import re
 from datetime import date, datetime, time
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.agendamento.application import conferir as conferir_app
 from processo_seletivo.agendamento.application import configurar as configurar_app
 from processo_seletivo.agendamento.application import leitura
 from processo_seletivo.agendamento.application import montar as montar_app
+from processo_seletivo.agendamento.application import publicar as publicar_app
 from processo_seletivo.agendamento.domain import capacidade as capacidade_
+from processo_seletivo.agendamento.domain import nomes
 from processo_seletivo.agendamento.domain.configuracao import problemas
 from processo_seletivo.agendamento.domain.horarios import (
     Banca,
@@ -47,11 +50,13 @@ from processo_seletivo.agendamento.domain.preenchimento import ORDEM
 from processo_seletivo.agendamento.domain.recusas import (
     ConfiguracaoRecusada,
     completa,
+    fora_do_periodo_vigente,
     nao_participa_mais,
 )
 from processo_seletivo.interface import identidade
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada
+from processo_seletivo.unidades.domain.rotulos import rotulo_da_autoridade
 
 MANHA_E_TARDE = (("08:00", "12:00"), ("13:00", "17:00"))
 MENSAGEM = "mensagem_da_agenda"
@@ -686,6 +691,9 @@ def montar(request, edital_id, etapa_id):
     montagem = _montagem_ou_configurar(edital, etapa_id)
     if montagem is None:
         return redirect("interface:agenda-configurar", edital.id, etapa_id)
+    if leitura.publicacao(montagem.agenda) is not None:
+        # Publicada, a montagem acabou (FR-7240): o que se vê e se muda está na agenda publicada.
+        return redirect("interface:agenda-publicada", edital.id, etapa_id)
     contexto = _contexto_da_montagem(request, edital, etapa, etapa_id, montagem)
     return marcar_como_privada(render(request, "interface/agenda_montar.html", contexto))
 
@@ -699,6 +707,10 @@ def painel(request, edital_id, etapa_id):
     montagem = _montagem_ou_configurar(edital, etapa_id)
     if montagem is None:
         return redirect("interface:agenda-configurar", edital.id, etapa_id)
+    if leitura.publicacao(montagem.agenda) is not None:
+        return _redirecionar(
+            request, reverse("interface:agenda-publicada", args=[edital.id, etapa_id])
+        )
     contexto = _contexto_da_montagem(request, edital, etapa, etapa_id, montagem)
     return marcar_como_privada(render(request, "interface/_agenda_painel.html", contexto))
 
@@ -707,6 +719,11 @@ def _recusa_da_montagem(request, edital, etapa, etapa_id, recusa, *, previa=None
     """A recusa na tela inteira, com o status dela e a grade relida (contracts/recusas.md §3)."""
     if recusa.status == 404:
         raise _inexistente() from recusa
+    if recusa.code == nomes.AGENDA_PUBLICADA:
+        request.session[MENSAGEM] = {"tipo": "aviso", "texto": recusa.detail}
+        return _redirecionar(
+            request, reverse("interface:agenda-publicada", args=[edital.id, etapa_id])
+        )
     montagem = _montagem_ou_configurar(edital, etapa_id)
     if montagem is None:
         request.session[MENSAGEM] = {"tipo": "erro", "texto": recusa.detail}
@@ -867,6 +884,7 @@ def resumo_para_a_etapa(edital, etapa_id, participantes):
     com_horario = agenda.agendamentos.count()
     return {
         "existe": True,
+        "publicacao": leitura.publicacao(agenda),
         "horarios": horarios,
         "com_horario": com_horario,
         "participantes": participantes,
@@ -874,3 +892,227 @@ def resumo_para_a_etapa(edital, etapa_id, participantes):
         "dias": len({janela.dia for janela in agenda.janelas_em_ordem}),
         "bancas": len(agenda.bancas_em_ordem),
     }
+
+
+# --- a conferência e a publicação (entrega B) ----------------------------------------------------
+
+
+def _escolha_da_autoridade(conferencia, escolhida=""):
+    """As autoridades vigentes da unidade do Edital, como a tela de publicar as oferece (060)."""
+    return [
+        {
+            "valor": str(autoridade.pk),
+            "rotulo": rotulo_da_autoridade(autoridade),
+            "escolhida": str(autoridade.pk) == escolhida,
+        }
+        for autoridade in conferencia.autoridades
+    ]
+
+
+def _caminho_do_impedimento(impedimento, edital, etapa_id):
+    destinos = {
+        "montar": reverse("interface:agenda-montar", args=[edital.id, etapa_id]),
+        "configurar": reverse("interface:agenda-configurar", args=[edital.id, etapa_id]),
+        "unidades": reverse("interface:unidades"),
+    }
+    return destinos.get(impedimento.caminho, "")
+
+
+def _dias_da_previa(conteudo, *, limite=None):
+    """Os dias do conteúdo público, como a página pública os mostra; na prévia, os primeiros."""
+    dias = []
+    for dia in conteudo["dias"]:
+        horarios = [
+            {
+                "hora": hora(datetime.fromisoformat(item["inicio"])),
+                "banca": item.get("banca", ""),
+                "nome": item["pessoa"].get("nome", ""),
+                "protocolo": item["pessoa"]["protocolo"],
+            }
+            for item in dia["horarios"]
+        ]
+        dias.append(
+            {
+                "rotulo": dia_por_extenso(date.fromisoformat(dia["dia"])),
+                "horarios": horarios[:limite] if limite else horarios,
+                "mais": max(len(horarios) - limite, 0) if limite else 0,
+            }
+        )
+    return dias[:2] if limite else dias
+
+
+def _contexto_da_conferencia(request, edital, etapa, etapa_id, conferencia, **extra):
+    so_protocolo = conferencia.conteudo["cabecalho"]["identificacao"] == nomes.PROTOCOLO
+    dados = request.POST if request.method == "POST" else {}
+    return {
+        "edital": edital,
+        "processo": edital.processo,
+        "etapa": etapa,
+        "etapa_id": etapa_id,
+        "conferencia": conferencia,
+        "impedimentos": [
+            {
+                "impedimento": impedimento,
+                "caminho": _caminho_do_impedimento(impedimento, edital, etapa_id),
+                "pessoas": impedimento.pessoas[:12],
+                "mais": max(len(impedimento.pessoas) - 12, 0),
+            }
+            for impedimento in conferencia.impedimentos
+        ],
+        "previa": _dias_da_previa(conferencia.conteudo, limite=6),
+        "so_protocolo": so_protocolo,
+        "varias_bancas": len(conferencia.agenda.bancas_em_ordem) > 1,
+        "autoridades": _escolha_da_autoridade(conferencia, dados.get("autoridade", "")),
+        "veiculo": dados.get("veiculo", ""),
+        "declaracao": dados.get("declaracao", ""),
+        "onde": dados.get("onde", ""),
+        "quando": dados.get("quando", ""),
+        "chave_idempotencia": dados.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+        "mensagem": request.session.pop(MENSAGEM, None),
+        **extra,
+    }
+
+
+@require_http_methods(["GET"])
+def conferir(request, edital_id, etapa_id):
+    """A conferência antes de publicar (US3, FR-7220 a FR-7222). **Não grava nada.**"""
+    ator, edital, etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    agenda = leitura.agenda_da_etapa(edital, etapa_id)
+    if agenda is None:
+        return redirect("interface:agenda-configurar", edital.id, etapa_id)
+    if leitura.publicacao(agenda) is not None:
+        return redirect("interface:agenda-publicada", edital.id, etapa_id)
+    try:
+        conferencia = conferir_app.conferencia(actor=ator, edital=edital, etapa_id=etapa_id)
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise _inexistente() from recusa
+        raise
+    contexto = _contexto_da_conferencia(request, edital, etapa, etapa_id, conferencia)
+    return marcar_como_privada(render(request, "interface/agenda_conferir.html", contexto))
+
+
+@require_http_methods(["POST"])
+def publicar(request, edital_id, etapa_id):
+    """A confirmação: cria o ato ou devolve o existente (FR-7223, FR-7224)."""
+    ator, edital, etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        publicar_app.publicar(
+            actor=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            assinatura=request.POST.get("assinatura", ""),
+            autoridade_id=request.POST.get("autoridade", ""),
+            veiculo=request.POST.get("veiculo", ""),
+            declaracao=request.POST.get("declaracao", ""),
+            onde=request.POST.get("onde", ""),
+            quando=request.POST.get("quando", ""),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise _inexistente() from recusa
+        if recusa.code == nomes.SEM_CONFIGURACAO:
+            request.session[MENSAGEM] = {"tipo": "erro", "texto": recusa.detail}
+            return redirect("interface:agenda-configurar", edital.id, etapa_id)
+        conferencia = conferir_app.conferencia(actor=ator, edital=edital, etapa_id=etapa_id)
+        mudou = recusa.code == nomes.AGENDA_MUDOU_DESDE_A_CONFERENCIA
+        contexto = _contexto_da_conferencia(
+            request,
+            edital,
+            etapa,
+            etapa_id,
+            conferencia,
+            erro=recusa,
+            # A conferência refeita é outra: a chave da tentativa recusada não vale para ela.
+            refeita=mudou,
+        )
+        if mudou:
+            contexto["chave_idempotencia"] = f"ui-{uuid4().hex}"
+        return marcar_como_privada(
+            render(request, "interface/agenda_conferir.html", contexto, status=recusa.status)
+        )
+    request.session[MENSAGEM] = {
+        "tipo": "sucesso",
+        "texto": "Agenda publicada. A página pública e a área de cada pessoa já mostram o horário.",
+    }
+    return redirect("interface:agenda-publicada", edital.id, etapa_id)
+
+
+def _rotulo_do_vigente(item, varias):
+    local = item.inicio.astimezone(zona())
+    texto = f"{dia_curto(local.date())}, {hora(local)}"
+    return f"{texto} · {item.banca_nome}" if varias else texto
+
+
+@require_http_methods(["GET"])
+def publicada(request, edital_id, etapa_id):
+    """A agenda publicada: o ato, a lista vigente, quem entrou e quem saiu (FR-7240, T051).
+
+    **Quem passou a participar depois** e **quem tem horário e não participa mais** são lidos da
+    participação de hoje contra o vigente, como a montagem fazia contra o agendamento. As ações
+    sobre eles — incluir, cancelar, remarcar — são atos individuais da entrega C; aqui, só os nomes.
+    """
+    ator, edital, etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    agenda = leitura.agenda_da_etapa(edital, etapa_id)
+    if agenda is None:
+        return redirect("interface:agenda-configurar", edital.id, etapa_id)
+    ato = leitura.publicacao(agenda)
+    if ato is None:
+        return redirect("interface:agenda-conferir", edital.id, etapa_id)
+    vigentes = leitura.vigentes_da_agenda(agenda)
+    participacao = leitura.participacao(edital, etapa_id)
+    com_horario = {str(item.inscricao_id) for item in vigentes}
+    entrantes = sorted(
+        leitura.pessoas(participacao.participantes - com_horario).values(),
+        key=lambda pessoa: (pessoa.nome.casefold(), pessoa.protocolo),
+    )
+    varias = len(agenda.bancas_em_ordem) > 1
+    saintes = [
+        {
+            "pessoa": item.inscricao,
+            "horario": _rotulo_do_vigente(item, varias),
+            "motivo": participacao.motivo(item.inscricao_id),
+        }
+        for item in vigentes
+        if str(item.inscricao_id) not in participacao.participantes
+    ]
+    periodo = leitura.periodo_da_etapa(edital, etapa)
+    fora = (
+        sum(
+            1
+            for item in vigentes
+            if not periodo[0] <= item.inicio.astimezone(zona()).date() <= periodo[1]
+        )
+        if periodo
+        else 0
+    )
+    contexto = {
+        "edital": edital,
+        "processo": edital.processo,
+        "etapa": etapa,
+        "etapa_id": etapa_id,
+        "agenda": agenda,
+        "ato": ato,
+        "veiculo_gps": ato.veiculo == nomes.VEICULO_GPS,
+        "linhas": [
+            {
+                "quando": _rotulo_do_vigente(item, varias),
+                "pessoa": item.inscricao,
+                "remarcado_em": item.remarcado_em,
+            }
+            for item in vigentes
+        ],
+        "entrantes": entrantes,
+        "saintes": saintes,
+        "fora_do_periodo": fora_do_periodo_vigente(fora) if fora else "",
+        "mensagem": request.session.pop(MENSAGEM, None),
+    }
+    return marcar_como_privada(render(request, "interface/agenda_publicada.html", contexto))

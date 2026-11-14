@@ -654,6 +654,11 @@ def selecao(request, edital_id, *, assistente=True):
     from processo_seletivo.convocacao.application.publicacoes import publicacoes_da_selecao
 
     contexto["convocacoes_publicadas"] = publicacoes_da_selecao(versao.edital_id)
+    # **As agendas publicadas** (167, FR-7227), ao lado das convocações: é o passo seguinte de quem
+    # participa de uma Etapa com comparecimento. Uma consulta, e só o que os atos publicaram.
+    from processo_seletivo.agendamento.application.leitura import agendas_publicadas_do_edital
+
+    contexto["agendas_publicadas"] = agendas_publicadas_do_edital(versao.edital_id)
     # **O prazo que ainda corre, ao lado de cada resultado** (047, `FR-770`). A conta é a mesma da
     # página do resultado e da interposição, sobre a versão que cada ato citou e a vigente, que já
     # está carregada (RC-121) — e é a mesma função que a vitrine chama (072, FR-1635).
@@ -2077,11 +2082,18 @@ def acompanhamento(request, inscricao_id):
     # **Um cartão por lista e por marco** (063, D-006), na ordem do certame e, dentro do marco, na
     # das listas do Perfil.
     cartoes = situacao_da_inscricao.ordenar_cartoes(situacoes_do_candidato(registro), perfil)
+    # **O horário de cada Etapa com agenda** (167, FR-7228, T-017): o publicado vigente, com o
+    # endereço da sala só aqui, na área da própria pessoa (FR-7229). Não é situação nova da
+    # inscrição — o horário não é desfecho —, e por isso fica fora de `situacao_da_inscricao`.
+    from processo_seletivo.agendamento.application.leitura import horarios_da_inscricao
+
+    horarios = horarios_da_inscricao(registro)
     return render(
         request,
         "portal/acompanhamento.html",
         {
             "inscricao": registro,
+            "horarios": horarios,
             "selecao": _selecao(versao),
             # **A situação antes de tudo** (063, FR-1166): Situação → Por quê → O que fazer, saída
             # de uma função pura sobre o que esta view já leu — nenhuma consulta a mais (D-007).
@@ -3787,6 +3799,22 @@ def convocados(request, publicacao_id):
         "portal/convocados.html",
         {**leitura, "edital_id": leitura["ato"].edital_id},
     )
+
+
+@require_http_methods(["GET"])
+def agenda_da_etapa(request, agenda_id):
+    """A agenda publicada de uma Etapa, sem autenticação (167, FR-7225 a FR-7227, T-016).
+
+    **Lê só o que foi publicado**: os horários vigentes do append-only, e nunca o rascunho da
+    montagem. A busca é `GET ?busca=`, no servidor — funciona no celular sem script e cabe na CSP.
+    Agenda inexistente ou ainda não publicada responde igual: 404.
+    """
+    from processo_seletivo.agendamento.application.leitura import agenda_publica
+
+    leitura_ = agenda_publica(agenda_id, request.GET.get("busca", ""))
+    if leitura_ is None:
+        raise Http404
+    return render(request, "portal/agenda_da_etapa.html", leitura_)
 
 
 @require_http_methods(["GET"])

@@ -127,6 +127,10 @@ urlpatterns = [
     # resultado: a publicação não se sucede, e o que ela publicou responde sempre aqui. Não colide
     # com `<uuid:edital_id>/`: `convocacoes` não casa com `uuid`.
     path("convocacoes/<uuid:publicacao_id>/", views.convocados, name="convocados"),
+    # A agenda publicada de uma Etapa (167, FR-7227). Endereço **estável pela identidade da
+    # agenda**, e não do ato: a agenda publica uma vez, e as remarcações depois aparecem no mesmo
+    # lugar, marcadas. Não colide com `<uuid:edital_id>/`: `agendas` não casa com `uuid`.
+    path("agendas/<uuid:agenda_id>/", views.agenda_da_etapa, name="agenda-da-etapa"),
     path(
         "convocacoes/<uuid:publicacao_id>/documento.pdf",
         views.convocados_em_pdf,

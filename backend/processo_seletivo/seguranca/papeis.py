@@ -197,6 +197,12 @@ TABELAS_APPEND_ONLY = (
     # A exposição ao parecer (165): o fato de o sistema ter entregado a alguém o parecer de outro
     # membro. Apagá-la devolveria a quem já leu o caminho de avaliar a mesma inscrição (FR-7082).
     "avaliacoes_exposicao_ao_parecer",
+    # Os atos da agenda da Etapa (167): o ato — publicação, e depois remarcação, inclusão e
+    # cancelamento — e o horário que ele publicou para cada pessoa. Append-only pela razão das
+    # demais, e com um agravante próprio: o horário publicado é o de que a ausência conta, e o
+    # Edital pune a ausência. Reescrevê-lo mudaria, sem rastro, quando alguém foi chamado.
+    "agendamento_atodaagenda",
+    "agendamento_horariopublicado",
 )
 
 

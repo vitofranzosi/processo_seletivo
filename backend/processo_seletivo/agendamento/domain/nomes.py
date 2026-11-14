@@ -20,10 +20,12 @@ ORIGENS = (MANUAL, AUTOMATICA)
 CONFIGURACAO_SALVA = "agenda.configuracao_salva"
 AGENDAMENTO = "agenda.agendamento"
 PREENCHIMENTO_APLICADO = "agenda.preenchimento_aplicado"
+PUBLICACAO_DA_AGENDA = "agenda.publicacao"
 ROTULOS_DA_TRILHA = {
     CONFIGURACAO_SALVA: "Configuração da agenda da Etapa salva",
     AGENDAMENTO: "Agendamento à mão na agenda da Etapa",
     PREENCHIMENTO_APLICADO: "Preenchimento automático da agenda da Etapa aplicado",
+    PUBLICACAO_DA_AGENDA: "Agenda da Etapa publicada",
 }
 
 # --- §1 de `contracts/recusas.md`: a configuração ----------------------------------------------
@@ -50,3 +52,42 @@ HORARIO_INEXISTENTE = "horario_inexistente"
 AGENDA_MUDOU_DESDE_A_PREVIA = "agenda_mudou_desde_a_previa"
 SEM_CONFIGURACAO = "sem_configuracao"
 SEM_HORARIO_PARA_LIBERAR = "sem_horario_para_liberar"
+AGENDA_PUBLICADA = "agenda_publicada"
+
+# --- os atos da agenda (entrega B) ----------------------------------------------------------------
+PUBLICACAO = "PUBLICACAO"
+REMARCACAO = "REMARCACAO"
+INCLUSAO = "INCLUSAO"
+CANCELAMENTO = "CANCELAMENTO"
+ESPECIES = (PUBLICACAO, REMARCACAO, INCLUSAO, CANCELAMENTO)
+
+# A situação de cada pessoa num ato: no horário, ou fora da agenda vigente (o cancelamento, na C).
+AGENDADO = "AGENDADO"
+CANCELADO = "CANCELADO"
+
+# O veículo da publicação (`D-008`), como na `159`: a página pública do GPS, com a declaração do
+# item do Edital que a admite, ou a publicação feita fora dele, com onde e quando.
+VEICULO_GPS = "GPS"
+VEICULO_EXTERNO = "EXTERNO"
+
+# Como o conteúdo público identifica a pessoa (FR-7225, `D-009`): nome e protocolo, ou só o
+# protocolo na Etapa restrita por Modalidade.
+NOME_E_PROTOCOLO = "NOME_E_PROTOCOLO"
+PROTOCOLO = "PROTOCOLO"
+
+# --- §1 depois da publicação (FR-7208) -----------------------------------------------------------
+HORARIO_PUBLICADO_REMOVIDO = "horario_publicado_removido"
+PARAMETRO_PUBLICADO_ALTERADO = "parametro_publicado_alterado"
+
+# --- §4 a conferência: impedimentos e recusas da confirmação ------------------------------------
+PARTICIPANTES_SEM_HORARIO = "participantes_sem_horario"
+AGENDADOS_QUE_NAO_PARTICIPAM = "agendados_que_nao_participam"
+CONFIGURACAO_INVALIDA = "configuracao_invalida"
+BANCA_SEM_LOCAL = "banca_sem_local"
+SEM_AUTORIDADE_VIGENTE = "sem_autoridade_vigente"
+PUBLICACAO_IMPEDIDA = "publicacao_impedida"
+AGENDA_MUDOU_DESDE_A_CONFERENCIA = "agenda_mudou_desde_a_conferencia"
+VEICULO_NAO_ESCOLHIDO = "veiculo_nao_escolhido"
+DECLARACAO_DO_VEICULO_AUSENTE = "declaracao_do_veiculo_ausente"
+PUBLICACAO_EXTERNA_INCOMPLETA = "publicacao_externa_incompleta"
+AUTORIDADE_INVALIDA = "autoridade_invalida"

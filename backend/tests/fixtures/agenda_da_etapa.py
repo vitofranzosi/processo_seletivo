@@ -36,3 +36,45 @@ def eliminar_na_primeira(gestor, edital, etapa_a1, inscricoes, *, chave="ocorren
         idempotency_key=chave,
         correlation_id="teste-agenda",
     )
+
+
+# --- a entrega B: conferir e publicar -------------------------------------------------------------
+
+DUAS_HORAS = ((time(8), time(10)),)  # oito horários de 10 + 5 numa banca
+DECLARACAO = "item 7.2 do Edital"
+
+
+def montar_completa(gestor, edital, etapa, *, config=None):
+    """A agenda configurada e preenchida pelo automático: todos os participantes com horário."""
+    from processo_seletivo.agendamento.application import configurar, montar
+
+    configurar.salvar(
+        actor=gestor,
+        edital=edital,
+        etapa_id=etapa,
+        configuracao=config or configuracao(dias=((SEG, DUAS_HORAS),)),
+    )
+    previa = montar.previa_do_preenchimento(actor=gestor, edital=edital, etapa_id=etapa)
+    montar.aplicar_preenchimento(
+        actor=gestor, edital=edital, etapa_id=etapa, assinatura=previa.assinatura
+    )
+
+
+def publicar_agenda(gestor, edital, etapa, *, chave="publicar-agenda", **campos):
+    """Confere e publica no GPS, com a autoridade da suíte; `campos` troca o que a tela enviaria."""
+    from processo_seletivo.agendamento.application import conferir, publicar
+    from tests.fixtures.autoridades import AUTORIDADE_DA_SUITE
+
+    if "assinatura" not in campos:
+        campos["assinatura"] = conferir.conferencia(
+            actor=gestor, edital=edital, etapa_id=etapa
+        ).assinatura
+    valores = {
+        "autoridade_id": AUTORIDADE_DA_SUITE,
+        "veiculo": "GPS",
+        "declaracao": DECLARACAO,
+        **campos,
+    }
+    return publicar.publicar(
+        actor=gestor, edital=edital, etapa_id=etapa, idempotency_key=chave, **valores
+    )

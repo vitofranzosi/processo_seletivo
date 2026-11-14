@@ -1,0 +1,53 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Agenda publicada — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/minhas-etapas.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <span aria-current="page">Agenda publicada</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A agenda publicada (167, US3, FR-7240; protótipo `publicada.html`).
+
+**Um resumo só**: o ato — quando, quem assinou, onde foi publicado — e quantas pessoas. A lista é a
+vigente, lida do append-only, e não do rascunho da montagem (T-016). Os avisos e os atos individuais
+— remarcar, incluir, cancelar — são da entrega C; aqui as duas seções de quem entrou e de quem saiu
+depois da publicação só nomeiam as pessoas.
+{% endcomment %}
+<h1>Agenda publicada</h1>
+<p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. <a href="{% url 'portal:agenda-da-etapa' agenda.id %}">Ver como o público vê</a></p>
+<div id="mensagem" aria-live="polite">
+  {% if mensagem %}<p class="{{ mensagem.tipo }}" role="status" tabindex="-1">{{ mensagem.texto }}</p>{% endif %}
+  {% if fora_do_periodo %}<p class="aviso">{{ fora_do_periodo }}</p>{% endif %}
+</div>
+
+<div class="resumo-da-publicacao">
+  <p><span class="situacao s-PUBLICADO">Publicada</span> em {{ ato.praticado_em|date:"d/m/Y" }} às {{ ato.praticado_em|date:"H:i" }}, assinada por {% if ato.signatario_nome %}{{ ato.signatario_nome }} — {% endif %}{{ ato.signatario_cargo }}.</p>
+  <p class="fatos-da-agenda"><span>{{ linhas|length }} horário{{ linhas|length|pluralize:"s" }} publicado{{ linhas|length|pluralize:"s" }}</span><span>{% if veiculo_gps %}Na página pública do GPS ({{ ato.declaracao_do_veiculo }}){% else %}Publicada fora do GPS: {{ ato.publicado_fora_onde }}, em {{ ato.publicado_fora_em|date:"d/m/Y" }}{% endif %}</span></p>
+</div>
+
+{% if entrantes %}
+<section class="consequencias" aria-labelledby="entrantes-titulo">
+  <h2 id="entrantes-titulo">Passou a participar depois da publicação ({{ entrantes|length }})</h2>
+  <p>Estas pessoas passaram a participar da Etapa depois da publicação e ainda não têm horário. A agenda publicada não muda para mais ninguém.</p>
+  <ul>{% for pessoa in entrantes %}<li><strong>{{ pessoa.nome }}</strong> <span class="numero-de-inscricao">{{ pessoa.protocolo }}</span></li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if saintes %}
+<section class="consequencias" aria-labelledby="saintes-titulo">
+  <h2 id="saintes-titulo">Tem horário e não participa mais ({{ saintes|length }})</h2>
+  <ul>{% for item in saintes %}<li><strong>{{ item.pessoa.nome|default:item.pessoa.protocolo }}</strong> <span class="numero-de-inscricao">{{ item.pessoa.protocolo }}</span> — {{ item.horario }}: {{ item.motivo }}.</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+<section aria-labelledby="lista-titulo">
+  <h2 id="lista-titulo">Horários publicados</h2>
+  <p class="ajuda">O horário anterior de quem for remarcado fica no histórico. Para abrir horários novos, <a href="{% url 'interface:agenda-configurar' edital.id etapa_id %}">acrescente um dia, uma janela ou uma banca</a>.</p>
+  <div class="tabela-rolavel">
+    <table class="tabela lista-publicada">
+      <thead><tr><th scope="col">Quando</th><th scope="col">Pessoa</th></tr></thead>
+      <tbody>
+        {% for linha in linhas %}<tr><td>{{ linha.quando }}{% if linha.remarcado_em %} <span class="remarcado">remarcado em {{ linha.remarcado_em|date:"d/m" }}</span>{% endif %}</td><td>{{ linha.pessoa.nome|default:linha.pessoa.protocolo }} <span class="numero-de-inscricao">{{ linha.pessoa.protocolo }}</span></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

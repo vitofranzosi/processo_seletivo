@@ -1,0 +1,17 @@
+{% comment %}
+**As agendas publicadas** (167, FR-7227, T-016). Uma linha por Etapa com agenda publicada, com o
+período; a lista mora na página de cada agenda, com a busca pelo número de inscrição. Ao lado das
+convocações, porque é o mesmo tipo de pergunta: "quando e onde eu preciso estar?".
+{% endcomment %}
+<section class="agendas-da-selecao" aria-labelledby="agendas-titulo">
+  <h2 id="agendas-titulo">Agendas</h2>
+  <p class="orientacao-da-secao">Participa de uma Etapa com horário marcado? Encontre o seu na agenda dela. Na sua área, em <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>, você vê também o endereço da sala ou o local e as orientações.</p>
+  <ul class="agendas-publicadas">
+    {% for item in agendas_publicadas %}
+    <li class="agenda-publicada">
+      <a class="titulo-da-agenda" href="{% url 'portal:agenda-da-etapa' item.agenda_id %}">Agenda: {{ item.etapa }}</a>
+      <span class="meta">{% if item.periodo %}{{ item.periodo|capfirst }} · {% endif %}publicada em {{ item.ato.praticado_em|date:"d/m/Y" }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</section>

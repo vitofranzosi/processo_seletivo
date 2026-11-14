@@ -1,0 +1,33 @@
+{% comment %}
+**O horário desta pessoa em cada Etapa com agenda** (167, FR-7228, FR-7229, FR-7245; protótipo
+`candidato.html`). Só aqui, na área da própria pessoa identificada, aparece o endereço da sala
+virtual, no botão "Entrar na sala virtual" (FR-7229): a página pública nunca o tem.
+
+Antes da publicação, quem participa da Etapa lê que o horário ainda não foi publicado, e o período
+do cronograma. Depois, o publicado vigente — e, se mudou, quando mudou (FR-7245).
+{% endcomment %}
+{% for bloco in horarios %}
+<section class="painel horario-da-etapa" aria-labelledby="horario-{{ forloop.counter }}">
+  <h2 id="horario-{{ forloop.counter }}">Seu horário: {{ bloco.etapa }}</h2>
+  {% if bloco.publicado %}
+  {% with item=bloco.vigente agenda=bloco.agenda %}
+  {% if item.remarcado_em %}<p class="aviso remarcacao"><strong>Seu horário mudou em {{ item.remarcado_em|date:"d/m" }}.</strong> O horário anterior não vale mais.</p>{% endif %}
+  <p class="quando-grande">{{ bloco.quando }}, às <strong>{{ bloco.hora }}</strong></p>
+  <dl class="campos-do-horario">
+    <dt>Duração prevista</dt><dd>{{ agenda.duracao_minutos }} minutos</dd>
+    {% if bloco.varias_bancas %}<dt>Banca</dt><dd>{{ item.banca_nome }}</dd>{% endif %}
+    {% if agenda.forma == "REMOTA" %}<dt>Como participar</dt><dd>Por videoconferência</dd>{% else %}<dt>Local</dt><dd>{{ item.banca.acesso }}</dd>{% endif %}
+  </dl>
+  {% if agenda.forma == "REMOTA" %}
+  {% if bloco.sala %}<p><a class="documento" href="{{ bloco.sala }}" rel="noopener noreferrer">Entrar na sala virtual</a></p>{% else %}<p>Sala virtual: {{ item.banca.acesso }}</p>{% endif %}
+  <p class="meta">O endereço da sala é só seu: ele não aparece na página pública.</p>
+  {% endif %}
+  {% if agenda.orientacoes %}<h3>Orientações</h3><p class="orientacoes-do-horario">{{ agenda.orientacoes|linebreaksbr }}</p>{% endif %}
+  <p class="meta">Se você faltar, vale o que o Edital diz sobre a ausência nesta Etapa.</p>
+  {% endwith %}
+  {% else %}
+  <p class="situacao futuro">Seu horário na {{ bloco.etapa }} ainda não foi publicado.</p>
+  {% if bloco.periodo %}<p class="meta">A Etapa acontece {{ bloco.periodo_por_extenso }}, pelo cronograma.</p>{% endif %}
+  {% endif %}
+</section>
+{% endfor %}

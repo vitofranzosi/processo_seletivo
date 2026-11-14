@@ -53,7 +53,10 @@ de a lista fechar — a agenda acompanha a participação, e não guarda lista p
 {% endcomment %}
 <section class="cartao" aria-labelledby="agenda-da-etapa-titulo">
   <h2 id="agenda-da-etapa-titulo">Agenda</h2>
-  {% if agenda_da_etapa.existe %}
+  {% if agenda_da_etapa.publicacao %}
+  <p><span class="situacao s-PUBLICADO">Agenda publicada</span> em {{ agenda_da_etapa.publicacao.praticado_em|date:"d/m/Y" }}. A página pública e a área de cada pessoa mostram o horário.</p>
+  <p><a class="acao" href="{% url 'interface:agenda-publicada' edital.id etapa.id %}">Ver a agenda publicada</a></p>
+  {% elif agenda_da_etapa.existe %}
   <p><span class="situacao s-EM_ELABORACAO">Agenda em montagem</span> Nada é público até a agenda ser conferida e publicada.</p>
   <p>{{ agenda_da_etapa.com_horario }} de {{ agenda_da_etapa.participantes }} pessoa{{ agenda_da_etapa.participantes|pluralize:"s" }} com horário · {{ agenda_da_etapa.horarios }} horário{{ agenda_da_etapa.horarios|pluralize:"s" }}{% if agenda_da_etapa.falta %} · <strong>faltam {{ agenda_da_etapa.falta }}</strong>{% endif %}</p>
   <p><a class="acao" href="{% url 'interface:agenda-montar' edital.id etapa.id %}">Montar a agenda</a> <a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Ajustar a configuração</a></p>

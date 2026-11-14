@@ -166,3 +166,48 @@
   .secao-da-configuracao,.simulador{padding:1rem;}
   .lista-com-rolagem{max-height:16rem;}
 }
+
+/* --- a conferência e a agenda publicada (entrega B) ------------------------------------------- */
+
+/* A conferência começa respondendo "posso publicar?", em quatro linhas (04-redesign, decisão 2). */
+.lista-de-prontidao{list-style:none;margin:0 0 1.5rem;padding:.75rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.5rem 1.5rem;}
+.lista-de-prontidao li{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;}
+.marca-de-prontidao{display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;
+  font-size:.75rem;font-weight:700;flex:none;}
+.lista-de-prontidao .pronto .marca-de-prontidao{background:var(--sucesso-fundo);color:var(--sucesso);}
+.lista-de-prontidao .pendente{font-weight:600;}
+.lista-de-prontidao .pendente .marca-de-prontidao{background:var(--amarelo-fundo);color:var(--amarelo);}
+.lista-de-prontidao .a-fazer .marca-de-prontidao{background:var(--cinza-fundo);color:var(--texto-fraco);}
+
+/* Cada impedimento com o caminho de corrigir, em amarelo: impede, e não é erro de quem confere. */
+.consequencias.impedimentos{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo);}
+.consequencias.impedimentos h2{color:var(--amarelo);}
+.impedimento{margin-bottom:1rem;}
+.impedimento h3{margin:0 0 .25rem;}
+.impedimento p{margin:0 0 .5rem;max-width:var(--leitura);}
+
+/* A prévia pública com a moldura tracejada: é o que a página mostrará, e ainda não está nela. */
+.previa-publica{border:1px dashed var(--borda);border-radius:4px;padding:.75rem 1rem;background:var(--fundo);}
+.dia-publico h3{margin:.5rem 0;}
+.horarios-publicos{list-style:none;margin:0 0 .75rem;padding:0;}
+.horarios-publicos li{display:flex;gap:1rem;align-items:baseline;padding:.3rem 0;
+  border-bottom:1px solid var(--borda);flex-wrap:wrap;}
+.horarios-publicos .hora{font-variant-numeric:tabular-nums;font-weight:600;min-width:3.5rem;}
+.horarios-publicos .mais{color:var(--texto-fraco);border-bottom:0;}
+.numero-de-inscricao{font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;}
+
+/* O veículo: as duas escolhas, cada uma com o que exige logo abaixo dela. */
+.veiculo-da-agenda{border:0;margin:0;padding:0;max-width:var(--leitura);}
+.veiculo-da-agenda legend{font-weight:600;margin-bottom:.5rem;}
+.opcao-de-veiculo{margin:.75rem 0 .35rem;}
+.veiculo-da-agenda .campo{margin:0 0 .5rem 1.5rem;}
+.veiculo-da-agenda .campos-em-linha{margin-left:1.5rem;}
+
+/* A agenda publicada: um resumo só, e a lista vigente. */
+.resumo-da-publicacao{margin:0 0 1.5rem;}
+.resumo-da-publicacao p{margin:0 0 .35rem;}
+.remarcado{display:inline-block;font-size:.75rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;
+  background:var(--amarelo-fundo);color:var(--amarelo);}
+.lista-publicada td{vertical-align:top;}

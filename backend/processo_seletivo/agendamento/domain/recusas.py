@@ -186,6 +186,193 @@ def sem_horario_para_liberar(nome):
     )
 
 
+def agenda_publicada():
+    """Preencher, agendar ou liberar com a agenda publicada (FR-7240)."""
+    return DomainError(
+        nomes.AGENDA_PUBLICADA,
+        "A agenda já foi publicada. Para mudar uma pessoa, use Remarcar na agenda publicada.",
+        409,
+    )
+
+
+# --- §1 depois da publicação (FR-7208, T-015) ---------------------------------------------------
+
+
+def horario_publicado_removido(nome, protocolo, inicio, banca):
+    return Recusa(
+        nomes.HORARIO_PUBLICADO_REMOVIDO,
+        f"A agenda já foi publicada, e {nome} ({protocolo}) tem horário em "
+        f"{horario_curto(inicio)}, {banca}, que esta configuração removeria. Depois da "
+        "publicação, só se acrescenta dia, janela ou banca; para mudar uma pessoa, use Remarcar.",
+    )
+
+
+def parametro_publicado_alterado(duracao, intervalo, forma):
+    atendimento = "remoto" if forma == nomes.REMOTA else "presencial"
+    return Recusa(
+        nomes.PARAMETRO_PUBLICADO_ALTERADO,
+        f"A agenda já foi publicada com {duracao} minutos e {intervalo} de intervalo, em "
+        f"atendimento {atendimento}. Depois da publicação, só se acrescenta dia, janela ou banca.",
+    )
+
+
+# --- §4 a conferência ----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Impedimento:
+    """Um impedimento da publicação, com o caminho de corrigir (FR-7221, UX-766).
+
+    `caminho` é o nome do destino — `montar`, `configurar` ou `unidades` —, e a tela o resolve; o
+    domínio não conhece rota. `pessoas` é a lista nominal, quando há.
+    """
+
+    codigo: str
+    titulo: str
+    frase: str
+    caminho: str
+    rotulo_do_caminho: str
+    pessoas: tuple = ()
+
+
+def participantes_sem_horario(pessoas):
+    quantas = len(pessoas)
+    sujeito = plural(quantas, "pessoa está", "pessoas estão")
+    alvo = "essa pessoa" if quantas == 1 else "essas pessoas"
+    return Impedimento(
+        nomes.PARTICIPANTES_SEM_HORARIO,
+        f"{sujeito} sem horário",
+        f"{sujeito} sem horário. Toda pessoa que participa da Etapa precisa de um horário antes "
+        f"da publicação: a ausência tem consequência no Edital. Volte à montagem e agende {alvo}.",
+        "montar",
+        "Voltar à montagem",
+        tuple(f"{pessoa.nome} ({pessoa.protocolo})" for pessoa in pessoas),
+    )
+
+
+def agendado_que_nao_participa(nome, protocolo, motivo):
+    return Impedimento(
+        nomes.AGENDADOS_QUE_NAO_PARTICIPAM,
+        f"{nome} tem horário e não participa mais",
+        f"{nome} ({protocolo}) tem horário, mas não participa mais da Etapa: "
+        f"{_sem_ponto(motivo)}. Volte à montagem e libere o horário.",
+        "montar",
+        "Voltar à montagem",
+    )
+
+
+def configuracao_invalida(problemas):
+    return Impedimento(
+        nomes.CONFIGURACAO_INVALIDA,
+        "A configuração tem problemas",
+        "A configuração tem problemas: " + " ".join(problema.frase for problema in problemas),
+        "configurar",
+        "Ajustar a configuração",
+    )
+
+
+def banca_sem_local(banca, forma):
+    falta = "endereço da sala" if forma == nomes.REMOTA else "local"
+    return Impedimento(
+        nomes.BANCA_SEM_LOCAL,
+        f"{banca} sem {falta}",
+        f"{banca} sem {falta}. Quem for atendido nessa banca não saberia aonde ir. Informe na "
+        "configuração.",
+        "configurar",
+        "Ajustar a configuração",
+    )
+
+
+def sem_autoridade_vigente():
+    return Impedimento(
+        nomes.SEM_AUTORIDADE_VIGENTE,
+        "Sem autoridade signatária vigente",
+        "A unidade do Edital não tem autoridade signatária vigente. Peça ao Administrador "
+        'institucional que registre uma na tela "Unidades".',
+        "unidades",
+        "Unidades",
+    )
+
+
+ETAPA_SEM_EVENTO = (
+    "Esta Etapa não tem período publicado no cronograma; os dias não foram conferidos contra ele."
+)
+
+
+def publicacao_impedida(impedimentos):
+    return DomainError(
+        nomes.PUBLICACAO_IMPEDIDA,
+        " ".join(impedimento.frase for impedimento in impedimentos),
+        409,
+    )
+
+
+def agenda_mudou_desde_a_conferencia():
+    return DomainError(
+        nomes.AGENDA_MUDOU_DESDE_A_CONFERENCIA,
+        "A agenda mudou desde esta conferência. Confira de novo.",
+        409,
+    )
+
+
+def veiculo_nao_escolhido():
+    return DomainError(
+        nomes.VEICULO_NAO_ESCOLHIDO,
+        "Escolha onde a agenda é publicada: na página pública do GPS, ou fora dele.",
+        422,
+        campo="veiculo",
+    )
+
+
+def declaracao_do_veiculo_ausente():
+    return DomainError(
+        nomes.DECLARACAO_DO_VEICULO_AUSENTE,
+        "Diga o item do Edital que admite a página pública do GPS como veículo da publicação.",
+        422,
+        campo="declaracao",
+    )
+
+
+def publicacao_externa_incompleta():
+    return DomainError(
+        nomes.PUBLICACAO_EXTERNA_INCOMPLETA,
+        "Diga onde e quando a agenda foi publicada fora do GPS.",
+        422,
+        campo="onde",
+    )
+
+
+def autoridade_invalida():
+    return DomainError(
+        nomes.AUTORIDADE_INVALIDA,
+        "A autoridade escolhida não está vigente na unidade do Edital. Escolha outra.",
+        422,
+        campo="autoridade",
+    )
+
+
+def autoridade_nao_escolhida():
+    """A frase do protótipo para o campo vazio: diz o que fica gravado, e não só que falta."""
+    return DomainError(
+        nomes.AUTORIDADE_INVALIDA,
+        "Escolha a autoridade signatária: o nome e o cargo ficam gravados na publicação.",
+        422,
+        campo="autoridade",
+    )
+
+
+def fora_do_periodo_vigente(quantos):
+    if quantos == 1:
+        return (
+            "O Evento da Etapa foi retificado depois da publicação, e 1 horário publicado está "
+            "fora do período vigente. Ele continua valendo como foi publicado."
+        )
+    return (
+        f"O Evento da Etapa foi retificado depois da publicação, e {quantos} horários publicados "
+        "estão fora do período vigente. Eles continuam valendo como foram publicados."
+    )
+
+
 # --- §2 e §3 as frases que informam, sem recusar --------------------------------------------------
 
 
