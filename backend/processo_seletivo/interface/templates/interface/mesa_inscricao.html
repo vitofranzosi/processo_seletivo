@@ -81,6 +81,7 @@ metade da identidade produziria a meia anonimização que é pior que nenhuma.
   exigidos, "onde eu parei" deixa de ser pergunta que se responde olhando. Cada abertura já está na
   trilha, com o requisito no motivo (FR-027) — a tela só mostra o que já está registrado.
   {% endcomment %}
+  {% if video_da_mesa %}{% include "interface/_video_da_mesa.html" %}{% endif %}
   {% include "interface/_documentos_da_mesa.html" %}
 
   {% comment %}
@@ -299,4 +300,5 @@ cumpre.
 {% load static %}<script src="{% static 'interface/visualizador.js' %}" defer></script>
 <p class="oculto" role="status" aria-live="polite" data-anuncio></p>
 {% if ficha and avaliacao.estado != "CONCLUIDA" %}<script src="{% static 'interface/mesa_barema.js' %}" defer></script>{% endif %}
+{% if video_da_mesa.abertura %}<script src="{% estatico 'interface/video_da_mesa.js' %}" defer></script>{% endif %}
 {% endblock %}

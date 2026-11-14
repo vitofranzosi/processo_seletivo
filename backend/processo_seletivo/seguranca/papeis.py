@@ -197,6 +197,14 @@ TABELAS_APPEND_ONLY = (
     # A exposição ao parecer (165): o fato de o sistema ter entregado a alguém o parecer de outro
     # membro. Apagá-la devolveria a quem já leu o caminho de avaliar a mesma inscrição (FR-7082).
     "avaliacoes_exposicao_ao_parecer",
+    # A verificação por vídeo (166): o vídeo recebido, cada abertura, o encaminhamento à entrevista
+    # ao vivo e a eliminação do arquivo. O vídeo é a evidência que a comissão viu; reescrever a
+    # abertura devolveria ao titular a troca de um vídeo já analisado (FR-7124), e apagar o
+    # encaminhamento devolveria ao vídeo o poder de produzir "não confirmada" (FR-7139).
+    "verificacao_video",
+    "verificacao_abertura_do_video",
+    "verificacao_encaminhamento",
+    "verificacao_eliminacao_do_video",
 )
 
 

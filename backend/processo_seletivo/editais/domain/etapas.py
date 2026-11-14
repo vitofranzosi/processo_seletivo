@@ -71,6 +71,12 @@ def validate_stage(stage: dict, *, event_ids: frozenset[str]) -> None:
     _validate_alcance(stage)
     _validate_efeito(stage)
     _validate_regra_de_deliberacao(stage)
+    if stage.get("videoOption") not in (None, True, False):
+        raise StageValidationError(
+            f"A admissão do vídeo na Etapa «{_nome_da_etapa(stage)}» é sim ou não.",
+            campo="videoOption",
+            identidade=stage.get("id", ""),
+        )
     evento = stage.get("scheduleEventId")
     if evento is not None and str(evento) not in event_ids:
         raise StageValidationError(

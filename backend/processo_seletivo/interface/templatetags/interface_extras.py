@@ -697,3 +697,11 @@ def previa_do_barema(etapa, documentos):
         return {"linhas": [], "total": "0"}
     linhas, total = lido
     return {"linhas": linhas, "total": total}
+
+
+@register.simple_tag
+def chave_do_video():
+    """A chave da verificação por vídeo (166, FR-7100): a composição desabilita o campo sem ela."""
+    from django.conf import settings
+
+    return bool(getattr(settings, "VERIFICACAO_POR_VIDEO", False))

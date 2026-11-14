@@ -327,6 +327,25 @@
     </fieldset>
   </div>
   {% comment %}
+  A admissão do vídeo gravado pelo candidato (166, FR-7102 a FR-7104). Só na Etapa decisória com mais
+  de uma avaliação, pela mesma folha da regra: o vídeo só confirma, e quem confirma é a deliberação.
+  **Com a chave desligada o campo aparece desabilitado, com a razão**: o vídeo depende de protocolo
+  institucional que ainda não existe (P-0). Desabilitado ele não é enviado, e a Etapa que o tinha
+  marcado em desenvolvimento continua marcada no rascunho só se a chave voltar.
+  {% endcomment %}
+  {% chave_do_video as video_ligado %}
+  <div class="campos dependentes so-decisoria so-colegiada">
+    <p class="opcao">
+      <input type="checkbox" id="etapa-{{ indice }}-admiteVideo" name="etapa-{{ indice }}-admiteVideo" value="1"
+             {% if etapa_linha.videoOption %}checked{% endif %}{% if not video_ligado %} disabled{% endif %}
+             aria-describedby="etapa-{{ indice }}-admiteVideo-ajuda">
+      <label for="etapa-{{ indice }}-admiteVideo">Admite vídeo gravado pelo candidato{% if not video_ligado %} — o vídeo depende de protocolo institucional que ainda não existe{% endif %}</label>
+      <span class="oculto" id="etapa-{{ indice }}-admiteVideo-ajuda">O vídeo só confirma: quem ele não confirma vai à entrevista ao vivo.</span>
+    </p>
+    {% recusa_de recusas "etapa" indice "videoOption" as recusado_video %}
+    {% if recusado_video %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-videoOption">{{ recusado_video }}</span>{% endif %}
+  </div>
+  {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
   só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
   esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema

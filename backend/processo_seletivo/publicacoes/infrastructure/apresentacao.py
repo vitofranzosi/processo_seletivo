@@ -39,6 +39,7 @@ from processo_seletivo.publicacoes.infrastructure import humano
 from processo_seletivo.publicacoes.infrastructure import pdf as composicao_pdf
 from processo_seletivo.resultados.domain import deliberacao as deliberacao_da_etapa
 from processo_seletivo.resultados.domain import efeito as efeito_do_desfecho
+from processo_seletivo.verificacao.domain import admissao as admissao_do_video
 
 # Natureza dos itens numerados que só esta apresentação tem (R-003): a subseção textual (membro) e
 # a gerada (requisitos, atribuições, regras de classificação, dados do sorteio).
@@ -679,6 +680,9 @@ def _parte(composicao, snapshot, plano_, secao, parte, tabelas):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
         # A regra de deliberação (165, FR-7075), depois do efeito que ela decide quando acontece.
         if frase := deliberacao_da_etapa.frase_da_regra(parte.etapa):
+            _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
+        # A admissão do vídeo (166, FR-7106), só onde é declarada.
+        if frase := admissao_do_video.frase(parte.etapa):
             _paragrafo(composicao, frase, antes=composicao_pdf.ANTES_DE_PARAGRAFO)
         # O barema logo depois da frase da Etapa, pelo mesmo compositor da apresentação plana
         # (146, FR-5209). Sem critério, nada é escrito.
