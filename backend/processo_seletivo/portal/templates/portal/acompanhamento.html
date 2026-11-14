@@ -55,6 +55,7 @@ As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausên
   {% if recorriveis %}<p><a href="{% url 'portal:recorrer' inscricao.id %}">Recorrer de um resultado</a></p>{% endif %}
 </section>
 {% endwith %}
+{% if verificacoes %}{% include "portal/_verificacao_por_video.html" %}{% endif %}
 
 {% if retificado %}
 {% comment %}
