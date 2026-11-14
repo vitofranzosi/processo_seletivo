@@ -65,6 +65,11 @@ elegíveis de uma inscrição, e conta quantas inscrições ficariam assim.
 **Por quê.** É a forma do impedimento histórico da `164`, com o recorte da D-008: a regra decide
 também o favorável. Os dois rodam sob o bloqueio do Processo que a consolidação toma (FR-7074).
 
+**A compatibilidade da `013` compara o número de avaliações, e não a regra.** Por isso trocar a
+regra mantém os pareceres, e trocar o número os torna incompatíveis, como torna hoje a avaliação
+única. Excluir o número da conferência na Etapa colegiada mudaria uma regra da `013` que esta spec
+não revê; a FR-7073 foi ajustada na implementação para dizer o comportamento que fica.
+
 ## T-005 — O Resultado deliberado é uma origem nova, com os pareceres numa tabela à parte
 
 **Decisão.**

@@ -258,6 +258,9 @@ def _recusar_o_que_o_ato_acrescenta(edital, base, content):
     _recusar_corte_sobre_etapa_com_resultado(edital, base, content)
     _recusar_alcance_estreitado_sobre_atribuicao(edital, base, content)
     _recusar_efeito_mudado_apos_desfavoravel(edital, base, content)
+    _recusar_colegiada_sem_regra(base, content)
+    _recusar_deliberacao_mudada_apos_resultado(edital, base, content)
+    _recusar_reducao_abaixo_das_conclusoes(edital, base, content)
     _recusar_criterio_que_a_composicao_recusaria(base, content)
     _recusar_modalidade_que_a_composicao_recusaria(base, content)
 
@@ -487,6 +490,122 @@ def _recusar_efeito_mudado_apos_desfavoravel(edital, base, content):
                 f"A Retificação mudaria o efeito do desfecho da Etapa «{etapa.get('name') or ''}», "
                 f"que já registrou {registrados}, contando os superados por recurso. O efeito "
                 "aplicado a alguém não muda mais nesta Etapa.",
+                422,
+            )
+
+
+def _etapas_por_id(conteudo):
+    return {
+        str(etapa.get("id")): etapa
+        for etapa in (conteudo or {}).get("stages") or []
+        if isinstance(etapa, dict)
+    }
+
+
+def _recusar_colegiada_sem_regra(base, content):
+    """A Etapa que o ato compõe ou recompõe como colegiada precisa declarar a regra (165, FR-7051).
+
+    **Só a que o ato toca** (research T-003): Etapa nova, ou com a forma, o número de avaliações ou
+    a própria regra mudados. A Etapa colegiada do acervo, que nunca declarou regra, não trava toda
+    Retificação do Edital — nem a de um prazo — à espera de uma escolha que é da CPVA; ela continua
+    impedida na consolidação, como era, até um ato declarar a regra.
+    """
+    from processo_seletivo.resultados.domain import deliberacao
+
+    antes = _etapas_por_id(base)
+    for etapa in (content or {}).get("stages") or []:
+        if not isinstance(etapa, dict) or not deliberacao.decisoria_com_varias(etapa):
+            continue
+        if etapa.get("deliberationRule") is not None:
+            continue
+        anterior = antes.get(str(etapa.get("id")))
+        tocada = anterior is None or any(
+            anterior.get(campo) != etapa.get(campo)
+            for campo in ("forma", "evaluationsPerRegistration", "deliberationRule")
+        )
+        if tocada:
+            raise DomainError(
+                "stage_deliberation_without_rule",
+                f"A Retificação compõe a Etapa «{etapa.get('name') or ''}» com "
+                f"{etapa.get('evaluationsPerRegistration')} pareceres por inscrição e sem regra de "
+                "deliberação. Escolha uma das três regras.",
+                422,
+            )
+
+
+def _recusar_deliberacao_mudada_apos_resultado(edital, base, content):
+    """A regra e o número de avaliações não mudam depois do primeiro Resultado (165, FR-7073).
+
+    **Conta todo Resultado por avaliação**, favorável ou desfavorável, vigente ou superado (D-008):
+    a regra decide também o favorável, e três pareceres para uns e cinco para outros é a mesma
+    desigualdade que dois efeitos para o mesmo desfecho. Só a Etapa decisória: na pontuada, o número
+    de avaliações segue o contrato de hoje. Roda sob o bloqueio do Processo que a consolidação
+    também toma (FR-7074).
+    """
+    from processo_seletivo.resultados.application.selectors import (
+        resultados_por_avaliacao_registrados,
+    )
+
+    antes = _etapas_por_id(base)
+    for etapa in (content or {}).get("stages") or []:
+        if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
+            continue
+        anterior = antes[str(etapa.get("id"))]
+        if "DECISORIA" not in (anterior.get("forma"), etapa.get("forma")):
+            continue
+        mudou = any(
+            anterior.get(campo) != etapa.get(campo)
+            for campo in ("deliberationRule", "evaluationsPerRegistration")
+        )
+        if not mudou:
+            continue
+        quantos = resultados_por_avaliacao_registrados(edital=edital, etapa_id=etapa.get("id"))
+        if quantos:
+            registrados = "1 resultado" if quantos == 1 else f"{quantos} resultados"
+            raise DomainError(
+                "stage_deliberation_changed_after_result",
+                f"A Retificação mudaria a regra de deliberação ou o número de pareceres da Etapa "
+                f"«{etapa.get('name') or ''}», que já registrou {registrados} por avaliação, "
+                "contando os superados por recurso. A regra aplicada a alguém não muda mais nesta "
+                "Etapa.",
+                422,
+            )
+
+
+def _recusar_reducao_abaixo_das_conclusoes(edital, base, content):
+    """O número de avaliações não cai abaixo das conclusões que alguma inscrição já tem (FR-7073).
+
+    Sem isto, a inscrição ficaria com pareceres a mais, não consolidável, e o sistema não escolhe
+    quais contam (FR-7062). Recusar o ato que a produziria é o que fecha o beco; o resíduo de
+    conteúdo anterior sai pela inativação da Atribuição por ato nomeado.
+    """
+    from django.db.models import Count
+
+    from processo_seletivo.avaliacoes.application.selectors import avaliacoes_elegiveis
+    from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
+
+    antes = _etapas_por_id(base)
+    for etapa in (content or {}).get("stages") or []:
+        if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
+            continue
+        novo = avaliacoes_previstas(etapa)
+        if novo >= avaliacoes_previstas(antes[str(etapa.get("id"))]):
+            continue
+        acima = (
+            avaliacoes_elegiveis(edital=edital, etapa_id=etapa.get("id"))
+            .order_by()
+            .values("atribuicao__inscricao_id")
+            .annotate(quantas=Count("id"))
+            .filter(quantas__gt=novo)
+            .count()
+        )
+        if acima:
+            quem = "1 inscrição já tem" if acima == 1 else f"{acima} inscrições já têm"
+            raise DomainError(
+                "stage_evaluations_below_concluded",
+                f"A Retificação reduziria a Etapa «{etapa.get('name') or ''}» a {novo} "
+                f"{'parecer' if novo == 1 else 'pareceres'} por inscrição, e {quem} mais "
+                "pareceres concluídos que isso.",
                 422,
             )
 

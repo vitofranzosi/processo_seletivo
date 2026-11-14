@@ -636,8 +636,11 @@ Cada caso abaixo é requisito, e cita o requisito que o resolve.
 - **FR-7073**: A Retificação que muda a **regra de deliberação**, ou o **número de avaliações por
   inscrição** de uma Etapa decisória, DEVE ser impedida desde o **primeiro** Resultado por avaliação
   registrado nela, favorável ou desfavorável, vigente ou superado. A mensagem DEVE nomear a Etapa e dizer
-  quantos Resultados por avaliação ela já tem. Antes disso, a Retificação DEVE passar, e os pareceres já
-  concluídos DEVEM continuar valendo (D-008), salvo um caso: a Retificação que **reduz** o número de
+  quantos Resultados por avaliação ela já tem. Antes disso, a Retificação DEVE passar (D-008). Quando
+  muda só a regra, os pareceres já concluídos DEVEM continuar valendo: o parecer não depende dela.
+  Quando muda o número de avaliações, eles seguem a conferência de compatibilidade de hoje (FR-7063),
+  que os torna incompatíveis com a versão nova, como torna hoje a avaliação única; a correção é a
+  reabertura. Há ainda um caso: a Retificação que **reduz** o número de
   avaliações abaixo das conclusões elegíveis que alguma inscrição já tem DEVE ser impedida, e a mensagem
   DEVE dizer quantas inscrições ficariam com pareceres a mais.
 - **FR-7074**: A Retificação da regra e a consolidação na mesma Etapa DEVEM ser serializadas: o
