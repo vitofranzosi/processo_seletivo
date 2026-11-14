@@ -350,11 +350,21 @@ def etapas_de_analise(conteudo):
 
     Decisória porque a análise produz deferido ou indeferido, e não nota; eliminatória porque o
     indeferimento tira a inscrição do certame — e a consolidação recusa decisória que não elimina.
+
+    **E que alcançam todas as inscrições** (163, FR-6987). A homologação publica o deferimento de
+    toda inscrição enviada; uma Etapa restrita — a heteroidentificação, que é decisória e
+    eliminatória como a análise — deixaria a ampla pendente para sempre, e o ato nunca sairia.
+    Fora daqui, ela some também da escolha automática: com uma análise só para todas, a escolha
+    continua sendo dela.
     """
+    from processo_seletivo.editais.domain import alcance
+
     return [
         etapa
         for etapa in sorted(conteudo.get("stages") or [], key=lambda item: item.get("order") or 0)
-        if etapa.get("forma") == "DECISORIA" and etapa.get("eliminatory")
+        if etapa.get("forma") == "DECISORIA"
+        and etapa.get("eliminatory")
+        and not alcance.restrita(etapa)
     ]
 
 

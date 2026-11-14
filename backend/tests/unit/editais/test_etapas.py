@@ -121,6 +121,7 @@ def _publicada(**extra):
         "scheduleEventId": None,
         # O barema (146, degrau 21): sempre presente, vazio na Etapa sem critério.
         "criteria": [],
+        "modalityCodes": None,
         **extra,
     }
 

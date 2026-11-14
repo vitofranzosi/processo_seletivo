@@ -105,7 +105,7 @@ def test_o_conjunto_dos_pendentes_so_cita_campo_retificavel():
 
 
 def test_a_conta_fecha_com_a_matriz():
-    """92 retificáveis, e 92 com tela. O número está na matriz e no contrato.
+    """93 retificáveis, e 93 com tela. O número está na matriz e no contrato.
 
     Era 73 com a `029` — o texto da declaração de veracidade — e chegou a 83 com a `030`, que
     acrescentou `orderProduction` ao marco e os nove campos do método do sorteio comum ao Edital.
@@ -114,10 +114,11 @@ def test_a_conta_fecha_com_a_matriz():
     86 com a `144`: a visibilidade do Evento na tabela do PDF, `shownInPdf` (P-1, FR-5113).
     92 com a `146`: os seis campos do critério do barema — nome, descrição, máxima, pontos por
     unidade, unidade e documento que comprova (FR-5210).
+    93 com a `163`: o alcance da Etapa, `modalityCodes` (FR-6967).
 
 
     Escrito como asserção porque é a promessa que a feature faz: não "quase todos", não "os que
     importam" — todos.
     """
-    assert len(_retificaveis()) == 92
+    assert len(_retificaveis()) == 93
     assert _retificaveis() <= _oferecidos()

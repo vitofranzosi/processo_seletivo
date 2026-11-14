@@ -23,6 +23,7 @@ from django.utils import timezone
 
 # Apelidado, e não importado como `marcos`: dentro de `_marcos` a variável local com esse nome é
 # a lista de marcos do Perfil, e o módulo ficaria sombreado justamente na função que precisa dele.
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
 from processo_seletivo.editais.domain import cadastro_de_reserva
 from processo_seletivo.editais.domain import marcos as regras_do_marco
 from processo_seletivo.editais.domain import quadro as quadro_do_perfil
@@ -4472,6 +4473,10 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 # E1 a E3: os pares viram uma frase, com o mesmo que estava declarado.
                 if frase := frase_da_etapa(etapa, eventos):
                     composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
+                # O alcance (163, FR-6983): só a Etapa restrita diz a quem se aplica. A que alcança
+                # todas sai com o texto de antes, e é o que recompõe o acervo byte a byte (D-008).
+                if frase := alcance_da_etapa.frase_do_alcance(snapshot, etapa):
+                    composicao.escrever(frase, antes=ANTES_DE_PARAGRAFO, justificar=True)
                 tabela_do_barema(composicao, etapa, snapshot, tabelas)
                 continue
             caracteres = [rotulo for chave, rotulo in CARATER_DA_ETAPA if etapa.get(chave)]
@@ -4499,6 +4504,10 @@ def _etapas(composicao, snapshot, secao=0, tabelas=None):
                 favoravel = etapa.get("rotuloFavoravel") or "favorável"
                 desfavoravel = etapa.get("rotuloDesfavoravel") or "desfavorável"
                 pares.append(["Resultado", f"{favoravel} ou {desfavoravel}"])
+            # O alcance (163, FR-6983), pela régua dos pares acima: impresso só quando declarado.
+            if alcance_da_etapa.restrita(etapa):
+                nomes = alcance_da_etapa.nomes_do_alcance(snapshot, etapa)
+                pares.append(["Alcance", f"Somente candidatos inscritos em {nomes}"])
             # As datas são do Evento e não são copiadas: o documento as lê de lá, como o domínio.
             # E o rótulo humano é que vai para o papel, não a chave do tipo.
             evento = eventos.get(etapa.get("scheduleEventId"))

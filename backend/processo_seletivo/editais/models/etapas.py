@@ -12,9 +12,13 @@ class EtapaAvaliacao(models.Model):
     """Fase pela qual os candidatos passam.
 
     Pertence ao **Edital** e vale para todos os seus Perfis. A Constituição admite que Perfis
-    possuam Etapas distintas, e admitir não é exigir: nada está publicado, então mover a coleção
-    para dentro do Perfil depois custa uma migration e um caminho de snapshot — preço que se paga
-    quando houver um Edital real que precise disso.
+    possuam Etapas distintas, e admitir não é exigir: a coleção continua no Edital.
+
+    **Mas nem toda Etapa alcança toda inscrição** (163, D-001). A heteroidentificação dos Editais
+    28/2026 e 57/2026 só avalia quem se inscreveu numa Modalidade reservada, e era a lacuna L-2 que
+    a mantinha fora do sistema. O `alcance` diz quais códigos de Modalidade a Etapa alcança, em
+    todos os Perfis que os têm; quem responde se uma inscrição é alcançada é
+    `editais/domain/alcance.py`.
 
     A forma de identidade e de ordenação é a de `EventoCronograma`, do qual esta entidade herda o
     padrão: `id` recebido e preservado na gravação, `order` único por Edital.
@@ -52,6 +56,12 @@ class EtapaAvaliacao(models.Model):
     # default institucional aplicaria ao Edital um rótulo que ele não publicou (012, D-008, P-007).
     rotulo_favoravel = models.CharField(max_length=100, blank=True, default="")
     rotulo_desfavoravel = models.CharField(max_length=100, blank=True, default="")
+    # **O alcance** (163, FR-6960, D-002): `NULL` é "todas as inscrições", que é o que toda Etapa
+    # significava antes desta coluna — por isso ela nasce sem preenchimento. A forma restrita é a
+    # lista dos **códigos** de Modalidade, e não das identidades: a Modalidade é do Perfil, e o que
+    # a `PPI` do C1 e a do C2 têm em comum é o código, como no recorte transversal da `044`. Lista,
+    # e não tabela filha, porque nada endereça um item do alcance sozinho (T-001).
+    alcance = models.JSONField(null=True, blank=True)
     # A Etapa referencia o Evento; as datas são do Evento e não são copiadas. `SET_NULL` porque
     # remover o Evento não pode remover a Etapa — o que não pode é o vínculo sobreviver a ele.
     evento = models.ForeignKey(
@@ -86,6 +96,12 @@ class EtapaAvaliacao(models.Model):
             models.CheckConstraint(
                 condition=Q(maximum_score__isnull=True) | Q(maximum_score__gt=0),
                 name="ck_etapa_maximum_score_positiva",
+            ),
+            # Alcance vazio não é "nenhuma Modalidade": é contradição, pela razão das avaliações
+            # positivas acima. A recusa com mensagem é de `validate_stage` (FR-6962).
+            models.CheckConstraint(
+                condition=Q(alcance__isnull=True) | ~Q(alcance=[]),
+                name="ck_etapa_alcance_nao_vazio",
             ),
         ]
 

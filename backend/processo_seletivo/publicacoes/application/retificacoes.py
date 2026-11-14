@@ -256,6 +256,7 @@ def _recusar_o_que_o_ato_acrescenta(edital, base, content):
     except ValueError as exc:
         raise _recusa_de_caminho(exc) from exc
     _recusar_corte_sobre_etapa_com_resultado(edital, base, content)
+    _recusar_alcance_estreitado_sobre_atribuicao(edital, base, content)
     _recusar_criterio_que_a_composicao_recusaria(base, content)
     _recusar_modalidade_que_a_composicao_recusaria(base, content)
 
@@ -360,6 +361,80 @@ def _recusar_corte_sobre_etapa_com_resultado(edital, base, content):
                 f"Etapa '{nomes.get(etapa, etapa)}', que o corte governaria, já tem Resultado "
                 "registrado: o corte excluiria dela quem já foi avaliado. Declare a regra sem "
                 "governar Etapa, ou governando uma Etapa ainda sem Resultado.",
+                422,
+            )
+
+
+def _recusar_alcance_estreitado_sobre_atribuicao(edital, base, content):
+    """O alcance não se estreita sobre inscrição já atribuída ou avaliada (163, FR-6980, D-006).
+
+    É a razão da regra de corte que nasce sobre Etapa com Resultado, logo acima, aplicada ao
+    alcance: estreitar tiraria da Etapa um ato praticado sob a norma publicada. **Ampliar passa**
+    — só acrescenta pendentes (FR-6979) —, e estreitar sem nenhuma Atribuição também. A Atribuição
+    aberta se remove antes, pela distribuição, com motivo; a concluída e o Resultado não se removem,
+    e por isso depois deles o estreitamento fica impossível. Foi a decisão do usuário no clarify de
+    13/11: recusar, e não encerrar em silêncio o trabalho da comissão.
+
+    Roda na elaboração, na edição e na publicação, sob o bloqueio do Edital que a distribuição
+    também toma: ou a Atribuição entra antes e a publicação é recusada, ou a Retificação é publicada
+    antes e a distribuição já lê o alcance novo — nunca as duas.
+    """
+    from django.db.models import Exists, OuterRef, Q
+
+    from processo_seletivo.avaliacoes.models import Atribuicao
+    from processo_seletivo.editais.domain import alcance
+    from processo_seletivo.inscricoes.models import Inscricao
+    from processo_seletivo.resultados.models import ResultadoEtapa
+
+    antes = {
+        str(etapa.get("id")): etapa for etapa in base.get("stages") or [] if isinstance(etapa, dict)
+    }
+    for etapa in content.get("stages") or []:
+        if not isinstance(etapa, dict) or str(etapa.get("id")) not in antes:
+            continue
+        anterior = antes[str(etapa.get("id"))]
+        depois = alcance.modalidades_alcancadas(content, etapa)
+        if depois is None:
+            continue
+        era = alcance.modalidades_alcancadas(base, anterior)
+        if era is None:
+            saem = ~Q(modality_id__in=list(depois)) | Q(modality_id__isnull=True)
+            codigos = "que ela deixa de alcançar"
+        else:
+            perdidas = era - depois
+            if not perdidas:
+                continue
+            saem = Q(modality_id__in=list(perdidas))
+            perdidos = sorted((alcance.codigos(anterior) or set()) - alcance.codigos(etapa))
+            codigos = ", ".join(f"«{codigo}»" for codigo in perdidos) or "que ela deixa de alcançar"
+        etapa_id = etapa.get("id")
+        quantas = (
+            Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
+            .filter(saem)
+            .filter(
+                Exists(
+                    Atribuicao.objects.filter(
+                        inscricao_id=OuterRef("pk"), etapa_id=etapa_id, ativo=True
+                    )
+                )
+                | Exists(
+                    ResultadoEtapa.vigentes.filter(inscricao_id=OuterRef("pk"), etapa_id=etapa_id)
+                )
+            )
+            .count()
+        )
+        if quantas:
+            quem = (
+                "1 inscrição dessas Modalidades já tem"
+                if quantas == 1
+                else f"{quantas} inscrições dessas Modalidades já têm"
+            )
+            raise DomainError(
+                "stage_scope_narrowed_over_assigned",
+                f"A Retificação tiraria do alcance da Etapa «{etapa.get('name') or ''}» as "
+                f"Modalidades {codigos}, e {quem} Atribuição ou Resultado nessa Etapa. Remova "
+                "antes as Atribuições abertas, pela distribuição; inscrição com avaliação "
+                "concluída ou Resultado não sai do alcance.",
                 422,
             )
 

@@ -237,6 +237,8 @@ def _etapa(**numeros):
         maximum_score=None,
         # O barema (146): a Etapa sem critério, que é a destas linhas.
         criterios=SimpleNamespace(all=lambda: []),
+        # O alcance (163): a Etapa para todas as inscrições.
+        alcance=None,
     )
     return SimpleNamespace(**{**campos, **numeros})
 

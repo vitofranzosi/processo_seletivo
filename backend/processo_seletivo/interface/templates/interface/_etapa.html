@@ -209,6 +209,46 @@
     </fieldset>
   </div>
   {% comment %}
+  O alcance (163, UX-730, UX-731). Duas opções exclusivas, e a lista só com a segunda — esconder é
+  da folha, pela regra das dependentes da forma: onde `:has` não existir, a lista aparece sempre, e
+  `ler_etapas` ignora as marcas quando a opção é "todas". Um código por linha, e não uma Modalidade
+  por Perfil: o alcance vale onde o código existe (D-001).
+  {% endcomment %}
+  {% opcoes_do_alcance modalidades_do_alcance etapa_linha as alcance %}
+  <div class="campos">
+    <fieldset class="opcoes">
+      <legend>A quem a Etapa se aplica</legend>
+      {% recusa_de recusas "etapa" indice "modalityCodes" as recusado %}
+      {% if recusado %}<span class="recusa" role="alert" id="recusa-etapa-{{ indice }}-modalityCodes">{{ recusado }}</span>{% endif %}
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-alcance-todas"
+               name="etapa-{{ indice }}-alcance" value="TODAS"
+               {% if not alcance.restrita %}checked{% endif %}>
+        <label for="etapa-{{ indice }}-alcance-todas">Todas as inscrições</label>
+      </p>
+      <p class="opcao">
+        <input type="radio" id="etapa-{{ indice }}-alcance-restrita"
+               name="etapa-{{ indice }}-alcance" value="RESTRITA"
+               {% if alcance.restrita %}checked{% endif %}
+               {% if recusado %}aria-describedby="recusa-etapa-{{ indice }}-modalityCodes"{% endif %}>
+        <label for="etapa-{{ indice }}-alcance-restrita">Só as inscrições destas Modalidades</label>
+      </p>
+      <div class="campos dependentes so-restrita">
+        {% for opcao in alcance.opcoes %}
+        <label for="etapa-{{ indice }}-modalityCodes-{{ forloop.counter0 }}">
+          <input type="checkbox" id="etapa-{{ indice }}-modalityCodes-{{ forloop.counter0 }}"
+                 name="etapa-{{ indice }}-modalityCodes" value="{{ opcao.codigo }}"
+                 {% if opcao.marcada %}checked{% endif %}>
+          {{ opcao.denominacao }} ({{ opcao.codigo }}){% if opcao.ampla %} — é a ampla concorrência, que não restringe Etapa{% elif opcao.inexistente %} — nenhum Perfil tem mais esta Modalidade{% elif opcao.onde %} — {{ opcao.onde }}{% endif %}
+        </label>
+        {% empty %}
+        <p class="aviso">Nenhum Perfil deste Edital tem Modalidade além da ampla concorrência.</p>
+        {% endfor %}
+        {% if alcance.sem_alcancado %}<p class="aviso">Em {{ alcance.sem_alcancado }}, nenhuma Modalidade marcada existe: lá a Etapa não alcança ninguém.</p>{% endif %}
+      </div>
+    </fieldset>
+  </div>
+  {% comment %}
   O barema (146, FR-5206, FR-5207, UX-420, UX-421). Dentro do cartão, abaixo da pontuação máxima, e
   só na Etapa pontuada: a decisória não produz nota (FR-5204). Na decisória sem critério a folha
   esconde a seção; **com critério, ela fica à vista**, com o aviso de que a decisória não tem barema
