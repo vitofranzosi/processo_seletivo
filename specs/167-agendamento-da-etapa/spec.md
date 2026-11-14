@@ -4,10 +4,11 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia, sem plan nem tasks. As três
+**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia; plan e tasks no mesmo dia,
+divididos nas entregas A, B, C e D (ver [plan.md](plan.md)). As três
 perguntas ao usuário foram respondidas no mesmo dia (ver *Clarifications*), e a experiência visual —
 o protótipo da segunda rodada do estudo — foi aprovada pelo usuário em 14/11, o marco anterior à
-implementação. Pronta para o plan. Pendentes: os SC-2390 e SC-2398, humanos.
+implementação. Pendentes: os SC-2390 e SC-2398, humanos.
 
 **Input**: o pedido de 14/11/2026 para especificar o agendamento de participantes em Etapas que
 exigem comparecimento em dia e horário — entrevista, verificação da autodeclaração, arguição —, como
