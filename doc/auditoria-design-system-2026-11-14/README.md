@@ -24,6 +24,7 @@ proposta. **Nada no produto foi alterado**, e nada deve ser antes da decisão so
 | Registro da revisão | [06-revisao.md](06-revisao.md) |
 | Estados da Ocupação que a suíte já monta | [07-fixtures-da-ocupacao.md](07-fixtures-da-ocupacao.md) |
 | P0, correções críticas, e a referência do piloto | [08-p0.md](08-p0.md) e [`referencia-p0/`](referencia-p0/) |
+| O piloto: fotografia, comparação e resultado | [`piloto/`](piloto/) e a [spec 172](../../specs/172-piloto-do-design-system/spec.md) |
 | Capturas | [`capturas/`](capturas/), 94 imagens |
 | Medições e scripts | [`medicoes/`](medicoes/), com o resultado por tela em [`telas.csv`](medicoes/telas.csv) |
 
