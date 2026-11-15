@@ -5,8 +5,8 @@
 
 **Created**: 2026-11-15
 
-**Status**: Especificada em 15/11, com quatro perguntas ao usuário (Q-1 a Q-4) e o texto escrito pelas
-recomendações delas. Sem plano, sem tarefas e sem código. O merge é do usuário.
+**Status**: Especificada em 15/11; as quatro perguntas (Q-1 a Q-4) foram decididas pelo usuário no
+mesmo dia, pelas recomendações. Planejada e com tarefas em 15/11, sem código. O merge é do usuário.
 
 **Input**: em 15/11 o usuário gravou um vídeo real pela página da `166`, no Safari do macOS, num
 ambiente local, e julgou a interface do candidato *"com cara de desenvolvimento, não de produção"*.
@@ -100,7 +100,14 @@ nome que a `169` lhe der quando for implementada.
   *pode* ser só por tempo, com "Próximo" manual sempre disponível — mas a acessibilidade (Libras,
   limitação motora) não pode depender de detecção. A Q-1 trata disso.
 
-### Perguntas ao usuário (abertas; o texto desta spec segue as recomendações)
+### Session 2026-11-15 (decisões do usuário sobre o PR #566)
+
+- **Q-1 a Q-4: adotadas as recomendações.** O avanço continua só pelo gesto, com "Próximo" grande sobre
+  o vídeo (D-001); o selo provisório muda no acompanhamento inteiro (D-008); os dados para conferência
+  ficam no fim do comprovante, visíveis (D-009); a validação no celular é da equipe, num iPhone e num
+  Android reais, e de três pessoas de fora da equipe técnica (SC-2655, SC-2658).
+
+### Perguntas ao usuário (decididas em 15/11 pelas recomendações abaixo)
 
 #### Q-1 — Como a gravação avança de um passo ao outro?
 
