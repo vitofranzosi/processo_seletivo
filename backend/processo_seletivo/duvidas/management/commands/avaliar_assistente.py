@@ -99,8 +99,8 @@ class Command(BaseCommand):
             quantas = _exportar_conversas(saida / "conversas.json")
             self.stdout.write(f"{quantas} trocas das sessões exportadas em {saida}.")
             return
-        if not settings.ASSISTENTE_PILOTO:
-            raise CommandError("O piloto do assistente está desligado (ASSISTENTE_PILOTO).")
+        # A avaliação é operação da equipe, e não uso por pessoas: não depende da habilitação nem
+        # do atalho (170, FR-7509). Sem serviço, cada caso termina no estado explícito.
         anterior = _rodada_anterior(opcoes["rodada_anterior"])
         matriz = json.loads(MATRIZ.read_text(encoding="utf-8"))
         casos = _selecionados(matriz["casos"], opcoes["casos"])

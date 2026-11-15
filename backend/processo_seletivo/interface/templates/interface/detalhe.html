@@ -206,6 +206,7 @@ elaboração seria responder a uma pergunta que ninguém fez.
   {% if pode_conversar_com_o_assistente %}
   <p><a class="acao" href="{% url 'interface:assistente' edital.id %}">Conversar com o assistente (piloto)</a></p>
   {% endif %}
+  {% if assistente_na_pagina_publica %}{% include "interface/_assistente_na_pagina_publica.html" %}{% endif %}
 </section>
 {% endif %}
 
