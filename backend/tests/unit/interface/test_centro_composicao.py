@@ -197,7 +197,7 @@ def test_toda_natureza_da_127_tem_fase_propria():
     naturezas = {
         a.RELACAO, a.SEMENTE, a.SORTEIO, a.ORDEM, a.CORTE, a.APURACAO, a.RESULTADO,
         a.CONVOCACAO, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.CONFERIR,
-        a.RECURSO, a.ETAPA, a.AVISAR,
+        a.RECURSO, a.ETAPA, a.AVISAR, a.AGENDA,
     }  # fmt: skip
     assert naturezas <= cc.NATUREZAS_CONHECIDAS
 

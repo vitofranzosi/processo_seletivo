@@ -202,6 +202,17 @@ CONCEITOS = {
         "recurso.",
     },
 }
+#: A agenda da Etapa que pede comparecimento (167, T-023). Conceito próprio, e não o da Etapa:
+#: montar e publicar a agenda não é avaliar, e a frase da avaliação diria o que ela não faz.
+CONCEITOS[a.AGENDA] = {
+    "simples": "Montar e publicar a agenda",
+    "termo": "agenda",
+    "curta": "Dá a cada pessoa que participa da Etapa um dia, um horário e uma banca, e publica a "
+    "agenda.",
+    "porque": "Sem a agenda publicada, ninguém sabe quando comparecer.",
+    "ao_confirmar": "Montar não publica nada, e até a publicação os horários se ajustam à mão. "
+    "Publicada, a agenda só muda por remarcação, uma pessoa de cada vez.",
+}
 #: Os atos da Etapa leem o mesmo conceito: distribuir, avaliar, consolidar e reavaliar são partes
 #: de "avaliar a Etapa", e a frase vale para todos.
 for _natureza in (a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR):

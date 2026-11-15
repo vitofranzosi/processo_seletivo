@@ -44,8 +44,9 @@ _DO_TIPO = {
     a.RESULTADO: c.RESULTADO,
     a.CONVOCACAO: c.CONVOCACAO,
 }
-# O aviso do passo (171) é da Etapa restrita: a fase dela, e não uma fase da orientação.
-_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.AVISAR)
+# O aviso do passo (171) é da Etapa restrita, e a agenda (167) também: a fase dela, e não uma
+# fase da orientação. A agenda mora na fase das vagas quando a Etapa é governada.
+_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.AVISAR, a.AGENDA)
 _DA_NATUREZA = {
     **_DO_TIPO,
     **dict.fromkeys(_DA_ETAPA, c.AVALIACAO),
