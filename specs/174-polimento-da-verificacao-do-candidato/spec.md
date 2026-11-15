@@ -6,7 +6,7 @@
 **Created**: 2026-11-15
 
 **Status**: Especificada em 15/11; as quatro perguntas (Q-1 a Q-4) foram decididas pelo usuário no
-mesmo dia, pelas recomendações. Planejada, com tarefas e implementada em 15/11, no PR #566, sem
+mesmo dia, pelas recomendações. Planejada e com tarefas em 15/11 (#566, mergeado); implementada no mesmo dia, no PR #568, sem
 merge; a jornada no navegador (câmera simulada, quatro larguras) passa, e ficam pendentes a verificação
 em aparelhos reais, com três pessoas de fora da equipe e com leitor de tela (SC-2655, SC-2658). O
 merge é do usuário.

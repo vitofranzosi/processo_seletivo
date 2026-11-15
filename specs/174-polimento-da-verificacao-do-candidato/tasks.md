@@ -4,7 +4,7 @@
 [data-model.md](data-model.md), [contracts/telas.md](contracts/telas.md), [quickstart.md](quickstart.md),
 [spec.md](spec.md)
 
-**Andamento (15/11)**: implementadas na mesma branch do PR #566. O #564 não estava na `main`, e o
+**Andamento (15/11)**: implementadas no PR #568 (spec, plano e tarefas no #566). O #564 não estava na `main`, e o
 T001 seguiu o caminho que a research T-009 previu: `--coluna` e `--raio-pilula` acrescentados com o
 nome e o valor da `172`, mais o `--controle-g`. Abertas: T039 e T040 (leitor de tela, por pessoa), T043
 (aparelhos reais) e T044 (três pessoas de fora). A suíte inteira (T047) fechou em 21 388 passando e 13 pulados, sem falha.
