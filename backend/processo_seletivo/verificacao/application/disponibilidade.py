@@ -30,6 +30,10 @@ RECEBIDO = "RECEBIDO"
 EM_ANALISE = "EM_ANALISE"
 ENCAMINHADA = "ENCAMINHADA"
 AO_VIVO = "AO_VIVO"
+#: O mesmo estado que `ENCAMINHADA`, pelo nome que o portal lê (168): o acompanhamento diz "a
+#: comissão quer conversar com você ao vivo", e a varredura da `115` recusa "encaminhad[oa]" em
+#: `portal/situacao.py` — lá, encaminhado é só com registro de entrega (D-005 da `115`).
+CONVERSA_AO_VIVO = ENCAMINHADA
 
 # A tolerância depois do fim do período para concluir o envio já iniciado (FR-7126): a última parte
 # de quem começou às 23h59 não se perde por segundos, e nenhum envio novo começa depois do fim.

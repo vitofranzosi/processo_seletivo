@@ -157,7 +157,7 @@ VER_O_EDITAL = "Ver o Edital vigente"
 VIDEO_OU_AO_VIVO = (
     "Você pode gravar um vídeo curto ou fazer a entrevista ao vivo. As duas formas valem igual."
 )
-ENCAMINHADA_AO_VIVO = "A comissão quer conversar com você ao vivo. Isso não é reprovação."
+QUER_CONVERSAR_AO_VIVO = "A comissão quer conversar com você ao vivo. Isso não é reprovação."
 VER_COMO_FUNCIONA = "Ver como funciona"
 VER_O_COMPROVANTE = "Ver o comprovante"
 
@@ -522,8 +522,8 @@ def _situacao_do_passo(inscricao, passos, em_analise, recurso):
             ),
         )
     principal = (
-        f"{ENCAMINHADA_AO_VIVO} {COMISSAO_INFORMA}"
-        if estado_do_video == video.ENCAMINHADA
+        f"{QUER_CONVERSAR_AO_VIVO} {COMISSAO_INFORMA}"
+        if estado_do_video == video.CONVERSA_AO_VIVO
         else _quando(passo)
     )
     return _situacao(
