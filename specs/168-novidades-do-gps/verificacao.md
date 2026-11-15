@@ -61,7 +61,7 @@ Entrada `novidades-168` do `.claude/launch.json`, banco `ps_novidades`, como `de
 ## Revisão editorial de 14/11: a vitrine das capacidades (`D-012`, `D-013`)
 
 **O que mudou.** A página ganhou "Descubra o que o GPS já faz", com dez capacidades (seis à vista); o
-histórico ganhou a relevância (13 transformadoras, ~48 relevantes, ~49 incrementais), o "faz parte de"
+histórico ganhou a relevância (110 notas: 14 transformadoras, 51 relevantes, 45 incrementais), o "faz parte de"
 e a linha enxuta do incremental; o "Desde sua última visita" abre pela mudança de maior peso. As seis
 notas "Pequenas melhorias" foram desfeitas em 21 notas de um assunto cada; o kit foi separado em
 textos (disponíveis) e peças (condicionadas). Entraram as notas dos PRs mergeados durante a revisão:
