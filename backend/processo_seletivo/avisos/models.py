@@ -104,7 +104,9 @@ class Aviso(_AppendOnly):
     )
     justificativa = models.TextField(blank=True, default="")
     perfil_id = models.UUIDField()
-    marco_id = models.UUIDField()
+    # Nulo só no aviso de agenda (167): a agenda é da Etapa, e não de um marco. Um marco fictício
+    # seria dado falso numa tabela append-only (`ck_aviso_marco_da_origem`).
+    marco_id = models.UUIDField(null=True, blank=True)
     lista_id = models.UUIDField(null=True, blank=True)
     natureza = models.CharField(
         max_length=16, choices=_escolhas(nomes.NATUREZAS), blank=True, default=""
@@ -141,8 +143,15 @@ class Aviso(_AppendOnly):
                     )
                     | (Q(origem=nomes.CHAMADA, natureza="") & ~Q(referencia_da_publicacao=""))
                     | Q(origem=nomes.PENDENCIA, natureza="", referencia_da_publicacao="")
+                    # A agenda (167) cita o ato dela pela frase ("Agenda da «Etapa», publicada em
+                    # «data»"), como a chamada cita a referência declarada.
+                    | (Q(origem=nomes.AGENDA, natureza="") & ~Q(referencia_da_publicacao=""))
                 ),
                 name="ck_aviso_ato_da_origem",
+            ),
+            models.CheckConstraint(
+                condition=Q(marco_id__isnull=False) | Q(origem=nomes.AGENDA),
+                name="ck_aviso_marco_da_origem",
             ),
             # Reenvio sem o aviso de que ele é reenvio perderia a história (`R-011`).
             models.CheckConstraint(

@@ -1,0 +1,88 @@
+{% url 'interface:agenda-configurar' edital.id etapa_id as endereco %}
+<form id="form-da-agenda" class="configuracao" method="post" action="{{ endereco }}" novalidate>
+{% csrf_token %}
+{% comment %} O primeiro botão do formulário é o que o Enter aciona. Sem este, Enter na duração
+   acionaria o primeiro "×" da página e removeria uma janela. Ele recalcula, e não grava. {% endcomment %}
+<button type="submit" class="oculto" name="acao" value="calcular" tabindex="-1" aria-hidden="true">Recalcular</button>
+<div class="configuracao-colunas">
+  <div class="secoes-da-configuracao">
+    {% if erro %}
+    <div class="erro" role="alert" tabindex="-1" autofocus>
+      <p><strong>A configuração não foi salva.</strong> Corrija {% if erro.problemas|length > 1 %}os pontos abaixo{% else %}o ponto abaixo{% endif %} e salve de novo.</p>
+      <ul>{% for problema in erro.problemas %}<li>{{ problema.frase }}</li>{% empty %}<li>{{ erro.detail }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+
+    <section class="secao-da-configuracao" aria-labelledby="s-atendimento">
+      <header><span class="numero-da-secao" aria-hidden="true">1</span><h2 id="s-atendimento">Atendimento</h2></header>
+      <div class="campos-em-linha">
+        <fieldset class="segmentado">
+          <legend>Forma</legend>
+          {% comment %} Continua sendo rádio, para o teclado e o leitor de tela; trocar a forma redesenha
+             o formulário, porque o rótulo do acesso de cada banca muda com ela. {% endcomment %}
+          <label><input type="radio" name="forma" value="REMOTA"{% if formulario.forma == "REMOTA" %} checked{% endif %} hx-post="{{ endereco }}" hx-trigger="change" hx-target="#form-da-agenda" hx-swap="outerHTML" hx-vals='{"acao": "calcular"}'><span>Videoconferência</span></label>
+          <label><input type="radio" name="forma" value="PRESENCIAL"{% if formulario.forma == "PRESENCIAL" %} checked{% endif %} hx-post="{{ endereco }}" hx-trigger="change" hx-target="#form-da-agenda" hx-swap="outerHTML" hx-vals='{"acao": "calcular"}'><span>Presencial</span></label>
+        </fieldset>
+        <p class="campo"><label for="duracao">Duração</label>
+          <span class="com-unidade"><input id="duracao" name="duracao" type="number" min="1" max="480" inputmode="numeric" value="{{ formulario.duracao }}"><span>min</span></span></p>
+        <p class="campo"><label for="intervalo">Intervalo</label>
+          <span class="com-unidade"><input id="intervalo" name="intervalo" type="number" min="0" max="240" inputmode="numeric" value="{{ formulario.intervalo }}" aria-describedby="ajuda-intervalo"><span>min</span></span></p>
+      </div>
+      <p class="ajuda" id="ajuda-intervalo">O intervalo é o tempo para a banca registrar e chamar a pessoa seguinte.</p>
+    </section>
+
+    <section class="secao-da-configuracao" aria-labelledby="s-dias">
+      <header><span class="numero-da-secao" aria-hidden="true">2</span><h2 id="s-dias">Dias e horários</h2></header>
+      <p class="ajuda">Uma janela por turno: 08:00–12:00 e 13:00–17:00 já deixam o almoço de fora.</p>
+      <ul class="lista-de-dias">
+        {% for dia in dias %}
+        <li class="linha-de-dia">
+          <span class="rotulo-do-dia"><label class="oculto" for="dia-{{ dia.indice }}">Dia {{ forloop.counter }}</label><input type="date" class="campo-do-dia" id="dia-{{ dia.indice }}" name="dia-{{ dia.indice }}" value="{{ dia.dia }}"{% if periodo %} min="{{ periodo.0|date:'Y-m-d' }}" max="{{ periodo.1|date:'Y-m-d' }}"{% endif %}></span>
+          <span class="janelas-do-dia">
+            {% for janela in dia.janelas %}
+            <span class="janela"><input type="time" step="300" name="dia-{{ dia.indice }}-janela-{{ janela.indice }}-inicio" value="{{ janela.inicio }}" aria-label="Início da janela {{ forloop.counter }} de {{ dia.rotulo }}"><span aria-hidden="true">–</span><input type="time" step="300" name="dia-{{ dia.indice }}-janela-{{ janela.indice }}-fim" value="{{ janela.fim }}" aria-label="Fim da janela {{ forloop.counter }} de {{ dia.rotulo }}">{% if dia.janelas|length > 1 %}<button type="submit" class="remover-item" name="acao" value="remover-janela-{{ dia.indice }}-{{ janela.indice }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Remover a janela {{ janela.inicio }}–{{ janela.fim }} de {{ dia.rotulo }}">×</button>{% endif %}</span>
+            {% endfor %}
+            <button type="submit" class="acao" name="acao" value="acrescentar-janela-{{ dia.indice }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Acrescentar uma janela em {{ dia.rotulo }}">+ janela</button>
+          </span>
+          <span class="horarios-do-dia" id="horarios-do-dia-{{ dia.indice }}">{{ dia.horarios }} horário{{ dia.horarios|pluralize:"s" }}</span>
+          {% if dias|length > 1 %}<button type="submit" class="remover-item" name="acao" value="remover-dia-{{ dia.indice }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Remover {{ dia.rotulo }}">×</button>{% else %}<span></span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p><button type="submit" class="acao" name="acao" value="acrescentar-dia" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML">+ Acrescentar o dia seguinte</button></p>
+    </section>
+
+    <section class="secao-da-configuracao" aria-labelledby="s-bancas">
+      <header><span class="numero-da-secao" aria-hidden="true">3</span><h2 id="s-bancas">Bancas</h2></header>
+      <p class="ajuda">Cada banca atende uma pessoa por vez. Duas bancas atendem duas pessoas no mesmo horário.</p>
+      <div class="cabecalho-de-bancas" aria-hidden="true"><span>Nome</span><span>{% if remota %}Endereço da sala virtual{% else %}Local{% endif %}</span><span></span></div>
+      <ul class="lista-de-bancas">
+        {% for banca in formulario.bancas %}
+        <li class="linha-de-banca"><input type="hidden" name="banca-{{ forloop.counter0 }}-id" value="{{ banca.id }}"><input name="banca-{{ forloop.counter0 }}-nome" value="{{ banca.nome }}" maxlength="80" aria-label="Nome da banca {{ forloop.counter }}"><input name="banca-{{ forloop.counter0 }}-acesso" value="{{ banca.acesso }}" aria-label="{% if remota %}Endereço da sala{% else %}Local{% endif %} da banca {{ forloop.counter }}" placeholder="{% if remota %}https://…{% else %}Sala, prédio{% endif %}">{% if formulario.bancas|length > 1 %}<button type="submit" class="remover-item" name="acao" value="remover-banca-{{ forloop.counter0 }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" aria-label="Remover {{ banca.nome|default:'a banca' }}">×</button>{% else %}<span></span>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      <p class="ajuda">{% if remota %}O endereço da sala vai só para a área de cada pessoa e para o e-mail dela; a página pública mostra só o nome da banca.{% else %}O local aparece na área de cada pessoa, no e-mail e na página pública.{% endif %} Sem ele a agenda pode ser montada, mas não publicada.</p>
+      <p><button type="submit" class="acao" name="acao" value="acrescentar-banca" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML">+ Acrescentar banca</button></p>
+    </section>
+
+    <section class="secao-da-configuracao" aria-labelledby="s-orientacoes">
+      <header><span class="numero-da-secao" aria-hidden="true">4</span><h2 id="s-orientacoes">Orientações ao candidato</h2></header>
+      <p class="campo"><label for="orientacoes" class="oculto">Orientações</label>
+        <textarea id="orientacoes" name="orientacoes" rows="4" aria-describedby="ajuda-orientacoes">{{ formulario.orientacoes }}</textarea>
+        <span class="ajuda" id="ajuda-orientacoes">Aparece na área do candidato e no e-mail. Repita o que o Edital exige; não crie regra nova aqui.</span></p>
+    </section>
+  </div>
+
+  <aside class="simulador" aria-labelledby="capacidade-titulo">
+    <h2 id="capacidade-titulo" class="oculto">Capacidade</h2>
+    {% comment %} O simulador reage ao formulário a cada campo, sem gravar (T-006): o servidor deriva
+       os horários pela mesma função da montagem. {% endcomment %}
+    <div id="calculo" aria-live="polite" hx-post="{% url 'interface:agenda-capacidade' edital.id etapa_id %}" hx-trigger="input delay:250ms from:#form-da-agenda, change from:#form-da-agenda" hx-include="#form-da-agenda" hx-swap="innerHTML">{% include "interface/_agenda_capacidade.html" %}</div>
+    <noscript><p><button type="submit" class="acao" name="acao" value="calcular">Calcular</button></p></noscript>
+    <div class="acao-do-simulador">
+      <button type="submit" class="botao" name="acao" value="salvar">Salvar e montar a agenda</button>
+      <p class="ajuda">Salvar não publica nada.</p>
+    </div>
+  </aside>
+</div>
+</form>

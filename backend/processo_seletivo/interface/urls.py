@@ -2,6 +2,7 @@ from django.urls import path
 
 from processo_seletivo.interface import (
     acessos,
+    agenda_da_etapa,
     assistente,
     avisos,
     centro_do_edital,
@@ -534,6 +535,43 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
+    # A agenda da Etapa (167): configurar, montar, conferir e publicar. Segmento próprio,
+    # `agenda-da-etapa`, e nunca `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`,
+    # pela decisão de rotas da 011. A porta é a da Distribuição, e as recusas estão no contrato.
+    *[
+        path(
+            f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}",
+            view,
+            name=f"agenda-{segmento}",
+        )
+        for segmento, view in (
+            ("configurar", agenda_da_etapa.configurar),
+            ("capacidade", agenda_da_etapa.capacidade),
+            ("montar", agenda_da_etapa.montar),
+            ("painel", agenda_da_etapa.painel),
+            ("preencher", agenda_da_etapa.preencher),
+            ("agendar", agenda_da_etapa.agendar),
+            ("liberar", agenda_da_etapa.liberar),
+            ("conferir", agenda_da_etapa.conferir),
+            ("publicar", agenda_da_etapa.publicar),
+            ("publicada", agenda_da_etapa.publicada),
+            ("reenviar", agenda_da_etapa.reenviar),
+        )
+    ],
+    # Os atos individuais depois da publicação (entrega C): uma pessoa por vez, pela inscrição.
+    # `remarcar` é também a inclusão de quem não tem horário publicado (contracts/telas.md).
+    *[
+        path(
+            f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}/"
+            "<uuid:inscricao_id>",
+            view,
+            name=f"agenda-{segmento}",
+        )
+        for segmento, view in (
+            ("remarcar", agenda_da_etapa.remarcar),
+            ("cancelar", agenda_da_etapa.cancelar),
+        )
+    ],
     # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é
     # dali que ela é alcançada e porque a autorização é a mesma.
     path(

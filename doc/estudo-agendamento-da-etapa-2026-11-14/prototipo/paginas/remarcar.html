@@ -1,0 +1,37 @@
+<!--
+titulo: Remarcar uma pessoa
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <a href="publicada.html">Agenda publicada</a> › <span aria-current="page">Remarcar</span>
+moldura: gestao
+folhas: interface/grupos/aviso.css interface/telas/convocacao-conferir.css
+-->
+<header class="cabecalho-da-tela">
+  <h1 id="titulo-da-remarcacao">Remarcar</h1>
+  <p class="sub"><span data-texto="etapa"></span>. Só esta pessoa muda, e só ela é avisada.</p>
+</header>
+
+<form id="form-remarcar" class="remarcacao" novalidate>
+  <div id="erros"></div>
+  <div class="colunas-da-remarcacao">
+    <section class="secao-da-configuracao" aria-labelledby="novo-titulo">
+      <div id="quem"></div>
+      <h2 id="novo-titulo">Novo horário</h2>
+      <div id="seletor"></div>
+      <p class="campo"><label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <textarea id="motivo" name="motivo" rows="2" required aria-required="true" aria-describedby="ajuda-motivo" placeholder="por exemplo, falha de conexão comprovada, item 6.9.9 do Edital"></textarea>
+        <span class="ajuda" id="ajuda-motivo">Fica na trilha, com o seu nome. Não aparece para o candidato nem na página pública.</span></p>
+    </section>
+    <aside class="simulador resumo-da-remarcacao" aria-labelledby="efeito-titulo">
+      <h2 id="efeito-titulo">Ao confirmar</h2>
+      <p class="troca" id="resumo-da-troca" aria-live="polite"></p>
+      <ul class="efeitos">
+        <li>A página pública e a área da pessoa mostram o horário novo, com "remarcado em".</li>
+        <li>Só esta pessoa recebe e-mail.</li>
+        <li>O horário anterior fica livre, e o histórico o guarda.</li>
+      </ul>
+      <div class="acao-do-simulador">
+        <button type="submit" class="botao perigoso" id="botao-remarcar">Remarcar e avisar esta pessoa</button>
+        <a class="acao" href="publicada.html">Cancelar</a>
+      </div>
+    </aside>
+  </div>
+</form>

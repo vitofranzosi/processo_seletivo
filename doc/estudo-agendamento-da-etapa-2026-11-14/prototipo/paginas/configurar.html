@@ -1,0 +1,65 @@
+<!--
+titulo: Configurar a agenda
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <span aria-current="page">Configurar a agenda</span>
+moldura: gestao
+folhas: interface/telas/minhas-etapas.css
+-->
+<header class="cabecalho-da-tela">
+  <h1>Configurar a agenda</h1>
+  <p class="sub"><span data-texto="etapa"></span> · período no cronograma: <span data-texto="evento"></span></p>
+</header>
+<div id="trava-publicada"></div>
+
+<form id="form-da-agenda" class="configuracao" novalidate>
+  <div class="configuracao-colunas">
+    <div class="secoes-da-configuracao">
+      <section class="secao-da-configuracao" aria-labelledby="s-atendimento">
+        <header><span class="numero-da-secao" aria-hidden="true">1</span><h2 id="s-atendimento">Atendimento</h2></header>
+        <div class="campos-em-linha">
+          <fieldset class="segmentado">
+            <legend>Forma</legend>
+            <label><input type="radio" name="modalidade" value="remota"><span>Videoconferência</span></label>
+            <label><input type="radio" name="modalidade" value="presencial"><span>Presencial</span></label>
+          </fieldset>
+          <p class="campo"><label for="duracao">Duração</label>
+            <span class="com-unidade"><input id="duracao" name="duracao" type="number" min="1" max="240" inputmode="numeric"><span>min</span></span></p>
+          <p class="campo"><label for="intervalo">Intervalo</label>
+            <span class="com-unidade"><input id="intervalo" name="intervalo" type="number" min="0" max="120" inputmode="numeric" aria-describedby="ajuda-intervalo"><span>min</span></span></p>
+        </div>
+        <p class="ajuda" id="ajuda-intervalo">O intervalo é o tempo para a banca registrar e chamar a pessoa seguinte.</p>
+      </section>
+
+      <section class="secao-da-configuracao" aria-labelledby="s-dias">
+        <header><span class="numero-da-secao" aria-hidden="true">2</span><h2 id="s-dias">Dias e horários</h2></header>
+        <p class="ajuda">Uma janela por turno: 08:00–12:00 e 13:00–17:00 já deixam o almoço de fora.</p>
+        <ul class="lista-de-dias" id="dias"></ul>
+        <p><button type="button" class="acao" data-acrescentar-dia>+ Acrescentar o dia seguinte</button></p>
+      </section>
+
+      <section class="secao-da-configuracao" aria-labelledby="s-bancas">
+        <header><span class="numero-da-secao" aria-hidden="true">3</span><h2 id="s-bancas">Bancas</h2></header>
+        <p class="ajuda">Cada banca atende uma pessoa por vez. Duas bancas atendem duas pessoas no mesmo horário.</p>
+        <div class="cabecalho-de-bancas" id="cabecalho-bancas" aria-hidden="true"></div>
+        <ul class="lista-de-bancas" id="bancas"></ul>
+        <p class="ajuda" id="ajuda-acesso"><span id="ajuda-acesso-texto"></span></p>
+        <p><button type="button" class="acao" data-acrescentar-banca>+ Acrescentar banca</button></p>
+      </section>
+
+      <section class="secao-da-configuracao" aria-labelledby="s-orientacoes">
+        <header><span class="numero-da-secao" aria-hidden="true">4</span><h2 id="s-orientacoes">Orientações ao candidato</h2></header>
+        <p class="campo"><label for="orientacoes" class="oculto">Orientações</label>
+          <textarea id="orientacoes" name="orientacoes" rows="4" aria-describedby="ajuda-orientacoes"></textarea>
+          <span class="ajuda" id="ajuda-orientacoes">Aparece na área do candidato e no e-mail. Repita o que o Edital exige; não crie regra nova aqui.</span></p>
+      </section>
+    </div>
+
+    <aside class="simulador" aria-labelledby="capacidade-titulo">
+      <h2 id="capacidade-titulo" class="oculto">Capacidade</h2>
+      <div id="calculo" aria-live="polite"></div>
+      <div class="acao-do-simulador">
+        <button type="submit" class="botao" data-salvar>Salvar e montar a agenda</button>
+        <p class="ajuda">Salvar não publica nada.</p>
+      </div>
+    </aside>
+  </div>
+</form>

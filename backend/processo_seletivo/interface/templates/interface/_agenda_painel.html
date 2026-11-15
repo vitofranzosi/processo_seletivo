@@ -1,0 +1,128 @@
+{% comment %}
+O painel de ação: o lugar onde se age (04-redesign, decisão 5; UX-762). Quatro estados — a lista de
+quem está sem horário, uma pessoa escolhida, um horário livre escolhido, e a prévia do preenchimento
+—, todos com botões e formulários de verdade: o ajuste à mão funciona com teclado, leitor de tela e
+toque, sem arrastar.
+{% endcomment %}
+{% url 'interface:agenda-montar' edital.id etapa_id as endereco %}
+{% url 'interface:agenda-painel' edital.id etapa_id as do_painel %}
+{% url 'interface:agenda-configurar' edital.id etapa_id as configurar %}
+{% url 'interface:agenda-agendar' edital.id etapa_id as agendar %}
+{% url 'interface:agenda-liberar' edital.id etapa_id as liberar %}
+{% with dia_iso=dia|date:'Y-m-d' %}
+{% if painel.tipo == "previa" %}
+<header class="cabecalho-do-painel"><div><h2 id="painel-titulo" tabindex="-1">Preencher automaticamente</h2><p class="inscricao">Prévia: nada foi gravado</p></div></header>
+{% if painel.erro %}<p class="erro" role="alert">{{ painel.erro }}</p>{% endif %}
+<div class="veredito {% if painel.proposta.sem_horario %}falta{% else %}cabe{% endif %}">
+  <p class="titulo-do-veredito">{{ painel.proposta.frase }}</p>
+  {% if painel.proposta.sem_horario %}<p>Faltam horários livres para as demais. <a href="{{ configurar }}">Ajustar a configuração</a></p>{% else %}<p>Ninguém fica sem horário. Quem já tinha horário não muda.</p>{% endif %}
+</div>
+{% if painel.tabela %}
+<table class="tabela distribuicao-da-previa">
+  <thead><tr><th scope="col">Dia</th>{% for banca in painel.bancas %}<th scope="col" class="numero">{{ banca }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for linha in painel.tabela %}<tr><th scope="row">{{ linha.dia }}</th>{% for numero in linha.numeros %}<td class="numero">{{ numero }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+<p class="ajuda">Ficam livres {{ painel.livres }} horário{{ painel.livres|pluralize:"s" }}. {{ painel.ordem }}</p>
+{% if painel.relacao %}
+<details class="relacao-nominal"><summary>Ver quem vai para cada horário ({{ painel.relacao|length }})</summary>
+  <ol>{% for par in painel.relacao %}<li><span>{{ par.horario }}</span> {{ par.nome }} <span>{{ par.protocolo }}</span></li>{% endfor %}</ol>
+</details>
+{% endif %}
+<form class="acoes-do-painel" method="post" action="{% url 'interface:agenda-preencher' edital.id etapa_id %}">
+  {% csrf_token %}
+  <input type="hidden" name="assinatura" value="{{ painel.assinatura }}">
+  {% if painel.relacao %}<button type="submit" class="botao">Aplicar</button>{% endif %}
+  <a class="acao" href="{{ endereco }}?dia={{ dia_iso }}" hx-get="{{ endereco }}?dia={{ dia_iso }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML">Cancelar</a>
+</form>
+
+{% elif painel.tipo == "pessoa" %}
+<header class="cabecalho-do-painel"><a class="voltar" href="{{ endereco }}?dia={{ dia_iso }}" hx-get="{{ endereco }}?dia={{ dia_iso }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true" aria-label="Voltar à lista">←</a><div><h2 id="painel-titulo" tabindex="-1">{{ painel.pessoa.nome }}</h2><p class="inscricao">{{ painel.pessoa.protocolo }}</p></div></header>
+{% if painel.motivo %}
+<p class="aviso">{{ painel.pessoa.nome }} tem horário, mas não participa mais da Etapa: {{ painel.motivo }}. Libere o horário.</p>
+<p class="horario-atual">Agora: {{ painel.agora }}</p>
+{% else %}
+{% if painel.agendamento %}<p class="horario-atual">Agora: {{ painel.agora }}</p>{% else %}<p class="sem-horario-ainda">Sem horário</p>{% endif %}
+{% if painel.seletor %}
+<form class="alocacao" method="post" action="{{ agendar }}">
+  {% csrf_token %}
+  <input type="hidden" name="inscricao" value="{{ painel.pessoa.inscricao_id }}">
+  {% if painel.agendamento %}<input type="hidden" name="mudanca" value="1">{% endif %}
+  <h3>{% if painel.agendamento %}Mudar para{% else %}Escolha um horário livre{% endif %}</h3>
+  {% comment %} O seletor de horário (04-redesign, decisão 6): o dia em botões, os horários livres
+     como opções, agrupados por banca. Atravessa os dias: mudar alguém para outro dia são quatro
+     cliques, e não liberar e recomeçar. {% endcomment %}
+  <p class="dias-do-seletor" role="group" aria-label="Dia">{% for opcao in painel.seletor.dias %}<a class="dia-do-seletor" href="{{ endereco }}?dia={{ dia_iso }}&amp;pessoa={{ painel.pessoa.inscricao_id }}&amp;seletor={{ opcao.dia }}" hx-get="{{ do_painel }}?dia={{ dia_iso }}&amp;pessoa={{ painel.pessoa.inscricao_id }}&amp;seletor={{ opcao.dia }}" hx-target="#painel" hx-swap="innerHTML"{% if opcao.atual %} aria-current="true"{% endif %}>{{ opcao.rotulo }} <span class="contagem">{{ opcao.livres }}</span></a>{% endfor %}</p>
+  {% for grupo in painel.seletor.grupos %}
+  <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"><span>{{ opcao.hora }}</span></label>{% endfor %}</fieldset>
+  {% endfor %}
+  <p class="acoes-do-painel"><button type="submit" class="botao">{% if painel.agendamento %}Mudar de horário{% else %}Agendar{% endif %}</button></p>
+</form>
+{% else %}
+<p class="aviso">Não há horário livre. Acrescente um dia, uma janela ou uma banca na <a href="{{ configurar }}">configuração</a>.</p>
+{% endif %}
+{% endif %}
+{% if painel.agendamento %}
+<form class="acoes-do-painel" method="post" action="{{ liberar }}">
+  {% csrf_token %}
+  <input type="hidden" name="inscricao" value="{{ painel.pessoa.inscricao_id }}">
+  <input type="hidden" name="dia" value="{{ dia_iso }}">
+  <button type="submit" class="acao perigoso">Liberar o horário</button>
+</form>
+{% endif %}
+
+{% elif painel.tipo == "horario" %}
+<header class="cabecalho-do-painel"><a class="voltar" href="{{ endereco }}?dia={{ dia_iso }}" hx-get="{{ endereco }}?dia={{ dia_iso }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true" aria-label="Voltar à lista">←</a><div><h2 id="painel-titulo" tabindex="-1">{{ painel.titulo }}</h2><p class="inscricao">{{ painel.banca }} · livre, até {{ painel.fim }}</p></div></header>
+{% if painel.ha_sem_horario %}
+<h3 class="pergunta-do-painel">Quem vai para este horário?</h3>
+<form class="busca-do-painel" method="get" action="{{ endereco }}" role="search">
+  <input type="hidden" name="dia" value="{{ dia_iso }}"><input type="hidden" name="horario" value="{{ painel.valor }}">
+  <label class="oculto" for="busca-no-painel">Procurar por nome ou protocolo</label>
+  <input type="search" id="busca-no-painel" name="busca" value="{{ painel.busca }}" placeholder="Procurar por nome ou protocolo" autocomplete="off" hx-get="{{ do_painel }}?dia={{ dia_iso }}&amp;horario={{ painel.valor|urlencode }}" hx-trigger="input changed delay:250ms, search" hx-target="#lista-do-painel" hx-select="#lista-do-painel" hx-swap="outerHTML">
+</form>
+<form class="alocacao" method="post" action="{{ agendar }}">
+  {% csrf_token %}
+  <input type="hidden" name="horario" value="{{ painel.valor }}">
+  <div class="lista-com-rolagem" id="lista-do-painel">
+    <ul class="pessoas-do-painel">
+      {% for pessoa in painel.pessoas %}<li><label><input type="radio" name="inscricao" value="{{ pessoa.inscricao_id }}"><span class="quem">{{ pessoa.nome }}</span><span class="inscricao">{{ pessoa.protocolo }}</span></label></li>{% empty %}<li class="nenhuma">Ninguém sem horário com esse nome ou protocolo.</li>{% endfor %}
+    </ul>
+  </div>
+  <p class="acoes-do-painel"><button type="submit" class="botao">Agendar aqui</button></p>
+</form>
+{% else %}
+<p class="ajuda">Todas as pessoas já têm horário. Para mudar alguém para cá, escolha a pessoa na grade.</p>
+{% endif %}
+
+{% else %}
+<header class="cabecalho-do-painel"><div><h2 id="painel-titulo" tabindex="-1">Sem horário <span class="contagem">{{ painel.sem_horario }}</span></h2></div></header>
+{% if not montagem.participantes %}
+<p class="vazio">Ninguém participa desta Etapa hoje. A lista é a da própria Etapa, e a agenda a acompanha quando ela mudar.</p>
+{% elif painel.completa %}
+<div class="veredito cabe"><p class="titulo-do-veredito">{{ painel.completa }}</p><p>Nada é público: a agenda continua em rascunho. Para mudar alguém de horário, escolha a pessoa na grade.</p></div>
+{% else %}
+<p class="ajuda">Escolha uma pessoa para ver os horários livres, ou clique num horário livre da grade.</p>
+<form class="busca-do-painel" method="get" action="{{ endereco }}" role="search">
+  <input type="hidden" name="dia" value="{{ dia_iso }}">
+  <label class="oculto" for="busca-no-painel">Procurar por nome ou protocolo</label>
+  <input type="search" id="busca-no-painel" name="busca" value="{{ painel.busca }}" placeholder="Procurar por nome ou protocolo" autocomplete="off" hx-get="{{ do_painel }}?dia={{ dia_iso }}" hx-trigger="input changed delay:250ms, search" hx-target="#lista-do-painel" hx-select="#lista-do-painel" hx-swap="outerHTML">
+</form>
+<div class="lista-com-rolagem" id="lista-do-painel">
+  <ul class="pessoas-do-painel">
+    {% for pessoa in painel.pessoas %}<li><a class="pessoa-do-painel" href="{{ endereco }}?dia={{ dia_iso }}&amp;pessoa={{ pessoa.inscricao_id }}" hx-get="{{ endereco }}?dia={{ dia_iso }}&amp;pessoa={{ pessoa.inscricao_id }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true"><span class="quem">{{ pessoa.nome }}</span><span class="inscricao">{{ pessoa.protocolo }}</span></a></li>{% empty %}<li class="nenhuma">Ninguém sem horário com esse nome ou protocolo.</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% if painel.nao_participam %}
+<section class="nao-participam" aria-labelledby="nao-participa-titulo">
+  <h3 id="nao-participa-titulo">Não participa mais <span class="contagem">{{ painel.nao_participam|length }}</span></h3>
+  <ul class="pessoas-do-painel">
+    {% for item in painel.nao_participam %}
+    <li><p>{{ item.frase }}</p><p class="ajuda">{{ item.horario }}</p>
+      <form method="post" action="{{ liberar }}">{% csrf_token %}<input type="hidden" name="inscricao" value="{{ item.pessoa.inscricao_id }}"><input type="hidden" name="dia" value="{{ dia_iso }}"><button type="submit" class="acao perigoso">Liberar o horário</button></form></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endif %}
+{% endwith %}

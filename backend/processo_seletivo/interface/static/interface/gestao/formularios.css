@@ -186,7 +186,7 @@ pesada do sistema. `
 fica no cache, e os comentários vieram com ela, junto de cada regra (D-002 da `089`).
 */
 input[type=text],input[type=number],input[type=date],input[type=datetime-local],
-input[type=email],input[type=url],input[type=search],input[type=tel],
+input[type=email],input[type=url],input[type=search],input[type=tel],input[type=time],
 input[type=password],select,textarea{
   width:100%;padding:.55rem;border:1px solid var(--borda);border-radius:4px;
   font-size:1rem;font-family:inherit}

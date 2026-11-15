@@ -1,0 +1,42 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Cancelar o agendamento — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <a href="{% url 'interface:agenda-publicada' edital.id etapa_id %}">Agenda publicada</a> › <span aria-current="page">Cancelar o agendamento</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+Cancelar o agendamento de quem deixou de participar da Etapa (167, US5, FR-7243). Não está no
+protótipo; segue a moldura da remarcação. O que foi publicado continua no histórico, e o horário
+fica livre. O cancelamento não avisa: o aviso de cancelamento seria situação nova de mensagem.
+{% endcomment %}
+<header class="cabecalho-da-tela">
+  <h1>Cancelar o agendamento</h1>
+  <p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. Só esta pessoa sai da agenda vigente.</p>
+</header>
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ erro.detail }}</p>{% endif %}
+<form class="remarcacao" method="post" action="{% url 'interface:agenda-cancelar' edital.id etapa_id inscricao.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <div class="configuracao-colunas">
+    <section class="secao-da-configuracao" aria-labelledby="quem-titulo">
+      <h2 id="quem-titulo" class="quem-remarca"><strong>{{ inscricao.nome|default:inscricao.protocolo }}</strong> <span class="numero-de-inscricao">{{ inscricao.protocolo }}</span></h2>
+      {% if horario %}<p class="horario-atual">Horário publicado: {{ horario }}</p>{% endif %}
+      {% if motivo_da_saida %}<p class="aviso">Não participa mais da Etapa: {{ motivo_da_saida }}.</p>{% endif %}
+      <p class="campo"><label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <textarea id="motivo" name="motivo" rows="2" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+        <span class="ajuda" id="ajuda-motivo">Fica na trilha, com o seu nome. Não aparece para o candidato nem na página pública.</span></p>
+    </section>
+    <aside class="simulador" aria-labelledby="efeito-titulo">
+      <h2 id="efeito-titulo">Ao confirmar</h2>
+      <ul class="efeitos">
+        <li>A pessoa sai da agenda vigente na página pública.</li>
+        <li>O horário fica livre; o que foi publicado antes continua no histórico.</li>
+        <li>Ninguém recebe e-mail.</li>
+      </ul>
+      <div class="acao-do-simulador">
+        <button type="submit" class="botao perigoso">{{ botao }}</button>
+        <a class="acao" href="{% url 'interface:agenda-publicada' edital.id etapa_id %}">Voltar à agenda publicada</a>
+      </div>
+    </aside>
+  </div>
+</form>
+{% endblock %}

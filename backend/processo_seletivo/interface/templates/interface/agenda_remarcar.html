@@ -1,0 +1,55 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}{% if inclusao %}Agendar{% else %}Remarcar{% endif %} — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <a href="{% url 'interface:agenda-publicada' edital.id etapa_id %}">Agenda publicada</a> › <span aria-current="page">{% if inclusao %}Agendar{% else %}Remarcar{% endif %}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+Remarcar uma pessoa, ou agendar quem passou a participar depois da publicação (167, US5, FR-7241,
+FR-7242; protótipo remarcar.html). Uma tela para os dois atos: o que muda é haver horário publicado.
+
+O seletor de horário é o da montagem (04-redesign, decisão 6): o dia em botões, os horários livres
+por banca. Trocar o dia volta esta mesma tela, sem gravar e sem pôr o motivo na URL. O motivo é
+obrigatório e fica na trilha; não aparece ao candidato (FR-7246).
+{% endcomment %}
+<header class="cabecalho-da-tela">
+  <h1>{% if inclusao %}Agendar{% else %}Remarcar{% endif %}</h1>
+  <p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. Só esta pessoa muda, e só ela é avisada.</p>
+</header>
+{% if erro %}<p class="erro" role="alert" tabindex="-1" autofocus>{{ erro.detail }}</p>{% endif %}
+<form class="remarcacao" method="post" action="{% url 'interface:agenda-remarcar' edital.id etapa_id inscricao.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <div class="configuracao-colunas">
+    <section class="secao-da-configuracao" aria-labelledby="novo-titulo">
+      <p class="quem-remarca"><strong>{{ inscricao.nome|default:inscricao.protocolo }}</strong> <span class="numero-de-inscricao">{{ inscricao.protocolo }}</span></p>
+      {% if inclusao %}<p class="sem-horario-ainda">Sem horário publicado: passou a participar da Etapa depois da publicação.</p>{% else %}<p class="horario-atual">Agora: {{ de }}</p>{% endif %}
+      <h2 id="novo-titulo">{% if inclusao %}Horário{% else %}Novo horário{% endif %}</h2>
+      {% if seletor %}
+      <p class="dias-do-seletor" role="group" aria-label="Dia">{% for opcao in seletor.dias %}<button type="submit" class="dia-do-seletor" name="ver_dia" value="{{ opcao.dia }}" formnovalidate{% if opcao.atual %} aria-current="true"{% endif %}>{{ opcao.rotulo }} <span class="contagem">{{ opcao.livres }}</span></button>{% endfor %}</p>
+      {% for grupo in seletor.grupos %}
+      <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"{% if opcao.valor == escolhido %} checked{% endif %}><span>{{ opcao.hora }}</span></label>{% endfor %}</fieldset>
+      {% endfor %}
+      {% else %}
+      <p class="aviso">{{ sem_horario_livre }} <a href="{% url 'interface:agenda-configurar' edital.id etapa_id %}">Abrir a configuração</a></p>
+      {% endif %}
+      <p class="campo"><label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+        <textarea id="motivo" name="motivo" rows="2" required aria-required="true" aria-describedby="ajuda-motivo" placeholder="por exemplo, falha de conexão comprovada, item 6.9.9 do Edital">{{ motivo }}</textarea>
+        <span class="ajuda" id="ajuda-motivo">Fica na trilha, com o seu nome. Não aparece para o candidato nem na página pública.</span></p>
+    </section>
+    <aside class="simulador" aria-labelledby="efeito-titulo">
+      <h2 id="efeito-titulo">Ao confirmar</h2>
+      {% if para %}<p class="troca" aria-live="polite">{% if de %}{{ de }} → {% endif %}<strong>{{ para }}</strong></p>{% endif %}
+      <ul class="efeitos">
+        <li>A página pública e a área da pessoa mostram o horário {% if inclusao %}publicado{% else %}novo, com "remarcado em"{% endif %}.</li>
+        {% if avisos_ligados %}<li>Só esta pessoa recebe e-mail.</li>{% else %}<li>Os avisos por e-mail estão desligados nesta instalação: ninguém recebe e-mail.</li>{% endif %}
+        {% if not inclusao %}<li>O horário anterior fica livre, e o histórico o guarda.</li>{% endif %}
+        <li>O ato tem documento próprio, ao lado do da publicação.</li>
+      </ul>
+      <div class="acao-do-simulador">
+        {% if seletor %}<button type="submit" class="botao">{{ botao }}</button>{% endif %}
+        <a class="acao" href="{% url 'interface:agenda-publicada' edital.id etapa_id %}">Voltar à agenda publicada</a>
+      </div>
+    </aside>
+  </div>
+</form>
+{% endblock %}
