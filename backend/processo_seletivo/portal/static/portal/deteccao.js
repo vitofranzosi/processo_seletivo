@@ -210,6 +210,18 @@
         }
       }
       if (!motor) throw new Error("o motor não abriu");
+      // O aquecimento: a primeira leitura custa segundos (a bancada mediu ~2,7 s no computador,
+      // contra ~20 ms das seguintes), e tem de acontecer aqui, no carregamento — e não no meio de um
+      // perfil, nem contada no orçamento, que a tomaria por aparelho lento.
+      var video = this.opcoes.video;
+      if (video && video.readyState >= 2) {
+        try {
+          this.ultimoInstante = performance.now();
+          motor.detectForVideo(video, this.ultimoInstante);
+        } catch (erro) {
+          // Sem quadro ainda: a primeira leitura de verdade paga o aquecimento, uma vez.
+        }
+      }
       if (this.parado) {
         motor.close();
         return;

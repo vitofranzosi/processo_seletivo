@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bancada da detecção do giro (176)</title>
+<link rel="stylesheet" href="bancada.css">
+</head>
+<body>
+<main>
+<h1>Bancada da detecção do giro (176)</h1>
+<p>Ferramenta de medição e calibração, <strong>fora do sistema</strong>. Usa o mesmo
+<code>deteccao.js</code> e o mesmo motor da página da gravação. Nada é gravado nem enviado: a imagem
+não sai desta aba. Sirva a raiz do repositório em <code>localhost</code> (contexto seguro) e abra
+<code>/doc/deteccao-do-giro-2026-11/bancada/</code>.</p>
+<p><button type="button" id="abrir">Abrir a câmera e carregar o motor</button></p>
+<div class="palco"><video id="previa" autoplay muted playsinline></video></div>
+<dl id="medidas">
+  <dt>Motor</dt><dd id="estado">—</dd>
+  <dt>Até pronto</dt><dd id="carga">—</dd>
+  <dt>Leitura (média / pior, ms)</dt><dd id="leitura">—</dd>
+  <dt>Giro (positivo = esquerda da pessoa)</dt><dd id="giro">—</dd>
+  <dt>Lado, pelo limiar</dt><dd id="lado">—</dd>
+</dl>
+</main>
+<script src="../../../backend/processo_seletivo/portal/static/portal/deteccao.js"></script>
+<script src="bancada.js"></script>
+</body>
+</html>

@@ -579,6 +579,8 @@
       estado.vigia.observar("oval");
       return;
     }
+    // Gravando, o oval não é mais pedido: volta ao traço da 174.
+    aoRosto(false);
     var atual = passos[estado.passo];
     estado.vigia.observar(atual && atual.giro ? atual.giro : null);
   }
@@ -588,8 +590,11 @@
     estado.deteccaoAtiva = situacao === "pronta" || situacao === "simulada";
     var aviso = q("[data-aviso-deteccao]");
     var ajuda = q("[data-ajuda-deteccao]");
+    var ajudaDoToque = q("[data-ajuda-toque]");
     if (aviso) aviso.hidden = !(estado.deteccaoAtiva || situacao === "recusada");
+    // Uma frase de ajuda por vez: a do toque (a da 174) ou a da detecção, que diz o mesmo e mais.
     if (ajuda) ajuda.hidden = !estado.deteccaoAtiva;
+    if (ajudaDoToque) ajudaDoToque.hidden = estado.deteccaoAtiva;
     if (situacao === "recusada") {
       q("[data-frase-deteccao]").textContent = "Combinado: você avança tocando em «Próximo».";
       q("[data-so-tocando]").hidden = true;

@@ -87,7 +87,8 @@ FRASES = (
     "A tela acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece "
     "só neste aparelho: nada dessa leitura é enviado nem guardado.",
     "Prefiro avançar só tocando",
-    "Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo».",
+    "Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em "
+    "«Próximo», no seu tempo.",
 )
 
 

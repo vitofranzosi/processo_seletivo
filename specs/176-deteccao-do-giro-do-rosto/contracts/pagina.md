@@ -32,7 +32,7 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 | aviso, antes de começar | "A tela acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece só neste aparelho: nada dessa leitura é enviado nem guardado." |
 | botão do aviso | "Prefiro avançar só tocando" |
 | depois da escolha | "Combinado: você avança tocando em «Próximo»." |
-| ajuda do roteiro | "Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo»." |
+| ajuda do roteiro | "O vídeo tem até {teto} minutos. Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo», no seu tempo." — no lugar da ajuda da `174`, que volta quando a detecção não está |
 | guia do oval, fora | "Encaixe o rosto no oval. Ele não aparece no vídeo." (o de hoje) |
 | guia do oval, dentro | "Rosto no oval. Ele não aparece no vídeo." |
 | confirmação | "Perfil esquerdo visto" · "Perfil direito visto" |

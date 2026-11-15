@@ -191,6 +191,12 @@ mesmos `_gwN` e voltam a se derrubar. Os papéis de conformidade de `test_databa
 que são do cluster e não do banco, levam o worker e o `DB_NAME` no nome desde 10/17: com o nome
 fixo, os workers se derrubavam ali — 51 erros em 92 casos com `-n 4`.
 
+**Com o `.env` na worktree, `DB_NAME=x make …` não vale.** O `Makefile` faz `include .env` e
+exporta: variável do `.env` vence a do ambiente, e o comando roda contra o `DB_NAME` do arquivo — em
+15/11 um `DB_NAME=ps_176_demo make preparar` migrou o banco de desenvolvimento `processo_seletivo`, e
+as suítes caíram em `test_processo_seletivo_gwN`, o banco que o parágrafo acima diz para não
+disputar. Passe como variável do `make`, que vence o `include`: `make test-pg DB_NAME=ps_176`.
+
 **`/gestao/` não abre sem o seletor de identidade.** Sem `INTERFACE_SELETOR_IDENTIDADE=true` o
 runserver local devolve 503. Ele deixa qualquer pessoa declarar quem é, e produção recusa subir com
 ele. Desde a `075`, desligá-lo também **derruba a sessão de demonstração já aberta** — ligar de novo

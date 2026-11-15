@@ -6,7 +6,8 @@ da implementação da `174`, #568)
 **Created**: 2026-11-15
 
 **Status**: Especificada em 15/11; as quatro perguntas (Q-1 a Q-4) foram decididas pelo usuário no
-mesmo dia, pelas recomendações.
+mesmo dia, pelas recomendações. Planejada, com tarefas e implementada no mesmo dia, sem merge (o merge
+é do usuário). Pendentes: a câmera real e o celular de entrada (SC-2753, SC-2757) e a P-13.
 
 **Input**: em 15/11 o usuário gravou um vídeo real pela página da `166`, no Safari, e pediu que a
 gravação ficasse *"como acontece nos bancos — pedem para você ir para um lado, ele já detecta, gira
@@ -262,7 +263,8 @@ envio, sem nenhum toque nos perfis.
 - **Leitor de tela**: a confirmação "Perfil esquerdo visto" e o passo novo são anunciados como no
   toque (UX-875 da `174`), e o foco continua em "Próximo".
 - **Economia de dados ligada no aparelho**: o motor não é baixado; o palco é o da `174`.
-- **Regravar**: a detecção recomeça do primeiro perfil, com o motor já carregado.
+- **Regravar**: ao sair do palco o motor é fechado (FR-8003); ao voltar, ele é recriado a partir do
+  que o navegador já guardou, sem baixar de novo, e a detecção recomeça do oval.
 - **Chave da detecção ligada e a do vídeo desligada**: nada aparece; a do vídeo continua mandando.
 
 ## Requirements *(mandatory)*

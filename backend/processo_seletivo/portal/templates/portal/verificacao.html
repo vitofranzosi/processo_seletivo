@@ -188,8 +188,8 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
       <ol class="passos-do-roteiro" data-passos>
         {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
       </ol>
-      <p class="ajuda">O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
-      {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo».</p>{% endif %}
+      <p class="ajuda"{% if deteccao %} data-ajuda-toque{% endif %}>O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
+      {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>O vídeo tem até {{ teto_minutos }} minutos. Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo», no seu tempo.</p>{% endif %}
     </div>
     <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
     <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
