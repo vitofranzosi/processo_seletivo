@@ -44,7 +44,8 @@ _DO_TIPO = {
     a.RESULTADO: c.RESULTADO,
     a.CONVOCACAO: c.CONVOCACAO,
 }
-_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR)
+# O aviso do passo (171) é da Etapa restrita: a fase dela, e não uma fase da orientação.
+_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.AVISAR)
 _DA_NATUREZA = {
     **_DO_TIPO,
     **dict.fromkeys(_DA_ETAPA, c.AVALIACAO),

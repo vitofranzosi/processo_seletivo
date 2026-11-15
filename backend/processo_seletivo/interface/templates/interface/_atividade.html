@@ -11,7 +11,7 @@
   {% if espera or grupo.situacao != "pendente" %}<span class="situacao-do-andamento s-{{ grupo.situacao }}"><span aria-hidden="true">{{ grupo.sinal }}</span> {{ grupo.rotulo }}</span>{% endif %}
   {% if not espera and grupo.unico and grupo.providencia.url %}<a class="ato-da-atividade" href="{{ grupo.providencia.url }}">{{ grupo.ato }}</a>{% else %}<strong class="ato-da-atividade">{{ grupo.ato }}</strong>{% endif %}
   {% if grupo.base and not atividades.base_unica %}<span class="base-da-atividade">{{ grupo.base }}</span>{% endif %}
-  <span class="onde-da-atividade">{% if grupo.unico %}Edital {{ grupo.primeira.edital.number }}/{{ grupo.primeira.edital.year }}{% else %}{{ grupo.quantos_editais }} Editais{% endif %}{% if grupo.lugar %} · {{ grupo.lugar }}{% endif %} · {{ grupo.fase }}</span>
+  <span class="onde-da-atividade">{% if grupo.unico %}Edital {{ grupo.primeira.edital.number }}/{{ grupo.primeira.edital.year }}{% else %}{{ grupo.quantos_editais }} Editais{% endif %}{% if grupo.lugar %} · {{ grupo.lugar }}{% endif %} · {{ grupo.fase }}{% if grupo.unico and grupo.providencia.ate %} · até {{ grupo.providencia.ate|date:"d/m/Y" }}{% endif %}</span>
   {% if espera %}
   {% if grupo.providencia.razao %}<span class="razao">{{ grupo.providencia.razao }}.</span>{% endif %}
   {% if grupo.situacao == "impedido" and grupo.providencia.texto_de_quem_resolve %}<span class="razao">Quem resolve: {{ grupo.providencia.texto_de_quem_resolve|lower }}.</span>{% endif %}

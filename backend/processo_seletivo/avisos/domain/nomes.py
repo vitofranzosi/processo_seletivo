@@ -16,7 +16,21 @@ PENDENCIA = "PENDENCIA"
 # de uma pessoa na agenda publicada de uma Etapa. Cita o ato da agenda pela referência; não tem
 # marco, porque a agenda é da Etapa, e o texto é da pessoa, como o da pendência.
 AGENDA = "AGENDA"
-ORIGENS = (RESULTADO, CHAMADA, PENDENCIA, AGENDA)
+# **O aviso do passo** (171, FR-7315): parte de uma Etapa restrita publicada, e não de uma
+# publicação nem de uma chamada. Cita a Etapa, e não o marco nem o Perfil: o passo é de todas as
+# inscrições que a Etapa alcança, em qualquer Perfil (research T-004).
+PASSO = "PASSO"
+ORIGENS = (RESULTADO, CHAMADA, PENDENCIA, AGENDA, PASSO)
+#: A origem por extenso, para as frases que nomeiam onde uma variável tem valor.
+ORIGEM_POR_EXTENSO = {
+    RESULTADO: "resultado",
+    CHAMADA: "chamada",
+    PENDENCIA: "pendência",
+    AGENDA: "agenda",
+    PASSO: "passo de uma etapa",
+}
+#: A marca do modelo inicial do aviso do passo (171, FR-7320, T-005).
+CHAVE_DO_MODELO_DO_PASSO = PASSO
 
 # --- O motivo: primeiro aviso, ou reenvio (R-011) -------------------------------------------------
 

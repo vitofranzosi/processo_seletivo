@@ -37,6 +37,7 @@ from processo_seletivo.portal.leitura import _chave_da_lista
 from processo_seletivo.publicacoes.domain.vocabulario_da_regra import (
     FORMA_DE_CONVOCACAO_POR_EXTENSO,
 )
+from processo_seletivo.resultados.domain import efeito
 
 # --- O conjunto fechado, em ordem de precedência (D-002) ----------------------------------------
 CONVOCADO = "CONVOCADO"
@@ -54,6 +55,13 @@ INSCRICAO_ACEITA_PRELIMINAR = "INSCRICAO_ACEITA_PRELIMINAR"
 INSCRICAO_NAO_ACEITA_PRELIMINAR = "INSCRICAO_NAO_ACEITA_PRELIMINAR"
 INSCRICAO_ACEITA = "INSCRICAO_ACEITA"
 INSCRICAO_NAO_ACEITA = "INSCRICAO_NAO_ACEITA"
+# **O passo da Etapa restrita** (171, FR-7300, FR-7306): três rótulos, e cada um afirma só o que os
+# dados mostram. "Aguardando a comissão" é o período encerrado sem registro nenhum — **não** é
+# análise iniciada (decisão do usuário de 14/11); "aguardando o resultado" é haver parecer ou
+# Resultado que o titular ainda não vê.
+PASSO_PENDENTE = "PASSO_PENDENTE"
+PASSO_AGUARDA_COMISSAO = "PASSO_AGUARDA_COMISSAO"
+PASSO_AGUARDA_RESULTADO = "PASSO_AGUARDA_RESULTADO"
 
 ROTULOS = {
     CONVOCADO: "Convocado",
@@ -69,6 +77,9 @@ ROTULOS = {
     INSCRICAO_NAO_ACEITA_PRELIMINAR: "Inscrição não aceita (resultado preliminar)",
     INSCRICAO_ACEITA: "Inscrição aceita",
     INSCRICAO_NAO_ACEITA: "Inscrição não aceita",
+    PASSO_PENDENTE: "Falta um passo seu",
+    PASSO_AGUARDA_COMISSAO: "Aguardando a comissão",
+    PASSO_AGUARDA_RESULTADO: "Aguardando o resultado",
 }
 
 # **O rótulo de cada desfecho em linguagem simples, e nenhum promovido a matrícula** (FR-1172). O
@@ -93,6 +104,9 @@ PROVISORIAS = {
     INSCRICAO_RECEBIDA,
     INSCRICAO_ACEITA_PRELIMINAR,
     INSCRICAO_NAO_ACEITA_PRELIMINAR,
+    PASSO_PENDENTE,
+    PASSO_AGUARDA_COMISSAO,
+    PASSO_AGUARDA_RESULTADO,
 }
 
 # O que o ato diz da inscrição, já traduzido pela view (148): a função pura não lê o vocabulário
@@ -120,6 +134,32 @@ NAO_ATENDIMENTO_PODE_SER_REGISTRADO = (
     "Se você não atender no prazo, a comissão poderá registrar o não atendimento desta convocação."
 )
 CONSEQUENCIAS = (NOVAS_CHAMADAS, NAO_ATENDIMENTO_PODE_SER_REGISTRADO)
+
+# **A consequência da ausência no passo da Etapa restrita** (171, FR-7304), que o Edital declara em
+# forma estruturada (`164`, o efeito da ausência): é o caso "vem do Edital" da FR-1177 da `063`, e
+# não uma terceira frase neutra. Nenhuma diz "perde": a retirada mantém a ampla.
+CONSEQUENCIA_DA_AUSENCIA = {
+    efeito.RETIRA_DA_RESERVA: (
+        "Se você não participar, deixa de concorrer pela reserva de vagas e continua concorrendo "
+        "pela ampla concorrência."
+    ),
+    efeito.ELIMINA: "Se você não participar, é eliminado desta seleção.",
+}
+# As frases do passo (171, `contracts/frases.md`). Nenhuma nomeia o procedimento: a Etapa restrita
+# pode ser a verificação da autodeclaração ou a perícia de pessoa com deficiência (D-001), e quem
+# a nomeia é o Edital, pelo nome publicado.
+COMISSAO_INFORMA = "A comissão vai informar o dia, a hora e como participar."
+COMISSAO_INFORMA_QUANDO = "A comissão vai informar quando e como participar."
+RESULTADO_APARECE_AQUI = (
+    "O resultado desta etapa aparece neste acompanhamento quando for publicado."
+)
+VER_O_EDITAL = "Ver o Edital vigente"
+VIDEO_OU_AO_VIVO = (
+    "Você pode gravar um vídeo curto ou fazer a entrevista ao vivo. As duas formas valem igual."
+)
+QUER_CONVERSAR_AO_VIVO = "A comissão quer conversar com você ao vivo. Isso não é reprovação."
+VER_COMO_FUNCIONA = "Ver como funciona"
+VER_O_COMPROVANTE = "Ver o comprovante"
 
 NADA_POR_ENQUANTO = "Nada por enquanto."
 RESULTADO_CONFORME_O_EDITAL = "Nada por enquanto. O resultado será publicado conforme o Edital."
@@ -225,12 +265,14 @@ def situacao_da_inscricao(
     politica_do_requerimento=None,
     obrigacoes=None,
     inscricao_publicada=None,
+    passos=(),
 ):
     """A situação, pela primeira regra da precedência que se aplica (D-002).
 
     1. desfecho da convocação vigente;
     2. convocação vigente sem desfecho;
     3. Resultado de Etapa visível que eliminou;
+    3a. o passo que falta numa Etapa restrita (171, FR-7303), já derivado em `passos`;
     4. classificação em ao menos uma publicação definitiva;
     5. classificação só em publicações preliminares;
     6. sem posição em todas as listas;
@@ -273,7 +315,13 @@ def situacao_da_inscricao(
     if convocacao is not None:
         return _situacao(
             CONVOCADO,
-            porque=(_linha_da_convocacao(convocacao, perfil, cartoes), *em_analise),
+            porque=(
+                _linha_da_convocacao(convocacao, perfil, cartoes),
+                # O passo pendente entra como linha: a convocação tem prazo próprio e continua a
+                # situação (171, FR-7303, D-003).
+                *(_linha_de_outro_passo(passo) for passo in passos),
+                *em_analise,
+            ),
             acao=(
                 _acao_das_obrigacoes(inscricao, convocacao, obrigacoes, recurso)
                 if obrigacoes is not None
@@ -313,6 +361,9 @@ def situacao_da_inscricao(
             ),
             acao=Acao(NADA_POR_ENQUANTO, recurso=recurso),
         )
+
+    if passos:
+        return _situacao_do_passo(inscricao, passos, em_analise, recurso)
 
     classificadas = [cartao for cartao in cartoes if cartao["classificada"]]
     if classificadas:
@@ -358,6 +409,127 @@ def situacao_da_inscricao(
         INSCRICAO_ENVIADA,
         porque=(*enviada, *em_analise),
         acao=Acao(RESULTADO_CONFORME_O_EDITAL, recurso=recurso),
+    )
+
+
+def _periodo(passo) -> str:
+    if passo.inicio and passo.fim:
+        return f"de {_data(passo.inicio)} a {_data(passo.fim)}"
+    if passo.fim:
+        return f"até {_data(passo.fim)}"
+    return ""
+
+
+def _linha_de_outro_passo(passo):
+    """O passo que não é a situação: na convocação, ou o segundo de dois (FR-7303, FR-7309)."""
+    periodo = _periodo(passo)
+    return Linha(
+        f"Também falta um passo seu: {passo.etapa}" + (f", {periodo}." if periodo else ".")
+    )
+
+
+def _quando(passo):
+    """O quando do passo pendente: antes do período, durante ele, ou sem período."""
+    if passo.inicio is None and passo.fim is None:
+        return COMISSAO_INFORMA_QUANDO
+    if not passo.comecou:
+        quando = (
+            f"Acontece {_periodo(passo)}." if passo.fim else f"Começa em {_data(passo.inicio)}."
+        )
+        return f"{quando} {COMISSAO_INFORMA}"
+    if passo.fim is not None:
+        return f"Está acontecendo até {_data(passo.fim)}. {COMISSAO_INFORMA}"
+    return COMISSAO_INFORMA
+
+
+def _situacao_do_passo(inscricao, passos, em_analise, recurso):
+    """O degrau do passo (171, FR-7304, FR-7306, FR-7312): o primeiro é a situação, e os outros
+    viram linha.
+
+    Sem relógio, como o resto do módulo: o estado e o "já começou" chegam derivados em `passos`
+    (`portal/passo_da_etapa.py`).
+    """
+    from processo_seletivo.portal import passo_da_etapa as p
+    from processo_seletivo.verificacao.application import disponibilidade as video
+
+    passo, *outros = passos
+    porque = [
+        Linha(
+            f"Você se inscreveu em {passo.modalidade}, e quem se inscreve nela passa também por "
+            f"esta etapa: {passo.etapa}."
+            if passo.modalidade
+            else f"Quem se inscreveu na sua lista passa também por esta etapa: {passo.etapa}."
+        ),
+        *(_linha_de_outro_passo(outro) for outro in outros),
+        *em_analise,
+    ]
+    edital = reverse("portal:selecao", args=[inscricao.edital_id])
+    no_edital = {
+        "secundaria": f"No Edital, veja a etapa {passo.etapa}.",
+        "secundaria_link": edital,
+        "secundaria_rotulo": VER_O_EDITAL,
+    }
+    estado_do_video = getattr(passo.video, "estado", None)
+    if passo.estado == p.AGUARDA_RESULTADO:
+        if estado_do_video in (video.RECEBIDO, video.EM_ANALISE):
+            principal = (
+                f"Seu vídeo chegou em {_data(passo.video.video.recebido_em)}. "
+                "A comissão ainda não o abriu."
+                if estado_do_video == video.RECEBIDO
+                else "A comissão está analisando o seu vídeo."
+            )
+            return _situacao(
+                PASSO_AGUARDA_RESULTADO,
+                porque=porque,
+                acao=Acao(
+                    f"{principal} {RESULTADO_APARECE_AQUI}",
+                    link=reverse(
+                        "portal:verificacao-comprovante", args=[inscricao.id, passo.etapa_id]
+                    ),
+                    link_rotulo=VER_O_COMPROVANTE,
+                    recurso=recurso,
+                ),
+            )
+        return _situacao(
+            PASSO_AGUARDA_RESULTADO,
+            porque=porque,
+            acao=Acao(RESULTADO_APARECE_AQUI, recurso=recurso),
+        )
+    if passo.estado == p.AGUARDA_COMISSAO:
+        return _situacao(
+            PASSO_AGUARDA_COMISSAO,
+            porque=porque,
+            acao=Acao(
+                f"O período desta etapa terminou em {_data(passo.fim)}. Aguarde a comissão: "
+                "o resultado aparece neste acompanhamento quando for publicado.",
+                recurso=recurso,
+                **no_edital,
+            ),
+        )
+    consequencia = CONSEQUENCIA_DA_AUSENCIA.get(passo.efeito_da_ausencia, "")
+    if estado_do_video == video.PODE_GRAVAR:
+        prazo = f" O vídeo pode ser enviado até {_data_e_hora(passo.fim)}." if passo.fim else ""
+        return _situacao(
+            PASSO_PENDENTE,
+            porque=porque,
+            acao=Acao(
+                f"{VIDEO_OU_AO_VIVO}{prazo}",
+                link=reverse("portal:verificacao", args=[inscricao.id, passo.etapa_id]),
+                link_rotulo=VER_COMO_FUNCIONA,
+                consequencia=consequencia,
+                recurso=recurso,
+                **no_edital,
+            ),
+        )
+    principal = (
+        f"{QUER_CONVERSAR_AO_VIVO} {COMISSAO_INFORMA}"
+        if estado_do_video == video.CONVERSA_AO_VIVO
+        else _quando(passo)
+    )
+    return _situacao(
+        PASSO_PENDENTE,
+        porque=porque,
+        acao=Acao(principal, consequencia=consequencia, recurso=recurso, **no_edital),
     )
 
 

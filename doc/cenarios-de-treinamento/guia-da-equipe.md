@@ -79,8 +79,8 @@ quem cobre o quê:
 
 | Frente | Por que a pessoa está nela | Cenário | Identidade |
 |---|---|---|---|
-| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C17 | `treino.presidencia` |
-| Avaliar uma Etapa | membro alocado à Etapa | C05 | `treino.avaliacao1` |
+| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C18 | `treino.presidencia` |
+| Avaliar uma Etapa | membro alocado à Etapa | C05, C18 | `treino.avaliacao1`, `treino.avaliacao2` (C18) |
 | Conferir os documentos da convocação | membro **alocado à conferência** — sem presidir | C12 | `treino.avaliacao2` |
 | Receber os documentos para formalizar | **designada** para o Edital, sem integrar a comissão | C16 (designada), C17 (a designar) | `treino.formalizacao` |
 | Decidir recursos | papel Julgador de recursos da unidade | C08 (um recurso admitido) | Julgador de recursos |
@@ -490,6 +490,40 @@ pacote é exportado.
 
 **Atenção:** a pessoa `treino.formalizacao` só aparece para designar nos Editais de treinamento —
 nos Editais reais da unidade ela não é oferecida nem contada.
+
+## C18 — Verificação da autodeclaração
+
+**Objetivo:** conduzir uma Etapa que vale só para quem se inscreveu na reserva de vagas — avisar
+quem tem o passo, acompanhar os pareceres e ver o que o candidato lê.
+
+**Você começa com:** o Edital `SIM18`, com a Etapa **Verificação da autodeclaração** em curso, só
+para a cota PPP, com dois pareceres por inscrição e a regra "confirma só por unanimidade". Quatro
+candidatos se inscreveram na cota: o 01 ainda sem avaliador, o 02 sem parecer, o 03 com um parecer
+de dois e o 04 com os dois. O 05 está só na ampla. **Ninguém foi avisado.**
+
+**Quem faz:** a presidência (`treino.presidencia`); os avaliadores (`treino.avaliacao1` e
+`treino.avaliacao2`); e o candidato, pelo portal.
+
+**Seu desafio:**
+
+1. Entre como a presidência e abra o Edital `SIM18`. No Centro, veja a Etapa: **Avisar 4 inscrições
+   sobre Verificação da autodeclaração**, **Distribuir 1 inscrição**, os pareceres que faltam por
+   avaliador e **Consolidar 1 inscrição pronta**.
+2. Siga **Avisar**. Na prévia, confira que só os quatro da cota estão na lista e que o e-mail diz a
+   etapa e o período, sem dizer a lista de ninguém. Confirme. O e-mail só sai quando o administrador
+   rodar `manage.py despachar_avisos` — e aparece no terminal desse comando.
+3. Entre como `treino.avaliacao2` e abra **Minhas atividades**: a linha diz quantas avaliações são
+   suas e **até quando** vai a Etapa.
+4. Entre no portal como o candidato 01 (o código de acesso sai no terminal do servidor). O
+   acompanhamento diz **Falta um passo seu**, por que, quando, o que acontece se faltar, e leva ao
+   Edital. Entre como o 05: nada disso aparece.
+
+**Resultado esperado:** aviso confirmado; o Centro deixa de pedir para avisar; os pareceres
+concluídos e a Etapa consolidada pela regra.
+
+**Atenção:** o período vencido sem nada registrado e o resultado visível ao candidato não cabem num
+cenário com a Etapa em curso. Para vê-los, a equipe conclui os pareceres, consolida e publica o
+resultado do marco.
 
 ---
 

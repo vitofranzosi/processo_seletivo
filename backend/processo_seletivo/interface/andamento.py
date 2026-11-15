@@ -35,6 +35,9 @@ from datetime import datetime
 from django.urls import reverse
 from django.utils import timezone
 
+from processo_seletivo.editais.domain import alcance as alcance_da_etapa
+from processo_seletivo.editais.domain.cronograma import periodo_da_etapa
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------------------------
@@ -100,6 +103,9 @@ CORTE, APURACAO, RESULTADO, CONVOCACAO = "corte", "apuracao", "resultado", "conv
 DISTRIBUIR, AVALIAR, CONSOLIDAR, REAVALIAR = "distribuir", "avaliar", "consolidar", "reavaliar"
 CONFERIR, RECURSO = "conferir", "recurso"
 ETAPA = "etapa"
+#: O aviso do passo de uma Etapa restrita (171, FR-7323): o único ato da orientação que não é
+#: distribuir, avaliar nem consolidar.
+AVISAR = "avisar"
 #: A passagem ao setor da formalização (153): definir, designar, exportar.
 FORMALIZACAO = "formalizacao"
 
@@ -394,6 +400,8 @@ def situacoes_da_etapa(f):
         return _c(NAO_SE_APLICA, natureza=ETAPA, nota="nenhuma inscrição participa"), []
     consolidadas = f.get("consolidadas") or 0
     nota = f"{consolidadas} de {participantes} consolidadas"
+    if f.get("nota_do_alcance"):
+        nota = f"{nota} · {f['nota_do_alcance']}"
     providencias = []
     reavaliacoes = f.get("reavaliacoes") or 0
     if reavaliacoes:
@@ -446,21 +454,36 @@ def situacoes_da_etapa(f):
                 url=f.get("url_da_mesa") or "",
                 contagem=minhas,
                 nota=nota,
+                ate=f.get("fim"),
             )
         )
     if a_avaliar - minhas > 0:
+        # **De quem são os pareceres que faltam** (171, FR-7321): na Etapa restrita, para quem
+        # conduz, o nome e a contagem de cada membro — nunca o sentido.
+        # No **ato**, e não na nota: a linha "Com outros papéis" do Centro mostra só o ato, e a
+        # presidência lia "avaliar 2 inscrições" sem saber de quem (visto no navegador, no C18).
+        faltam = f.get("faltam_por_membro") or ()
+        de_quem = ""
+        if faltam:
+            total = sum(quantas for _, quantas in faltam)
+            de_quem = f"; faltam {_n(total, 'parecer', 'pareceres')}: " + ", ".join(
+                f"{nome} {quantas}" for nome, quantas in faltam
+            )
         providencias.append(
             _c(
                 PENDENTE,
                 natureza=AVALIAR,
                 ato="Avaliar "
-                + _n(a_avaliar - minhas, "inscrição distribuída", "inscrições distribuídas"),
+                + _n(a_avaliar - minhas, "inscrição distribuída", "inscrições distribuídas")
+                + de_quem,
                 responsavel=AVALIA,
                 contagem=a_avaliar - minhas,
                 nota=nota,
+                ate=f.get("fim"),
             )
         )
-    prontas = f.get("prontas") or 0
+    a_encaminhar = f.get("a_encaminhar") or 0
+    prontas = max((f.get("prontas") or 0) - a_encaminhar, 0)
     if prontas:
         providencias.append(
             _c(
@@ -473,6 +496,7 @@ def situacoes_da_etapa(f):
                 nota=nota,
             )
         )
+    providencias += _pendencias_da_restrita(f, nome, url, nota)
     if providencias:
         resumo = providencias[0]
         return replace(resumo, natureza=ETAPA, url=resumo.url or url), providencias
@@ -490,6 +514,63 @@ def situacoes_da_etapa(f):
         nota=nota,
     )
     return celula, [celula]
+
+
+def _pendencias_da_restrita(f, nome, url, nota):
+    """O que é próprio da Etapa restrita (171, FR-7323 a FR-7325), a partir dos fatos já lidos.
+
+    - **Avisar** os alcançados que nenhum aviso do passo citou, até o fim do período;
+    - **registrar a ausência ou os pareceres** de quem passou do período sem nada registrado;
+    - **encaminhar à entrevista ao vivo** quem o vídeo não confirmou (`166`).
+
+    São pendências da Etapa, nas telas que já existem; nenhuma natureza "verificação" (D-005).
+    """
+    providencias = []
+    fim = f.get("fim")
+    nao_avisadas = f.get("nao_avisadas") or 0
+    if nao_avisadas:
+        providencias.append(
+            _c(
+                PENDENTE,
+                natureza=AVISAR,
+                ato=f"Avisar {_n(nao_avisadas, 'inscrição', 'inscrições')} sobre {nome}",
+                responsavel=CONDUZ,
+                url=f.get("url_do_aviso") or "",
+                contagem=nao_avisadas,
+                nota=nota,
+                ate=fim,
+            )
+        )
+    vencidas = f.get("sem_desfecho_vencido") or 0
+    if vencidas:
+        providencias.append(
+            _c(
+                PENDENTE,
+                natureza=DISTRIBUIR,
+                ato="Registrar a ausência ou os pareceres de "
+                + _n(vencidas, "inscrição", "inscrições"),
+                responsavel=CONDUZ,
+                url=url,
+                contagem=vencidas,
+                nota=f"o período terminou em {timezone.localtime(fim):%d/%m/%Y}",
+            )
+        )
+    a_encaminhar = f.get("a_encaminhar") or 0
+    if a_encaminhar:
+        providencias.append(
+            _c(
+                PENDENTE,
+                natureza=CONSOLIDAR,
+                ato="Encaminhar "
+                + _n(a_encaminhar, "inscrição", "inscrições")
+                + " à entrevista ao vivo",
+                responsavel=CONDUZ,
+                url=f.get("url_do_encaminhamento") or url,
+                contagem=a_encaminhar,
+                nota=nota,
+            )
+        )
+    return providencias
 
 
 def ato_de_avaliar(quantas):
@@ -1975,6 +2056,9 @@ class _Leitor:
                     consolidadas=resumo_da_tela.get("consolidadas", 0),
                     reavaliacoes=resumo_da_tela.get("reavaliacoes", 0),
                 )
+                if alcance_da_etapa.restrita(etapa):
+                    fatos.update(self._fatos_da_restrita(etapa, panorama, resumo_da_tela))
+            fatos["fim"] = periodo_da_etapa(self.conteudo, etapa)[1]
             resumo, providencias = situacoes_da_etapa(fatos)
             for celula in providencias:
                 self._acrescentar(celula, onde=nome, chave=("etapa", eid))
@@ -1984,6 +2068,70 @@ class _Leitor:
                 "participantes": {str(i) for i in panorama.get("participantes") or ()},
             }
         return saida
+
+    def _fatos_da_restrita(self, etapa, panorama, resumo_da_tela):
+        """Os fatos da Etapa restrita (171, T-006). Só para quem conduz: é a pendência dela.
+
+        Do panorama já calculado, mais uma consulta para os pareceres por membro, uma para os já
+        avisados e, só na Etapa que admite o vídeo, as do plano da consolidação.
+        """
+        from processo_seletivo.avaliacoes.application.selectors import pendentes_por_membro
+        from processo_seletivo.avisos.application.destinatarios import avisadas_do_passo
+
+        eid = str(etapa["id"])
+        alcancadas, total = resumo_da_tela.get("alcancadas"), resumo_da_tela.get("total")
+        fatos = {}
+        if alcancadas is not None and total:
+            # A frase do alcance da distribuição (163, UX-732; 171, FR-7322).
+            fatos["nota_do_alcance"] = (
+                f"{_n(alcancadas, 'inscrição alcançada', 'inscrições alcançadas')}, de {total}"
+            )
+        if not self.alcance.conduz:
+            return fatos
+        participantes = panorama.get("participantes") or ()
+        resultados = panorama.get("resultados") or set()
+        abertas = [i for i in participantes if i not in resultados]
+        fim = periodo_da_etapa(self.conteudo, etapa)[1]
+        vencido = fim is not None and self.agora > fim
+        fatos["faltam_por_membro"] = pendentes_por_membro(
+            edital=self.edital, etapa_id=etapa["id"], participantes=participantes
+        )
+        if abertas and not vencido:
+            fatos["nao_avisadas"] = len(set(abertas) - avisadas_do_passo(self.edital, etapa["id"]))
+            fatos["url_do_aviso"] = reverse("interface:aviso-do-passo", args=[self.edital.id, eid])
+        if vencido:
+            elegiveis = panorama.get("elegiveis") or {}
+            fatos["sem_desfecho_vencido"] = sum(1 for i in abertas if not elegiveis.get(i))
+        fatos.update(self._a_encaminhar(etapa, panorama))
+        return fatos
+
+    def _a_encaminhar(self, etapa, panorama):
+        """As que o vídeo não confirmou (166, FR-7138), pelo plano da consolidação. Só com vídeo."""
+        from processo_seletivo.verificacao.domain import admissao
+
+        if not admissao.admite_video(etapa):
+            return {}
+        from processo_seletivo.inscricoes.models import Inscricao
+        from processo_seletivo.resultados.application import consolidacao, prontidao
+        from processo_seletivo.verificacao.application import ganchos
+
+        prontas = [
+            i
+            for i, (estado, _) in (panorama.get("estados") or {}).items()
+            if estado == prontidao.PRONTA
+        ]
+        if not prontas:
+            return {}
+        _, recusas = consolidacao._planejar(
+            etapa, panorama, Inscricao.objects.filter(id__in=prontas), self.conteudo
+        )
+        quantas = sum(1 for recusa in recusas if recusa.motivo == ganchos.ENCAMINHAR_AO_VIVO)
+        return {
+            "a_encaminhar": quantas,
+            "url_do_encaminhamento": reverse(
+                "interface:encaminhar-ao-vivo", args=[self.edital.id, str(etapa["id"])]
+            ),
+        }
 
     def _etapa_no_perfil(self, eid, perfil_id, expectativa_do_perfil):
         lida = self.etapas_no_edital.get(eid)
