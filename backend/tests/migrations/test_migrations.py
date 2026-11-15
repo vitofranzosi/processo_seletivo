@@ -41,6 +41,9 @@ APPS = (
     # A entrega documental à formalização da 117: quatro tabelas append-only e a coerência da
     # exportação contra a designação e a definição do mesmo Edital.
     "formalizacao",
+    # A agenda da Etapa da 167: quatro tabelas operacionais, com as duas unicidades do agendamento.
+    # Nenhum gatilho na entrega A; os atos append-only chegam na B.
+    "agendamento",
     # A publicação de convocados da 149: três tabelas append-only e a coerência do vínculo entre a
     # convocação, a comunicação e o ato.
     "convocacao",

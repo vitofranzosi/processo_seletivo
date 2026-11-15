@@ -1,0 +1,60 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Montar a agenda — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/minhas-etapas.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <span aria-current="page">Montar a agenda</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A montagem como espaço de trabalho (167, US2, UX-761 a UX-764; protótipo `montar.html`).
+
+Um resumo só, com o medidor real da gestão; uma aba por dia com "ocupados/total"; a grade, em que a
+célula é o link que escolhe a pessoa ou o horário; e o painel ao lado, onde se age (04-redesign,
+decisões 4 a 8). A ação principal é a que falta fazer, e nenhuma aparece duas vezes (UX-764).
+{% endcomment %}
+{% url 'interface:agenda-montar' edital.id etapa_id as endereco %}
+{% url 'interface:agenda-configurar' edital.id etapa_id as configurar %}
+<header class="cabecalho-do-workspace">
+  <div class="titulo-do-workspace">
+    <h1>Montar a agenda</h1><span class="situacao s-EM_ELABORACAO">Rascunho</span>
+    <p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}</p>
+  </div>
+  {% if pode_preencher %}
+  <form class="acoes-do-workspace" method="post" action="{% url 'interface:agenda-preencher' edital.id etapa_id %}">
+    {% csrf_token %}
+    <button type="submit" class="botao" hx-post="{% url 'interface:agenda-preencher' edital.id etapa_id %}" hx-target="#painel" hx-swap="innerHTML">Preencher automaticamente</button>
+  </form>
+  {% endif %}
+</header>
+
+<div id="mensagem" aria-live="polite">
+  {% if mensagem %}<p class="{{ mensagem.tipo }}" role="status" tabindex="-1">{{ mensagem.texto }}</p>{% endif %}
+  {% if devolvidos %}<p class="aviso">{{ devolvidos }}</p>{% endif %}
+</div>
+
+<div class="progresso-da-agenda">
+  <div class="medidor{% if resumo.completo %} completo{% endif %}">
+    <p class="numeros"><span class="restante"><strong>{{ resumo.com_horario }}</strong> de {{ resumo.participantes }} com horário</span><span class="taxa">{{ resumo.taxa }}%</span></p>
+    <div class="trilha-do-medidor" aria-hidden="true"><div class="feito largura-{{ resumo.taxa }}"></div></div>
+  </div>
+  <p class="fatos-da-agenda"><span>{{ resumo.horarios }} horário{{ resumo.horarios|pluralize:"s" }}</span><span>{% if resumo.falta %}<strong class="falta">faltam {{ resumo.falta }}</strong>{% else %}sobram {{ resumo.sobra }}{% endif %}</span>{% if resumo.sem_horario %}<span><a href="{{ endereco }}#painel">{{ resumo.sem_horario }} pessoa{{ resumo.sem_horario|pluralize:"s" }} sem horário</a></span>{% endif %}</p>
+</div>
+{% if resumo.falta %}<p class="aviso"><strong>Faltam {{ resumo.falta }} horário{{ resumo.falta|pluralize:"s" }}.</strong> Acrescente um dia, uma janela ou uma banca. <a href="{{ configurar }}">Ajustar a configuração</a></p>{% endif %}
+
+<div class="workspace" id="workspace">
+  <section class="agenda-do-dia" aria-labelledby="grade-titulo">
+    <h2 id="grade-titulo" class="oculto">Grade de horários</h2>
+    {% if abas %}
+    <nav aria-label="Dias da agenda"><ul class="dias-da-agenda">
+      {% for aba in abas %}<li><a href="?dia={{ aba.dia }}" hx-get="{{ endereco }}?dia={{ aba.dia }}" hx-target="#workspace" hx-select="#workspace" hx-swap="outerHTML" hx-push-url="true"{% if aba.atual %} aria-current="page"{% endif %}>{{ aba.rotulo }} <span class="contagem">{{ aba.ocupados }}/{{ aba.total }}</span></a></li>{% endfor %}
+    </ul></nav>
+    {% include "interface/_agenda_grade.html" %}
+    <p class="ajuda">Clique numa pessoa para mudá-la de horário, ou num horário livre para escolher quem vai para ele.{% if not resumo.falta %} <a href="{{ configurar }}">Ajustar dias, horários ou bancas</a>{% endif %}</p>
+    {% else %}
+    <p class="vazio">A configuração não deriva horário nenhum. <a href="{{ configurar }}">Ajustar a configuração</a></p>
+    {% endif %}
+  </section>
+  <aside class="painel-de-acao" id="painel" aria-labelledby="painel-titulo" aria-live="polite">
+    {% include "interface/_agenda_painel.html" %}
+  </aside>
+</div>
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+{% endblock %}

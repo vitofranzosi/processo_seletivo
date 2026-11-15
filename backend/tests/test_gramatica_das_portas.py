@@ -68,6 +68,7 @@ MODULOS_DE_VIEW = (
     # A verificação por vídeo (166): 404 a quem não tem a Atribuição alocada, que é a composição
     # da Mesa, e à abertura que não é da sessão; o encaminhamento usa a porta da consolidação.
     RAIZ / "processo_seletivo/interface/verificacao.py",
+    RAIZ / "processo_seletivo/interface/agenda_da_etapa.py",
 )
 INVENTARIO = RAIZ.parent / "specs/033-navegacao-por-capacidade/inventario-das-negativas.md"
 

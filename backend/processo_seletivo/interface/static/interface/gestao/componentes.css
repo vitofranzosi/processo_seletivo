@@ -177,3 +177,88 @@ section h2{margin-bottom:.75rem}
 .resultado-da-conferencia.impede{color:var(--vermelho);font-weight:600}
 .resultado-da-conferencia.adverte{color:var(--amarelo)}
 .resultado-da-conferencia.informa{color:var(--texto-fraco)}
+
+/* As peças que o redesign da agenda da Etapa criou e que servem a outras telas (167, 04-redesign
+   §4.5.2): o controle segmentado, o veredito, o seletor de horário e o painel de ação. Só tokens, e a
+   escala de espaçamento que a gestão já pratica. */
+
+/* Duas opções que se excluem: controle segmentado, e não dois rádios soltos. Continua sendo rádio,
+   para o teclado e o leitor de tela. */
+.segmentado{border:0;padding:0;margin:0;display:inline-flex;flex-wrap:wrap}
+.segmentado legend{display:block;width:100%;font-size:.8125rem;font-weight:600;margin-bottom:.35rem;padding:0}
+.segmentado label{position:relative;margin:0}
+.segmentado input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.segmentado span{display:inline-block;padding:.45rem .9rem;border:1px solid var(--borda);background:var(--branco);
+  font-size:.875rem;white-space:nowrap}
+.segmentado label:first-of-type span{border-radius:4px 0 0 4px}
+.segmentado label:last-of-type span{border-radius:0 4px 4px 0;margin-left:-1px}
+.segmentado input:checked+span{background:var(--verde-claro);border-color:var(--verde);color:var(--verde-escuro);
+  font-weight:600;position:relative}
+.segmentado input:focus-visible+span{outline:2px solid var(--verde);outline-offset:2px}
+
+/* O veredito antes do detalhe: a resposta em cor de estado, e o porquê depois. */
+.veredito{border-radius:6px;padding:.9rem 1rem;margin:0 0 1rem;border-left:4px solid}
+.veredito p{margin:0 0 .35rem;font-size:.875rem}
+.veredito p:last-child{margin-bottom:0}
+.veredito .titulo-do-veredito{font-size:1.15rem;font-weight:600;margin-bottom:.25rem}
+.veredito.cabe{background:var(--sucesso-fundo);border-color:var(--sucesso)}
+.veredito.cabe .titulo-do-veredito{color:var(--sucesso)}
+.veredito.falta{background:var(--amarelo-fundo);border-color:var(--amarelo)}
+.veredito.falta .titulo-do-veredito{color:var(--amarelo)}
+.veredito.invalido{background:var(--vermelho-fundo);border-color:var(--vermelho)}
+.veredito.invalido .titulo-do-veredito{color:var(--vermelho)}
+.veredito ul{margin:.25rem 0 0;padding-left:1.1rem;font-size:.875rem}
+.veredito .resolver{margin-top:.6rem;font-weight:600}
+.sugestoes{list-style:none;padding:0;margin:.35rem 0 0;display:flex;flex-direction:column;gap:.35rem}
+.sugestoes .acao{display:flex;justify-content:space-between;width:100%;font-size:.875rem;padding:.4rem .7rem;
+  background:var(--branco);cursor:pointer}
+.acao.sugestao.resolve{border-width:2px;font-weight:600}
+.ganho{font-variant-numeric:tabular-nums;color:var(--verde-texto);font-weight:600}
+
+/* O seletor de horário: o dia, depois os horários livres como opções compactas, por banca. */
+.dias-do-seletor{display:flex;flex-wrap:wrap;gap:.25rem;margin:0 0 .75rem}
+.dia-do-seletor{border:1px solid var(--borda);background:var(--branco);border-radius:4px;padding:.3rem .6rem;
+  font-size:.8125rem;color:var(--texto);text-decoration:none}
+.dia-do-seletor[aria-current]{background:var(--verde-claro);border-color:var(--verde);color:var(--verde-escuro);font-weight:600}
+.horarios-livres{border:0;padding:0;margin:0 0 .75rem;display:flex;flex-wrap:wrap;gap:.35rem}
+.horarios-livres legend{font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;
+  letter-spacing:.04em;padding:0;margin-bottom:.35rem;width:100%;}
+.opcao-de-horario{position:relative}
+.opcao-de-horario input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opcao-de-horario span{display:inline-block;min-width:3.75rem;text-align:center;padding:.35rem .5rem;
+  border:1px solid var(--borda);border-radius:4px;font-variant-numeric:tabular-nums;font-size:.875rem;background:var(--branco)}
+.opcao-de-horario input:hover+span{border-color:var(--verde)}
+.opcao-de-horario input:checked+span{background:var(--verde);border-color:var(--verde);color:var(--branco);font-weight:600}
+.opcao-de-horario input:focus-visible+span{outline:2px solid var(--verde);outline-offset:2px}
+
+/* O painel de ação: o lugar onde se age, ao lado do que se vê. */
+.painel-de-acao{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1rem 1.25rem;max-height:calc(100vh - 2rem);overflow:auto}
+.cabecalho-do-painel{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.75rem}
+.cabecalho-do-painel h2{margin:0;font-size:1.05rem}
+.cabecalho-do-painel h2:focus{outline:none}
+.cabecalho-do-painel .inscricao{margin:0}
+.cabecalho-do-painel .voltar{display:inline-grid;place-items:center;border:1px solid var(--borda);background:var(--branco);border-radius:4px;
+  width:2rem;height:2rem;flex:none;color:var(--texto);text-decoration:none}
+.cabecalho-do-painel .voltar:hover{background:var(--fundo)}
+.painel-de-acao .acoes-do-painel{margin:1rem 0 0}
+.painel-de-acao h3{font-size:.875rem;margin:0 0 .5rem}
+.horario-atual{margin:0 0 .75rem;font-size:.9375rem}
+.sem-horario-ainda{margin:0 0 .75rem;color:var(--amarelo);font-weight:600;font-size:.875rem}
+.busca-do-painel{margin:0 0 .5rem}
+.busca-do-painel input{width:100%;}
+.lista-com-rolagem{position:relative;max-height:22rem;overflow:auto;border:1px solid var(--borda);border-radius:4px}
+.pessoas-do-painel{list-style:none;margin:0;padding:0}
+.pessoas-do-painel li+li{border-top:1px solid var(--fundo)}
+.pessoa-do-painel,.pessoas-do-painel label{display:block;width:100%;text-align:left;padding:.45rem .75rem;
+  cursor:pointer;color:inherit;text-decoration:none}
+.pessoas-do-painel label{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:.5rem}
+.pessoas-do-painel label input{grid-row:span 2;margin-top:.3rem}
+.pessoa-do-painel:hover,.pessoas-do-painel label:hover{background:var(--fundo)}
+.pessoas-do-painel label:has(input:checked){background:var(--verde-claro)}
+.pessoas-do-painel .nenhuma{padding:.45rem .75rem}
+.pessoas-do-painel .quem{font-weight:600;display:block}
+.pessoas-do-painel .inscricao,.cabecalho-do-painel .inscricao{display:block;font-size:.75rem;color:var(--texto-fraco);
+  font-variant-numeric:tabular-nums}
+:is(.cabecalho-do-painel,.dias-do-seletor,.painel-de-acao) .contagem{font-size:.75rem;color:var(--texto-fraco);
+  font-variant-numeric:tabular-nums;font-weight:400}
