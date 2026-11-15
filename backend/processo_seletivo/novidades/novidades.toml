@@ -21,8 +21,8 @@ categoria = "novidade"
 relevancia = "relevante"
 titulo = "O candidato vê que falta um passo dele, e você vê o que falta à banca"
 resumo = """
-Quem concorre a uma vaga com verificação da autodeclaração lê, na área do candidato, "Falta um passo
-seu", com o período e o que acontece se faltar. No Centro de Controle e em Minhas atividades, você vê
+Quem concorre a uma vaga com verificação da autodeclaração lê "Falta um passo seu" na área do
+candidato e na lista das inscrições dele, com o período e o que acontece se faltar. No Centro de Controle e em Minhas atividades, você vê
 os pareceres que cada membro da banca ainda deve.
 """
 exemplo = """
@@ -30,8 +30,27 @@ No Edital 20/2026, a candidata que escolheu a vaga reservada abre a área dela e
 verificação. Do seu lado, Minhas atividades mostra que um membro da banca ainda deve três pareceres.
 """
 destino = "interface:minhas-etapas"
-prs = [551]
+prs = [551, 567]
 specs = ["171"]
+
+[[nota]]
+id = "avisos-por-email-ligados"
+data = 2026-11-15
+categoria = "melhoria"
+relevancia = "relevante"
+titulo = "Os candidatos recebem por e-mail os avisos que você confirma"
+resumo = """
+Resultado, chamada, pendência e horário da agenda: o aviso que você confirma chega por e-mail a cada
+candidato, em poucos minutos. Antes, a agenda podia ser publicada sem que ninguém recebesse o próprio
+horário.
+"""
+exemplo = """
+Você publica a agenda da entrevista e confirma o aviso. Em poucos minutos, cada candidato recebe por
+e-mail o dia e o horário dele, sem você mandar mensagem a ninguém.
+"""
+requer_configuracao = "AVISOS_AOS_CANDIDATOS"
+prs = [570]
+specs = []
 
 [[nota]]
 id = "agenda-nas-pendencias"
@@ -51,6 +70,57 @@ agenda", e um clique leva à conferência.
 destino = "interface:minhas-etapas"
 prs = [558]
 specs = ["167"]
+
+[[nota]]
+id = "cenarios-de-treinamento"
+data = 2026-11-15
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "Treine a equipe com 19 seleções fictícias, já em andamento"
+resumo = """
+Dezenove Processos fictícios, parados em fases diferentes — da elaboração à formalização, com a
+agenda das entrevistas e a verificação da autodeclaração —, deixam a equipe treinar sem montar
+Edital. A equipe técnica os prepara no ambiente de treinamento e
+pode devolvê-los ao ponto de partida.
+"""
+exemplo = """
+Uma servidora nova na comissão pratica a conferência de documentos num Processo fictício já na fase
+da convocação. Terminado o treino, a equipe técnica restaura o cenário para a próxima turma.
+"""
+documentacao = "cenarios-de-treinamento"
+requer_configuracao = "CENARIOS_DE_TREINAMENTO"
+prs = [436, 438, 500, 513, 518, 522, 572]
+specs = ["134"]
+
+[[nota]]
+id = "novidades-do-gps"
+data = 2026-11-15
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "Esta página: o que o GPS ganhou, contado para você"
+resumo = """
+Novidades do GPS mostra o que mudou no sistema, com o que é novo para você no topo e a mudança mais
+importante primeiro. O número ao lado de Novidades, na barra, diz quantas você ainda não viu.
+"""
+exemplo = """
+Na segunda de manhã, você vê "3" ao lado de Novidades. Abre a página e lê, no topo, o que chegou desde
+sexta — sem precisar perguntar a ninguém.
+"""
+prs = [555, 561]
+specs = ["168"]
+
+[[nota]]
+id = "telas-mais-compactas"
+data = 2026-11-15
+categoria = "melhoria"
+relevancia = "incremental"
+titulo = "Confirmação do Edital, Ocupação e lista de Processos mais enxutas"
+resumo = """
+Nessas três telas o texto passou a usar a largura toda, os números ficam lado a lado e cada dado aparece
+na mesma linha do seu nome. Você rola menos, e nada mudou no que cada tela mostra ou permite.
+"""
+prs = [564]
+specs = ["172"]
 
 [[nota]]
 id = "confirmacoes-mais-legiveis"
@@ -100,23 +170,6 @@ horário novo.
 """
 prs = [556]
 specs = ["167"]
-
-[[nota]]
-id = "novidades-do-gps"
-data = 2026-11-14
-categoria = "novidade"
-relevancia = "relevante"
-titulo = "Esta página: o que o GPS ganhou, contado para você"
-resumo = """
-Novidades do GPS mostra o que mudou no sistema, com o que é novo para você no topo. O número ao lado
-de Novidades, na barra, diz quantas mudanças você ainda não viu.
-"""
-exemplo = """
-Na segunda de manhã, você vê "3" ao lado de Novidades. Abre a página e lê, no topo, o que chegou desde
-sexta — sem precisar perguntar a ninguém.
-"""
-prs = [555]
-specs = ["168"]
 
 [[nota]]
 id = "habilitacao-do-assistente"
@@ -289,26 +342,6 @@ diz qual é a lista antes do botão de confirmar, e cada publicação aparece co
 """
 prs = [534]
 specs = []
-
-[[nota]]
-id = "cenarios-de-treinamento"
-data = 2026-11-13
-categoria = "novidade"
-relevancia = "relevante"
-titulo = "Treine a equipe com 17 seleções fictícias, já em andamento"
-resumo = """
-Dezessete Processos fictícios, parados em fases diferentes, da elaboração à formalização, deixam a
-equipe treinar sem montar um Edital do zero. A equipe técnica os prepara no ambiente de treinamento e
-pode devolvê-los ao ponto de partida.
-"""
-exemplo = """
-Uma servidora nova na comissão pratica a conferência de documentos num Processo fictício já na fase
-da convocação. Terminado o treino, a equipe técnica restaura o cenário para a próxima turma.
-"""
-documentacao = "cenarios-de-treinamento"
-requer_configuracao = "CENARIOS_DE_TREINAMENTO"
-prs = [436, 438, 500, 513, 518, 522]
-specs = ["134"]
 
 [[nota]]
 id = "convocacao-depois-do-envio"

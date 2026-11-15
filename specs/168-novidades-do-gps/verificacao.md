@@ -115,3 +115,11 @@ erro no console e sem rolagem horizontal.
 **A curadoria de 15/11.** Três PRs entraram na `main` depois da revisão. O #551 (171) e o #558
 (entrega D da 167) ganharam nota própria. O #559 completa o #557 e entrou na nota da legibilidade das
 confirmações. O roteiro voltou a "Nada pendente", e o arquivo tem 112 notas.
+
+**A segunda curadoria de 15/11**, depois do merge do #561. Ganharam nota o #570 (os avisos por e-mail
+ligados por padrão) e o #564 (o piloto do design system em três telas, como incremental). O #567
+entrou na nota do passo da autodeclaração, o #561 na da própria página e o #572 (cenário C20) na dos
+cenários de treinamento, que passou a dezenove — o C19 pede a verificação por vídeo, que a produção
+recusa. O #568, o #571 e o #573 só funcionam no desenvolvimento e foram para `[[sem_nota]]`. O roteiro
+voltou a "Nada pendente", e o arquivo tem 114 notas.
+
