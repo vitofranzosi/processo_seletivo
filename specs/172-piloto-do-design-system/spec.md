@@ -97,6 +97,10 @@ de CSS. O experimento opcional de escala tipográfica do roadmap não é desta s
   disponível"). Como as telas devem usar a largura? → A: **o texto ocupa a largura do conteúdo**,
   inclusive onde a `main` hoje o limita; ficam os cartões, os indicadores e os botões (D-012). A
   FR-7704, a FR-7730, a SC-2603 e a UX-850 foram revistas por esta decisão.
+- Na segunda leitura, o usuário pediu três padrões, para generalizar: indicadores que dividem a
+  linha em partes iguais; campos de texto na largura do formulário; e "rótulo: valor" na mesma
+  linha em toda lista de definição. Entram na D-012. A tela de um notebook citada no pedido foi só
+  exemplo, e não critério de medida.
 
 ---
 
@@ -818,7 +822,9 @@ escolheu o texto na largura toda.**
 
 Consequências: a medida de leitura não vale nas cinco telas, nem a da P0 nas confirmações; a
 composição centrada sai; a linha longa vira diagnóstico. Os cartões, os indicadores, os avisos e os
-botões ficam. A preferência do usuário pelo aproveitamento da tela vale como premissa para a
+botões ficam, com três padrões da segunda leitura: os indicadores de um grupo dividem a linha em
+partes iguais, o campo de texto ocupa a largura do formulário e a lista de definição lê "rótulo:
+valor" na mesma linha (os dois-pontos são a única pontuação que a folha gera). A preferência do usuário pelo aproveitamento da tela vale como premissa para a
 migração das outras famílias, e o "Texto explicativo" e a "medida de leitura" do estudo de 14/11
 ficam subordinados a ela.
 

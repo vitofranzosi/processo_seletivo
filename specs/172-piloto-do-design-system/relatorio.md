@@ -9,6 +9,11 @@ equipe, e diz o que fica esperando por ela. A decisão sobre a migração é do 
 > confirmação numa coluna estreita. O usuário a viu e a achou pior que a `main` ("o texto não está
 > utilizando o espaço disponível"), e escolheu que o texto ocupe a largura do conteúdo. Este
 > relatório é o da segunda versão; o que a primeira mediu está no fim, em *A primeira versão*.
+>
+> **Ajustes da segunda leitura (15/11).** O usuário pediu, como padrão a generalizar, três coisas, que
+> a segunda versão já traz: os **indicadores dividem a linha em partes iguais**, em vez de caixas do
+> tamanho do texto; os **campos de texto ocupam a largura do formulário** (a `main` os limita a
+> 68ch); e o **rótulo e o valor ficam na mesma linha**, com dois-pontos, em toda lista de definição.
 
 ## Resposta curta
 
@@ -21,10 +26,10 @@ páginas mais baixas e aproxima a ação, sem esconder nada.**
 - **O texto ocupa a largura do conteúdo**, inclusive onde a `main` o limitava a 68ch (o subtítulo, a
   ajuda, as notas, a faixa da Lista e as caixas da confirmação).
 - **As páginas ficaram mais baixas.** A 1440 px, somando os estados de cada tela: confirmação −6,9%,
-  conferências −7,9%, Ocupação −3,7%, retornos da Ocupação −3,5%, Lista −3,0%. No banco da referência,
+  conferências −11,5%, Ocupação −3,5%, retornos da Ocupação −3,6%, Lista −3,0%. No banco da referência,
   com 20 Processos por página, a Lista cai de 2929 para 2709 px.
-- **A ação principal ficou mais perto em todos os sete estados** que a têm abaixo da dobra a
-  1280 × 800 (de 11 a 92 px mais acima), mas nenhum deles chegou acima da dobra.
+- **A ação principal ficou mais perto em seis dos sete estados** que a têm abaixo da dobra a
+  1280 × 800 (de 11 a 158 px mais acima), e 10 px mais longe na O-13; nenhum chegou acima da dobra.
 - **Nada fora do piloto mudou**: a `main` e a branch, rastreadas sobre o mesmo banco, só diferem nas telas do piloto.
 - **A acessibilidade conferida passou** em todos os 15 estados conferidos.
 
@@ -36,7 +41,7 @@ páginas mais baixas e aproxima a ação, sem esconder nada.**
 | SC-2601, sequências | **cumprido**: 28 sequências, nenhuma invertida, nas duas ordens | idem |
 | SC-2602, nada fora muda | **cumprido**: só as telas do piloto diferem, fora uma diferença de dado | *O rastreio*, abaixo |
 | SC-2603 (revisto pela D-012), a prosa na largura do conteúdo | **cumprido**: nenhuma medida de leitura no escopo; a linha mais longa é registrada, sem valor de aprovação | idem |
-| SC-2604, ação acima da dobra | **não cumprido em 7 estados** (C-01, C-06, K-01, K-04, K-06, O-13, O-15), embora mais perto em todos | idem, e a tabela abaixo |
+| SC-2604, ação acima da dobra | **não cumprido em 7 estados** (C-01, C-06, K-01, K-04, K-06, O-13, O-15), embora mais perto em seis | idem, e a tabela abaixo |
 | SC-2605, acessibilidade | **cumprido** nos 15 estados conferidos | *A acessibilidade*, abaixo |
 | SC-2606 e SC-2607, validação | **pendente**: as sessões com a equipe | `validacao.md` |
 | SC-2608, suíte e lint | ver *Verificação* | — |
@@ -50,10 +55,10 @@ O topo da ação principal a 1280 × 800, em px. Ela está acima da dobra quando
 |---|---:|---:|---:|
 | C-01 Submeter (cinco atenções) | 936 | 848 | −88 |
 | C-06 Publicar | 1060 | 968 | −92 |
-| K-01 Conferir o acréscimo | 878 | 852 | −26 |
-| K-04 Conferir o desfazimento | 983 | 936 | −47 |
-| K-06 Conferir a declaração | 969 | 891 | −78 |
-| O-13 Ocupação com vagas acrescidas | 812 | 801 | −11 |
+| K-01 Conferir o acréscimo | 878 | 783 | −95 |
+| K-04 Conferir o desfazimento | 983 | 886 | −97 |
+| K-06 Conferir a declaração | 969 | 811 | −158 |
+| O-13 Ocupação com vagas acrescidas | 812 | 822 | +10 |
 | O-15 Ocupação, a vaga sem quem a ocupe | 1203 | 1192 | −11 |
 
 **Por que ainda não cabem, e o que o piloto não fez.** O que vem antes do botão é texto decidido em

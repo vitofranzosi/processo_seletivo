@@ -52,12 +52,35 @@
 .piloto-ds .consequencias.irreversivel{border-color:var(--vermelho)}
 .piloto-ds .consequencias li{margin-bottom:var(--e-1)}
 
-/* **O indicador**: o número e o rótulo juntos, numa caixa própria. O tamanho do número é o de
-   `componentes.css`; muda a caixa, o raio, o espaço e a largura mínima, para que os quatro números
-   de um recorte se leiam como uma fileira, e não como etiquetas soltas. */
-.piloto-ds .resumo{gap:var(--e-3)}
+/* **O indicador**: o número e o rótulo juntos, numa caixa própria, e **os indicadores de um grupo
+   dividem a linha em partes iguais** (pedido do usuário em 15/11). Do tamanho do texto, eles ficavam
+   empilhados à esquerda, cada um de uma largura, e a direita vazia. Em grade, a linha se reparte
+   entre eles; no estreito, a grade quebra em duas ou numa coluna sozinha. O tamanho do número é o
+   de `componentes.css`; muda a caixa, e não a letra. */
+.piloto-ds .resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:var(--e-3)}
 .piloto-ds .resumo li{border-color:var(--linha);border-radius:var(--raio);
-  padding:var(--e-2) var(--e-4);min-width:7rem;box-shadow:var(--sombra-1)}
+  padding:var(--e-2) var(--e-4);min-width:0;box-shadow:var(--sombra-1)}
+
+/* **O campo ocupa a largura do formulário** (pedido do usuário em 15/11). A `main` limita texto,
+   área de texto e seleção a `--leitura` (`formularios.css`), e o campo do fundamento cobria metade
+   da área. O número e a data continuam do tamanho do que recebem. A busca da Lista ocupa a largura
+   do cartão. */
+.piloto-ds .campo>:is(textarea,input[type=text],input[type=search],input[type=email],select),
+.piloto-ds .busca-da-lista{max-width:none}
+
+/* **Rótulo e valor na mesma linha** (pedido do usuário em 15/11): toda lista de definição do escopo
+   lê "De onde a vaga veio: Edital…", e não o valor quebrado e recuado abaixo do rótulo, como o
+   navegador desenha por padrão. Os dois-pontos são pontuação de apresentação: o texto do rótulo
+   no documento não muda, e é ele que a comparação confere. No celular, o valor desce. */
+.piloto-ds dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--e-1) var(--e-3);
+  margin:0 0 var(--e-4)}
+.piloto-ds dt{font-weight:600;color:var(--tinta-2)}
+.piloto-ds dt::after{content:":"}
+.piloto-ds dd{margin:0}
+@media (max-width:40rem){
+  .piloto-ds dl{grid-template-columns:minmax(0,1fr);gap:0}
+  .piloto-ds dd{margin-bottom:var(--e-2)}
+}
 
 /* **A barra de ações fica no fluxo, e não fixa.** Fixa ao pé da janela, ela poria o botão à vista
    antes das consequências, e a C-S4 da spec ("a consequência antes da confirmação") se inverteria na
