@@ -1,0 +1,258 @@
+/*
+GPS Design System — folha da PROPOSTA (protótipo, 14/11/2026).
+
+Não é a folha do produto e nada no produto a carrega. Existe para demonstrar a direção visual do
+estudo em doc/auditoria-design-system-2026-11-14/ com fidelidade suficiente para julgar proporção,
+tipografia, cor e componente.
+
+Três regras guiaram cada linha:
+1. Os nomes que já existem no produto continuam valendo (.botao, .acao, .cartao, .aviso, .situacao,
+   .codigo, .campo, .tabela, .sub): a proposta é variante do que existe, e não um segundo sistema.
+2. Nenhum valor solto. Cor, tamanho, espaço, raio e sombra saem de token; o que não é token é
+   exceção e tem comentário.
+3. Largura é decisão do tipo de conteúdo, e não da tela: tabela ocupa a página, formulário tem
+   medida própria, prosa tem medida de leitura, e o que é contexto vai para o trilho.
+*/
+
+/* ───────────── 1. Tokens ───────────── */
+:root{
+  /* Marca: os verdes de shared/tokens.css, sem mudança de valor. */
+  --verde:#15803d; --verde-texto:#146c37; --verde-escuro:#0b5a2a; --verde-claro:#e7f5ec;
+  --verde-50:#eef7f1; --verde-100:#d9eee0;                 /* hoje só em grupos/acesso.css */
+
+  /* Neutros: a rampa que a tela de entrada (075) já usa, promovida a oficial. Os nomes antigos
+     continuam, apontando para ela — nenhuma regra existente precisa mudar de nome. */
+  --tinta:#0f1a14; --tinta-2:#36433b; --tinta-3:#5f6b64;
+  --linha:#e3e7e4; --linha-forte:#cfd6d1; --fundo-p:#f6f7f6; --branco:#fff;
+  --texto:var(--tinta); --texto-fraco:var(--tinta-3); --borda:var(--linha-forte); --fundo:var(--fundo-p);
+
+  /* Estados: os de hoje, mais o azul, que a prévia da classificação usa 11 vezes sem token. */
+  --sucesso:#146c37; --sucesso-fundo:#e7f5ec;
+  --amarelo:#8a5300; --amarelo-fundo:#fdf5e5; --amarelo-linha:#e9c98a;
+  --vermelho:#a91b1b; --vermelho-fundo:#fbe9e9; --vermelho-linha:#e7b4b4;
+  --azul:#1d4f91; --azul-fundo:#e8f0fb;
+
+  /* Tipografia: seis tamanhos. Hoje são 33 declarados, e oito entre 12 e 16 px. */
+  --fonte:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --t-12:.75rem; --t-13:.8125rem; --t-14:.875rem; --t-16:1rem; --t-18:1.125rem; --t-24:1.5rem;
+
+  /* Espaço: base 4. Hoje há 141 valores distintos de padding. */
+  --e-1:.25rem; --e-2:.5rem; --e-3:.75rem; --e-4:1rem; --e-5:1.25rem; --e-6:1.5rem; --e-8:2rem; --e-10:2.5rem;
+
+  /* Forma. */
+  --raio-p:6px; --raio:10px; --raio-pilula:999px;
+  --sombra-1:0 1px 2px rgba(15,26,20,.06),0 1px 1px rgba(15,26,20,.04);
+  --sombra-2:0 8px 24px -8px rgba(15,26,20,.18),0 2px 6px rgba(15,26,20,.06);
+
+  /* Controles: duas alturas na gestão, uma maior no portal. Hoje .acao rende 25, 26, 30 e 40. */
+  --controle:2.5rem; --controle-p:2rem; --controle-g:3rem;
+
+  /* Larguras por tipo de conteúdo. */
+  --leitura:68ch;        /* prosa */
+  --formulario:46rem;    /* formulário de uma coluna */
+  --trilho:21rem;        /* contexto ao lado do principal */
+  --pagina:96rem;        /* estrutura: tabela, matriz, mapa */
+  --coluna:44rem;        /* página centrada: confirmação, jornada do candidato */
+}
+
+/* ───────────── 2. Base ───────────── */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--fonte);font-size:var(--t-16);line-height:1.5;color:var(--texto);background:var(--fundo)}
+a{color:var(--verde-texto);text-underline-offset:2px}
+*:focus-visible{outline:3px solid var(--verde);outline-offset:2px;border-radius:2px}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.011em;line-height:1.25}
+h1{font-size:var(--t-24)} h2{font-size:var(--t-18)} h3{font-size:var(--t-16)}
+p{margin:0}
+.oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.fraco{color:var(--texto-fraco)} .numero{font-variant-numeric:tabular-nums;text-align:right}
+.rotulo-de-secao{font-size:var(--t-12);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--texto-fraco)}
+
+/* ───────────── 3. Moldura da gestão (a de hoje, sem mudança de estrutura) ───────────── */
+.shell{display:grid;grid-template-columns:16rem minmax(0,1fr);min-height:100vh}
+.barra-lateral{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:var(--branco);border-right:1px solid var(--linha)}
+.marca-da-barra{display:flex;align-items:center;gap:.6rem;height:3.5rem;padding:0 var(--e-4) 0 1.125rem;border-bottom:1px solid var(--linha)}
+.sigla-do-produto{display:grid;place-items:center;width:2rem;height:2rem;border-radius:var(--raio-p);background:var(--verde-escuro);color:#fff;font-size:.6875rem;font-weight:600;letter-spacing:.04em}
+.nome-do-produto{font-size:var(--t-14);font-weight:600;color:var(--verde-escuro);line-height:1.2}
+.nome-do-produto span{display:block;font-weight:400;font-size:var(--t-12);color:var(--texto-fraco)}
+.grupo-de-secoes{margin:var(--e-5) var(--e-5) .35rem;font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--texto-fraco)}
+.secoes{list-style:none;margin:0;padding:0 var(--e-2)}
+.secoes a{display:flex;align-items:center;gap:.7rem;min-height:2.25rem;padding:.3rem .75rem;border-radius:var(--raio-p);color:var(--texto);text-decoration:none;font-size:var(--t-14);border-left:3px solid transparent}
+.secoes a:hover{background:var(--fundo)}
+.secoes a[aria-current]{background:var(--verde-claro);border-left-color:var(--verde);color:var(--verde-escuro);font-weight:600}
+.secoes svg{width:1.125rem;height:1.125rem;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.pessoa-identificada{margin-top:auto;display:flex;align-items:center;gap:.6rem;padding:var(--e-3) var(--e-4);border-top:1px solid var(--linha);font-size:var(--t-13)}
+.iniciais{display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:var(--verde-claro);color:var(--verde-escuro);font-size:var(--t-12);font-weight:600;flex:none}
+.pessoa-identificada span{display:block;color:var(--texto-fraco);font-size:var(--t-12)}
+.cabecalho-de-contexto{display:flex;align-items:center;gap:var(--e-4);min-height:3.5rem;padding:0 var(--e-6);background:var(--branco);border-bottom:1px solid var(--linha);font-size:var(--t-14);color:var(--texto-fraco)}
+.cabecalho-de-contexto>a:last-child{margin-left:auto}
+
+/* ───────────── 4. Página: três composições, uma por tipo de conteúdo ───────────── */
+main{padding:var(--e-6) var(--e-6) var(--e-10);max-width:var(--pagina);margin:0 auto}
+/* 4.1 Cabeçalho de página: um só, para todas as telas. Título à esquerda, ações à direita. */
+.cabecalho-da-pagina{display:flex;flex-wrap:wrap;align-items:flex-start;gap:var(--e-3) var(--e-6);margin-bottom:var(--e-5)}
+.cabecalho-da-pagina .titulo{flex:1 1 24rem;min-width:0}
+.cabecalho-da-pagina h1{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-2) var(--e-3)}
+.cabecalho-da-pagina .sub{margin-top:var(--e-1);color:var(--texto-fraco);font-size:var(--t-14);max-width:var(--leitura)}
+.cabecalho-da-pagina .acoes{display:flex;flex-wrap:wrap;gap:var(--e-2);align-items:center}
+/* 4.2 Principal + trilho: o contexto (situação, definições, próximos passos) sai da coluna de trabalho. */
+.com-trilho{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e-6)}
+@media (min-width:80rem){.com-trilho{grid-template-columns:minmax(0,1fr) var(--trilho);align-items:start}
+  .trilho{position:sticky;top:var(--e-4)}}
+.trilho{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e-4)}
+/* 4.3 Página centrada: confirmação de ato e jornada do candidato. */
+.centrada{max-width:var(--coluna);margin-inline:auto}
+.secao{margin-top:var(--e-8)} .secao>h2{margin-bottom:var(--e-3)}
+.secao>.sub,.cartao>.sub{color:var(--texto-fraco);font-size:var(--t-14);max-width:var(--leitura);margin:calc(var(--e-2) * -1) 0 var(--e-3)}
+.pilha{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--e-4)} .linha{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-2) var(--e-3)}
+.entre{justify-content:space-between}
+
+/* ───────────── 5. Componentes ───────────── */
+/* Botão: três papéis, duas alturas. <a> e <button> saem com a mesma altura (line-height fixo). */
+.botao,.acao{display:inline-flex;align-items:center;justify-content:center;gap:var(--e-2);height:var(--controle);padding:0 var(--e-4);
+  border:1px solid transparent;border-radius:var(--raio-p);font:inherit;font-size:var(--t-14);font-weight:600;line-height:1;
+  text-decoration:none;white-space:nowrap;cursor:pointer;transition:background .12s,border-color .12s}
+.botao{background:var(--verde);color:#fff} .botao:hover{background:var(--verde-escuro)}
+.botao.secundario,.acao{background:var(--branco);color:var(--verde-texto);border-color:var(--linha-forte)}
+.botao.secundario:hover,.acao:hover{background:var(--verde-50);border-color:var(--verde)}
+.botao.discreto{background:none;color:var(--verde-texto);padding-inline:var(--e-2)} .botao.discreto:hover{background:var(--verde-50)}
+.botao.perigoso{background:var(--vermelho);color:#fff} .acao.perigoso{color:var(--vermelho);border-color:var(--vermelho-linha)}
+.acao,.botao.compacto{height:var(--controle-p);padding:0 var(--e-3);font-size:var(--t-13)}
+.botao.grande{height:var(--controle-g);padding:0 var(--e-6);font-size:var(--t-16)}
+.botao.largo{width:100%}
+.botao[disabled],.botao.desabilitado{background:var(--fundo);color:var(--tinta-3);border-color:var(--linha-forte);cursor:not-allowed}
+.botao svg,.acao svg{width:1rem;height:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Campo. */
+.campos{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--e-4)}
+.campo{grid-column:span 12;display:grid;gap:var(--e-1);align-content:start}
+@media (min-width:40rem){.campo.c-3{grid-column:span 3}.campo.c-4{grid-column:span 4}.campo.c-6{grid-column:span 6}.campo.c-8{grid-column:span 8}}
+.campo label,.campo legend,.rotulo{font-size:var(--t-13);font-weight:600;color:var(--tinta-2);padding:0}
+.campo input,.campo select,.campo textarea{width:100%;height:var(--controle);padding:0 var(--e-3);border:1px solid var(--linha-forte);border-radius:var(--raio-p);
+  background:var(--branco);font:inherit;font-size:var(--t-16);color:var(--texto)}
+.campo textarea{height:auto;padding:var(--e-2) var(--e-3);resize:vertical}
+.campo input:hover,.campo select:hover,.campo textarea:hover{border-color:var(--tinta-3)}
+.campo input:focus-visible,.campo select:focus-visible,.campo textarea:focus-visible{outline:none;border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-100)}
+.ajuda{font-size:var(--t-13);color:var(--texto-fraco)} .obrigatorio{color:var(--vermelho)} .opcional{font-weight:400;color:var(--texto-fraco)}
+.escolha{display:flex;align-items:center;gap:var(--e-2);min-height:1.75rem;font-size:var(--t-14)}
+.escolha input{width:1.125rem;height:1.125rem;margin:0;accent-color:var(--verde);flex:none}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+
+/* Cartão: uma caixa. Hoje são 63 regras e 37 combinações de raio e padding. */
+.cartao{background:var(--branco);border:1px solid var(--linha);border-radius:var(--raio);padding:var(--e-5);box-shadow:var(--sombra-1)}
+.cartao>h2,.cartao>h3{margin-bottom:var(--e-3)}
+.cartao.sem-recuo{padding:0;overflow:hidden} .cartao.sem-recuo>.cabeca{padding:var(--e-4) var(--e-5);border-bottom:1px solid var(--linha)}
+.cartao.calculado{border-style:dashed;box-shadow:none;background:transparent}
+.cartao.destaque{border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-100)}
+.cabeca{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--e-2) var(--e-4)}
+.cabeca h2,.cabeca h3{margin:0}
+
+/* Indicador: um desenho para o número com rótulo. Hoje são sete (Visão Geral, Distribuição,
+   Convocação ×2, Ocupação, Relatório, Agenda). */
+.indicadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:var(--e-3)}
+.indicador{display:grid;gap:2px;padding:var(--e-3) var(--e-4);background:var(--branco);border:1px solid var(--linha);border-radius:var(--raio);text-decoration:none;color:inherit}
+.indicador strong{font-size:var(--t-24);font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.indicador span{font-size:var(--t-13);color:var(--texto-fraco);line-height:1.3}
+.indicador.zero strong{color:var(--tinta-3);font-weight:400}
+.indicador.ativo{border-color:var(--verde);background:var(--verde-50)} .indicador.ativo strong{color:var(--verde-escuro)}
+.indicadores.compactos{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--e-2)}
+.indicadores.compactos .indicador{padding:var(--e-2) var(--e-3);border-radius:var(--raio-p)} .indicadores.compactos strong{font-size:var(--t-18)}
+
+/* Selo: três espécies. Hoje são 26 assinaturas. */
+.situacao{display:inline-flex;align-items:center;gap:.35rem;height:1.375rem;padding:0 .6rem;border-radius:var(--raio-pilula);font-size:var(--t-12);font-weight:600;white-space:nowrap;background:var(--fundo);color:var(--tinta-2)}
+.situacao::before{content:"";width:.4rem;height:.4rem;border-radius:50%;background:currentColor;opacity:.7}
+.situacao.ok{background:var(--sucesso-fundo);color:var(--sucesso)} .situacao.atencao{background:var(--amarelo-fundo);color:var(--amarelo)}
+.situacao.erro{background:var(--vermelho-fundo);color:var(--vermelho)} .situacao.info{background:var(--azul-fundo);color:var(--azul)}
+.codigo{font-family:var(--mono);font-size:var(--t-12);padding:.1rem .4rem;border-radius:4px;background:var(--fundo);color:var(--tinta-2);border:1px solid var(--linha);white-space:nowrap}
+.marca{font-size:.6875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1rem .4rem;border-radius:4px;background:var(--verde-escuro);color:#fff;white-space:nowrap}
+.marca.perigo{background:var(--vermelho-fundo);color:var(--vermelho)} .marca.neutra{background:var(--fundo);color:var(--tinta-2);border:1px solid var(--linha)}
+
+/* Aviso: quatro tons, dois tamanhos. Hoje são 28 regras de faixa. */
+.aviso{display:flex;gap:var(--e-3);padding:var(--e-3) var(--e-4);border:1px solid var(--amarelo-linha);border-radius:var(--raio-p);background:var(--amarelo-fundo);font-size:var(--t-14);color:var(--tinta)}
+.aviso::before{content:"!";flex:none;display:grid;place-items:center;width:1.25rem;height:1.25rem;margin-top:1px;border-radius:50%;background:var(--amarelo);color:#fff;font-size:var(--t-12);font-weight:700}
+.aviso strong{color:var(--amarelo)}
+.aviso.info{border-color:#c5d6ee;background:var(--azul-fundo)} .aviso.info::before{content:"i";background:var(--azul)} .aviso.info strong{color:var(--azul)}
+.aviso.ok{border-color:#bfe0cb;background:var(--sucesso-fundo)} .aviso.ok::before{content:"✓";background:var(--sucesso)} .aviso.ok strong{color:var(--sucesso)}
+.aviso.erro{border-color:var(--vermelho-linha);background:var(--vermelho-fundo)} .aviso.erro::before{background:var(--vermelho)} .aviso.erro strong{color:var(--vermelho)}
+.aviso.em-linha{padding:var(--e-2) var(--e-3);font-size:var(--t-13)}
+.aviso ul{margin:var(--e-1) 0 0;padding-left:1.1rem}
+
+/* Tabela: sempre em moldura rolável, dentro de cartão; duas densidades. */
+/* position:relative: sem ele, um .oculto (absoluto) dentro da tabela escapa da moldura e alarga a página. */
+.tabela-rolavel{position:relative;overflow-x:auto}
+.tabela{width:100%;border-collapse:collapse;font-size:var(--t-14)}
+.tabela th,.tabela td{padding:var(--e-3) var(--e-4);text-align:left;vertical-align:top;border-bottom:1px solid var(--linha)}
+.tabela thead th{font-size:var(--t-12);font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--texto-fraco);background:var(--fundo);white-space:nowrap;padding-block:var(--e-2)}
+.tabela tbody tr:last-child>*{border-bottom:0} .tabela tbody tr:hover{background:var(--verde-50)}
+.tabela .numero{text-align:right;font-variant-numeric:tabular-nums}
+.tabela.densa th,.tabela.densa td{padding:var(--e-2) var(--e-3);font-size:var(--t-13)}
+.tabela .segunda{display:block;font-size:var(--t-13);color:var(--texto-fraco)}
+.tabela .filha td{background:var(--fundo-p);padding-block:var(--e-2)} .tabela .filha td:first-child{padding-left:var(--e-8)}
+.tabela .acoes{text-align:right;white-space:nowrap}
+.tabela .segunda a{color:var(--verde-texto)}
+
+/* Barra de filtros: uma. Hoje há seis (.filtro, .filtros, da agenda, da visão, da mesa, da retificação). */
+.barra-de-filtros{display:flex;flex-wrap:wrap;align-items:flex-end;gap:var(--e-3)}
+.barra-de-filtros .campo{grid-column:auto;flex:0 1 14rem} .barra-de-filtros .campo.busca{flex:1 1 16rem}
+.barra-de-filtros .campo input,.barra-de-filtros .campo select{height:var(--controle-p);font-size:var(--t-14)}
+
+/* Abas (vistas do mesmo conjunto) e segmentos (recortes). */
+.abas{display:flex;gap:var(--e-5);border-bottom:1px solid var(--linha);font-size:var(--t-14);overflow-x:auto}
+.abas a{padding:var(--e-2) 0 var(--e-3);color:var(--texto-fraco);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.abas a[aria-current]{color:var(--tinta);font-weight:600;border-bottom-color:var(--verde)} .abas a span{color:var(--texto-fraco);font-weight:400}
+.segmentos{display:inline-flex;flex-wrap:wrap;padding:3px;gap:3px;border-radius:var(--raio-p);background:var(--linha)}
+.segmentos a{display:inline-flex;align-items:center;height:1.75rem;padding:0 var(--e-3);border-radius:4px;font-size:var(--t-13);color:var(--tinta-2);text-decoration:none}
+.segmentos a[aria-current]{background:var(--branco);color:var(--tinta);font-weight:600;box-shadow:var(--sombra-1)}
+
+/* Passos: um componente para o assistente de composição, o mapa de fases e os passos do sorteio. */
+.passos{display:flex;list-style:none;margin:0;padding:0;gap:var(--e-1);overflow-x:auto;counter-reset:passo}
+.passos li{flex:1 1 0;min-width:6.5rem;counter-increment:passo}
+.passos a{display:grid;gap:2px;padding:var(--e-2) var(--e-1) 0;border-top:3px solid var(--linha-forte);text-decoration:none;color:var(--texto-fraco);font-size:var(--t-13)}
+.passos a strong{color:var(--tinta-2);font-weight:600} .passos a strong::before{content:counter(passo) ". ";color:var(--texto-fraco);font-weight:400}
+.passos .feito a{border-top-color:var(--verde)} .passos .feito a strong::before{content:"✓ ";color:var(--verde)}
+.passos .atual a{border-top-color:var(--verde-escuro)} .passos .atual a strong{color:var(--verde-escuro)}
+.passos .atencao a{border-top-color:var(--amarelo)}
+
+/* Lista de itens (definições, fila, tarefas) — a alternativa densa ao cartão por item. */
+.itens{list-style:none;margin:0;padding:0} .itens>li{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-1) var(--e-3);padding:var(--e-3) 0;border-bottom:1px solid var(--linha);font-size:var(--t-14)}
+.itens>li:last-child{border-bottom:0;padding-bottom:0} .itens>li:first-child{padding-top:0}
+.itens .corpo{flex:1 1 12rem;min-width:0} .itens .corpo strong{display:block;font-weight:600} .itens .corpo span{display:block;font-size:var(--t-13);color:var(--texto-fraco)}
+.dados{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--e-1) var(--e-4);margin:0;font-size:var(--t-14)}
+.dados dt{color:var(--texto-fraco)} .dados dd{margin:0}
+details.explica{font-size:var(--t-13);color:var(--tinta-2)} details.explica summary{cursor:pointer;color:var(--verde-texto);font-weight:600;padding:var(--e-1) 0}
+details.explica p{margin-top:var(--e-2);max-width:var(--leitura)}
+
+/* Barra de ações do formulário: fixa ao pé, primária à direita. Uma convenção, e não três. */
+.barra-de-acoes{position:sticky;bottom:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-3);margin-top:var(--e-6);padding:var(--e-3) 0;
+  background:linear-gradient(to bottom,transparent,var(--fundo) 30%);border-top:1px solid var(--linha)}
+.barra-de-acoes .fim{margin-left:auto;display:flex;gap:var(--e-3);align-items:center}
+.vazio{padding:var(--e-8) var(--e-6);border:1px dashed var(--linha-forte);border-radius:var(--raio);text-align:center;color:var(--texto-fraco);font-size:var(--t-14)}
+.paginacao{display:flex;align-items:center;justify-content:space-between;gap:var(--e-3);padding:var(--e-3) var(--e-4);font-size:var(--t-13);color:var(--texto-fraco);border-top:1px solid var(--linha)}
+
+/* ───────────── 6. Portal do candidato ───────────── */
+.topo-do-portal{display:flex;align-items:center;gap:var(--e-4);min-height:3.5rem;padding:0 var(--e-6);background:var(--verde-escuro);color:#fff;font-size:var(--t-14)}
+.topo-do-portal .marca-do-portal{font-weight:600;color:#fff;text-decoration:none} .topo-do-portal .marca-do-portal span{font-weight:400;opacity:.85}
+.topo-do-portal nav{margin-left:auto;display:flex;align-items:center;gap:var(--e-4)} .topo-do-portal nav a{color:#fff;text-decoration:none}
+.topo-do-portal .sair{height:var(--controle-p);padding:0 var(--e-3);border:1px solid rgba(255,255,255,.45);border-radius:var(--raio-p);background:none;color:#fff;font:inherit;font-size:var(--t-13)}
+.prazo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--e-2) var(--e-4)}
+.prazo strong{font-size:var(--t-18);display:block} .progresso{height:.5rem;border-radius:var(--raio-pilula);background:var(--linha);overflow:hidden}
+.progresso i{display:block;height:100%;background:var(--verde);border-radius:inherit}
+.documento{display:flex;flex-wrap:wrap;align-items:center;gap:var(--e-3);padding:var(--e-4) var(--e-5);border-bottom:1px solid var(--linha)}
+.documento:last-child{border-bottom:0} .documento .corpo{flex:1 1 14rem;min-width:0} .documento .corpo strong{display:block} .documento .corpo span{font-size:var(--t-14);color:var(--texto-fraco)}
+
+/* ───────────── 7. Estreito ───────────── */
+@media not all and (min-width:64rem){
+  .shell{display:block} .barra-lateral{position:static;height:auto;flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--linha)}
+  .barra-lateral nav,.pessoa-identificada{display:none} .marca-da-barra{border-bottom:0;flex:1}
+  main{padding:var(--e-4) var(--e-4) var(--e-8)} .cabecalho-de-contexto{padding:0 var(--e-4);min-height:2.75rem;font-size:var(--t-13)}
+  .cabecalho-da-pagina .acoes{width:100%} .topo-do-portal{padding:0 var(--e-4)}
+}
+@media (max-width:40rem){
+  .botao.grande,.cabecalho-da-pagina .acoes .botao{width:100%} .barra-de-acoes .fim{width:100%;flex-wrap:wrap} .barra-de-acoes .fim .botao{flex:1 1 100%}
+  .barra-de-acoes{position:static}
+  .topo-do-portal .quem{display:none} .topo-do-portal nav{gap:var(--e-3)}
+  .tabela.empilha thead{display:none} .tabela.empilha tr{display:grid;padding:var(--e-3) var(--e-4);border-bottom:1px solid var(--linha);gap:2px}
+  .tabela.empilha td{padding:0;border:0} .tabela.empilha .acoes{text-align:left;margin-top:var(--e-2)} .tabela.empilha .filha td:first-child{padding-left:var(--e-4)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}

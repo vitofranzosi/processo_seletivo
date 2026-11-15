@@ -1,0 +1,2 @@
+{% comment %} A página pública deste Edital aberta ao assistente, ou não (170, FR-7522, UX-814): a mesma linguagem da página "Assistente do Edital" da administração institucional. Fora de produção só; em produção a página pública não abre, e a linha não aparece. {% endcomment %}
+<p>{% if assistente_na_pagina_publica.ato %}Assistente na página pública: <strong>aberto</strong> desde {{ assistente_na_pagina_publica.ato.criado_em|date:"d/m/Y H:i" }}.{% else %}Assistente na página pública: não aberto.{% endif %}</p>

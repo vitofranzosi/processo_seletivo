@@ -1,0 +1,109 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Assistente do Edital{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A habilitação do assistente do Edital (170, contracts/tela.md).
+
+Do Administrador institucional, e de mais ninguém. A configuração técnica é do ambiente e só se lê
+aqui; a decisão — habilitar e desabilitar — é ato, com motivo, e nada se exclui. Abrir esta página
+não chama o modelo (FR-7502).
+{% endcomment %}
+<h1>Assistente do Edital</h1>
+<p class="sub">Habilite o piloto da gestão e a página pública de cada Edital. A configuração do
+  serviço do modelo é do ambiente do servidor, e não se edita aqui.</p>
+
+{% if feito == "habilitado" %}<p class="sucesso" role="status">Assistente habilitado.</p>{% endif %}
+{% if feito == "desabilitado" %}<p class="sucesso" role="status">Assistente desabilitado. Nenhuma pergunta nova chega ao modelo.</p>{% endif %}
+
+<section aria-labelledby="configuracao-titulo">
+  <h2 id="configuracao-titulo">Configuração do serviço</h2>
+  {% if configuracao.completa %}
+  <p><strong>Configuração completa.</strong> Isso não confirma que o serviço está no ar: a conexão se verifica pelo comando <code>verificar_servico_de_inferencia</code>, no servidor.</p>
+  {% else %}
+  <p class="aviso"><strong>Configuração incompleta:</strong> o assistente não pode ser habilitado.</p>
+  <ul>{% for falta in faltas %}<li>{{ falta|capfirst }}.</li>{% endfor %}</ul>
+  {% endif %}
+  <dl>
+    <dt>Serviço</dt><dd>{{ configuracao.servico|default:"não configurado" }}</dd>
+    <dt>Modelo</dt><dd>{{ configuracao.modelo|default:"não configurado" }}</dd>
+    <dt>Endereço</dt><dd>{{ configuracao.endereco|default:"não configurado" }}</dd>
+    <dt>Tempo-limite</dt><dd>{{ configuracao.tempo_limite|floatformat:"0" }} s</dd>
+    <dt>Credencial</dt><dd>{% if configuracao.credencial_presente %}presente{% else %}ausente{% endif %}</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="piloto-titulo">
+  <h2 id="piloto-titulo">Piloto da gestão</h2>
+  <p>Quem tem o papel Participante do piloto conversa com o assistente na página dos Editais que alcança. O piloto continua em sessões acompanhadas pela equipe.</p>
+  {% if piloto_habilitado %}
+  <p><strong>Habilitado</strong> desde {{ piloto.criado_em|date:"d/m/Y H:i" }}, por {% nome_de_pessoa piloto.autor %}: “{{ piloto.motivo }}”.</p>
+  {% if not configuracao.completa %}<p class="aviso">Habilitado com a configuração incompleta: as perguntas livres terminam sem chegar ao modelo.</p>{% endif %}
+  <p class="salvar"><a class="botao perigoso" href="{% url 'interface:administracao-do-assistente-piloto' 'desabilitar' %}">Desabilitar o piloto</a></p>
+  {% else %}
+  <p><strong>Desabilitado.</strong></p>
+  {% if configuracao.completa %}<p class="salvar"><a class="botao" href="{% url 'interface:administracao-do-assistente-piloto' 'habilitar' %}">Habilitar o piloto</a></p>{% endif %}
+  {% endif %}
+  {% if atalho_do_piloto %}<p class="aviso">A demonstração local do piloto está ligada neste ambiente: ele atende sem habilitação.</p>{% endif %}
+</section>
+
+<section aria-labelledby="pagina-publica-titulo">
+  <h2 id="pagina-publica-titulo">Página pública dos Editais</h2>
+  {% if em_producao %}
+  <p class="aviso">Em produção, a página pública não abre ao assistente enquanto os requisitos da abertura estiverem pendentes.</p>
+  {% else %}
+  <p>Qualquer visitante da página pública do Edital habilitado conversa com o assistente, sem entrar no sistema. Os outros Editais continuam sem ele.</p>
+  {% if atalho_da_pagina %}<p class="aviso">A demonstração local da página pública está ligada neste ambiente: todos os Editais oferecem o assistente.</p>{% endif %}
+  {% endif %}
+  {% if editais %}
+  <div class="tabela-rolavel">
+  <table aria-label="Editais com página pública">
+    <thead><tr><th scope="col">Edital</th><th scope="col">Unidade</th><th scope="col">Título</th><th scope="col">Situação</th><th scope="col">Ação</th></tr></thead>
+    <tbody>
+      {% for item in editais %}
+      <tr>
+        <th scope="row">{{ item.edital.number }}/{{ item.edital.year }}</th>
+        <td>{{ item.edital.institution_scope }}</td>
+        <td>{{ item.edital.title }}</td>
+        <td>{% if item.habilitado %}Habilitado desde {{ item.ato.criado_em|date:"d/m/Y H:i" }}{% if not item.tem_pagina_publica %}, sem página pública{% endif %}{% elif not item.tem_pagina_publica %}Sem página pública{% else %}Não habilitado{% endif %}</td>
+        <td>{% if item.habilitado %}<a class="acao" href="{% url 'interface:administracao-do-assistente-edital' item.edital.id 'desabilitar' %}">Desabilitar</a>{% elif not em_producao and configuracao.completa and item.tem_pagina_publica %}<a class="acao" href="{% url 'interface:administracao-do-assistente-edital' item.edital.id 'habilitar' %}">Habilitar</a>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vazio"><p>Nenhum Edital tem página pública agora.</p></div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="requisitos-titulo">
+  <h2 id="requisitos-titulo">Requisitos da abertura em produção</h2>
+  <p>Fora de produção, eles não impedem os testes. Em produção, a página pública só abre quando todos estiverem cumpridos, e o registro deles é de uma entrega futura.</p>
+  <ul>{% for codigo, rotulo, especie in requisitos %}<li><strong>{{ codigo }}</strong> — {{ rotulo }} ({{ especie }}): pendente.</li>{% endfor %}</ul>
+</section>
+
+<section aria-labelledby="historico-titulo">
+  <h2 id="historico-titulo">Histórico</h2>
+  {% if historico %}
+  <div class="tabela-rolavel">
+  <table aria-label="Atos de habilitação do assistente, do mais recente para o mais antigo">
+    <thead><tr><th scope="col">Quando</th><th scope="col">Ato</th><th scope="col">Onde</th><th scope="col">Quem</th><th scope="col">Motivo</th></tr></thead>
+    <tbody>
+      {% for ato in historico %}
+      <tr>
+        <th scope="row">{{ ato.criado_em|date:"d/m/Y H:i" }}</th>
+        <td>{% if ato.habilitada %}Habilitação{% else %}Desabilitação{% endif %}</td>
+        <td>{% if ato.edital %}Página pública do Edital {{ ato.edital.number }}/{{ ato.edital.year }}{% else %}Piloto da gestão{% endif %}</td>
+        <td>{% nome_de_pessoa ato.autor %}</td>
+        <td>{{ ato.motivo }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="vazio"><p>Nenhum ato registrado. Sem ato, o assistente está desabilitado.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

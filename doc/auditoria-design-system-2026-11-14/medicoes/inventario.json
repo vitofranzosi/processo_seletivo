@@ -1,0 +1,3763 @@
+[
+ {
+  "rota": "/",
+  "nome": "index",
+  "modulo": "shared.api.operacional",
+  "view": "IndexView",
+  "templates": [],
+  "caps": [
+   "portal:vitrine"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/",
+  "nome": "interface:lista",
+  "modulo": "interface.views",
+  "view": "lista",
+  "templates": [
+   "interface/lista.html"
+  ],
+  "caps": [
+   "comissao:gerir",
+   "processo:criar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/",
+   "/gestao/?situacao"
+  ]
+ },
+ {
+  "rota": "/gestao/identificar",
+  "nome": "interface:identificar",
+  "modulo": "interface.views",
+  "view": "identificar",
+  "templates": [
+   "interface/identificar.html",
+   "interface/identificar_demonstracao.html",
+   "interface/sem_autenticacao.html"
+  ],
+  "caps": [
+   "interface:lista"
+  ],
+  "vista_por": [
+   "anonimo",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/identificar",
+   "/gestao/identificar?proximo"
+  ]
+ },
+ {
+  "rota": "/gestao/sair",
+  "nome": "interface:sair",
+  "modulo": "interface.views",
+  "view": "sair",
+  "templates": [],
+  "caps": [
+   "interface:identificar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/identificar/demonstracao",
+  "nome": "interface:identificar-demonstracao",
+  "modulo": "interface.views",
+  "view": "identificar_demonstracao",
+  "templates": [
+   "interface/identificar_demonstracao.html",
+   "interface/sem_autenticacao.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "anonimo",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/identificar/demonstracao",
+   "/gestao/identificar/demonstracao?proximo"
+  ]
+ },
+ {
+  "rota": "/gestao/entrar/institucional",
+  "nome": "interface:entrar-institucional",
+  "modulo": "interface.views",
+  "view": "entrar_institucional",
+  "templates": [
+   "interface/sem_autenticacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/entrar/institucional/retorno",
+  "nome": "interface:retorno-institucional",
+  "modulo": "interface.views",
+  "view": "retorno_institucional",
+  "templates": [
+   "interface/sem_autenticacao.html"
+  ],
+  "caps": [
+   "interface:lista"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/unidade-ativa",
+  "nome": "interface:unidade-ativa",
+  "modulo": "interface.views",
+  "view": "unidade_ativa",
+  "templates": [],
+  "caps": [
+   "interface:lista"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/sem-acesso",
+  "nome": "interface:sem-acesso",
+  "modulo": "interface.acessos",
+  "view": "sem_acesso",
+  "templates": [
+   "interface/sem_acesso.html"
+  ],
+  "caps": [
+   "interface:identificar",
+   "interface:lista"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/acessos/formalizacao",
+  "nome": "interface:acessos-formalizacao",
+  "modulo": "interface.acessos",
+  "view": "formalizacao",
+  "templates": [
+   "interface/acessos_formalizacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/acessos/formalizacao/<uuid:designacao_id>/revogar",
+  "nome": "interface:acessos-formalizacao-revogar",
+  "modulo": "interface.acessos",
+  "view": "revogar_designacao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/formalizacao/",
+  "nome": "interface:formalizacao",
+  "modulo": "interface.views_formalizacao",
+  "view": "lista",
+  "templates": [
+   "interface/formalizacao_lista.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/formalizacao/"
+  ]
+ },
+ {
+  "rota": "/gestao/formalizacao/editais/<uuid:edital_id>",
+  "nome": "interface:formalizacao-edital",
+  "modulo": "interface.views_formalizacao",
+  "view": "edital",
+  "templates": [
+   "interface/formalizacao_edital.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "treino.formalizacao"
+  ],
+  "estados": [
+   "/gestao/formalizacao/editais/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/formalizacao/editais/<uuid:edital_id>/pessoas/<uuid:inscricao_id>/documentos/<str:origem>/<uuid:objeto_id>",
+  "nome": "interface:formalizacao-documento",
+  "modulo": "interface.views_formalizacao",
+  "view": "documento",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/formalizacao/editais/<uuid:edital_id>/verificar",
+  "nome": "interface:formalizacao-verificar",
+  "modulo": "interface.views_formalizacao",
+  "view": "verificar",
+  "templates": [
+   "interface/formalizacao_recusa.html",
+   "interface/formalizacao_verificacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/formalizacao/editais/<uuid:edital_id>/baixar",
+  "nome": "interface:formalizacao-baixar",
+  "modulo": "interface.views_formalizacao",
+  "view": "baixar",
+  "templates": [
+   "interface/formalizacao_recusa.html",
+   "interface/formalizacao_verificacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/formalizacao/editais/<uuid:edital_id>/pessoas/<uuid:inscricao_id>/exportar",
+  "nome": "interface:formalizacao-exportar-pessoa",
+  "modulo": "interface.views_formalizacao",
+  "view": "exportar_pessoa",
+  "templates": [
+   "interface/formalizacao_recusa.html",
+   "interface/formalizacao_verificacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/acessos",
+  "nome": "interface:acessos",
+  "modulo": "interface.acessos",
+  "view": "lista",
+  "templates": [
+   "interface/acessos.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/acessos/conceder",
+  "nome": "interface:acessos-conceder",
+  "modulo": "interface.acessos",
+  "view": "conceder",
+  "templates": [
+   "interface/acessos_conceder.html",
+   "interface/acessos_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/acessos/vinculos/<uuid:vinculo_id>/revogar",
+  "nome": "interface:acessos-revogar",
+  "modulo": "interface.acessos",
+  "view": "revogar",
+  "templates": [
+   "interface/acessos_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos",
+  "nome": "interface:administracao-de-acessos",
+  "modulo": "interface.acessos",
+  "view": "lista",
+  "templates": [
+   "interface/acessos.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos/conceder",
+  "nome": "interface:administracao-de-acessos-conceder",
+  "modulo": "interface.acessos",
+  "view": "conceder",
+  "templates": [
+   "interface/acessos_conceder.html",
+   "interface/acessos_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos/vinculos/<uuid:vinculo_id>/revogar",
+  "nome": "interface:administracao-de-acessos-revogar",
+  "modulo": "interface.acessos",
+  "view": "revogar",
+  "templates": [
+   "interface/acessos_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos/pessoas",
+  "nome": "interface:administracao-de-acessos-pessoas",
+  "modulo": "interface.acessos",
+  "view": "pessoas",
+  "templates": [
+   "interface/acessos_pessoas.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos/pessoas/<str:identificador>/suspender",
+  "nome": "interface:administracao-de-acessos-suspender",
+  "modulo": "interface.acessos",
+  "view": "suspender",
+  "templates": [
+   "interface/acessos_suspensao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-acessos/pessoas/<str:identificador>/reativar",
+  "nome": "interface:administracao-de-acessos-reativar",
+  "modulo": "interface.acessos",
+  "view": "reativar",
+  "templates": [
+   "interface/acessos_suspensao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades",
+  "nome": "interface:unidades",
+  "modulo": "interface.unidades",
+  "view": "lista",
+  "templates": [
+   "interface/unidades.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades/cadastrar",
+  "nome": "interface:unidade-cadastrar",
+  "modulo": "interface.unidades",
+  "view": "cadastrar",
+  "templates": [
+   "interface/unidades_conferencia.html",
+   "interface/unidades_formulario.html"
+  ],
+  "caps": [
+   "interface:unidade"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades/unidades/<str:codigo>",
+  "nome": "interface:unidade",
+  "modulo": "interface.unidades",
+  "view": "ficha",
+  "templates": [
+   "interface/unidades_ficha.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades/unidades/<str:codigo>/editar",
+  "nome": "interface:unidade-editar",
+  "modulo": "interface.unidades",
+  "view": "editar",
+  "templates": [
+   "interface/unidades_conferencia.html",
+   "interface/unidades_formulario.html"
+  ],
+  "caps": [
+   "interface:unidade"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades/unidades/<str:codigo>/desativar",
+  "nome": "interface:unidade-desativar",
+  "modulo": "interface.unidades",
+  "view": "desativar",
+  "templates": [
+   "interface/unidades_situacao.html"
+  ],
+  "caps": [
+   "interface:unidade"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/administracao-de-unidades/unidades/<str:codigo>/reativar",
+  "nome": "interface:unidade-reativar",
+  "modulo": "interface.unidades",
+  "view": "reativar",
+  "templates": [
+   "interface/unidades_situacao.html"
+  ],
+  "caps": [
+   "interface:unidade"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/trilha-da-unidade",
+  "nome": "interface:trilha-da-unidade",
+  "modulo": "interface.trilha_da_unidade",
+  "view": "trilha_da_unidade",
+  "templates": [
+   "interface/trilha_da_unidade.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/trilha-da-unidade"
+  ]
+ },
+ {
+  "rota": "/gestao/visao-geral",
+  "nome": "interface:visao-geral",
+  "modulo": "interface.views",
+  "view": "visao_geral",
+  "templates": [
+   "interface/visao_geral.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/visao-geral"
+  ]
+ },
+ {
+  "rota": "/gestao/agenda",
+  "nome": "interface:agenda",
+  "modulo": "interface.views",
+  "view": "agenda",
+  "templates": [
+   "interface/agenda.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/agenda",
+   "/gestao/agenda?dia&visao",
+   "/gestao/agenda?janela&visao",
+   "/gestao/agenda?mes&visao",
+   "/gestao/agenda?visao"
+  ]
+ },
+ {
+  "rota": "/gestao/documentacao/",
+  "nome": "interface:documentacao",
+  "modulo": "interface.documentacao",
+  "view": "visao_do_sistema",
+  "templates": [
+   "index.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/documentacao/"
+  ]
+ },
+ {
+  "rota": "/gestao/documentacao/<path:arquivo>",
+  "nome": "interface:documentacao-arquivo",
+  "modulo": "interface.documentacao",
+  "view": "visao_do_sistema",
+  "templates": [
+   "index.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/visao-geral/relatorio",
+  "nome": "interface:relatorio-consolidado",
+  "modulo": "interface.relatorio",
+  "view": "relatorio_consolidado_escolha",
+  "templates": [
+   "interface/relatorio_consolidado_escolha.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/visao-geral/relatorio"
+  ]
+ },
+ {
+  "rota": "/gestao/visao-geral/relatorio/conjunto",
+  "nome": "interface:relatorio-consolidado-ver",
+  "modulo": "interface.relatorio",
+  "view": "relatorio_consolidado",
+  "templates": [
+   "interface/relatorio_consolidado.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/visao-geral/relatorio/pdf",
+  "nome": "interface:relatorio-consolidado-pdf",
+  "modulo": "interface.relatorio",
+  "view": "emitir_relatorio_consolidado",
+  "templates": [],
+  "caps": [
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/autoridades",
+  "nome": "interface:autoridades",
+  "modulo": "interface.views",
+  "view": "autoridades",
+  "templates": [
+   "interface/autoridades.html"
+  ],
+  "caps": [
+   "interface:autoridades"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/autoridades"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/criar",
+  "nome": "interface:processo-criar",
+  "modulo": "interface.views",
+  "view": "criar_processo",
+  "templates": [
+   "interface/processo_criar.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/criar"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/",
+  "nome": "interface:processo-detalhe",
+  "modulo": "interface.views",
+  "view": "processo_detalhe",
+  "templates": [
+   "interface/processo_detalhe.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "edital:criar",
+   "edital:elaborar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/editais/criar",
+  "nome": "interface:edital-criar",
+  "modulo": "interface.views",
+  "view": "criar_edital",
+  "templates": [
+   "interface/edital_criar.html"
+  ],
+  "caps": [
+   "edital:criar",
+   "interface:detalhe"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/editais/criar"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/atos/<slug:acao>",
+  "nome": "interface:processo-ato",
+  "modulo": "interface.views",
+  "view": "praticar_ato_processo",
+  "templates": [
+   "interface/processo_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/supervisao",
+  "nome": "interface:supervisao",
+  "modulo": "interface.views",
+  "view": "supervisao",
+  "templates": [
+   "interface/supervisao.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/supervisao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/",
+  "nome": "interface:detalhe",
+  "modulo": "interface.views",
+  "view": "detalhe",
+  "templates": [
+   "interface/detalhe.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "edital:elaborar",
+   "interface:convocacao",
+   "interface:corte",
+   "interface:marco",
+   "interface:ocupacao",
+   "interface:ordenacao",
+   "interface:sorteio",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/",
+   "/gestao/editais/<id>/?fase"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/centro/",
+  "nome": "interface:centro-do-edital",
+  "modulo": "interface.centro_do_edital",
+  "view": "centro_do_edital",
+  "templates": [],
+  "caps": [
+   "interface:detalhe"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/pagina-anterior/",
+  "nome": "interface:pagina-anterior",
+  "modulo": "interface.views",
+  "view": "pagina_anterior",
+  "templates": [
+   "interface/detalhe.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "edital:elaborar",
+   "interface:convocacao",
+   "interface:corte",
+   "interface:marco",
+   "interface:ocupacao",
+   "interface:ordenacao",
+   "interface:sorteio",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/pagina-anterior/"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/duvidas/",
+  "nome": "interface:duvidas",
+  "modulo": "interface.duvidas",
+  "view": "respostas_do_assistente",
+  "templates": [
+   "interface/duvidas.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/duvidas/"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/",
+  "nome": "interface:assistente",
+  "modulo": "interface.assistente",
+  "view": "conversar",
+  "templates": [
+   "interface/assistente.html"
+  ],
+  "caps": [
+   "interface:assistente"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/nova/",
+  "nome": "interface:assistente-nova",
+  "modulo": "interface.assistente",
+  "view": "nova_conversa",
+  "templates": [],
+  "caps": [
+   "interface:assistente"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/prototipo/",
+  "nome": "interface:assistente-prototipo",
+  "modulo": "interface.prototipo_do_assistente",
+  "view": "prototipo",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/prototipo/perguntar",
+  "nome": "interface:assistente-prototipo-perguntar",
+  "modulo": "interface.prototipo_do_assistente",
+  "view": "prototipo_perguntar",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/prototipo/sugestao",
+  "nome": "interface:assistente-prototipo-sugestao",
+  "modulo": "interface.prototipo_do_assistente",
+  "view": "prototipo_sugestao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/assistente/prototipo/nova",
+  "nome": "interface:assistente-prototipo-nova",
+  "modulo": "interface.prototipo_do_assistente",
+  "view": "prototipo_nova",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/compor",
+  "nome": "interface:compor",
+  "modulo": "interface.views",
+  "view": "compor",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/compor/<slug:etapa>",
+  "nome": "interface:compor-etapa",
+  "modulo": "interface.views",
+  "view": "compor_etapa",
+  "templates": [],
+  "caps": [
+   "edital:elaborar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/compor/anexos",
+   "/gestao/editais/<id>/compor/classificacao",
+   "/gestao/editais/<id>/compor/conteudo",
+   "/gestao/editais/<id>/compor/cronograma",
+   "/gestao/editais/<id>/compor/etapas",
+   "/gestao/editais/<id>/compor/identificacao",
+   "/gestao/editais/<id>/compor/inscricao",
+   "/gestao/editais/<id>/compor/perfis",
+   "/gestao/editais/<id>/compor/revisao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/reaproveitar",
+  "nome": "interface:reaproveitar",
+  "modulo": "interface.views",
+  "view": "reaproveitar",
+  "templates": [
+   "interface/reaproveitar.html",
+   "interface/reaproveitar_confirmar.html"
+  ],
+  "caps": [
+   "edital:elaborar",
+   "interface:reaproveitar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/reaproveitar"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/previa",
+  "nome": "interface:previa",
+  "modulo": "interface.views",
+  "view": "previa",
+  "templates": [
+   "interface/previa.html"
+  ],
+  "caps": [
+   "edital:elaborar",
+   "interface:detalhe"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/previa",
+   "/gestao/editais/<id>/previa?origem"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/previa/documento",
+  "nome": "interface:previa-documento",
+  "modulo": "interface.views",
+  "view": "previa_documento",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/atos/<slug:acao>",
+  "nome": "interface:ato",
+  "modulo": "interface.views",
+  "view": "praticar_ato",
+  "templates": [
+   "interface/confirmar.html"
+  ],
+  "caps": [
+   "edital:elaborar",
+   "interface:detalhe"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/atos/cancelar",
+   "/gestao/editais/<id>/atos/encerrar",
+   "/gestao/editais/<id>/atos/submeter"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/retificar",
+  "nome": "interface:retificar",
+  "modulo": "interface.views",
+  "view": "retificar",
+  "templates": [
+   "interface/retificar.html"
+  ],
+  "caps": [
+   "interface:retificar",
+   "retificacao:elaborar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/retificar"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/anexos",
+  "nome": "interface:anexos",
+  "modulo": "interface.views",
+  "view": "anexos_acao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/anexos/<uuid:anexo_id>/arquivo",
+  "nome": "interface:anexo-arquivo",
+  "modulo": "interface.views",
+  "view": "anexo_do_rascunho",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/auditoria",
+  "nome": "interface:auditoria",
+  "modulo": "interface.views",
+  "view": "auditoria",
+  "templates": [
+   "interface/auditoria.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/auditoria",
+   "/gestao/editais/<id>/auditoria?cursor"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/relatorio",
+  "nome": "interface:relatorio-do-edital",
+  "modulo": "interface.relatorio",
+  "view": "relatorio",
+  "templates": [
+   "interface/relatorio_do_edital.html"
+  ],
+  "caps": [
+   "portal:resultado",
+   "portal:selecao"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/relatorio"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/relatorio/pdf",
+  "nome": "interface:relatorio-do-edital-pdf",
+  "modulo": "interface.relatorio",
+  "view": "emitir",
+  "templates": [],
+  "caps": [
+   "portal:resultado",
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/kit-de-divulgacao/",
+  "nome": "interface:kit-de-divulgacao",
+  "modulo": "interface.kit_de_divulgacao",
+  "view": "kit",
+  "templates": [
+   "interface/kit_de_divulgacao.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/kit-de-divulgacao/"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/kit-de-divulgacao/previa.png",
+  "nome": "interface:kit-de-divulgacao-previa",
+  "modulo": "interface.kit_de_divulgacao",
+  "view": "previa",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/kit-de-divulgacao/exportar/<str:formato>",
+  "nome": "interface:kit-de-divulgacao-exportar",
+  "modulo": "interface.kit_de_divulgacao",
+  "view": "exportar",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/formalizacao",
+  "nome": "interface:formalizacao-definicao",
+  "modulo": "interface.views_formalizacao",
+  "view": "definicao",
+  "templates": [
+   "interface/formalizacao_definicao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:lista"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/formalizacao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/formalizacao/designar",
+  "nome": "interface:formalizacao-designar",
+  "modulo": "interface.views_formalizacao",
+  "view": "designar_na_definicao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/formalizacao/designacoes/<uuid:designacao_id>/revogar",
+  "nome": "interface:formalizacao-designacao-revogar",
+  "modulo": "interface.views_formalizacao",
+  "view": "revogar_na_definicao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/matriculas",
+  "nome": "interface:exportar-matriculas",
+  "modulo": "interface.views",
+  "view": "exportar_matriculas",
+  "templates": [
+   "interface/matriculas.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/inscricoes",
+  "nome": "interface:inscricoes",
+  "modulo": "interface.views",
+  "view": "inscricoes_recebidas",
+  "templates": [
+   "interface/inscricoes.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/inscricoes"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/inscricoes/publicacoes",
+  "nome": "interface:publicacoes-das-inscricoes",
+  "modulo": "interface.inscricoes_publicadas",
+  "view": "publicacoes_das_inscricoes",
+  "templates": [
+   "interface/publicacoes_das_inscricoes.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/inscricoes/publicacoes",
+   "/gestao/editais/<id>/inscricoes/publicacoes?natureza"
+  ]
+ },
+ {
+  "rota": "/gestao/inscricoes/<uuid:inscricao_id>/",
+  "nome": "interface:inscricao-recebida",
+  "modulo": "interface.views",
+  "view": "inscricao_recebida",
+  "templates": [
+   "interface/inscricao_detalhe.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/inscricoes/<id>/"
+  ]
+ },
+ {
+  "rota": "/gestao/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
+  "nome": "interface:documento-da-inscricao",
+  "modulo": "interface.views",
+  "view": "documento_da_inscricao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/retificacoes/<uuid:retificacao_id>/",
+  "nome": "interface:retificacao-detalhe",
+  "modulo": "interface.views",
+  "view": "retificacao_detalhe",
+  "templates": [
+   "interface/retificacao_detalhe.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/retificacoes/<id>/"
+  ]
+ },
+ {
+  "rota": "/gestao/retificacoes/<uuid:retificacao_id>/editar",
+  "nome": "interface:retificacao-editar",
+  "modulo": "interface.views",
+  "view": "retificacao_editar",
+  "templates": [
+   "interface/retificar.html"
+  ],
+  "caps": [
+   "interface:retificar",
+   "retificacao:elaborar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/retificacoes/<uuid:retificacao_id>/atos/<slug:acao>",
+  "nome": "interface:retificacao-ato",
+  "modulo": "interface.views",
+  "view": "praticar_ato_retificacao",
+  "templates": [
+   "interface/retificacao_confirmar.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/fragmentos/etapa",
+  "nome": "interface:fragmento-etapa",
+  "modulo": "interface.views",
+  "view": "fragmento_etapa",
+  "templates": [
+   "interface/_etapa.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/fragmentos/etapa/<str:indice>/criterio",
+  "nome": "interface:fragmento-criterio-de-avaliacao",
+  "modulo": "interface.views",
+  "view": "fragmento_criterio_de_avaliacao",
+  "templates": [
+   "interface/_criterio_de_avaliacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/fragmentos/documento",
+  "nome": "interface:fragmento-documento",
+  "modulo": "interface.views",
+  "view": "fragmento_documento",
+  "templates": [
+   "interface/_documento.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil",
+  "nome": "interface:fragmento-perfil",
+  "modulo": "interface.views",
+  "view": "fragmento_perfil",
+  "templates": [
+   "interface/_perfil.html"
+  ],
+  "caps": [
+   "edital:elaborar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/modalidade",
+  "nome": "interface:fragmento-modalidade",
+  "modulo": "interface.views",
+  "view": "fragmento_modalidade",
+  "templates": [
+   "interface/_modalidade_com_linha.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/duplicar",
+  "nome": "interface:fragmento-perfil-duplicado",
+  "modulo": "interface.views",
+  "view": "fragmento_perfil_duplicado",
+  "templates": [
+   "interface/_duplicar_perfil.html",
+   "interface/_perfil.html"
+  ],
+  "caps": [
+   "edital:elaborar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/conferir-referencia",
+  "nome": "interface:fragmento-conferir-referencia",
+  "modulo": "interface.views",
+  "view": "fragmento_conferir_referencia",
+  "templates": [
+   "interface/_conferencia_sob_demanda.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "edital:elaborar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/quadro",
+  "nome": "interface:fragmento-quadro",
+  "modulo": "interface.views",
+  "view": "fragmento_quadro",
+  "templates": [
+   "interface/_quadro_do_perfil.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/fato",
+  "nome": "interface:fragmento-fato",
+  "modulo": "interface.views",
+  "view": "fragmento_fato",
+  "templates": [
+   "interface/_fato.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/marco",
+  "nome": "interface:fragmento-marco",
+  "modulo": "interface.views",
+  "view": "fragmento_marco",
+  "templates": [
+   "interface/_marco_acrescentado.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/marco/<str:sub>/recompor",
+  "nome": "interface:fragmento-marco-recomposto",
+  "modulo": "interface.views",
+  "view": "fragmento_marco_recomposto",
+  "templates": [
+   "interface/_marco.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/marco/<str:sub>/previa",
+  "nome": "interface:fragmento-previa-da-classificacao",
+  "modulo": "interface.views",
+  "view": "fragmento_previa_da_classificacao",
+  "templates": [
+   "interface/_previa_da_classificacao.html",
+   "interface/_previa_do_sorteio.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/previa-da-classificacao/fechar",
+  "nome": "interface:fragmento-previa-da-classificacao-fechar",
+  "modulo": "interface.views",
+  "view": "fragmento_previa_da_classificacao_fechar",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/perfil/<str:indice>/marco/<str:sub>/criterio",
+  "nome": "interface:fragmento-criterio",
+  "modulo": "interface.views",
+  "view": "fragmento_criterio",
+  "templates": [
+   "interface/_criterio.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/evento",
+  "nome": "interface:fragmento-evento",
+  "modulo": "interface.views",
+  "view": "fragmento_evento",
+  "templates": [
+   "interface/_evento.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/perfil",
+  "nome": "interface:fragmento-retificacao-perfil",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_perfil",
+  "templates": [
+   "interface/_retificacao_perfil.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/evento",
+  "nome": "interface:fragmento-retificacao-evento",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_evento",
+  "templates": [
+   "interface/_retificacao_evento.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/anexo",
+  "nome": "interface:fragmento-retificacao-anexo",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_anexo",
+  "templates": [
+   "interface/_retificacao_anexo.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/<uuid:edital_id>/linha-do-quadro",
+  "nome": "interface:fragmento-retificacao-linha-do-quadro",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_linha_do_quadro",
+  "templates": [
+   "interface/_retificacao_linha_do_quadro.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/<uuid:edital_id>/modalidade",
+  "nome": "interface:fragmento-retificacao-modalidade",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_modalidade",
+  "templates": [
+   "interface/_retificacao_modalidade.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/retificacao/<uuid:edital_id>/criterio",
+  "nome": "interface:fragmento-retificacao-criterio",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_criterio",
+  "templates": [
+   "interface/_retificacao_criterio.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/fragmentos/retificacao/criterio-de-avaliacao",
+  "nome": "interface:fragmento-retificacao-criterio-de-avaliacao",
+  "modulo": "interface.views",
+  "view": "fragmento_retificacao_criterio_de_avaliacao",
+  "templates": [
+   "interface/_retificacao_criterio_de_avaliacao.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/fragmentos/remover",
+  "nome": "interface:fragmento-remover",
+  "modulo": "interface.views",
+  "view": "fragmento_remover",
+  "templates": [
+   "interface/_remover_junto.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/comissao",
+  "nome": "interface:comissao",
+  "modulo": "interface.views",
+  "view": "comissao",
+  "templates": [
+   "interface/comissao.html",
+   "interface/comissao_confirmar.html"
+  ],
+  "caps": [
+   "interface:comissao"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/comissao"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/alocacoes",
+  "nome": "interface:alocacoes",
+  "modulo": "interface.views",
+  "view": "alocacoes",
+  "templates": [
+   "interface/alocacoes.html"
+  ],
+  "caps": [
+   "interface:alocacoes"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/alocacoes"
+  ]
+ },
+ {
+  "rota": "/gestao/processos/<uuid:processo_id>/auditoria",
+  "nome": "interface:auditoria-comissao",
+  "modulo": "interface.views",
+  "view": "auditoria_da_comissao",
+  "templates": [
+   "interface/auditoria.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/processos/<id>/auditoria"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>",
+  "nome": "interface:distribuicao",
+  "modulo": "interface.views",
+  "view": "distribuicao",
+  "templates": [
+   "interface/distribuicao.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>",
+   "/gestao/editais/<id>/distribuicao/<id>?cobertura",
+   "/gestao/editais/<id>/distribuicao/<id>?prontidao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/consolidar",
+  "nome": "interface:consolidar-resultados",
+  "modulo": "interface.views",
+  "view": "consolidar_resultados",
+  "templates": [
+   "interface/consolidacao_confirmar.html"
+  ],
+  "caps": [
+   "interface:distribuicao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/ocorrencia",
+  "nome": "interface:registrar-ocorrencia",
+  "modulo": "interface.views",
+  "view": "registrar_ocorrencia",
+  "templates": [
+   "interface/ocorrencia.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>/ocorrencia"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/remover",
+  "nome": "interface:distribuicao-remover",
+  "modulo": "interface.views",
+  "view": "remover_atribuicao",
+  "templates": [
+   "interface/distribuicao_remover_confirmar.html"
+  ],
+  "caps": [
+   "interface:distribuicao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/impedimentos",
+  "nome": "interface:impedimentos",
+  "modulo": "interface.views",
+  "view": "impedimentos",
+  "templates": [
+   "interface/impedimentos.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>/impedimentos"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/reabrir",
+  "nome": "interface:reabrir-avaliacao",
+  "modulo": "interface.views",
+  "view": "reabrir_avaliacao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/trilha",
+  "nome": "interface:trilha-da-avaliacao",
+  "modulo": "interface.views",
+  "view": "trilha_da_avaliacao",
+  "templates": [
+   "interface/auditoria.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>/trilha",
+   "/gestao/editais/<id>/distribuicao/<id>/trilha?inscricao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/resultados",
+  "nome": "interface:resultados-da-etapa",
+  "modulo": "interface.views",
+  "view": "resultados_da_etapa",
+  "templates": [
+   "interface/resultados.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>/resultados",
+   "/gestao/editais/<id>/distribuicao/<id>/resultados?consequencia"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>",
+  "nome": "interface:ordenacao",
+  "modulo": "interface.views",
+  "view": "ordenacao",
+  "templates": [
+   "interface/ordenacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:detalhe",
+   "interface:distribuicao",
+   "interface:ordenacao",
+   "interface:sorteio",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>",
+   "/gestao/editais/<id>/marcos/<id>?lista"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/emitir",
+  "nome": "interface:emitir-ordenacao",
+  "modulo": "interface.views",
+  "view": "emitir_ordenacao",
+  "templates": [
+   "interface/ordenacao_confirmar.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ordenacao",
+   "interface:sorteio"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/cortes/<uuid:corte_id>",
+  "nome": "interface:corte-historico",
+  "modulo": "interface.views",
+  "view": "corte_historico",
+  "templates": [
+   "interface/corte_historico.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/cortes/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>",
+  "nome": "interface:ato-de-ordenacao",
+  "modulo": "interface.views",
+  "view": "ato_de_ordenacao",
+  "templates": [
+   "interface/ato_ordenacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ordenacao"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/atos/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte",
+  "nome": "interface:corte",
+  "modulo": "interface.views",
+  "view": "corte",
+  "templates": [
+   "interface/corte.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:corte",
+   "interface:detalhe",
+   "interface:ordenacao",
+   "interface:retificar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/corte",
+   "/gestao/editais/<id>/marcos/<id>/corte?lista"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/emitir",
+  "nome": "interface:emitir-corte",
+  "modulo": "interface.views",
+  "view": "emitir_corte_view",
+  "templates": [
+   "interface/corte_confirmar.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:corte"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao",
+  "nome": "interface:ocupacao",
+  "modulo": "interface.views",
+  "view": "ocupacao",
+  "templates": [
+   "interface/ocupacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:detalhe",
+   "interface:ocupacao",
+   "retificacao:elaborar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/ocupacao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/apurar",
+  "nome": "interface:emitir-apuracao",
+  "modulo": "interface.views",
+  "view": "emitir_apuracao_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/faixa-seguinte",
+  "nome": "interface:causar-faixa",
+  "modulo": "interface.views",
+  "view": "causar_faixa_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/acrescentar-vagas",
+  "nome": "interface:acrescentar-vagas",
+  "modulo": "interface.views",
+  "view": "acrescentar_vagas_view",
+  "templates": [
+   "interface/ocupacao_acrescimo.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-acrescimo",
+  "nome": "interface:desfazer-acrescimo",
+  "modulo": "interface.views",
+  "view": "desfazer_acrescimo_view",
+  "templates": [
+   "interface/ocupacao_acrescimo.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/declarar-nao-preenchida",
+  "nome": "interface:declarar-nao-preenchida",
+  "modulo": "interface.views_da_nao_preenchida",
+  "view": "declarar_nao_preenchida",
+  "templates": [
+   "interface/ocupacao_nao_preenchida.html"
+  ],
+  "caps": [
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/desfazer-nao-preenchida",
+  "nome": "interface:desfazer-nao-preenchida",
+  "modulo": "interface.views_da_nao_preenchida",
+  "view": "desfazer_nao_preenchida",
+  "templates": [
+   "interface/ocupacao_nao_preenchida.html"
+  ],
+  "caps": [
+   "interface:ocupacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/ocupacao/historico",
+  "nome": "interface:ocupacao-historico",
+  "modulo": "interface.views",
+  "view": "ocupacao_historico",
+  "templates": [
+   "interface/ocupacao_historico.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/ocupacao/historico"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/convocacoes/publicacao",
+  "nome": "interface:publicacao-de-convocados",
+  "modulo": "interface.views",
+  "view": "publicacao_de_convocados",
+  "templates": [
+   "interface/publicacao_de_convocados.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/convocacoes/publicacao",
+   "/gestao/editais/<id>/convocacoes/publicacao?escolha&recorte"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao",
+  "nome": "interface:convocacao",
+  "modulo": "interface.views",
+  "view": "convocacao",
+  "templates": [
+   "interface/convocacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "interface:detalhe",
+   "retificacao:elaborar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/convocacao",
+   "/gestao/editais/<id>/marcos/<id>/convocacao?lista",
+   "/gestao/editais/<id>/marcos/<id>/convocacao?ordem"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/convocar",
+  "nome": "interface:convocar",
+  "modulo": "interface.views",
+  "view": "convocar_view",
+  "templates": [
+   "interface/convocacao_conferir.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "interface:convocar",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/titulares",
+  "nome": "interface:convocar-titulares",
+  "modulo": "interface.views",
+  "view": "convocar_titulares_view",
+  "templates": [
+   "interface/convocacao_conferir.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "interface:convocar",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/vencidos",
+  "nome": "interface:nao-atendimento-dos-vencidos",
+  "modulo": "interface.views",
+  "view": "nao_atendimento_dos_vencidos_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/pendentes",
+  "nome": "interface:emitir-pendentes",
+  "modulo": "interface.views",
+  "view": "emitir_pendentes_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/avisar-pendencias",
+  "nome": "interface:avisar-pendencias",
+  "modulo": "interface.views",
+  "view": "avisar_pendencias_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/historico",
+  "nome": "interface:convocacao-historico",
+  "modulo": "interface.views",
+  "view": "convocacao_historico",
+  "templates": [
+   "interface/convocacao_historico.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/convocacao/historico",
+   "/gestao/editais/<id>/marcos/<id>/convocacao/historico?lista"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/desfecho",
+  "nome": "interface:desfechar",
+  "modulo": "interface.views",
+  "view": "desfechar_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/comunicar",
+  "nome": "interface:comunicar-convocacao",
+  "modulo": "interface.views",
+  "view": "comunicar_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:convocacao",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos",
+  "nome": "interface:documentos-da-convocacao",
+  "modulo": "interface.views",
+  "view": "documentos_da_convocacao",
+  "templates": [
+   "interface/convocacao_documentos.html"
+  ],
+  "caps": [
+   "interface:convocacao",
+   "interface:detalhe"
+  ],
+  "vista_por": [
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/convocacao/<id>/documentos"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/<uuid:apresentacao_id>",
+  "nome": "interface:documento-da-convocacao",
+  "modulo": "interface.views",
+  "view": "documento_da_convocacao",
+  "templates": [
+   "interface/_recusa_no_painel.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/itens/<uuid:item_id>/conferencia",
+  "nome": "interface:conferir-documento",
+  "modulo": "interface.views",
+  "view": "conferir_documento_view",
+  "templates": [
+   "interface/_documento_da_convocacao.html",
+   "interface/_pessoas_do_recorte.html",
+   "interface/_situacao_dos_documentos.html"
+  ],
+  "caps": [
+   "interface:convocacao",
+   "interface:detalhe"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/documentos/itens/<uuid:item_id>/cartao",
+  "nome": "interface:cartao-do-documento-da-convocacao",
+  "modulo": "interface.views",
+  "view": "cartao_do_documento_da_convocacao",
+  "templates": [
+   "interface/_documento_da_convocacao.html"
+  ],
+  "caps": [
+   "interface:convocacao",
+   "interface:detalhe"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/<uuid:convocacao_id>/aviso-de-pendencia",
+  "nome": "interface:pedir-aviso-de-pendencia",
+  "modulo": "interface.views",
+  "view": "pedir_aviso_de_pendencia_view",
+  "templates": [
+   "interface/_confirmacao_da_conferencia.html",
+   "interface/_situacao_dos_documentos.html"
+  ],
+  "caps": [
+   "interface:convocacao",
+   "interface:detalhe",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/inscricoes/<uuid:inscricao_id>/atestado",
+  "nome": "interface:atestar",
+  "modulo": "interface.views",
+  "view": "atestar_view",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:detalhe"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/corte/continuar",
+  "nome": "interface:continuar-corte",
+  "modulo": "interface.views",
+  "view": "continuar_corte_view",
+  "templates": [
+   "interface/corte_confirmar.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:corte"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio",
+  "nome": "interface:sorteio",
+  "modulo": "interface.views",
+  "view": "sorteio",
+  "templates": [
+   "interface/sorteio.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:detalhe",
+   "resultado:publicar",
+   "retificacao:elaborar"
+  ],
+  "vista_por": [
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/sorteio"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/relacao",
+  "nome": "interface:publicar-relacao-do-sorteio",
+  "modulo": "interface.views",
+  "view": "publicar_relacao_do_sorteio",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:sorteio"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/ocorrencia",
+  "nome": "interface:observar-ocorrencia-do-sorteio",
+  "modulo": "interface.views",
+  "view": "observar_ocorrencia_do_sorteio",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:sorteio"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/realizar",
+  "nome": "interface:realizar-sorteio",
+  "modulo": "interface.views",
+  "view": "realizar_sorteio",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:sorteio"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/sorteio/anular",
+  "nome": "interface:anular-sorteio",
+  "modulo": "interface.views",
+  "view": "anular_o_sorteio",
+  "templates": [],
+  "caps": [
+   "auditoria:consultar",
+   "interface:sorteio"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>/publicar",
+  "nome": "interface:previa-de-publicacao",
+  "modulo": "interface.views",
+  "view": "previa_de_publicacao",
+  "templates": [
+   "interface/previa_de_publicacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/atos/<id>/publicar"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/atos/<uuid:ato_id>/publicar/confirmar",
+  "nome": "interface:publicar-resultado",
+  "modulo": "interface.views",
+  "view": "publicar_resultado",
+  "templates": [
+   "interface/previa_de_publicacao.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "resultado:publicar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/publicacoes",
+  "nome": "interface:publicacoes-do-marco",
+  "modulo": "interface.views",
+  "view": "publicacoes_do_marco",
+  "templates": [
+   "interface/publicacoes_do_marco.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/publicacoes"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/avisos/novo",
+  "nome": "interface:aviso-do-resultado",
+  "modulo": "interface.avisos",
+  "view": "aviso_do_resultado",
+  "templates": [
+   "interface/aviso_previa.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:aviso",
+   "portal:inscricoes",
+   "portal:resultado",
+   "portal:selecao"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/avisos/novo?de&natureza",
+   "/gestao/editais/<id>/marcos/<id>/avisos/novo?natureza"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/convocacao/avisos/novo",
+  "nome": "interface:aviso-da-chamada",
+  "modulo": "interface.avisos",
+  "view": "aviso_da_chamada",
+  "templates": [
+   "interface/aviso_previa.html"
+  ],
+  "caps": [
+   "interface:aviso",
+   "interface:convocacao",
+   "portal:inscricoes",
+   "portal:resultado",
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/avisos",
+  "nome": "interface:avisos-do-edital",
+  "modulo": "interface.avisos",
+  "view": "avisos_do_edital",
+  "templates": [
+   "interface/avisos_do_edital.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/avisos"
+  ]
+ },
+ {
+  "rota": "/gestao/avisos/<uuid:aviso_id>",
+  "nome": "interface:aviso",
+  "modulo": "interface.avisos",
+  "view": "aviso",
+  "templates": [
+   "interface/aviso.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/avisos/<uuid:aviso_id>/interromper",
+  "nome": "interface:aviso-interromper",
+  "modulo": "interface.avisos",
+  "view": "aviso_interromper",
+  "templates": [
+   "interface/aviso_interromper.html"
+  ],
+  "caps": [
+   "interface:aviso"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/avisos/<uuid:aviso_id>/reenviar",
+  "nome": "interface:aviso-reenviar",
+  "modulo": "interface.avisos",
+  "view": "aviso_reenviar",
+  "templates": [
+   "interface/aviso_previa.html"
+  ],
+  "caps": [
+   "interface:aviso",
+   "portal:inscricoes",
+   "portal:resultado",
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/modelos-de-aviso",
+  "nome": "interface:modelos-de-aviso",
+  "modulo": "interface.avisos",
+  "view": "modelos_de_aviso",
+  "templates": [
+   "interface/modelos_de_aviso.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/modelos-de-aviso"
+  ]
+ },
+ {
+  "rota": "/gestao/modelos-de-aviso/novo",
+  "nome": "interface:modelo-de-aviso-novo",
+  "modulo": "interface.avisos",
+  "view": "modelo_de_aviso",
+  "templates": [
+   "interface/modelo_de_aviso.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/modelos-de-aviso/novo"
+  ]
+ },
+ {
+  "rota": "/gestao/modelos-de-aviso/<uuid:modelo_id>",
+  "nome": "interface:modelo-de-aviso",
+  "modulo": "interface.avisos",
+  "view": "modelo_de_aviso",
+  "templates": [
+   "interface/modelo_de_aviso.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/modelos-de-aviso/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/modelos-de-aviso/<uuid:modelo_id>/situacao",
+  "nome": "interface:modelo-de-aviso-situacao",
+  "modulo": "interface.avisos",
+  "view": "modelo_de_aviso_situacao",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao",
+  "nome": "interface:marco",
+  "modulo": "interface.views",
+  "view": "marco",
+  "templates": [
+   "interface/marco.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "resultado:publicar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/marcos/<id>/conducao"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/marcos/<uuid:marco_id>/conducao/<str:operacao>",
+  "nome": "interface:gesto-do-marco",
+  "modulo": "interface.views",
+  "view": "gesto_do_marco",
+  "templates": [
+   "interface/marco_conferir.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:marco",
+   "resultado:publicar"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/distribuicao/<uuid:etapa_id>/conclusoes",
+  "nome": "interface:conclusoes-preservadas",
+  "modulo": "interface.views",
+  "view": "conclusoes_preservadas",
+  "templates": [
+   "interface/conclusoes.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/distribuicao/<id>/conclusoes"
+  ]
+ },
+ {
+  "rota": "/gestao/editais/<uuid:edital_id>/recursos",
+  "nome": "interface:recursos",
+  "modulo": "interface.views",
+  "view": "recursos_do_edital",
+  "templates": [
+   "interface/recursos.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/editais/<id>/recursos"
+  ]
+ },
+ {
+  "rota": "/gestao/recursos/<uuid:recurso_id>",
+  "nome": "interface:recurso",
+  "modulo": "interface.views",
+  "view": "recurso_recebido",
+  "templates": [
+   "interface/recurso.html"
+  ],
+  "caps": [
+   "auditoria:consultar"
+  ],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/recursos/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/recursos/<uuid:recurso_id>/admitir",
+  "nome": "interface:recurso-admitir",
+  "modulo": "interface.views",
+  "view": "admitir_recurso",
+  "templates": [
+   "interface/recurso.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:recurso"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/recursos/<uuid:recurso_id>/julgar",
+  "nome": "interface:recurso-julgar",
+  "modulo": "interface.views",
+  "view": "julgar_recurso",
+  "templates": [
+   "interface/recurso.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:recurso"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/recursos/<uuid:recurso_id>/instruir",
+  "nome": "interface:recurso-instruir",
+  "modulo": "interface.views",
+  "view": "instruir_recurso",
+  "templates": [
+   "interface/recurso.html"
+  ],
+  "caps": [
+   "auditoria:consultar",
+   "interface:recurso"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/recursos/<uuid:recurso_id>/instrucao/<uuid:documento_id>",
+  "nome": "interface:recurso-documento-instruido",
+  "modulo": "interface.views",
+  "view": "documento_instruido",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/minhas-etapas",
+  "nome": "interface:minhas-etapas",
+  "modulo": "interface.views",
+  "view": "minhas_etapas",
+  "templates": [
+   "interface/minhas_etapas.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/gestao/minhas-etapas"
+  ]
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>",
+  "nome": "interface:mesa-inscricao",
+  "modulo": "interface.views",
+  "view": "inscricao_da_mesa",
+  "templates": [
+   "interface/mesa_inscricao.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "treino.avaliacao1"
+  ],
+  "estados": [
+   "/gestao/minhas-etapas/<id>/<id>/inscricoes/<id>"
+  ]
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao",
+  "nome": "interface:mesa-avaliacao-gravar",
+  "modulo": "interface.views",
+  "view": "avaliacao_gravar",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/avaliacao/concluir",
+  "nome": "interface:mesa-avaliacao-concluir",
+  "modulo": "interface.views",
+  "view": "avaliacao_concluir",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
+  "nome": "interface:mesa-documento",
+  "modulo": "interface.views",
+  "view": "documento_da_mesa",
+  "templates": [
+   "interface/_recusa_no_painel.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>/inscricoes/<uuid:inscricao_id>/documentos",
+  "nome": "interface:mesa-documentos",
+  "modulo": "interface.views",
+  "view": "documentos_da_mesa",
+  "templates": [
+   "interface/_documentos_da_mesa.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/gestao/minhas-etapas/<uuid:edital_id>/<uuid:etapa_id>",
+  "nome": "interface:minha-etapa",
+  "modulo": "interface.views",
+  "view": "minha_etapa",
+  "templates": [
+   "interface/minha_etapa.html"
+  ],
+  "caps": [
+   "interface:lista"
+  ],
+  "vista_por": [
+   "treino.avaliacao1"
+  ],
+  "estados": [
+   "/gestao/minhas-etapas/<id>/<id>",
+   "/gestao/minhas-etapas/<id>/<id>?filtro"
+  ]
+ },
+ {
+  "rota": "/selecoes/",
+  "nome": "portal:vitrine",
+  "modulo": "portal.views",
+  "view": "vitrine",
+  "templates": [
+   "portal/vitrine.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "anonimo",
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4",
+   "cand5",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/selecoes/",
+   "/selecoes/?pagina"
+  ]
+ },
+ {
+  "rota": "/selecoes/acesso",
+  "nome": "portal:acesso",
+  "modulo": "portal.views",
+  "view": "acesso",
+  "templates": [
+   "portal/acesso_email.html"
+  ],
+  "caps": [
+   "portal:convocacao",
+   "portal:inscrever",
+   "portal:inscricoes"
+  ],
+  "vista_por": [
+   "anonimo",
+   "cand5",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/selecoes/acesso",
+   "/selecoes/acesso?destino"
+  ]
+ },
+ {
+  "rota": "/selecoes/acesso/codigo",
+  "nome": "portal:acesso-codigo",
+  "modulo": "portal.views",
+  "view": "acesso_codigo",
+  "templates": [
+   "portal/acesso_codigo.html"
+  ],
+  "caps": [
+   "portal:acesso",
+   "portal:conta",
+   "portal:convocacao",
+   "portal:inscrever",
+   "portal:inscricoes",
+   "portal:selecao"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4",
+   "cand5"
+  ],
+  "estados": [
+   "/selecoes/acesso/codigo"
+  ]
+ },
+ {
+  "rota": "/selecoes/acesso/reconciliar",
+  "nome": "portal:acesso-reconciliar",
+  "modulo": "portal.views",
+  "view": "acesso_reconciliar",
+  "templates": [
+   "portal/acesso_reconciliar.html"
+  ],
+  "caps": [
+   "portal:acesso",
+   "portal:convocacao",
+   "portal:inscrever",
+   "portal:inscricoes",
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/acesso/reconciliar/retomar",
+  "nome": "portal:acesso-retomar",
+  "modulo": "portal.views",
+  "view": "acesso_retomar",
+  "templates": [],
+  "caps": [
+   "portal:acesso",
+   "portal:inscricoes"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/meus-dados",
+  "nome": "portal:meus-dados",
+  "modulo": "portal.views",
+  "view": "meus_dados",
+  "templates": [
+   "portal/meus_dados.html"
+  ],
+  "caps": [
+   "portal:acesso",
+   "portal:convocacao",
+   "portal:inscrever",
+   "portal:inscricoes",
+   "portal:selecao"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/meus-dados"
+  ]
+ },
+ {
+  "rota": "/selecoes/conta",
+  "nome": "portal:conta",
+  "modulo": "portal.views",
+  "view": "conta",
+  "templates": [
+   "portal/conta.html"
+  ],
+  "caps": [
+   "portal:acesso"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/conta"
+  ]
+ },
+ {
+  "rota": "/selecoes/conta/emails",
+  "nome": "portal:conta-adicionar",
+  "modulo": "portal.views",
+  "view": "conta_adicionar",
+  "templates": [],
+  "caps": [
+   "portal:acesso",
+   "portal:conta"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/conta/emails/<uuid:credencial_id>/principal",
+  "nome": "portal:conta-principal",
+  "modulo": "portal.views",
+  "view": "conta_principal",
+  "templates": [],
+  "caps": [
+   "portal:acesso",
+   "portal:conta"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/conta/emails/<uuid:credencial_id>/remover",
+  "nome": "portal:conta-remover",
+  "modulo": "portal.views",
+  "view": "conta_remover",
+  "templates": [
+   "portal/conta_remover.html"
+  ],
+  "caps": [
+   "portal:acesso",
+   "portal:conta"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/",
+  "nome": "portal:inscricoes",
+  "modulo": "portal.views",
+  "view": "inscricoes",
+  "templates": [
+   "portal/inscricoes.html"
+  ],
+  "caps": [
+   "portal:acesso"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/"
+  ]
+ },
+ {
+  "rota": "/selecoes/sair",
+  "nome": "portal:sair",
+  "modulo": "portal.views",
+  "view": "sair",
+  "templates": [],
+  "caps": [
+   "portal:vitrine"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/",
+  "nome": "portal:inscricao",
+  "modulo": "portal.views",
+  "view": "inscricao",
+  "templates": [
+   "portal/descarte.html",
+   "portal/inscricao.html",
+   "portal/inscricao_enviada.html"
+  ],
+  "caps": [
+   "portal:inscricao",
+   "portal:revisao",
+   "portal:vitrine"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/"
+  ]
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/revisao",
+  "nome": "portal:revisao",
+  "modulo": "portal.views",
+  "view": "revisao",
+  "templates": [
+   "portal/revisao.html"
+  ],
+  "caps": [
+   "portal:comprovante",
+   "portal:revisao",
+   "portal:vitrine"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/acompanhamento",
+  "nome": "portal:acompanhamento",
+  "modulo": "portal.views",
+  "view": "acompanhamento",
+  "templates": [
+   "portal/acompanhamento.html"
+  ],
+  "caps": [
+   "portal:inscricao"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/acompanhamento"
+  ]
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/convocacao",
+  "nome": "portal:convocacao",
+  "modulo": "portal.views",
+  "view": "convocacao",
+  "templates": [
+   "portal/convocacao.html"
+  ],
+  "caps": [
+   "portal:acesso"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/convocacao"
+  ]
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/convocacao/documentos/<uuid:item_id>",
+  "nome": "portal:apresentar-documento-da-convocacao",
+  "modulo": "portal.views",
+  "view": "apresentar_documento_da_convocacao",
+  "templates": [],
+  "caps": [
+   "portal:convocacao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/convocacao/apresentacoes/<uuid:apresentacao_id>",
+  "nome": "portal:documento-da-convocacao",
+  "modulo": "portal.views",
+  "view": "documento_da_convocacao_do_candidato",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/recorrer",
+  "nome": "portal:recorrer",
+  "modulo": "portal.views",
+  "view": "recorrer",
+  "templates": [
+   "portal/recorrer.html"
+  ],
+  "caps": [
+   "portal:acompanhamento",
+   "portal:inscricao",
+   "portal:recurso"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/recorrer"
+  ]
+ },
+ {
+  "rota": "/selecoes/recursos/<uuid:recurso_id>",
+  "nome": "portal:recurso",
+  "modulo": "portal.views",
+  "view": "recurso",
+  "templates": [
+   "portal/recurso.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "cand2"
+  ],
+  "estados": [
+   "/selecoes/recursos/<id>"
+  ]
+ },
+ {
+  "rota": "/selecoes/requerimento/cep",
+  "nome": "portal:requerimento-cep",
+  "modulo": "portal.views",
+  "view": "requerimento_cep",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/requerimento",
+  "nome": "portal:requerimento",
+  "modulo": "portal.views",
+  "view": "requerimento",
+  "templates": [
+   "portal/requerimento.html"
+  ],
+  "caps": [
+   "portal:conta",
+   "portal:requerimento"
+  ],
+  "vista_por": [
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/requerimento",
+   "/selecoes/inscricoes/<id>/requerimento?atualizando"
+  ]
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/requerimento/anterior/<uuid:requerimento_id>",
+  "nome": "portal:requerimento-anterior",
+  "modulo": "portal.views",
+  "view": "requerimento_anterior",
+  "templates": [
+   "portal/requerimento_anterior.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/comprovante",
+  "nome": "portal:comprovante",
+  "modulo": "portal.views",
+  "view": "comprovante",
+  "templates": [
+   "portal/comprovante.html"
+  ],
+  "caps": [
+   "portal:inscricao",
+   "portal:vitrine"
+  ],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4"
+  ],
+  "estados": [
+   "/selecoes/inscricoes/<id>/comprovante"
+  ]
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/comprovante.pdf",
+  "nome": "portal:comprovante-pdf",
+  "modulo": "portal.views",
+  "view": "comprovante_em_pdf",
+  "templates": [],
+  "caps": [
+   "portal:vitrine"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
+  "nome": "portal:enviar-documento",
+  "modulo": "portal.views",
+  "view": "enviar_documento",
+  "templates": [
+   "portal/_documentos.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>/remover",
+  "nome": "portal:remover-documento",
+  "modulo": "portal.views",
+  "view": "remover_documento_enviado",
+  "templates": [
+   "portal/_documentos.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>/arquivo",
+  "nome": "portal:documento-do-candidato",
+  "modulo": "portal.views",
+  "view": "documento_do_candidato",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/resultados/<uuid:publicacao_id>/",
+  "nome": "portal:resultado",
+  "modulo": "portal.views",
+  "view": "resultado",
+  "templates": [
+   "portal/resultado.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/selecoes/resultados/<id>/"
+  ]
+ },
+ {
+  "rota": "/selecoes/resultados/<uuid:publicacao_id>/documento.pdf",
+  "nome": "portal:resultado-documento",
+  "modulo": "portal.views",
+  "view": "resultado_em_pdf",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes-publicadas/<uuid:publicacao_id>/",
+  "nome": "portal:publicacao-das-inscricoes",
+  "modulo": "portal.views",
+  "view": "publicacao_das_inscricoes",
+  "templates": [
+   "portal/publicacao_das_inscricoes.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/inscricoes-publicadas/<uuid:publicacao_id>/documento.pdf",
+  "nome": "portal:publicacao-das-inscricoes-documento",
+  "modulo": "portal.views",
+  "view": "publicacao_das_inscricoes_em_pdf",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/convocacoes/<uuid:publicacao_id>/",
+  "nome": "portal:convocados",
+  "modulo": "portal.views",
+  "view": "convocados",
+  "templates": [
+   "portal/convocados.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/convocacoes/<uuid:publicacao_id>/documento.pdf",
+  "nome": "portal:convocados-documento",
+  "modulo": "portal.views",
+  "view": "convocados_em_pdf",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/sorteio/relacoes/<uuid:relacao_id>/",
+  "nome": "portal:relacao-de-habilitados",
+  "modulo": "portal.views",
+  "view": "relacao_de_habilitados",
+  "templates": [
+   "portal/relacao_de_habilitados.html"
+  ],
+  "caps": [],
+  "vista_por": [
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/selecoes/sorteio/relacoes/<id>/"
+  ]
+ },
+ {
+  "rota": "/selecoes/sorteio/<uuid:sorteio_id>/verificar",
+  "nome": "portal:verificar-sorteio",
+  "modulo": "portal.views",
+  "view": "verificar_sorteio",
+  "templates": [
+   "portal/verificacao_de_sorteio.html"
+  ],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/sorteio/<uuid:sorteio_id>/manifesto.json",
+  "nome": "portal:manifesto-do-sorteio",
+  "modulo": "portal.views",
+  "view": "manifesto_do_sorteio",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/<uuid:edital_id>/",
+  "nome": "portal:selecao",
+  "modulo": "portal.views",
+  "view": "selecao",
+  "templates": [
+   "portal/selecao.html"
+  ],
+  "caps": [
+   "portal:acesso",
+   "portal:acompanhamento",
+   "portal:inscricoes",
+   "portal:selecao",
+   "portal:vitrine"
+  ],
+  "vista_por": [
+   "anonimo",
+   "cand1",
+   "cand2",
+   "cand3",
+   "cand4",
+   "cand5",
+   "paulo.presidente",
+   "treino.avaliacao1",
+   "treino.formalizacao",
+   "treino.presidencia"
+  ],
+  "estados": [
+   "/selecoes/<id>/",
+   "/selecoes/<id>/?pagina"
+  ]
+ },
+ {
+  "rota": "/selecoes/<uuid:edital_id>/assistente/perguntar",
+  "nome": "portal:assistente-perguntar",
+  "modulo": "portal.assistente",
+  "view": "perguntar",
+  "templates": [],
+  "caps": [
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/<uuid:edital_id>/assistente/sugestao",
+  "nome": "portal:assistente-sugestao",
+  "modulo": "portal.assistente",
+  "view": "sugestao",
+  "templates": [],
+  "caps": [
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/<uuid:edital_id>/assistente/nova",
+  "nome": "portal:assistente-nova",
+  "modulo": "portal.assistente",
+  "view": "nova",
+  "templates": [],
+  "caps": [
+   "portal:selecao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/selecoes/<uuid:edital_id>/vagas/<uuid:profile_id>/inscrever",
+  "nome": "portal:inscrever",
+  "modulo": "portal.views",
+  "view": "inscrever",
+  "templates": [],
+  "caps": [
+   "portal:acesso",
+   "portal:inscrever",
+   "portal:inscricao"
+  ],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/health",
+  "nome": "health",
+  "modulo": "shared.api.operacional",
+  "view": "HealthView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/readiness",
+  "nome": "readiness",
+  "modulo": "shared.api.operacional",
+  "view": "ReadinessView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/metrics",
+  "nome": "metrics",
+  "modulo": "shared.api.operacional",
+  "view": "MetricsView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/processos",
+  "nome": "process-create",
+  "modulo": "processos.api.views",
+  "view": "ProcessCollectionView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/processos/<uuid:processo_id>/editais",
+  "nome": "edital-create",
+  "modulo": "processos.api.views",
+  "view": "EditalCollectionView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/processos/<uuid:processo_id>/ativacoes",
+  "nome": "process-activate",
+  "modulo": "processos.api.views",
+  "view": "ActivateProcessView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/processos/<uuid:processo_id>/encerramentos",
+  "nome": "process-close",
+  "modulo": "processos.api.finalizacao",
+  "view": "CloseProcessView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/processos/<uuid:processo_id>/cancelamentos",
+  "nome": "process-cancel",
+  "modulo": "processos.api.finalizacao",
+  "view": "CancelProcessView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/encerramentos",
+  "nome": "edital-close",
+  "modulo": "processos.api.finalizacao",
+  "view": "CloseEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/cancelamentos",
+  "nome": "edital-cancel",
+  "modulo": "processos.api.finalizacao",
+  "view": "CancelEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/rascunho",
+  "nome": "edital-draft",
+  "modulo": "editais.api.views",
+  "view": "EditalDraftView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/submissoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "SubmitEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/homologacoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "HomologateEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/devolucoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "ReturnEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/revogacoes-homologacao",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "RevokeHomologationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/publicacoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "PublishEditalView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/editais/<uuid:edital_id>/retificacoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "CreateRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/rascunho",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "EditRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/submissoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "SubmitRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/homologacoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "HomologateRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/publicacoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "PublishRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/devolucoes",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "ReturnRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/retificacoes/<uuid:retificacao_id>/cancelamentos",
+  "nome": "",
+  "modulo": "publicacoes.api.views",
+  "view": "CancelRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/admin/auditoria",
+  "nome": "auditoria",
+  "modulo": "auditoria.api",
+  "view": "AuditoriaView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/editais/<uuid:edital_id>/versao-vigente",
+  "nome": "public-effective-version",
+  "modulo": "publicacoes.api.public_views",
+  "view": "EffectiveVersionView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/editais/<uuid:edital_id>/historico",
+  "nome": "public-history",
+  "modulo": "publicacoes.api.public_views",
+  "view": "PublicHistoryView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/publicacoes/<uuid:publicacao_id>",
+  "nome": "public-publication",
+  "modulo": "publicacoes.api.public_views",
+  "view": "PublicPublicationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/publicacoes/<uuid:publicacao_id>/documento",
+  "nome": "public-document",
+  "modulo": "publicacoes.api.views",
+  "view": "PublishedDocumentView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/retificacoes/<uuid:retificacao_id>",
+  "nome": "public-retification",
+  "modulo": "publicacoes.api.public_views",
+  "view": "PublicRetificationView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/versoes/<uuid:versao_id>",
+  "nome": "public-version",
+  "modulo": "publicacoes.api.public_views",
+  "view": "ConsolidatedVersionView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/anexos/<uuid:artefato_id>",
+  "nome": "public-anexo",
+  "modulo": "publicacoes.api.public_views",
+  "view": "ArtefatoPublicoView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ },
+ {
+  "rota": "/api/v1/public/sorteio/relacoes/<uuid:relacao_id>",
+  "nome": "public-relacao-de-habilitados",
+  "modulo": "sorteios.api.public_views",
+  "view": "RelacaoPublicaView",
+  "templates": [],
+  "caps": [],
+  "vista_por": [],
+  "estados": []
+ }
+]

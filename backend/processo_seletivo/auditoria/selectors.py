@@ -119,6 +119,10 @@ ASSUNTOS_DA_UNIDADE = {
     # A designação para a formalização (117, FR-3668) é acesso também: concedida e revogada pela
     # mesma capacidade que concede o papel, e é aqui que quem fiscaliza a unidade a procura.
     "acessos": ("Vinculo", "DesignacaoParaFormalizacao"),
+    # A página pública de um Edital da unidade aberta ou fechada ao assistente (170, FR-7529). O
+    # ato é do Administrador institucional, e é gravado no escopo da unidade do Edital, como o
+    # registro de Unidades da 110 — é aqui que quem fiscaliza a unidade o procura.
+    "assistente": ("HabilitacaoDoAssistente",),
 }
 
 

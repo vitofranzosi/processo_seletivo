@@ -45,6 +45,8 @@ MODULOS_DE_VIEW = (
     # A trilha da unidade (108): nenhum 404 — a página não recebe identificador, e a falta de
     # permissão é a recusa explicada. Entra para que um 404 futuro não escape do inventário.
     RAIZ / "processo_seletivo/interface/trilha_da_unidade.py",
+    # As Novidades do GPS (168): nenhum 404 — listagem, e filtro ou página inválidos caem no padrão.
+    RAIZ / "processo_seletivo/interface/novidades_do_gps.py",
     # O registro de Unidades (110): 404 só para o código que não é de unidade registrada; a falta
     # de permissão é a recusa explicada, por `require_authorization_base`.
     RAIZ / "processo_seletivo/interface/unidades.py",

@@ -20,9 +20,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.duvidas.application import habilitacao
 from processo_seletivo.duvidas.application.consultar import SemVersaoVigente, contexto
 from processo_seletivo.duvidas.application.perguntar import PERMISSAO, perguntar
 from processo_seletivo.duvidas.domain import canal as canais
+from processo_seletivo.duvidas.domain import habilitacao as nomes_da_habilitacao
 from processo_seletivo.duvidas.domain import leitura, respostas
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import (
     RESPONDIDA_E_CONFERIDA,
@@ -89,14 +91,25 @@ def _edital_do_piloto(request, edital_id):
     if ator is None:
         return None, identidade.pedir_identificacao(request)
     edital = obter_edital(actor=ator, edital_id=edital_id)
-    if edital is None or not settings.ASSISTENTE_PILOTO or not ator.can(PERMISSAO):
+    # O piloto ligado é o ato na administração institucional, ou o atalho fora de produção (170,
+    # FR-7515), lido a cada requisição: desabilitado no meio da conversa, a próxima pergunta já
+    # recebe a negativa, e nada chega ao modelo (FR-7524).
+    if edital is None or not habilitacao.piloto_atende() or not ator.can(PERMISSAO):
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     return edital, None
 
 
+def chave_da_conversa(edital_id, marca=""):
+    """A chave da conversa de um Edital na sessão. Com a marca do ato de habilitação vigente (170,
+    R-5), um ato novo é chave nova, e por isso conversa nova: o histórico de antes da desabilitação
+    não volta ao modelo (FR-7525). Sem marca — o atalho de demonstração —, a chave de sempre."""
+    return f"{edital_id}:{marca}" if marca else str(edital_id)
+
+
 def _conversa(request, edital_id, *, nova=False):
     conversas = dict(request.session.get(CHAVE_DA_SESSAO) or {})
-    chave = str(edital_id)
+    # A marca do ato vigente (170, R-5): reabilitar começa conversa nova.
+    chave = chave_da_conversa(edital_id, habilitacao.marca(nomes_da_habilitacao.PILOTO))
     if nova or chave not in conversas:
         conversas[chave] = str(uuid.uuid4())
         request.session[CHAVE_DA_SESSAO] = conversas
