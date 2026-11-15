@@ -218,6 +218,20 @@ por isso a página é um servidor, e não um `page.route` —; e o ORM chamado c
 deixava uma sessão aberta no banco de teste, que travava o `DROP DATABASE` do fim — a fixture do
 navegador fecha as conexões ao sair.
 
+**O piloto do design system (172) acrescenta dois pulados em toda configuração.** A fotografia dos
+64 estados (`tests/navegador/test_fotografia_do_piloto.py`) e os bancos da validação com a equipe
+(`test_banco_da_validacao_do_piloto.py`) rodam só sob demanda, com `PILOTO_DS_FOTOGRAFIA=<pasta>` e
+`PILOTO_DS_BANCO=<pasta>`; sem a variável, cada módulo pula inteiro, com ou sem o grupo `navegador`.
+Não são guardiões: gravam a fotografia e o inventário que
+`doc/auditoria-design-system-2026-11-14/piloto/scripts/comparar.py` compara. **Duas armadilhas já
+pagas:** o contêiner `.piloto-ds` das cinco telas do piloto tira o conteúdo de `main>`, e três regras
+comuns (a medida do parágrafo, o respiro antes da seção e a medida da confirmação da P0) deixam de
+valer em silêncio — no piloto isso é proposital desde a D-012 (o texto ocupa a largura), e a
+folha repõe só o respiro; e o `ps_p0_referencia` ficou para trás das
+migrations da `167`, da `168` e da `170` — não o migre, restaure a cópia com
+`REFERENCIA_DUMP=<dump> piloto/scripts/montar_banco_da_validacao.sh referencia` (o cabeçalho do
+roteiro diz como regerar o dump).
+
 **Os cenários de treinamento (134) não rodam sozinhos, e restaurar não apaga.** Os quatro comandos
 (`carregar`, `listar`, `verificar` e `restaurar_cenario_de_treinamento`) exigem
 `CENARIOS_DE_TREINAMENTO=true` no ambiente **do comando**, e os que gravam exigem `--banco` igual ao

@@ -1,0 +1,261 @@
+# As sequências que não se invertem (172, seção "As sequências declaradas" da spec).
+#
+# Cada termo é uma lista: um bloco pertence ao termo se casa com algum item dela. `=texto` é o
+# texto inteiro do bloco, `.classe` uma classe dele, `<tag>` a etiqueta, `item:x` um trecho do item
+# da estrutura que o contém, e o resto é trecho contido no texto. O casamento exato existe porque o
+# trecho solto achava o rótulo "Fundamento da homologação" também dentro da recusa que o cita.
+# A sequência vale onde os dois termos existem; todo bloco de `antes` precede todo bloco de
+# `depois`, na ordem do documento e na visual. `escopo` diz se ela vale na página ou dentro de cada
+# recorte (a `section` rotulada) ou de cada Processo (o `article`).
+#
+# Os trechos são do texto dos templates em 15/11/2026. Mudou o texto? Mudou a spec da tela, e
+# este arquivo acompanha.
+
+# ── Em todas as cinco telas ─────────────────────────────────────────────────────────────────────
+
+# A T-S1 da spec (a trilha antes do título) não se confere aqui: a trilha é da moldura, fora do
+# `main` que o inventário lê, e o piloto não toca a moldura (FR-7702).
+
+[[sequencia]]
+id = "T-S2"
+telas = ["confirmacao", "ocupacao", "conferencia"]
+antes = [".erro"]
+depois = ["<form>", "<label>", "<button>"]
+
+[[sequencia]]
+id = "T-S3"
+telas = ["confirmacao"]
+antes = ["Impedimento:"]
+depois = ["Atenção:", "Nenhuma pendência registrada no GPS impede"]
+
+# ── Confirmação de ato do Edital ────────────────────────────────────────────────────────────────
+
+[[sequencia]]
+id = "C-S1"
+telas = ["confirmacao"]
+antes = ["<h1>", ".sub"]
+depois = [".erro", ".aviso"]
+
+[[sequencia]]
+id = "C-S2"
+telas = ["confirmacao"]
+antes = ["Impedimento:"]
+depois = ["Atenção:"]
+
+[[sequencia]]
+id = "C-S3"
+telas = ["confirmacao"]
+antes = ["Impedimento:", "Atenção:", "Nenhuma pendência registrada no GPS impede"]
+depois = ["Este ato não pode ser desfeito", "O que este ato provoca", "Depois deste ato, o Edital fica"]
+
+[[sequencia]]
+id = "C-S4"
+telas = ["confirmacao"]
+antes = ["=Este ato não pode ser desfeito", "=O que este ato provoca", ".bastao"]
+depois = ["<legend>", "<label>", "<button>"]
+
+[[sequencia]]
+id = "C-S5"
+telas = ["confirmacao"]
+antes = ["<label>", ".ajuda"]
+depois = ["<button>"]
+
+[[sequencia]]
+id = "C-S6"
+telas = ["confirmacao"]
+antes = ["<button>"]
+depois = ["Cancelar e voltar"]
+# Só na ordem do documento: a barra pode pôr os dois em qualquer lado.
+somente = "documento"
+
+[[sequencia]]
+id = "O-S1"
+telas = ["ocupacao"]
+antes = ["Termos desta tela", "é a lista em que a pessoa concorre"]
+depois = ["Publicadas", "Ocupação ainda não apurada", "Este Edital não publicou quadro de vagas", "Esta apuração está obsoleta"]
+
+[[sequencia]]
+id = "O-S2"
+telas = ["ocupacao"]
+antes = ["Apuração emitida", "Faixa seguinte emitida", "Vaga acrescida", "Vaga declarada não preenchida", "Declaração de vaga não preenchida desfeita", "Não foi possível"]
+depois = ["Próximo nesta lista", "Ainda neste marco", "Abrir esta tela"]
+
+[[sequencia]]
+id = "O-S3"
+telas = ["ocupacao"]
+antes = ["Abrir esta tela não apura nada"]
+depois = ["Publicadas"]
+
+[[sequencia]]
+id = "O-S4a"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["Ocupação ainda não apurada", "Esta apuração está obsoleta", "um efeito registrado depois dela", "a ordem deste recorte foi sucedida"]
+depois = ["Publicadas", "Efetivas", "A ocupar"]
+
+[[sequencia]]
+id = "O-S4b"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["Publicadas", "Efetivas", "Ocupadas", "A ocupar"]
+depois = ["As efetivas divergem", "As efetivas somam", "Reversão de cota:"]
+
+[[sequencia]]
+id = "O-S4c"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["Reversão de cota:", "As efetivas divergem", "As efetivas somam"]
+depois = ["Ver o histórico deste recorte", "Abrir a convocação deste recorte", "Declarar a vaga não preenchida", "Pedir a faixa seguinte", "Suceder esta apuração", "Conferir o acréscimo"]
+
+[[sequencia]]
+id = "O-S4d"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["Publicadas"]
+depois = ["Apurar a ocupação deste recorte", "Emitir nova apuração", "Pedir a faixa seguinte", "Conferir o acréscimo", "Declarar a vaga não preenchida", "Desfazer esta declaração", "Conferir o desfazimento"]
+
+[[sequencia]]
+id = "O-S5a"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["O déficit apurado de"]
+depois = ["Pedir a faixa seguinte com este déficit"]
+
+[[sequencia]]
+id = "O-S5b"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["Uma vaga que chegou depois da publicação"]
+depois = ["=De onde a vaga veio", "=Por que ela existe", "=Processo administrativo (opcional)", "=Conferir o acréscimo"]
+
+[[sequencia]]
+id = "O-S5c"
+telas = ["ocupacao"]
+escopo = "recorte"
+antes = ["A apuração vigente não é alterada: a nova a sucede"]
+depois = ["Emitir nova apuração"]
+
+[[sequencia]]
+id = "O-S6"
+telas = ["ocupacao"]
+antes = ["A presidência não é papel"]
+depois = ["Publicadas", "Ocupação ainda não apurada", "Este Edital não publicou quadro de vagas"]
+
+# ── As duas conferências da Ocupação ────────────────────────────────────────────────────────────
+
+[[sequencia]]
+id = "K-S1"
+telas = ["conferencia"]
+antes = [".erro"]
+depois = ["=As vagas", "=A vaga", "=O efeito", "=A apuração seguinte", "=Quem a ordem alcança", "=O ato desfeito"]
+
+[[sequencia]]
+id = "K-S2"
+telas = ["conferencia"]
+antes = ["=As vagas", "=Quem a ordem alcança", "=A vaga", "=Os atos anteriores deste recorte", "=O ato desfeito"]
+depois = ["=A apuração seguinte", "=O efeito", ".imutavel"]
+
+[[sequencia]]
+id = "K-S3"
+telas = ["conferencia"]
+antes = ["=A apuração seguinte", "=O efeito", ".imutavel"]
+depois = ["<button>", "<label>"]
+
+[[sequencia]]
+id = "K-S4"
+telas = ["conferencia"]
+antes = ["<button>"]
+depois = ["Voltar à ocupação"]
+somente = "documento"
+
+[[sequencia]]
+id = "L-S1"
+telas = ["lista"]
+antes = ["Ambiente de demonstração.", "Sem permissões."]
+depois = ["Ações disponíveis para você"]
+
+[[sequencia]]
+id = "L-S2"
+telas = ["lista"]
+antes = ["Ações disponíveis para você"]
+depois = ["Em andamento (", "Buscar em todas as situações"]
+
+[[sequencia]]
+id = "L-S3"
+telas = ["lista"]
+antes = [".frase-do-recorte"]
+depois = ["item:processo:"]
+
+[[sequencia]]
+id = "L-S4"
+telas = ["lista"]
+escopo = "processo"
+antes = ["Você preside a comissão", "Você integra a comissão"]
+depois = ["Comissão", "Alocação por Etapa"]
+
+[[sequencia]]
+id = "L-S5"
+telas = ["lista"]
+antes = ["item:processo:"]
+depois = ["Página ", "=Anterior", "=Próxima"]
+
+# ── Estados que a fixture não reproduz igual ─────────────────────────────────────────────────────
+#
+# Os estados montados sobre a desistência da cotista (`pela_desistencia`, da `155`) partem de um
+# sorteio, e a ordem do sorteio sai dos identificadores das inscrições, que mudam a cada montagem:
+# duas fotografias do mesmo código deram 0 e 1 ocupadas na ampla concorrência (15/11, no R-10 e no
+# R-09). O que esses estados existem para mostrar é da lista reservada, e a ampla sai da comparação
+# deles. Os outros recortes, e as ações deles, continuam comparados. O passo seguinte ("Próximo nesta
+# lista") também sai, porque é a fila da ampla que ele aponta.
+
+[[instavel]]
+codigo = "O-12"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-15"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-16"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-17"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-18"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-09"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-10"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-11"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-12"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-09"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-10"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-11"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-12"
+trecho = "Próximo nesta lista"

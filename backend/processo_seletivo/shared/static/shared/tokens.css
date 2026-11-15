@@ -25,4 +25,20 @@ formulário de dez campos.
      estrutura pode ocupar: tabelas, matrizes, painéis e grades de cartão. Quem lê ganha linha
      curta; quem trabalha ganha a tela. */
   --leitura:68ch; --pagina:96rem;
+
+  /* **A direção experimental do piloto do design system** (172, D-010): os neutros da tela de
+     entrada, o azul e as escalas de espaço, raio, sombra, controle e composição. **Só se
+     acrescentam**: nenhum token acima muda, e só a folha do piloto (`interface/grupos/piloto-ds.css`)
+     os usa — por isso nenhuma outra tela muda. Os neutros têm os mesmos nomes e valores que
+     `grupos/acesso.css` já declarava para a entrada, e a entrada continua igual. Apontar `--texto`,
+     `--borda` e `--fundo` para eles é decisão do usuário depois do piloto (decisão 8 do roadmap do
+     estudo de 14/11). O tamanho de fonte (`--t-*`) não entra: o piloto mantém os de hoje. */
+  --tinta:#0f1a14; --tinta-2:#36433b; --tinta-3:#5f6b64; --linha:#e3e7e4; --linha-forte:#cfd6d1;
+  --fundo-p:#f6f7f6; --verde-50:#eef7f1; --verde-100:#d9eee0;
+  --azul:#1d4f91; --azul-fundo:#e8f0fb;
+  --e-1:4px; --e-2:8px; --e-3:12px; --e-4:16px; --e-5:20px; --e-6:24px; --e-8:32px; --e-10:40px;
+  --raio-p:6px; --raio:10px; --raio-pilula:999px;
+  --sombra-1:0 1px 2px rgba(15,26,20,.06),0 1px 1px rgba(15,26,20,.04);
+  --controle:40px; --controle-p:32px;
+  --coluna:44rem; --trilho:21rem;
 }

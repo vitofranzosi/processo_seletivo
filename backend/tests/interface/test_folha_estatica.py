@@ -148,6 +148,8 @@ def test_a_gestao_carrega_tokens_folha_comum_e_so_entao_o_estilo_da_pagina(clien
         "/static/shared/tokens.css",
         *(f"/static/{caminho}" for caminho in estaticos.FOLHAS_DA_GESTAO),
         "/static/interface/telas/lista.css",
+        # A Lista é tela do piloto do design system (172): a folha dele vem depois da da tela.
+        "/static/interface/grupos/piloto-ds.css",
     ]
 
 
@@ -296,6 +298,15 @@ QUEM_CARREGA = {
         "confirmar.html",
         "processo_confirmar.html",
         "retificacao_confirmar.html",
+    },
+    # O piloto do design system (172, D-003): a folha só viaja nas cinco telas dele, e toda regra
+    # dela fica sob a classe de escopo `.piloto-ds`.
+    "interface/grupos/piloto-ds.css": {
+        "confirmar.html",
+        "ocupacao.html",
+        "ocupacao_acrescimo.html",
+        "ocupacao_nao_preenchida.html",
+        "lista.html",
     },
     "interface/grupos/terminais.css": {
         # O Centro de Controle (136) desenha Encerrar e Cancelar como o detalhe os desenha.

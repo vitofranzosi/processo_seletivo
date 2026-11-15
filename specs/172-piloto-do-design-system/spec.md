@@ -5,7 +5,11 @@ do merge da P0, PRs #557 e #559, e da Visão do Sistema, #560)
 
 **Created**: 2026-11-15
 
-**Status**: Especificada, planejada e com tarefas em 15/11. Nada implementado. O merge é do usuário.
+**Status**: Especificada, planejada e com tarefas em 15/11 (#563, mergeada). **Implementada no mesmo dia**,
+na branch `claude/172-piloto-implementacao`, sem merge: as três telas, a fotografia de 64 estados, a
+comparação, a conferência de acessibilidade e o levantamento dos guardiões. O resultado, os desvios e
+os achados estão em [relatorio.md](relatorio.md). **A validação com a equipe (US4) não aconteceu**: o
+roteiro, os bancos e as duas versões estão prontos, e as sessões são do usuário. O merge é do usuário.
 
 **Input**: o terceiro passo da sequência que o usuário aprovou para o estudo de design system
 (`doc/auditoria-design-system-2026-11-14/`, mergeado no #549): *"a spec do piloto pelo Spec Kit,
@@ -85,6 +89,18 @@ de CSS. O experimento opcional de escala tipográfica do roadmap não é desta s
   confirmações (D-007) e a validação com a equipe (D-008). Cada decisão está tomada para que o plano
   possa existir, e **o usuário pode revê-la na leitura do PR**. Nenhuma ficou como pergunta, porque
   todas têm um caminho razoável que os documentos do estudo já apontam.
+
+### Session 2026-11-15 (o usuário, depois de ver o antes e o depois do piloto implementado)
+
+- Q: A primeira versão prendeu toda prosa em 80 caracteres e centrou a confirmação numa coluna
+  estreita, e o usuário a achou pior que a `main` ("o texto não está utilizando o espaço
+  disponível"). Como as telas devem usar a largura? → A: **o texto ocupa a largura do conteúdo**,
+  inclusive onde a `main` hoje o limita; ficam os cartões, os indicadores e os botões (D-012). A
+  FR-7704, a FR-7730, a SC-2603 e a UX-850 foram revistas por esta decisão.
+- Na segunda leitura, o usuário pediu três padrões, para generalizar: indicadores que dividem a
+  linha em partes iguais; campos de texto na largura do formulário; e "rótulo: valor" na mesma
+  linha em toda lista de definição. Entram na D-012. A tela de um notebook citada no pedido foi só
+  exemplo, e não critério de medida.
 
 ---
 
@@ -299,9 +315,10 @@ do piloto e comparar com o `telas.csv` da referência.
   gestão não muda.
 - **FR-7703**: Os tokens da direção experimental DEVEM ser só acrescentados a `tokens.css`, com nomes
   novos. Nenhum token existente PODE mudar de valor (D-010).
-- **FR-7704**: Dentro do escopo, aviso, erro, bastão, consequências e formulário da confirmação
-  DEVEM manter a medida de leitura que a P0 lhes deu: nenhuma linha acima de 80 caracteres em
-  nenhuma largura.
+- **FR-7704**: *(revista em 15/11, D-012)* Dentro do escopo, aviso, erro, bastão, consequências e
+  formulário da confirmação DEVEM ir até a largura do conteúdo, como o resto da prosa: a medida que a
+  P0 lhes deu não vale no piloto. Fora dele, nas confirmações do Processo e da Retificação, ela
+  continua.
 - **FR-7705**: O `.acao` com altura única e a barra de ações DEVEM valer só dentro do escopo do
   piloto. Fora dele, o `.acao` continua com as quatro alturas de hoje.
 - **FR-7706**: Nenhum template fora dos cinco PODE mudar, salvo uma parcial que só eles incluem.
@@ -374,8 +391,9 @@ do piloto e comparar com o `telas.csv` da referência.
 
 #### Legibilidade e localização da ação
 
-- **FR-7730**: Nenhuma linha de prosa das cinco telas PODE passar de 80 caracteres em nenhuma largura
-  do catálogo.
+- **FR-7730**: *(revista em 15/11, D-012)* A prosa das cinco telas DEVE ocupar a largura do conteúdo,
+  que a moldura limita a `--pagina`. O comprimento da linha é registrado como diagnóstico, sem valor
+  de aprovação.
 - **FR-7731**: Quando o estado tem ação principal, ela DEVE aparecer sem rolagem a 1280 × 800, ou a
   tela DEVE dizer, acima da dobra, que ela existe.
 - **FR-7732**: O dado de que a ação depende DEVE ficar à vista junto dela.
@@ -463,9 +481,9 @@ São as ordens que não se invertem. O aceite as confere nas duas ordens, a do d
 
 ### Requisitos de experiência
 
-- **UX-850**: A confirmação de ato e as duas conferências usam a composição **centrada** (uma coluna
-  de 44rem no meio, com a prosa na medida de leitura), com o cabeçalho de página, os avisos como
-  componente e a barra de ações ao pé.
+- **UX-850**: *(revista em 15/11, D-012)* A confirmação de ato e as duas conferências usam a largura
+  do conteúdo, e não uma coluna centrada, com os avisos como componente, as consequências em cartão e
+  a barra de ações ao pé.
 - **UX-851**: A Ocupação usa a composição **principal e trilho** a partir de 80rem de janela, a
   largura em que o trilho de 21rem cabe ao lado do trabalho. No trilho só vai o que é apoio de leitura e vale para a página inteira, nunca condição de
   gesto nem pendência. Abaixo dessa largura, o trilho desce sem violar a O-S1 nem a O-S5.
@@ -509,8 +527,8 @@ São as ordens que não se invertem. O aceite as confere nas duas ordens, a do d
 - **SC-2602**: No rastreio sobre o banco da referência da P0, **só** as linhas das cinco telas do
   piloto diferem do `telas.csv` da referência, e nenhuma das vinte capturas de amostra de fora do
   piloto passa da linha de ruído.
-- **SC-2603**: **Nenhuma** linha de prosa acima de 80 caracteres nas cinco telas, em nenhuma largura
-  e em nenhum estado.
+- **SC-2603**: *(revisto em 15/11, D-012)* Em todos os estados, a prosa ocupa a largura do conteúdo:
+  nenhum parágrafo, nota, aviso ou item de lista para antes dela.
 - **SC-2604**: Em todos os estados que têm ação principal, ela aparece sem rolagem a 1280 × 800, ou a
   tela a anuncia acima da dobra.
 - **SC-2605**: Nas cinco telas, **zero** perda de conteúdo e **zero** rolagem em dois eixos a 320 px e
@@ -630,6 +648,10 @@ da folha nova.
 não muda porque a regra nova não as alcança, e não porque alguém tomou cuidado.
 
 ### D-004 — O catálogo: 12 estados da confirmação, 18 da Ocupação, 12 retornos, 9 das conferências e 12 da Lista
+
+> **Revisto na implementação (15/11):** a C-12 virou C-12 (a recusa do envio) e C-13 (quem não tem a
+> permissão), porque são duas páginas, e o catálogo tem 64 estados. A O-06 e a O-14 mostram menos do
+> que a tabela abaixo descreve; o porquê está em `doc/auditoria-design-system-2026-11-14/piloto/README.md`.
 
 O catálogo parte dos 51 ramos da Ocupação que a suíte já desenha e dos estados que o roadmap lista.
 Ele fotografa **combinações de página**, e não ramos soltos: um marco com três recortes em situações
@@ -789,6 +811,26 @@ hoje.
 
 **Por quê.** `tokens.css` é o único lugar de valor literal na governança proposta. Declarar os
 neutros na folha do piloto criaria uma segunda fonte de cor, que é o defeito que o estudo mediu.
+
+### D-012 — O texto ocupa a largura do conteúdo (decisão do usuário, 15/11)
+
+O usuário viu o antes e o depois da primeira versão, com a prosa presa em 80 caracteres e a
+confirmação numa coluna centrada, e a achou pior que a `main`: a página ficou mais alta, a direita
+vazia e o texto mais espremido. A pergunta foi entre usar a largura por colunas, deixar o texto
+ocupar a largura toda, ou voltar à composição da `main` com os componentes novos; **o usuário
+escolheu o texto na largura toda.**
+
+Consequências: a medida de leitura não vale nas cinco telas, nem a da P0 nas confirmações; a
+composição centrada sai; a linha longa vira diagnóstico. Os cartões, os indicadores, os avisos e os
+botões ficam, com três padrões da segunda leitura: os indicadores de um grupo dividem a linha em
+partes iguais, o campo de texto ocupa a largura do formulário e a lista de definição põe rótulo e
+valor na mesma linha, o rótulo em peso maior. Os dois-pontos que o usuário mencionou chegaram a ser
+gerados pela folha (`dt::after`) e saíram na revisão de código de 15/11, aprovada por ele: era texto
+que o template não tem, fora do alcance da comparação do conteúdo, e na gestão inteira escrevia
+"Volta atrás?:" em rótulo que é pergunta. Pôr os dois-pontos no texto do template mudaria o conteúdo
+(FR-7707), e fica para quando o usuário o pedir como mudança de texto. A preferência do usuário pelo aproveitamento da tela vale como premissa para a
+migração das outras famílias, e o "Texto explicativo" e a "medida de leitura" do estudo de 14/11
+ficam subordinados a ela.
 
 ### D-011 — A Lista continua lista, e não tabela
 

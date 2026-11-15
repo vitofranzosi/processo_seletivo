@@ -19,8 +19,9 @@ from django.urls import reverse
 
 from processo_seletivo.ocupacao.domain import nomes
 from processo_seletivo.ocupacao.models import MovimentoDeVaga, VagaNaoPreenchida
+from tests.fixtures import ocupacao_da_tela
+from tests.fixtures.ocupacao_da_tela import pela_desistencia
 from tests.fixtures.sorteio import MARCO
-from tests.integration.ocupacao.test_condicao_do_esgotamento import publicar_definitivo
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -33,52 +34,7 @@ DECLARAR = "Declarar a vaga não preenchida"
 
 @pytest.fixture
 def prazo_encerrado(monkeypatch):
-    monkeypatch.setattr(
-        "processo_seletivo.divulgacao.domain.publicabilidade.janela_aberta_ate",
-        lambda **_: None,
-    )
-
-
-def pela_desistencia(gestor, api_client, manager_headers, process_payload, prefixo, *, reversao):
-    """A V-1 pelo caminho do ator: a cotista é chamada e desiste, e o desfecho emite a apuração.
-
-    **Todos habilitados na Etapa que o corte governa**: com a Etapa por consolidar, o Centro diz que
-    a convocação espera por ela, e o ramo da vaga sem quem a ocupe nunca é lido. **A espécie da
-    chamada é a que a posição determina** (`especie=None`): supor que a cotista é titular tornaria o
-    caso dependente da ordem que o sorteio produz.
-    """
-    from processo_seletivo.convocacao.domain import nomes as nomes_da_conducao
-    from tests.fixtures.ocupacao_sorteada import LISTA_PPI as PPI
-    from tests.fixtures.ocupacao_sorteada import certame_sorteado_com_quadro
-    from tests.integration.convocacao.test_suplencia import chamar, responder
-    from tests.integration.ocupacao.test_concomitancia import apurar, emitir_cortes, habilitar
-    from tests.integration.ocupacao.test_condicao_do_esgotamento import sem_concomitancia
-
-    certame = certame_sorteado_com_quadro(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        prefixo=prefixo,
-        com_corte=True,
-        quantos=8,
-        geral=1,
-        reversao=reversao,
-    )
-    cotista = certame["cotista_ppi"]
-    emitir_cortes(certame, gestor)
-    habilitar(certame, certame["inscricoes"])
-    apurar(certame, gestor, chave=f"{prefixo}-ampla")
-    sem_concomitancia(certame, cotista)
-    apurar(certame, gestor, chave=f"{prefixo}-ampla-2", motivo="Saída da ampla registrada")
-    apurar(certame, gestor, lista_id=PPI, chave=f"{prefixo}-ppi")
-    chamada = chamar(
-        certame, gestor, cotista.id, lista_id=PPI, chave=f"{prefixo}-chamar", especie=None
-    )
-    responder(
-        certame, gestor, chamada["id"], nomes_da_conducao.DESISTENCIA_EXPRESSA, f"{prefixo}-sai"
-    )
-    return certame
+    ocupacao_da_tela.encerrar_o_prazo(monkeypatch)
 
 
 def ocupacao(client, certame):
@@ -120,18 +76,10 @@ def declarar_pela_tela(client, certame, **extra):
 def reversao_que_nao_sai(
     db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos
 ):
-    """A V-1 sob a reversão por esgotamento: a apuração conta a posição de quem desistiu e não
-    cede, e o resultado definitivo está publicado."""
-    certame = pela_desistencia(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        "tela-rev-155",
-        reversao=nomes.REVERSAO_POR_ESGOTAMENTO,
+    """A reversão por esgotamento (agora em `tests/fixtures/ocupacao_da_tela.py`)."""
+    return ocupacao_da_tela.reversao_que_nao_sai(
+        gestor, api_client, manager_headers, process_payload
     )
-    publicar_definitivo(certame)
-    return certame
 
 
 class TestAVagaQueNaoSai:
@@ -231,12 +179,8 @@ def test_por_saldo_a_apuracao_cede_e_nenhuma_tela_oferece_ato(
 
 @pytest.fixture
 def silente(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
-    """O C09: sem reversão declarada, a lista PPI esgotada e o resultado definitivo publicado."""
-    certame = pela_desistencia(
-        gestor, api_client, manager_headers, process_payload, "tela-np-155", reversao=None
-    )
-    publicar_definitivo(certame)
-    return certame
+    """O C09 (agora em `tests/fixtures/ocupacao_da_tela.py`)."""
+    return ocupacao_da_tela.silente(gestor, api_client, manager_headers, process_payload)
 
 
 class TestOEditalSilente:

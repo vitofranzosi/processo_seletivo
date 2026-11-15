@@ -1,0 +1,40 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "T-S3": "aprovada",
+  "C-S1": "não se aplica",
+  "C-S2": "aprovada",
+  "C-S3": "aprovada",
+  "C-S4": "aprovada",
+  "C-S5": "não se aplica",
+  "C-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "O Edital não declarou prazo de recurso contra “Classificação final”: recursos co",
+   "maior_linha": 121
+  },
+  {
+   "bloco": "A Retificação de ‹data›, em revisão, não poderá mais prosseguir. Abrir a Retific",
+   "maior_linha": 88
+  },
+  {
+   "bloco": "O que aparece acima como continuando segue possível, e consta do Relatório do Ed",
+   "maior_linha": 85
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

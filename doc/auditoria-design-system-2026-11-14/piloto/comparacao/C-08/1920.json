@@ -1,0 +1,52 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "T-S3": "não se aplica",
+  "C-S1": "aprovada",
+  "C-S2": "não se aplica",
+  "C-S3": "aprovada",
+  "C-S4": "aprovada",
+  "C-S5": "não se aplica",
+  "C-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Atenção: Nenhum Evento do Cronograma está marcado como período de inscrições. O ",
+   "maior_linha": 144
+  },
+  {
+   "bloco": "Atenção: O Evento 'Inscrições' começou em ‹data›, que já passou. O Edital será p",
+   "maior_linha": 130
+  },
+  {
+   "bloco": "Atenção: A seção «Apresentação» está vazia e não sairá no documento, e todos os ",
+   "maior_linha": 157
+  },
+  {
+   "bloco": "Atenção: A seção «Disposições finais» está vazia e não sairá no documento, e tod",
+   "maior_linha": 163
+  },
+  {
+   "bloco": "Correções posteriores só são possíveis por Retificação, com novo fluxo de aprova",
+   "maior_linha": 84
+  },
+  {
+   "bloco": "Nenhuma autoridade vigente para Cefor hoje. Quem tem a permissão de gerir autori",
+   "maior_linha": 109
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

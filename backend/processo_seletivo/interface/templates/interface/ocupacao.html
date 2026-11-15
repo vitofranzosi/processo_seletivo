@@ -1,7 +1,8 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}Ocupação de vagas — quantas faltam em cada lista{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <span aria-current="page">Ocupação de vagas</span></nav>{% endblock %}
-{% block conteudo %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/piloto-ds.css' %}">{% endblock %}
+{% block conteudo %}<div class="piloto-ds">
 <h1>Ocupação de vagas</h1>
 <p class="sub">Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, quantas estão ocupadas e quantas faltam.</p>
 {% if nota_do_cadastro %}<p class="nota">{{ nota_do_cadastro }}</p>{% endif %}
@@ -317,4 +318,4 @@ ao lado do título. Os números vão para o `ul.resumo`, que é onde a classe de
   {% endif %}
 </section>
 {% endfor %}
-{% endblock %}
+</div>{% endblock %}
