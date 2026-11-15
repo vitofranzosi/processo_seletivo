@@ -119,6 +119,53 @@
     return this.deslocamento;
   };
 
+  // --- as funções do palco (174) -----------------------------------------------------------
+
+  // "Passo 2 de 4": a posição no roteiro, sobre o vídeo e no anúncio ao leitor de tela (FR-7868).
+  function rotuloDoPasso(indice, total) {
+    return "Passo " + (indice + 1) + " de " + total;
+  }
+
+  // Dois toques a menos de meio segundo contam como um (FR-7870). É proteção contra o toque duplo
+  // de um gesto só, e não tempo mínimo de passo: ninguém mostra um documento em meio segundo.
+  var INTERVALO_DO_TOQUE_DUPLO = 500;
+
+  function aceitaAvanco(agora, ultimo) {
+    return ultimo === null || ultimo === undefined || agora - ultimo >= INTERVALO_DO_TOQUE_DUPLO;
+  }
+
+  // Megabytes com vírgula e uma casa: "o envio vai usar cerca de 9,4 MB da sua internet" (FR-7880).
+  function megabytes(bytes) {
+    return (Math.max(0, Number(bytes) || 0) / 1048576).toFixed(1).replace(".", ",");
+  }
+
+  // "1 min 12 s", e não "72.3 segundos" (FR-7883). O filtro do servidor tem os mesmos casos.
+  function duracaoPorExtenso(segundos) {
+    var total = Math.max(0, Math.round(Number(segundos) || 0));
+    var minutos = Math.floor(total / 60);
+    var resto = total % 60;
+    if (!minutos) return resto + " s";
+    return resto ? minutos + " min " + resto + " s" : minutos + " min";
+  }
+
+  /* Houve fala? Nível de pelo menos `limiar` por `minimo` ms seguidos (FR-7873, research T-006). É
+     nível de sinal, calculado no aparelho, e não entra no que se envia (FR-7890). `amostras` são
+     `{nivel, ms}` em ordem de tempo. */
+  function ouviuFala(amostras, limiar, minimo) {
+    limiar = limiar === undefined ? 20 : limiar;
+    minimo = minimo === undefined ? 300 : minimo;
+    var inicio = null;
+    for (var i = 0; i < amostras.length; i += 1) {
+      if (amostras[i].nivel >= limiar) {
+        if (inicio === null) inicio = amostras[i].ms;
+        if (amostras[i].ms - inicio >= minimo) return true;
+      } else {
+        inicio = null;
+      }
+    }
+    return false;
+  }
+
   var api = {
     FORMATOS: FORMATOS,
     escolherFormato: escolherFormato,
@@ -127,6 +174,11 @@
     mmss: mmss,
     hex: hex,
     Envio: Envio,
+    rotuloDoPasso: rotuloDoPasso,
+    aceitaAvanco: aceitaAvanco,
+    megabytes: megabytes,
+    duracaoPorExtenso: duracaoPorExtenso,
+    ouviuFala: ouviuFala,
   };
   raiz.GravacaoDoVideo = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -141,23 +193,44 @@
   var limite = Number(pagina.getAttribute("data-limite"));
   var tamanhoDaParte = Number(pagina.getAttribute("data-parte"));
   var ficha = pagina.querySelector("[name=csrfmiddlewaretoken]");
+  var palco = pagina.querySelector('[data-tela="palco"]');
+  var momentos = document.querySelector("[data-momentos]");
   var passos = Array.prototype.slice.call(pagina.querySelectorAll("[data-passo]")).map(function (item) {
-    return { chave: item.getAttribute("data-passo"), texto: item.getAttribute("data-texto") };
+    return {
+      chave: item.getAttribute("data-passo"),
+      texto: item.getAttribute("data-texto"),
+      titulo: item.getAttribute("data-titulo"),
+    };
   });
   var estado = {
     stream: null, sintetica: null, gravador: null, pedacos: [], marcas: [], passo: 0,
     inicio: 0, relogio: null, limiteDaTomada: null, descartar: "", tomada: null, envio: null,
-    medidor: null, contexto: null, quedaSimulada: 0,
+    medidor: null, contexto: null, quedaSimulada: 0, ultimoAvanco: null, telaAcesa: null,
+    amostras: [], ouviu: false, tela: "escolha",
   };
+
+  // Em que momento da jornada cada tela fica (FR-7852): o cabeçalho diz onde a pessoa está.
+  var MOMENTO_DA_TELA = { palco: "gravar", permissao: "gravar", revisao: "enviar", envio: "enviar" };
 
   function q(seletor) {
     return pagina.querySelector(seletor);
   }
 
   function mostrar(nome) {
+    estado.tela = nome;
     Array.prototype.forEach.call(pagina.querySelectorAll("[data-tela]"), function (tela) {
       tela.hidden = tela.getAttribute("data-tela") !== nome;
     });
+    if (momentos) {
+      var atual = MOMENTO_DA_TELA[nome] || "preparar";
+      Array.prototype.forEach.call(momentos.querySelectorAll("[data-momento]"), function (item) {
+        if (item.getAttribute("data-momento") === atual) item.setAttribute("aria-current", "step");
+        else item.removeAttribute("aria-current");
+      });
+    }
+    // A tela acesa só enquanto o palco está aberto (FR-7877, research T-004).
+    if (nome === "palco") pedirTelaAcesa();
+    else soltarTelaAcesa();
     var titulo = pagina.querySelector('[data-tela="' + nome + '"] h2');
     if (titulo) {
       titulo.setAttribute("tabindex", "-1");
@@ -177,6 +250,41 @@
       dados = {};
     }
     return { status: resposta.status, dados: dados };
+  }
+
+  // --- a tela acesa -----------------------------------------------------------------------
+
+  /* O pedido do próprio navegador para a tela não apagar (FR-7877, research T-004). A tela que
+     apaga esconde a página, e a página escondida descarta a tomada (FR-7115 da 166): sem este
+     pedido, o celular parado no tripé perdia a gravação. Onde não há suporte, o aviso explica. */
+  async function pedirTelaAcesa() {
+    var aviso = q("[data-aviso-tela-acesa]");
+    if (estado.telaAcesa) return;
+    if (!navigator.wakeLock || !navigator.wakeLock.request) {
+      aviso.hidden = false;
+      return;
+    }
+    try {
+      var pedido = await navigator.wakeLock.request("screen");
+      if (estado.tela !== "palco") {
+        pedido.release();
+        return;
+      }
+      estado.telaAcesa = pedido;
+      pedido.addEventListener("release", function () {
+        if (estado.telaAcesa === pedido) estado.telaAcesa = null;
+      });
+      aviso.hidden = true;
+    } catch (erro) {
+      aviso.hidden = false;
+    }
+  }
+
+  function soltarTelaAcesa() {
+    if (!estado.telaAcesa) return;
+    var pedido = estado.telaAcesa;
+    estado.telaAcesa = null;
+    pedido.release().catch(function () {});
   }
 
   // --- a fonte ----------------------------------------------------------------------------
@@ -259,6 +367,8 @@
     estado.contexto = null;
   }
 
+  /* A câmera abre no "Continuar" do "Antes de gravar" (FR-7866, D-004): o toque é o gesto que o
+     navegador exige, e o palco aparece sem o "Abrir a câmera" e o "Ir para a gravação" de antes. */
   async function abrirCamera() {
     fecharFonte();
     var sintetica = q("[data-sintetica]");
@@ -284,21 +394,24 @@
     }
     // A câmera aparece espelhada, como toda "selfie"; a imagem de teste não é rosto, e espelhá-la só
     // inverteria o texto. O arquivo gravado nunca é espelhado: é o `MediaStream`, e não a prévia.
-    Array.prototype.forEach.call(pagina.querySelectorAll(".previa"), function (previa) {
-      previa.classList.toggle("sem-espelho", Boolean(sintetica && sintetica.checked));
-    });
-    q("[data-previa]").srcObject = estado.stream;
-    q("[data-previa-gravacao]").srcObject = estado.stream;
-    q("[data-checagem-camera]").textContent = "Câmera funcionando.";
-    q("[data-ir-gravar]").disabled = false;
+    var previa = q("[data-previa]");
+    previa.classList.toggle("sem-espelho", Boolean(sintetica && sintetica.checked));
+    previa.srcObject = estado.stream;
     medirSom();
-    mostrar("camera");
+    entrarNoPalco("");
   }
 
   function medirSom() {
     var faixas = estado.stream.getAudioTracks();
     var medidor = q("[data-nivel]");
-    if (!faixas.length) return;
+    var frase = q("[data-estado-do-som]");
+    estado.amostras = [];
+    estado.ouviu = false;
+    if (!faixas.length) {
+      frase.textContent = "Não encontramos o microfone. Você pode mostrar a frase escrita num papel.";
+      return;
+    }
+    frase.textContent = "Fale alguma coisa para testar o microfone.";
     var Contexto = window.AudioContext || window.webkitAudioContext;
     estado.contexto = new Contexto();
     var analisador = estado.contexto.createAnalyser();
@@ -309,7 +422,16 @@
       analisador.getByteTimeDomainData(amostras);
       var pico = 0;
       for (var i = 0; i < amostras.length; i += 1) pico = Math.max(pico, Math.abs(amostras[i] - 128));
-      medidor.value = Math.min(100, Math.round((pico / 128) * 250));
+      var nivel = Math.min(100, Math.round((pico / 128) * 250));
+      medidor.value = nivel;
+      if (!estado.ouviu) {
+        estado.amostras.push({ nivel: nivel, ms: performance.now() });
+        if (estado.amostras.length > 120) estado.amostras.shift();
+        if (ouviuFala(estado.amostras)) {
+          estado.ouviu = true;
+          frase.textContent = "Estamos ouvindo você.";
+        }
+      }
       estado.medidor = requestAnimationFrame(quadro);
     }
     quadro();
@@ -317,30 +439,34 @@
 
   // --- a gravação -------------------------------------------------------------------------
 
+  // O passo atual sobre a prévia, com a posição e o título (FR-7868); o texto é o do roteiro,
+  // inteiro (D-003). O anúncio diz os três, e o foco não sai de "Próximo" (UX-875).
   function desenharPassos() {
-    Array.prototype.forEach.call(pagina.querySelectorAll("[data-passo]"), function (item, i) {
-      item.classList.toggle("feito", i < estado.passo);
-      item.classList.toggle("atual", i === estado.passo);
-    });
     var atual = passos[estado.passo];
-    var seguinte = passos[estado.passo + 1];
-    q("[data-passo-atual]").textContent = atual ? atual.texto : "";
-    q("[data-passo-proximo]").textContent = seguinte ? "Depois: " + seguinte.texto : "Depois: assistir ao vídeo.";
-    q("[data-proximo]").textContent = seguinte ? "Próximo passo" : "Terminar a gravação";
+    if (!atual) return;
+    var rotulo = rotuloDoPasso(estado.passo, passos.length);
+    q("[data-passo-rotulo]").textContent = rotulo;
+    q("[data-passo-titulo]").textContent = atual.titulo;
+    q("[data-passo-atual]").textContent = atual.texto;
+    q("[data-proximo]").textContent = estado.passo < passos.length - 1 ? "Próximo" : "Terminar a gravação";
+    q("[data-anuncio]").textContent = rotulo + ": " + atual.titulo + ". " + atual.texto;
   }
 
-  function prepararGravacao(aviso) {
+  function entrarNoPalco(aviso) {
     estado.passo = 0;
-    q("[data-comecar]").hidden = false;
-    q("[data-proximo]").hidden = true;
-    q("[data-recomecar]").hidden = true;
-    q("[data-selo]").hidden = true;
+    estado.ultimoAvanco = null;
+    palco.setAttribute("data-estado", "preparo");
     q("[data-tempo]").textContent = "0:00";
     var caixa = q("[data-aviso-gravacao]");
     caixa.textContent = aviso || "";
     caixa.hidden = !aviso;
     desenharPassos();
-    mostrar("gravacao");
+    mostrar("palco");
+    // No computador o palco fica na coluna, abaixo do título: rolar até ele põe a prévia e "Começar
+    // a gravar" na mesma tela. No celular ele já ocupa a tela inteira.
+    if (window.matchMedia && window.matchMedia("(min-width: 40rem)").matches) {
+      palco.scrollIntoView({ block: "start" });
+    }
   }
 
   function comecar() {
@@ -352,7 +478,7 @@
     try {
       estado.gravador = new MediaRecorder(estado.stream, opcoes);
     } catch (erro) {
-      prepararGravacao("Este navegador não conseguiu gravar. A entrevista ao vivo continua disponível.");
+      entrarNoPalco("Este navegador não conseguiu gravar. A entrevista ao vivo continua disponível.");
       return;
     }
     estado.pedacos = [];
@@ -364,25 +490,29 @@
     estado.gravador.onstop = aoParar;
     estado.gravador.start(1000);
     estado.inicio = performance.now();
+    estado.ultimoAvanco = estado.inicio;
     estado.relogio = setInterval(function () {
       q("[data-tempo]").textContent = mmss((performance.now() - estado.inicio) / 1000);
     }, 250);
     estado.limiteDaTomada = setTimeout(function () { terminar(); }, teto * 1000);
-    q("[data-comecar]").hidden = true;
-    q("[data-proximo]").hidden = false;
-    q("[data-recomecar]").hidden = false;
-    q("[data-selo]").hidden = false;
+    palco.setAttribute("data-estado", "gravando");
+    desenharPassos();
     q("[data-proximo]").focus();
   }
 
+  // Só pelo gesto, sem relógio (FR-7869, D-001); o toque duplo conta uma vez (FR-7870).
   function avancar() {
+    var agora = performance.now();
+    if (!aceitaAvanco(agora, estado.ultimoAvanco)) return;
+    estado.ultimoAvanco = agora;
     if (estado.passo >= passos.length - 1) {
       terminar();
       return;
     }
     estado.passo += 1;
-    estado.marcas.push({ passo: passos[estado.passo].chave, ms: performance.now() - estado.inicio });
+    estado.marcas.push({ passo: passos[estado.passo].chave, ms: agora - estado.inicio });
     desenharPassos();
+    q("[data-proximo]").focus();
   }
 
   function pararRelogios() {
@@ -411,7 +541,10 @@
       var motivo = estado.descartar;
       estado.pedacos = [];
       estado.descartar = "";
-      prepararGravacao(
+      // Quem saiu do palco ("Voltar", "Não consigo") não volta a ele: só o recomeço e a tela que
+      // sumiu reabrem o preparo.
+      if (motivo === "saiu") return;
+      entrarNoPalco(
         motivo === "tela-oculta"
           ? "A gravação parou porque a tela saiu do navegador. Grave de novo, do começo."
           : ""
@@ -434,7 +567,8 @@
     }
     q("[data-revisao]").src = estado.tomada.url;
     q("[data-dados-da-tomada]").textContent =
-      "Duração: " + mmss(estado.tomada.duracao) + ". Tamanho: " + (arquivo.size / 1048576).toFixed(1) + " MB.";
+      "Duração: " + duracaoPorExtenso(estado.tomada.duracao) +
+      ". O envio vai usar cerca de " + megabytes(arquivo.size) + " MB da sua internet.";
     mostrar("revisao");
   }
 
@@ -442,14 +576,17 @@
     if (estado.tomada) URL.revokeObjectURL(estado.tomada.url);
     estado.tomada = null;
     q("[data-revisao]").removeAttribute("src");
-    prepararGravacao("");
+    if (estado.stream) entrarNoPalco("");
+    else abrirCamera();
   }
 
-  // A tomada é contínua: se a página some no meio, ela é descartada (FR-7115; A-3 da prova).
+  // A tomada é contínua: se a página some no meio, ela é descartada (FR-7115; A-3 da prova). Ao
+  // voltar com o palco aberto, a tela acesa é pedida de novo: o navegador a solta ao esconder.
   document.addEventListener("visibilitychange", function () {
     if (document.visibilityState === "hidden" && estado.gravador && estado.gravador.state === "recording") {
       descartar("tela-oculta");
     }
+    if (document.visibilityState === "visible" && estado.tela === "palco") pedirTelaAcesa();
   });
 
   // --- o envio ----------------------------------------------------------------------------
@@ -497,7 +634,9 @@
       rotas: { estado: inicio.dados.estado, partes: inicio.dados.partes },
       quedaSimulada: estado.quedaSimulada,
       progresso: function (fracao) {
-        q("[data-progresso]").value = Math.round(fracao * 100);
+        var porcento = Math.round(fracao * 100);
+        q("[data-progresso]").value = porcento;
+        q("[data-estado-do-envio]").textContent = "Enviando… " + porcento + "%";
       },
     });
     estado.envio.concluir = inicio.dados.concluir;
@@ -511,7 +650,7 @@
     mostrarErro("");
     try {
       await envio.retomar();
-      q("[data-estado-do-envio]").textContent = "Enviando o vídeo.";
+      q("[data-estado-do-envio]").textContent = "Enviando… " + q("[data-progresso]").value + "%";
       await envio.enviarPartes();
     } catch (erro) {
       if (erro.recusa) {
@@ -545,21 +684,21 @@
     var alvo = evento.target.closest("button");
     if (!alvo) return;
     if (alvo.hasAttribute("data-ir")) {
-      var destino = alvo.getAttribute("data-ir");
-      if (destino !== "camera") {
-        descartar("saiu");
-        fecharFonte();
-      }
-      mostrar(destino);
+      descartar("saiu");
+      fecharFonte();
+      mostrar(alvo.getAttribute("data-ir"));
     } else if (alvo.hasAttribute("data-continuar-acolhimento")) {
       var escolhida = pagina.querySelector("[data-maioridade]:checked");
       q("[data-erro-maioridade]").hidden = Boolean(escolhida);
-      if (!escolhida) return;
-      mostrar(escolhida.value === "sim" ? "camera" : "menor");
+      if (!escolhida) {
+        // A recusa só depois do gesto, junto da pergunta, com o foco nela (FR-7865).
+        q("[data-pergunta-maioridade]").focus();
+        return;
+      }
+      if (escolhida.value === "sim") abrirCamera();
+      else mostrar("menor");
     } else if (alvo.hasAttribute("data-abrir-camera")) {
       abrirCamera();
-    } else if (alvo.hasAttribute("data-ir-gravar")) {
-      prepararGravacao("");
     } else if (alvo.hasAttribute("data-comecar")) {
       comecar();
     } else if (alvo.hasAttribute("data-proximo")) {

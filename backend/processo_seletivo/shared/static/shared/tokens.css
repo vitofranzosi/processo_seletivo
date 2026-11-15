@@ -25,4 +25,11 @@ formulário de dez campos.
      estrutura pode ocupar: tabelas, matrizes, painéis e grades de cartão. Quem lê ganha linha
      curta; quem trabalha ganha a tela. */
   --leitura:68ch; --pagina:96rem;
+
+  /* **A coluna da jornada do candidato e o controle grande** (174, D-007). `--coluna` e
+     `--raio-pilula` têm o nome e o valor que a direção experimental da `172` dá a eles: quando ela
+     entrar, a declaração dela substitui esta, sem mudar nada. `--controle-g` é o do estudo de design
+     system para a ação principal do candidato no portal: 48 px, o alvo de quem segura o celular com
+     uma mão e grava com a outra. */
+  --coluna:44rem; --raio-pilula:999px; --controle-g:48px;
 }

@@ -19,7 +19,13 @@ As três partes aparecem sempre. "Nada por enquanto." é resposta, e não ausên
 {% with acao=situacao.o_que_fazer %}
 <section class="situacao-da-inscricao" aria-labelledby="situacao-titulo">
   <h2 id="situacao-titulo">Sua situação</h2>
-  <p class="rotulo-da-situacao {% if situacao.provisoria %}provisoria{% else %}registrada{% endif %}">{{ situacao.rotulo }}</p>
+  {% comment %}
+  O selo em pílula, com ícone e a palavra (174, FR-7856, D-008). O tracejado que distinguia o
+  provisório sem depender da cor (063, UX-155) parecia marcador de depuração; a distinção sem cor
+  passou ao ícone — relógio no provisório, confirmação no registrado.
+  {% endcomment %}
+  <p class="rotulo-da-situacao {% if situacao.provisoria %}provisoria{% else %}registrada{% endif %}">{% if situacao.provisoria %}{% include "portal/_icone.html" with nome="relogio" %}{% else %}{% include "portal/_icone.html" with nome="confirmado" %}{% endif %}{{ situacao.rotulo }}</p>
+  {% if situacao.prazo_do_passo %}<p class="prazo-do-passo"><strong>Prazo:</strong> {{ situacao.prazo_do_passo }}</p>{% endif %}
   <h3>Por quê</h3>
   <ul class="porque">
     {% for linha in situacao.porque %}
