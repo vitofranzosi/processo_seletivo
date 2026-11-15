@@ -169,8 +169,11 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
     expect(comecar).to_be_visible()
     expect(pagina.locator("[data-momento='gravar']")).to_have_attribute("aria-current", "step")
     pagina.wait_for_function("() => document.querySelector('[data-previa]').videoWidth > 0")
+    # O gesto principal fica na faixa de baixo do vídeo, como "Próximo" depois: dentro do palco, e
+    # não no pé do painel, cuja altura muda com a fonte do sistema (a CI do #568, no Linux).
+    assert pagina.locator(".palco [data-comecar]").count() == 1
     assert _na_tela(pagina, comecar)
-    assert _na_tela(pagina, pagina.locator(".acoes-do-palco .nao-consigo button"))
+    assert _na_tela(pagina, pagina.locator(".link-no-palco"))
     tela.capturar(pagina, "palco-preparo")
     comecar.click()
 

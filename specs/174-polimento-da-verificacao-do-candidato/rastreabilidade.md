@@ -50,7 +50,7 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-7872 | `.oval` com `cq*`; `.guia-do-oval` | NV (captura) |
 | FR-7873 | `medirSom()`, `ouviuFala()`, `data-estado-do-som` | JS |
 | FR-7874 | a frase do espelho no preparo | PV |
-| FR-7875 | `.palco-da-gravacao` fixo abaixo de 40rem; `.acoes-do-palco` | NV (375 px) |
+| FR-7875 | `.palco-da-gravacao` fixo abaixo de 40rem; "Começar a gravar", "Próximo" e "Não consigo" na `.faixa-de-baixo` | NV (375 px) |
 | FR-7876 | `.palco` em 16:9 na coluna; `scrollIntoView` ao entrar | NV (768, 1280, 1920) |
 | FR-7877 | `pedirTelaAcesa()` e `soltarTelaAcesa()`; `data-aviso-tela-acesa` | humano (aparelho real) |
 | FR-7878 | `@media (orientation:landscape) and (max-height:30rem)` | humano (aparelho real) |

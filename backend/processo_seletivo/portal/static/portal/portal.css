@@ -1437,17 +1437,19 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .previa.sem-espelho{transform:none}
 .oval{place-self:center;width:40%;width:min(70cqw,54cqh);aspect-ratio:3/4;
   border:3px solid rgba(255,255,255,.75);border-radius:50%;pointer-events:none}
-.guia-do-oval{align-self:end;justify-self:center;margin:0 .75rem .75rem;padding:.35rem .8rem;
+.canto-do-palco{align-self:start;justify-self:start;margin:.6rem}
+.guia-do-oval{align-self:start;justify-self:center;margin:3.25rem .75rem 0;padding:.35rem .8rem;
   border-radius:var(--raio-pilula);background:rgba(0,0,0,.65);font-size:.875rem;text-align:center}
 .faixa-de-cima{align-self:start;display:grid;gap:.5rem;padding:.6rem}
 .linha-do-selo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:0}
+.linha-do-selo .botao-no-palco{margin-left:auto}
 .selo-gravando{padding:.2rem .55rem;border-radius:4px;background:var(--vermelho);color:var(--branco);
   font-weight:700;font-size:.875rem}
 .selo-gravando::before{content:"";display:inline-block;width:.55rem;height:.55rem;margin-right:.35rem;
   border-radius:50%;background:currentColor}
 .tempo-da-gravacao{padding:.2rem .5rem;border-radius:4px;background:rgba(0,0,0,.65);font-size:.875rem;
   font-variant-numeric:tabular-nums}
-.recomecar{margin-left:auto;min-height:32px;padding:.25rem .6rem;border:1px solid rgba(255,255,255,.75);
+.botao-no-palco{min-height:32px;padding:.25rem .6rem;border:1px solid rgba(255,255,255,.75);
   border-radius:6px;background:rgba(0,0,0,.65);color:var(--branco);font:inherit;font-size:.8125rem;
   cursor:pointer}
 .instrucao-do-passo{max-height:33%;max-height:33cqh;overflow:auto;padding:.75rem 1rem;border-radius:8px;
@@ -1459,7 +1461,7 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .proximo{width:100%;max-width:22rem;min-height:56px;border:0;border-radius:var(--raio-pilula);
   background:var(--verde);color:var(--branco);font:inherit;font-size:1.125rem;font-weight:700;cursor:pointer;
   box-shadow:0 0 0 2px rgba(255,255,255,.85)}
-.proximo:focus-visible,.recomecar:focus-visible,.link-no-palco:focus-visible{outline:3px solid var(--branco);
+.proximo:focus-visible,.botao-no-palco:focus-visible,.link-no-palco:focus-visible{outline:3px solid var(--branco);
   outline-offset:3px}
 .link-no-palco{min-height:32px;padding:.25rem .5rem;border:0;background:transparent;color:var(--branco);
   text-decoration:underline;font:inherit;font-size:.875rem;cursor:pointer}
@@ -1467,13 +1469,12 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .palco-da-gravacao[data-estado="gravando"] [data-so-preparo]{display:none}
 .preparo-do-palco{padding:1rem 0 0}
 .preparo-do-palco h3{margin:0 0 .4rem;font-size:1rem}
+.preparo-do-palco>.aviso{margin:0 0 .75rem}
 .passos-do-roteiro{margin:.25rem 0 .75rem;padding-left:1.3rem}
 .sugestao-do-retrato{display:none}
 .nivel-do-som{display:flex;align-items:center;gap:.75rem;margin:.75rem 0 .25rem}
 .nivel-do-som meter{flex:1;height:14px}
 .estado-do-som{margin:0 0 .5rem;font-weight:600}
-.acoes-do-palco .acoes-da-tela{margin-top:.75rem}
-.acoes-do-palco .nao-consigo{margin:.5rem 0 0}
 .revisao,.video-do-titular{display:block;width:100%;max-height:70vh;background:var(--texto);border-radius:10px;}
 .autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
 .autoconferencia li{margin:.35rem 0;}
@@ -1493,21 +1494,17 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
   .palco{flex:1;aspect-ratio:auto;max-height:none;border-radius:0}
   .faixa-de-cima{padding-top:calc(.6rem + env(safe-area-inset-top))}
   .faixa-de-baixo{padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
-  .preparo-do-palco{flex:none;display:flex;flex-direction:column;max-height:55%;padding:0;
-    background:var(--branco);color:var(--texto);border-radius:14px 14px 0 0}
-  .conteudo-do-preparo{flex:1;min-height:0;overflow:auto;padding:1rem 1rem 0}
-  .acoes-do-palco{flex:none;padding:0 1rem calc(.75rem + env(safe-area-inset-bottom));
-    border-top:1px solid var(--borda)}
+  .preparo-do-palco{flex:none;max-height:42%;overflow:auto;
+    padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));background:var(--branco);
+    color:var(--texto);border-radius:14px 14px 0 0}
 }
 /* O celular deitado continua usável, e sugere o retrato sem impedir (FR-7878). */
 @media (max-width:59.99rem) and (orientation:landscape) and (max-height:30rem){
   .palco-da-gravacao{position:fixed;inset:0;z-index:30;display:flex;flex-direction:row;margin:0;
     height:100vh;height:100dvh;background:var(--texto)}
   .palco{flex:1;aspect-ratio:auto;max-height:none;border-radius:0}
-  .preparo-do-palco{flex:none;display:flex;flex-direction:column;width:45%;max-height:none;padding:0;
+  .preparo-do-palco{flex:none;width:45%;max-height:none;overflow:auto;padding:.75rem 1rem;
     background:var(--branco);color:var(--texto)}
-  .conteudo-do-preparo{flex:1;min-height:0;overflow:auto;padding:.75rem 1rem 0}
-  .acoes-do-palco{flex:none;padding:0 1rem .75rem}
   .sugestao-do-retrato{display:block}
 }
 @media (prefers-reduced-motion:reduce){

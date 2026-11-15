@@ -140,43 +140,46 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
 {% endcomment %}
 <section class="verificacao-tela palco-da-gravacao" data-tela="palco" data-estado="preparo" hidden aria-labelledby="t-palco">
   <h2 id="t-palco" class="oculto">Gravação do vídeo</h2>
+  {% comment %}
+  **O gesto principal fica sempre no mesmo lugar** (174, FR-7869, FR-7875): "Começar a gravar" e
+  depois "Próximo" ocupam a faixa de baixo do vídeo, ao alcance do polegar, e "Não consigo usar a
+  câmera" fica logo abaixo deles, nos dois estados. Até 15/11 "Começar a gravar" vinha no pé do
+  painel do preparo, e no computador a altura daquele painel — que muda com a fonte do sistema —
+  o empurrava para fora da tela (achado da CI do #568, no Linux).
+  {% endcomment %}
   <div class="palco">
     <video class="previa" data-previa autoplay muted playsinline></video>
     <span class="oval" aria-hidden="true"></span>
+    <p class="canto-do-palco" data-so-preparo><button type="button" class="botao-no-palco" data-ir="acolhimento">Voltar</button></p>
     <p class="guia-do-oval" data-so-preparo>Encaixe o rosto no oval. Ele não aparece no vídeo.</p>
     <div class="faixa-de-cima" data-so-gravando>
-      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span> <button type="button" class="recomecar" data-recomecar>Parar e recomeçar</button></p>
+      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span> <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
       <div class="instrucao-do-passo">
         <p class="rotulo-do-passo"><span data-passo-rotulo></span> · <span data-passo-titulo></span></p>
         <p class="texto-do-passo" data-passo-atual></p>
       </div>
     </div>
-    <div class="faixa-de-baixo" data-so-gravando>
-      <button type="button" class="proximo" data-proximo>Próximo</button>
+    <div class="faixa-de-baixo">
+      <button type="button" class="proximo" data-comecar data-so-preparo aria-describedby="o-que-voce-vai-fazer">Começar a gravar</button>
+      <button type="button" class="proximo" data-proximo data-so-gravando>Próximo</button>
       <button type="button" class="link-no-palco" data-ir="nao-consigo">Não consigo usar a câmera</button>
     </div>
   </div>
   <p class="oculto" data-anuncio aria-live="assertive"></p>
   <div class="preparo-do-palco" data-so-preparo>
-    <div class="conteudo-do-preparo">
+    <p class="aviso" data-aviso-gravacao hidden></p>
+    <p class="aviso" data-aviso-tela-acesa hidden>Mantenha a tela acesa: se ela apagar, a gravação para e você grava de novo.</p>
+    <div id="o-que-voce-vai-fazer">
       <h3>O que você vai fazer</h3>
       <ol class="passos-do-roteiro" data-passos>
         {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}">{{ passo.titulo }}</li>{% endfor %}
       </ol>
       <p class="ajuda">O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
-      <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
-      <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
-      <p class="nivel-do-som"><label for="nivel-do-som">Microfone</label> <meter id="nivel-do-som" data-nivel min="0" max="100" value="0"></meter></p>
-      <p class="estado-do-som" data-estado-do-som aria-live="polite">Fale alguma coisa para testar o microfone.</p>
-      <p class="aviso" data-aviso-tela-acesa hidden>Mantenha a tela acesa: se ela apagar, a gravação para e você grava de novo.</p>
-      <p class="aviso" data-aviso-gravacao hidden></p>
     </div>
-    {% comment %} As ações fora da rolagem: no celular, o painel do preparo rola, e "Começar a gravar" e
-    "Não consigo usar a câmera" ficam sempre à vista (FR-7875, UX-772 da 166). {% endcomment %}
-    <div class="acoes-do-palco">
-      <p class="acoes-da-tela"><button type="button" class="principal" data-comecar>Começar a gravar</button> <button type="button" class="link-do-meio" data-ir="acolhimento">Voltar</button></p>
-      <p class="nao-consigo"><button type="button" class="link-do-meio" data-ir="nao-consigo">Não consigo usar a câmera</button></p>
-    </div>
+    <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
+    <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
+    <p class="nivel-do-som"><label for="nivel-do-som">Microfone</label> <meter id="nivel-do-som" data-nivel min="0" max="100" value="0"></meter></p>
+    <p class="estado-do-som" data-estado-do-som aria-live="polite">Fale alguma coisa para testar o microfone.</p>
   </div>
 </section>
 

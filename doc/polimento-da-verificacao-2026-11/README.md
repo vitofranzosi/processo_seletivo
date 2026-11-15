@@ -29,7 +29,7 @@ As imagens foram convertidas para JPEG (qualidade 60) para caber no repositório
 | Escolha (`02`) | título fixo "Verificação da autodeclaração"; "vaga para pessoas pretas e pardas"; dois botões iguais sem explicação; coluna encostada à esquerda | o nome da Etapa como título e os três momentos; a Modalidade pelo nome publicado; o prazo; dois cartões iguais que dizem o que cada forma é; coluna centrada |
 | Antes de gravar (`03`) | seis itens numa lista; "Escolha uma das duas respostas" vermelho em repouso | três itens com ícone, o documento incluído; "Quem vê o seu vídeo" num bloco; a idade em opções grandes; a recusa só depois de "Continuar" |
 | Câmera (`04`, antes) | "Abrir a câmera" e depois "Ir para a gravação"; medidor minúsculo | — (fundida ao palco) |
-| Palco, preparo (`04`, depois) | — | a câmera abre no "Continuar"; o guia com a explicação; a lista dos passos só pelos títulos; o medidor largo com "Fale alguma coisa…"; "Começar a gravar" à vista |
+| Palco, preparo (`04`, depois) | — | a câmera abre no "Continuar"; o guia com a explicação; "Começar a gravar" na faixa de baixo do vídeo, onde depois fica "Próximo"; abaixo, a lista dos passos só pelos títulos e o medidor largo com "Fale alguma coisa…" |
 | Gravação (`05`) | a instrução abaixo do vídeo, o roteiro inteiro repetido embaixo, "Próximo passo" fora do vídeo | "Passo N de 4", o título e a instrução sobre o vídeo, no alto; "Próximo" no polegar; "Gravando" e o tempo; "Parar e recomeçar" no canto oposto; no celular, a tela inteira |
 | Revisão (`06`, depois) | duração em "m:ss" e tamanho em MB | "Duração: 1 min 12 s. O envio vai usar cerca de N MB da sua internet." |
 | Comprovante (`06` antes, `07` depois) | número do envio e SHA-256 em destaque no topo; "72.3 segundos" | "Seu vídeo foi enviado" com ícone e data no topo; "E agora?"; "Assistir"; os dados para conferência no fim, com "Código de conferência do arquivo (SHA-256)" |
@@ -46,7 +46,9 @@ comprovante (SC-2659). No computador, o avanço é por Espaço, com o foco em "P
 
 **O achado que só ela pegou**: o vídeo espelhado (`transform: scaleX(-1)`) vai para a camada dos
 elementos posicionados, e ficava **por cima** de "Próximo", interceptando o toque. As camadas do palco
-ganharam `z-index`.
+ganharam `z-index`. **E a CI pegou o segundo**: no Linux, a fonte padrão alonga o painel do preparo, e
+"Começar a gravar", que ficava no pé dele, saía da tela no computador; o gesto principal passou à
+faixa de baixo do vídeo.
 
 ## O que ainda não foi verificado
 
