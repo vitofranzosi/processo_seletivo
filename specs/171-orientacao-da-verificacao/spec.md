@@ -467,8 +467,11 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
 - **FR-7320**: Cada unidade DEVE ter um modelo inicial do aviso do passo, criado uma vez pelo mesmo
   comando que cria os modelos iniciais da `066`, **inclusive na unidade que já tem os três de hoje**. O
   modelo é editável e inativável como os outros, e o comando NÃO DEVE recriá-lo depois. O assunto do
-  modelo inicial DEVE ser o assunto neutro da `066`, que a varredura dos modelos iniciais já confere
-  ("cota", "reserva", "modalidade", "lista" e "heteroidentificação" fora dele), e a mesma conferência
+  modelo inicial DEVE ser neutro como o da `066` ("cota", "reserva", "modalidade", "lista" e
+  "heteroidentificação" fora dele, e também o nome da etapa), mas NÃO DEVE anunciar publicação: é
+  "Processo Seletivo Ifes — Há um passo a mais para você" (*revisto em 15/11/2026, depois da
+  demonstração: o assunto da `066`, "Nova publicação disponível", mandava procurar um ato que o
+  aviso do passo não tem*). A mesma conferência
   DEVE passar a valer para o **corpo** do modelo inicial do aviso do passo (FR-7319).
 
 #### O Centro de Controle e Minhas atividades (comissão e operação)

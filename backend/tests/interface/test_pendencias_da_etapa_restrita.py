@@ -167,6 +167,18 @@ def test_o_centro_mostra_a_etapa_e_o_aviso(no_periodo, client, seletor_ligado):
     )
 
 
+def test_o_roteiro_diz_para_quem_a_etapa_restrita_vale(no_periodo, client, seletor_ligado):
+    """Achado da demonstração de 15/11: a Etapa restrita aparecia como "vale para todas as listas".
+    O roteiro da fase diz agora a quem ela se aplica, pelo nome da Modalidade (163)."""
+    identificar(client, "maria", [])
+    corpo = client.get(
+        reverse("interface:centro-do-edital", args=[no_periodo["edital"].id]), follow=True
+    ).content.decode()
+    assert "só para quem se inscreveu em Pretos e pardos" in corpo
+    # As Etapas sem alcance continuam valendo para todas as listas.
+    assert "vale para todas as listas" in corpo
+
+
 def test_com_o_video_quem_ele_nao_confirmou_espera_o_encaminhamento(
     raiz_de_arquivos, gestor, api_client, manager_headers, settings
 ):
