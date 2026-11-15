@@ -84,9 +84,9 @@ para entender falhou, por mais correta que seja.
    "apuração", "predicado", "estado", "ato", "comando", "persistir", "renderizar" nem siglas
    internas — se a tela usa o termo, explique-o com palavras comuns na primeira vez. Nada de número de
    PR, spec, requisito ou arquivo.
-5. **Uma ideia por nota, e só o que vale anunciar.** Se a mudança não daria um bom aviso no mural da
-   equipe, ela não precisa de nota própria: junte as pequenas numa nota "Pequenas melhorias" do
-   período, com uma lista curta do que se percebe. Correção se anuncia pelo alívio: "Resolvido: …".
+5. **Uma ideia por nota, e o peso certo.** O valor vem antes do funcionamento: diga o que ficou
+   possível, e só depois a regra. O ajuste pequeno é uma nota *incremental*, de uma linha — nunca um
+   pacote de assuntos. Correção se anuncia pelo alívio: "Resolvido: …".
 
 ### Antes e depois
 
@@ -116,11 +116,42 @@ para entender falhou, por mais correta que seja.
 - **Categoria**: *novidade* é o que não existia; *melhoria*, o que existia e ficou melhor;
   *correção*, o problema que deixou de acontecer.
 
+### Duas camadas: a vitrine e o histórico
+
+*Revisão de 14/11 (`D-012` da 168).* O PR não é a unidade de comunicação: dez, vinte PRs podem ser uma
+capacidade só. A página tem duas camadas:
+
+- **A vitrine, "Descubra o que o GPS já faz"** — as capacidades do produto, em `[[capacidade]]` no fim
+  de `novidades.toml`. Cada uma reúne as notas que a construíram e é escrita em três tempos: **o que
+  agora é possível**, **por que isso facilita** e **por onde começar**. Título até 70 caracteres,
+  resumo até 240, até três passos. Não tem data: o cartão diz quantas atualizações a construíram.
+- **O histórico** — cada nota, com a **relevância** (`relevancia`), que é independente da categoria:
+  - *transformadora*: cria capacidade ou elimina operação trabalhosa — cartão com filete;
+  - *relevante*: melhora uma jornada que já existia — cartão normal;
+  - *incremental*: ajuste, legibilidade, correção pontual — uma linha enxuta, sem "Na prática".
+
+  Meça pelo benefício para quem opera, nunca pelo número de PRs nem pela dificuldade técnica.
+
+### Os destaques
+
+- **No máximo dez capacidades, seis à vista.** A vitrine que vira lista deixa de destacar.
+- **Entra** a capacidade que cria uma possibilidade nova ou elimina uma operação trabalhosa — e só
+  quando o que ela promete está disponível. Em desenvolvimento, só no desenvolvimento local ou atrás
+  de chave desligada: não entra.
+- **Sai**, quando passar de dez, a de menor uso na rotina da comissão; a decisão vai na descrição do
+  PR.
+- **Destaque não é novidade recente.** A capacidade de setembro fica enquanto for das mais
+  importantes.
+- **A nova nota de uma capacidade que já existe** entra em `notas` dela: a página diz "faz parte de", e
+  a capacidade não se repete como novidade.
+- A matriz que fundamentou a vitrine está em `specs/168-novidades-do-gps/capacidades.md`.
+
 ### Como agrupar
 
-**Uma nota por capacidade que alguém perceberia, e não por PR.** O Centro de Controle são sete PRs e
-uma nota; o Kit de divulgação, onze. As melhorias miúdas de um período vão juntas numa nota
-"Pequenas melhorias". Um PR nunca está em duas notas — a suíte recusa.
+**Uma nota por mudança que alguém perceberia, e não por PR.** O Centro de Controle são sete PRs e uma
+nota. **Não junte assuntos distintos numa nota só** — "Pequenas melhorias no Edital, nos e-mails e nas
+páginas" esconde o que cada um vale: cada assunto é uma nota, e a incremental, uma linha enxuta, não
+pesa no histórico. Um PR nunca está em duas notas — a suíte recusa.
 
 ## Lista da revisão
 
@@ -132,5 +163,7 @@ uma nota; o Kit de divulgação, onze. As melhorias miúdas de um período vão 
 - [ ] Lida em voz alta para alguém da comissão, a nota se entende de primeira?
 - [ ] O título promete um ganho, e o exemplo mostra esse ganho numa cena concreta?
 - [ ] Nenhuma palavra do sistema ("marco", "recorte", "derivação", "ato", "estado")?
+- [ ] A relevância está pelo benefício? A nota de uma capacidade que já existe entrou em `notas` dela?
+- [ ] Um servidor que não acompanhou o desenvolvimento entende, em 15 segundos, o benefício?
 - [ ] A capacidade depende de configuração desligada em algum ambiente? Então `requer_configuracao`.
 - [ ] A nota não expõe falha de segurança nem problema interno sem efeito para quem opera?

@@ -41,4 +41,6 @@
 - [x] T020 Segunda revisão de 14/11: registro `curadoria.toml` e roteiro pela data do merge (FR-7424); 17 notas novas e 9 PRs acrescentados a notas existentes, sem PR de produto da janela sem destino (FR-7426); os caminhos institucionais por teste (`tests/seguranca/test_novidades_na_entrada_institucional.py`)
 - [x] T021 Período do histórico (P-4, respondida em 14/11: estender): 47 notas de 15/09 a 16/10, curadas em três frentes, e 26 PRs a mais no registro
 - [x] T022 A diretriz do anúncio (`D-011`, FR-7427, UX-806): o campo `exemplo` ("Na prática"), os limites e o vocabulário na suíte, o guia reescrito com antes e depois, a convenção no `AGENTS.md`; as 109 notas reescritas e reunidas em 90
-- [ ] T023 Validação humana com alguém da comissão (SC-2501)
+- [x] T024 Revisão editorial (`D-012`, `D-013`, FR-7601 a FR-7606, UX-821, UX-822): matriz das capacidades (`capacidades.md`), relevância em toda nota, `[[capacidade]]` e a vitrine, "faz parte de", a linha enxuta do incremental, o "Desde sua última visita" pela maior relevância, as "Pequenas melhorias" desfeitas, o kit separado, e as notas dos PRs de 14/11
+- [ ] T023 Validação humana com alguém da comissão (SC-2501, SC-2511)
+- [ ] T025 Decidir quem renumera a faixa repetida com a 169 (P-5)

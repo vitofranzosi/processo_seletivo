@@ -57,3 +57,40 @@ Entrada `novidades-168` do `.claude/launch.json`, banco `ps_novidades`, como `de
   (`tests/seguranca/test_novidades_na_entrada_institucional.py`), mas não foram percorridas num
   navegador.
 - SC-2501 é validação humana.
+
+## Revisão editorial de 14/11: a vitrine das capacidades (`D-012`, `D-013`)
+
+**O que mudou.** A página ganhou "Descubra o que o GPS já faz", com dez capacidades (seis à vista); o
+histórico ganhou a relevância (13 transformadoras, ~48 relevantes, ~49 incrementais), o "faz parte de"
+e a linha enxuta do incremental; o "Desde sua última visita" abre pela mudança de maior peso. As seis
+notas "Pequenas melhorias" foram desfeitas em 21 notas de um assunto cada; o kit foi separado em
+textos (disponíveis) e peças (condicionadas). Entraram as notas dos PRs mergeados durante a revisão:
+a agenda da Etapa (167), a habilitação do assistente (170), a legibilidade das confirmações (#557) e a
+própria página. A nota do piloto do assistente deixou de depender de `ASSISTENTE_PILOTO`, que a 170
+passou a recusar em produção. O registro continua em "Nada pendente".
+
+**Teste de descoberta — avaliação heurística, e não teste com operador.** Para cada uma de cinco
+capacidades, o cartão responde às três perguntas sem abrir o detalhe técnico:
+
+| Capacidade | O que consigo fazer? | Por que facilita? | Onde encontro? |
+|---|---|---|---|
+| Agenda das entrevistas | Montar a agenda com dias, horários e bancas | "sem montar planilhas"; cada candidato vê o horário | "Por onde começar": distribuição da Etapa, cartão Agenda |
+| Centro de Controle | Ver o que falta em cada Edital e de quem é a vez | "um clique leva ao lugar certo" | Processos Seletivos → Edital publicado (com link) |
+| Convocação com documentos | Convocar, receber e conferir documentos | "sem e-mail nem planilha" | A convocação de cada lista |
+| Barema | Pontuar item a item com total calculado | "acaba a planilha paralela" | Cartão da Etapa pontuada, seção Barema |
+| Edital guiado | Montar o Edital e receber o PDF oficial | "documento oficial pronto, em linguagem simples" | Novo Processo Seletivo (com link) |
+
+A SC-2511 — a mesma pergunta feita a alguém da comissão — continua pendente.
+
+**Suíte inteira contra PostgreSQL**, com a `main` de 15/11 integrada: **21 224 passando, 25 pulados,
+sem falha** (554s).
+
+**No navegador** (entrada `novidades-168`, `demo.gestor`): a vitrine, o detalhe aberto de uma
+capacidade, a linha do tempo com transformadora e incremental, e o celular, sem erro no console e sem
+rolagem horizontal a 375 e 1.280 px. **Limitação conhecida:** no celular os seis destaques à vista
+ficam empilhados e somam bastante rolagem antes do histórico; um carrossel ou cartões mais baixos no
+estreito ficam para depois da validação com pessoas.
+
+**A faixa de identificadores.** A `169` usa FR-7400 a 7435 e UX-800 a 803, que se sobrepõem à faixa
+da `168`; a revisão abriu em FR-7601, SC-2511 e UX-821, e a pergunta de quem renumera é a P-5.
+

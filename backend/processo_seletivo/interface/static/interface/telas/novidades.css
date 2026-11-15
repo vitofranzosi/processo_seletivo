@@ -1,18 +1,44 @@
-/* As Novidades do GPS (168). Linha do tempo de cartões compactos na medida de leitura (UX-802): o
-   texto corrido não passa de --leitura, e a página não pede tela larga (UX-804). Só pares de cor que
-   o teste de contraste já confere: --verde-escuro sobre --verde-claro, --texto sobre --fundo e
-   --texto-fraco sobre --branco. A categoria se lê pelo texto, e a cor só a acompanha (UX-803). */
+/* As Novidades do GPS (168), em duas camadas (D-012): a vitrine das capacidades e o histórico.
+   O peso visual segue a relevância, e não a cor (UX-822): o cartão transformador ganha filete e
+   espaço, o incremental vira uma linha enxuta. Só pares de cor que o teste de contraste já confere:
+   --verde-escuro sobre --verde-claro, --texto sobre --fundo e --texto-fraco sobre --branco. A
+   categoria se lê pelo texto, e a cor só a acompanha (UX-803). */
 
-.desde-a-ultima-visita,.filtros-das-novidades,.mes-de-novidades,.rodape-das-novidades,
-.paginas-das-novidades{max-width:var(--leitura)}
+.desde-a-ultima-visita,.historico,.rodape-das-novidades{max-width:var(--leitura)}
 
+/* ---- Desde sua última visita: a mudança de maior peso primeiro (FR-7604) ---- */
 .desde-a-ultima-visita{margin:1rem 0 1.5rem;padding:.9rem 1.1rem;border:1px solid var(--verde);
   border-radius:6px;background:var(--verde-claro)}
-.desde-a-ultima-visita .ajuda{margin:.15rem 0 .5rem;color:var(--verde-escuro)}
-.desde-a-ultima-visita ul{margin:0;padding:0;list-style:none}
-.desde-a-ultima-visita li{padding:.2rem 0}
+.desde-a-ultima-visita h2{font-size:1rem;color:var(--verde-escuro)}
+.principal-da-visita{margin:.4rem 0;font-size:1.1rem;font-weight:600}
+.desde-a-ultima-visita .ajuda{margin:.4rem 0 .2rem;color:var(--verde-escuro)}
+.demais-da-visita{margin:0;padding-left:1.1rem}
+.demais-da-visita li{padding:.1rem 0}
 
-.filtros-das-novidades{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0 .5rem}
+/* ---- Descubra o que o GPS já faz (FR-7602, UX-821) ---- */
+.destaques{margin:1.5rem 0 2rem}
+.destaques>h2{margin-bottom:.75rem}
+.grade-de-destaques{display:grid;gap:.75rem;margin:0;padding:0;list-style:none;
+  grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
+.destaque{display:flex;flex-direction:column;gap:.35rem;padding:.9rem 1rem;border:1px solid var(--borda);
+  border-radius:8px;background:var(--branco);scroll-margin-top:1rem}
+.destaque:target{border-color:var(--verde)}
+.icone-do-destaque{width:1.75rem;height:1.75rem;padding:.3rem;border-radius:6px;background:var(--verde-claro);
+  fill:none;stroke:var(--verde-escuro);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.destaque h3{margin:0;font-size:1.02rem;line-height:1.35}
+.destaque>p{margin:0;font-size:.92rem;color:var(--texto)}
+.como-funciona{margin-top:auto;padding-top:.3rem}
+.como-funciona summary,.mais-destaques>summary{cursor:pointer;color:var(--verde-texto);font-size:.9rem;
+  font-weight:600}
+.como-funciona p,.como-funciona ol{margin:.35rem 0;font-size:.9rem}
+.como-funciona ol{padding-left:1.2rem}
+.historico-do-destaque{color:var(--texto-fraco)}
+.mais-destaques{margin-top:.75rem}
+.mais-destaques>.grade-de-destaques{margin-top:.75rem}
+
+/* ---- Todas as atualizações ---- */
+.historico{margin-top:2rem}
+.filtros-das-novidades{display:flex;flex-wrap:wrap;gap:.4rem;margin:.75rem 0 .5rem}
 .filtros-das-novidades a{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;
   border:1px solid var(--borda);border-radius:999px;background:var(--branco);color:var(--texto);
   text-decoration:none;font-size:.875rem}
@@ -21,8 +47,8 @@
   color:var(--verde-escuro);font-weight:600}
 .quantidade-do-filtro{font-variant-numeric:tabular-nums;color:inherit}
 
-.mes-de-novidades{margin:1.75rem 0 0}
-.mes-de-novidades h2{padding-bottom:.35rem;border-bottom:1px solid var(--borda)}
+.mes-de-novidades{margin:1.5rem 0 0}
+.mes-de-novidades h3{margin:0;padding-bottom:.35rem;border-bottom:1px solid var(--borda);font-size:1.05rem}
 
 /* O filete à esquerda é a linha do tempo; cada cartão pendura nele pelo marcador. */
 .linha-do-tempo{list-style:none;margin:0;padding:0 0 0 1.1rem;border-left:2px solid var(--borda)}
@@ -31,10 +57,23 @@
 .novidade::before{content:"";position:absolute;left:calc(-1.1rem - .4rem);top:1.1rem;width:.65rem;
   height:.65rem;border-radius:50%;background:var(--branco);border:2px solid var(--verde)}
 .novidade:target{border-color:var(--verde)}
-.novidade h3{margin:.15rem 0 .3rem;font-size:1.05rem}
+.novidade h4{margin:.15rem 0 .3rem;font-size:1.05rem}
 .novidade p{margin:.3rem 0}
+/* Peso pela relevância (FR-7601, UX-822): a transformadora com filete e marcador cheio; a
+   incremental sem moldura, numa linha enxuta. */
+.novidade.r-transformadora{border-left:4px solid var(--verde)}
+.novidade.r-transformadora::before{background:var(--verde)}
+.novidade.r-transformadora h4{font-size:1.15rem}
+.novidade.r-relevante{border-color:var(--borda)}
+.novidade.r-incremental{margin:.4rem 0;padding:.35rem 0 .35rem .25rem;border-color:transparent;
+  background:none}
+.novidade.r-incremental::before{top:.75rem;width:.5rem;height:.5rem;left:calc(-1.1rem - .32rem);
+  border-color:var(--borda)}
+.novidade.r-incremental h4{margin:0;font-size:.95rem}
+.novidade.r-incremental>p:not(.cabeca-da-novidade){font-size:.9rem;color:var(--texto-fraco)}
 .cabeca-da-novidade{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.82rem;
   color:var(--texto-fraco)}
+.parte-de a{color:var(--verde-texto)}
 .beneficio-da-novidade{color:var(--texto)}
 /* "Na prática" (FR-7427): a cena que faz a nota se entender de primeira, destacada sem competir com o
    título — um filete e o fundo neutro da gestão. */

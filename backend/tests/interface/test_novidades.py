@@ -18,12 +18,13 @@ from processo_seletivo.novidades.models import LeituraDasNovidades
 from tests.interface.conftest import identificar
 
 
-def _nota(id, data, categoria="novidade", **extra):
+def _nota(id, data, categoria="novidade", relevancia="relevante", **extra):
     linhas = [
         "[[nota]]",
         f'id = "{id}"',
         f"data = {data}",
         f'categoria = "{categoria}"',
+        f'relevancia = "{relevancia}"',
         f'titulo = "Título {id}"',
         f'resumo = "Resumo de {id}."',
         "prs = [1]",
@@ -166,7 +167,7 @@ def test_quem_volta_ve_o_que_chegou_e_o_bloco_dura_a_sessao(client, seletor_liga
     corpo = _pagina(client)
     bloco = corpo.split('class="desde-a-ultima-visita"')[1].split("</section>")[0]
     assert re.findall(r'href="[^"]*#(\w+)">Título', bloco) == ["c", "b"]
-    assert "2 mudanças desde" in bloco
+    assert "Também chegaram 1 melhoria, desde" in bloco
     # Recarregar não esvazia o bloco: a visita é a sessão.
     assert 'class="desde-a-ultima-visita"' in _pagina(client)
 
@@ -242,7 +243,7 @@ def test_basta_uma_das_capacidades_do_publico(client, seletor_ligado, notas):
     """FR-7411: a nota de vários públicos aparece a quem tem qualquer uma das capacidades."""
     notas(
         *TRES,
-        '[[nota]]\nid = "vg"\ndata = 2026-10-01\ncategoria = "novidade"\n'
+        '[[nota]]\nid = "vg"\ndata = 2026-10-01\ncategoria = "novidade"\nrelevancia = "relevante"\n'
         'titulo = "Título vg"\nresumo = "R."\nprs = [9]\nspecs = []\n'
         'para_capacidade = ["acesso:administrar", "visao:consultar"]\n',
     )
@@ -275,11 +276,11 @@ def test_a_linha_do_tempo_agrupa_por_mes_da_mais_recente(client, seletor_ligado,
     notas(*TRES)
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = _pagina(client)
-    assert re.findall(r'<h2 id="mes-de-novidades-\d+">([^<]+)</h2>', corpo) == [
+    assert re.findall(r'<h3 id="mes-de-novidades-\d+">([^<]+)</h3>', corpo) == [
         "Novembro de 2026",
         "Outubro de 2026",
     ]
-    assert re.findall(r'<li class="novidade" id="(\w+)">', corpo) == ["c", "b", "a"]
+    assert re.findall(r'<li class="novidade r-\w+" id="(\w+)">', corpo) == ["c", "b", "a"]
     assert '<span class="categoria-da-novidade c-correcao">Correção</span>' in corpo
     assert "As datas são as de chegada da mudança ao GPS" in corpo
 
@@ -289,7 +290,7 @@ def test_o_exemplo_aparece_como_na_pratica(client, seletor_ligado, notas):
     """FR-7427, UX-806: a cena concreta logo abaixo do resumo."""
     notas(_nota("x", "2026-11-12", exemplo="Você abre o Edital 12/2026 e vê o que falta."))
     identificar(client, "gustavo.gestor", ["gestor"])
-    cartao = _pagina(client).split('<li class="novidade" id="x">')[1].split("</li>")[0]
+    cartao = _pagina(client).split('<li class="novidade r-relevante" id="x">')[1].split("</li>")[0]
     assert (
         '<p class="exemplo-da-novidade"><strong>Na prática:</strong> '
         "Você abre o Edital 12/2026 e vê o que falta.</p>"
@@ -303,12 +304,12 @@ def test_o_filtro_por_categoria_conta_e_guarda_a_escolha(client, seletor_ligado,
     notas(*TRES)
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = _pagina(client, categoria="correcao")
-    assert re.findall(r'<li class="novidade" id="(\w+)">', corpo) == ["c"]
+    assert re.findall(r'<li class="novidade r-\w+" id="(\w+)">', corpo) == ["c"]
     filtros = corpo.split('class="filtros-das-novidades"')[1].split("</nav>")[0]
     assert 'aria-current="page">Correções <span class="quantidade-do-filtro">1</span>' in filtros
     assert 'Todas <span class="quantidade-do-filtro">3</span>' in filtros
     # Filtro inventado cai no padrão, sem 404.
-    assert len(re.findall(r'<li class="novidade"', _pagina(client, categoria="x"))) == 3
+    assert len(re.findall(r'<li class="novidade r-', _pagina(client, categoria="x"))) == 3
 
 
 @pytest.mark.django_db
@@ -317,11 +318,11 @@ def test_a_pagina_continua_nas_anteriores(client, seletor_ligado, notas):
     notas(*[_nota(f"n{i:02d}", f"2026-11-{30 - i:02d}") for i in range(14)])
     identificar(client, "gustavo.gestor", ["gestor"])
     primeira = _pagina(client)
-    assert len(re.findall(r'<li class="novidade"', primeira)) == 12
-    assert "Novidades anteriores" in primeira
+    assert len(re.findall(r'<li class="novidade r-', primeira)) == 12
+    assert "Atualizações anteriores" in primeira
     segunda = _pagina(client, pagina=2)
-    assert re.findall(r'<li class="novidade" id="(\w+)">', segunda) == ["n12", "n13"]
-    assert "Novidades mais recentes" in segunda
+    assert re.findall(r'<li class="novidade r-\w+" id="(\w+)">', segunda) == ["n12", "n13"]
+    assert "Atualizações mais recentes" in segunda
 
 
 @pytest.mark.django_db
@@ -344,3 +345,112 @@ def test_o_conteudo_real_abre_sem_jargao_na_tela(client, seletor_ligado):
     # A primeira nota do arquivo, e não um título fixo: a curadoria acrescenta no topo toda semana.
     assert catalogo.notas()[0].titulo in conteudo
     assert not re.search(r"#\d{3}|\bPR\b|FR-\d", re.sub(r'href="[^"]*"', "", conteudo))
+
+
+# ---- a vitrine e o peso (FR-7601 a FR-7606) ----------------------------------------------------
+
+
+def _capacidade(id, notas, ordem=1, **extra):
+    linhas = [
+        "[[capacidade]]",
+        f'id = "{id}"',
+        f"ordem = {ordem}",
+        'icone = "i-pasta"',
+        f'titulo = "Capacidade {id}"',
+        f'resumo = "O que {id} permite."',
+        "notas = [" + ", ".join(f'"{n}"' for n in notas) + "]",
+    ]
+    linhas += [f'{campo} = "{valor}"' for campo, valor in extra.items()]
+    return "\n".join(linhas) + "\n"
+
+
+@pytest.mark.django_db
+def test_a_vitrine_mostra_a_capacidade_e_a_nota_diz_de_qual_faz_parte(
+    client, seletor_ligado, notas
+):
+    """FR-7602, FR-7603: a capacidade no topo; a nota a aponta."""
+    notas(*TRES, _capacidade("x", ["c", "b"], como_comecar="Na barra lateral."))
+    identificar(client, "gustavo.gestor", ["gestor"])
+    corpo = _pagina(client)
+    vitrine = corpo.split('class="destaques"')[1].split("</section>")[0]
+    assert '<li class="destaque" id="capacidade-x">' in vitrine
+    assert "Capacidade x" in vitrine and "Na barra lateral." in vitrine
+    # Quantas atualizações a construíram, e desde quando — sem dia de lançamento inventado.
+    assert "2 atualizações desde novembro de 2026." in vitrine
+    cartao_c = corpo.split('<li class="novidade r-relevante" id="c">')[1].split("</li>")[0]
+    assert (
+        f'faz parte de <a href="{reverse("interface:novidades")}#capacidade-x">Capacidade x</a>'
+        in cartao_c
+    )
+    cartao_a = corpo.split('id="a">')[1].split("</li>")[0]
+    assert "faz parte de" not in cartao_a
+
+
+@pytest.mark.django_db
+def test_a_capacidade_de_outro_publico_ou_desligada_fica_fora(
+    client, seletor_ligado, settings, notas
+):
+    """FR-7606: a vitrine obedece às mesmas regras da nota."""
+    settings.AVISOS_AOS_CANDIDATOS = False
+    notas(
+        *TRES,
+        _capacidade("acessos", ["c"], ordem=1, para_capacidade="acesso:consultar"),
+        _capacidade("avisos", ["b"], ordem=2, requer_configuracao="AVISOS_AOS_CANDIDATOS"),
+    )
+    identificar(client, "gustavo.gestor", ["gestor"])
+    corpo = _pagina(client)
+    assert 'class="destaques"' not in corpo
+    assert "faz parte de" not in corpo
+
+
+@pytest.mark.django_db
+def test_a_vitrine_so_na_primeira_pagina_sem_filtro_e_o_excesso_recolhido(
+    client, seletor_ligado, notas
+):
+    """UX-821: quem filtra ou pagina procura no histórico; o sétimo destaque fica recolhido."""
+    ids = [f"n{i}" for i in range(8)]
+    notas(
+        *[_nota(i, f"2026-11-{20 - k:02d}") for k, i in enumerate(ids)],
+        *[_capacidade(f"k{k}", [i], ordem=k) for k, i in enumerate(ids)],
+    )
+    identificar(client, "gustavo.gestor", ["gestor"])
+    corpo = _pagina(client)
+    vitrine = corpo.split('class="destaques"')[1].split("</section>")[0]
+    visiveis, recolhidos = vitrine.split('<details class="mais-destaques">')
+    assert visiveis.count('class="destaque"') == 6
+    assert "Ver mais 2 capacidades" in recolhidos
+    assert 'class="destaques"' not in _pagina(client, categoria="novidade")
+
+
+@pytest.mark.django_db
+def test_a_incremental_e_uma_linha_enxuta(client, seletor_ligado, notas):
+    """FR-7601, UX-822: o ajuste não ganha o mesmo peso da capacidade nova."""
+    notas(_nota("y", "2026-11-12", "correcao", "incremental", exemplo="Uma cena.", onde="Ali."))
+    identificar(client, "gustavo.gestor", ["gestor"])
+    cartao = (
+        _pagina(client).split('<li class="novidade r-incremental" id="y">')[1].split("</li>")[0]
+    )
+    assert "Resumo de y." in cartao
+    assert "Na prática" not in cartao and "Como usar" not in cartao
+
+
+@pytest.mark.django_db
+def test_a_visita_abre_pela_mudanca_de_maior_peso(client, seletor_ligado, notas):
+    """FR-7604: a transformadora abre o bloco, mesmo mais antiga; o resto vem contado, com teto."""
+    from django.utils import timezone
+
+    LeituraDasNovidades.objects.create(
+        subject="gustavo.gestor", vistas=["velha"], ultima_visita=timezone.now()
+    )
+    notas(
+        *[_nota(f"m{i}", "2026-11-12", "correcao", "incremental") for i in range(5)],
+        _nota("grande", "2026-11-10", "novidade", "transformadora", exemplo="Cena."),
+        _nota("velha", "2026-10-01"),
+    )
+    identificar(client, "gustavo.gestor", ["gestor"])
+    bloco = _pagina(client).split('class="desde-a-ultima-visita"')[1].split("</section>")[0]
+    principal = bloco.split('class="principal-da-visita"')[1].split("</p>")[0]
+    assert "#grande" in principal
+    assert "Também chegaram 5 correções" in bloco
+    assert bloco.count("<li>") == 3
+    assert "E mais 2, em" in bloco

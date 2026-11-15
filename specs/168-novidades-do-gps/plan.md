@@ -33,6 +33,7 @@ backend/processo_seletivo/novidades/        app novo
   leitura.py        disponibilidade, contagem da sessão, registro da visita
   novidades.toml    as notas
   curadoria.toml    o registro: o início da janela e os PRs deixados sem nota, com o motivo
+                    (as capacidades da vitrine ficam em novidades.toml, em [[capacidade]])
 backend/processo_seletivo/interface/
   novidades_do_gps.py                 a view
   templates/interface/novidades.html  a página

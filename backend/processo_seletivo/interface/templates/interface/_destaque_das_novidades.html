@@ -1,0 +1,18 @@
+{% comment %}
+Um cartão de "Descubra o que o GPS já faz" (168, FR-7602, UX-821): o ícone, a promessa, duas frases
+e o detalhe recolhido. Quantas atualizações a construíram, e desde quando a página as conhece — e não
+um dia de lançamento, que a capacidade construída em várias entregas não tem.
+{% endcomment %}{% with capacidade=destaque.capacidade %}
+<li class="destaque" id="capacidade-{{ capacidade.id }}">
+  <svg class="icone-do-destaque" aria-hidden="true"><use href="#{{ capacidade.icone }}"/></svg>
+  <h3>{{ capacidade.titulo }}</h3>
+  <p>{{ capacidade.resumo }}</p>
+  <details class="como-funciona">
+    <summary>Veja como funciona</summary>
+    {% if capacidade.como_comecar %}<p><strong>Por onde começar:</strong> {{ capacidade.como_comecar }}</p>{% endif %}
+    {% if capacidade.passos %}<ol>{% for passo in capacidade.passos %}<li>{{ passo }}</li>{% endfor %}</ol>{% endif %}
+    <p class="historico-do-destaque">{{ destaque.atualizacoes }} atualizaç{{ destaque.atualizacoes|pluralize:"ão,ões" }} desde {{ destaque.desde|date:"F \d\e Y"|lower }}.</p>
+    {% if destaque.destino or destaque.saiba_mais %}<p class="acoes-da-novidade">{% if destaque.destino %}<a href="{{ destaque.destino }}">Abrir {{ destaque.rotulo_do_destino }}</a>{% endif %}{% if destaque.saiba_mais %}<a href="{{ destaque.saiba_mais }}">Saiba mais na documentação</a>{% endif %}</p>{% endif %}
+  </details>
+</li>
+{% endwith %}

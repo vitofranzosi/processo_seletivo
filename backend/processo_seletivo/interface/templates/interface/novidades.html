@@ -4,26 +4,34 @@
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/novidades.css' %}">{% endblock %}
 {% block conteudo %}
 {% comment %}
-As Novidades do GPS (168). O que mudou no produto, em linguagem de quem opera: nenhum número de PR,
-de requisito ou de spec no texto visível (FR-7407). O detalhe fica recolhido (UX-802), e o "Saiba
-mais" leva à seção da Documentação do Sistema em vez de repeti-la.
+As Novidades do GPS (168), em duas camadas (D-012): "Descubra o que o GPS já faz", com as capacidades
+de produto, e o histórico, com cada mudança. A capacidade diz o que agora é possível; a nota, o que
+mudou. Nenhum número de PR, de requisito ou de spec no texto visível (FR-7407).
 {% endcomment %}
+<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="i-documento" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
+  <symbol id="i-selo" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M9.5 9l1.8 1.8 3.2-3.3M9 13.5L7.5 21l4.5-2.5 4.5 2.5-1.5-7.5"/></symbol>
+  <symbol id="i-sorteio" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></symbol>
+  <symbol id="i-megafone" viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6l-7 4z"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5M7 14l1.5 5h2.5l-1-5"/></symbol>
+</svg>
 <h1>Novidades do GPS</h1>
-<p class="sub">O que mudou no sistema, da mudança mais recente para a mais antiga: o que é novo, o que melhorou e o que foi corrigido.</p>
+<p class="sub">Descubra o que o GPS agora permite fazer e como isso facilita o seu trabalho.</p>
 
 {% if indisponivel %}
 <p class="aviso">As novidades estão indisponíveis neste momento. O restante do sistema funciona normalmente.</p>
 {% else %}
 
-{% if recentes %}
+{% if principal %}
 <section class="desde-a-ultima-visita" aria-labelledby="titulo-desde-a-ultima-visita">
   <h2 id="titulo-desde-a-ultima-visita">Desde sua última visita</h2>
-  <p class="ajuda">{{ recentes|length }} mudança{{ recentes|length|pluralize }} desde <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>.</p>
-  <ul>
-    {% for recente in recentes %}
-    <li><span class="categoria-da-novidade c-{{ recente.nota.categoria.codigo }}">{{ recente.nota.categoria.rotulo }}</span> <a href="{{ recente.endereco }}">{{ recente.nota.titulo }}</a></li>
-    {% endfor %}
+  <p class="principal-da-visita"><span class="categoria-da-novidade c-{{ principal.nota.categoria.codigo }}">{{ principal.nota.categoria.rotulo }}</span> <a href="{{ principal.endereco }}">{{ principal.nota.titulo }}</a></p>
+  {% if demais %}
+  <p class="ajuda">Também chegaram {% for item in resumo_das_demais %}{{ item.quantidade }} {% if item.quantidade == 1 %}{{ item.categoria.rotulo|lower }}{% else %}{{ item.categoria.plural|lower }}{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}, desde <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>:</p>
+  <ul class="demais-da-visita">
+    {% for recente in demais %}<li><a href="{{ recente.endereco }}">{{ recente.nota.titulo }}</a></li>{% endfor %}
   </ul>
+  {% if outras %}<p class="ajuda">E mais {{ outras }}, em <a href="#titulo-do-historico">Todas as atualizações</a>.</p>{% endif %}
+  {% endif %}
 </section>
 {% elif primeira_visita %}
 <p class="nota">Esta é a sua primeira visita: a página reúne as mudanças desde {{ inicio|date:"j \d\e F \d\e Y"|lower }}. Da próxima vez, o topo dirá o que chegou desde a visita anterior.</p>
@@ -31,19 +39,39 @@ mais" leva à seção da Documentação do Sistema em vez de repeti-la.
 <p class="nota">Nada novo desde a sua última visita, em <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>.</p>
 {% endif %}
 
-<nav class="filtros-das-novidades" aria-label="Filtrar por categoria">
+{% if destaques %}
+<section class="destaques" aria-labelledby="titulo-dos-destaques">
+  <h2 id="titulo-dos-destaques">Descubra o que o GPS já faz</h2>
+  <ul class="grade-de-destaques">
+    {% for destaque in destaques %}{% include "interface/_destaque_das_novidades.html" %}{% endfor %}
+  </ul>
+  {% if mais_destaques %}
+  <details class="mais-destaques">
+    <summary>Ver mais {{ mais_destaques|length }} capacidade{{ mais_destaques|length|pluralize }}</summary>
+    <ul class="grade-de-destaques">
+      {% for destaque in mais_destaques %}{% include "interface/_destaque_das_novidades.html" %}{% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="historico" aria-labelledby="titulo-do-historico">
+<h2 id="titulo-do-historico">Todas as atualizações</h2>
+<nav class="filtros-das-novidades" aria-label="Filtrar por tipo">
   {% for filtro in filtros %}<a href="{{ filtro.endereco }}"{% if filtro.codigo == categoria %} aria-current="page"{% endif %}>{{ filtro.rotulo }} <span class="quantidade-do-filtro">{{ filtro.quantidade }}</span></a>{% endfor %}
 </nav>
 
 {% for mes in meses %}
 <section class="mes-de-novidades" aria-labelledby="mes-de-novidades-{{ forloop.counter }}">
-  <h2 id="mes-de-novidades-{{ forloop.counter }}">{{ mes.data|date:"F \d\e Y" }}</h2>
+  <h3 id="mes-de-novidades-{{ forloop.counter }}">{{ mes.data|date:"F \d\e Y" }}</h3>
   <ol class="linha-do-tempo">
     {% for cartao in mes.cartoes %}{% with nota=cartao.nota %}
-    <li class="novidade" id="{{ nota.id }}">
-      <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time></p>
-      <h3>{{ nota.titulo }}</h3>
+    <li class="novidade r-{{ nota.relevancia }}" id="{{ nota.id }}">
+      <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time>{% if cartao.capacidade %} <span class="parte-de">· faz parte de <a href="{% url 'interface:novidades' %}#capacidade-{{ cartao.capacidade.id }}">{{ cartao.capacidade.titulo }}</a></span>{% endif %}</p>
+      <h4>{{ nota.titulo }}</h4>
       <p>{{ nota.resumo }}</p>
+      {% if nota.relevancia != "incremental" %}
       {% if nota.exemplo %}<p class="exemplo-da-novidade"><strong>Na prática:</strong> {{ nota.exemplo }}</p>{% endif %}
       {% if nota.beneficio %}<p class="beneficio-da-novidade"><strong>Para que serve:</strong> {{ nota.beneficio }}</p>{% endif %}
       {% if nota.onde or nota.passos %}
@@ -53,6 +81,7 @@ mais" leva à seção da Documentação do Sistema em vez de repeti-la.
         {% if nota.passos %}<ol>{% for passo in nota.passos %}<li>{{ passo }}</li>{% endfor %}</ol>{% endif %}
       </details>
       {% endif %}
+      {% endif %}
       {% if cartao.destino or cartao.saiba_mais %}
       <p class="acoes-da-novidade">{% if cartao.destino %}<a href="{{ cartao.destino }}">Abrir {{ cartao.rotulo_do_destino }}</a>{% endif %}{% if cartao.saiba_mais %}<a href="{{ cartao.saiba_mais }}">Saiba mais na documentação</a>{% endif %}</p>
       {% endif %}
@@ -61,16 +90,17 @@ mais" leva à seção da Documentação do Sistema em vez de repeti-la.
   </ol>
 </section>
 {% empty %}
-<p class="vazio">Nenhuma novidade nesta categoria.</p>
+<p class="vazio">Nenhuma atualização deste tipo.</p>
 {% endfor %}
 
 {% if anteriores or seguintes %}
 <nav class="paginas-das-novidades" aria-label="Páginas das novidades">
-  {% if seguintes %}<a href="{{ seguintes }}">Novidades mais recentes</a>{% endif %}
+  {% if seguintes %}<a href="{{ seguintes }}">Atualizações mais recentes</a>{% endif %}
   <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
-  {% if anteriores %}<a href="{{ anteriores }}">Novidades anteriores</a>{% endif %}
+  {% if anteriores %}<a href="{{ anteriores }}">Atualizações anteriores</a>{% endif %}
 </nav>
 {% endif %}
+</section>
 
 <p class="nota rodape-das-novidades">As datas são as de chegada da mudança ao GPS. Cada ambiente recebe as mudanças na sua própria atualização, e esta página mostra só o que já está disponível aqui.</p>
 {% endif %}

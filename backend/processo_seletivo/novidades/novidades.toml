@@ -15,6 +15,42 @@
 # ---- novembro de 2026 ----------------------------------------------------------------------------
 
 [[nota]]
+id = "agenda-da-etapa"
+data = 2026-11-14
+categoria = "novidade"
+relevancia = "transformadora"
+titulo = "Monte a agenda das entrevistas sem planilha"
+resumo = """
+Defina dias, horários e bancas: o GPS calcula quantas pessoas cabem, distribui todo mundo e mostra a
+prévia antes de gravar. Conferida, a agenda é publicada com PDF oficial e cada candidato vê o seu
+horário.
+"""
+exemplo = """
+Para a entrevista do Edital 07/2026, você define três manhãs com duas bancas. O GPS mostra que cabem
+as 48 pessoas, monta a agenda, e depois de publicada cada candidato encontra o seu dia e horário.
+"""
+onde = "Na distribuição da Etapa que precisa de horário, no cartão Agenda."
+prs = [550, 554]
+specs = ["167"]
+
+[[nota]]
+id = "remarcar-a-agenda"
+data = 2026-11-14
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "Remarque, inclua ou cancele um horário da agenda publicada"
+resumo = """
+Depois de publicada, cada mudança é feita pessoa a pessoa, com motivo e um novo PDF. Onde os avisos por
+e-mail estão ligados, a pessoa recebe o horário novo.
+"""
+exemplo = """
+Um candidato pede para trocar de dia. Você remarca para quinta às 10h, e a área dele já mostra o
+horário novo.
+"""
+prs = [556]
+specs = ["167"]
+
+[[nota]]
 id = "novidades-do-gps"
 data = 2026-11-14
 categoria = "novidade"
@@ -68,10 +104,11 @@ id = "etapa-por-modalidade-e-deliberacao"
 data = 2026-11-14
 categoria = "novidade"
 relevancia = "transformadora"
-titulo = "Conduza a verificação da autodeclaração inteira no GPS"
+titulo = "A banca da autodeclaração trabalha dentro do GPS"
 resumo = """
-Uma Etapa pode valer só para algumas Modalidades, e a comissão decide por maioria ou unanimidade, cada
-parecer dado sem ver o dos colegas. A banca trabalha no GPS, e a regra sai publicada no Edital.
+Organize a banca, registre o parecer de cada avaliador e acompanhe a decisão sem sair do sistema. A
+regra — maioria ou unanimidade — fica publicada no Edital, e cada um dá o parecer sem ver o dos
+colegas.
 """
 exemplo = """
 No Edital 20/2026, a verificação vale só para quem concorre às vagas reservadas, e os demais seguem
@@ -317,9 +354,9 @@ categoria = "novidade"
 relevancia = "transformadora"
 titulo = "Publique a lista de convocados direto do GPS, com PDF oficial"
 resumo = """
-A comissão publica as convocações no GPS, com número por Edital, página pública, PDF oficial e a seção
-Convocações na página da seleção. Na convocação por publicação, o prazo corre da publicação, e dá para
-convocar e publicar de uma vez.
+Escolha quem entra na lista e publique: o GPS gera a página pública, o PDF oficial e a seção
+Convocações na página da seleção. Sem montar a lista à mão — e dá para convocar e publicar de uma
+vez.
 """
 exemplo = """
 Na terça, você escolhe as vagas e as listas do Edital 09/2026, confere na prévia quem será convocado,
@@ -375,9 +412,8 @@ categoria = "novidade"
 relevancia = "transformadora"
 titulo = "Publique as inscrições recebidas, o preliminar e a homologação"
 resumo = """
-O GPS publica a relação das inscrições recebidas, o resultado preliminar da análise, que abre o prazo
-de recurso, e a homologação. Cada uma é opcional, tem prévia, assinatura e PDF oficial, e se organiza
-por lista de concorrência. Sem montar listas à mão.
+Publique a relação das inscrições recebidas, o resultado preliminar e a homologação direto do GPS,
+cada uma com prévia e PDF oficial. Sem montar listas à mão; o preliminar já abre o prazo de recurso.
 """
 exemplo = """
 Encerradas as inscrições do Edital 10/2026 na quinta, você publica a relação das recebidas na sexta.
@@ -408,9 +444,8 @@ categoria = "novidade"
 relevancia = "transformadora"
 titulo = "Pontue a ficha de títulos item a item, e o GPS soma"
 resumo = """
-A Etapa pontuada pode publicar seu barema: a lista de critérios, com a pontuação máxima de cada um.
-Quem avalia pontua critério a critério, e o GPS calcula o total. Acaba a planilha paralela, e a nota
-fica fácil de conferir.
+Quem avalia pontua cada critério da ficha na Mesa, e o GPS calcula o total. Acaba a planilha
+paralela, e a nota fica fácil de conferir num recurso. Os critérios saem publicados no Edital.
 """
 exemplo = """
 No Edital 06/2026, a ficha tem "Especialização: até 10 pontos" e "Experiência docente: até 20
@@ -1935,11 +1970,10 @@ id = "requerimento-de-matricula"
 data = 2026-09-17
 categoria = "novidade"
 relevancia = "transformadora"
-titulo = "Receba os dados de matrícula pelo GPS, na inscrição ou na convocação"
+titulo = "Receba os dados de matrícula pelo GPS, sem redigitar"
 resumo = """
-O Edital pode pedir o Requerimento de Matrícula e escolher, em "Quando pedir", se na inscrição ou na
-convocação. O candidato preenche só o que ainda não informou — o CEP completa município e UF —, e o
-requerimento enviado não se altera: a correção gera um novo.
+O candidato preenche o Requerimento de Matrícula na área dele — na inscrição ou na convocação, como
+o Edital escolher —, só com o que ainda não informou. O CEP completa município e UF.
 """
 exemplo = """
 No Edital 01/2026, você escolhe pedir o requerimento na convocação. A candidata Marta digita o CEP,
@@ -1972,7 +2006,7 @@ specs = ["027"]
 #
 # Os destaques do topo da página, "Descubra o que o GPS já faz" (FR-7429, `D-012`). Cada uma é uma
 # entrega de produto, e não uma mudança: reúne as notas que a construíram. A política de entrada e
-# saída está no guia, em "Os destaques". No máximo nove, na ordem de `ordem`.
+# saída está no guia, em "Os destaques". No máximo dez, na ordem de `ordem`.
 
 [[capacidade]]
 id = "centro-de-controle"
@@ -2010,8 +2044,25 @@ documentacao = "minhas-atividades"
 notas = ["minhas-atividades"]
 
 [[capacidade]]
-id = "convocacao-com-documentos"
+id = "agenda-de-entrevistas"
 ordem = 3
+icone = "i-calendario"
+titulo = "Organize as entrevistas sem montar planilhas"
+resumo = """
+Defina os dias, os horários e as bancas; o GPS distribui os candidatos, publica a agenda e mostra a
+cada pessoa o seu horário. Mudou algo? Remarque um por um, com registro.
+"""
+como_comecar = "Na distribuição da Etapa que precisa de horário, no cartão Agenda."
+passos = [
+  "Configure os dias, as janelas de horário e as bancas.",
+  "Monte a agenda e confira a prévia.",
+  "Publique: cada candidato vê o seu horário.",
+]
+notas = ["agenda-da-etapa", "remarcar-a-agenda"]
+
+[[capacidade]]
+id = "convocacao-com-documentos"
+ordem = 4
 icone = "i-envelope"
 titulo = "Convoque, receba e confira documentos sem e-mail nem planilha"
 resumo = """
@@ -2047,7 +2098,7 @@ notas = [
 
 [[capacidade]]
 id = "da-aprovacao-a-matricula"
-ordem = 4
+ordem = 5
 icone = "i-pacote"
 titulo = "Da lista de aprovados à matrícula, sem redigitar dados"
 resumo = """
@@ -2064,7 +2115,7 @@ notas = [
 
 [[capacidade]]
 id = "edital-guiado"
-ordem = 5
+ordem = 6
 icone = "i-documento"
 titulo = "Monte o Edital no GPS e receba o documento oficial pronto"
 resumo = """
@@ -2103,7 +2154,7 @@ notas = [
 
 [[capacidade]]
 id = "barema"
-ordem = 6
+ordem = 7
 icone = "i-selo"
 titulo = "Avalie títulos item a item, e o GPS soma a nota"
 resumo = """
@@ -2116,7 +2167,7 @@ notas = ["barema-da-etapa"]
 
 [[capacidade]]
 id = "sorteio-publico"
-ordem = 7
+ordem = 8
 icone = "i-sorteio"
 titulo = "Faça o sorteio público no GPS, com a Loteria Federal"
 resumo = """
@@ -2135,7 +2186,7 @@ notas = [
 
 [[capacidade]]
 id = "verificacao-da-autodeclaracao"
-ordem = 8
+ordem = 9
 icone = "i-escudo"
 titulo = "A verificação da autodeclaração agora acontece dentro do GPS"
 resumo = """
@@ -2148,7 +2199,7 @@ notas = ["etapa-por-modalidade-e-deliberacao"]
 
 [[capacidade]]
 id = "kit-de-divulgacao"
-ordem = 9
+ordem = 10
 icone = "i-megafone"
 titulo = "Divulgue o Edital com textos prontos, tirados do que foi publicado"
 resumo = """
