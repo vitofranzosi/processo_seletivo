@@ -5,7 +5,9 @@
 **Created**: 2026-11-14
 
 **Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia; plan e tasks no mesmo dia,
-divididos nas entregas A, B, C e D (ver [plan.md](plan.md)); a D fica fora desta implementação. As
+divididos nas entregas A, B, C e D (ver [plan.md](plan.md)). As quatro foram implementadas e
+mergeadas: a A no #550, a B no #554 e a C no #556, em 14/11, e a D no #558, em 15/11, que de início
+ficaria fora e foi feita num PR empilhado sobre o da C. As
 três perguntas ao usuário foram respondidas no mesmo dia, e os três pontos do plano numa segunda
 rodada, que acrescentou o documento PDF (ver *Clarifications*), e a experiência visual —
 o protótipo da segunda rodada do estudo — foi aprovada pelo usuário em 14/11, o marco anterior à
