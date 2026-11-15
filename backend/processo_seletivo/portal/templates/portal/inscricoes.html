@@ -1,8 +1,19 @@
-{% extends "portal/base.html" %}
+{% extends "portal/base.html" %}{% load prazo_da_convocacao %}
 {% block titulo %}Minhas inscrições{% endblock %}
 {% block conteudo %}
-<h1>Minhas inscrições</h1>
-<p class="sub"><a href="{% url 'portal:conta' %}">Acesso à conta</a></p>
+{% comment %}
+**A coluna da jornada do candidato** (177, FR-8100, D-001): a mesma das telas da verificação (174),
+centrada, e os cartões nela, um abaixo do outro. A lista era uma grade de cartões de 600 px encostada à
+esquerda, com a página vazia à direita (achado E7 do estudo de design system de 14/11).
+
+"Acesso à conta" sai do lugar do subtítulo e fica na faixa do título, como ação secundária (D-006): é a
+única porta para as credenciais, e um link solto onde se espera o subtítulo parecia resto de tela.
+{% endcomment %}
+<div class="jornada jornada-da-inscricao">
+<div class="comeco-da-lista">
+  <h1>Minhas inscrições</h1>
+  <a class="acesso-a-conta" href="{% url 'portal:conta' %}">Acesso à conta</a>
+</div>
 {% include "portal/_mensagens.html" %}
 {% if inscricoes %}
 {% comment %}
@@ -17,21 +28,37 @@ para esta apagava a cor de estado daquela. Nome próprio no lugar de disputa de 
 <ul class="selecoes minhas-inscricoes">
   {% for inscricao in inscricoes %}
   <li class="selecao">
-    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.perfil|default:"Inscrição" }}</a>
     {% comment %}
-    O Processo e o Edital, e não só o número: com três processos abertos ao mesmo tempo — a
-    situação normal de um instituto — "Edital 01/2026" não identifica qual é qual.
+    **O Processo no título, e o Edital e o Perfil na linha de baixo** (177, FR-8105, D-002). O título
+    era o Perfil — "Professor de Informática" em dois cartões de Processos diferentes, ou "Perfil" num
+    Perfil sem nome próprio —, e o Processo vinha em cinza. A ordem é a de quem procura: de qual
+    seleção é, qual Edital, qual vaga. O Processo e o Edital, e não só o número: com três processos
+    abertos ao mesmo tempo — a situação normal de um instituto — "Edital 01/2026" não identifica qual
+    é qual.
     {% endcomment %}
-    {% if inscricao.processo or inscricao.edital %}<span class="meta">{{ inscricao.processo }}{% if inscricao.processo and inscricao.edital %} · {% endif %}{{ inscricao.edital }}</span>{% endif %}
+    <a class="titulo" href="{% url 'portal:inscricao' inscricao.id %}">{{ inscricao.processo|default:"Inscrição" }}</a>
+    {% if inscricao.edital or inscricao.perfil %}<span class="meta">{{ inscricao.edital }}{% if inscricao.edital and inscricao.perfil %} · {% endif %}{{ inscricao.perfil }}</span>{% endif %}
+    {% comment %}
+    **A situação em selo** (177, FR-8107), com as frases de sempre: a marca (✓ ou ➜) e a palavra dizem o
+    estado, e a cor só acompanha (UX-952). O registrado é verde; o que pede a pessoa, de atenção.
+    {% endcomment %}
+    <span class="selos-da-inscricao">
     {% if inscricao.enviada %}
-    <span class="situacao enviada">✓ Inscrição enviada</span>
-    {% if inscricao.passo_pendente %}<span class="situacao passo"><span aria-hidden="true">➜</span> Falta um passo seu: {{ inscricao.passo_pendente }}</span>{% endif %}
-    <span class="codigo">{{ inscricao.protocolo }}</span>
+    <span class="situacao enviada selo-da-inscricao">✓ Inscrição enviada</span>
+    {% if inscricao.passo_pendente %}<span class="situacao passo selo-da-inscricao atencao"><span aria-hidden="true">➜</span> Falta um passo seu: {{ inscricao.passo_pendente }}</span>{% endif %}
+    {% if inscricao.convocacao_aberta %}<span class="situacao convocada selo-da-inscricao atencao"><span aria-hidden="true">➜</span> Convocação aberta</span>{% endif %}
     {% elif inscricao.fechada %}
-    <span class="situacao">Inscrição não enviada · {% if inscricao.fechada.cancelado %}Período de inscrições cancelado{% elif inscricao.fechada.estado == "encerrado" and inscricao.fechada.fim %}Inscrições encerradas em {{ inscricao.fechada.fim|date:"d/m/Y" }}{% else %}Seleção sem inscrições abertas{% endif %}</span>
+    <span class="situacao selo-da-inscricao">Inscrição não enviada · {% if inscricao.fechada.cancelado %}Período de inscrições cancelado{% elif inscricao.fechada.estado == "encerrado" and inscricao.fechada.fim %}Inscrições encerradas em {{ inscricao.fechada.fim|date:"d/m/Y" }}{% else %}Seleção sem inscrições abertas{% endif %}</span>
     {% else %}
-    <span class="situacao">Inscrição não enviada</span>
+    <span class="situacao selo-da-inscricao">Inscrição não enviada</span>
     {% endif %}
+    </span>
+    {% comment %}
+    **O prazo da ação do cartão, quando corre** (177, FR-8106, D-003): o da convocação, o do passo ou o
+    do envio do rascunho — um só, o da ação que o botão abre. Sem prazo, a linha não aparece.
+    {% endcomment %}
+    {% if inscricao.prazo %}<span class="prazo-do-cartao"><strong>Prazo:</strong> {{ inscricao.prazo|ate_o_prazo }}</span>{% endif %}
+    {% if inscricao.enviada %}<span class="codigo">{{ inscricao.protocolo }}</span>{% endif %}
     {% comment %}
     **A convocação aberta muda a ação principal, e a concluída vira nota** (059, D-003, D-004). A
     mensagem de convocação manda a pessoa para esta lista, e era aqui que ela lia só "Acompanhar" —
@@ -42,7 +69,6 @@ para esta apagava a cor de estado daquela. Nome próprio no lugar de disputa de 
     por item é o que a lista existe para garantir.
     {% endcomment %}
     {% if inscricao.convocacao_aberta %}
-    <span class="situacao convocada"><span aria-hidden="true">➜</span> Convocação aberta</span>
     <a class="principal" href="{% url 'portal:convocacao' inscricao.id %}">{{ inscricao.acao }}</a>
     <a class="acompanhar" href="{% url 'portal:acompanhamento' inscricao.id %}">Acompanhar</a>
     {% elif inscricao.enviada %}
@@ -77,4 +103,5 @@ vinculá-la a este acesso confirmando seu CPF.</p>
 </form>
 {% endif %}
 {% endif %}
+</div>
 {% endblock %}
