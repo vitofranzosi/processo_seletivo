@@ -202,3 +202,24 @@ def test_o_comprovante_abre_pela_confirmacao(cenario, client):
     assert "Código de conferência do arquivo (SHA-256)" in corpo
     assert "1 min 12 s" in corpo
     assert "segundos" not in corpo
+
+
+def test_com_o_arquivo_eliminado_o_comprovante_diz_logo_abaixo_da_confirmacao(cenario, client):
+    """FR-7885 da 174 (a FR-7149 da 166): a frase da eliminação, e nada de assistir."""
+    from django.utils import timezone
+
+    from processo_seletivo.verificacao.models import EliminacaoDoVideo
+
+    maria = cenario["inscricoes"][0]
+    video = enviar_video(maria, cenario["hetero"])
+    agora = timezone.now()
+    EliminacaoDoVideo.objects.create(
+        video=video, eliminado_em=agora, prazo_em_dias=30, encerramento_em=agora
+    )
+    entrar_como_titular(client, maria)
+    rota = reverse("portal:verificacao-comprovante", args=[maria.id, cenario["hetero"]])
+    corpo = client.get(rota).content.decode()
+    eliminacao = corpo.index("O arquivo deste vídeo foi eliminado")
+    assert corpo.index("Seu vídeo foi enviado") < eliminacao < corpo.index("E agora?")
+    assert "Assistir ao vídeo" not in corpo
+    assert video.sha256 in corpo

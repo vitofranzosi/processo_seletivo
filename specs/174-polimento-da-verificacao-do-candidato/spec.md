@@ -6,7 +6,10 @@
 **Created**: 2026-11-15
 
 **Status**: Especificada em 15/11; as quatro perguntas (Q-1 a Q-4) foram decididas pelo usuário no
-mesmo dia, pelas recomendações. Planejada e com tarefas em 15/11, sem código. O merge é do usuário.
+mesmo dia, pelas recomendações. Planejada, com tarefas e implementada em 15/11, no PR #566, sem
+merge; a jornada no navegador (câmera simulada, quatro larguras) passa, e ficam pendentes a verificação
+em aparelhos reais, com três pessoas de fora da equipe e com leitor de tela (SC-2655, SC-2658). O
+merge é do usuário.
 
 **Input**: em 15/11 o usuário gravou um vídeo real pela página da `166`, no Safari do macOS, num
 ambiente local, e julgou a interface do candidato *"com cara de desenvolvimento, não de produção"*.

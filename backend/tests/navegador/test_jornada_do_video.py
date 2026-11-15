@@ -31,7 +31,9 @@ from tests.fixtures.verificacao import montar_com_video  # noqa: E402
 pytestmark = pytest.mark.django_db(transaction=True)
 
 CELULAR = {"width": 375, "height": 667}
+TABLET = {"width": 768, "height": 1024}
 DESKTOP = {"width": 1280, "height": 800}
+LARGO = {"width": 1920, "height": 1080}
 
 
 @pytest.fixture
@@ -110,7 +112,9 @@ def _contraste_da_faixa(pagina):
     return (1.05) / (luminancia(mistura) + 0.05)
 
 
-@pytest.mark.parametrize("viewport", [CELULAR, DESKTOP], ids=["375", "1280"])
+@pytest.mark.parametrize(
+    "viewport", [CELULAR, TABLET, DESKTOP, LARGO], ids=["375", "768", "1280", "1920"]
+)
 def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_headers, viewport):
     cenario = montar_com_video(gestor, api_client, manager_headers, seed=7480, quantas=2)
     maria = cenario["inscricoes"][0]
@@ -164,7 +168,7 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
     comecar = pagina.get_by_role("button", name="Começar a gravar")
     expect(comecar).to_be_visible()
     expect(pagina.locator("[data-momento='gravar']")).to_have_attribute("aria-current", "step")
-    pagina.wait_for_function("document.querySelector('[data-previa]').videoWidth > 0")
+    pagina.wait_for_function("() => document.querySelector('[data-previa]').videoWidth > 0")
     assert _na_tela(pagina, comecar)
     assert _na_tela(pagina, pagina.locator(".acoes-do-palco .nao-consigo button"))
     tela.capturar(pagina, "palco-preparo")
