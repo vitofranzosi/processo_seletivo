@@ -47,8 +47,12 @@ PAPEIS_INSTITUCIONAIS = {
     # um segundo mecanismo de designação. A ampliação não chega em silêncio a quem já tem o papel —
     # a migração da 110 manda verificar e autorizar antes do deploy. A permissão vai por extenso,
     # como as do `PAPEIS`: a fronteira de identidade não importa quem a consome.
+    #
+    # **A habilitação do assistente veio com a 170, pelo mesmo caminho** (Q-2): a decisão de usar o
+    # assistente custa GPU da instituição e expõe resposta não oficial, e não é de uma unidade só.
+    # Como na 110, a ampliação passa pela autorização expressa antes do deploy (quickstart, D).
     ADMINISTRADOR_INSTITUCIONAL: (
         "Administrador institucional",
-        [ADMINISTRAR, "unidade:administrar"],
+        [ADMINISTRAR, "unidade:administrar", "assistente:habilitar"],
     ),
 }
