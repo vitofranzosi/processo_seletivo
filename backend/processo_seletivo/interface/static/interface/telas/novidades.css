@@ -1,6 +1,6 @@
-/* As Novidades do GPS (168), em duas camadas (D-012): a vitrine das capacidades e o histórico.
-   O peso visual segue a relevância, e não a cor (UX-822): o cartão transformador ganha filete e
-   espaço, o incremental vira uma linha enxuta. Só pares de cor que o teste de contraste já confere:
+/* As Novidades do GPS (168): o que mudou, e não o que o GPS faz (D-014). O peso visual segue a
+   relevância, e não a cor (UX-822): o cartão transformador ganha filete e espaço, o incremental vira
+   uma linha enxuta. Só pares de cor que o teste de contraste já confere:
    --verde-escuro sobre --verde-claro, --texto sobre --fundo e --texto-fraco sobre --branco. A
    categoria se lê pelo texto, e a cor só a acompanha (UX-803). */
 
@@ -14,27 +14,6 @@
 .desde-a-ultima-visita .ajuda{margin:.4rem 0 .2rem;color:var(--verde-escuro)}
 .demais-da-visita{margin:0;padding-left:1.1rem}
 .demais-da-visita li{padding:.1rem 0}
-
-/* ---- Descubra o que o GPS já faz (FR-7602, UX-821) ---- */
-.destaques{margin:1.5rem 0 2rem}
-.destaques>h2{margin-bottom:.75rem}
-.grade-de-destaques{display:grid;gap:.75rem;margin:0;padding:0;list-style:none;
-  grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))}
-.destaque{display:flex;flex-direction:column;gap:.35rem;padding:.9rem 1rem;border:1px solid var(--borda);
-  border-radius:8px;background:var(--branco);scroll-margin-top:1rem}
-.destaque:target{border-color:var(--verde)}
-.icone-do-destaque{width:1.75rem;height:1.75rem;padding:.3rem;border-radius:6px;background:var(--verde-claro);
-  fill:none;stroke:var(--verde-escuro);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.destaque h3{margin:0;font-size:1.02rem;line-height:1.35}
-.destaque>p{margin:0;font-size:.92rem;color:var(--texto)}
-.como-funciona{margin-top:auto;padding-top:.3rem}
-.como-funciona summary,.mais-destaques>summary{cursor:pointer;color:var(--verde-texto);font-size:.9rem;
-  font-weight:600}
-.como-funciona p,.como-funciona ol{margin:.35rem 0;font-size:.9rem}
-.como-funciona ol{padding-left:1.2rem}
-.historico-do-destaque{color:var(--texto-fraco)}
-.mais-destaques{margin-top:.75rem}
-.mais-destaques>.grade-de-destaques{margin-top:.75rem}
 
 /* ---- Todas as atualizações ---- */
 .historico{margin-top:2rem}
@@ -73,7 +52,6 @@
 .novidade.r-incremental>p:not(.cabeca-da-novidade){font-size:.9rem;color:var(--texto-fraco)}
 .cabeca-da-novidade{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;font-size:.82rem;
   color:var(--texto-fraco)}
-.parte-de a{color:var(--verde-texto)}
 .beneficio-da-novidade{color:var(--texto)}
 /* "Na prática" (FR-7427): a cena que faz a nota se entender de primeira, destacada sem competir com o
    título — um filete e o fundo neutro da gestão. */

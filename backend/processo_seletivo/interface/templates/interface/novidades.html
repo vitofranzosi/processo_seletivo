@@ -4,18 +4,13 @@
 {% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/novidades.css' %}">{% endblock %}
 {% block conteudo %}
 {% comment %}
-As Novidades do GPS (168), em duas camadas (D-012): "Descubra o que o GPS já faz", com as capacidades
-de produto, e o histórico, com cada mudança. A capacidade diz o que agora é possível; a nota, o que
-mudou. Nenhum número de PR, de requisito ou de spec no texto visível (FR-7407).
+As Novidades do GPS (168): o que mudou, e não o que o GPS faz (D-014). O topo diz o que chegou desde a
+última visita, e o histórico pesa cada mudança pela relevância (FR-7601). O tour do produto, se houver,
+mora na Documentação do Sistema. Nenhum número de PR, de requisito ou de spec no texto visível
+(FR-7407).
 {% endcomment %}
-<svg class="simbolos" width="0" height="0" aria-hidden="true" focusable="false">
-  <symbol id="i-documento" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></symbol>
-  <symbol id="i-selo" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M9.5 9l1.8 1.8 3.2-3.3M9 13.5L7.5 21l4.5-2.5 4.5 2.5-1.5-7.5"/></symbol>
-  <symbol id="i-sorteio" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.2"/><circle cx="15" cy="15" r="1.2"/><circle cx="15" cy="9" r="1.2"/><circle cx="9" cy="15" r="1.2"/></symbol>
-  <symbol id="i-megafone" viewBox="0 0 24 24"><path d="M4 10v4h3l7 4V6l-7 4z"/><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5M7 14l1.5 5h2.5l-1-5"/></symbol>
-</svg>
 <h1>Novidades do GPS</h1>
-<p class="sub">Descubra o que o GPS agora permite fazer e como isso facilita o seu trabalho.</p>
+<p class="sub">O que mudou no GPS, e como isso facilita o seu trabalho.</p>
 
 {% if indisponivel %}
 <p class="aviso">As novidades estão indisponíveis neste momento. O restante do sistema funciona normalmente.</p>
@@ -34,26 +29,9 @@ mudou. Nenhum número de PR, de requisito ou de spec no texto visível (FR-7407)
   {% endif %}
 </section>
 {% elif primeira_visita %}
-<p class="nota">Esta é a sua primeira visita: a página reúne as mudanças desde {{ inicio|date:"j \d\e F \d\e Y"|lower }}. Da próxima vez, o topo dirá o que chegou desde a visita anterior.</p>
+<p class="nota">Esta é a sua primeira visita: a página reúne as mudanças desde {{ inicio|date:"j \d\e F \d\e Y"|lower }}. Da próxima vez, o topo dirá o que chegou desde a visita anterior. Para aprender a usar o GPS do começo, veja a <a href="{% url 'interface:documentacao' %}#comece">Documentação do Sistema</a>.</p>
 {% else %}
 <p class="nota">Nada novo desde a sua última visita, em <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>.</p>
-{% endif %}
-
-{% if destaques %}
-<section class="destaques" aria-labelledby="titulo-dos-destaques">
-  <h2 id="titulo-dos-destaques">Descubra o que o GPS já faz</h2>
-  <ul class="grade-de-destaques">
-    {% for destaque in destaques %}{% include "interface/_destaque_das_novidades.html" %}{% endfor %}
-  </ul>
-  {% if mais_destaques %}
-  <details class="mais-destaques">
-    <summary>Ver mais {{ mais_destaques|length }} capacidade{{ mais_destaques|length|pluralize }}</summary>
-    <ul class="grade-de-destaques">
-      {% for destaque in mais_destaques %}{% include "interface/_destaque_das_novidades.html" %}{% endfor %}
-    </ul>
-  </details>
-  {% endif %}
-</section>
 {% endif %}
 
 <section class="historico" aria-labelledby="titulo-do-historico">
@@ -68,7 +46,7 @@ mudou. Nenhum número de PR, de requisito ou de spec no texto visível (FR-7407)
   <ol class="linha-do-tempo">
     {% for cartao in mes.cartoes %}{% with nota=cartao.nota %}
     <li class="novidade r-{{ nota.relevancia }}" id="{{ nota.id }}">
-      <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time>{% if cartao.capacidade %} <span class="parte-de">· faz parte de <a href="{% url 'interface:novidades' %}#capacidade-{{ cartao.capacidade.id }}">{{ cartao.capacidade.titulo }}</a></span>{% endif %}</p>
+      <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time></p>
       <h4>{{ nota.titulo }}</h4>
       <p>{{ nota.resumo }}</p>
       {% if nota.relevancia != "incremental" %}

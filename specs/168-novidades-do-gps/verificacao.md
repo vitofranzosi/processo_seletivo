@@ -60,6 +60,8 @@ Entrada `novidades-168` do `.claude/launch.json`, banco `ps_novidades`, como `de
 
 ## Revisão editorial de 14/11: a vitrine das capacidades (`D-012`, `D-013`)
 
+*A vitrine saiu em 15/11 (`D-014`; ver a seção seguinte). Fica o registro do que foi medido.*
+
 **O que mudou.** A página ganhou "Descubra o que o GPS já faz", com dez capacidades (seis à vista); o
 histórico ganhou a relevância (110 notas: 14 transformadoras, 51 relevantes, 45 incrementais), o "faz parte de"
 e a linha enxuta do incremental; o "Desde sua última visita" abre pela mudança de maior peso. As seis
@@ -93,4 +95,20 @@ estreito ficam para depois da validação com pessoas.
 
 **A faixa de identificadores.** A `169` usa FR-7400 a 7435 e UX-800 a 803, que se sobrepõem à faixa
 da `168`; a revisão abriu em FR-7601, SC-2511 e UX-821, e a pergunta de quem renumera é a P-5.
+
+## 15/11: a vitrine retirada (`D-014`)
+
+**O que mudou.** A seção "Descubra o que o GPS já faz", os dez cartões, a tabela `[[capacidade]]` e o
+"faz parte de" saíram; o arquivo só aceita `[[nota]]`. Ficam a relevância, o peso visual, o bloco da
+visita aberto pela mudança de maior peso e as notas de um assunto cada. A primeira visita aponta
+"Comece por aqui", na Documentação do Sistema. A limitação do celular da seção anterior deixa de
+existir com a vitrine.
+
+**Suíte inteira contra PostgreSQL: 21 190 passando, 25 pulados, sem falha** (610s). São 34 casos a
+menos que em 14/11: os da vitrine e das capacidades, parametrizados por cartão, e os das classes que
+saíram da folha, contra três novos — o arquivo só com notas, a âncora da primeira visita e a página sem
+vitrine.
+
+**No navegador** (`novidades-168`, `demo.gestor`): o histórico vem logo depois do bloco da visita, sem
+erro no console e sem rolagem horizontal.
 

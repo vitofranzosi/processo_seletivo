@@ -21,8 +21,7 @@ REPOSITORIO = Path(__file__).resolve().parents[3]
 DOCUMENTACAO = REPOSITORIO / "docs" / "visao-sistema" / "index.html"
 SPECS = REPOSITORIO / "specs"
 
-CATALOGO = catalogo.ler_catalogo(catalogo.ARQUIVO.read_text(encoding="utf-8"))
-NOTAS = CATALOGO.notas
+NOTAS = catalogo.ler(catalogo.ARQUIVO.read_text(encoding="utf-8"))
 
 # O que denuncia o log técnico no texto que a pessoa lê (FR-7407). A referência mora em `prs` e
 # `specs`; no texto visível, ela é ruído para quem opera.
@@ -101,7 +100,7 @@ def test_a_ancora_existe_na_documentacao_do_sistema():
 def test_a_configuracao_existe_e_e_booleana_ou_lista():
     """FR-7410: uma configuração escrita errado esconderia a nota em todo ambiente, sem aviso. A
     lista vale pela presença de item — a dos modelos aprovados do kit, vazia em produção."""
-    for item in (*NOTAS, *CATALOGO.capacidades):
+    for item in NOTAS:
         if item.requer_configuracao:
             valor = getattr(settings, item.requer_configuracao, None)
             assert isinstance(valor, bool | tuple | list), item.id
@@ -209,8 +208,8 @@ def test_a_falha_de_leitura_se_guarda_ate_o_arquivo_mudar(tmp_path, monkeypatch)
     monkeypatch.setattr(catalogo, "ARQUIVO", arquivo)
     catalogo._LIDO.clear()
     lidas = []
-    original = catalogo.ler_catalogo
-    monkeypatch.setattr(catalogo, "ler_catalogo", lambda texto: lidas.append(1) or original(texto))
+    original = catalogo.ler
+    monkeypatch.setattr(catalogo, "ler", lambda texto: lidas.append(1) or original(texto))
     for _ in range(3):
         with pytest.raises(catalogo.CatalogoInvalido):
             catalogo.notas()
@@ -230,9 +229,7 @@ def test_a_ordem_e_da_mais_recente_para_a_mais_antiga():
         catalogo.ler(antiga + VALIDA)
 
 
-# ---- as capacidades: o que o GPS já faz (FR-7601 a FR-7606) -----------------------------------
-
-BASE = Path(catalogo.__file__).resolve().parents[1] / "interface" / "templates" / "interface"
+# ---- a relevância (FR-7601) e o que saiu com a vitrine (`D-014`) -------------------------------
 
 
 def test_toda_nota_tem_relevancia_e_ha_de_cada_peso():
@@ -240,77 +237,26 @@ def test_toda_nota_tem_relevancia_e_ha_de_cada_peso():
     assert {nota.relevancia for nota in NOTAS} == set(catalogo.RELEVANCIAS)
 
 
-def test_a_vitrine_tem_no_maximo_dez_capacidades():
-    """FR-7602, UX-821: destaque que vira lista longa deixa de destacar."""
-    assert 1 <= len(CATALOGO.capacidades) <= 10
+def test_o_arquivo_so_tem_notas():
+    """`D-014`: a vitrine saiu, e uma tabela [[capacidade]] que voltasse seria lida por ninguém."""
+    capacidade = '[[capacidade]]\nid = "cap"\ntitulo = "T"\n'
+    with pytest.raises(catalogo.CatalogoInvalido, match="sobra capacidade"):
+        catalogo.ler(VALIDA + capacidade)
 
 
-@pytest.mark.parametrize("capacidade", CATALOGO.capacidades, ids=lambda c: c.id)
-def test_a_capacidade_fala_a_lingua_de_quem_opera(capacidade):
-    """FR-7605: o que agora é possível e por que importa, em poucas linhas e sem jargão."""
-    assert len(capacidade.titulo) <= 70, capacidade.id
-    assert len(capacidade.resumo) <= 240, capacidade.id
-    assert len(capacidade.passos) <= 3, capacidade.id
-    for texto in (
-        capacidade.titulo,
-        capacidade.resumo,
-        capacidade.como_comecar,
-        *capacidade.passos,
-    ):
-        for regra in (JARGAO, PALAVRAS_DO_SISTEMA):
-            achado = regra.search(texto)
-            assert not achado, f"{capacidade.id}: {achado.group(0)!r}"
-
-
-@pytest.mark.parametrize("capacidade", CATALOGO.capacidades, ids=lambda c: c.id)
-def test_o_icone_e_o_destino_da_capacidade_existem(capacidade):
-    simbolos = (BASE / "base.html").read_text("utf-8") + (BASE / "novidades.html").read_text(
-        "utf-8"
-    )
-    assert f'<symbol id="{capacidade.icone}"' in simbolos, capacidade.id
-    assert not capacidade.destino or navegacao.secao_da_rota(capacidade.destino), capacidade.id
+def test_a_primeira_visita_aponta_uma_secao_que_existe():
+    """`D-014`: quem chega e quer aprender a usar vai à Documentação do Sistema, e não a um cartão
+    nas Novidades — o link tem de cair numa seção do manual."""
+    pagina = (
+        Path(catalogo.__file__).resolve().parents[1]
+        / "interface"
+        / "templates"
+        / "interface"
+        / "novidades.html"
+    ).read_text(encoding="utf-8")
     ancoras = set(re.findall(r'\bid="([^"]+)"', DOCUMENTACAO.read_text(encoding="utf-8")))
-    assert not capacidade.documentacao or capacidade.documentacao in ancoras, capacidade.id
-
-
-CAPACIDADE = """
-[[capacidade]]
-id = "cap"
-ordem = 1
-icone = "i-pasta"
-titulo = "Título"
-resumo = "Resumo."
-notas = ["uma"]
-"""
-
-
-def test_a_capacidade_valida_se_le_na_ordem():
-    outra = CAPACIDADE.replace('"cap"', '"outra"').replace("ordem = 1", "ordem = 0")
-    lido = catalogo.ler_catalogo(
-        VALIDA
-        + CAPACIDADE
-        + outra.replace('["uma"]', '["uma-b"]')
-        + VALIDA.replace('"uma"', '"uma-b"').replace("2026-11-10", "2026-11-01")
-    )
-    assert [c.id for c in lido.capacidades] == ["outra", "cap"]
-    assert lido.capacidade_da_nota() == {"uma": lido.capacidades[1], "uma-b": lido.capacidades[0]}
-
-
-@pytest.mark.parametrize(
-    ("texto", "mensagem"),
-    [
-        (CAPACIDADE.replace('["uma"]', '["inexistente"]'), "a nota 'inexistente' não existe"),
-        (
-            CAPACIDADE + CAPACIDADE.replace('"cap"', '"outra"').replace("ordem = 1", "ordem = 2"),
-            "uma nota pertence a uma capacidade só",
-        ),
-        (CAPACIDADE.replace('icone = "i-pasta"', 'icone = "pasta"'), "'icone' deve ser"),
-        (CAPACIDADE.replace("ordem = 1\n", ""), "falta 'ordem'"),
-    ],
-)
-def test_a_capacidade_malformada_e_recusada(texto, mensagem):
-    with pytest.raises(catalogo.CatalogoInvalido, match=re.escape(mensagem)):
-        catalogo.ler_catalogo(VALIDA + texto)
+    citadas = re.findall(r"interface:documentacao' %\}#([\w-]+)", pagina)
+    assert citadas and set(citadas) <= ancoras, citadas
 
 
 def test_relevancia_desconhecida_e_recusada():

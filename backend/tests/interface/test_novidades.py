@@ -347,79 +347,18 @@ def test_o_conteudo_real_abre_sem_jargao_na_tela(client, seletor_ligado):
     assert not re.search(r"#\d{3}|\bPR\b|FR-\d", re.sub(r'href="[^"]*"', "", conteudo))
 
 
-# ---- a vitrine e o peso (FR-7601 a FR-7606) ----------------------------------------------------
-
-
-def _capacidade(id, notas, ordem=1, **extra):
-    linhas = [
-        "[[capacidade]]",
-        f'id = "{id}"',
-        f"ordem = {ordem}",
-        'icone = "i-pasta"',
-        f'titulo = "Capacidade {id}"',
-        f'resumo = "O que {id} permite."',
-        "notas = [" + ", ".join(f'"{n}"' for n in notas) + "]",
-    ]
-    linhas += [f'{campo} = "{valor}"' for campo, valor in extra.items()]
-    return "\n".join(linhas) + "\n"
+# ---- o peso pela relevância (FR-7601, FR-7604) e só o que mudou (`D-014`) ----------------------
 
 
 @pytest.mark.django_db
-def test_a_vitrine_mostra_a_capacidade_e_a_nota_diz_de_qual_faz_parte(
-    client, seletor_ligado, notas
-):
-    """FR-7602, FR-7603: a capacidade no topo; a nota a aponta."""
-    notas(*TRES, _capacidade("x", ["c", "b"], como_comecar="Na barra lateral."))
+def test_a_pagina_e_so_do_que_mudou(client, seletor_ligado, notas):
+    """`D-014`: nenhuma vitrine de capacidades antes do histórico; a primeira visita aponta o manual
+    a quem quer aprender a usar o GPS do começo."""
+    notas(*TRES)
     identificar(client, "gustavo.gestor", ["gestor"])
     corpo = _pagina(client)
-    vitrine = corpo.split('class="destaques"')[1].split("</section>")[0]
-    assert '<li class="destaque" id="capacidade-x">' in vitrine
-    assert "Capacidade x" in vitrine and "Na barra lateral." in vitrine
-    # Quantas atualizações a construíram, e desde quando — sem dia de lançamento inventado.
-    assert "2 atualizações desde novembro de 2026." in vitrine
-    cartao_c = corpo.split('<li class="novidade r-relevante" id="c">')[1].split("</li>")[0]
-    assert (
-        f'faz parte de <a href="{reverse("interface:novidades")}#capacidade-x">Capacidade x</a>'
-        in cartao_c
-    )
-    cartao_a = corpo.split('id="a">')[1].split("</li>")[0]
-    assert "faz parte de" not in cartao_a
-
-
-@pytest.mark.django_db
-def test_a_capacidade_de_outro_publico_ou_desligada_fica_fora(
-    client, seletor_ligado, settings, notas
-):
-    """FR-7606: a vitrine obedece às mesmas regras da nota."""
-    settings.AVISOS_AOS_CANDIDATOS = False
-    notas(
-        *TRES,
-        _capacidade("acessos", ["c"], ordem=1, para_capacidade="acesso:consultar"),
-        _capacidade("avisos", ["b"], ordem=2, requer_configuracao="AVISOS_AOS_CANDIDATOS"),
-    )
-    identificar(client, "gustavo.gestor", ["gestor"])
-    corpo = _pagina(client)
-    assert 'class="destaques"' not in corpo
-    assert "faz parte de" not in corpo
-
-
-@pytest.mark.django_db
-def test_a_vitrine_so_na_primeira_pagina_sem_filtro_e_o_excesso_recolhido(
-    client, seletor_ligado, notas
-):
-    """UX-821: quem filtra ou pagina procura no histórico; o sétimo destaque fica recolhido."""
-    ids = [f"n{i}" for i in range(8)]
-    notas(
-        *[_nota(i, f"2026-11-{20 - k:02d}") for k, i in enumerate(ids)],
-        *[_capacidade(f"k{k}", [i], ordem=k) for k, i in enumerate(ids)],
-    )
-    identificar(client, "gustavo.gestor", ["gestor"])
-    corpo = _pagina(client)
-    vitrine = corpo.split('class="destaques"')[1].split("</section>")[0]
-    visiveis, recolhidos = vitrine.split('<details class="mais-destaques">')
-    assert visiveis.count('class="destaque"') == 6
-    assert "Ver mais 2 capacidades" in recolhidos
-    assert 'class="destaques"' not in _pagina(client, categoria="novidade")
+    assert "Descubra o que o GPS" not in corpo and "faz parte de" not in corpo
+    assert f'href="{reverse("interface:documentacao")}#comece"' in corpo
 
 
 @pytest.mark.django_db

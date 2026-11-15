@@ -37,7 +37,7 @@ CATEGORIAS = (
 )
 POR_CODIGO = {categoria.codigo: categoria for categoria in CATEGORIAS}
 
-# O peso da nota para quem opera, independente do tipo (FR-7428, `D-012`). A categoria diz o que
+# O peso da nota para quem opera, independente do tipo (FR-7601, `D-012`). A categoria diz o que
 # a mudança é; a relevância diz quanto ela muda o trabalho — e decide o tamanho do cartão e o que
 # abre o "Desde sua última visita". Medida pelo benefício, nunca pelo número de PRs.
 RELEVANCIAS = ("transformadora", "relevante", "incremental")
@@ -171,106 +171,19 @@ def _nota(numero, entrada):
     )
 
 
-@dataclass(frozen=True)
-class Capacidade:
-    """Uma entrega de produto, e não uma mudança: o que o GPS passou a fazer (FR-7429, `D-012`).
-
-    Reúne as notas que a construíram — dez, vinte PRs que, juntos, são uma coisa só para quem
-    opera — e é o que a página mostra em "Descubra o que o GPS já faz". Não tem data própria: a
-    página diz quantas atualizações a construíram, e não inventa um dia de lançamento.
-    """
-
-    id: str
-    ordem: int
-    icone: str
-    titulo: str
-    resumo: str
-    notas: tuple
-    como_comecar: str = ""
-    passos: tuple = ()
-    destino: str = ""
-    documentacao: str = ""
-    requer_configuracao: str = ""
-    para_capacidade: tuple = ()
-
-
-CAPACIDADE_OBRIGATORIOS = ("id", "ordem", "icone", "titulo", "resumo", "notas")
-CAPACIDADE_OPCIONAIS = (
-    "como_comecar",
-    "passos",
-    "destino",
-    "documentacao",
-    "requer_configuracao",
-    "para_capacidade",
-)
-ICONE = re.compile(r"^i-[a-z]+(?:-[a-z]+)*$")
-
-
-def _capacidade(numero, entrada, ids_das_notas):
-    if not isinstance(entrada, dict):
-        raise CatalogoInvalido(f"capacidade {numero}: não é uma tabela [[capacidade]]")
-    nome = entrada.get("id")
-    rotulo = f"capacidade {numero} ({nome})"
-    for campo in CAPACIDADE_OBRIGATORIOS:
-        if campo not in entrada:
-            raise CatalogoInvalido(f"{rotulo}: falta '{campo}'")
-    desconhecidos = set(entrada) - set(CAPACIDADE_OBRIGATORIOS) - set(CAPACIDADE_OPCIONAIS)
-    if desconhecidos:
-        raise CatalogoInvalido(f"{rotulo}: campo desconhecido {', '.join(sorted(desconhecidos))}")
-    if not isinstance(nome, str) or not IDENTIFICADOR.match(nome):
-        raise CatalogoInvalido(f"capacidade {numero}: 'id' deve ser minúsculo, com hífens")
-    if not isinstance(entrada["ordem"], int):
-        raise CatalogoInvalido(f"{rotulo}: 'ordem' deve ser um número inteiro")
-    if not isinstance(entrada["icone"], str) or not ICONE.match(entrada["icone"]):
-        raise CatalogoInvalido(f"{rotulo}: 'icone' deve ser um símbolo como 'i-pasta'")
-    notas = entrada["notas"]
-    if not notas or not isinstance(notas, list) or not all(isinstance(n, str) for n in notas):
-        raise CatalogoInvalido(f"{rotulo}: 'notas' deve listar os ids das notas que a construíram")
-    for nota in notas:
-        if nota not in ids_das_notas:
-            raise CatalogoInvalido(f"{rotulo}: a nota {nota!r} não existe")
-    passos = entrada.get("passos", [])
-    if not isinstance(passos, list) or not all(isinstance(p, str) and p.strip() for p in passos):
-        raise CatalogoInvalido(f"{rotulo}: 'passos' deve listar textos")
-    texto = {
-        campo: _texto(numero, entrada, campo, obrigatorio=False)
-        for campo in CAPACIDADE_OPCIONAIS
-        if campo not in ("passos", "para_capacidade")
-    }
-    return Capacidade(
-        id=nome,
-        ordem=entrada["ordem"],
-        icone=entrada["icone"],
-        titulo=_texto(numero, entrada, "titulo", obrigatorio=True),
-        resumo=_texto(numero, entrada, "resumo", obrigatorio=True),
-        notas=tuple(notas),
-        passos=tuple(" ".join(p.split()) for p in passos),
-        para_capacidade=_capacidades(numero, entrada),
-        **texto,
-    )
-
-
-@dataclass(frozen=True)
-class Catalogo:
-    notas: tuple
-    capacidades: tuple
-
-    def capacidade_da_nota(self):
-        """O id de cada nota → a capacidade a que ela pertence."""
-        return {nota: capacidade for capacidade in self.capacidades for nota in capacidade.notas}
-
-
 def ler(conteudo):
     """As notas de um texto TOML, na ordem do arquivo, que é a da linha do tempo."""
-    return ler_catalogo(conteudo).notas
-
-
-def ler_catalogo(conteudo):
-    """As notas e as capacidades de um texto TOML."""
     try:
         dados = tomllib.loads(conteudo)
     except tomllib.TOMLDecodeError as erro:
         raise CatalogoInvalido(f"o arquivo não é TOML válido: {erro}") from erro
+    # Só notas. A vitrine de capacidades saiu da página (`D-014`): uma tabela [[capacidade]] que
+    # voltasse ao arquivo seria lida por ninguém, e o curador acharia que publicou um destaque.
+    outras = set(dados) - {"nota"}
+    if outras:
+        raise CatalogoInvalido(
+            f"o arquivo só tem tabelas [[nota]]; sobra {', '.join(sorted(outras))}"
+        )
     entradas = dados.get("nota", [])
     if not isinstance(entradas, list):
         raise CatalogoInvalido("as notas devem ser tabelas [[nota]]")
@@ -289,42 +202,14 @@ def ler_catalogo(conteudo):
                 f"a nota {seguinte.id!r} ({seguinte.data}) está depois de {anterior.id!r} "
                 f"({anterior.data}): o arquivo vai da mais recente para a mais antiga"
             )
-    ids = {nota.id for nota in notas}
-    capacidades = [
-        _capacidade(numero, entrada, ids)
-        for numero, entrada in enumerate(dados.get("capacidade", []), start=1)
-    ]
-    dono = {}
-    for capacidade in capacidades:
-        for nota in capacidade.notas:
-            if nota in dono:
-                raise CatalogoInvalido(
-                    f"a nota {nota!r} está em {dono[nota]!r} e em {capacidade.id!r}: "
-                    "uma nota pertence a uma capacidade só"
-                )
-            dono[nota] = capacidade.id
-    if len({c.id for c in capacidades}) != len(capacidades):
-        raise CatalogoInvalido("o id de uma capacidade se repete")
-    if len({c.ordem for c in capacidades}) != len(capacidades):
-        raise CatalogoInvalido("duas capacidades têm a mesma ordem")
-    return Catalogo(tuple(notas), tuple(sorted(capacidades, key=lambda c: c.ordem)))
+    return tuple(notas)
 
 
 _LIDO = {}
 
 
 def notas():
-    """As notas do arquivo da release."""
-    return catalogo().notas
-
-
-def capacidades():
-    """As capacidades do arquivo da release, na ordem dos destaques."""
-    return catalogo().capacidades
-
-
-def catalogo():
-    """O arquivo da release, lido. Relido só quando o arquivo muda — em produção, nunca.
+    """As notas do arquivo da release, lidas. Relido só quando o arquivo muda — em produção, nunca.
 
     **A falha também se guarda**, pela mesma marca: com o arquivo inválido, a barra e a página o
     releriam e reinterpretariam a cada tela, e o erro é o mesmo até o arquivo mudar.
@@ -335,7 +220,7 @@ def catalogo():
         raise CatalogoInvalido(f"o arquivo das notas não existe: {ARQUIVO}") from erro
     if marca not in _LIDO:
         try:
-            lido = ler_catalogo(ARQUIVO.read_text(encoding="utf-8"))
+            lido = ler(ARQUIVO.read_text(encoding="utf-8"))
         except CatalogoInvalido as erro:
             lido = erro
         _LIDO.clear()

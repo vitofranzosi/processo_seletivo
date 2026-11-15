@@ -116,35 +116,25 @@ para entender falhou, por mais correta que seja.
 - **Categoria**: *novidade* é o que não existia; *melhoria*, o que existia e ficou melhor;
   *correção*, o problema que deixou de acontecer.
 
-### Duas camadas: a vitrine e o histórico
+### O peso de cada nota: a relevância
 
-*Revisão de 14/11 (`D-012` da 168).* O PR não é a unidade de comunicação: dez, vinte PRs podem ser uma
-capacidade só. A página tem duas camadas:
+*Revisão de 14/11 (`D-012` da 168).* A categoria diz o que a mudança é; a **relevância**
+(`relevancia`) diz quanto ela muda o trabalho de quem opera:
 
-- **A vitrine, "Descubra o que o GPS já faz"** — as capacidades do produto, em `[[capacidade]]` no fim
-  de `novidades.toml`. Cada uma reúne as notas que a construíram e é escrita em três tempos: **o que
-  agora é possível**, **por que isso facilita** e **por onde começar**. Título até 70 caracteres,
-  resumo até 240, até três passos. Não tem data: o cartão diz quantas atualizações a construíram.
-- **O histórico** — cada nota, com a **relevância** (`relevancia`), que é independente da categoria:
-  - *transformadora*: cria capacidade ou elimina operação trabalhosa — cartão com filete;
-  - *relevante*: melhora uma jornada que já existia — cartão normal;
-  - *incremental*: ajuste, legibilidade, correção pontual — uma linha enxuta, sem "Na prática".
+- *transformadora*: cria capacidade ou elimina operação trabalhosa — cartão com filete, e é ela que
+  abre o "Desde sua última visita";
+- *relevante*: melhora uma jornada que já existia — cartão normal;
+- *incremental*: ajuste, legibilidade, correção pontual — uma linha enxuta, sem "Na prática".
 
-  Meça pelo benefício para quem opera, nunca pelo número de PRs nem pela dificuldade técnica.
+Meça pelo benefício para quem opera, nunca pelo número de PRs nem pela dificuldade técnica.
 
-### Os destaques
+### A página é do que mudou
 
-- **No máximo dez capacidades, seis à vista.** A vitrine que vira lista deixa de destacar.
-- **Entra** a capacidade que cria uma possibilidade nova ou elimina uma operação trabalhosa — e só
-  quando o que ela promete está disponível. Em desenvolvimento, só no desenvolvimento local ou atrás
-  de chave desligada: não entra.
-- **Sai**, quando passar de dez, a de menor uso na rotina da comissão; a decisão vai na descrição do
-  PR.
-- **Destaque não é novidade recente.** A capacidade de setembro fica enquanto for das mais
-  importantes.
-- **A nova nota de uma capacidade que já existe** entra em `notas` dela: a página diz "faz parte de", e
-  a capacidade não se repete como novidade.
-- A matriz que fundamentou a vitrine está em `specs/168-novidades-do-gps/capacidades.md`.
+*Decisão do usuário em 15/11 (`D-014` da 168).* As Novidades respondem "o que mudou desde que eu estive
+aqui", e não "o que o GPS faz". Não há vitrine de capacidades, e o arquivo só aceita `[[nota]]`. **A
+mudança grande se explica na própria nota transformadora**: o título promete o ganho, o exemplo mostra a
+cena, e o "Saiba mais" leva à seção da Documentação do Sistema, que é onde se aprende a usar o GPS do
+começo. Uma capacidade construída em vários PRs aparece em várias notas, cada uma com o que trouxe.
 
 ### Como agrupar
 
@@ -163,7 +153,7 @@ pesa no histórico. Um PR nunca está em duas notas — a suíte recusa.
 - [ ] Lida em voz alta para alguém da comissão, a nota se entende de primeira?
 - [ ] O título promete um ganho, e o exemplo mostra esse ganho numa cena concreta?
 - [ ] Nenhuma palavra do sistema ("marco", "recorte", "derivação", "ato", "estado")?
-- [ ] A relevância está pelo benefício? A nota de uma capacidade que já existe entrou em `notas` dela?
+- [ ] A relevância está pelo benefício, e não pelo tamanho do PR?
 - [ ] Um servidor que não acompanhou o desenvolvimento entende, em 15 segundos, o benefício?
 - [ ] A capacidade depende de configuração desligada em algum ambiente? Então `requer_configuracao`.
 - [ ] A nota não expõe falha de segurança nem problema interno sem efeito para quem opera?
