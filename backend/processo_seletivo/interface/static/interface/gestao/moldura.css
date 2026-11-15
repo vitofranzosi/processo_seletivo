@@ -65,6 +65,12 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
 .secoes-da-gestao nav a[aria-current]{background:var(--verde-claro);border-left-color:var(--verde);
   color:var(--verde-escuro);font-weight:600}
 .rotulo-da-secao{white-space:nowrap}
+/* A contagem das Novidades do GPS (168, UX-805): um número pequeno no fim do item, e nada quando é
+   zero. Discreta de propósito — não pisca, não se repete e não interrompe (FR-7418). O par de cores
+   é o do item atual, que o teste de contraste já confere. */
+.contagem-de-novidades{margin-left:auto;min-width:1.4rem;padding:0 .35rem;border:1px solid var(--verde);
+  border-radius:999px;background:var(--verde-claro);color:var(--verde-escuro);font-size:.75rem;
+  font-weight:600;line-height:1.25rem;text-align:center}
 .grupo-de-secoes{margin:1.25rem 1.25rem .35rem;font-size:.6875rem;font-weight:600;letter-spacing:.08em;
   text-transform:uppercase;color:var(--texto-fraco)}
 .pessoa-identificada{margin-top:auto;padding:.85rem 1rem .85rem 1.125rem;border-top:1px solid var(--borda);
@@ -143,6 +149,10 @@ que o que é largo role dentro da própria tabela, e não empurre a página.
     font-size:.75rem;font-weight:400;white-space:nowrap;pointer-events:none;opacity:0}
   .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):hover .rotulo-da-secao,
   .shell[data-barra=recolhida] .secoes-da-gestao :is(a,button):focus-visible .rotulo-da-secao{opacity:1}
+  /* Recolhida, a contagem vira um ponto no canto do ícone; o número continua para o leitor de tela. */
+  .shell[data-barra=recolhida] .contagem-de-novidades{position:absolute;top:.3rem;left:1.95rem;
+    min-width:0;width:.6rem;height:.6rem;padding:0;border:2px solid var(--branco);
+    background:var(--verde);font-size:0;line-height:0}
   .shell[data-barra=recolhida] .pessoa-identificada{flex-direction:column;padding:.75rem 0}
   .shell-barra-no-topo{display:block;background:none}
   .shell-barra-no-topo .barra-lateral{height:auto;flex-direction:row;align-items:center;
