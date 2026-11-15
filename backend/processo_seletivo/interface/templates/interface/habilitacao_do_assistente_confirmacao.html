@@ -1,0 +1,53 @@
+{% extends "interface/base.html" %}
+{% block titulo %}{% if habilitar %}Habilitar{% else %}Desabilitar{% endif %} — Assistente do Edital{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:administracao-do-assistente' %}">{{ navegacao.secao_atual }}</a> › <span aria-current="page">{% if habilitar %}Habilitar{% else %}Desabilitar{% endif %}</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+Habilitar ou desabilitar uma frente do assistente (170, UX-811, UX-812).
+
+A consequência vem antes do motivo e do botão. O caso de uso confere tudo de novo ao confirmar; se
+algo recusa — produção, configuração incompleta, estado já mudado —, a página diz por quê e não
+oferece o botão.
+{% endcomment %}
+<h1>{% if habilitar %}Habilitar{% else %}Desabilitar{% endif %} {% if edital %}a página pública do Edital {{ edital.number }}/{{ edital.year }}{% else %}o piloto da gestão{% endif %}</h1>
+
+{% if requisitos %}
+<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> em produção, a página pública não abre ao assistente enquanto os requisitos da abertura estiverem pendentes.</p>
+<ul>{% for codigo, rotulo, especie in requisitos %}<li><strong>{{ codigo }}</strong> — {{ rotulo }} ({{ especie }})</li>{% endfor %}</ul>
+{% elif erro %}<p class="erro" role="alert" tabindex="-1" autofocus><strong>Não foi possível concluir:</strong> {{ erro.detail }}</p>{% endif %}
+
+<section aria-labelledby="consequencia-titulo" class="consequencias{% if not habilitar %} irreversivel{% endif %}">
+  <h2 id="consequencia-titulo">Consequências</h2>
+  <ul>
+    {% if habilitar and edital %}
+    <li>Qualquer visitante da página pública deste Edital passa a conversar com o assistente, sem entrar no sistema.</li>
+    <li>Os outros Editais continuam sem o assistente.</li>
+    <li>As perguntas livres vão ao serviço do modelo configurado no servidor.</li>
+    {% elif habilitar %}
+    <li>Quem tem o papel Participante do piloto passa a ver o assistente na página dos Editais que alcança.</li>
+    <li>O piloto continua em sessões acompanhadas pela equipe.</li>
+    {% else %}
+    <li>Nenhuma pergunta nova chega ao modelo. A pergunta que já estiver com ele termina e é registrada.</li>
+    <li>As conversas não continuam: habilitar de novo começa conversa nova.</li>
+    <li>Os registros das conversas não são apagados.</li>
+    {% endif %}
+  </ul>
+</section>
+
+{% if pode_confirmar %}
+<form method="post" class="confirmar">
+  {% csrf_token %}
+  <p class="campo">
+    <label for="motivo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+    <textarea id="motivo" name="motivo" rows="3" required aria-required="true" aria-describedby="ajuda-motivo">{{ motivo }}</textarea>
+    <span class="ajuda" id="ajuda-motivo">Por exemplo, a sessão de teste ou o pedido que determinou a mudança. Vai ao histórico e à trilha, com o seu nome e a data.</span>
+  </p>
+  <p class="salvar">
+    <button type="submit" class="botao{% if not habilitar %} perigoso{% endif %}">{% if habilitar %}Confirmar a habilitação{% else %}Confirmar a desabilitação{% endif %}</button>
+    <a class="acao" href="{% url 'interface:administracao-do-assistente' %}">Cancelar e voltar</a>
+  </p>
+</form>
+{% else %}
+<p class="salvar"><a class="acao" href="{% url 'interface:administracao-do-assistente' %}">Voltar</a></p>
+{% endif %}
+{% endblock %}

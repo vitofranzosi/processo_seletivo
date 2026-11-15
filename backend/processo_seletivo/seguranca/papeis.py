@@ -205,6 +205,10 @@ TABELAS_APPEND_ONLY = (
     "verificacao_abertura_do_video",
     "verificacao_encaminhamento",
     "verificacao_eliminacao_do_video",
+    # A habilitação do assistente (170): cada ato de habilitar ou desabilitar uma frente. O estado é
+    # o último ato; reescrever um deles mudaria quem decidiu abrir o assistente, e por quê
+    # (FR-7527).
+    "duvidas_habilitacao_do_assistente",
 )
 
 

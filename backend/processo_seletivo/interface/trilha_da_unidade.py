@@ -41,6 +41,7 @@ ASSUNTOS = {
     "modelos": "Modelos de aviso",
     "avisos": "Avisos",
     "acessos": "Acessos",
+    "assistente": "Assistente do Edital",
 }
 ASSUNTO_DO_TIPO = {
     tipo: chave
@@ -65,6 +66,9 @@ SITUACOES = {
     "revogado": "Revogado",
     # A designação para a formalização (117), no feminino do objeto.
     "revogada": "Revogada",
+    # O assistente na página pública, habilitado ou desabilitado (170).
+    "HABILITADO": "Habilitado",
+    "DESABILITADO": "Desabilitado",
 }
 
 # Os dados da unidade e da autoridade que a alteração mostra, com antes e depois (`FR-3163`). São os
@@ -224,6 +228,9 @@ def _linha(registro, editais, papeis, nome_da_unidade):
         linha["pessoa"] = detalhe.get("pessoa", "")
         linha["papel"] = "Formalização"
         linha["sobre"] = editais.get(registro.aggregate_id, "")
+    elif tipo == "HabilitacaoDoAssistente":
+        # O Edital cuja página pública abriu ou fechou, pelo rótulo gravado no ato (170, R-8).
+        linha["sobre"] = detalhe.get("rotulo", "")
     elif tipo == "Vinculo":
         linha["pessoa"] = detalhe.get("pessoa", "")
         papel = detalhe.get("papel", "")

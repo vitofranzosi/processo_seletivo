@@ -66,6 +66,12 @@ def pode_administrar_unidades(ator):
     return ator.can("unidade:administrar")
 
 
+def pode_habilitar_assistente(ator):
+    # A habilitação do assistente (170): como Unidades, a permissão só existe no escopo
+    # institucional, e o item aparece ao lado dela, do mesmo papel.
+    return ator.can("assistente:habilitar")
+
+
 def pode_ver_formalizacao(ator):
     # A página do setor que formaliza (117, `FR-3675`): pela capacidade do papel, sem consulta. A
     # designação se confere na página, e sem ela a lista diz que não há Edital.
@@ -154,6 +160,13 @@ SECOES_DE_ACESSO = (
         UNIDADE,
         pode_administrar_unidades,
         "i-predio",
+    ),
+    Secao(
+        "Assistente do Edital",
+        "interface:administracao-do-assistente",
+        UNIDADE,
+        pode_habilitar_assistente,
+        "i-livro",
     ),
 )
 

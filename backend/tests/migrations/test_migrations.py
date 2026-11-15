@@ -44,6 +44,9 @@ APPS = (
     # A publicação de convocados da 149: três tabelas append-only e a coerência do vínculo entre a
     # convocação, a comunicação e o ato.
     "convocacao",
+    # A habilitação do assistente da 170: uma tabela append-only, a dos atos de habilitar e
+    # desabilitar. A troca do piloto, no mesmo app, não é append-only (071, R-021).
+    "duvidas",
 )
 # Agrupadas pelo app que as cria, porque o teste de upgrade incremental exercita **um** app por vez:
 # voltar `publicacoes` uma migration desaplica também o que depende dela, e exigir ali o conjunto
@@ -90,6 +93,8 @@ TRIGGERS_POR_APP = {
         "parecer_da_deliberacao_completo",
         "resultado_deliberado_completo",
     ),
+    # A habilitação do assistente (170): os atos de habilitar e desabilitar.
+    "duvidas": ("habilitacao_do_assistente_append_only",),
     # A verificação por vídeo (166): quatro tabelas append-only, um gatilho cada.
     "verificacao": (
         "verificacao_video_append_only",

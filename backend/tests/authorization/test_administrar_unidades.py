@@ -114,5 +114,7 @@ def test_a_permissao_nao_abre_processo_edital_nem_acesso():
     """FR-3310: o Administrador institucional não conduz certame nem concede papel de unidade."""
     permissoes = permissoes_dos_papeis([ADMINISTRADOR_INSTITUCIONAL])
 
-    assert permissoes == {"acesso:administrar", nomes.ADMINISTRAR}
+    # A 170 acrescentou a habilitação do assistente ao mesmo papel (FR-7510), e ela também não
+    # conduz certame nem concede papel de unidade.
+    assert permissoes == {"acesso:administrar", nomes.ADMINISTRAR, "assistente:habilitar"}
     assert not {p for p in permissoes if p.split(":")[0] in {"processo", "edital", "resultado"}}
