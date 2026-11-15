@@ -35,7 +35,7 @@ object.documento{width:100%;height:min(75vh,900px);border:1px solid var(--borda)
    sonda da 078 achou a mesma estrutura em outras 19 variantes, nenhuma estourando ainda. A regra não
    move caixa nenhuma: muda só a quem conta o transbordo. As duas molduras que só rolam no estreito
    ganham posição lá, no `@media` em que rolam: na tela larga elas são bloco comum (058). */
-.tabela-rolavel,.rolagem,.rolagem-da-tabela,.serie .barras{position:relative}
+.tabela-rolavel,.rolagem,.serie .barras{position:relative}
 
 /* Por que o lote recusou o que recusou, agrupado por motivo. Sem regra, a lista voltava ao
    marcador e ao recuo do navegador dentro de uma faixa de aviso — a única do sistema a fazê-lo. */

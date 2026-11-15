@@ -1,6 +1,7 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{{ ato.rotulo }} — {{ processo.institutional_code }}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' processo.id %}">{{ processo.institutional_code }}</a> › <span aria-current="page">{{ ato.rotulo }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/confirmacao-de-ato.css' %}">{% endblock %}
 {% block conteudo %}
 <h1>{{ ato.rotulo }}</h1>
 <p class="sub">{{ processo.title }} — <span class="codigo">{{ processo.institutional_code }}</span></p>
@@ -23,13 +24,13 @@
 </div>
 {% endif %}
 
-{% if renovada %}<p class="aviso" role="status" tabindex="-1" autofocus>As providências em aberto mudaram desde que você abriu esta tela. Confira a lista atual e confirme de novo.</p>{% endif %}
+{% if renovada %}<p class="aviso" role="status" tabindex="-1" autofocus><strong>Atenção:</strong> As providências em aberto mudaram desde que você abriu esta tela. Confira a lista atual e confirme de novo.</p>{% endif %}
 
 {% if advertencia %}{% if advertencia.vazia %}
 <p class="aviso" role="status">Nenhuma providência em aberto registrada no GPS nos Editais deste Processo. O GPS não sabe se ainda haverá convocação do cadastro de reserva: a validade dele está no texto do Edital.</p>
 {% else %}
 <div class="aviso" role="status">
-  <p><strong>Em aberto nos Editais deste Processo</strong></p>
+  <p><strong>Atenção:</strong> <strong>Em aberto nos Editais deste Processo</strong></p>
   <p>Encerrar o Processo não conclui estas providências, e os Editais dele deixam de aceitar alteração.</p>
   {% if advertencia.convocado_no_prazo %}<p>Quem foi convocado e ainda está no prazo não poderá mais apresentar documento nem enviar o Requerimento de Matrícula.</p>{% endif %}
   {% for grupo in advertencia.grupos %}
