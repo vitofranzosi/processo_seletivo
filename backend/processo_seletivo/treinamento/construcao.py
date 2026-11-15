@@ -19,6 +19,7 @@ import copy
 from dataclasses import dataclass, field
 from datetime import timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
@@ -129,6 +130,13 @@ def pdf_ficticio(titulo):
     return corpo
 
 
+#: O vídeo do C19 (171, FR-7337): barras de cor e um tom, com a faixa "TREINAMENTO - VIDEO
+#: FICTICIO, SEM VALOR LEGAL", gerado pelo ffmpeg (`testsrc2`), 12 segundos, sem rosto nem voz de
+#: ninguém. **Um arquivo, e não bytes montados à mão** como o PDF acima: a comissão precisa
+#: assistir, e o contêiner sintético da suíte (`tests/fixtures/videos_sinteticos.py`) não toca.
+VIDEO_DE_TREINAMENTO = Path(__file__).resolve().parent / "amostras" / "video-de-treinamento.mp4"
+
+
 def arquivo_ficticio(titulo, nome):
     return SimpleUploadedFile(nome, pdf_ficticio(titulo), content_type="application/pdf")
 
@@ -156,7 +164,7 @@ EVENTO_VERIFICACAO = do_molde("c9")
 NOME_DA_VERIFICACAO = "Verificação da autodeclaração"
 
 
-def etapa_da_verificacao():
+def etapa_da_verificacao(*, video=False):
     """A Etapa restrita e colegiada do C18: dois pareceres, confirma só por unanimidade (171).
 
     Antes da Prova na ordem, para que a progressão a torne esperada pelo marco que lê a Prova — num
@@ -181,6 +189,9 @@ def etapa_da_verificacao():
         "unfavorableOutcomeEffect": "RESERVE_REMOVAL",
         "absenceEffect": "RESERVE_REMOVAL",
         "scheduleEventId": EVENTO_VERIFICACAO,
+        # O C19 é a mesma Etapa com o vídeo (166): a admissão é da Etapa publicada, e o resto —
+        # alcance, pareceres, regra, efeito — não muda (171, FR-7337).
+        "videoOption": video,
     }
 
 
