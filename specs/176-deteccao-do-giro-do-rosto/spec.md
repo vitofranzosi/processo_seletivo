@@ -372,7 +372,8 @@ envio, sem nenhum toque nos perfis.
   medido: o tempo até o motor carregar, o tempo por leitura e o peso baixado.
 - **FR-8042**: A documentação da porta do piloto (a FR-7153 da `166`) DEVE ganhar a P-13: a validação
   da detecção com a CPVA e com o encarregado de dados, e o registro dela no relatório de impacto, antes
-  de qualquer chave ligada em produção.
+  de qualquer chave ligada em produção; e a compressão do motor no `nginx` da implantação, que hoje só
+  comprime HTML.
 
 ### Requisitos de experiência
 
@@ -408,7 +409,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
   de 5% dos da mesma gravação sem ela *(medido; registrado em `doc/`)*.
 - **SC-2754**: Durante toda a gravação com a detecção ligada, a página não faz nenhum pedido de rede
   além dos que faz sem ela, fora o download do motor, que acontece no máximo uma vez.
-- **SC-2755**: O peso baixado para a detecção não passa de 7 MB (Q-4, D-006), e o palco aparece no mesmo
+- **SC-2755**: O peso baixado para a detecção não passa de 7 MB com o motor comprimido no transporte,
+  como a implantação precisa servi-lo (Q-4, D-006, P-13), nem de 19 MB sem compressão, e o palco aparece no mesmo
   tempo com e sem ela (o motor não está no caminho do palco).
 - **SC-2756**: Nenhuma página além da gravação carrega o motor ou tem a exceção de política de
   conteúdo dele; a política da gravação com a chave desligada é a de hoje, diretiva a diretiva.
