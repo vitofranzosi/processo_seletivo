@@ -1,0 +1,24 @@
+/* A moldura dos e-mails do GPS, transcrita de `shared/templates/correio/estilos.json`. No sistema
+   as classes viram estilo em linha (`shared/correio.py`); aqui, pela CSP, ficam numa folha. */
+body{margin:0;background:#f3f4f2;font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1c1c1c}
+.prototipo-faixa{margin:12px;padding:8px 12px;border:1px dashed #555;border-radius:4px;font-size:13px;color:#555}
+.fundo{padding:24px 12px}
+.cartao{width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid #d4d4d4;border-radius:6px;border-collapse:separate;border-spacing:0}
+.faixa{background:#0b5a2a;height:6px;line-height:6px;font-size:0;border-radius:6px 6px 0 0}
+.cabecalho{padding:20px 28px 16px;border-bottom:1px solid #d4d4d4}
+.marca{margin:0;font-size:15px;line-height:20px;font-weight:700}
+.unidade{margin:2px 0 0;font-size:13px;color:#555}
+.assunto-linha{padding:10px 28px;font-size:13px;color:#555;background:#fafafa;border-bottom:1px solid #d4d4d4}
+.conteudo{padding:28px 28px 8px}
+.titulo{margin:0 0 12px;font-size:22px;line-height:30px;font-weight:700}
+.texto{margin:0 0 16px;font-size:16px;line-height:24px}
+.quadro{width:100%;margin:0 0 20px;border-collapse:separate}
+.destaque-acao{background:#e7f5ec;border-left:4px solid #15803d;border-radius:4px;padding:16px 18px}
+.rotulo{margin:0 0 4px;font-size:13px;line-height:18px;color:#555;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+.valor{margin:0 0 14px;font-size:18px;line-height:26px;font-weight:700}
+.valor.endereco{font-size:15px;font-weight:400;word-break:break-all}
+.botao-linha{margin:4px 0 20px}
+.botao{display:inline-block;background:#15803d;color:#fff;text-decoration:none;font-weight:700;padding:14px 26px;border-radius:6px;font-size:16px}
+.nota{margin:0 0 4px;font-size:13px;line-height:19px;color:#555}
+.rodape{padding:20px 28px 24px;border-top:1px solid #d4d4d4}
+.assinatura{margin:0 0 4px;font-size:14px;line-height:20px;font-weight:700}

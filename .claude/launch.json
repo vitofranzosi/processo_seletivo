@@ -710,6 +710,13 @@
       "url": "http://localhost:8176"
     },
     {
+      "name": "agendamento-prototipo",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["doc/estudo-agendamento-da-etapa-2026-11-14/prototipo/servidor.py", "8166"],
+      "port": 8166,
+      "url": "http://localhost:8166"
+    },
+    {
       "name": "habilitacao-do-assistente-170",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
