@@ -196,6 +196,51 @@ def evento_da_verificacao(inicio, fim):
     }
 
 
+# A Etapa de Entrevista do C20 (167): só neste cenário, e fora do molde, como a do C18. Posições
+# próprias — `d5` e `c5` —, que nenhuma peça do molde nem do C18 usa.
+ETAPA_ENTREVISTA = do_molde("d5")
+EVENTO_ENTREVISTA = do_molde("c5")
+NOME_DA_ENTREVISTA = "Entrevista"
+
+
+def etapa_da_entrevista():
+    """A Entrevista do C20: pontuada e classificatória, logo depois da Prova (167).
+
+    **Depois da Prova na ordem, e no lugar dos Títulos.** É a Prova consolidada que fecha a lista da
+    Entrevista — quem passou nela participa, pela exigência de habilitação da anterior —, e a
+    agenda é de quem participa. Os Títulos saem do Edital deste cenário porque, entre as duas, a
+    progressão poria a Entrevista atrás de uma Etapa sem Resultado, e a lista ficaria aberta.
+
+    **Sem eliminar**, e sem nota mínima: o exercício é marcar horário, e não o critério da nota. O
+    marco a soma à Prova, como um Edital do Ifes soma a entrevista à prova de desempenho.
+    """
+    return {
+        "id": ETAPA_ENTREVISTA,
+        "name": NOME_DA_ENTREVISTA,
+        "order": 2,
+        "weight": Decimal("1.0000"),
+        "eliminatory": False,
+        "classificatory": True,
+        "minimumScore": None,
+        "scheduleEventId": EVENTO_ENTREVISTA,
+    }
+
+
+def evento_da_entrevista(inicio, fim):
+    return {
+        "id": EVENTO_ENTREVISTA,
+        "type": NOME_DA_ENTREVISTA,
+        "description": (
+            "Entrevista com a comissão, em horário individual divulgado na agenda da Etapa."
+        ),
+        "startAt": inicio,
+        "endAt": fim,
+        # Provisório: `elaborar(ordem_cronologica=True)` renumera o cronograma inteiro pela data.
+        "order": 9,
+        "isRegistrationPeriod": False,
+    }
+
+
 def perfil_de_notas(*, vagas=4, janela="declarada"):
     """O Perfil docente do `seed_demo`, com desempate declarado e quatro vagas.
 
@@ -464,20 +509,31 @@ class Montagem:
         etapas=None,
         etapas_a_mais=(),
         eventos_a_mais=(),
+        ordem_cronologica=False,
     ):
         """Grava o rascunho: os moldes remapeados, com o período de inscrições pedido.
 
         `inicio` e `duracao_dias` são o período de inscrições; os demais eventos do molde se
         deslocam junto, para que a sequência do cronograma continue coerente. `etapas_a_mais` e
         `eventos_a_mais` são peças de fora do molde, em identificadores do molde (o C18, 171).
+
+        `ordem_cronologica` renumera o cronograma pela data de início (o C20, 167): o Evento de fora
+        do molde que cai entre dois do molde apareceria depois do "Resultado final", porque o
+        cronograma se lê pela ordem, e a ordem não se repete.
         """
         from processo_seletivo.editais.application.draft import replace_draft
 
         calendario = molde.cronograma(inicio, MOLDE)
         calendario[0]["endAt"] = inicio + timedelta(days=duracao_dias)
+        eventos = [*calendario, *eventos_a_mais]
+        if ordem_cronologica:
+            eventos = [
+                {**evento, "order": ordem}
+                for ordem, evento in enumerate(sorted(eventos, key=lambda e: e["startAt"]), 1)
+            ]
         argumentos = {
             "profiles": self.remapear(perfis),
-            "schedule": self.remapear([*calendario, *eventos_a_mais]),
+            "schedule": self.remapear(eventos),
             "stages": self.remapear([*self._etapas(etapas), *etapas_a_mais]),
             "document_requirements": self.remapear(documentos),
         }

@@ -205,19 +205,20 @@ def test_propriedade_que_nao_se_comprova_bloqueia_a_restauracao(treinamento):
     assert "INCONSISTENTE" in verificar("C03")
 
 
-def test_a_carga_dos_dezoito_cria_cenarios_independentes(treinamento):
+def test_a_carga_do_catalogo_inteiro_cria_cenarios_independentes(treinamento):
     """O catálogo inteiro coexiste, cada um no seu Processo, sem identificador partilhado (SC-1455).
 
     Eram quinze; o C16 e o C17 da formalização entraram com a revisão de 12/11/2026 (FR-4650), e o
-    C18 da verificação da autodeclaração com a `171` (FR-7333).
+    C18 da verificação da autodeclaração com a `171` (FR-7333), e o C20 do agendamento da Etapa com
+    a `167`. São dezenove, e não vinte: o C19 tem o número reservado e entra noutra entrega.
     """
     saida = carregar(autoridade=str(AUTORIDADE_DA_SUITE))
-    assert saida.count("CRIADO") == 18, saida
+    assert saida.count("CRIADO") == 19, saida
     processos = ProcessoSeletivo.objects.filter(institutional_code__startswith="SIM-TREINAMENTO-")
-    assert processos.count() == 18
-    assert CenarioDeTreinamento.objects.filter(situacao="PRONTO").count() == 18
-    assert Edital.objects.filter(number__startswith="SIM").count() == 18
-    assert verificar().count("INTACTO") == 18
+    assert processos.count() == 19
+    assert CenarioDeTreinamento.objects.filter(situacao="PRONTO").count() == 19
+    assert Edital.objects.filter(number__startswith="SIM").count() == 19
+    assert verificar().count("INTACTO") == 19
 
 
 def test_autoridade_nunca_usada_so_com_escolha_expressa(treinamento):

@@ -102,7 +102,7 @@ def test_o_catalogo_inteiro_monta_atrasado_menos_o_que_venceria(treinamento):
     """Seis dias: tudo menos o C08, recusado sozinho — os demais não dependem dele (FR-4612)."""
     saida = carregar(autoridade=AUTORIDADE, dias_atras=6)
     # Dezessete desde o C18 (171), que nasce com o período da Etapa restrita em curso e cabe nos
-    # seis dias.
-    assert saida.count("CRIADO") == 17, saida
+    # seis dias; dezoito desde o C20 (167), cuja Entrevista começa depois de 27 dias.
+    assert saida.count("CRIADO") == 18, saida
     assert saida.count("FALHOU") == 1 and "C08" in saida, saida
-    assert verificar().count("INTACTO") == 17
+    assert verificar().count("INTACTO") == 18
