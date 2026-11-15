@@ -363,7 +363,6 @@ QUEM_CARREGA = {
             # O kit de divulgação (111).
             "kit-de-divulgacao",
             "marco",
-            "minhas-etapas",
             # As Novidades do GPS (168).
             "novidades",
             "prototipo-do-assistente",
