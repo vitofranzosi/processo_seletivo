@@ -160,3 +160,22 @@ Decisões técnicas da `176`, de `T-001` a `T-012`. Conferidas no pacote em 15/1
 - **Decisão**: a 0.10.35 (D-007 da spec), com o guardião `test_o_motor_nao_traz_registrador_de_uso`,
   que lê os bytes dos arquivos copiados. Atualizar o motor exige conferir isso de novo. Fica como registro para a porta do
   piloto (FR-8042), porque a implantação não liga a chave.
+
+## T-014 — Os achados da revisão do #573
+
+A revisão de código de 15/11 achou oito pontos, todos corrigidos no mesmo PR:
+
+- **A leitura que lança** (`detectForVideo` com o WebGL perdido) subia do temporizador e matava o laço,
+  com a página ainda dizendo que avança sozinha; agora desliga a detecção (`desligada`), e a página volta
+  a ser a da `174`. O delegado que abre mas não lê, no aquecimento, dá lugar ao seguinte (GPU → CPU).
+- **O aquecimento com a tomada em curso** congelaria o relógio e o toque; agora o motor que chega
+  durante a gravação espera o próximo preparo (`emGravacao`).
+- **O motor recriado a cada "Gravar de novo"**: o vigia passou a ser um por página; sair do palco
+  pausa e esquece as leituras (FR-8003), e só a escolha de tocar, a falha e a saída da página soltam o
+  motor. A jornada confere que nada é baixado de novo.
+- **"Para o outro lado" logo depois de um perfil visto**: o lado oposto só conta depois de o rosto
+  passar pela frente (`permitirOposto`).
+- **"Para o outro lado" mudo para o leitor de tela**: vai também ao anúncio.
+- **Os guardiões**: a isenção do guardião do motor é pelo caminho, e não pelo nome; e dois casos leem
+  o fonte — o corpo do envio tem só os seis campos do contrato, e `deteccao.js` não faz pedido de rede —,
+  para valer também sem o grupo `navegador`.

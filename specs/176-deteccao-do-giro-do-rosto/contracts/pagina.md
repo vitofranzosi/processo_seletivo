@@ -52,5 +52,8 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 - `avaliarGiro(leituras, lado, opcoes)` → `"esperando" | "outro-lado" | "visto"`;
 - `Orcamento` com `registrar(ms)` → `true` enquanto cabe;
 - `podeCarregar(ambiente)` → booleano (sem `WebAssembly`, com `saveData`, ou recusada → `false`);
-- `Vigia(opcoes)`: `iniciar(video, palco)`, `observar(lado | "oval" | null)`, `parar()`, e os retornos
-  `aoRosto(dentro)`, `aoGiro(estado)`; com `simulada: () => giro`, não carrega o motor.
+- `Vigia(opcoes)`, um por página: `carregar()`, `observar(lado | "oval" | null)`, `pausar()` (fora do
+  palco: para de ler e esquece as leituras, e guarda o motor), `parar()` (solta tudo: a escolha de
+  tocar, o orçamento, a falha de leitura e a saída da página), e os retornos `aoEstado`, `aoRosto` e
+  `aoGiro`; `emGravacao()` impede o aquecimento com a tomada em curso; com `simulada`, não carrega
+  o motor.

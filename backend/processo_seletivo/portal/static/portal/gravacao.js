@@ -259,7 +259,7 @@
       ligarDeteccao();
     } else {
       soltarTelaAcesa();
-      desligarDeteccao();
+      pausarDeteccao();
     }
     var titulo = pagina.querySelector('[data-tela="' + nome + '"] h2');
     if (titulo) {
@@ -539,8 +539,21 @@
   var GUIA_DENTRO = "Rosto no oval. Ele não aparece no vídeo.";
 
   function ligarDeteccao() {
-    if (!detectar || estado.soTocando || estado.vigia) return;
+    if (!detectar || estado.soTocando) return;
     var previa = q("[data-previa]");
+    var simulada = estado.sintetica ? estado.sintetica.ler : null;
+    if (estado.vigia) {
+      // O vigia é um por página, e o motor fica entre as tomadas (achado da revisão do #573). Só a
+      // troca entre a câmera e a imagem de teste pede outro: um tem motor, o outro não.
+      if (Boolean(estado.vigia.opcoes.simulada) === Boolean(simulada)) {
+        estado.vigia.opcoes.simulada = simulada;
+        estado.vigia.opcoes.espelhada = !previa.classList.contains("sem-espelho");
+        observarPasso();
+        return;
+      }
+      estado.vigia.parar();
+      estado.vigia = null;
+    }
     estado.vigia = new Deteccao.Vigia({
       enderecos: {
         motor: pagina.getAttribute("data-deteccao-motor"),
@@ -551,7 +564,11 @@
       video: previa,
       oval: q("[data-oval]"),
       espelhada: !previa.classList.contains("sem-espelho"),
-      simulada: estado.sintetica ? estado.sintetica.ler : null,
+      simulada: simulada,
+      // Com a tomada em curso o motor não aquece: o aquecimento congela a página por segundos.
+      emGravacao: function () {
+        return palco.getAttribute("data-estado") === "gravando";
+      },
       aoEstado: aoEstadoDaDeteccao,
       aoRosto: aoRosto,
       aoGiro: aoGiro,
@@ -564,13 +581,24 @@
     observarPasso();
   }
 
-  function desligarDeteccao() {
+  // Fora do palco: o vigia para de ler e esquece as leituras (FR-8003), e o motor fica.
+  function pausarDeteccao() {
     if (estado.confirmando) clearTimeout(estado.confirmando);
     estado.confirmando = null;
+    if (estado.vigia) estado.vigia.pausar();
+  }
+
+  function desligarDeteccao() {
+    pausarDeteccao();
     if (!estado.vigia) return;
     estado.vigia.parar();
     estado.vigia = null;
   }
+
+  // Ao sair da página, o motor é solto.
+  window.addEventListener("pagehide", function () {
+    desligarDeteccao();
+  });
 
   // O que o vigia olha agora: o oval antes de começar, o lado nos perfis, nada no resto.
   function observarPasso() {
@@ -637,6 +665,9 @@
       caixa.textContent = "Para o outro lado";
       caixa.setAttribute("data-tipo", "outro-lado");
       caixa.hidden = false;
+      // Também para quem usa leitor de tela: a confirmação só seria lida ao mudar de passo, e esta
+      // não muda passo nenhum (R-21 do estudo; achado da revisão do #573).
+      q("[data-anuncio]").textContent = "Para o outro lado.";
     } else {
       caixa.hidden = true;
     }

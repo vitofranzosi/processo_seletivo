@@ -8,6 +8,7 @@ de `tests/javascript/deteccao.test.js` e da jornada no navegador.
 
 import hashlib
 import re
+from pathlib import Path
 
 import pytest
 from django.contrib.staticfiles import finders
@@ -179,10 +180,44 @@ def test_nenhuma_frase_chama_a_deteccao_de_biometria_ou_prova_de_vida(cenario, c
 
 
 def test_o_video_nao_guarda_nada_da_deteccao(cenario, client, settings):
-    """FR-8030, FR-8031: o contrato do envio é o da 166, e nenhum campo do vídeo diz como um passo
-    avançou — pelo giro ou pelo toque."""
+    """FR-8031: nenhum campo do vídeo diz como um passo avançou — pelo giro ou pelo toque."""
     settings.VERIFICACAO_DETECCAO_DO_GIRO = True
     maria = cenario["inscricoes"][0]
     video = enviar_video(maria, cenario["hetero"])
     campos = {campo.name for campo in type(video)._meta.get_fields()}
     assert not {c for c in campos if {"deteccao", "giro", "detectado"} & set(c.split("_"))}
+
+
+# --- o que sai do aparelho, lido no fonte ------------------------------------------------------
+#
+# A jornada no navegador confere o pedido de envio de verdade, mas pula sem o grupo `navegador`.
+# Os dois casos abaixo leem o fonte, como `test_armazenamento_no_navegador.py`: a propriedade é
+# negativa ("nada da detecção sai"), e o fonte a prova em todo ambiente (achado da revisão do #573).
+
+ESTATICOS = (
+    Path(__file__).resolve().parents[2] / "processo_seletivo" / "portal" / "static" / "portal"
+)
+
+
+def _sem_comentarios(texto):
+    return re.sub(r"//[^\n]*|/\*.*?\*/", "", texto, flags=re.S)
+
+
+def test_o_corpo_do_envio_tem_so_os_campos_do_contrato_da_166():
+    """FR-8030, FR-8031, SC-2752: os seis campos de sempre, e as marcas só com passo e instante."""
+    fonte = _sem_comentarios((ESTATICOS / "gravacao.js").read_text(encoding="utf-8"))
+    corpos = re.findall(r"JSON\.stringify\(\{(.*?)\}\)", fonte, flags=re.S)
+    inicio = [c for c in corpos if "tamanho" in c]
+    assert len(inicio) == 1, corpos
+    campos = re.findall(r"(\w+)\s*:", inicio[0])
+    assert campos == ["tamanho", "formato", "duracao", "marcas", "roteiro", "maioridade"]
+    marcas = re.search(r"function marcasEmSegundos.*?return \{(.*?)\}", fonte, flags=re.S)
+    assert re.findall(r"(\w+)\s*:", marcas.group(1)) == ["passo", "instante"]
+
+
+def test_a_deteccao_nao_faz_pedido_de_rede():
+    """FR-8000: o único pedido de `deteccao.js` é o `import()` do motor; nada de `fetch`,
+    `XMLHttpRequest`, `sendBeacon` nem `WebSocket`, e nenhuma menção às rotas do envio."""
+    fonte = _sem_comentarios((ESTATICOS / "deteccao.js").read_text(encoding="utf-8"))
+    for proibido in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "envios", "pedir("):
+        assert proibido not in fonte, proibido

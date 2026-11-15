@@ -241,7 +241,9 @@ envio, sem nenhum toque nos perfis.
 ### Edge Cases
 
 - **Giro para o lado errado** (a confusão do espelho): a tela diz, sem tom de erro, "Para o outro
-  lado", e continua esperando; nada é registrado.
+  lado", e o leitor de tela também; a espera continua, e nada é registrado. Só depois de o rosto
+  passar pela frente: quem acabou de ter um perfil visto ainda está virado para aquele lado quando o
+  passo seguinte começa.
 - **O rosto sai do oval no meio do passo**: a tela volta a esperar o giro; o "Rosto no oval" não é
   pedido durante a gravação.
 - **Duas pessoas no quadro**: a detecção considera só o rosto maior, e não avisa nada; a comissão vê
@@ -250,8 +252,8 @@ envio, sem nenhum toque nos perfis.
   avança.
 - **A pessoa toca em "Próximo" ao mesmo tempo em que o giro é percebido**: conta um avanço só, como o
   toque duplo da FR-7870 da `174`.
-- **O motor carrega depois que a gravação começou**: ele passa a guiar a partir do passo em curso;
-  não muda nada do que já foi gravado.
+- **O motor carrega depois que a gravação começou**: ele não aquece nem lê durante aquela tomada —
+  o aquecimento congelaria a página por segundos — e passa a guiar a partir do próximo preparo.
 - **O aparelho fica lento**: se a leitura de um quadro passar do orçamento (FR-8017), a detecção
   desliga para o resto da tomada, sem aviso, e a gravação segue pelo toque.
 - **Óculos, barba, véu, cabelo no rosto, pouca luz**: a detecção pode não perceber; o toque resolve,
@@ -263,8 +265,8 @@ envio, sem nenhum toque nos perfis.
 - **Leitor de tela**: a confirmação "Perfil esquerdo visto" e o passo novo são anunciados como no
   toque (UX-875 da `174`), e o foco continua em "Próximo".
 - **Economia de dados ligada no aparelho**: o motor não é baixado; o palco é o da `174`.
-- **Regravar**: ao sair do palco o motor é fechado (FR-8003); ao voltar, ele é recriado a partir do
-  que o navegador já guardou, sem baixar de novo, e a detecção recomeça do oval.
+- **Regravar**: ao sair do palco o vigia para de ler e esquece as leituras (FR-8003); o motor fica na
+  página, e a detecção recomeça do oval, sem baixar nem aquecer de novo.
 - **Chave da detecção ligada e a do vídeo desligada**: nada aparece; a do vídeo continua mandando.
 
 ## Requirements *(mandatory)*

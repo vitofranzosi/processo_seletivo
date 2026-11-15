@@ -298,6 +298,20 @@ def test_o_motor_de_verdade_carrega_da_propria_origem_e_sem_rosto_vale_o_toque(
     proximo.click()
     expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
 
+    # "Gravar de novo" volta ao palco com o mesmo motor: nada é baixado de novo, e a detecção já
+    # está pronta (achado da revisão do #573, que recriava e reaquecia o motor a cada tomada).
+    pagina.get_by_role("button", name="Gravar de novo").click()
+    expect(pagina.get_by_role("button", name="Começar a gravar")).to_be_visible()
+    expect(raiz).to_have_attribute("data-deteccao", "pronta")
+    expect(pagina.locator("[data-aviso-deteccao]")).to_be_visible()
+    for arquivo in (
+        "vision_bundle.mjs",
+        "vision_wasm_internal.js",
+        "vision_wasm_internal.wasm",
+        "face_landmarker-float16-1.task",
+    ):
+        assert sum(arquivo in url for url in pedidos) == 1, arquivo
+
 
 def test_prefiro_avancar_so_tocando_desliga_a_deteccao(
     tela, gestor, api_client, manager_headers, settings
