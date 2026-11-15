@@ -221,5 +221,9 @@ def test_quem_nao_pode_encerrar_nao_ve_as_contagens(peca):
     corpo = tela(sessao("julia.julgadora", ["julgador"]), peca["cenario"]["edital"])
 
     assert "Você não pode praticar este ato." in corpo
+    assert (
+        "<strong>Impedimento:</strong> <strong>Você não pode praticar este ato.</strong>"
+        in " ".join(corpo.split())
+    )
     assert "recurso aguarda decisão" not in corpo
     assert "Continuam depois do encerramento" not in corpo

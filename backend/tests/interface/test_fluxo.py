@@ -160,6 +160,10 @@ def test_segregacao_e_avisada_antes_da_tentativa(client, seletor_ligado, edital)
         reverse("interface:ato", args=[edital.id, "publicar"])
     ).content.decode()
     assert "Segregação de funções" in confirmacao
+    # A espécie no texto, e não só no vermelho (P0 do estudo de design system; WCAG 1.4.1). Uma
+    # vez só: a parcial `_impedimento.html` não tem ramo de segregação para o Edital.
+    marcada = "<strong>Impedimento:</strong> <strong>Segregação de funções.</strong>"
+    assert " ".join(confirmacao.split()).count(marcada) == 1
     assert "não pode publicá-la sozinho" in confirmacao
     # A previsão é exata — mesma regra do command —, então oferecer "Confirmar" logo abaixo
     # do aviso só adiaria a recusa para depois do clique.

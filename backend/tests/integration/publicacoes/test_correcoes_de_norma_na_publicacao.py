@@ -167,6 +167,6 @@ def test_a_tela_da_retificacao_mostra_o_aviso_e_diz_que_ele_nao_impede(
         .split()
     )
     # Como aviso, e não como impedimento: a linha de aviso, e o botão do ato continua na tela.
-    assert "<strong>Aviso:</strong> Prazos de recurso a conferir." in tela
+    assert "<strong>Atenção:</strong> Prazos de recurso a conferir." in tela
     assert 'type="submit"' in tela
     assert "blocking_findings" not in tela

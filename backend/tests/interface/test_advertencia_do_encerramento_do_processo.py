@@ -107,6 +107,8 @@ def test_o_bloco_mostra_a_convocacao_no_prazo_antes_das_consequencias(pendente):
 
     edital = pendente.edital
     assert TITULO in corpo
+    # A espécie no texto, e não só no amarelo (P0 do estudo de design system; WCAG 1.4.1).
+    assert f"<strong>Atenção:</strong> <strong>{TITULO}</strong>" in corpo
     assert ABERTURA in corpo
     assert CONVOCADO in corpo
     assert f"{edital.number}/{edital.year}</a>" in corpo
@@ -344,6 +346,7 @@ def test_com_edital_fora_de_estado_final_nada_e_lido(pendente):
         resposta = abrir(gestor(), pendente.processo)
     corpo = texto(resposta)
     assert "Este ato será recusado." in corpo
+    assert "<strong>Impedimento:</strong> <strong>Este ato será recusado.</strong>" in corpo
     assert TITULO not in corpo and NADA not in corpo
     assert "advertencia" not in resposta.context
 
@@ -367,6 +370,7 @@ def test_a_lista_mudou_a_confirmacao_volta_sem_encerrar(pendente):
     assert resposta.status_code == 409
     corpo = texto(resposta)
     assert RENOVADA in corpo
+    assert f"<strong>Atenção:</strong> {RENOVADA}" in corpo
     assert "1 convocação aguardando" not in corpo, "a lista é a de agora"
     assert CONVOCADO not in corpo
     assert ">Etapas concluídas</textarea>" in corpo

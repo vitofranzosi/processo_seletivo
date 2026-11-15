@@ -55,9 +55,7 @@ comunicação, formalização e participante do piloto do assistente.
 sh doc/auditoria-design-system-2026-11-14/referencia-p0/scripts/montar_banco.sh ps_p0_referencia
 ```
 
-Depois, o servidor `referencia-p0` do `.claude/launch.json` (porta 8165, a que o instrumento do
-estudo espera; a entrada `auditoria-visual` usa a mesma porta, com o banco do estudo, e só uma das
-duas pode estar no ar), e:
+Depois, o servidor `referencia-p0` do `.claude/launch.json` (porta 8166), e:
 
 ```bash
 cd backend && uv sync --extra dev --extra navegador && uv run playwright install chromium
@@ -66,6 +64,12 @@ cd backend && uv sync --extra dev --extra navegador && uv run playwright install
 ```bash
 cd backend && sh ../doc/auditoria-design-system-2026-11-14/referencia-p0/scripts/rastrear_tudo.sh <pasta de trabalho>
 ```
+
+**A porta.** O instrumento do estudo traz fixa a 8165, que é a da entrada `auditoria-visual`, com
+o banco do estudo. O roteiro não o altera: copia os quatro scripts para `<pasta>/instrumento/` e
+troca só o endereço, para a 8166 ou para a que `PORTA` disser. A referência desta pasta foi gravada
+com a entrada na 8165, antes da troca, e saiu do `ps_p0_referencia`: os 17 Editais que o rastreio
+visitou existem nele, e nenhum no `ps_auditoria_visual`. A sonda `medir_p0.py` lê a mesma `PORTA`.
 
 O passo do portal espera o código de acesso de cada candidato: o roteiro grava
 `<pasta>/pedido-candN.txt` com o e-mail, o código sai no terminal do servidor, e quem o lê o

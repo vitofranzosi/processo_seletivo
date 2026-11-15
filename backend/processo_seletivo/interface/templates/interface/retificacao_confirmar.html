@@ -34,7 +34,7 @@ existir. O que ela faz é dizer, no lugar onde quem pode agir já está: a tela 
 exatamente onde a linha se acrescenta.
 {% endcomment %}
 {% for item in advertencias %}
-<p class="aviso" role="status"><strong>Aviso:</strong> {{ item.message }}</p>
+<p class="aviso" role="status"><strong>Atenção:</strong> {{ item.message }}</p>
 {% endfor %}
 {% comment %} As que já valiam no Edital vigente, recolhidas (104, FR-2825): continuam ditas — são
    verdadeiras —, mas não antes do que este ato muda. **Com a mesma severidade**, e não como nota:
@@ -44,7 +44,7 @@ exatamente onde a linha se acrescenta.
 <details class="avisos-anteriores">
   <summary>Avisos que já valiam no Edital vigente ({{ advertencias_anteriores|length }})</summary>
   {% for item in advertencias_anteriores %}
-  <p class="aviso"><strong>Aviso:</strong> {{ item.message }}</p>
+  <p class="aviso"><strong>Atenção:</strong> {{ item.message }}</p>
   {% endfor %}
 </details>
 {% endif %}
