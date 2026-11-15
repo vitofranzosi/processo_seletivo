@@ -25,7 +25,32 @@
   "O-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Vaga acrescida desfeita: 1 vaga. A apuração seguinte foi emitida por este ato, e",
+   "maior_linha": 120
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "‹data› — acréscimo de 1 vaga. Origem: Edital Multicampi nº 20/2026, Campus Vitór",
+   "maior_linha": 125
+  },
+  {
+   "bloco": "‹data› — desfazimento de 1 vaga. Motivo: Matrícula efetivada no Edital regular. ",
+   "maior_linha": 112
+  },
+  {
+   "bloco": "Uma vaga que chegou depois da publicação, de fora deste Edital — a que o Edital ",
+   "maior_linha": 160
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

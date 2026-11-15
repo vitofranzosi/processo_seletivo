@@ -90,6 +90,14 @@ de CSS. O experimento opcional de escala tipográfica do roadmap não é desta s
   possa existir, e **o usuário pode revê-la na leitura do PR**. Nenhuma ficou como pergunta, porque
   todas têm um caminho razoável que os documentos do estudo já apontam.
 
+### Session 2026-11-15 (o usuário, depois de ver o antes e o depois do piloto implementado)
+
+- Q: A primeira versão prendeu toda prosa em 80 caracteres e centrou a confirmação numa coluna
+  estreita, e o usuário a achou pior que a `main` ("o texto não está utilizando o espaço
+  disponível"). Como as telas devem usar a largura? → A: **o texto ocupa a largura do conteúdo**,
+  inclusive onde a `main` hoje o limita; ficam os cartões, os indicadores e os botões (D-012). A
+  FR-7704, a FR-7730, a SC-2603 e a UX-850 foram revistas por esta decisão.
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
@@ -303,9 +311,10 @@ do piloto e comparar com o `telas.csv` da referência.
   gestão não muda.
 - **FR-7703**: Os tokens da direção experimental DEVEM ser só acrescentados a `tokens.css`, com nomes
   novos. Nenhum token existente PODE mudar de valor (D-010).
-- **FR-7704**: Dentro do escopo, aviso, erro, bastão, consequências e formulário da confirmação
-  DEVEM manter a medida de leitura que a P0 lhes deu: nenhuma linha acima de 80 caracteres em
-  nenhuma largura.
+- **FR-7704**: *(revista em 15/11, D-012)* Dentro do escopo, aviso, erro, bastão, consequências e
+  formulário da confirmação DEVEM ir até a largura do conteúdo, como o resto da prosa: a medida que a
+  P0 lhes deu não vale no piloto. Fora dele, nas confirmações do Processo e da Retificação, ela
+  continua.
 - **FR-7705**: O `.acao` com altura única e a barra de ações DEVEM valer só dentro do escopo do
   piloto. Fora dele, o `.acao` continua com as quatro alturas de hoje.
 - **FR-7706**: Nenhum template fora dos cinco PODE mudar, salvo uma parcial que só eles incluem.
@@ -378,8 +387,9 @@ do piloto e comparar com o `telas.csv` da referência.
 
 #### Legibilidade e localização da ação
 
-- **FR-7730**: Nenhuma linha de prosa das cinco telas PODE passar de 80 caracteres em nenhuma largura
-  do catálogo.
+- **FR-7730**: *(revista em 15/11, D-012)* A prosa das cinco telas DEVE ocupar a largura do conteúdo,
+  que a moldura limita a `--pagina`. O comprimento da linha é registrado como diagnóstico, sem valor
+  de aprovação.
 - **FR-7731**: Quando o estado tem ação principal, ela DEVE aparecer sem rolagem a 1280 × 800, ou a
   tela DEVE dizer, acima da dobra, que ela existe.
 - **FR-7732**: O dado de que a ação depende DEVE ficar à vista junto dela.
@@ -467,9 +477,9 @@ São as ordens que não se invertem. O aceite as confere nas duas ordens, a do d
 
 ### Requisitos de experiência
 
-- **UX-850**: A confirmação de ato e as duas conferências usam a composição **centrada** (uma coluna
-  de 44rem no meio, com a prosa na medida de leitura), com o cabeçalho de página, os avisos como
-  componente e a barra de ações ao pé.
+- **UX-850**: *(revista em 15/11, D-012)* A confirmação de ato e as duas conferências usam a largura
+  do conteúdo, e não uma coluna centrada, com os avisos como componente, as consequências em cartão e
+  a barra de ações ao pé.
 - **UX-851**: A Ocupação usa a composição **principal e trilho** a partir de 80rem de janela, a
   largura em que o trilho de 21rem cabe ao lado do trabalho. No trilho só vai o que é apoio de leitura e vale para a página inteira, nunca condição de
   gesto nem pendência. Abaixo dessa largura, o trilho desce sem violar a O-S1 nem a O-S5.
@@ -513,8 +523,8 @@ São as ordens que não se invertem. O aceite as confere nas duas ordens, a do d
 - **SC-2602**: No rastreio sobre o banco da referência da P0, **só** as linhas das cinco telas do
   piloto diferem do `telas.csv` da referência, e nenhuma das vinte capturas de amostra de fora do
   piloto passa da linha de ruído.
-- **SC-2603**: **Nenhuma** linha de prosa acima de 80 caracteres nas cinco telas, em nenhuma largura
-  e em nenhum estado.
+- **SC-2603**: *(revisto em 15/11, D-012)* Em todos os estados, a prosa ocupa a largura do conteúdo:
+  nenhum parágrafo, nota, aviso ou item de lista para antes dela.
 - **SC-2604**: Em todos os estados que têm ação principal, ela aparece sem rolagem a 1280 × 800, ou a
   tela a anuncia acima da dobra.
 - **SC-2605**: Nas cinco telas, **zero** perda de conteúdo e **zero** rolagem em dois eixos a 320 px e
@@ -797,6 +807,20 @@ hoje.
 
 **Por quê.** `tokens.css` é o único lugar de valor literal na governança proposta. Declarar os
 neutros na folha do piloto criaria uma segunda fonte de cor, que é o defeito que o estudo mediu.
+
+### D-012 — O texto ocupa a largura do conteúdo (decisão do usuário, 15/11)
+
+O usuário viu o antes e o depois da primeira versão, com a prosa presa em 80 caracteres e a
+confirmação numa coluna centrada, e a achou pior que a `main`: a página ficou mais alta, a direita
+vazia e o texto mais espremido. A pergunta foi entre usar a largura por colunas, deixar o texto
+ocupar a largura toda, ou voltar à composição da `main` com os componentes novos; **o usuário
+escolheu o texto na largura toda.**
+
+Consequências: a medida de leitura não vale nas cinco telas, nem a da P0 nas confirmações; a
+composição centrada sai; a linha longa vira diagnóstico. Os cartões, os indicadores, os avisos e os
+botões ficam. A preferência do usuário pelo aproveitamento da tela vale como premissa para a
+migração das outras famílias, e o "Texto explicativo" e a "medida de leitura" do estudo de 14/11
+ficam subordinados a ela.
 
 ### D-011 — A Lista continua lista, e não tabela
 

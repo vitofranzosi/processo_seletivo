@@ -25,7 +25,32 @@
   "O-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Não foi possível desfazer a declaração de vaga não preenchida: Há 1 pessoa chama",
+   "maior_linha": 121
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 135
+  },
+  {
+   "bloco": "‹data› — 1 vaga declarada não preenchida. Fundamento: O Edital não declara rever",
+   "maior_linha": 118
+  },
+  {
+   "bloco": "Esta declaração não se desfaz agora: P-0701 — Fulana foi chamada para ela. O des",
+   "maior_linha": 135
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

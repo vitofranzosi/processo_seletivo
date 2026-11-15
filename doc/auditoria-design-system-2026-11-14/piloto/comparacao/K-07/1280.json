@@ -18,12 +18,25 @@
   "K-S4": "aprovada"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado aind",
+   "maior_linha": 82
+  },
+  {
+   "bloco": "1 vaga de Pretos, pardos e indígenas (PPI) não preenchida, em ‹data›, por carlos",
+   "maior_linha": 90
+  },
+  {
+   "bloco": "O ato desfeito não é alterado: o desfazimento o cita, e os dois continuam legíve",
+   "maior_linha": 83
+  }
+ ],
  "dobra": {
   "acao_principal": "Desfazer a declaração",
   "achada": true,
   "acima": true,
-  "topo": 702
+  "topo": 578
  },
  "falhas": []
 }

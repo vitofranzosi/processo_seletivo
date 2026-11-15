@@ -25,7 +25,28 @@
   "O-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Não foi possível acrescentar a vaga: Diga de onde a vaga veio: o número do Edita",
+   "maior_linha": 93
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 153
+  },
+  {
+   "bloco": "Uma vaga que chegou depois da publicação, de fora deste Edital — a que o Edital ",
+   "maior_linha": 238
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

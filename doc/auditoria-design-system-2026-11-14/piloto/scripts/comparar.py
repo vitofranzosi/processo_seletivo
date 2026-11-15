@@ -182,8 +182,8 @@ def comparar_estado(antes, depois, sequencias, codigo, instaveis=()):
         falhas.append("ação")
     if any(v.startswith("invertida") for v in resultado_das_sequencias.values()):
         falhas.append("sequência")
-    if longas:
-        falhas.append("linha acima de 80")
+    # A linha longa é registrada, e não reprova: o usuário decidiu em 15/11 que o texto ocupa a
+    # largura do conteúdo (D-012 da spec).
     if depois.get("violacoes_de_csp"):
         falhas.append("CSP")
     if depois.get("rolagem_horizontal"):

@@ -226,7 +226,8 @@ Não são guardiões: gravam a fotografia e o inventário que
 `doc/auditoria-design-system-2026-11-14/piloto/scripts/comparar.py` compara. **Duas armadilhas já
 pagas:** o contêiner `.piloto-ds` das cinco telas do piloto tira o conteúdo de `main>`, e três regras
 comuns (a medida do parágrafo, o respiro antes da seção e a medida da confirmação da P0) deixam de
-valer em silêncio — a folha do piloto as repõe; e o `ps_p0_referencia` ficou para trás das
+valer em silêncio — no piloto isso é proposital desde a D-012 (o texto ocupa a largura), e a
+folha repõe só o respiro; e o `ps_p0_referencia` ficou para trás das
 migrations da `167`, da `168` e da `170` — não o migre, restaure a cópia com
 `piloto/scripts/montar_banco_da_validacao.sh referencia`.
 

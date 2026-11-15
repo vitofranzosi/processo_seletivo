@@ -21,7 +21,24 @@
   "C-S6": "aprovada"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Atenção: Nenhum Evento do Cronograma está marcado como período de inscrições. O ",
+   "maior_linha": 144
+  },
+  {
+   "bloco": "Atenção: O Evento 'Inscrições' começa em ‹data›, que é de 2027, e o Edital é de ",
+   "maior_linha": 134
+  },
+  {
+   "bloco": "Atenção: A seção «Apresentação» está vazia e não sairá no documento, e todos os ",
+   "maior_linha": 157
+  },
+  {
+   "bloco": "Atenção: A seção «Disposições finais» está vazia e não sairá no documento, e tod",
+   "maior_linha": 163
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

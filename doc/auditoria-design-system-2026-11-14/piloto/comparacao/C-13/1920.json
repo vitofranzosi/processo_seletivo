@@ -21,7 +21,16 @@
   "C-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Impedimento: Você não pode praticar este ato. Ele exige a permissão edital:encer",
+   "maior_linha": 132
+  },
+  {
+   "bloco": "O que aparece acima como continuando segue possível, e consta do Relatório do Ed",
+   "maior_linha": 85
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

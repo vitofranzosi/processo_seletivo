@@ -25,7 +25,32 @@
   "O-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Não foi possível apurar: Este recorte não tem ordem vigente: não há ocupação a a",
+   "maior_linha": 86
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 153
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 153
+  },
+  {
+   "bloco": "Este recorte ainda não tem ordem emitida, e a apuração conta sobre a ordem: emit",
+   "maior_linha": 167
+  }
+ ],
  "dobra": null,
  "falhas": []
 }

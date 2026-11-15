@@ -8,7 +8,8 @@ teste novo o cobra (D-009). A medida que o confere é o SC-2602.*
 - Declarar regras cujo seletor **começa** por `.piloto-ds` (o contêiner) e só alcançam descendentes
   dele.
 - Usar os tokens de `tokens.css`, os existentes e os acrescidos pelo piloto.
-- Redeclarar sob o escopo a medida de leitura que a P0 dá à confirmação (FR-7704).
+- Desfazer, sob o escopo, as medidas de leitura da `main` e a da P0 na confirmação, para que a prosa
+  ocupe a largura do conteúdo (FR-7704 e FR-7730, revistas pela D-012).
 - Dar ao `.acao` e ao `.botao` **dentro do escopo** a altura única (40 e 32 px) e o
   `display:inline-flex` (FR-7705).
 - Usar `@media` e `@container` para as composições, a partir das larguras do `03-design-system.md`.

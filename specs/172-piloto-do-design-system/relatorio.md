@@ -5,20 +5,26 @@ SC-2609. **A validação com a equipe (US4) ainda não aconteceu**: o roteiro, o
 versões estão prontos, e as sessões são do usuário. Este relatório responde ao que se mede sem a
 equipe, e diz o que fica esperando por ela. A decisão sobre a migração é do usuário.*
 
+> **Segunda versão (15/11, D-012 da spec).** A primeira prendia a prosa em 80 caracteres e centrava a
+> confirmação numa coluna estreita. O usuário a viu e a achou pior que a `main` ("o texto não está
+> utilizando o espaço disponível"), e escolheu que o texto ocupe a largura do conteúdo. Este
+> relatório é o da segunda versão; o que a primeira mediu está no fim, em *A primeira versão*.
+
 ## Resposta curta
 
-**Com o mesmo conteúdo e o mesmo comportamento, a composição nova lê melhor e não esconde nada, mas
-põe a ação mais longe nas telas compridas.**
+**Com o mesmo conteúdo e o mesmo comportamento, a composição nova aproveita a largura, deixa as
+páginas mais baixas e aproxima a ação, sem esconder nada.**
 
 - **O conteúdo ficou idêntico.** Nos 64 estados, nas cinco larguras e nas duas ordens: nenhum bloco
   de texto a mais ou a menos, nenhuma quantidade, associação ou ação diferente e nenhuma sequência
   declarada invertida. A ordem não mudou nem fora das sequências.
-- **A leitura melhorou de forma mensurável.** Antes, 244 das 320 fotografias tinham linha de prosa
-  acima de 80 caracteres (até 193, na frase da vaga sem quem a ocupe); depois, nenhuma (a maior
-  tem 78).
-- **A ação principal ficou mais longe, e não mais perto.** Os sete estados que já a tinham abaixo
-  da dobra a 1280 × 800 continuam com ela abaixo, e seis deles mais abaixo (de 57 a 278 px). A
-  medida de 80 caracteres alonga as páginas que têm muito texto antes do botão.
+- **O texto ocupa a largura do conteúdo**, inclusive onde a `main` o limitava a 68ch (o subtítulo, a
+  ajuda, as notas, a faixa da Lista e as caixas da confirmação).
+- **As páginas ficaram mais baixas.** A 1440 px, somando os estados de cada tela: confirmação −6,9%,
+  conferências −7,9%, Ocupação −3,7%, retornos da Ocupação −3,5%, Lista −3,0%. No banco da referência,
+  com 20 Processos por página, a Lista cai de 2929 para 2709 px.
+- **A ação principal ficou mais perto em todos os sete estados** que a têm abaixo da dobra a
+  1280 × 800 (de 11 a 92 px mais acima), mas nenhum deles chegou acima da dobra.
 - **Nada fora do piloto mudou**: a `main` e a branch, rastreadas sobre o mesmo banco, só diferem nas telas do piloto.
 - **A acessibilidade conferida passou** em todos os 15 estados conferidos.
 
@@ -29,8 +35,8 @@ põe a ação mais longe nas telas compridas.**
 | SC-2600, conteúdo e ações preservados | **cumprido**: 0 diferença em 320 fotografias | `doc/auditoria-design-system-2026-11-14/piloto/comparacao/resumo.md` |
 | SC-2601, sequências | **cumprido**: 28 sequências, nenhuma invertida, nas duas ordens | idem |
 | SC-2602, nada fora muda | **cumprido**: só as telas do piloto diferem, fora uma diferença de dado | *O rastreio*, abaixo |
-| SC-2603, linha até 80 | **cumprido**: maior linha 78 (era 193) | idem |
-| SC-2604, ação acima da dobra | **não cumprido em 7 estados** (C-01, C-06, K-01, K-04, K-06, O-13, O-15) | idem, e a tabela abaixo |
+| SC-2603 (revisto pela D-012), a prosa na largura do conteúdo | **cumprido**: nenhuma medida de leitura no escopo; a linha mais longa é registrada, sem valor de aprovação | idem |
+| SC-2604, ação acima da dobra | **não cumprido em 7 estados** (C-01, C-06, K-01, K-04, K-06, O-13, O-15), embora mais perto em todos | idem, e a tabela abaixo |
 | SC-2605, acessibilidade | **cumprido** nos 15 estados conferidos | *A acessibilidade*, abaixo |
 | SC-2606 e SC-2607, validação | **pendente**: as sessões com a equipe | `validacao.md` |
 | SC-2608, suíte e lint | ver *Verificação* | — |
@@ -42,16 +48,17 @@ O topo da ação principal a 1280 × 800, em px. Ela está acima da dobra quando
 
 | Estado | Antes | Depois | Diferença |
 |---|---:|---:|---:|
-| C-01 Submeter (cinco atenções) | 936 | 930 | −6 |
-| C-06 Publicar | 1060 | 1117 | +57 |
-| K-01 Conferir o acréscimo | 878 | 970 | +92 |
-| K-04 Conferir o desfazimento | 983 | 1094 | +111 |
-| K-06 Conferir a declaração | 969 | 1136 | +167 |
-| O-13 Ocupação com vagas acrescidas | 812 | 931 | +119 |
-| O-15 Ocupação, a vaga sem quem a ocupe | 1203 | 1481 | +278 |
+| C-01 Submeter (cinco atenções) | 936 | 848 | −88 |
+| C-06 Publicar | 1060 | 968 | −92 |
+| K-01 Conferir o acréscimo | 878 | 852 | −26 |
+| K-04 Conferir o desfazimento | 983 | 936 | −47 |
+| K-06 Conferir a declaração | 969 | 891 | −78 |
+| O-13 Ocupação com vagas acrescidas | 812 | 801 | −11 |
+| O-15 Ocupação, a vaga sem quem a ocupe | 1203 | 1192 | −11 |
 
-**Por que, e o que o piloto não fez para resolver.** A coluna na medida de leitura quebra mais linhas,
-e os cartões ganharam respiro. Três saídas foram consideradas e recusadas:
+**Por que ainda não cabem, e o que o piloto não fez.** O que vem antes do botão é texto decidido em
+spec (as cinco atenções da C-01, a lista de quem a ordem alcança da K-01), e a O-15 tem a ação no
+terceiro recorte. Três saídas foram consideradas e recusadas:
 
 - **A barra de ações fixa ao pé da janela** poria o botão à vista, mas antes das consequências na
   ordem visual, e inverteria a C-S4 ("a consequência antes da confirmação"). Numa tela de ato
@@ -59,8 +66,9 @@ e os cartões ganharam respiro. Três saídas foram consideradas e recusadas:
 - **Anunciar a ação acima da dobra** (a alternativa que a FR-7731 admite) exigiria um bloco de texto
   novo, que a FR-7707 proíbe. **As duas FRs se contradizem** quando a ação está abaixo: é achado da
   spec, abaixo.
-- **Pôr os recortes da Ocupação lado a lado** encurtaria a O-15, mas é composição que a proposta do
-  estudo não tem, e muda a leitura recorte a recorte. Fica como hipótese, e não como entrega.
+- **Pôr os recortes da Ocupação lado a lado** encurtaria a O-15, e seria outra forma de aproveitar a
+  largura. O usuário escolheu, entre as opções, o texto na largura toda, e não as colunas; fica como
+  hipótese.
 
 ### A acessibilidade (SC-2605)
 
@@ -92,25 +100,40 @@ O que se mediu no lugar dele, e que isola o piloto melhor: **a `main` de hoje e 
 rastreadas sobre a mesma cópia migrada da referência** (`ps_piloto_validacao`), pelas entradas
 `piloto-antiga` e `piloto-nova`. As duas diferem só pelo código do piloto.
 
-**Resultado: nada fora do piloto mudou.** As duas passadas mediram 123 padrões de tela cada (as 129
-da referência menos os seis do portal autenticado). No `telas.csv`, 13 padrões diferem:
+**Resultado, na segunda versão: nada fora do piloto mudou.** No `telas.csv`, diferem:
 
-- **nove são telas do piloto**: a Lista nas duas formas (`/gestao/` e `/gestao/?situacao`), os seis
-  atos da confirmação que o rastreio alcança e a Ocupação. As conferências não aparecem porque só
-  nascem de um POST;
-- **quatro são a página Novidades, e só na altura**, por dado: a primeira passada registrou a visita
-  de `paulo.presidente`, e a segunda leu "Nada novo desde a sua última visita" no lugar de "Esta é a
-  sua primeira visita". As folhas carregadas são as mesmas.
+- **as telas do piloto**: a Lista nas duas formas (`/gestao/` e `/gestao/?situacao`), os seis atos
+  da confirmação que o rastreio alcança e a Ocupação. As conferências não aparecem porque só nascem
+  de um POST;
+- **a página Novidades, só na altura**, por dado: a primeira passada registrou a visita de
+  `paulo.presidente`, e a seguinte leu "Nada novo desde a sua última visita" no lugar de "Esta é a
+  sua primeira visita". As folhas carregadas são as mesmas;
+- **um padrão a mais na versão nova**, a segunda página da trilha de uma Distribuição
+  (`…/trilha?cursor`), por dado: as passadas do rastreio registram entradas na trilha, e a terceira
+  passada encontrou registros para uma página nova.
 
 **A amostra de vinte capturas de fora do piloto** (sorteada com semente 172 entre os 110 padrões de
-fora): 17 idênticas byte a byte, e três com diferença de pixel — o formulário de aviso novo, a
-escolha de identidade da demonstração e a Agenda —, com as mesmas folhas, a mesma altura e as mesmas
-métricas. São conteúdos que dependem da hora e do uso (a Agenda marca o agora; a demonstração sugere
-quem acabou de entrar), e não do piloto.
+fora, na primeira versão): 17 idênticas byte a byte, e três com diferença de pixel — o formulário de
+aviso novo, a escolha de identidade da demonstração e a Agenda —, com as mesmas folhas, a mesma
+altura e as mesmas métricas. A segunda versão só mudou a folha do piloto e retirou um token que só
+ela usava.
+
+**As telas do piloto no banco da referência** (a 1440 px; a metade direita é o diagnóstico da
+FR-7734, a fração da altura em que há conteúdo à direita do meio da página):
+
+| Tela | Altura, antes → depois | Metade direita a 1440 | Metade direita a 1920 |
+|---|---|---|---|
+| Lista (`/gestao/`) | 2929 → 2709 px | 32% → 35% | 25% → 31% |
+| Lista, outra aba | 986 → 938 px | 25% → 24% | 9% → 20% |
+| Encerrar | 1023 → 905 px | 22% → 22% | 0% → 2% |
+| Publicar | 969 → 900 px | 19% → 21% | 0% → 3% |
+| Submeter | 1237 → 1061 px | 24% → 17% | 0% → 12% |
+| Cancelar | 933 → 900 px | 25% → 25% | 0% → 6% |
+| Ocupação | 1050 → 979 px | 18% → 23% | 2% → 13% |
 
 O portal autenticado não foi rastreado: o passo dele pede o código de acesso de cada candidato,
-digitado à mão. As folhas do piloto não chegam ao portal (ele não as carrega), e os tokens
-acrescidos não são usados por nenhuma regra dele.
+digitado à mão. As folhas do piloto não chegam ao portal, e os tokens acrescidos não são usados por
+nenhuma regra dele.
 
 ## As hipóteses que o piloto devolve (o quadro do roadmap)
 
@@ -124,11 +147,11 @@ acrescidos não são usados por nenhuma regra dele.
 | Trilho no celular | **o trilho não coube na Ocupação**: o que poderia ir para o lado ("Termos desta tela", "Abrir esta tela não apura nada") precisa vir antes do primeiro recorte nas duas ordens (O-S1, O-S3), e ao lado ele ficaria depois na ordem visual. A Ocupação ficou na composição cheia |
 | Guardiões novos | o levantamento está em `levantamento-dos-guardioes.md`: cor só por token nasceria verde; caixa nova acusaria a própria folha do piloto duas vezes |
 
-E uma que o quadro não tinha:
+E uma que o quadro não tinha, e que o usuário decidiu:
 
 | Hipótese | O que o piloto informa |
 |---|---|
-| A medida de leitura de 68ch | **dá mais de 80 caracteres** com a fonte do sistema (81 a 92 nas confirmações). O piloto usa 54ch (`--medida-do-piloto`). Se a medida virar regra, o número é este, e não o de `--leitura` |
+| A medida de leitura | **a linha curta não é ganho para o usuário** se custa altura e deixa a direita vazia (D-012). A primeira versão, com 80 caracteres, deixou páginas até 21% mais altas; a segunda, com o texto na largura, as deixou mais baixas. A medida da `main` (68ch) também sai das telas do piloto |
 
 ## Desvios do plano, registrados
 
@@ -142,16 +165,19 @@ E uma que o quadro não tinha:
 - **Um banco por tarefa na validação, e a mesma cópia para as duas versões** (FR-7737 pedia registros
   diferentes na segunda versão): as fixtures supõem banco vazio, e a mitigação é a ordem alternada.
 - **A T-S1 não se confere**: a trilha é da moldura, fora do `main` que o inventário lê.
+- **A medida de leitura e a composição centrada saíram** (D-012): a FR-7704, a FR-7730, a SC-2603 e
+  a UX-850 foram revistas na spec.
 
 ## Achados, para o usuário decidir
 
 1. **A FR-7731 e a FR-7707 se contradizem** quando a ação fica abaixo da dobra: a primeira admite
    anunciá-la acima, e a segunda proíbe bloco de texto novo.
-2. **A medida `--leitura` (68ch) passa de 80 caracteres** com a fonte do sistema, em toda tela que a
-   usa, e não só no piloto.
+2. **A medida `--leitura` (68ch) continua valendo em toda tela fora do piloto**, e a preferência do
+   usuário (D-012) vai contra ela. Se a migração seguir, ela sai junto; se não seguir, fica.
 3. **Três regras comuns valem só para o filho direto de `main`**: a medida do parágrafo e o respiro
    antes da seção, em `componentes.css`, e a medida da confirmação, em `confirmacao-de-ato.css`.
-   Qualquer contêiner nas telas que as usam as desfaz em silêncio.
+   Qualquer contêiner nas telas que as usam as desfaz em silêncio. No piloto isso deixou de importar
+   para as medidas, que saíram, mas o respiro foi reposto sob o escopo.
 4. **A recusa não é apontada pelo campo** (`aria-describedby`), nas telas do piloto e, provavelmente,
    nas outras: a FR-7727 o pede.
 5. **O componente "cartão" não existe como classe aplicável**: o piloto desenhou caixa por regra
@@ -174,5 +200,18 @@ afrouxado; quatro aprenderam o que o piloto acrescenta, sem mudar o que exigem:
 - a lista de pares de contraste ganhou os oito pares dos tokens novos, todos acima de 4,5:1.
 
 E um guardião acusou duas vezes o que o piloto fazia de errado, e o piloto mudou: os tokens têm um
-lugar só, e `acesso.css` deixou de redeclarar os que subiram para `tokens.css`; e a medida do piloto
-deixou de redefinir `--leitura` na folha, e virou o token `--medida-do-piloto`.
+lugar só, e `acesso.css` deixou de redeclarar os que subiram para `tokens.css`; e a primeira versão
+redefinia `--leitura` na folha (a segunda já não tem medida nenhuma).
+
+**A segunda versão** (o texto na largura) passou de novo por `tests/interface` e `tests/performance`
+(6106 passando), pela fotografia e comparação dos 64 estados (zero diferença de conteúdo, ação e
+sequência) e pela sonda de acessibilidade (os 15 estados limpos).. A suíte inteira, de novo:
+`make lint check test-pg` verde, **21 380 passando e 15 pulados, sem falha** (721 s, 4 workers).
+
+## A primeira versão (80 caracteres e coluna centrada)
+
+Medida em 15/11 e recusada pelo usuário no mesmo dia. Conteúdo idêntico nos 64 estados, como a
+segunda. A maior linha caiu de 193 para 78 caracteres, mas as páginas das conferências e da Ocupação
+ficaram mais altas, e a ação principal desceu em seis dos sete estados abaixo da dobra: de 57 a
+278 px (a O-15, de 1203 para 1481). O usuário, sobre a Lista: "o piloto está pior. O main tem
+margem pra melhoria — o texto não está utilizando o espaço disponível".

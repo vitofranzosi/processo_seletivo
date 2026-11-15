@@ -25,7 +25,20 @@
   "O-S6": "não se aplica"
  },
  "ordem_fora_das_sequencias": [],
- "linhas_acima_de_80": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "Este marco não declara regra de corte, e a faixa nasce do corte: sem a regra não",
+   "maior_linha": 144
+  }
+ ],
  "dobra": null,
  "falhas": []
 }
