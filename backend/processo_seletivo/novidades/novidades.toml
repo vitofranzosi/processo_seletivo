@@ -15,6 +15,57 @@
 # ---- novembro de 2026 ----------------------------------------------------------------------------
 
 [[nota]]
+id = "passo-da-autodeclaracao"
+data = 2026-11-15
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "O candidato vê que falta um passo dele, e você vê o que falta à banca"
+resumo = """
+Quem concorre a uma vaga com verificação da autodeclaração lê, na área do candidato, "Falta um passo
+seu", com o período e o que acontece se faltar. No Centro de Controle e em Minhas atividades, você vê
+os pareceres que cada membro da banca ainda deve.
+"""
+exemplo = """
+No Edital 20/2026, a candidata que escolheu a vaga reservada abre a área dela e lê quando acontece a
+verificação. Do seu lado, Minhas atividades mostra que um membro da banca ainda deve três pareceres.
+"""
+destino = "interface:minhas-etapas"
+prs = [551]
+specs = ["171"]
+
+[[nota]]
+id = "agenda-nas-pendencias"
+data = 2026-11-15
+categoria = "melhoria"
+relevancia = "relevante"
+titulo = "A agenda por montar ou publicar entra nas suas pendências"
+resumo = """
+O Centro de Controle e Minhas atividades avisam quando falta montar ou publicar a agenda de uma
+Etapa, com o link para fazer. Depois de publicada, o registro de ocorrência mostra o horário de cada
+pessoa.
+"""
+exemplo = """
+A agenda da entrevista está montada, mas ninguém a publicou. Minhas atividades mostra "Publicar a
+agenda", e um clique leva à conferência.
+"""
+destino = "interface:minhas-etapas"
+prs = [558]
+specs = ["167"]
+
+[[nota]]
+id = "confirmacoes-mais-legiveis"
+data = 2026-11-15
+categoria = "melhoria"
+relevancia = "incremental"
+titulo = "Visão Geral e confirmações de ato mais fáceis de ler"
+resumo = """
+O texto da Visão Geral ganhou contraste para ler sem esforço. E nas confirmações do Edital, do Processo
+e da Retificação, o aviso sempre começa por "Impedimento:", quando o ato será recusado, ou "Atenção:".
+"""
+prs = [557, 559]
+specs = []
+
+[[nota]]
 id = "agenda-da-etapa"
 data = 2026-11-14
 categoria = "novidade"
@@ -85,19 +136,6 @@ destino = "interface:administracao-do-assistente"
 para_capacidade = "assistente:habilitar"
 prs = [553]
 specs = ["170"]
-
-[[nota]]
-id = "confirmacoes-mais-legiveis"
-data = 2026-11-14
-categoria = "melhoria"
-relevancia = "incremental"
-titulo = "Visão Geral e confirmações de ato mais fáceis de ler"
-resumo = """
-O texto da Visão Geral ganhou contraste para ler sem esforço. E nas confirmações do Edital, do Processo
-e da Retificação, o aviso começa dizendo se é "Impedimento:" ou "Atenção:".
-"""
-prs = [557]
-specs = []
 
 [[nota]]
 id = "etapa-por-modalidade-e-deliberacao"

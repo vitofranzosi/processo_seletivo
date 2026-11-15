@@ -112,3 +112,6 @@ vitrine.
 **No navegador** (`novidades-168`, `demo.gestor`): o histórico vem logo depois do bloco da visita, sem
 erro no console e sem rolagem horizontal.
 
+**A curadoria de 15/11.** Três PRs entraram na `main` depois da revisão. O #551 (171) e o #558
+(entrega D da 167) ganharam nota própria. O #559 completa o #557 e entrou na nota da legibilidade das
+confirmações. O roteiro voltou a "Nada pendente", e o arquivo tem 112 notas.
