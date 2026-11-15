@@ -48,6 +48,9 @@ def comeca_pelo_titulo(corpo):
     """Nada antes do título. O cabeçalho que o envolve (o do Centro, o do Processo da 147) não
     conta: é moldura, e o `h1` continua sendo a primeira coisa que se lê."""
     resto = conteudo(corpo).split(">", 1)[1].lstrip()
+    # O contêiner de escopo do piloto do design system (172) também é moldura: não tem texto.
+    if resto.startswith('<div class="piloto-ds'):
+        resto = resto.split(">", 1)[1].lstrip()
     if resto.startswith("<header"):
         resto = resto.split(">", 1)[1].lstrip()
     return resto.startswith("<h1>")

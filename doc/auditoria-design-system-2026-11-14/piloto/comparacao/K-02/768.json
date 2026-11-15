@@ -1,0 +1,49 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "K-S1": "não se aplica",
+  "K-S2": "aprovada",
+  "K-S3": "aprovada",
+  "K-S4": "aprovada"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado aind",
+   "maior_linha": 82
+  },
+  {
+   "bloco": "Recorte é a lista em que a pessoa concorre — aqui, a ampla concorrência. Faixa é",
+   "maior_linha": 104
+  },
+  {
+   "bloco": "As primeiras posições da ordem, tantas quantas as vagas efetivas depois deste at",
+   "maior_linha": 101
+  },
+  {
+   "bloco": "3 vagas; a ordem publicada alcança só 2 pessoas. A faixa é a do corte publicado,",
+   "maior_linha": 91
+  },
+  {
+   "bloco": "A apuração seguinte será emitida por este ato, em seu nome, com o motivo: “Vaga ",
+   "maior_linha": 99
+  },
+  {
+   "bloco": "O acréscimo não se apaga. Se estiver errado, desfaça-o por outro ato, com motivo",
+   "maior_linha": 81
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

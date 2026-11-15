@@ -95,6 +95,15 @@ PARES = [
     ("--texto-fraco", "--branco", "texto de apoio"),
     ("--texto-fraco", "--fundo", "texto de apoio sobre a página"),
     ("--texto-fraco", "--verde-claro", "indicador de períodos no dia destacado da agenda"),
+    # Os neutros e o azul que o piloto do design system acrescenta (172), nos pares que ele usa.
+    ("--tinta", "--branco", "piloto: texto sobre cartão"),
+    ("--tinta", "--fundo-p", "piloto: texto sobre a página"),
+    ("--tinta-2", "--branco", "piloto: rótulo sobre cartão"),
+    ("--tinta-2", "--linha", "piloto: texto de apoio sobre fundo cinza"),
+    ("--tinta-3", "--branco", "piloto: texto de apoio sobre cartão"),
+    ("--tinta-3", "--fundo-p", "piloto: texto de apoio sobre a página"),
+    ("--azul", "--azul-fundo", "piloto: aviso de informação"),
+    ("--verde-texto", "--verde-50", "piloto: segmento atual"),
 ]
 
 

@@ -1,0 +1,48 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "O-S1": "aprovada",
+  "O-S2": "não se aplica",
+  "O-S3": "aprovada",
+  "O-S4a": "aprovada",
+  "O-S4b": "não se aplica",
+  "O-S4c": "não se aplica",
+  "O-S4d": "aprovada",
+  "O-S5a": "não se aplica",
+  "O-S5b": "não se aplica",
+  "O-S5c": "aprovada",
+  "O-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 153
+  },
+  {
+   "bloco": "‹data› — 1 vaga declarada não preenchida. Fundamento: O Edital não declara rever",
+   "maior_linha": 141
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

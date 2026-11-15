@@ -1,7 +1,8 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{% if modo == "nao_preenchida" %}Conferir a declaração de vaga não preenchida{% else %}Conferir o desfazimento da declaração de vaga não preenchida{% endif %}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> › <span aria-current="page">{% if modo == "nao_preenchida" %}Declarar a vaga não preenchida{% else %}Desfazer a declaração de vaga não preenchida{% endif %}</span></nav>{% endblock %}
-{% block conteudo %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/piloto-ds.css' %}">{% endblock %}
+{% block conteudo %}<div class="piloto-ds">
 {% comment %}
 A conferencia comum da declaracao de vaga nao preenchida e do desfazimento dela (155, UX-601). O
 molde e o da conferencia do acrescimo (097): o que o ato muda, antes de ele ser praticado, e o
@@ -109,4 +110,4 @@ nomeia cada uma (FR-6335); o pedido enviado direto ao comando e recusado e fica 
 {% endif %}
 
 {% endif %}
-{% endblock %}
+</div>{% endblock %}

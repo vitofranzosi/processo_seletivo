@@ -1,0 +1,56 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "O-S1": "aprovada",
+  "O-S2": "aprovada",
+  "O-S3": "aprovada",
+  "O-S4a": "não se aplica",
+  "O-S4b": "aprovada",
+  "O-S4c": "aprovada",
+  "O-S4d": "aprovada",
+  "O-S5a": "não se aplica",
+  "O-S5b": "aprovada",
+  "O-S5c": "aprovada",
+  "O-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Vaga acrescida: 1 vaga. A apuração seguinte foi emitida por este ato, em seu nom",
+   "maior_linha": 139
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "As efetivas somam às publicadas as vagas acrescidas depois da publicação. O que ",
+   "maior_linha": 168
+  },
+  {
+   "bloco": "‹data› — acréscimo de 1 vaga. Origem: Edital Multicampi nº 20/2026, Campus Vitór",
+   "maior_linha": 167
+  },
+  {
+   "bloco": "Uma vaga que chegou depois da publicação, de fora deste Edital — a que o Edital ",
+   "maior_linha": 238
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

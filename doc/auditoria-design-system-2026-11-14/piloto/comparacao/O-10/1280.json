@@ -1,0 +1,48 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "O-S1": "aprovada",
+  "O-S2": "não se aplica",
+  "O-S3": "aprovada",
+  "O-S4a": "aprovada",
+  "O-S4b": "não se aplica",
+  "O-S4c": "não se aplica",
+  "O-S4d": "não se aplica",
+  "O-S5a": "não se aplica",
+  "O-S5b": "não se aplica",
+  "O-S5c": "não se aplica",
+  "O-S6": "aprovada"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 117
+  },
+  {
+   "bloco": "Apurar a ocupação deste marco depende da permissão de gerir a comissão ou da pre",
+   "maior_linha": 159
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 108
+  },
+  {
+   "bloco": "A quantidade publicada é o que o Edital declara nesta linha do quadro. Quantas e",
+   "maior_linha": 135
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

@@ -8,7 +8,8 @@ teste novo o cobra (D-009). A medida que o confere é o SC-2602.*
 - Declarar regras cujo seletor **começa** por `.piloto-ds` (o contêiner) e só alcançam descendentes
   dele.
 - Usar os tokens de `tokens.css`, os existentes e os acrescidos pelo piloto.
-- Redeclarar sob o escopo a medida de leitura que a P0 dá à confirmação (FR-7704).
+- Desfazer, sob o escopo, as medidas de leitura da `main` e a da P0 na confirmação, para que a prosa
+  ocupe a largura do conteúdo (FR-7704 e FR-7730, revistas pela D-012).
 - Dar ao `.acao` e ao `.botao` **dentro do escopo** a altura única (40 e 32 px) e o
   `display:inline-flex` (FR-7705).
 - Usar `@media` e `@container` para as composições, a partir das larguras do `03-design-system.md`.
@@ -22,6 +23,8 @@ teste novo o cobra (D-009). A medida que o confere é o SC-2602.*
 - Esconder texto: `display:none`, `visibility:hidden`, `clip`, `font-size:0`, `opacity:0`, altura
   zero com `overflow:hidden` ou recolhimento, sobre qualquer elemento com texto (FR-7711).
 - `content:` com texto, porque o texto gerado não está no template e não seria igual antes e depois.
+  Sem exceção: os dois-pontos depois do rótulo de uma lista de definição, que a primeira versão do
+  "rótulo: valor" gerava, saíram na revisão de 15/11; o rótulo se distingue pelo peso e pela grade.
 - `order`, `flex-direction: *-reverse` ou `grid` com posições que invertam uma sequência declarada na
   ordem visual sem invertê-la no documento (FR-7714). Mudar a ordem visual fora das sequências é
   permitido, e fica registrado.

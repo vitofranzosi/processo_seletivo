@@ -1,0 +1,56 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "O-S1": "aprovada",
+  "O-S2": "aprovada",
+  "O-S3": "aprovada",
+  "O-S4a": "não se aplica",
+  "O-S4b": "não se aplica",
+  "O-S4c": "não se aplica",
+  "O-S4d": "aprovada",
+  "O-S5a": "não se aplica",
+  "O-S5b": "aprovada",
+  "O-S5c": "aprovada",
+  "O-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Quantas vagas cada lista de concorrência publicou, quantas tem efetivamente, qua",
+   "maior_linha": 90
+  },
+  {
+   "bloco": "Vaga acrescida desfeita: 1 vaga. A apuração seguinte foi emitida por este ato, e",
+   "maior_linha": 85
+  },
+  {
+   "bloco": "Abrir esta tela não apura nada . Os números abaixo vêm de atos já emitidos, e on",
+   "maior_linha": 97
+  },
+  {
+   "bloco": "‹data› — acréscimo de 1 vaga. Origem: Edital Multicampi nº 20/2026, Campus Vitór",
+   "maior_linha": 84
+  },
+  {
+   "bloco": "‹data› — desfazimento de 1 vaga. Motivo: Matrícula efetivada no Edital regular. ",
+   "maior_linha": 89
+  },
+  {
+   "bloco": "Uma vaga que chegou depois da publicação, de fora deste Edital — a que o Edital ",
+   "maior_linha": 112
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

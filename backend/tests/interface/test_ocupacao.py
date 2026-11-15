@@ -9,6 +9,7 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.ocupacao.models import ApuracaoDeOcupacao
+from tests.fixtures import ocupacao_da_tela
 from tests.fixtures.corte import MARCO
 from tests.fixtures.edital import PROFILE_ID
 from tests.fixtures.ocupacao import MODALIDADE_PPI
@@ -176,23 +177,8 @@ def test_a_pagina_nao_tem_tabela_horizontal_a_375px(client, seletor_ligado, cena
 
 @pytest.fixture
 def com_continuacao(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
-    """O cenário da ocupação com um Edital que **admite** continuação além da faixa (014, D-011).
-
-    O cenário base é o do 14/2026, que não a admite: ali o comando recusa a faixa seguinte, e a tela
-    deixou de oferecê-la (achado 02 do estudo de 11/11/2026). Quem quer ver o botão precisa do 77.
-    """
-    from tests.fixtures.corte import regra
-    from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
-
-    return montar_cenario_da_ocupacao(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        prefixo="tela-016-continua",
-        geral=3,
-        cut=regra(continuation="ALLOWED"),
-    )
+    """O Edital que admite continuação (agora em `tests/fixtures/ocupacao_da_tela.py`)."""
+    return ocupacao_da_tela.com_continuacao(gestor, api_client, manager_headers, process_payload)
 
 
 def test_a_acao_da_faixa_seguinte_aparece_so_onde_ha_deficit(
@@ -498,34 +484,8 @@ def test_as_duas_acoes_da_tela_confirmam_coisas_diferentes(
 
 @pytest.fixture
 def sem_regra_de_corte(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
-    """O cenário da ocupação com o marco **sem** regra de corte, e sem ato de corte emitido.
-
-    Não é `montar_cenario_da_ocupacao`: aquele emite o corte, e um marco sem regra não tem corte a
-    emitir. O que este cenário exercita é o que a `016` já admitia por escrito — *"marco que não
-    corta continua tendo ocupação apurável"* —, e é justamente por isso que o recorte chega a
-    `CURRENT` com déficit e a tela chega a oferecer a faixa.
-    """
-    from tests.fixtures.corte import montar_cenario_do_corte
-    from tests.fixtures.legado import publicar_como_acervo
-    from tests.fixtures.ocupacao import rascunho_com_quadro
-
-    def monta(cut=None):
-        base, pontuada = rascunho_com_quadro(geral=3)
-        # A chave sai inteira: `{}` seria uma segunda grafia da ausência, e o marco do acervo não a
-        # tem — ele tem `cutRule` nulo, que é o que o degrau 13 escreve.
-        base["profiles"][0]["classificationMilestones"][0].pop("cutRule", None)
-        return base, pontuada
-
-    return montar_cenario_do_corte(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        prefixo="ocupacao-032-sem-corte",
-        draft_factory=monta,
-        # O marco do acervo (046, `FR-752`): a `FR-463` continua valendo sobre ele.
-        publicar=publicar_como_acervo,
-    )
+    """O marco sem regra de corte (agora em `tests/fixtures/ocupacao_da_tela.py`)."""
+    return ocupacao_da_tela.sem_regra_de_corte(gestor, api_client, manager_headers, process_payload)
 
 
 def test_sem_regra_de_corte_a_faixa_seguinte_nao_e_oferecida(

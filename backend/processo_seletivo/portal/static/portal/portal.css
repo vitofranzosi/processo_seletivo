@@ -754,6 +754,8 @@ a.principal{display:inline-block;width:auto;text-align:center;text-decoration:no
 /* A convocação aberta no item da lista (059). Peso, e não cor de alerta: a situação vem por texto e
    símbolo, e o que a destaca das linhas cinzas acima é ser a única em tom de texto. */
 .minhas-inscricoes .situacao.convocada{color:var(--texto);font-weight:700}
+/* O passo que falta numa Etapa restrita (171): o mesmo peso da convocação aberta, pelo mesmo motivo. */
+.minhas-inscricoes .situacao.passo{color:var(--texto);font-weight:700}
 /* **As ações do item ficam acima do título esticado** (059, D-010). O `::after` do título cobre o
    cartão inteiro e é posicionado; o que não é posicionado pinta por baixo dele. Medido em 06/10:
    no centro de "Acompanhar", `elementFromPoint` devolvia o título, e o clique do mouse levava a
