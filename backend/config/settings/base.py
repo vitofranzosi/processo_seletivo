@@ -277,11 +277,14 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 # envios de uma vez: código, comprovante, convocação e aviso (066, `R-006`, `FR-1270`).
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
 
-# Os avisos complementares aos candidatos (066). **Desligados por padrão**, e é produção quem herda
-# o padrão: a ativação depende da validação institucional de LGPD e da infraestrutura de correio
-# (`D-009`). Desligada, ninguém confirma aviso e o despacho não tenta nada; o histórico e os modelos
-# continuam (`FR-1282`).
-AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "false").lower() == "true"
+# Os avisos complementares aos candidatos (066). **Ligados por padrão desde 15/11/2026**, por
+# decisão do usuário: desligados, a agenda da Etapa (167) era publicada e ninguém era avisado do
+# horário, e o candidato perdia a Etapa por não ter visto a publicação. Até então ficavam
+# desligados em produção à espera da validação de LGPD e do correio (`D-009` da 066); a decisão e
+# o que ela substitui estão em `doc/decisao-avisos-ligados-por-padrao-2026-11-15.md`. O ambiente
+# sem correio pronto os desliga com `AVISOS_AOS_CANDIDATOS=false`: desligada, ninguém confirma
+# aviso e o despacho não tenta nada; o histórico e os modelos continuam (`FR-1282`).
+AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "true").lower() == "true"
 # A peça visual do kit de divulgação (111, `D-010`). **Desligada por padrão**, e é produção quem
 # herda o padrão: a marca entrou versionada, mas o template com ela espera a aprovação da
 # comunicação (SC-1054). Desligada, a tela diz que a peça está em

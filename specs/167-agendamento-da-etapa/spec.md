@@ -657,7 +657,8 @@ desligada em produção até a validação de proteção de dados da `066`. A ag
 envio próprios: desligada a habilitação, a publicação acontece e a tela diz que os avisos estão
 desligados; ligada, a confirmação mostra os avisos, os destinatários e a prévia, e o despacho é o da
 `066`. Ligar depois não cria aviso de publicação anterior: o aviso é efeito do ato, no instante dele,
-e não pendência que se acumula.
+e não pendência que se acumula. Em 15/11/2026 o usuário ligou a habilitação por padrão em todo
+ambiente (`doc/decisao-avisos-ligados-por-padrao-2026-11-15.md`); a regra desta decisão não muda.
 
 ### D-012 — A agenda publicada tem documento PDF, um por ato
 
