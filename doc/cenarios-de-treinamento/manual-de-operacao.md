@@ -6,8 +6,8 @@ o servidor de homologação. O roteiro de cada exercício, para a equipe de sele
 
 ## O que o gerador faz, e o que ele não faz
 
-Ele **acrescenta** ao banco até dezessete Processos fictícios, `SIM-TREINAMENTO-001` a `017`, cada um
-parado numa etapa do certame e pronto para a próxima ação. Cria tudo pelos mesmos comandos que a
+Ele **acrescenta** ao banco um Processo fictício por cenário do catálogo, `SIM-TREINAMENTO-001` em
+diante, cada um parado numa etapa do certame e pronto para a próxima ação. Cria tudo pelos mesmos comandos que a
 tela usa: publica, inscreve, avalia, classifica, convoca. Por isso cada cenário tem a trilha de
 auditoria e o histórico completos.
 
@@ -213,6 +213,7 @@ As datas de cada cenário contam do dia da carga. Os que têm prazo correndo val
 | C02, C13 | 30 dias | período de inscrições aberto |
 | C08 | 5 dias | janela recursal do resultado preliminar |
 | C11, C12 | 30 dias | prazo da convocação |
+| C20 | 27 dias | o período da Entrevista começa na primeira segunda-feira depois de 27 dias da carga |
 
 Os demais não dependem do calendário. Antes de uma sessão de treinamento, rode a verificação e
 restaure o que ela apontar.
@@ -252,6 +253,15 @@ Os candidatos fictícios têm e-mail em `treinamento.exemplo.test`, que não ent
 código de acesso ao portal chega ao **mailpit** do ambiente, na porta 8025 do servidor, e é de lá
 que a equipe o lê para agir como candidato (C08, C11). O mailpit não guarda nada em disco:
 reiniciá-lo esvazia a caixa, e basta pedir um código novo.
+
+**Os avisos aos candidatos** (C18 e C20) não saem no clique: a tela grava o aviso, e quem envia é o
+`despachar_avisos`, que na homologação roda no timer de cada minuto. Na instalação nativa de
+desenvolvimento ninguém o roda: rode-o à mão depois da publicação, e as mensagens saem no terminal
+**do comando**, e não no do servidor:
+
+```bash
+uv run python manage.py despachar_avisos
+```
 
 Sem o mailpit, o GPS imprime a mensagem no log do app, e só quem acessa o servidor a lê:
 
