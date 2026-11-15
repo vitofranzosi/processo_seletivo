@@ -22,7 +22,7 @@ escritos):
 PILOTO_DS_FOTOGRAFIA=/caminho/de/trabalho/antes PYTEST_ADDOPTS="tests/navegador/test_fotografia_do_piloto.py" make test-pg PYTEST_WORKERS=0
 ```
 
-Esperado: 63 casos passando, uma pasta por código, cinco PNG e cinco JSON em cada uma. Um caso que
+Esperado: 64 casos passando, uma pasta por código, cinco PNG e cinco JSON em cada uma. Um caso que
 falha por "estado não alcançado" é defeito do catálogo, e se corrige antes de seguir.
 
 Sem a variável, o módulo pula: `1 skipped`.
@@ -37,31 +37,38 @@ PILOTO_DS_FOTOGRAFIA=/caminho/de/trabalho/depois PYTEST_ADDOPTS="tests/navegador
 uv run python ../doc/auditoria-design-system-2026-11-14/piloto/scripts/comparar.py /caminho/de/trabalho/antes /caminho/de/trabalho/depois ../doc/auditoria-design-system-2026-11-14/piloto/comparacao
 ```
 
-Esperado: o `resumo.md` com os 63 estados passando, nas cinco larguras (SC-2600, SC-2601, SC-2603,
+Esperado: o `resumo.md` com os 64 estados passando, nas cinco larguras (SC-2600, SC-2601, SC-2603,
 SC-2604).
 
 ## 3. Nada fora do piloto mudou
 
-Com o servidor `referencia-p0` (porta 8166) servindo a branch sobre o `ps_p0_referencia`:
+O `ps_p0_referencia` ficou para trás das migrations da `main` e não se migra. Com
+`montar_banco_da_validacao.sh referencia` e as duas entradas do §4 no ar, o rastreio roda nas duas
+(`PORTA=8172` e `PORTA=8173`), sem o passo do portal, e os dois `telas.csv` se comparam:
 
 ```bash
 sh ../doc/auditoria-design-system-2026-11-14/referencia-p0/scripts/rastrear_tudo.sh /caminho/de/trabalho/rastreio
 ```
 
-Esperado: comparado com `referencia-p0/telas.csv`, só diferem as linhas das cinco telas do piloto;
-vinte capturas de fora, sorteadas, dentro da linha de ruído (SC-2602).
+Esperado: só diferem as linhas das telas do piloto; vinte capturas de fora, sorteadas, sem diferença
+de métrica (SC-2602).
 
 ## 4. As duas versões para a equipe
 
+Os bancos são um por tarefa (o roteiro está em `validacao.md`, *Antes da sessão*):
+
 ```bash
-sh ../doc/auditoria-design-system-2026-11-14/piloto/scripts/montar_banco_da_validacao.sh
+PILOTO_DS_BANCO=/caminho/bancos PYTEST_ADDOPTS="tests/navegador/test_banco_da_validacao_do_piloto.py" make test-pg PYTEST_WORKERS=0
 ```
 
-Depois, as entradas `piloto-antiga` (porta 8167, a `main`, de uma worktree nela) e `piloto-nova`
-(porta 8168, a branch) do `.claude/launch.json`, cada uma sobre o seu banco, com
-`INTERFACE_SELETOR_IDENTIDADE=true`. Abrir as duas em `/gestao/`, entrar com a identidade de cada
-tarefa da `validacao.md` e conferir que os seis estados das tarefas aparecem, nas duas, com registros
-diferentes.
+```bash
+sh ../doc/auditoria-design-system-2026-11-14/piloto/scripts/montar_banco_da_validacao.sh v3 /caminho/bancos
+```
+
+Depois, as entradas `piloto-antiga` (porta 8172, a `main`, de uma worktree destacada que o roteiro
+cria) e `piloto-nova` (porta 8173, a branch) do `.claude/launch.json`, as duas sobre
+`ps_piloto_validacao`. O mesmo roteiro, com `referencia` no lugar da tarefa, restaura a cópia da
+referência da P0, migrada, para o rastreio do §3.
 
 ## 5. A conferência manual
 

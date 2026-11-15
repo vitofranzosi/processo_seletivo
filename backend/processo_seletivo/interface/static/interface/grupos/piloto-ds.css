@@ -17,9 +17,104 @@
    o filho direto de `main` (`main>…`), e o contêiner tira o conteúdo de lá: a medida de leitura do
    parágrafo (`componentes.css`), o respiro antes da seção que vem depois de um formulário (idem) e a
    medida das caixas da confirmação de ato (`grupos/confirmacao-de-ato.css`, da P0). Sem isto, a
-   linha da confirmação de Encerrar voltaria de 81 a 162 caracteres em silêncio. Os valores são os
-   das regras originais, que não mudam. */
-.piloto-ds>p,.piloto-ds>section>p{max-width:var(--leitura)}
+   linha da confirmação de Encerrar voltaria de 81 a 162 caracteres em silêncio. As regras originais
+   não mudam; aqui elas valem com a medida do piloto, explicada logo abaixo — com a de fora, os 68ch,
+   a especificidade de `form.confirmar` venceria a medida do piloto em toda caixa filha do conteúdo. */
+.piloto-ds>p,.piloto-ds>section>p{max-width:var(--medida-do-piloto)}
 .piloto-ds>:is(form,.tabela-rolavel)+section[aria-labelledby]{margin-top:2rem}
 .piloto-ds>:is(.aviso,.erro,.bastao,.consequencias,form.confirmar),
-.piloto-ds>.avisos-anteriores>.aviso{max-width:calc(var(--leitura) + 2.5rem)}
+.piloto-ds>.avisos-anteriores>.aviso{max-width:calc(var(--medida-do-piloto) + 2.5rem)}
+
+/* **A medida de leitura do piloto é 54ch, e não os 68ch de `--leitura`** (`--medida-do-piloto`, em
+   `tokens.css`). O `ch` é a largura do algarismo zero, e a letra média da fonte do sistema é mais
+   estreita que ele: os 68ch davam linhas de 81 a 92 caracteres nas confirmações a 1920 px, e 64ch
+   ainda davam 92 no item de lista, que tem fonte menor que a caixa onde a medida é declarada
+   (medido em 15/11). A spec do piloto pede no máximo 80 (FR-7730). Daqui para baixo, toda medida
+   do escopo é esta. */
+
+/* **Toda prosa do escopo na medida de leitura** (FR-7730). A regra comum só alcançava o `p` filho
+   direto do conteúdo; a nota, a ajuda, o item de lista e o parágrafo dentro de seção chegavam a 193
+   caracteres a 1920 px (a frase da vaga sem quem a ocupe, na Ocupação). O indicador não é prosa. */
+.piloto-ds :is(p,li,dd,.nota,.ajuda){max-width:var(--medida-do-piloto)}
+.piloto-ds .resumo li{max-width:none}
+
+/* ── Os componentes, dentro do escopo ──────────────────────────────────────────────────────────
+
+   **O botão tem uma altura por tamanho, e o `a` e o `button` têm a mesma** (UX-854; a P1.4 do
+   roadmap, só aqui). Fora do escopo o `.acao` continua com as quatro alturas que o estudo mediu. O
+   tamanho de fonte é o que cada um já tinha: muda a caixa, e não a letra. */
+.piloto-ds :is(.botao,.acao){display:inline-flex;align-items:center;justify-content:center;
+  box-sizing:border-box;border-radius:var(--raio-p)}
+.piloto-ds .botao,.piloto-ds .salvar .acao{min-height:var(--controle)}
+.piloto-ds .acao{min-height:var(--controle-p)}
+
+/* **O aviso é um componente**, com a espécie no texto (a marca da P0) e a cor como reforço: o filete,
+   o raio pequeno e o respiro da escala. A caixa para na medida de leitura mais o preenchimento, como
+   a P0 fez nas confirmações: o texto, e não a caixa, tem a medida. */
+.piloto-ds :is(.aviso,.erro,.sucesso,.imutavel){border-radius:var(--raio-p);
+  padding:var(--e-3) var(--e-4);max-width:calc(var(--medida-do-piloto) + 2.5rem)}
+.piloto-ds :is(.aviso,.erro,.sucesso,.imutavel) :is(p,li){max-width:none}
+
+/* **O cartão**: o painel que agrupa, solto do fundo pela borda e pela sombra discreta. */
+.piloto-ds .consequencias{border-color:var(--linha);border-radius:var(--raio);box-shadow:var(--sombra-1);
+  padding:var(--e-5);max-width:calc(var(--medida-do-piloto) + 2.5rem)}
+.piloto-ds .consequencias.irreversivel{border-color:var(--vermelho)}
+.piloto-ds .consequencias :is(p,li){max-width:none}
+
+/* **O indicador**: o número e o rótulo juntos, numa caixa própria. O tamanho do número é o de
+   `componentes.css`; muda a caixa, o raio, o espaço e a largura mínima, para que os quatro números
+   de um recorte se leiam como uma fileira, e não como etiquetas soltas. */
+.piloto-ds .resumo{gap:var(--e-3)}
+.piloto-ds .resumo li{border-color:var(--linha);border-radius:var(--raio);
+  padding:var(--e-3) var(--e-4);min-width:7rem;box-shadow:var(--sombra-1)}
+
+/* ── A composição centrada: a confirmação de ato e as duas conferências (UX-850) ───────────────
+
+   Uma coluna no meio da página, na medida do que se lê antes de confirmar. É a classe ao lado do
+   contêiner que escolhe a composição. */
+.piloto-ds.centrada{max-width:calc(var(--medida-do-piloto) + 2.5rem);margin-inline:auto}
+
+/* **A barra de ações fica no fluxo, e não fixa.** Fixa ao pé da janela, ela poria o botão à vista
+   antes das consequências, e a C-S4 da spec ("a consequência antes da confirmação") se inverteria na
+   ordem visual. Fica depois do formulário, com o primário primeiro, separada por um filete. */
+.piloto-ds .salvar{gap:var(--e-3);padding:var(--e-4) 0 var(--e-8);border-top-color:var(--linha)}
+
+/* ── A Ocupação: cada recorte num cartão, e o gesto junto do número ──────────────────────────── */
+.piloto-ds section[aria-labelledby]{background:var(--branco);border:1px solid var(--linha);
+  border-radius:var(--raio);box-shadow:var(--sombra-1);padding:var(--e-5);margin-bottom:var(--e-6)}
+.piloto-ds section[aria-labelledby]>h2{margin-top:0}
+/* O gesto é um bloco do recorte, separado do que se lê por um filete: a condição dele vem antes do
+   botão, dentro do mesmo bloco (O-S5). */
+.piloto-ds section[aria-labelledby] :is(form,details.sucessao){border-top:1px solid var(--linha);
+  padding-top:var(--e-4);margin-top:var(--e-4)}
+.piloto-ds section[aria-labelledby] li form{border-top:0;padding-top:0;margin-top:var(--e-2)}
+
+/* ── A Lista de Processos: os segmentos e o cartão (UX-853) ───────────────────────────────────
+
+   **"Novo Processo Seletivo" não sobe para o cabeçalho.** O roadmap o punha à direita do título,
+   e a ordem de leitura que a `129` fixou, e que um teste dela prende, o quer depois da faixa de
+   ações (DP-1 da `076`). O piloto não reescreve essa decisão. */
+.piloto-ds .abas-da-lista ul{gap:var(--e-1) var(--e-6);border-bottom-color:var(--linha)}
+.piloto-ds .consulta-dos-processos{background:var(--branco);border:1px solid var(--linha);
+  border-radius:var(--raio);box-shadow:var(--sombra-1);padding:var(--e-4) var(--e-5)}
+/* Os Processos são itens da lista, e não cartões dentro do cartão: uma caixa só, um filete entre
+   eles (a convenção "caixa dentro de caixa, no máximo um nível" do estudo). */
+.piloto-ds .processo{border:0;border-bottom:1px solid var(--linha);border-radius:0;box-shadow:none;
+  margin:0;padding:var(--e-3) 0}
+.piloto-ds .processo:last-of-type{border-bottom:0}
+.piloto-ds .acoes-disponiveis{border-color:var(--linha);border-left-color:var(--verde);
+  border-radius:var(--raio);box-shadow:var(--sombra-1)}
+
+/* ── O ritmo vertical: o espaço da escala, e não o de cada regra ───────────────────────────────
+
+   **A medida de leitura alonga a página**, e o respiro que cada regra trazia somava: a confirmação
+   de Submeter ficou 72 px mais alta só com a coluna de 80 caracteres (medido em 15/11). O espaço
+   entre caixas vai a 12 px, o do cartão a 16, e a barra de ações perde o filete quando já está
+   dentro do cartão do formulário, onde ele separava nada de nada. */
+.piloto-ds :is(.aviso,.erro,.sucesso,.imutavel){margin-bottom:var(--e-3)}
+.piloto-ds .sub{margin-bottom:var(--e-5)}
+.piloto-ds .consequencias{padding:var(--e-4);margin-bottom:var(--e-4)}
+.piloto-ds .consequencias li{margin-bottom:var(--e-1)}
+.piloto-ds form.confirmar .salvar{border-top:0;padding:var(--e-2) 0 0}
+.piloto-ds section[aria-labelledby]{padding:var(--e-4);margin-bottom:var(--e-4)}
+.piloto-ds section[aria-labelledby] p.acoes{margin:var(--e-2) 0}

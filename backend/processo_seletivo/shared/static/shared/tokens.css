@@ -41,4 +41,6 @@ formulário de dez campos.
   --sombra-1:0 1px 2px rgba(15,26,20,.06),0 1px 1px rgba(15,26,20,.04);
   --controle:40px; --controle-p:32px;
   --coluna:44rem; --trilho:21rem;
+  /* A medida de leitura do piloto: 54ch dão no máximo 80 caracteres com a fonte do sistema. */
+  --medida-do-piloto:54ch;
 }

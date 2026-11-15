@@ -1,0 +1,29 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "L-S1": "aprovada",
+  "L-S2": "aprovada",
+  "L-S3": "aprovada",
+  "L-S4": "não se aplica",
+  "L-S5": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [],
+ "dobra": {
+  "acao_principal": "Novo Processo Seletivo",
+  "achada": true,
+  "acima": true,
+  "topo": 561
+ },
+ "falhas": []
+}

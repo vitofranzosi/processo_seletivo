@@ -6,19 +6,27 @@ aconteceram**; elas são a tarefa T042, que é de quem conduz.*
 
 ## Antes da sessão
 
-1. Os dois bancos montados por `doc/auditoria-design-system-2026-11-14/piloto/scripts/montar_banco_da_validacao.sh`
-   e os dois servidores no ar: `piloto-antiga` (porta 8167, a `main`) e `piloto-nova` (porta 8168,
-   a branch do piloto), cada um sobre o seu banco (quickstart §4).
-2. Este roteiro impresso, sem a coluna do gabarito.
-3. Uma cópia do registro, abaixo, para cada pessoa.
+1. **Os bancos, um por tarefa.** De `backend/`, com o grupo `navegador`:
+   `PILOTO_DS_BANCO=<pasta> PYTEST_ADDOPTS="tests/navegador/test_banco_da_validacao_do_piloto.py" make test-pg PYTEST_WORKERS=0`
+   grava `lista.dump`, `v3.dump`, `v4.dump`, `v5.dump` e `v6.dump` (há uma cópia de 15/11 na pasta
+   de notas das sessões deste trabalho, em `piloto-172-bancos/`).
+2. **Antes de cada tarefa**, `sh ../doc/auditoria-design-system-2026-11-14/piloto/scripts/montar_banco_da_validacao.sh <tarefa> <pasta>`
+   restaura o banco dela em `ps_piloto_validacao` e prepara a worktree da `main`. V1 e V2 usam
+   `lista`.
+3. **As duas versões no ar, sobre o mesmo banco**: `piloto-antiga` (porta 8172, a `main`) e
+   `piloto-nova` (porta 8173, a branch do piloto), do `.claude/launch.json`. Reinicie as duas a cada
+   troca de banco.
+4. Este roteiro impresso, sem a coluna do gabarito, e uma cópia do registro para cada pessoa.
+
+**Um desvio da spec, registrado:** a FR-7737 pedia registros diferentes na segunda versão. As
+fixtures supõem banco vazio, e cada estado nasce num banco só; as duas versões mostram os mesmos
+registros. O que reduz o efeito de lembrança é a ordem alternada, e quem conduz registra, na coluna
+"Hesitação", quando a pessoa disser que já viu aquela tela.
 
 ## Como conduzir
 
 - **Metade começa pela versão antiga, metade pela nova.** P1 antiga→nova, P2 nova→antiga, P3
   antiga→nova.
-- **Na segunda versão, a tarefa usa o Edital ou o Processo da duplicata** (coluna "Registro"), que
-  está no mesmo estado com outros dados, para que a segunda resposta não seja lembrança da
-  primeira.
 - **Quem conduz não explica a tela.** Lê a tarefa, anota o que a pessoa diz com as palavras dela,
   onde ela para, volta ou rola à procura, e não corrige.
 - **Ninguém confirma ato nenhum.** As perguntas são feitas antes do botão. Os bancos são cópias,
@@ -32,14 +40,14 @@ aconteceram**; elas são a tarefa T042, que é de quem conduz.*
 O gabarito é a frase da própria tela, copiada do "antes" de 15/11. As duas versões têm o mesmo texto
 (é o que a comparação provou), e por isso o gabarito é um só.
 
-| Tarefa | Tela e estado | Registro (antiga / nova) | Identidade | O que se pede |
+| Tarefa | Tela e estado | Banco | Identidade | O que se pede |
 |---|---|---|---|---|
-| V1 | Lista de Processos, busca (L-05) | "Seleção cancelada" / "Seleção cancelada B" | `gabi.gestora`, gestor e elaborador | Ache o Processo do Edital 90/2026 pela busca e diga em que situação ele está. |
-| V2 | Lista de Processos (L-01) | o mesmo banco | `gabi.gestora`, gestor e elaborador | Ache a ação que é sua agora e diga onde ela leva. |
-| V3 | Confirmação de Encerrar, com impedimento (C-09) | Edital 1161 / o da duplicata | `gabi.gestora`, gestor | O que acontece se você confirmar? Alguma coisa impede este ato? Dá para desfazer depois? |
-| V4 | Confirmação de Homologar, por quem elaborou (C-03) | Edital 01 / o da duplicata | `ana.elaboradora`, homologador | O que muda na publicação depois de homologar? |
-| V5 | Ocupação, Edital que admite a faixa seguinte (O-07) | o Edital "tela-016-continua" / o da duplicata | `carlos`, gestor | Quantas vagas faltam ocupar na ampla concorrência? O que você faria para preenchê-las? |
-| V6 | Conferência do acréscimo (K-01) | o Edital "interface-097" / o da duplicata | `carlos`, gestor | Quem a ordem alcança? O que este ato emite? Se estiver errado, como se desfaz? E: há dois Editais com quadro de reserva na Lista; acrescente a vaga **no do Edital nº ...** (o certo é o da tarefa) |
+| V1 | Lista de Processos, busca (L-05) | `lista` | `gabi.gestora`, gestor e elaborador | Ache o Processo do Edital 90/2026 pela busca e diga em que situação ele está. |
+| V2 | Lista de Processos (L-01) | `lista` | `gabi.gestora`, gestor e elaborador | Ache a ação que é sua agora e diga onde ela leva. |
+| V3 | Confirmação de Encerrar, com impedimento (C-09) | `v3` | `gabi.gestora`, gestor | O que acontece se você confirmar? Alguma coisa impede este ato? Dá para desfazer depois? |
+| V4 | Confirmação de Homologar, por quem elaborou (C-03) | `v4` | `ana.elaboradora`, homologador | O que muda na publicação depois de homologar? |
+| V5 | Ocupação, Edital que admite a faixa seguinte (O-07) | `v5` | `carlos`, gestor | Quantas vagas faltam ocupar na ampla concorrência? O que você faria para preenchê-las? |
+| V6 | Conferência do acréscimo (K-01) | `v6` | `carlos`, gestor | Abra a Ocupação do Edital, preencha o acréscimo (origem e fundamento do roteiro) e confira. Quem a ordem alcança? O que este ato emite? Se estiver errado, como se desfaz? |
 
 ## O gabarito
 
@@ -53,10 +61,10 @@ O gabarito é a frase da própria tela, copiada do "antes" de 15/11. As duas ver
 | V4 | a publicação | "Depois de homologar, você não poderá publicar esta revisão." e "a publicação precisará de outra autoridade" |
 | V5 | quantas | "3 A ocupar" |
 | V5 | o que fazer | "Pedir a faixa seguinte com este déficit", e "a faixa anterior não é revogada" |
-| V6 | quem alcança | "Candidata 601, na 1ª posição da ordem" (o nome da duplicata é outro) |
+| V6 | quem alcança | "Candidata 601, na 1ª posição da ordem" |
 | V6 | o que emite | "A apuração seguinte será emitida por este ato, em seu nome" |
 | V6 | desfazer | "O acréscimo não se apaga. Se estiver errado, desfaça-o por outro ato, com motivo." |
-| V6 | o Edital certo | **Prevenção de erro:** a pessoa confere, na conferência, o Edital e a origem antes de chegar ao botão |
+| V6 | a origem certa | **Prevenção de erro:** a pessoa confere, na conferência, a origem e o fundamento que escreveu antes de chegar ao botão |
 
 ## O registro
 
@@ -65,7 +73,7 @@ sem valor de aprovação (SC-2607).
 
 ### P1 (antiga → nova)
 
-| Tarefa | Versão | Registro | Resposta, nas palavras da pessoa | Acerto | Notou o impedimento antes do botão? | Hesitação | Tempo |
+| Tarefa | Versão | Banco | Resposta, nas palavras da pessoa | Acerto | Notou o impedimento antes do botão? | Hesitação | Tempo |
 |---|---|---|---|---|---|---|---|
 | V1 | antiga | | | | — | | |
 | V1 | nova | | | | — | | |

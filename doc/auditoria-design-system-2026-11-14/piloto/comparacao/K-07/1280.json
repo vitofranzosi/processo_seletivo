@@ -1,0 +1,29 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "K-S1": "não se aplica",
+  "K-S2": "aprovada",
+  "K-S3": "aprovada",
+  "K-S4": "aprovada"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [],
+ "dobra": {
+  "acao_principal": "Desfazer a declaração",
+  "achada": true,
+  "acima": true,
+  "topo": 702
+ },
+ "falhas": []
+}

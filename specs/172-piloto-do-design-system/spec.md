@@ -5,7 +5,11 @@ do merge da P0, PRs #557 e #559, e da Visão do Sistema, #560)
 
 **Created**: 2026-11-15
 
-**Status**: Especificada, planejada e com tarefas em 15/11. Nada implementado. O merge é do usuário.
+**Status**: Especificada, planejada e com tarefas em 15/11 (#563, mergeada). **Implementada no mesmo dia**,
+na branch `claude/172-piloto-implementacao`, sem merge: as três telas, a fotografia de 64 estados, a
+comparação, a conferência de acessibilidade e o levantamento dos guardiões. O resultado, os desvios e
+os achados estão em [relatorio.md](relatorio.md). **A validação com a equipe (US4) não aconteceu**: o
+roteiro, os bancos e as duas versões estão prontos, e as sessões são do usuário. O merge é do usuário.
 
 **Input**: o terceiro passo da sequência que o usuário aprovou para o estudo de design system
 (`doc/auditoria-design-system-2026-11-14/`, mergeado no #549): *"a spec do piloto pelo Spec Kit,
@@ -630,6 +634,10 @@ da folha nova.
 não muda porque a regra nova não as alcança, e não porque alguém tomou cuidado.
 
 ### D-004 — O catálogo: 12 estados da confirmação, 18 da Ocupação, 12 retornos, 9 das conferências e 12 da Lista
+
+> **Revisto na implementação (15/11):** a C-12 virou C-12 (a recusa do envio) e C-13 (quem não tem a
+> permissão), porque são duas páginas, e o catálogo tem 64 estados. A O-06 e a O-14 mostram menos do
+> que a tabela abaixo descreve; o porquê está em `doc/auditoria-design-system-2026-11-14/piloto/README.md`.
 
 O catálogo parte dos 51 ramos da Ocupação que a suíte já desenha e dos estados que o roadmap lista.
 Ele fotografa **combinações de página**, e não ramos soltos: um marco com três recortes em situações
