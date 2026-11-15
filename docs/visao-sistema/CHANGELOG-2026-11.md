@@ -594,3 +594,63 @@ Os dez números foram recontados pelo método da própria página, com os mesmos
 - **O texto mudou** no bloco de números (título, dez números e evidência), no parágrafo dos gatilhos da imutabilidade, no diagrama, na linha da imutabilidade do veredito e na linha da Avaliação da tabela de domínios, que ganhou o parecer às cegas.
 
 **Não verificado:** a suíte não rodou sobre a `main`. A medição da suíte que a página cita é a da branch: 20 042 passando e 24 pulados.
+
+## Acréscimo de 15/11: as specs 163 a 171 na `main`, e a P0 de interface
+
+A documentação descrevia o sistema até a 165, ainda "sem merge". Entre 14/11 e 15/11 entraram na `main` 19 PRs, o último deles o #559. Esta revisão descreve tudo contra a `main` em `bd64e423`.
+
+**O que mudou na documentação:**
+
+- **Deixou de ser "sem merge"** a camada A da verificação da autodeclaração (163, 164 e 165, #542, #543 e #545): as linhas de *Famílias de Processo*, da matriz de capacidades, do FAQ, das decisões em aberto (DP-10) e da operação manual inevitável. A seção *A deliberação da comissão* passou de *Previsto* a *Implementado*.
+- **Entrou a verificação por vídeo (166, #547), como *Parcial*, só em desenvolvimento.** Subseção própria na consolidação, com quem elabora, o candidato, a comissão e a presidência:
+  - o vídeo só confirma, e nenhum caminho grava desfavorável por ele;
+  - quatro tabelas append-only e o envio em partes, mutável;
+  - a chave fecha o portal, e não a Mesa;
+  - a produção recusa a chave até o ato do Conselho Superior e o protocolo da CPVA (P-0).
+- **A 169 aparece como só especificada** (#552): nada dela existe no código, e o texto diz isso. A legenda *Previsto* a cita.
+- **Entrou a orientação de quem a Etapa restrita alcança (171, #551)**, como *Implementado*:
+  - os degraus *Falta um passo seu*, *Aguardando a comissão* e *Aguardando o resultado*;
+  - o aviso do passo, quinta origem dos avisos, sem Modalidade no e-mail;
+  - as pendências do Centro e os pareceres que faltam por membro;
+  - o cenário C18.
+- **Entrou a agenda da Etapa (167, entregas A a D, #546 a #558)**, como *Parcial*, em seção própria: configurar com a capacidade ao digitar, montar com prévia, conferir, publicar como ato imutável, remarcar, incluir e cancelar com motivo, o documento por ato, o horário do candidato e a página pública. A seção avisa que **não é a Agenda dos Editais** (101).
+- **Entrou a seção das Novidades do GPS (168, #555)**, que não existia na Visão: a página, o selo das não vistas, a regra de que a nota só entra depois do merge e a contagem real (90 notas, nenhuma ainda sobre as specs 166 a 171).
+- **A habilitação do assistente pela interface (170, #553)** reescreveu a seção do assistente de dúvidas. Ficaram falsas, e foram trocadas:
+  - "só na máquina de desenvolvimento";
+  - "404 enquanto a chave não estiver ligada";
+  - a lista de requisitos para abrir ao público, substituída por `RA-1` a `RA-12`;
+  - a barreira de produção, que agora recusa qualquer serviço que não seja o Ollama e a própria `ASSISTENTE_PILOTO`.
+- **Os avisos por e-mail passaram de cinco a seis situações no código** (sete na norma da FR-084, em que a do desfecho da 156 ainda não tem código), e três ficam desligadas em produção. As lacunas "a convocação para heteroidentificação, entrevista ou títulos não tem ato" ganharam a ressalva: com agenda publicada, o ato existe.
+- **A barra, os papéis e as rotas** ganharam *Novidades* e *Assistente do Edital*, a permissão `assistente:habilitar` e as rotas novas.
+- **A P0 de interface (#557 e #559)** não mudou rótulo citado pela Visão: as confirmações de ato passaram a abrir os avisos por *Impedimento:* e *Atenção:*, e os textos citados continuam literais.
+- **O #544 (números de linha do guia de implantação), o #549 e o #541 (estudos)** não pedem menção: o nome da branch do #544 sugeria armazenamento de anexos, mas o PR só corrige referências em `doc/implantacao-em-producao-ubuntu.md`.
+- **O README** perdeu o "sem merge" das linhas 163 a 171, e a linha da 167 ganhou a entrega D.
+
+**Os números de *Maturidade*, recontados pelo mesmo roteiro** depois de ele reproduzir, sem exceção, os dez de 14/11 sobre `37ed0ad0`:
+
+| | 14/11 (`37ed0ad0`) | 15/11 (`bd64e423`) |
+|---|---|---|
+| pastas de especificação | 163 | 172 |
+| tabelas append-only | 59 | 69 |
+| gatilhos | 91 em 36 migrations, sobre 73 tabelas | 100 em 39 migrations, sobre 78 tabelas |
+| migrations | 119 | 134 |
+| módulos de domínio | 24 | 27 (`agendamento`, `novidades`, `verificacao`) |
+| Python de aplicação | 583 (167,1 mil linhas) | 645 (182,3 mil) |
+| templates | 266 | 287 |
+| testes | 1 233 + 25 | 1 320 + 26 |
+| rotas (gestão, portal) | 180, 42 | 190, 52 |
+| espécies de sinal | 8 | 8 |
+
+**Como foi conferido:**
+
+- três leituras paralelas, uma para a 166, a 169 e a 171, outra para a 167 e outra para a 168, a 170 e a P0, cada uma escrevendo uma ficha de fatos conferida contra os templates e o código da `main`; onde spec e código divergiram, valeu o código;
+- os rótulos citados vêm dos templates e do código, e a 167 e a 169 tiveram o enunciado corrigido pelas leituras (a entrega D não pôs a agenda no acompanhamento do candidato, e a 169 não foi implementada);
+- a página passou pelos guardiões de documentação.
+
+**Não verificado:**
+
+- a suíte inteira não rodou, e nenhuma tela foi percorrida;
+- se *Não dá para confirmar pelo vídeo* exige motivo no código, como a spec diz, e se existe jornada em navegador do vídeo;
+- se a nota do piloto do assistente, presa a `ASSISTENTE_PILOTO`, deve aparecer em produção quando o piloto é habilitado por ato: hoje não aparece;
+- o e-mail da agenda em SMTP real e a largura de 375 px (há testes);
+- as pendências humanas seguem abertas: SC-2390, SC-2398, SC-2416, SC-2501 e a matriz de navegadores com câmera real da 166.
