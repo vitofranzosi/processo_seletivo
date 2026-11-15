@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migração do design system — antes e depois</title>
+<style>
+:root{
+  --fundo:#f6f7f6; --cartao:#fff; --tinta:#0f1a14; --tinta-2:#36433b; --tinta-3:#5f6b64;
+  --linha:#e3e7e4; --verde:#15803d; --verde-texto:#146c37; --verde-50:#eef7f1;
+  --vermelho:#a91b1b; --vermelho-50:#fbeeee; --ambar:#8a5300; --ambar-50:#fdf5e5;
+  --sombra:0 1px 2px rgba(15,26,20,.06),0 1px 1px rgba(15,26,20,.04);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--fundo:#111614; --cartao:#1a211d; --tinta:#e8ede9; --tinta-2:#c3cdc6; --tinta-3:#93a198;
+    --linha:#2c3530; --verde:#3fae66; --verde-texto:#6cc98d; --verde-50:#1e2b23; --vermelho:#ef8a8a;
+    --vermelho-50:#3a2222; --ambar:#f0c27a; --ambar-50:#342a18; --sombra:none}
+}
+:root[data-theme="dark"]{--fundo:#111614; --cartao:#1a211d; --tinta:#e8ede9; --tinta-2:#c3cdc6; --tinta-3:#93a198;
+  --linha:#2c3530; --verde:#3fae66; --verde-texto:#6cc98d; --verde-50:#1e2b23; --vermelho:#ef8a8a;
+  --vermelho-50:#3a2222; --ambar:#f0c27a; --ambar-50:#342a18; --sombra:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--tinta);
+  font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header.topo{padding:20px 24px 4px;max-width:1600px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--tinta-2);margin:0 0 12px}
+.numeros{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:10px;margin:8px 0 4px;padding:0;list-style:none}
+.numeros li{background:var(--cartao);border:1px solid var(--linha);border-radius:10px;padding:8px 14px;box-shadow:var(--sombra);font-size:13px;color:var(--tinta-3)}
+.numeros strong{display:block;font-size:22px;color:var(--tinta);font-variant-numeric:tabular-nums}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:20px;max-width:1600px;margin:0 auto;padding:12px 24px 40px}
+nav.estados{position:sticky;top:12px;align-self:start;background:var(--cartao);border:1px solid var(--linha);
+  border-radius:10px;padding:8px;box-shadow:var(--sombra);max-height:calc(100vh - 24px);overflow:auto}
+.filtros{display:flex;flex-wrap:wrap;gap:4px;margin:2px 4px 6px}
+.filtros button{border:1px solid var(--linha);background:none;border-radius:999px;font:inherit;font-size:12px;padding:2px 9px;color:var(--tinta-2);cursor:pointer}
+.filtros button[aria-pressed="true"]{background:var(--verde);border-color:var(--verde);color:#fff}
+nav.estados .grupo{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--tinta-3);
+  margin:12px 8px 4px;font-weight:600}
+nav.estados button.tela{display:flex;gap:6px;align-items:baseline;width:100%;text-align:left;background:none;border:0;border-radius:6px;
+  padding:5px 8px;color:var(--tinta-2);font:inherit;font-size:12.5px;cursor:pointer;line-height:1.35;word-break:break-all}
+nav.estados button.tela:hover{background:var(--verde-50)}
+nav.estados button.tela[aria-current="true"]{background:var(--verde-50);color:var(--verde-texto);font-weight:600}
+.marca{flex:none;display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:0 6px;border-radius:999px;white-space:nowrap}
+.m-quebrou{background:var(--vermelho-50);color:var(--vermelho)}
+.m-mais-alta{background:var(--ambar-50);color:var(--ambar)}
+.m-mudou{background:var(--verde-50);color:var(--verde-texto)}
+.m-igual{background:var(--fundo);color:var(--tinta-3);border:1px solid var(--linha)}
+main{min-width:0}
+.cabeca .modos+.modos{margin-left:8px}
+.cabeca{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.cabeca h2{font-size:18px;margin:0;word-break:break-all}
+.cabeca .onde{font-size:13px;color:var(--tinta-3);margin:2px 0 0}
+.modos{display:inline-flex;background:var(--cartao);border:1px solid var(--linha);border-radius:8px;padding:3px;gap:2px}
+.modos button{border:0;background:none;font:inherit;font-size:13.5px;padding:6px 12px;border-radius:6px;color:var(--tinta-2);cursor:pointer}
+.modos button[aria-pressed="true"]{background:var(--verde);color:#fff}
+.painel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:10px;padding:14px 16px;box-shadow:var(--sombra)}
+.cartao h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--tinta-3);margin:0 0 8px}
+.cartao ul{margin:0;padding-left:18px}
+.cartao li{margin-bottom:4px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--linha)}
+th{font-weight:600;color:var(--tinta-3);font-size:12px}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.melhor{color:var(--verde-texto);font-weight:600}
+.pior{color:var(--vermelho);font-weight:600}
+.visor{background:var(--cartao);border:1px solid var(--linha);border-radius:10px;padding:12px;box-shadow:var(--sombra)}
+.lado{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.estreita .lado{max-width:780px}
+.estreita .cortina,.estreita .alterna{max-width:400px}
+.modos[hidden]{display:none}
+figure{margin:0}
+figcaption{font-size:12.5px;font-weight:600;color:var(--tinta-3);margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+figure img,.cortina img,.alterna img{width:100%;display:block;border:1px solid var(--linha);border-radius:6px;background:#fff}
+.cortina{position:relative;display:grid;align-items:start}
+.cortina img{grid-area:1/1}
+.cortina .fio{position:absolute;top:0;bottom:0;width:2px;background:var(--verde);pointer-events:none}
+.controle{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:13.5px;color:var(--tinta-2)}
+.controle input[type=range]{flex:1}
+.alterna .rotulo{display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-bottom:8px}
+.r-antes{background:var(--ambar-50);color:var(--ambar)}
+.r-depois{background:var(--verde-50);color:var(--verde-texto)}
+.dica{font-size:12.5px;color:var(--tinta-3);margin:8px 0 0}
+.vazio{color:var(--tinta-3);font-style:italic}
+kbd{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;border:1px solid var(--linha);border-radius:4px;padding:0 4px}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr;padding:12px 16px 32px}
+  header.topo{padding:16px 16px 4px}
+  nav.estados{position:static;max-height:50vh}
+  .painel,.lado{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="topo">
+  <h1>Migração do design system — antes e depois</h1>
+  <p class="sub">Toda a gestão, tela a tela: à esquerda a <code>main</code>, à direita a branch com os padrões do piloto aplicados a todas as telas. As duas versões rodaram sobre a mesma cópia migrada do banco da referência, e o mesmo instrumento do estudo visitou as mesmas telas com as mesmas identidades. Capturas a 1440 px, na coluna do conteúdo. As marcas dizem o que aconteceu com cada tela: <span class="marca m-quebrou">quebrou</span> <span class="marca m-mais-alta">mais alta</span> <span class="marca m-mudou">mudou</span> <span class="marca m-igual">igual</span>.</p>
+  <p class="sub"><b>O que quebrou, e foi corrigido:</b> na primeira passada, a regra das listas de definição espalhou o cartão "Quem atuou" do Centro do Edital, que agrupa cada par num <code>div</code>, e a página passou a rolar de lado a 768 px. A regra ganhou o caso, e esta é a segunda passada. <b>O que piorou no celular:</b> os indicadores, com o mínimo de 9rem por caixa, ficam um por linha a 375 px (a Ocupação do piloto já fazia isso). Use o seletor <b>375 px</b> nas telas que o mostram.</p>
+  <ul class="numeros" id="numeros"></ul>
+</header>
+<div class="layout">
+  <nav class="estados" aria-label="Telas">
+    <div class="filtros" role="group" aria-label="Mostrar"></div>
+    <div id="lista"></div>
+  </nav>
+  <main>
+    <div class="cabeca">
+      <div><h2 id="titulo"></h2><p class="onde" id="onde"></p></div>
+      <div class="modos larguras" role="group" aria-label="Largura" hidden>
+        <button type="button" data-largura="1440" aria-pressed="true">1440 px</button>
+        <button type="button" data-largura="375" aria-pressed="false">375 px</button>
+      </div>
+      <div class="modos" role="group" aria-label="Como comparar">
+        <button type="button" data-modo="lado" aria-pressed="true">Lado a lado</button>
+        <button type="button" data-modo="cortina" aria-pressed="false">Cortina</button>
+        <button type="button" data-modo="alterna" aria-pressed="false">Alternar</button>
+      </div>
+    </div>
+    <div class="painel">
+      <section class="cartao" aria-labelledby="t-mudou"><h3 id="t-mudou">O que se vê nesta tela</h3><ul id="mudou"></ul></section>
+      <section class="cartao" aria-labelledby="t-medidas"><h3 id="t-medidas">Medidas desta tela</h3>
+        <table><thead><tr><th>Medida</th><th class="n">Antes</th><th class="n">Depois</th></tr></thead><tbody id="medidas"></tbody></table>
+      </section>
+    </div>
+    <div class="visor" id="visor"></div>
+    <p class="dica"><kbd>↑</kbd> <kbd>↓</kbd> trocam de tela; <kbd>espaço</kbd> alterna antes e depois no modo Alternar.</p>
+  </main>
+</div>
+<script>
+const ESTADOS = /*ESTADOS*/[];
+const RESUMO = /*RESUMO*/{};
+const IMAGENS = /*IMAGENS*/{};
+const ORDEM = /*ORDEM*/[];
+const SITUACOES = ["quebrou", "mais alta", "mudou", "igual"];
+let largura = "1440", atual = 0, modo = "lado", relogio = null, mostrandoDepois = false, cortina = 50, filtro = "todas";
+
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmt = n => n == null ? "—" : n.toLocaleString("pt-BR");
+const numeros = document.getElementById("numeros");
+const pct = RESUMO.soma_antes ? ((RESUMO.soma_depois - RESUMO.soma_antes) / RESUMO.soma_antes * 100) : 0;
+[["Telas comparadas", RESUMO.total], ["Quebraram", RESUMO["quebrou"]], ["Ficaram mais altas", RESUMO["mais alta"]],
+ ["Mudaram, sem crescer", RESUMO["mudou"]], ["Iguais", RESUMO["igual"]],
+ ["Mais altas no celular (+40 px a 375)", RESUMO.mais_altas_375],
+ ["Altura somada a 1440 px", `${pct > 0 ? "+" : ""}${pct.toLocaleString("pt-BR", {maximumFractionDigits: 1})}%`]]
+  .forEach(([r, v]) => { const li = document.createElement("li"); li.innerHTML = `<strong>${v}</strong>${r}`; numeros.append(li); });
+
+const filtros = document.querySelector(".filtros");
+["todas", ...SITUACOES].forEach(f => {
+  const b = document.createElement("button"); b.type = "button"; b.textContent = f === "todas" ? `todas (${ESTADOS.length})` : `${f} (${RESUMO[f] || 0})`;
+  b.setAttribute("aria-pressed", f === filtro ? "true" : "false");
+  b.addEventListener("click", () => { filtro = f; filtros.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false")); listar(); });
+  filtros.append(b);
+});
+
+const visiveis = () => ESTADOS.map((e, i) => i).filter(i => filtro === "todas" || ESTADOS[i].situacao === filtro);
+function listar() {
+  const lista = document.getElementById("lista"); lista.replaceChildren();
+  let grupo = null;
+  visiveis().forEach(i => {
+    const e = ESTADOS[i];
+    if (e.familia !== grupo) { grupo = e.familia; const g = document.createElement("div"); g.className = "grupo"; g.textContent = grupo; lista.append(g); }
+    const b = document.createElement("button"); b.type = "button"; b.className = "tela"; b.dataset.i = i;
+    b.innerHTML = `<span class="marca m-${e.situacao.replace(" ", "-")}">${e.situacao}</span><span>${esc(e.tela)}</span>`;
+    b.addEventListener("click", () => mostrar(i)); lista.append(b);
+  });
+  const v = visiveis(); if (v.length && !v.includes(atual)) mostrar(v[0]); else marcar();
+}
+function marcar() { document.querySelectorAll("button.tela").forEach(b => b.setAttribute("aria-current", +b.dataset.i === atual ? "true" : "false")); }
+
+function linha(rotulo, antes, depois, menorMelhor = true, sufixo = "") {
+  const tr = document.createElement("tr");
+  let classe = "";
+  if (menorMelhor !== null && antes != null && depois != null && antes !== depois) classe = (depois < antes) === menorMelhor ? "melhor" : "pior";
+  const f = v => (typeof v === "number" ? fmt(v) : (v ?? "—")) + (v == null ? "" : sufixo);
+  tr.innerHTML = `<td>${rotulo}</td><td class="n">${f(antes)}</td><td class="n ${classe}">${f(depois)}</td>`;
+  return tr;
+}
+
+function mostrar(i) {
+  atual = i; const e = ESTADOS[atual]; marcar();
+  const sel = document.querySelector(".larguras");
+  sel.hidden = !e.antes375;
+  if (!e.antes375) largura = "1440";
+  sel.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.largura === largura ? "true" : "false"));
+  document.getElementById("titulo").textContent = e.tela;
+  document.getElementById("onde").textContent = `${e.familia} · ${e.area} · vista por ${e.identidade}`;
+  const ul = document.getElementById("mudou"); ul.replaceChildren();
+  const itens = [];
+  const m = e.medidas;
+  if (e.situacao === "igual" && !e.diferenca) itens.push("Nenhum pixel mudou na coluna do conteúdo.");
+  e.quebra.forEach(t => itens.push("Quebrou: " + t));
+  e.observacoes.forEach(t => itens.push(t));
+  if (e.situacao !== "igual" && m.altura[0] != null && m.altura[1] != null) {
+    const d = m.altura[1] - m.altura[0];
+    itens.push(d === 0 ? "A altura da página não mudou." : `A página ficou ${Math.abs(d)} px ${d > 0 ? "mais alta" : "mais baixa"} a 1440 px.`);
+  }
+  if (e.diferenca) itens.push(`${(e.diferenca * 100).toLocaleString("pt-BR", {maximumFractionDigits: 1})}% dos pixels da coluna mudaram${e.diferenca === 1 ? " (a altura mudou, e a comparação é por tamanho)" : ""}.`);
+  itens.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.append(li); });
+  const tb = document.getElementById("medidas"); tb.replaceChildren();
+  tb.append(linha("Altura da página a 1440 px", m.altura[0], m.altura[1], true, " px"));
+  tb.append(linha("Altura da página a 375 px", m.altura375[0], m.altura375[1], true, " px"));
+  tb.append(linha("Maior linha de texto a 1440 px (caracteres; registro)", m.cpl1440[0], m.cpl1440[1], null));
+  tb.append(linha("Maior linha de texto a 1920 px (caracteres; registro)", m.cpl1920[0], m.cpl1920[1], null));
+  tb.append(linha("Metade direita vazia a 1440 px (%)", m.metade1440[0], m.metade1440[1], true));
+  const sn = v => v == null ? null : (v === "True" ? "sim" : "não");
+  tb.append(linha("Rola de lado a 375 px", sn(m.t375[0]), sn(m.t375[1]), null));
+  tb.append(linha("Rola de lado a 768 px", sn(m.t768[0]), sn(m.t768[1]), null));
+  tb.append(linha("Nós abaixo do contraste", m.contraste[0], m.contraste[1], true));
+  tb.append(linha("Alvos menores que 24 px", m.alvos[0], m.alvos[1], true));
+  tb.append(linha("Assinaturas de botão (altura × fonte)", m.botoes[0], m.botoes[1], true));
+  desenhar();
+}
+
+function desenhar() {
+  clearInterval(relogio); relogio = null;
+  const e0 = ESTADOS[atual], v = document.getElementById("visor");
+  const lado = largura === "375" && e0.antes375;
+  const e = {...e0, antes: IMAGENS[lado ? e0.antes375 : e0.antes], depois: IMAGENS[lado ? e0.depois375 : e0.depois]};
+  v.classList.toggle("estreita", !!lado);
+  v.replaceChildren();
+  if (!e.antes || !e.depois) { v.innerHTML = `<p class="vazio">Sem captura num dos lados.</p>`; return; }
+  if (modo === "lado") {
+    v.innerHTML = `<div class="lado"><figure><figcaption>Antes · main</figcaption><img alt="Antes: ${esc(e.tela)}" src="${e.antes}"></figure>
+      <figure><figcaption>Depois · migração</figcaption><img alt="Depois: ${esc(e.tela)}" src="${e.depois}"></figure></div>`;
+  } else if (modo === "cortina") {
+    v.innerHTML = `<div class="controle"><span>Antes</span><input type="range" min="0" max="100" value="${cortina}" aria-label="Posição da cortina"><span>Depois</span></div>
+      <div class="cortina"><img alt="Antes: ${esc(e.tela)}" src="${e.antes}"><img class="sobre" alt="Depois: ${esc(e.tela)}" src="${e.depois}"><div class="fio"></div></div>`;
+    const faixa = v.querySelector("input"), sobre = v.querySelector(".sobre"), fio = v.querySelector(".fio");
+    const aplicar = () => { cortina = +faixa.value; sobre.style.clipPath = `inset(0 0 0 ${cortina}%)`; fio.style.left = `${cortina}%`; };
+    faixa.addEventListener("input", aplicar); aplicar();
+  } else {
+    v.innerHTML = `<div class="alterna"><span class="rotulo"></span><img alt=""></div>
+      <div class="controle"><button type="button" class="pausa">Pausar</button><span>Troca a cada 1,2 s; clique na imagem para trocar à mão.</span></div>`;
+    const img = v.querySelector("img"), rot = v.querySelector(".rotulo"), pausa = v.querySelector(".pausa");
+    const pintar = () => { img.src = mostrandoDepois ? e.depois : e.antes; img.alt = (mostrandoDepois ? "Depois: " : "Antes: ") + e.tela;
+      rot.textContent = mostrandoDepois ? "Depois · migração" : "Antes · main"; rot.className = "rotulo " + (mostrandoDepois ? "r-depois" : "r-antes"); };
+    const girar = () => { mostrandoDepois = !mostrandoDepois; pintar(); };
+    img.addEventListener("click", girar);
+    pausa.addEventListener("click", () => { if (relogio) { clearInterval(relogio); relogio = null; pausa.textContent = "Continuar"; } else { relogio = setInterval(girar, 1200); pausa.textContent = "Pausar"; } });
+    pintar(); relogio = setInterval(girar, 1200);
+  }
+}
+
+document.querySelectorAll(".modos button[data-modo]").forEach(b => b.addEventListener("click", () => {
+  modo = b.dataset.modo;
+  document.querySelectorAll(".modos button[data-modo]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  desenhar();
+}));
+document.querySelectorAll(".larguras button").forEach(b => b.addEventListener("click", () => {
+  largura = b.dataset.largura;
+  document.querySelectorAll(".larguras button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  desenhar();
+}));
+document.addEventListener("keydown", ev => {
+  if (ev.target.closest("input")) return;
+  const v = visiveis(), k = v.indexOf(atual);
+  if (ev.key === "ArrowDown") { ev.preventDefault(); mostrar(v[(k + 1) % v.length]); }
+  if (ev.key === "ArrowUp") { ev.preventDefault(); mostrar(v[(k - 1 + v.length) % v.length]); }
+  if (ev.key === " " && modo === "alterna") { ev.preventDefault(); const img = document.querySelector(".alterna img"); img && img.click(); }
+});
+listar(); mostrar(visiveis()[0] ?? 0);
+</script>
+</body>
+</html>

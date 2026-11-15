@@ -1,0 +1,8 @@
+{
+ "/gestao/editais/<id>/agenda-da-etapa/<id>/configurar": {"observacoes": ["Os 12 px a mais vêm das ações pequenas (+ janela, + Acrescentar o dia seguinte, + Acrescentar banca): a ação de linha passou a ter 32 px de altura, como pede o padrão do botão."]},
+ "/gestao/editais/<id>/": {"observacoes": ["Os rótulos em caixa alta acima do valor (Situação administrativa, Inscrições, Seu papel aqui) ganharam os dois-pontos, mas o valor continua abaixo: essa lista tem desenho próprio, que a regra comum não desfaz. Decidir se ela também vira \"rótulo: valor\" na linha.", "\"Quem atuou\" passou a ler \"Elaborou: treino.elaboracao 14/11/2026 20:11\" numa linha (na primeira passada a regra das listas quebrou este cartão; corrigido)."]},
+ "/gestao/editais/<id>/?fase": {"observacoes": ["Os rótulos em caixa alta acima do valor ganharam os dois-pontos, e o valor continua abaixo (lista com desenho próprio).", "\"Quem atuou\" passou a ler \"rótulo: valor\" numa linha."]},
+ "/gestao/recursos/<id>": {"observacoes": ["A ficha da peça (Interposto por, Inscrição, Protocolo…) tem rótulo em caixa alta acima do valor: ganhou os dois-pontos e manteve o desenho dela.", "A fundamentação, a admissibilidade e os campos do julgamento passaram a ocupar a largura."]},
+ "/gestao/editais/<id>/marcos/<id>/ocupacao": {"observacoes": ["No celular, os indicadores ficam um por linha: com o mínimo de 9rem por caixa, dois não cabem lado a lado a 375 px. A Ocupação do piloto já fazia isso."]},
+ "/gestao/editais/<id>/marcos/<id>/convocacao/<id>/documentos": {"observacoes": ["No celular, os quatro indicadores (Conformes, Recebidos, Pendentes, A apresentar) ficam um por linha, pelo mesmo mínimo de 9rem; antes iam dois por linha."]}
+}
