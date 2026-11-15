@@ -60,6 +60,7 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
   <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M7.5 14h2M11 14h2M14.5 14h2M7.5 17.5h2M11 17.5h2"/></symbol>
   <symbol id="i-predio" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></symbol>
   <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-novidades" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
   <symbol id="i-livro" viewBox="0 0 24 24"><path d="M12 6.5C10.5 5 8 4.5 4 4.5v13c4 0 6.5.5 8 2 1.5-1.5 4-2 8-2v-13c-4 0-6.5.5-8 2zM12 6.5v13"/></symbol>
   <symbol id="i-chave" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
   <symbol id="i-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
@@ -82,7 +83,7 @@ viajava dentro do `<style>`; o argumento de escopar o estilo vale igual.
       {% for grupo in navegacao.barra %}
       <p class="grupo-de-secoes" id="grupo-de-secoes-{{ forloop.counter }}">{{ grupo.nome }}</p>
       <ul aria-labelledby="grupo-de-secoes-{{ forloop.counter }}">
-        {% for item in grupo.itens %}<li><a href="{{ item.endereco }}"{% if item.atual %} aria-current="{{ item.atual }}"{% endif %}><svg class="icone-da-secao" aria-hidden="true"><use href="#{{ item.icone }}"/></svg><span class="rotulo-da-secao">{{ item.rotulo }}</span></a></li>
+        {% for item in grupo.itens %}<li><a href="{{ item.endereco }}"{% if item.atual %} aria-current="{{ item.atual }}"{% endif %}><svg class="icone-da-secao" aria-hidden="true"><use href="#{{ item.icone }}"/></svg><span class="rotulo-da-secao">{{ item.rotulo }}</span>{% if item.contagem %}<span class="contagem-de-novidades"><span aria-hidden="true">{{ item.rotulo_da_contagem }}</span><span class="oculto">, {{ item.contagem }} não vista{{ item.contagem|pluralize }}</span></span>{% endif %}</a></li>
         {% endfor %}
       </ul>
       {% endfor %}

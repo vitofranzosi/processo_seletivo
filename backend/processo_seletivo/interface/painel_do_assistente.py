@@ -51,7 +51,11 @@ from processo_seletivo.duvidas.domain.estruturas_do_piloto import (
     TELA,
 )
 from processo_seletivo.duvidas.models import TrocaDoPiloto
-from processo_seletivo.interface.assistente import CAMINHO_OFICIAL, _aviso_de_mudanca
+from processo_seletivo.interface.assistente import (
+    CAMINHO_OFICIAL,
+    _aviso_de_mudanca,
+    chave_da_conversa,
+)
 
 TEMPLATE = "interface/prototipo_do_assistente.html"
 
@@ -116,14 +120,14 @@ ESTADOS_SIMULADOS = (
 )
 
 
-def conversa_da_sessao(request, edital_id, chave_da_sessao, *, nova=False, criar=True):
+def conversa_da_sessao(request, edital_id, chave_da_sessao, *, marca="", nova=False, criar=True):
     """A conversa desta sessão neste Edital: uma por par, e outra a cada "Nova conversa".
 
     `criar=False` só lê: mostrar a página não grava nada na sessão, e a conversa nasce no primeiro
     envio (revisão da `074`). Sem conversa, devolve vazio.
     """
     conversas = dict(request.session.get(chave_da_sessao) or {})
-    chave = str(edital_id)
+    chave = chave_da_conversa(edital_id, marca)
     if nova or (criar and chave not in conversas):
         conversas[chave] = str(uuid.uuid4())
         request.session[chave_da_sessao] = conversas

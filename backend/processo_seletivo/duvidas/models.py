@@ -20,6 +20,7 @@ from django.db import models
 from django.db.models import Q
 
 from processo_seletivo.duvidas.domain.estruturas_do_piloto import ESTADOS, ORIGENS, TIPOS
+from processo_seletivo.duvidas.domain.habilitacao import PAGINA_PUBLICA, PILOTO
 
 
 class TrocaDoPiloto(models.Model):
@@ -66,3 +67,66 @@ class TrocaDoPiloto(models.Model):
 
     def __str__(self):
         return f"{self.conversa} #{self.ordem} — {self.estado}"
+
+
+class HabilitacaoDoAssistente(models.Model):
+    """Um ato de habilitar ou desabilitar uma frente do assistente (170, data-model.md).
+
+    **Append-only, com as duas travas de sempre** (FR-7527): o gatilho que recusa `UPDATE` e
+    `DELETE`, e o privilégio ausente, pela entrada em `seguranca/papeis.py`. Desabilitar é ato
+    novo, e o estado de uma frente é o último ato dela — sem ato nenhum, desabilitada.
+
+    **A ordem é da frente, e não do relógio** (R-2). Os atos de uma frente são serializados por
+    trava consultiva, e a ordem é alocada sob ela, como a da `TrocaDoPiloto`. A chave é UUID porque
+    a trilha guarda o agregado como UUID: uma chave inteira viraria `UUID(int=pk)` em silêncio,
+    defeito que a `108` registrou no aviso interrompido.
+
+    **Nenhum valor do ambiente vem para cá** (FR-7500): nem serviço, nem modelo, nem credencial. O
+    que se guarda é a decisão, o motivo e quem decidiu.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    frente = models.CharField(max_length=16)
+    # Só da página pública, e obrigatório nela: o piloto é um por implantação (Q-1).
+    edital = models.ForeignKey(
+        "processos.Edital",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="habilitacoes_do_assistente",
+    )
+    ordem = models.PositiveIntegerField()
+    habilitada = models.BooleanField()
+    motivo = models.TextField()
+    # O `subject` da pessoa institucional; o nome se resolve como na trilha da `108`.
+    autor = models.CharField(max_length=255)
+    criado_em = models.DateTimeField()
+
+    class Meta:
+        db_table = "duvidas_habilitacao_do_assistente"
+        ordering = ("frente", "edital", "ordem")
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(frente=PILOTO) & Q(edital__isnull=True))
+                | (Q(frente=PAGINA_PUBLICA) & Q(edital__isnull=False)),
+                name="ck_habilitacao_frente_e_edital",
+            ),
+            models.CheckConstraint(condition=Q(ordem__gte=1), name="ck_habilitacao_ordem_positiva"),
+            models.CheckConstraint(
+                condition=~Q(motivo__regex=r"^\s*$"), name="ck_habilitacao_motivo_preenchido"
+            ),
+            models.UniqueConstraint(
+                fields=("ordem",),
+                condition=Q(frente=PILOTO),
+                name="uq_habilitacao_ordem_do_piloto",
+            ),
+            models.UniqueConstraint(
+                fields=("edital", "ordem"),
+                condition=Q(frente=PAGINA_PUBLICA),
+                name="uq_habilitacao_ordem_do_edital",
+            ),
+        ]
+
+    def __str__(self):
+        sentido = "habilitada" if self.habilitada else "desabilitada"
+        return f"{self.frente} {self.edital_id or ''} #{self.ordem} — {sentido}"
