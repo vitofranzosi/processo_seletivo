@@ -1959,9 +1959,13 @@ A tabela no fim da §10.4 diz o que cada erro pode significar.
 
 ### 16.4 Avisos aos candidatos (066)
 
-**Desligados em produção até duas validações**: a institucional de LGPD, com o encarregado de dados,
-e a da infraestrutura de correio (limite acima). Enquanto `AVISOS_AOS_CANDIDATOS` não for `true`,
-ninguém confirma aviso e o despacho não envia nada; o histórico e os modelos continuam acessíveis.
+**Ligados por padrão desde 15/11/2026**, por decisão do usuário
+([decisão](decisao-avisos-ligados-por-padrao-2026-11-15.md)). Até então ficavam desligados à espera de
+duas validações, a de LGPD com o encarregado de dados e a da infraestrutura de correio; a do correio
+continua sendo pré-requisito prático: **antes de subir, confira que o servidor de correio está
+configurado (§10.4) e que `AVISOS_LIMITE_POR_MINUTO` cabe no limite da conta**. Um ambiente sem correio
+pronto desliga os avisos com `AVISOS_AOS_CANDIDATOS=false`: ninguém confirma aviso e o despacho não
+envia nada; o histórico e os modelos continuam acessíveis.
 
 O despacho é um comando periódico, e não um worker: `manage.py despachar_avisos`, a cada minuto,
 com no máximo `AVISOS_LIMITE_POR_MINUTO` mensagens por execução. Ele sai com código diferente de 0
@@ -1969,7 +1973,7 @@ com no máximo `AVISOS_LIMITE_POR_MINUTO` mensagens por execução. Ele sai com 
 
 | Variável | Padrão | Uso |
 |---|---|---|
-| `AVISOS_AOS_CANDIDATOS` | `false` | liga a confirmação e o despacho |
+| `AVISOS_AOS_CANDIDATOS` | `true` | liga a confirmação e o despacho; `false` desliga os dois |
 | `AVISOS_LIMITE_POR_MINUTO` | 60 | mensagens por execução, uma execução por minuto |
 | `AVISOS_MAX_TENTATIVAS` | 3 | tentativas de uma falha temporária |
 | `AVISOS_INTERVALOS_DE_RETENTATIVA` | `5,15` | minutos antes da 2ª e da 3ª tentativa |
@@ -2581,8 +2585,8 @@ Persistent=true
 WantedBy=timers.target
 UNIT
 
-# Avisos aos candidatos (066, §16.4): o despacho, a cada minuto. Instale junto com o resto; ele não
-# faz nada enquanto AVISOS_AOS_CANDIDATOS não for true.
+# Avisos aos candidatos (066, §16.4): o despacho, a cada minuto. Instale junto com o resto; ele envia
+# desde a primeira execução, porque AVISOS_AOS_CANDIDATOS vem ligada por padrão.
 sudo tee /etc/systemd/system/ps-avisos.service >/dev/null <<'UNIT'
 [Unit]
 Description=Processo Seletivo — despacho dos avisos aos candidatos
@@ -2872,7 +2876,7 @@ Para cada caso: o que verificar, onde está o log, os comandos, e o que **não**
 | Backup | `restic snapshots`; o `restauracoes.log` | snapshot de hoje; restauração testada há menos de 3 meses |
 | Dado pessoal em log | `sudo grep -cE '[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}' /var/log/nginx/processoseletivo.access.log` | 0 (CPF não trafega em URL) |
 | Porta do correio (I-4) | Pergunte ao setor de correio: **o servidor aceita STARTTLS na 587?** Confirme com o passo 4 da §10.4 e com o `openssl s_client` da tabela de lá | sim. Se só aceitar a 465, o correio não funciona — o código não tem `EMAIL_USE_SSL` (I-4) —, e o candidato fica sem como entrar |
-| Avisos aos candidatos (066) | `sudo grep AVISOS_AOS_CANDIDATOS /etc/processoseletivo/*.env` | `false`, ou ausente, até a validação de LGPD com o encarregado de dados e a do limite da conta de correio (§16.4) |
+| Avisos aos candidatos (066) | `sudo grep AVISOS_AOS_CANDIDATOS /etc/processoseletivo/*.env` | ausente ou `true` (o padrão, desde 15/11); `false` só enquanto o correio não estiver pronto (§16.4) |
 
 ### 25.2 LGPD — implicações operacionais
 
