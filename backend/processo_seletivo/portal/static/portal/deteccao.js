@@ -95,9 +95,13 @@
   /* O giro pedido foi mantido? Sobre as leituras `{ms, giro}` em ordem de tempo, no desenho de
      `ouviuFala` da 174: a corrida mais recente além do limiar no lado pedido, se durar o instante, é
      "visto"; no lado oposto, "outro-lado" (FR-8015); leitura sem rosto (`giro: null`) interrompe a
-     corrida. `lado` é "esquerda" ou "direita", da pessoa. */
+     corrida. `lado` é "esquerda" ou "direita", da pessoa. Com `permitirOposto: false`, o lado oposto
+     não é notícia: quem acabou de ter o perfil esquerdo visto ainda está virado para a esquerda
+     quando o passo do direito começa, e "Para o outro lado" ali soaria como correção do que deu
+     certo (achado da revisão do #573). O vigia só o permite depois de o rosto passar pela frente. */
   function avaliarGiro(leituras, lado, opcoes) {
     opcoes = opcoes || {};
+    var permitirOposto = opcoes.permitirOposto !== false;
     var limiar = opcoes.limiar === undefined ? LIMIAR_DO_GIRO : opcoes.limiar;
     var mantido = opcoes.mantido === undefined ? INSTANTE_MANTIDO : opcoes.mantido;
     var sentido = lado === "esquerda" ? 1 : -1;
@@ -115,12 +119,13 @@
       return leitura.giro !== null && leitura.giro !== undefined && leitura.giro * sentido <= -limiar;
     }
     if (corrida(noLado)) return "visto";
-    if (corrida(noOposto)) return "outro-lado";
+    if (permitirOposto && corrida(noOposto)) return "outro-lado";
     return "esperando";
   }
 
   // O orçamento da leitura (FR-8017): `registrar` devolve `false` a partir da quinta leitura lenta
-  // seguida, e daí em diante, sempre — a detecção desligada não volta na mesma tomada.
+  // seguida, e daí em diante, sempre — a detecção desligada não volta enquanto a página estiver aberta:
+  // o vigia é um por página, e o aparelho lento numa tomada é lento na seguinte.
   function Orcamento(teto, limite) {
     this.teto = teto === undefined ? TETO_DA_LEITURA : teto;
     this.limite = limite === undefined ? LEITURAS_LENTAS : limite;
@@ -147,9 +152,14 @@
   /* O vigia: carrega o motor, lê a prévia quando lhe pedem, e conta o que viu.
 
      `opcoes`: `enderecos` ({motor, carregador, binario, modelo}), `video`, `oval` (o elemento),
-     `espelhada`, e os retornos `aoEstado(estado)`, `aoRosto(dentro)` e `aoGiro(estado)`. Com
-     `simulada` (uma função que devolve `{caixa, giro}`), não baixa motor nenhum: é a imagem de teste
-     do desenvolvimento (FR-8040). */
+     `espelhada`, `emGravacao` (uma função: a tomada está em curso?) e os retornos `aoEstado(estado)`,
+     `aoRosto(dentro)` e `aoGiro(estado)`. Com `simulada` (uma função que devolve `{caixa, giro}`),
+     não baixa motor nenhum: é a imagem de teste do desenvolvimento (FR-8040).
+
+     **Uma instância por página.** Sair do palco pausa — o laço para e as leituras somem (FR-8003) —,
+     mas o motor fica: recriá-lo a cada "Gravar de novo" recompilava 11 MB e repetia o aquecimento de
+     segundos (achado da revisão do #573). `parar()` solta tudo, e é o que a escolha de tocar, o
+     orçamento esgotado e a saída da página chamam. */
   function Vigia(opcoes) {
     this.opcoes = opcoes;
     this.motor = null;
@@ -162,11 +172,32 @@
     this.pronto = false;
     this.rosto = null;
     this.giro = null;
+    this.passouPelaFrente = false;
   }
 
   Vigia.prototype.estado = function (nome) {
-    this.situacao = nome;
     if (this.opcoes.aoEstado) this.opcoes.aoEstado(nome);
+  };
+
+  Vigia.prototype.gravando = function () {
+    return Boolean(this.opcoes.emGravacao && this.opcoes.emGravacao());
+  };
+
+  /* O aquecimento: a primeira leitura custa segundos (a bancada mediu ~2,7 s no computador, contra
+     ~20 ms das seguintes), na linha principal. Ele acontece antes de a detecção se dizer pronta, e
+     nunca com a tomada em curso: ali ele congelaria o relógio e o toque em "Próximo" (achado da
+     revisão do #573). Devolve "feito", "sem-quadro" (a primeira leitura de verdade o paga) ou
+     "falhou" — e a falha aqui é a do delegado, que dá lugar ao seguinte. */
+  Vigia.prototype.aquecer = function (motor) {
+    var video = this.opcoes.video;
+    if (!video || video.readyState < 2) return "sem-quadro";
+    try {
+      this.ultimoInstante = Math.max(performance.now(), this.ultimoInstante + 1);
+      motor.detectForVideo(video, this.ultimoInstante);
+      return "feito";
+    } catch (erro) {
+      return "falhou";
+    }
   };
 
   Vigia.prototype.carregar = async function () {
@@ -186,13 +217,14 @@
     }
     this.estado("carregando");
     var enderecos = this.opcoes.enderecos;
+    var motor = null;
+    var aquecido = false;
     try {
       var modulo = await import(enderecos.motor);
       // Sem SIMD, nada: a variante sem ele custaria 12,9 MB a mais, para aparelhos anteriores a 2023
       // (research T-001). O conjunto de arquivos é explícito, para o motor não escolher sozinho.
       if (!(await modulo.FilesetResolver.isSimdSupported())) throw new Error("sem SIMD");
       var arquivos = { wasmLoaderPath: enderecos.carregador, wasmBinaryPath: enderecos.binario };
-      var motor = null;
       var delegados = ["GPU", "CPU"];
       for (var i = 0; i < delegados.length && !motor; i += 1) {
         try {
@@ -207,30 +239,36 @@
           });
         } catch (erro) {
           motor = null;
+          continue;
+        }
+        // O delegado que abre mas não lê (o GPU com WebGL que falha na inferência) dá lugar ao
+        // seguinte, em vez de a página se dizer pronta com um motor que nunca vai funcionar.
+        if (this.gravando()) break;
+        var aquecimento = this.aquecer(motor);
+        if (aquecimento === "falhou") {
+          motor.close();
+          motor = null;
+        } else {
+          aquecido = true;
         }
       }
-      if (!motor) throw new Error("o motor não abriu");
-      // O aquecimento: a primeira leitura custa segundos (a bancada mediu ~2,7 s no computador,
-      // contra ~20 ms das seguintes), e tem de acontecer aqui, no carregamento — e não no meio de um
-      // perfil, nem contada no orçamento, que a tomaria por aparelho lento.
-      var video = this.opcoes.video;
-      if (video && video.readyState >= 2) {
-        try {
-          this.ultimoInstante = performance.now();
-          motor.detectForVideo(video, this.ultimoInstante);
-        } catch (erro) {
-          // Sem quadro ainda: a primeira leitura de verdade paga o aquecimento, uma vez.
-        }
-      }
-      if (this.parado) {
-        motor.close();
-        return;
-      }
-      this.motor = motor;
     } catch (erro) {
-      if (!this.parado) this.estado("indisponivel");
+      motor = null;
+    }
+    if (this.parado) {
+      if (motor) motor.close();
       return;
     }
+    if (!motor) {
+      this.estado("indisponivel");
+      return;
+    }
+    this.motor = motor;
+    // Pronto com a tomada em curso: espera o próximo preparo para aquecer e começar a ler.
+    if (aquecido) this.ficarPronto();
+  };
+
+  Vigia.prototype.ficarPronto = function () {
     this.pronto = true;
     this.estado("pronta");
     this.agendar();
@@ -244,6 +282,16 @@
     // Começa esperando, sem avisar: só a mudança é notícia.
     this.giro = "esperando";
     this.rosto = null;
+    this.passouPelaFrente = false;
+    // O motor que chegou com a tomada em curso aquece no primeiro pedido fora dela.
+    if (this.motor && !this.pronto && !this.parado && !this.gravando()) {
+      if (this.aquecer(this.motor) === "falhou") {
+        this.desligar("indisponivel");
+        return;
+      }
+      this.ficarPronto();
+      return;
+    }
     this.agendar();
   };
 
@@ -265,7 +313,15 @@
     // O motor exige instantes crescentes.
     var instante = Math.max(agora, this.ultimoInstante + 1);
     this.ultimoInstante = instante;
-    var resultado = this.motor.detectForVideo(video, instante);
+    var resultado;
+    try {
+      resultado = this.motor.detectForVideo(video, instante);
+    } catch (erro) {
+      // Sem isto a exceção subia do temporizador, o laço morria e a página continuava dizendo que
+      // a tela avança sozinha (achado da revisão do #573). Desligada, ela volta a ser a da 174.
+      this.desligar("desligada");
+      return null;
+    }
     if (!this.orcamento.registrar(performance.now() - agora)) {
       this.desligar("desligada");
       return null;
@@ -304,9 +360,10 @@
       }
       return;
     }
+    if (leitura.giro !== null && Math.abs(leitura.giro) < LIMIAR_DO_GIRO) this.passouPelaFrente = true;
     this.leituras.push({ ms: performance.now(), giro: leitura.giro });
     if (this.leituras.length > LEITURAS_GUARDADAS) this.leituras.shift();
-    var giro = avaliarGiro(this.leituras, this.alvo);
+    var giro = avaliarGiro(this.leituras, this.alvo, { permitirOposto: this.passouPelaFrente });
     if (giro !== this.giro) {
       this.giro = giro;
       // Visto, o vigia para de olhar até o próximo pedido: o passo vai mudar.
@@ -320,13 +377,20 @@
     return { x: r.left, y: r.top, largura: r.width, altura: r.height };
   }
 
-  // Para e solta tudo: o laço, as leituras e o motor (FR-8003).
-  Vigia.prototype.parar = function () {
-    this.parado = true;
+  // Fora do palco: o laço para e as leituras somem (FR-8003); o motor fica para a próxima tomada.
+  Vigia.prototype.pausar = function () {
     this.alvo = null;
     this.leituras = [];
+    this.rosto = null;
+    this.giro = null;
     clearTimeout(this.relogio);
     this.relogio = null;
+  };
+
+  // Para e solta tudo: o laço, as leituras e o motor.
+  Vigia.prototype.parar = function () {
+    this.parado = true;
+    this.pausar();
     if (this.motor) this.motor.close();
     this.motor = null;
   };

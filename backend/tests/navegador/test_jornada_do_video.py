@@ -31,6 +31,13 @@ from tests.fixtures.verificacao import montar_com_video  # noqa: E402
 pytestmark = pytest.mark.django_db(transaction=True)
 
 CELULAR = {"width": 375, "height": 667}
+# O sinal de cada passo durante a gravação (176, FR-8050); o passo de frente não tem.
+GESTOS = {
+    "documento": "documento",
+    "perfil-esquerdo": "esquerda",
+    "perfil-direito": "direita",
+    "frente": "",
+}
 TABLET = {"width": 768, "height": 1024}
 DESKTOP = {"width": 1280, "height": 800}
 LARGO = {"width": 1920, "height": 1080}
@@ -195,9 +202,24 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
             assert _na_tela(pagina, pagina.locator(".link-no-palco"))
         assert pagina.locator(".passos-do-roteiro").is_hidden()
         assert pagina.evaluate("document.activeElement.hasAttribute('data-proximo')")
+        # O sinal do gesto (176, FR-8050 a FR-8052): seta nos perfis, pictograma no documento,
+        # nenhum na frente; o oval sai na gravação; a frase continua inteira, menor nos gestos.
+        esperado = GESTOS[roteiro.PASSOS[indice].chave]
+        for gesto in ("esquerda", "direita", "documento"):
+            visivel = pagina.locator(f".gesto-{gesto}").is_visible()
+            assert visivel is (gesto == esperado), (titulo, gesto)
+        if esperado:
+            assert _na_tela(pagina, pagina.locator(f".gesto-{esperado}"))
+        assert pagina.locator(".oval").is_hidden()
+        corpo_da_frase = pagina.evaluate(
+            "parseFloat(getComputedStyle(document.querySelector('.texto-do-passo')).fontSize)"
+        )
+        assert (corpo_da_frase <= 16.5) is bool(esperado), (titulo, corpo_da_frase)
         if indice == 0:
             assert _contraste_da_faixa(pagina) >= 4.5
             tela.capturar(pagina, "palco-gravando")
+        if indice == 1:
+            tela.capturar(pagina, "palco-perfil")
         pagina.wait_for_timeout(600)
         if celular:
             proximo.click()
@@ -297,6 +319,25 @@ def test_o_motor_de_verdade_carrega_da_propria_origem_e_sem_rosto_vale_o_toque(
     pagina.wait_for_timeout(600)
     proximo.click()
     expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
+
+    # "Gravar de novo" volta ao palco com o mesmo motor: nada é baixado de novo, e a detecção fica
+    # como estava (achado da revisão do #573, que recriava e reaquecia o motor a cada tomada). No
+    # runner da CI, sem GPU, a leitura passa do orçamento e a detecção se desliga na gravação — é o
+    # caminho do aparelho lento (FR-8017), e ele também vale para a página inteira.
+    antes = raiz.get_attribute("data-deteccao")
+    assert antes in ("pronta", "desligada"), antes
+    pagina.get_by_role("button", name="Gravar de novo").click()
+    expect(pagina.get_by_role("button", name="Começar a gravar")).to_be_visible()
+    expect(raiz).to_have_attribute("data-deteccao", antes)
+    aviso = pagina.locator("[data-aviso-deteccao]")
+    expect(aviso).to_be_visible() if antes == "pronta" else expect(aviso).to_be_hidden()
+    for arquivo in (
+        "vision_bundle.mjs",
+        "vision_wasm_internal.js",
+        "vision_wasm_internal.wasm",
+        "face_landmarker-float16-1.task",
+    ):
+        assert sum(arquivo in url for url in pedidos) == 1, arquivo
 
 
 def test_prefiro_avancar_so_tocando_desliga_a_deteccao(

@@ -31,6 +31,15 @@ from processo_seletivo.verificacao.domain import roteiro
 
 PARTE = envio.PARTE_MAXIMA
 
+# O sinal de cada passo de gesto, sobre a prévia (176, FR-8050, D-008): a seta nos perfis, o
+# pictograma no documento. O passo de frente não tem: a frase dele é a fala. As chaves são as do
+# roteiro, e o teste confere que existem nele.
+GESTO_DO_PASSO = {
+    "documento": "documento",
+    "perfil-esquerdo": "esquerda",
+    "perfil-direito": "direita",
+}
+
 
 def _identidade(request):
     return identidade_do_candidato.identidade_da_sessao(request)
@@ -77,6 +86,7 @@ def pagina(request, inscricao_id, etapa_id):
             "situacao": situacao,
             "pode_gravar": situacao.pode_enviar,
             "passos": roteiro.PASSOS,
+            "gestos": GESTO_DO_PASSO,
             "roteiro_versao": roteiro.VERSAO,
             "teto_minutos": roteiro.TETO_SEGUNDOS // 60,
             "teto_segundos": roteiro.TETO_SEGUNDOS,

@@ -14,6 +14,15 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 | `data-giro` em `[data-passo]` | ausente | `esquerda` no perfil esquerdo, `direita` no perfil direito |
 | rotas, corpos e respostas do envio | os da `166` | **os mesmos** (FR-8030) |
 
+## O sinal do gesto (emenda de 15/11), com ou sem a chave
+
+| O quê | Onde |
+|---|---|
+| `data-gesto` em `[data-passo]` | `documento`, `esquerda`, `direita`; ausente no passo de frente |
+| `.gesto-do-passo` (`aria-hidden`) | sobre a prévia, só gravando; `.gesto-esquerda`, `.gesto-direita`, `.gesto-documento` |
+| `data-gesto` e `data-confirmado` no palco | escritos por `gravacao.js`; a folha mostra o sinal do passo e o esconde quando visto |
+| frases | "Sua esquerda", "Sua direita", "Mostre o documento" |
+
 ## Os ganchos do script
 
 | Gancho | Em | Quem escreve | O que significa |
@@ -52,5 +61,8 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 - `avaliarGiro(leituras, lado, opcoes)` → `"esperando" | "outro-lado" | "visto"`;
 - `Orcamento` com `registrar(ms)` → `true` enquanto cabe;
 - `podeCarregar(ambiente)` → booleano (sem `WebAssembly`, com `saveData`, ou recusada → `false`);
-- `Vigia(opcoes)`: `iniciar(video, palco)`, `observar(lado | "oval" | null)`, `parar()`, e os retornos
-  `aoRosto(dentro)`, `aoGiro(estado)`; com `simulada: () => giro`, não carrega o motor.
+- `Vigia(opcoes)`, um por página: `carregar()`, `observar(lado | "oval" | null)`, `pausar()` (fora do
+  palco: para de ler e esquece as leituras, e guarda o motor), `parar()` (solta tudo: a escolha de
+  tocar, o orçamento, a falha de leitura e a saída da página), e os retornos `aoEstado`, `aoRosto` e
+  `aoGiro`; `emGravacao()` impede o aquecimento com a tomada em curso; com `simulada`, não carrega
+  o motor.

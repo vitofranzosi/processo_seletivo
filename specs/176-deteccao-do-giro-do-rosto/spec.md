@@ -87,6 +87,14 @@ pelo toque.
   no palco (D-001); só os dois perfis avançam sozinhos (D-002); ligado, com aviso e "Prefiro avançar
   só tocando" (D-003); o motor dos pontos do rosto, de cerca de 6,5 MB baixados uma vez (D-006).
 
+### Session 2026-11-15 (emenda: menos texto na gravação)
+
+- Depois do #573, o usuário avaliou a tela da gravação: *"tem muito texto durante a gravação… às vezes
+  uma seta indicando já resolve"*. Das duas saídas apresentadas — só limpar e acrescentar a seta, com a
+  frase em destaque; ou limpar e recolher a frase depois de alguns segundos, revendo a D-003 da `174` —,
+  ele pediu **um meio-termo**: a frase do roteiro continua inteira e sempre à vista, mas nos passos de
+  gesto deixa de ser o centro da tela, e o sinal visual passa a ser (FR-8050 a FR-8054, D-008).
+
 ### Perguntas ao usuário (decididas em 15/11 pelas recomendações abaixo)
 
 #### Q-1 — Como fica a regra de que o sistema não analisa o vídeo?
@@ -241,7 +249,9 @@ envio, sem nenhum toque nos perfis.
 ### Edge Cases
 
 - **Giro para o lado errado** (a confusão do espelho): a tela diz, sem tom de erro, "Para o outro
-  lado", e continua esperando; nada é registrado.
+  lado", e o leitor de tela também; a espera continua, e nada é registrado. Só depois de o rosto
+  passar pela frente: quem acabou de ter um perfil visto ainda está virado para aquele lado quando o
+  passo seguinte começa.
 - **O rosto sai do oval no meio do passo**: a tela volta a esperar o giro; o "Rosto no oval" não é
   pedido durante a gravação.
 - **Duas pessoas no quadro**: a detecção considera só o rosto maior, e não avisa nada; a comissão vê
@@ -250,10 +260,11 @@ envio, sem nenhum toque nos perfis.
   avança.
 - **A pessoa toca em "Próximo" ao mesmo tempo em que o giro é percebido**: conta um avanço só, como o
   toque duplo da FR-7870 da `174`.
-- **O motor carrega depois que a gravação começou**: ele passa a guiar a partir do passo em curso;
-  não muda nada do que já foi gravado.
+- **O motor carrega depois que a gravação começou**: ele não aquece nem lê durante aquela tomada —
+  o aquecimento congelaria a página por segundos — e passa a guiar a partir do próximo preparo.
 - **O aparelho fica lento**: se a leitura de um quadro passar do orçamento (FR-8017), a detecção
-  desliga para o resto da tomada, sem aviso, e a gravação segue pelo toque.
+  desliga até a página ser recarregada, sem aviso, e a gravação segue pelo toque — o aparelho lento
+  numa tomada é lento na seguinte, e tentar de novo custaria outro aquecimento.
 - **Óculos, barba, véu, cabelo no rosto, pouca luz**: a detecção pode não perceber; o toque resolve,
   e nenhuma frase culpa a aparência ou a luz da pessoa (R-19 do estudo).
 - **A tela some no meio** (troca de aplicativo): a tomada é descartada como hoje (a FR-7115 da `166`),
@@ -263,8 +274,8 @@ envio, sem nenhum toque nos perfis.
 - **Leitor de tela**: a confirmação "Perfil esquerdo visto" e o passo novo são anunciados como no
   toque (UX-875 da `174`), e o foco continua em "Próximo".
 - **Economia de dados ligada no aparelho**: o motor não é baixado; o palco é o da `174`.
-- **Regravar**: ao sair do palco o motor é fechado (FR-8003); ao voltar, ele é recriado a partir do
-  que o navegador já guardou, sem baixar de novo, e a detecção recomeça do oval.
+- **Regravar**: ao sair do palco o vigia para de ler e esquece as leituras (FR-8003); o motor fica na
+  página, e a detecção recomeça do oval, sem baixar nem aquecer de novo.
 - **Chave da detecção ligada e a do vídeo desligada**: nada aparece; a do vídeo continua mandando.
 
 ## Requirements *(mandatory)*
@@ -328,8 +339,8 @@ envio, sem nenhum toque nos perfis.
   memória, economia de dados, chave desligada —, o palco DEVE ser o da `174`, sem aviso de falha e
   sem as frases da detecção.
 - **FR-8017**: A leitura DEVE ter orçamento: no máximo uma leitura por intervalo fixo, e, se a leitura
-  de um quadro passar do teto de tempo várias vezes seguidas, a detecção DEVE desligar para o resto
-  da tomada, sem aviso. A detecção NÃO DEVE degradar a gravação: o vídeo gravado com ela ligada DEVE
+  de um quadro passar do teto de tempo várias vezes seguidas, a detecção DEVE desligar até a página
+  ser recarregada, sem aviso. A detecção NÃO DEVE degradar a gravação: o vídeo gravado com ela ligada DEVE
   ter a mesma fluidez que sem ela (SC-2753).
 - **FR-8018**: Com o aparelho pedindo economia de dados, o motor NÃO DEVE ser baixado.
 
@@ -349,6 +360,27 @@ envio, sem nenhum toque nos perfis.
   — no lock, no que se declara e no código — e DEVE passar a recusar também qualquer motor de visão no
   navegador que não seja o desta spec, na versão e no resumo registrados, e em qualquer página além da
   gravação.
+
+#### O sinal do gesto, e menos texto na gravação (emenda de 15/11)
+
+Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e não leitura do rosto.
+
+- **FR-8050**: Durante a gravação, os passos de gesto DEVEM mostrar sobre a prévia um sinal visual
+  grande, com uma palavra ao lado: no perfil esquerdo, uma seta para a esquerda da tela e "Sua
+  esquerda"; no perfil direito, uma seta para a direita e "Sua direita"; no documento, o pictograma
+  do documento e "Mostre o documento". A prévia é espelhada (a FR-7874 da `174`), e a esquerda da
+  tela é a esquerda da pessoa. O passo de frente NÃO DEVE ter sinal: a frase dele é o que a pessoa
+  fala.
+- **FR-8051**: A frase do roteiro DEVE continuar inteira e à vista em todos os passos, sem recolher
+  (a D-003 da `174`). Nos passos de gesto, ela DEVE vir em tamanho de leitura, e não grande: o sinal
+  é o destaque, e a frase o apoio. No passo de frente, continua grande. Revê a "texto grande" da
+  FR-7868 da `174` só nos passos de gesto (D-008).
+- **FR-8052**: O oval NÃO DEVE aparecer durante a gravação: ele é o guia do enquadramento, antes de
+  começar, e no meio do giro ocupava o centro da tela sem guiar nada.
+- **FR-8053**: Com a detecção, "visto" DEVE substituir o sinal do perfil pela confirmação; e o sinal
+  DEVE continuar apontando o lado pedido enquanto a tela diz "Para o outro lado".
+- **FR-8054**: O sinal é decorativo para o leitor de tela (`aria-hidden`): o anúncio do passo, com a
+  frase inteira, continua o mesmo (a UX-875 da `174`).
 
 #### O que não muda
 
@@ -402,7 +434,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
   gravar" — o "Próximo" do documento e o "Terminar a gravação" —, contra quatro hoje, com câmera real
   e com a imagem de teste.
 - **SC-2751**: Sem a detecção (chave desligada, motor bloqueado ou "Prefiro avançar só tocando"), a
-  jornada é a da `174`: os mesmos toques, as mesmas frases, nenhuma frase da detecção à vista.
+  jornada é a da `174` com o sinal do gesto da emenda (FR-8050 a FR-8052): os mesmos toques, as
+  mesmas frases do roteiro, nenhuma frase da detecção à vista.
 - **SC-2752**: O pedido de envio de um vídeo gravado com a detecção tem os mesmos campos, a mesma versão
   do roteiro e uma marca por passo na mesma ordem que o gravado sem ela; o teste compara os dois
   corpos chave a chave.
@@ -418,6 +451,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
   conteúdo dele; a política da gravação com a chave desligada é a de hoje, diretiva a diretiva.
 - **SC-2757**: Num celular real, uma pessoa vira o rosto para os dois lados e a tela avança nos dois
   perfis sem toque *(humano)*.
+- **SC-2759**: A 375 px, durante cada perfil, o sinal e a sua palavra ficam à vista sem rolar, o oval
+  não aparece, e a frase do roteiro continua inteira na faixa de cima.
 - **SC-2758**: Uma pessoa que não vira o rosto grava até o fim pelo toque, sem ver nenhuma frase de
   erro *(humano, ou simulado com o motor carregado e o vulto parado)*.
 
@@ -526,3 +561,11 @@ uma tentativa, visível a quem olha a rede, e a garantia passaria a depender de 
 0.10.35, de 27/04/2026, tem a mesma interface, é menor (11,2 MB no disco, cerca de 3,3 MB em gzip) e
 só busca o modelo e o grafo, nos endereços que a página lhe dá. A política continua como segunda
 barreira, e o guardião recusa o registrador em qualquer versão copiada.
+
+### D-008 — O sinal do gesto à frente, e a frase do roteiro como apoio
+
+O meio-termo pedido pelo usuário (emenda de 15/11). Recolher a frase rompia a D-003 da `174` — o vídeo
+guarda a versão do roteiro, e a comissão lê o que o candidato viu —; mantê-la grande deixava o perfil
+com oito coisas na tela, e uma pessoa com o rosto virado não lê três linhas. A frase continua inteira
+e à vista, em tamanho de leitura; a seta diz o que fazer num relance. O passo de frente fica como
+está, porque nele a frase é a fala.

@@ -110,3 +110,10 @@ T010 deteccao.test.js              |                    |
 MVP é a US1 com a US2: o avanço pelo giro **e** a degradação invisível precisam chegar juntos, porque
 uma sem a outra viola a FR-8014. A US3 é o aviso, que a Q-3 tornou obrigatório antes de qualquer
 demonstração. A US4 é o que permite provar tudo no navegador sem rosto.
+
+## Phase 8: Emenda de 15/11 — menos texto na gravação (FR-8050 a FR-8054, D-008)
+
+- [x] T030 Registrar a emenda na spec: o meio-termo pedido pelo usuário, FR-8050 a FR-8054, SC-2759, D-008
+- [x] T031 `GESTO_DO_PASSO` em `processo_seletivo/portal/verificacao.py`, `data-gesto` nos passos e `.gesto-do-passo` em `verificacao.html`, ícones `seta-esquerda` e `seta-direita` em `_icone.html`
+- [x] T032 `gravacao.js`: `data-gesto` e `data-confirmado` no palco; `portal.css`: o sinal, a frase em tamanho de leitura nos gestos, o oval fora da gravação
+- [x] T033 Testes: o mapa contra o roteiro e a página com e sem a chave (`tests/portal/test_deteccao_do_giro.py`); a jornada nos quatro tamanhos confere o sinal de cada passo, o oval e o corpo da frase (`tests/navegador/test_jornada_do_video.py`)

@@ -156,3 +156,99 @@ test("o vigia simulado conta o giro visto e para de olhar até o pedido seguinte
   vigia.parar();
   assert.equal(vigia.relogio, null);
 });
+
+// --- os achados da revisão do #573 ------------------------------------------------------------
+
+test("o lado oposto só é notícia depois de o rosto passar pela frente", () => {
+  const ainda = leituras([0.4, 0.4, 0.4, 0.4, 0.4]);
+  assert.equal(d.avaliarGiro(ainda, "direita", { permitirOposto: false }), "esperando");
+  assert.equal(d.avaliarGiro(ainda, "direita", { permitirOposto: true }), "outro-lado");
+});
+
+/* Um motor falso, servido por `import()` de uma URL `data:` — o mesmo caminho do motor de verdade.
+   `globalThis.__motor` diz como cada delegado se comporta, e conta o que aconteceu. */
+function motorFalso(comportamento) {
+  globalThis.__motor = { comportamento, criados: [], fechados: 0, leituras: 0 };
+  const fonte = `
+    export const FilesetResolver = { isSimdSupported: async () => true };
+    export const FaceLandmarker = {
+      async createFromOptions(arquivos, opcoes) {
+        const m = globalThis.__motor;
+        const delegado = opcoes.baseOptions.delegate;
+        m.criados.push(delegado);
+        const quebra = m.comportamento[delegado];
+        if (quebra === "nao-abre") throw new Error("não abre");
+        return {
+          detectForVideo() {
+            m.leituras += 1;
+            if (quebra === "nao-le" || (quebra === "quebra-depois" && m.leituras > 1)) throw new Error("WebGL perdido");
+            return { faceLandmarks: [] };
+          },
+          close() { m.fechados += 1; },
+        };
+      },
+    };`;
+  return "data:text/javascript," + encodeURIComponent(fonte);
+}
+
+function vigiaDe(motor, extra = {}) {
+  const estados = [];
+  const vigia = new d.Vigia({
+    enderecos: { motor, carregador: "c", binario: "b", modelo: "m" },
+    video: { readyState: 4, videoWidth: 640, videoHeight: 480 },
+    aoEstado: (e) => estados.push(e),
+    ...extra,
+  });
+  return { vigia, estados };
+}
+
+const espera = (ms) => new Promise((pronto) => setTimeout(pronto, ms));
+
+test("o delegado que abre mas não lê dá lugar ao seguinte", async () => {
+  globalThis.WebAssembly = globalThis.WebAssembly || {};
+  const { vigia, estados } = vigiaDe(motorFalso({ GPU: "nao-le", CPU: "ok" }));
+  await vigia.carregar();
+  assert.deepEqual(globalThis.__motor.criados, ["GPU", "CPU"]);
+  assert.equal(globalThis.__motor.fechados, 1);
+  assert.deepEqual(estados, ["carregando", "pronta"]);
+  vigia.parar();
+});
+
+test("a leitura que lança desliga a detecção, em vez de matar o laço em silêncio", async () => {
+  const { vigia, estados } = vigiaDe(motorFalso({ GPU: "quebra-depois" }));
+  await vigia.carregar();
+  vigia.observar("esquerda");
+  await espera(d.INTERVALO * 2 + 50);
+  assert.deepEqual(estados, ["carregando", "pronta", "desligada"]);
+  assert.equal(vigia.parado, true);
+  assert.equal(vigia.relogio, null);
+});
+
+test("com a tomada em curso, o motor não aquece: espera o próximo preparo", async () => {
+  let gravando = true;
+  const { vigia, estados } = vigiaDe(motorFalso({ GPU: "ok" }), { emGravacao: () => gravando });
+  await vigia.carregar();
+  assert.equal(globalThis.__motor.leituras, 0);
+  assert.deepEqual(estados, ["carregando"]);
+  vigia.observar("esquerda");
+  assert.equal(globalThis.__motor.leituras, 0);
+  gravando = false;
+  vigia.observar("oval");
+  assert.equal(globalThis.__motor.leituras, 1);
+  assert.deepEqual(estados, ["carregando", "pronta"]);
+  vigia.parar();
+});
+
+test("pausar para o laço e esquece as leituras, mas guarda o motor", async () => {
+  const { vigia } = vigiaDe(motorFalso({ GPU: "ok" }));
+  await vigia.carregar();
+  vigia.observar("esquerda");
+  vigia.leituras.push({ ms: 0, giro: 0.5 });
+  vigia.pausar();
+  assert.equal(vigia.relogio, null);
+  assert.deepEqual(vigia.leituras, []);
+  assert.ok(vigia.motor);
+  assert.equal(globalThis.__motor.fechados, 0);
+  vigia.parar();
+  assert.equal(globalThis.__motor.fechados, 1);
+});

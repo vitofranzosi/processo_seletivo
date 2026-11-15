@@ -43,6 +43,11 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-8022 | `shared/politica_de_conteudo.py` (`compilar_wasm`) | DG, NV (sem violação) |
 | FR-8023 | `portal/deteccao.py` (`ARQUIVOS`); `portal/static/portal/deteccao/` | DG, SI |
 | FR-8024 | o guardião ampliado | SI |
+| FR-8050 | `GESTO_DO_PASSO` em `portal/verificacao.py`; `.gesto-do-passo` em `verificacao.html`; ícones `seta-esquerda` e `seta-direita` em `_icone.html` | DG, NV (os quatro tamanhos) |
+| FR-8051 | `.palco-da-gravacao[data-gesto=…] .texto-do-passo` em `portal.css` | NV (corpo da frase por passo) |
+| FR-8052 | `.palco-da-gravacao[data-estado="gravando"] .oval` | NV |
+| FR-8053 | `data-confirmado` em `gravacao.js` | NV (perfis com a imagem de teste) |
+| FR-8054 | `aria-hidden` no sinal; o anúncio de sempre | DG, NV |
 | FR-8030 | nenhum campo novo no envio | DG, NV, 166 |
 | FR-8031 | nada da detecção no vídeo nem na trilha | DG |
 | FR-8032 | o oval e a confirmação por CSS, sobre a prévia; nenhum ponto desenhado | NV (capturas) |
@@ -73,4 +78,5 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | SC-2755 | doc: 15,4 MB sem compressão, cerca de 6,7 MB com gzip |
 | SC-2756 | DG, SI |
 | SC-2757 | **humano** (câmera real; a bancada de `doc/deteccao-do-giro-2026-11/`) |
+| SC-2759 | NV: a 375 px, o sinal à vista sem rolar em cada perfil, o oval escondido, a frase inteira |
 | SC-2758 | NV (motor sem rosto, pelo toque) e **humano** |

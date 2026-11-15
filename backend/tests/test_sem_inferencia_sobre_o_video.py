@@ -92,6 +92,8 @@ ESTATICOS = RAIZ / "processo_seletivo"
 PASTA_DO_MOTOR = ESTATICOS / "portal" / "static" / deteccao.PASTA
 # O que denuncia um motor de visão no navegador: o nome do pacote, a classe do motor e o binário.
 MARCAS_DE_MOTOR = ("tasks-vision", "FaceLandmarker", "mediapipe", "vision_wasm")
+# O único script do sistema que pode nomear o motor: o que o carrega, na página da gravação.
+CARREGA_O_MOTOR = ESTATICOS / "portal" / "static" / "portal" / "deteccao.js"
 
 
 def _resumo(arquivo):
@@ -115,7 +117,9 @@ def test_nenhum_outro_estatico_traz_motor_de_visao():
     for arquivo in sorted(ESTATICOS.glob("*/static/**/*")):
         if not arquivo.is_file() or PASTA_DO_MOTOR in arquivo.parents:
             continue
-        if arquivo.name == "deteccao.js" or arquivo.suffix in {".png", ".jpg", ".svg", ".woff2"}:
+        # A isenção é pelo caminho, e não pelo nome: um `deteccao.js` na gestão citando o motor
+        # seria a Mesa lendo o rosto, e passaria (achado da revisão do #573).
+        if arquivo == CARREGA_O_MOTOR or arquivo.suffix in {".png", ".jpg", ".svg", ".woff2"}:
             continue
         texto = arquivo.read_text(encoding="utf-8", errors="ignore")
         achados += [f"{arquivo.relative_to(RAIZ)}: {m}" for m in MARCAS_DE_MOTOR if m in texto]

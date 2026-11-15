@@ -1488,6 +1488,26 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .aviso-da-deteccao{margin:0 0 .75rem;padding:.6rem .75rem;border-left:4px solid var(--verde);
   border-radius:6px;background:var(--fundo-p)}
 .aviso-da-deteccao p{margin:0 0 .4rem}
+/* O sinal do gesto (176, FR-8050 a FR-8053, D-008): grande, no meio da altura, do lado do giro. A
+   prévia é espelhada, então a esquerda da tela é a da pessoa. O do documento fica na lateral, e não
+   no meio: é no meio que a pessoa segura o documento, e precisa ver se ele dá para ler. Só aparece
+   o do passo atual, e some
+   quando o perfil foi visto. Nos passos de gesto a frase do roteiro vem em tamanho de leitura (o
+   sinal é o destaque); no de frente, continua grande. O oval é do preparo, e sai na gravação. */
+.gesto-do-passo{align-self:center;justify-self:stretch;display:flex;padding:0 .75rem;pointer-events:none}
+.gesto{display:none;flex-direction:column;align-items:center;gap:.25rem;padding:.6rem .8rem;
+  border-radius:12px;background:rgba(0,0,0,.65);font-size:1.0625rem;font-weight:700}
+.gesto .icone{width:4.5rem;height:4.5rem;stroke-width:2.25}
+.gesto-direita{margin-left:auto}
+.gesto-documento{margin-right:auto}
+.palco-da-gravacao[data-gesto="esquerda"] .gesto-esquerda,
+.palco-da-gravacao[data-gesto="direita"] .gesto-direita,
+.palco-da-gravacao[data-gesto="documento"] .gesto-documento{display:flex}
+.palco-da-gravacao[data-confirmado] .gesto{display:none}
+.palco-da-gravacao[data-gesto="esquerda"] .texto-do-passo,
+.palco-da-gravacao[data-gesto="direita"] .texto-do-passo,
+.palco-da-gravacao[data-gesto="documento"] .texto-do-passo{font-size:1rem;font-weight:400}
+.palco-da-gravacao[data-estado="gravando"] .oval{display:none}
 .aviso-da-deteccao p:last-child{margin:0}
 .revisao,.video-do-titular{display:block;width:100%;max-height:70vh;background:var(--texto);border-radius:10px;}
 .autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
