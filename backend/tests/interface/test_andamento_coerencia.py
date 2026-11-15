@@ -41,7 +41,7 @@ MARCADORES = {
     a.RESULTADO: "/publicar",
     a.CONFERIR: "/documentos",
     a.RECURSO: "/recursos/",
-    # O aviso do passo (168): a confirmação do aviso, com o seu botão.
+    # O aviso do passo (171): a confirmação do aviso, com o seu botão.
     a.AVISAR: 'value="confirmar"',
 }
 MARCADORES_DA_CONVOCACAO = {

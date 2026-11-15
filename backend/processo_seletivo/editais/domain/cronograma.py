@@ -55,10 +55,10 @@ def validate_schedule(events: list[dict]) -> None:
 def periodo_da_etapa(conteudo, etapa) -> tuple:
     """`(inicio, fim)` do Evento que a Etapa aponta, no conteúdo dado; `(None, None)` sem ele.
 
-    **Do conteúdo que quem chama já leu, e não relido** (168, T-002): o degrau do acompanhamento,
+    **Do conteúdo que quem chama já leu, e não relido** (171, T-002): o degrau do acompanhamento,
     as pendências do Centro e a linha de avaliar leem o período de toda Etapa da página, e reler a
     versão vigente custaria uma consulta por Etapa. Nasceu na `166`, dentro do app do vídeo, e veio
-    para cá quando a `168` precisou dele para toda Etapa (achado A-2 da `168`).
+    para cá quando a `171` precisou dele para toda Etapa (achado A-2 da `171`).
 
     O Evento cancelado não é período: a Etapa que aponta para ele não tem quando acontecer.
     """

@@ -1,4 +1,4 @@
-# Rastreabilidade — 168 · A orientação da verificação da autodeclaração
+# Rastreabilidade — 171 · A orientação da verificação da autodeclaração
 
 **Frase que governa**: *a verificação entra onde cada pessoa já trabalha, e cada tela diz só o que os
 dados permitem afirmar.*

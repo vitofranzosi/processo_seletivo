@@ -1,4 +1,4 @@
-"""O aviso do passo de uma Etapa restrita (168, US2; FR-7315 a FR-7320; SC-2412).
+"""O aviso do passo de uma Etapa restrita (171, US2; FR-7315 a FR-7320; SC-2412).
 
 O Edital é o da `166` sem o vídeo: a Etapa restrita a `PPI`, colegiada, com período. O aviso é o da
 `066` com outra origem — prévia, gesto, despacho —, e o texto nunca diz a lista de ninguém.

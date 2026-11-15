@@ -176,7 +176,7 @@ def test_o_comando_diz_que_semeou_e_cria_os_modelos(tmp_path):
     """FR-3305, e a linha que o guia ensina a ler (D-004)."""
     linhas, _ = _comando("semear_unidades", "--arquivo", _arquivo(tmp_path, _declarado()))
 
-    # Os três da `066` e o do passo da `168` (FR-7320).
+    # Os três da `066` e o do passo da `171` (FR-7320).
     assert linhas == ["Unidades: 1 semeadas.", "Modelos de aviso: 4 criados."]
 
 

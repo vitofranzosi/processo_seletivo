@@ -1,4 +1,4 @@
-"""A varredura do vocabulário do passo, nas telas do candidato (168, FR-7330 a FR-7332; SC-2411).
+"""A varredura do vocabulário do passo, nas telas do candidato (171, FR-7330 a FR-7332; SC-2411).
 
 **A lista é literal, e tela nova escapa dela em silêncio.** Aqui entram o degrau do acompanhamento,
 em todos os estados, com e sem a chave do vídeo, e as páginas da gravação e do comprovante da `166`,

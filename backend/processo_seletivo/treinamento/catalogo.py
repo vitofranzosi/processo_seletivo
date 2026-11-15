@@ -377,7 +377,7 @@ def montar_c07(m):
 # As fichas
 # ---------------------------------------------------------------------------------------------
 
-# Os estados do C18 (168), pela ordem dos candidatos: os quatro que a Etapa restrita alcança, e o
+# Os estados do C18 (171), pela ordem dos candidatos: os quatro que a Etapa restrita alcança, e o
 # 05, na ampla.
 SEM_AVALIADOR_DO_C18 = 1
 SEM_PARECER_DO_C18 = 2
@@ -387,7 +387,7 @@ NA_AMPLA_DO_C18 = 5
 
 
 def montar_c18(m):
-    """A Etapa restrita em curso, sem ninguém avisado (168, FR-7333).
+    """A Etapa restrita em curso, sem ninguém avisado (171, FR-7333).
 
     Quatro alcançados, em quatro estados do mesmo período: sem avaliador; distribuído, sem parecer;
     com um parecer de dois; com os dois, à espera da consolidação. O quinto está só na ampla, e a
@@ -830,7 +830,7 @@ CENARIOS = (
         validade_dias=7,
         limitacoes=(
             "O período vencido e o resultado visível ao candidato não cabem num período em curso: "
-            "ficam na suíte (FR-7333 da 168).",
+            "ficam na suíte (FR-7333 da 171).",
         ),
     ),
 )

@@ -204,7 +204,7 @@ def mudar_situacao(*, actor, modelo_id, ativo, correlation_id="interface-modelos
 
 
 def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlation_id, razao):
-    """Os modelos iniciais que **uma** unidade nunca teve, com o autor recebido (110; 168, T-005).
+    """Os modelos iniciais que **uma** unidade nunca teve, com o autor recebido (110; 171, T-005).
 
     Chamada dentro da transação de quem chama, e com a unidade já travada por ele. A implantação a
     chama para cada unidade com o ator `implantacao`; o cadastro pela tela, com a pessoa que
@@ -218,7 +218,7 @@ def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlatio
     # Os três de `D-008`: nenhum, se a unidade já teve algum deles.
     if not do_escopo.filter(chave_inicial="").exists():
         a_criar += [(*modelo, "") for modelo in MODELOS_INICIAIS]
-    # O do passo (168, T-005): pela marca própria, e por isso também na unidade que já tem os três.
+    # O do passo (171, T-005): pela marca própria, e por isso também na unidade que já tem os três.
     if not do_escopo.filter(chave_inicial=nomes.CHAVE_DO_MODELO_DO_PASSO).exists():
         a_criar.append((*MODELO_DO_PASSO, nomes.CHAVE_DO_MODELO_DO_PASSO))
     criados = 0
@@ -256,7 +256,7 @@ def criar_modelos_iniciais(unidade_codigo, *, actor, permission, now, correlatio
 
 
 def garantir_modelos_iniciais(*, correlation_id="semear-unidades"):
-    """Cria os modelos iniciais que cada unidade **nunca** teve (`R-012`; 168, T-005).
+    """Cria os modelos iniciais que cada unidade **nunca** teve (`R-012`; 171, T-005).
 
     Os três de `D-008` nascem na unidade que nunca teve nenhum deles; o do passo, pela marca
     própria, nasce também na unidade que já tem os três — uma vez, e nunca mais.

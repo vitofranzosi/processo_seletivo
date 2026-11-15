@@ -53,10 +53,10 @@ A suíte não depende do comando: uma fixture `autouse` registra o Cefor em todo
 porque os casos transacionais truncam as tabelas e a linha que uma migration criasse sumiria. O caso
 que precisa do registro vazio — os da semente — leva o marcador `sem_unidade_da_suite`.
 
-**O mesmo comando cria os modelos iniciais de aviso** de cada unidade (066; 168), e imprime
+**O mesmo comando cria os modelos iniciais de aviso** de cada unidade (066; 171), e imprime
 `Modelos de aviso: C criados` — **quatro** num banco novo, e zero daí em diante, para sempre: a
 unidade que editou ou inativou os modelos continua com os dela. São os três da `066` e o do aviso do
-passo da `168`, que tem marca própria (`chave_inicial`): num banco que já existia, a primeira passada
+passo da `171`, que tem marca própria (`chave_inicial`): num banco que já existia, a primeira passada
 depois da migration `avisos/0003` imprime **1** por unidade, e não é defeito. A fixture `autouse`
 **não** os cria, de propósito: gravaria quatro modelos e quatro eventos de trilha em todo caso, e os
 testes que contam a trilha quebrariam em bloco. Quem precisa deles chama `garantir_modelos_iniciais()`.

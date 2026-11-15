@@ -345,7 +345,7 @@ def confirmar_aviso_do_passo(
     modelo_id=None,
     justificativa="",
 ):
-    """Confirma o aviso do passo de uma Etapa restrita (168, FR-7315 a FR-7319).
+    """Confirma o aviso do passo de uma Etapa restrita (171, FR-7315 a FR-7319).
 
     O caminho é o do aviso de resultado: a prévia, a assinatura, o gesto de quem pode avisar.
     **Sem justificativa, só quem nenhum aviso do passo citou.** Com ela, é o reenvio intencional a

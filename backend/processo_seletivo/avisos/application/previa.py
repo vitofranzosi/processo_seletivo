@@ -61,7 +61,7 @@ def valores(universo, *, enderecos):
                 str(universo.publicacoes[0].id), ""
             )
     elif universo.origem == nomes.PASSO:
-        # O nome publicado da Etapa e o período dela; nunca a Modalidade (168, FR-7319).
+        # O nome publicado da Etapa e o período dela; nunca a Modalidade (171, FR-7319).
         resultado["etapa"] = cabecalho.get("etapa", "")
         resultado["periodo_da_etapa"] = periodo_por_extenso(*universo.periodo)
     else:

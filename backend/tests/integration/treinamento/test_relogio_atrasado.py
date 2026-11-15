@@ -101,7 +101,7 @@ def test_a_restauracao_recusada_pelo_atraso_nao_cancela_a_rodada_em_uso(treiname
 def test_o_catalogo_inteiro_monta_atrasado_menos_o_que_venceria(treinamento):
     """Seis dias: tudo menos o C08, recusado sozinho — os demais não dependem dele (FR-4612)."""
     saida = carregar(autoridade=AUTORIDADE, dias_atras=6)
-    # Dezessete desde o C18 (168), que nasce com o período da Etapa restrita em curso e cabe nos
+    # Dezessete desde o C18 (171), que nasce com o período da Etapa restrita em curso e cabe nos
     # seis dias.
     assert saida.count("CRIADO") == 17, saida
     assert saida.count("FALHOU") == 1 and "C08" in saida, saida

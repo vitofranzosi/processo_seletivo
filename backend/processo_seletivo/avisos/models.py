@@ -62,7 +62,7 @@ class ModeloDeAviso(models.Model):
     # unidade que já teve modelo inicial não ganha outro, ainda que tenha inativado os três.
     modelo_inicial = models.BooleanField(default=False)
     # A marca do modelo inicial que nasceu **depois** dos três, e por isso precisa de guarda própria
-    # (168, T-005): o do aviso do passo. Vazia nos três de `D-008` e em todo modelo da unidade.
+    # (171, T-005): o do aviso do passo. Vazia nos três de `D-008` e em todo modelo da unidade.
     chave_inicial = models.CharField(max_length=16, blank=True, default="")
     criado_por = models.CharField(max_length=255)
     criado_em = models.DateTimeField()
@@ -106,7 +106,7 @@ class Aviso(_AppendOnly):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="reenvios"
     )
     justificativa = models.TextField(blank=True, default="")
-    # Nulos só no aviso do passo, que cita a Etapa (168, T-004); o CHECK da origem os exige nas
+    # Nulos só no aviso do passo, que cita a Etapa (171, T-004); o CHECK da origem os exige nas
     # outras três.
     perfil_id = models.UUIDField(null=True, blank=True)
     marco_id = models.UUIDField(null=True, blank=True)
@@ -138,7 +138,7 @@ class Aviso(_AppendOnly):
             # **Cada origem cita o seu ato, e só ele.** O resultado tem natureza e não tem
             # referência; a chamada tem a referência declarada e não tem natureza. A pendência
             # (134) não tem nenhuma das duas: o ato que ela aponta é a convocação do destinatário.
-            # As três citam o marco e o Perfil. O passo (168) cita só a Etapa.
+            # As três citam o marco e o Perfil. O passo (171) cita só a Etapa.
             models.CheckConstraint(
                 condition=(
                     (

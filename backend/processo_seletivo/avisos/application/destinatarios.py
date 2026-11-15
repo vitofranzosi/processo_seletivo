@@ -53,7 +53,7 @@ class Universo:
     datas_retificadas: list = field(default_factory=list)
     data_da_publicacao: object = None
     ja_avisado: bool = False
-    # O aviso do passo cita a Etapa (168, T-004), e o período dela vai à variável do texto.
+    # O aviso do passo cita a Etapa (171, T-004), e o período dela vai à variável do texto.
     etapa_id: object = None
     periodo: tuple = (None, None)
 
@@ -290,7 +290,7 @@ def universo_da_chamada(*, edital, marco_id, lista_id, comunicacao_id, agora):
     )
 
 
-# --- O passo de uma Etapa restrita (168) -----------------------------------------------------
+# --- O passo de uma Etapa restrita (171) -----------------------------------------------------
 
 
 def _etapa_restrita(edital, etapa_id):
@@ -342,7 +342,7 @@ def sem_resultado_que_participam(edital, etapa, conteudo):
 
 
 def universo_do_passo(*, edital, etapa_id, reenvio=False):
-    """O universo do aviso do passo (168, FR-7318; research T-004).
+    """O universo do aviso do passo (171, FR-7318; research T-004).
 
     **Primeiro aviso**: quem participa da Etapa, sem Resultado nela, e que nenhum aviso do passo
     citou — a Etapa que ganhou participante depois do primeiro aviso avisa só a ele. **Reenvio
@@ -451,7 +451,7 @@ def universo_do_reenvio(anterior, *, motivo, agora):
     periodo = (None, None)
     if anterior.origem == nomes.PASSO:
         # O ato citado é a Etapa do anterior, relida na versão vigente: o reenvio termina de
-        # entregar o aviso daquele passo, e o período dito é o de hoje (168).
+        # entregar o aviso daquele passo, e o período dito é o de hoje (171).
         passo = universo_do_passo(edital=anterior.edital, etapa_id=anterior.etapa_id, reenvio=True)
         cabecalho, data, periodo = passo.cabecalho, None, passo.periodo
     elif publicacoes:

@@ -1,4 +1,4 @@
-"""A origem `PASSO` no aviso: o aviso do passo de uma Etapa restrita (168, FR-7315, T-004, T-005).
+"""A origem `PASSO` no aviso: o aviso do passo de uma Etapa restrita (171, FR-7315, T-004, T-005).
 
 **Duas colunas novas e duas que passam a aceitar nulo, e nenhuma tabela.** O aviso do passo cita a
 Etapa (`etapa_id`), e não o marco nem o Perfil: o passo é de todas as inscrições que a Etapa

@@ -715,7 +715,7 @@ def participa_da_etapa(
     Duas perguntas de existência no pior caso, e nenhuma listagem passa por aqui: o docstring de
     `autorizacao.py` registra que listagem usa a forma em conjunto, e é ela que está acima.
 
-    **`conteudo` e `modalidade`, quando quem chama já os tem** (168, T-001): o acompanhamento do
+    **`conteudo` e `modalidade`, quando quem chama já os tem** (171, T-001): o acompanhamento do
     portal já leu a versão vigente e já tem a inscrição, e sem eles a pergunta relia as duas — a
     versão duas vezes, para o alcance e para a faixa.
     """

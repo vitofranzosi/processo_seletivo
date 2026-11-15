@@ -187,7 +187,7 @@ def test_os_modelos_aparecem_pelo_nome_e_sem_o_texto(client):
     corpo = client.get(URL).content.decode()
     itens = _itens(corpo)
 
-    assert len(itens) == 7  # os três da `066` e o do passo da `168` (FR-7320)
+    assert len(itens) == 7  # os três da `066` e o do passo da `171` (FR-7320)
     assert "Inativação de modelo de aviso" in itens[0]
     assert "Edição de modelo de aviso" in itens[1]
     assert "Criação de modelo de aviso" in itens[2]
@@ -455,7 +455,7 @@ def test_cada_assunto_mostra_so_os_seus_atos_e_o_filtro_continua_na_paginacao(cl
     _auditor(client)
 
     so_modelos = client.get(URL + "?assunto=modelos").content.decode()
-    assert len(_itens(so_modelos)) == 4  # os três da `066` e o do passo da `168` (FR-7320)
+    assert len(_itens(so_modelos)) == 4  # os três da `066` e o do passo da `171` (FR-7320)
     assert "Cadastro de autoridade" not in _lista(so_modelos)
     assert '<option value="modelos" selected>' in so_modelos
     assert "Limpar" in so_modelos

@@ -1,4 +1,4 @@
-"""O degrau do passo da Etapa restrita, sem banco (168, FR-7303, FR-7304, FR-7306, FR-7309).
+"""O degrau do passo da Etapa restrita, sem banco (171, FR-7303, FR-7304, FR-7306, FR-7309).
 
 A função é pura: os passos chegam prontos (`portal/passo_da_etapa.py`), e aqui se prova o texto, a
 precedência e o que cada rótulo afirma — e o que não afirma.

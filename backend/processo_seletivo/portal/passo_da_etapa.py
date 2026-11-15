@@ -1,4 +1,4 @@
-"""O passo que falta ao candidato numa Etapa restrita (168, FR-7300 a FR-7313; research T-001).
+"""O passo que falta ao candidato numa Etapa restrita (171, FR-7300 a FR-7313; research T-001).
 
 **Derivado, e não guardado** (FR-7308, D-002). O passo sai do alcance (`163`), da participação, do
 período do Evento, dos pareceres concluídos, do Resultado e da visibilidade dele (`164`) — todos
@@ -105,7 +105,7 @@ def _estado_do_video(inscricao, etapa, conteudo):
 
     Com a chave desligada, o vídeo já enviado continua sendo fato (a chave fecha o portal, e não a
     Mesa — achado I1 da `166`): quem enviou lê "aguardando o resultado", sem a palavra vídeo
-    (FR-7313; achado U1 do `/speckit-analyze` da `168`).
+    (FR-7313; achado U1 do `/speckit-analyze` da `171`).
     """
     from processo_seletivo.verificacao.application import disponibilidade
     from processo_seletivo.verificacao.domain import admissao

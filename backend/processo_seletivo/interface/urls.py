@@ -827,7 +827,7 @@ urlpatterns = [
         avisos.aviso_da_chamada,
         name="aviso-da-chamada",
     ),
-    # O aviso do passo de uma Etapa restrita (168): pende da **Etapa**, que é o ato que ele cita.
+    # O aviso do passo de uma Etapa restrita (171): pende da **Etapa**, que é o ato que ele cita.
     path(
         "editais/<uuid:edital_id>/etapas/<uuid:etapa_id>/avisos/novo",
         avisos.aviso_do_passo,

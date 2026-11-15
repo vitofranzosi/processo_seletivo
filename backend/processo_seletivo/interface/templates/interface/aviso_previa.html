@@ -25,7 +25,7 @@ grava nada.
   {% if universo.origem == "CHAMADA" %}
   <p>As convocações da chamada publicada em <strong>{{ universo.referencia }}</strong>. A lista é a do ato, e ninguém a escolhe: quem não segue convocado aparece abaixo, com o motivo, e não recebe.</p>
   {% elif universo.origem == "PASSO" %}
-  {% comment %} 168, FR-7318, FR-7319: o universo é o da Etapa, e o texto do e-mail não diz a lista de ninguém. {% endcomment %}
+  {% comment %} 171, FR-7318, FR-7319: o universo é o da Etapa, e o texto do e-mail não diz a lista de ninguém. {% endcomment %}
   <p>As inscrições que participam da etapa <strong>{{ universo.cabecalho.etapa }}</strong> e ainda não têm resultado nela{% if not reenvio %}, menos as que um aviso deste passo já alcançou{% endif %}. A lista sai da etapa, e ninguém a escolhe. O e-mail não diz em que lista cada pessoa se inscreveu: isso ela lê no acompanhamento, depois de entrar.</p>
   {% else %}
   <p>As inscrições consideradas no <strong>resultado {{ universo.natureza|lower }}</strong>{% if universo.cabecalho.marco %} de {{ universo.cabecalho.marco }}{% endif %}, em {{ universo.publicacoes|length }} publicaç{{ universo.publicacoes|length|pluralize:"ão,ões" }}{% if universo.publicacoes|length > 1 %} — uma por lista; quem está em mais de uma recebe um aviso só{% endif %}. A lista é a do ato, e ninguém a escolhe.</p>

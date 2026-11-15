@@ -5,11 +5,16 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada, planejada e implementada em 14/11 (PR #551, sem merge). As cinco perguntas (Q-1 a Q-5) foram decididas pelo usuário em 14/11,
-pelas recomendações, com dois ajustes: o link para o Edital e a advertência de nome não pressupõem que a
+**Status**: Especificada, esclarecida (Q-1 a Q-5, decididas pelo usuário em 14/11 pelas
+recomendações, com dois ajustes: o link para o Edital e a advertência de nome não pressupõem que a
 Etapa restrita seja de verificação da autodeclaração, e o degrau depois do prazo diz só o que os dados
-permitem afirmar. Planejada em 14/11 (o plano estreitou a FR-7321 à Etapa restrita e a FR-7333 e a FR-7334 ao que um
-cenário de período único mostra); a implementação espera a aprovação do plano. O merge é do usuário.
+permitem afirmar), planejada (o plano estreitou a FR-7321 à Etapa restrita e a FR-7333 e a FR-7334 ao
+que um cenário de período único mostra) e implementada em 14/11, no PR #551, sem merge. O merge é do
+usuário.
+
+**Numeração**: nasceu como `168`. Na mesma noite, a `main` recebeu outra `168`, a das Novidades do GPS
+(#555), e esta passou a `171`, o primeiro número livre: a `167` é do agendamento e a `169` e a `170`
+estão em PRs abertos. Os identificadores de requisito não mudaram.
 
 **Input**: a **entrega 4** do plano do estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/04-plano-de-entregas.md`): *"Orientação: degrau no
@@ -22,8 +27,9 @@ verificação existe e o que lhe cabe.
 > requisito sete mil cento e cinquenta e três, o critério dois mil trezentos e setenta e sete e o
 > requisito de experiência setecentos e setenta e quatro, todos da `166`. A `167`, do agendamento da
 > Etapa, nos PRs #546 e #548, usa a faixa do requisito sete mil e duzentos ao sete mil duzentos e
-> cinquenta e seis. A pasta `168` estava livre na `main` e nos PRs abertos; a `169` e a `170` estão
-> reservadas por outras sessões. As decisões reiniciam em `D-001`.
+> cinquenta e seis. A `168` da `main` (Novidades do GPS) usa a faixa do requisito sete mil e
+> quatrocentos e um; a `169` e a `170`, em PRs abertos, as do sete mil e quatrocentos e do sete mil e
+> quinhentos. As decisões reiniciam em `D-001`.
 >
 > **Como esta spec cita outras.** Um requisito de outra feature é citado pelo identificador e pela
 > feature ("a FR-1243 da `066`"). Uma decisão de outra feature é citada pelo assunto e pela feature. A

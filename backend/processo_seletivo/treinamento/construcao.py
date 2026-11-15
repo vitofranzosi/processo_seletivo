@@ -149,7 +149,7 @@ ETAPA_DOCUMENTAL = do_molde("d3")
 AMPLA = do_molde("e1")
 RESERVADA = do_molde("e2")
 EVENTO_INSCRICOES = do_molde("c1")
-# A Etapa restrita do C18 (168): só neste cenário, e fora do molde do `seed_demo`, que não tem
+# A Etapa restrita do C18 (171): só neste cenário, e fora do molde do `seed_demo`, que não tem
 # nenhuma. Os outros cenários não a veem.
 ETAPA_VERIFICACAO = do_molde("d4")
 EVENTO_VERIFICACAO = do_molde("c9")
@@ -157,7 +157,7 @@ NOME_DA_VERIFICACAO = "Verificação da autodeclaração"
 
 
 def etapa_da_verificacao():
-    """A Etapa restrita e colegiada do C18: dois pareceres, confirma só por unanimidade (168).
+    """A Etapa restrita e colegiada do C18: dois pareceres, confirma só por unanimidade (171).
 
     Antes da Prova na ordem, para que a progressão a torne esperada pelo marco que lê a Prova — num
     Edital do Ifes ela vem antes da classificação. O efeito é o padrão da `164`: retira da reserva e
@@ -469,7 +469,7 @@ class Montagem:
 
         `inicio` e `duracao_dias` são o período de inscrições; os demais eventos do molde se
         deslocam junto, para que a sequência do cronograma continue coerente. `etapas_a_mais` e
-        `eventos_a_mais` são peças de fora do molde, em identificadores do molde (o C18, 168).
+        `eventos_a_mais` são peças de fora do molde, em identificadores do molde (o C18, 171).
         """
         from processo_seletivo.editais.application.draft import replace_draft
 
@@ -757,7 +757,7 @@ class Montagem:
         return alocacao
 
     def distribuir(self, etapa, inscricoes, avaliador=AVALIACAO_1, *, avaliadores=None):
-        """`avaliadores` dá a cada inscrição um parecer de cada um (a Etapa colegiada, 168)."""
+        """`avaliadores` dá a cada inscrição um parecer de cada um (a Etapa colegiada, 171)."""
         from processo_seletivo.avaliacoes.application.distribuicao import distribuir
 
         quem = avaliadores or (avaliador,)

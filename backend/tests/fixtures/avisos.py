@@ -79,7 +79,7 @@ def avisar_passo(
     corpo=MODELO_DO_PASSO[2],
     justificativa="",
 ):
-    """O aviso do passo (168), na ordem da tela: a assinatura sai da prévia e volta no POST."""
+    """O aviso do passo (171), na ordem da tela: a assinatura sai da prévia e volta no POST."""
     universo = destinatarios.universo_do_passo(
         edital=edital, etapa_id=etapa_id, reenvio=bool(justificativa)
     )

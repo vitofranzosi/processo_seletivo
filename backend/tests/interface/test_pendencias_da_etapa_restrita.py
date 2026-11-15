@@ -1,4 +1,4 @@
-"""As pendências da Etapa restrita no Centro e em Minhas atividades (168, US3; FR-7321 a FR-7328).
+"""As pendências da Etapa restrita no Centro e em Minhas atividades (171, US3; FR-7321 a FR-7328).
 
 O Edital é o da `166` sem o vídeo: a Etapa restrita a `PPI`, colegiada com três pareceres, e o
 período no Evento. `maria` preside; `ana`, `bruno` e `carla` dão os pareceres.

@@ -1,7 +1,7 @@
 """A página de gravação, o comprovante e o acesso no acompanhamento (166, US2, US5).
 
 FR-7100, FR-7107, FR-7110, FR-7117, FR-7145; SC-2376. O acesso no acompanhamento é o degrau da
-`168` desde a entrega 4 (FR-7312 a FR-7314; SC-2415).
+`171` desde a entrega 4 (FR-7312 a FR-7314; SC-2415).
 """
 
 import pytest
@@ -45,7 +45,7 @@ def test_so_a_pagina_de_gravacao_tem_a_excecao_de_csp(cenario, client):
 
 
 def test_o_acompanhamento_leva_a_verificacao(cenario, client):
-    """FR-7145, absorvido pelo degrau da `168` (FR-7312, FR-7314): o passo leva à página."""
+    """FR-7145, absorvido pelo degrau da `171` (FR-7312, FR-7314): o passo leva à página."""
     maria = cenario["inscricoes"][0]
     entrar_como_titular(client, maria)
     corpo = client.get(reverse("portal:acompanhamento", args=[maria.id])).content.decode()
@@ -99,7 +99,7 @@ def test_outra_pessoa_recebe_a_recusa_uniforme(cenario, client):
 
 
 def test_com_a_chave_desligada_nada_responde(cenario, client, settings):
-    """FR-7100, SC-2376; e a `168` (FR-7313, SC-2415): o degrau é o do rito sem vídeo."""
+    """FR-7100, SC-2376; e a `171` (FR-7313, SC-2415): o degrau é o do rito sem vídeo."""
     maria = cenario["inscricoes"][0]
     entrar_como_titular(client, maria)
     settings.VERIFICACAO_POR_VIDEO = False
@@ -111,7 +111,7 @@ def test_com_a_chave_desligada_nada_responde(cenario, client, settings):
 
 
 def test_com_a_chave_desligada_quem_enviou_aguarda_o_resultado(cenario, client, settings):
-    """FR-7313; achado U1 do `/speckit-analyze` da `168`: o vídeo enviado continua sendo fato."""
+    """FR-7313; achado U1 do `/speckit-analyze` da `171`: o vídeo enviado continua sendo fato."""
     maria = cenario["inscricoes"][0]
     enviar_video(maria, cenario["hetero"])
     settings.VERIFICACAO_POR_VIDEO = False

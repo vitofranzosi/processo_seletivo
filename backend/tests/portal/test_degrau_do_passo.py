@@ -1,4 +1,4 @@
-"""O degrau do passo no acompanhamento, com banco (168, US1; FR-7300 a FR-7311; SC-2414).
+"""O degrau do passo no acompanhamento, com banco (171, US1; FR-7300 a FR-7311; SC-2414).
 
 O Edital é o da `166` **sem** o vídeo (`rascunho_com_video(video=False)`): a Etapa restrita e
 colegiada da `165`, com o Evento que lhe dá período. É a camada A, o caminho real de hoje.

@@ -3,7 +3,7 @@
 **Branch**: `claude/spec-orientacao-da-verificacao-8d618e`, sobre a `main` em `7d5c6ade` | **Date**: 2026-11-14
 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `specs/168-orientacao-da-verificacao/spec.md`
+**Input**: Feature specification from `specs/171-orientacao-da-verificacao/spec.md`
 
 ## Summary
 
@@ -95,7 +95,7 @@ estado guardado.
 ### Documentation (this feature)
 
 ```text
-specs/168-orientacao-da-verificacao/
+specs/171-orientacao-da-verificacao/
 ├── spec.md
 ├── plan.md
 ├── research.md

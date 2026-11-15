@@ -239,7 +239,7 @@ def _atribuicoes(alocacoes):
     for alocacao in alocacoes:
         if alocacao.edital_id not in conteudo_por_edital:
             # O conteúdo, e não só as Etapas: o fim do período sai do mesmo documento, sem uma
-            # leitura a mais (168, T-008).
+            # leitura a mais (171, T-008).
             conteudo_por_edital[alocacao.edital_id] = _conteudo_ou_nada(alocacao.edital)
         conteudo = conteudo_por_edital[alocacao.edital_id]
         vigentes = {UUID(str(e["id"])): e for e in conteudo.get("stages") or []}
@@ -255,7 +255,7 @@ def _atribuicoes(alocacoes):
                 "etapa_id": alocacao.etapa_id,
                 "nome": dados.get("name", ""),
                 "ordem": dados.get("order", 0),
-                # O fim do período da Etapa, para "até dd/mm" na linha de avaliar (168, FR-7326).
+                # O fim do período da Etapa, para "até dd/mm" na linha de avaliar (171, FR-7326).
                 "fim": periodo_da_etapa(conteudo, dados)[1],
             }
         )

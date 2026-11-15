@@ -209,7 +209,7 @@ def test_a_carga_dos_dezoito_cria_cenarios_independentes(treinamento):
     """O catálogo inteiro coexiste, cada um no seu Processo, sem identificador partilhado (SC-1455).
 
     Eram quinze; o C16 e o C17 da formalização entraram com a revisão de 12/11/2026 (FR-4650), e o
-    C18 da verificação da autodeclaração com a `168` (FR-7333).
+    C18 da verificação da autodeclaração com a `171` (FR-7333).
     """
     saida = carregar(autoridade=str(AUTORIDADE_DA_SUITE))
     assert saida.count("CRIADO") == 18, saida

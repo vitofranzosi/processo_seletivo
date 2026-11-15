@@ -55,7 +55,7 @@ INSCRICAO_ACEITA_PRELIMINAR = "INSCRICAO_ACEITA_PRELIMINAR"
 INSCRICAO_NAO_ACEITA_PRELIMINAR = "INSCRICAO_NAO_ACEITA_PRELIMINAR"
 INSCRICAO_ACEITA = "INSCRICAO_ACEITA"
 INSCRICAO_NAO_ACEITA = "INSCRICAO_NAO_ACEITA"
-# **O passo da Etapa restrita** (168, FR-7300, FR-7306): três rótulos, e cada um afirma só o que os
+# **O passo da Etapa restrita** (171, FR-7300, FR-7306): três rótulos, e cada um afirma só o que os
 # dados mostram. "Aguardando a comissão" é o período encerrado sem registro nenhum — **não** é
 # análise iniciada (decisão do usuário de 14/11); "aguardando o resultado" é haver parecer ou
 # Resultado que o titular ainda não vê.
@@ -135,7 +135,7 @@ NAO_ATENDIMENTO_PODE_SER_REGISTRADO = (
 )
 CONSEQUENCIAS = (NOVAS_CHAMADAS, NAO_ATENDIMENTO_PODE_SER_REGISTRADO)
 
-# **A consequência da ausência no passo da Etapa restrita** (168, FR-7304), que o Edital declara em
+# **A consequência da ausência no passo da Etapa restrita** (171, FR-7304), que o Edital declara em
 # forma estruturada (`164`, o efeito da ausência): é o caso "vem do Edital" da FR-1177 da `063`, e
 # não uma terceira frase neutra. Nenhuma diz "perde": a retirada mantém a ampla.
 CONSEQUENCIA_DA_AUSENCIA = {
@@ -145,7 +145,7 @@ CONSEQUENCIA_DA_AUSENCIA = {
     ),
     efeito.ELIMINA: "Se você não participar, é eliminado desta seleção.",
 }
-# As frases do passo (168, `contracts/frases.md`). Nenhuma nomeia o procedimento: a Etapa restrita
+# As frases do passo (171, `contracts/frases.md`). Nenhuma nomeia o procedimento: a Etapa restrita
 # pode ser a verificação da autodeclaração ou a perícia de pessoa com deficiência (D-001), e quem
 # a nomeia é o Edital, pelo nome publicado.
 COMISSAO_INFORMA = "A comissão vai informar o dia, a hora e como participar."
@@ -272,7 +272,7 @@ def situacao_da_inscricao(
     1. desfecho da convocação vigente;
     2. convocação vigente sem desfecho;
     3. Resultado de Etapa visível que eliminou;
-    3a. o passo que falta numa Etapa restrita (168, FR-7303), já derivado em `passos`;
+    3a. o passo que falta numa Etapa restrita (171, FR-7303), já derivado em `passos`;
     4. classificação em ao menos uma publicação definitiva;
     5. classificação só em publicações preliminares;
     6. sem posição em todas as listas;
@@ -318,7 +318,7 @@ def situacao_da_inscricao(
             porque=(
                 _linha_da_convocacao(convocacao, perfil, cartoes),
                 # O passo pendente entra como linha: a convocação tem prazo próprio e continua a
-                # situação (168, FR-7303, D-003).
+                # situação (171, FR-7303, D-003).
                 *(_linha_de_outro_passo(passo) for passo in passos),
                 *em_analise,
             ),
@@ -443,7 +443,7 @@ def _quando(passo):
 
 
 def _situacao_do_passo(inscricao, passos, em_analise, recurso):
-    """O degrau do passo (168, FR-7304, FR-7306, FR-7312): o primeiro é a situação, e os outros
+    """O degrau do passo (171, FR-7304, FR-7306, FR-7312): o primeiro é a situação, e os outros
     viram linha.
 
     Sem relógio, como o resto do módulo: o estado e o "já começou" chegam derivados em `passos`

@@ -18,7 +18,7 @@ from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.shared.api.problems import DomainError
 
 AMBAS = (nomes.RESULTADO, nomes.CHAMADA)
-# **O passo** (168): o aviso de uma Etapa restrita não tem publicação, Perfil nem data de
+# **O passo** (171): o aviso de uma Etapa restrita não tem publicação, Perfil nem data de
 # publicação — tem a Etapa e o período dela. E, como as outras, nenhuma variável diz a Modalidade.
 TODAS = (*AMBAS, nomes.PASSO)
 

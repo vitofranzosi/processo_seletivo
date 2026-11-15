@@ -1,4 +1,4 @@
-"""A advertência do nome da Etapa restrita com termo técnico (168, FR-7336; research T-009).
+"""A advertência do nome da Etapa restrita com termo técnico (171, FR-7336; research T-009).
 
 Contextual e não impeditiva: nomeia o termo, diz que o candidato lê o nome, e não sugere nome — a
 Etapa restrita pode ser a verificação da autodeclaração ou a perícia de pessoa com deficiência.

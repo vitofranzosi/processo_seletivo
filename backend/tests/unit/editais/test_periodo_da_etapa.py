@@ -1,4 +1,4 @@
-"""O período da Etapa, lido do conteúdo já carregado (168, T-002; FR-7305)."""
+"""O período da Etapa, lido do conteúdo já carregado (171, T-002; FR-7305)."""
 
 from datetime import UTC, datetime
 

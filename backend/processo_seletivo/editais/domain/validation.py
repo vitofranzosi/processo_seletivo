@@ -1444,7 +1444,7 @@ def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
-# **Os termos técnicos que o candidato não lê** (168, FR-7330): a tabela de linguagem do estudo da
+# **Os termos técnicos que o candidato não lê** (171, FR-7330): a tabela de linguagem do estudo da
 # verificação. O texto fixo das telas do candidato nunca os usa; o nome da Etapa é do Edital, e por
 # isso aqui só se adverte (FR-7336). Por raiz, e sem acento, para casar "Heteroidentificação",
 # "fenotípica" e "Aferição".
@@ -1458,7 +1458,7 @@ NOME_DA_ETAPA_RESTRITA_COM_TERMO_TECNICO = "restricted_stage_name_with_technical
 
 
 def _nome_da_restrita_com_termo_tecnico(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
-    """A Etapa restrita cujo nome traz termo técnico — advertência, e nunca recusa (168, FR-7336).
+    """A Etapa restrita cujo nome traz termo técnico — advertência, e nunca recusa (171, FR-7336).
 
     **Contextual, e sem sugerir nome**: a Etapa restrita pode ser a verificação da autodeclaração ou
     a perícia de pessoa com deficiência, e o GPS não sabe qual (`163`, decisão do usuário de 14/11).

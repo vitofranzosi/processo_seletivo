@@ -149,7 +149,7 @@ def test_os_modelos_iniciais_nascem_uma_vez_com_a_pessoa_como_autora():
     _registrar()
 
     modelos = ModeloDeAviso.objects.filter(institution_scope="serra", modelo_inicial=True)
-    assert modelos.count() == 4  # os três da `066` e o do passo da `168`
+    assert modelos.count() == 4  # os três da `066` e o do passo da `171`
     assert set(modelos.values_list("criado_por", flat=True)) == {ADMINISTRADORA.subject}
     autores = set(
         RegistroAuditoria.objects.filter(

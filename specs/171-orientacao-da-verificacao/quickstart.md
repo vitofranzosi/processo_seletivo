@@ -1,6 +1,6 @@
 # Quickstart: validar a orientação da verificação
 
-Roteiro de verificação da `168`. As frases estão em [contracts/frases.md](contracts/frases.md); os
+Roteiro de verificação da `171`. As frases estão em [contracts/frases.md](contracts/frases.md); os
 dados, em [data-model.md](data-model.md).
 
 ## Pré-requisitos

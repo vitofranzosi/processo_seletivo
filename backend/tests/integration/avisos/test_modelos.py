@@ -34,7 +34,7 @@ PRESIDENCIA = ator_institucional("presidenta")
 
 @pytest.mark.django_db
 def test_os_tres_iniciais_nascem_ativos_na_primeira_sincronizacao():
-    # Os três da `066` e o do passo da `168` (FR-7320).
+    # Os três da `066` e o do passo da `171` (FR-7320).
     assert garantir_modelos_iniciais() == 4
 
     iniciais = ModeloDeAviso.objects.filter(institution_scope="cefor", modelo_inicial=True)

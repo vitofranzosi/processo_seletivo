@@ -1,4 +1,4 @@
-"""O cenário C18: a Etapa restrita em curso, para a equipe percorrer a orientação (168, US5).
+"""O cenário C18: a Etapa restrita em curso, para a equipe percorrer a orientação (171, US5).
 
 FR-7333 a FR-7335; SC-2410. O teste confere os estados que o cenário promete — no Centro da
 presidência, em Minhas atividades de quem avalia e no acompanhamento de quem a Etapa alcança —, pelo

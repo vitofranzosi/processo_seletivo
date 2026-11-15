@@ -85,7 +85,7 @@ def _modelos_ativos(ator):
 def _texto_inicial(ator, modelos, modelo_id, *, origem=None):
     """Assunto e corpo do modelo escolhido; sem escolha, o primeiro modelo ativo, ou vazio.
 
-    No aviso do passo (168), sem escolha, o modelo inicial do passo quando ativo: os outros três
+    No aviso do passo (171), sem escolha, o modelo inicial do passo quando ativo: os outros três
     falam de publicação e de chamada, e o primeiro em ordem alfabética seria o errado.
     """
     escolhido = next((m for m in modelos if str(m.id) == str(modelo_id or "")), None)
@@ -286,12 +286,12 @@ def _depois_de_confirmar(request, ator, declarado):
         request.session["modelo_nao_salvo"] = erro.detail
 
 
-# --- O passo de uma Etapa restrita (168) ------------------------------------------------------
+# --- O passo de uma Etapa restrita (171) ------------------------------------------------------
 
 
 @require_http_methods(["GET", "POST"])
 def aviso_do_passo(request, edital_id, etapa_id):
-    """A prévia e a confirmação do aviso do passo de uma Etapa restrita (168, FR-7315, FR-7316).
+    """A prévia e a confirmação do aviso do passo de uma Etapa restrita (171, FR-7315, FR-7316).
 
     O caminho é o do aviso de resultado, e a porta também: chega-se aqui pela pendência "Avisar"
     do Centro (FR-7323), e a prévia volta a ele.

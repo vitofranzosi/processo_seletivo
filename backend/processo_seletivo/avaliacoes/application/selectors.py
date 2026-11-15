@@ -88,7 +88,7 @@ def carga_por_avaliador(*, edital, etapa_id):
 
 
 def pendentes_por_membro(*, edital, etapa_id, participantes):
-    """`[(nome, quantas)]`: as Atribuições ativas sem parecer concluído, por membro (168, FR-7321).
+    """`[(nome, quantas)]`: as Atribuições ativas sem parecer concluído, por membro (171, FR-7321).
 
     **A conta da Mesa** (FR-7328): Atribuição ativa de inscrição que participa, menos a concluída —
     a mesma de `mesa()` e de `carga_nas_etapas`, para os números do Centro e da Mesa coincidirem.

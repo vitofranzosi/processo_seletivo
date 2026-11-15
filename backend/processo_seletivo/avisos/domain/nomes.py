@@ -12,7 +12,7 @@ CHAMADA = "CHAMADA"
 # **A quinta situação da `FR-084` da `010`** (134, FR-4618): o aviso de pendência documental. Não
 # cita publicação nem referência; cita a convocação, pelo destinatário, e o texto é da pessoa.
 PENDENCIA = "PENDENCIA"
-# **O aviso do passo** (168, FR-7315): parte de uma Etapa restrita publicada, e não de uma
+# **O aviso do passo** (171, FR-7315): parte de uma Etapa restrita publicada, e não de uma
 # publicação nem de uma chamada. Cita a Etapa, e não o marco nem o Perfil: o passo é de todas as
 # inscrições que a Etapa alcança, em qualquer Perfil (research T-004).
 PASSO = "PASSO"
@@ -24,7 +24,7 @@ ORIGEM_POR_EXTENSO = {
     PENDENCIA: "pendência",
     PASSO: "passo de uma etapa",
 }
-#: A marca do modelo inicial do aviso do passo (168, FR-7320, T-005).
+#: A marca do modelo inicial do aviso do passo (171, FR-7320, T-005).
 CHAVE_DO_MODELO_DO_PASSO = PASSO
 
 # --- O motivo: primeiro aviso, ou reenvio (R-011) -------------------------------------------------

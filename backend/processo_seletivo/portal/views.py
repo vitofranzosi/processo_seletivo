@@ -2101,7 +2101,7 @@ def acompanhamento(request, inscricao_id):
                 politica_do_requerimento=politica,
                 obrigacoes=obrigacoes_da_convocacao,
                 inscricao_publicada=_inscricao_publicada(registro),
-                # **O passo que falta numa Etapa restrita** (168, FR-7300): derivado aqui, sobre o
+                # **O passo que falta numa Etapa restrita** (171, FR-7300): derivado aqui, sobre o
                 # conteúdo vigente já lido; sem Etapa restrita que alcance a inscrição, nenhuma
                 # consulta (FR-7311). Absorve o cartão de acesso ao vídeo da `166` (FR-7314).
                 passos=passo_da_etapa.passos_da_inscricao(

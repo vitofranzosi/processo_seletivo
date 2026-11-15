@@ -103,7 +103,7 @@ CORTE, APURACAO, RESULTADO, CONVOCACAO = "corte", "apuracao", "resultado", "conv
 DISTRIBUIR, AVALIAR, CONSOLIDAR, REAVALIAR = "distribuir", "avaliar", "consolidar", "reavaliar"
 CONFERIR, RECURSO = "conferir", "recurso"
 ETAPA = "etapa"
-#: O aviso do passo de uma Etapa restrita (168, FR-7323): o único ato da orientação que não é
+#: O aviso do passo de uma Etapa restrita (171, FR-7323): o único ato da orientação que não é
 #: distribuir, avaliar nem consolidar.
 AVISAR = "avisar"
 #: A passagem ao setor da formalização (153): definir, designar, exportar.
@@ -458,7 +458,7 @@ def situacoes_da_etapa(f):
             )
         )
     if a_avaliar - minhas > 0:
-        # **De quem são os pareceres que faltam** (168, FR-7321): na Etapa restrita, para quem
+        # **De quem são os pareceres que faltam** (171, FR-7321): na Etapa restrita, para quem
         # conduz, o nome e a contagem de cada membro — nunca o sentido.
         # No **ato**, e não na nota: a linha "Com outros papéis" do Centro mostra só o ato, e a
         # presidência lia "avaliar 2 inscrições" sem saber de quem (visto no navegador, no C18).
@@ -517,7 +517,7 @@ def situacoes_da_etapa(f):
 
 
 def _pendencias_da_restrita(f, nome, url, nota):
-    """O que é próprio da Etapa restrita (168, FR-7323 a FR-7325), a partir dos fatos já lidos.
+    """O que é próprio da Etapa restrita (171, FR-7323 a FR-7325), a partir dos fatos já lidos.
 
     - **Avisar** os alcançados que nenhum aviso do passo citou, até o fim do período;
     - **registrar a ausência ou os pareceres** de quem passou do período sem nada registrado;
@@ -2070,7 +2070,7 @@ class _Leitor:
         return saida
 
     def _fatos_da_restrita(self, etapa, panorama, resumo_da_tela):
-        """Os fatos da Etapa restrita (168, T-006). Só para quem conduz: é a pendência dela.
+        """Os fatos da Etapa restrita (171, T-006). Só para quem conduz: é a pendência dela.
 
         Do panorama já calculado, mais uma consulta para os pareceres por membro, uma para os já
         avisados e, só na Etapa que admite o vídeo, as do plano da consolidação.
@@ -2082,7 +2082,7 @@ class _Leitor:
         alcancadas, total = resumo_da_tela.get("alcancadas"), resumo_da_tela.get("total")
         fatos = {}
         if alcancadas is not None and total:
-            # A frase do alcance da distribuição (163, UX-732; 168, FR-7322).
+            # A frase do alcance da distribuição (163, UX-732; 171, FR-7322).
             fatos["nota_do_alcance"] = (
                 f"{_n(alcancadas, 'inscrição alcançada', 'inscrições alcançadas')}, de {total}"
             )

@@ -53,7 +53,7 @@ def base_do_aviso(actor, processo, *, origem):
       convocação é ato da comissão, e o publicador sozinho não basta.
     - **Pendência** (134, D-010): a mesma da chamada, para ler e interromper pelas telas da `066`.
       O gesto que a grava tem porta própria, a da conferência (`pendencias.avisar_pendencias`).
-    - **Passo** (168, FR-7316): a do resultado — `aviso:enviar`, ou a presidência ativa. O passo é
+    - **Passo** (171, FR-7316): a do resultado — `aviso:enviar`, ou a presidência ativa. O passo é
       fato do Edital publicado, como o resultado, e quem divulga resultado pode anunciá-lo.
     """
     if actor is None or actor.institution_scope != processo.institution_scope:

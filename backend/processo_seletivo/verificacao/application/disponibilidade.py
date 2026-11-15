@@ -30,7 +30,7 @@ RECEBIDO = "RECEBIDO"
 EM_ANALISE = "EM_ANALISE"
 ENCAMINHADA = "ENCAMINHADA"
 AO_VIVO = "AO_VIVO"
-#: O mesmo estado que `ENCAMINHADA`, pelo nome que o portal lê (168): o acompanhamento diz "a
+#: O mesmo estado que `ENCAMINHADA`, pelo nome que o portal lê (171): o acompanhamento diz "a
 #: comissão quer conversar com você ao vivo", e a varredura da `115` recusa "encaminhad[oa]" em
 #: `portal/situacao.py` — lá, encaminhado é só com registro de entrega (D-005 da `115`).
 CONVERSA_AO_VIVO = ENCAMINHADA
@@ -77,7 +77,7 @@ def _uuid(valor):
 
 
 def periodo(conteudo, etapa) -> tuple:
-    """`(inicio, fim)` do Evento que a Etapa aponta; mora em `editais` desde a `168` (T-002)."""
+    """`(inicio, fim)` do Evento que a Etapa aponta; mora em `editais` desde a `171` (T-002)."""
     return periodo_da_etapa(conteudo, etapa)
 
 

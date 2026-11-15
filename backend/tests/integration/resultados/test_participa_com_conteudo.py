@@ -1,4 +1,4 @@
-"""`participa_da_etapa` com o conteúdo e a Modalidade dados (168, T-001).
+"""`participa_da_etapa` com o conteúdo e a Modalidade dados (171, T-001).
 
 A resposta é a mesma, e a versão vigente não é relida: é o que deixa o degrau do acompanhamento
 caber no orçamento.

@@ -1,4 +1,4 @@
-"""Os modelos com que toda unidade começa (066, `D-008`, contracts/mensagem.md; 168, FR-7320).
+"""Os modelos com que toda unidade começa (066, `D-008`, contracts/mensagem.md; 171, FR-7320).
 
 **Ponto de partida, e não padrão institucional.** Eles são criados uma vez por unidade e, daí em
 diante, são da unidade: editados, inativados, reativados como qualquer outro. Uma correção futura
@@ -43,7 +43,7 @@ MODELOS_INICIAIS = (
     ),
 )
 
-# **O quarto, o do passo de uma Etapa restrita** (168, FR-7319, FR-7320), com marca própria: ele
+# **O quarto, o do passo de uma Etapa restrita** (171, FR-7319, FR-7320), com marca própria: ele
 # nasce também na unidade que já tem os três (research T-005). O corpo diz o nome da etapa e o
 # período, e **não** diz a lista, a reserva nem o motivo do passo — o e-mail pode ser lido por outra
 # pessoa, e a autodeclaração é dado sensível. O resto, o titular lê no acompanhamento, autenticado.
