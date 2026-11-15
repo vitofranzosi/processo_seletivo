@@ -118,7 +118,7 @@ def test_a10_a_confirmacao_da_submissao_repete_a_advertencia(client, seletor_lig
     edital.refresh_from_db()
     corpo = client.get(reverse("interface:ato", args=[edital.id, "submeter"])).content.decode()
 
-    assert "Aviso:" in corpo
+    assert "<strong>Atenção:</strong>" in corpo
     assert "não terão quantidade a apurar" in corpo
 
 

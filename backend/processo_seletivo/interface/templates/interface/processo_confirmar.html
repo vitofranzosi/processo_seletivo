@@ -12,7 +12,7 @@
 
 {% if pendentes %}
 <div class="erro" role="alert">
-  <strong>Este ato será recusado.</strong>
+  <strong>Impedimento:</strong> <strong>Este ato será recusado.</strong>
   <p>{% if ato.chave == "encerrar" %}O encerramento{% else %}O cancelamento{% endif %} do Processo exige que cada Edital esteja Encerrado ou Cancelado. Ainda faltam:</p>
   <ul class="impedimentos">
     {% for edital in pendentes %}

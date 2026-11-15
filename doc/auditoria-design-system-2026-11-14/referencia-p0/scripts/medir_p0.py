@@ -1,10 +1,10 @@
 """Sonda da P0: Visão Geral e as confirmações de ato, nas cinco larguras do estudo.
 Usa metricas.js e largura.js do estudo sem alteração; acrescenta só um diagnóstico de qual
 elemento dá a linha mais longa. Só GET, além do POST da entrada."""
-import json, re, sys, pathlib, collections
+import json, os, re, sys, pathlib, collections
 from playwright.sync_api import sync_playwright
 M = pathlib.Path(sys.argv[1]); IDS = json.load(open(sys.argv[2])); SAIDA = pathlib.Path(sys.argv[3])
-BASE = "http://localhost:8165"
+BASE = "http://localhost:" + os.environ.get("PORTA", "8166")  # a entrada `referencia-p0`
 METRICAS = (M / "metricas.js").read_text(); LARGURA = (M / "largura.js").read_text()
 DIAG = """() => [...document.querySelectorAll('main p, main li, main dd, main td, main .sub, main .ajuda, main .nota, main .explicacao')]
   .filter(e => e.getBoundingClientRect().width > 1 && e.innerText && e.innerText.length > 160 && !e.querySelector('p, ul, table, input, select'))

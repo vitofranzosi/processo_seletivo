@@ -320,6 +320,10 @@ def test_d_quem_acumula_os_papeis_e_avisado_e_nao_recebe_o_botao_da_recusa(edita
     url = reverse("interface:retificacao-ato", args=[retificacao.id, "publicar"])
     confirmacao = dora.get(url).content.decode()
     assert "Segregação de funções." in confirmacao
+    # O ramo de segregação da parcial `_impedimento.html`, com a espécie no texto (P0 do estudo
+    # de design system; WCAG 1.4.1), e uma vez só: a Retificação não tem bloco próprio.
+    marcada = "<strong>Impedimento:</strong> <strong>Segregação de funções.</strong>"
+    assert " ".join(confirmacao.split()).count(marcada) == 1
     assert "Confirmar: Publicar Retificação" not in confirmacao
     assert dora.post(url, {"chave_idempotencia": "ui-dora", **SIGNATARIO}).status_code == 403
 
@@ -340,6 +344,16 @@ def test_d_as_recusas_dizem_qual_foi_a_causa(edital, vigente):
 
     assert "Você não pode praticar este ato." in sem_permissao.content.decode()
     assert "Este ato não cabe na situação atual." in fora_da_situacao.content.decode()
+    # Os outros dois ramos da parcial abrem pela mesma marca que o da segregação: a espécie no
+    # texto, e não só no vermelho (P0 do estudo de design system; WCAG 1.4.1).
+    assert (
+        "<strong>Impedimento:</strong> <strong>Você não pode praticar este ato.</strong>"
+        in " ".join(sem_permissao.content.decode().split())
+    )
+    assert (
+        "<strong>Impedimento:</strong> <strong>Este ato não cabe na situação atual.</strong>"
+        in " ".join(fora_da_situacao.content.decode().split())
+    )
 
 
 # ---------------------------------------------------------------------------------------------
