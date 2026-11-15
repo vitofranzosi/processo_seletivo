@@ -655,6 +655,16 @@
       "url": "http://localhost:8162"
     },
     {
+      "name": "referencia-p0",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_p0_referencia DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-p0-referencia-arquivos uv run python manage.py runserver 8165"
+      ],
+      "port": 8165,
+      "url": "http://localhost:8165"
+    },
+    {
       "name": "roteiro-equipe",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -663,6 +673,16 @@
       ],
       "port": 8197,
       "url": "http://localhost:8197"
+    },
+    {
+      "name": "auditoria-visual",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_auditoria_visual DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-auditoria-visual-arquivos uv run python manage.py runserver 8165"
+      ],
+      "port": 8165,
+      "url": "http://localhost:8165"
     },
     {
       "name": "poc-verificacao-video",
@@ -688,6 +708,16 @@
       ],
       "port": 8176,
       "url": "http://localhost:8176"
+    },
+    {
+      "name": "habilitacao-do-assistente-170",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DJANGO_DEBUG=true DB_NAME=ps_170_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=false GESTAO_PROVEDOR_INSTITUCIONAL=tests.homologacao.provedor.ProvedorDeHomologacao ASSISTENTE_SERVICO=openrouter ASSISTENTE_ENDERECO=https://openrouter.ai/api/v1 ASSISTENTE_MODELO=qwen/qwen3.8-27b ASSISTENTE_PROVEDOR=parasail ASSISTENTE_TOKENS_POR_CHAMADA=0 ASSISTENTE_TOKENS_POR_MENSAGEM=9 ASSISTENTE_TOKENIZER=\"$HOME/.config/processo-seletivo/qwen3.8-27b/tokenizer.json\" ASSISTENTE_CREDENCIAL=\"$(cat \"$HOME/.config/processo-seletivo/openrouter\")\" uv run python manage.py runserver 8170"
+      ],
+      "port": 8170,
+      "url": "http://localhost:8170"
     },
     {
       "name": "novidades-168",

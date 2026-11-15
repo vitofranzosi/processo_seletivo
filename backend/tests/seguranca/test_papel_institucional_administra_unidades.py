@@ -23,11 +23,11 @@ pytestmark = [pytest.mark.django_db, pytest.mark.integration]
 
 
 def test_o_papel_institucional_tem_as_duas_permissoes_e_o_rotulo_novo():
-    """FR-3308."""
+    """FR-3308; e a 170 acrescentou a habilitação do assistente ao mesmo papel (FR-7510)."""
     rotulo, permissoes = PAPEIS_INSTITUCIONAIS[ADMINISTRADOR_INSTITUCIONAL]
 
     assert rotulo == "Administrador institucional"
-    assert set(permissoes) == {"acesso:administrar", "unidade:administrar"}
+    assert set(permissoes) == {"acesso:administrar", "unidade:administrar", "assistente:habilitar"}
     assert list(PAPEIS_INSTITUCIONAIS) == [ADMINISTRADOR_INSTITUCIONAL], "nenhum papel novo"
 
 
