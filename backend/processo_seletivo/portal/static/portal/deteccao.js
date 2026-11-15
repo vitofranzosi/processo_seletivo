@@ -124,7 +124,8 @@
   }
 
   // O orçamento da leitura (FR-8017): `registrar` devolve `false` a partir da quinta leitura lenta
-  // seguida, e daí em diante, sempre — a detecção desligada não volta na mesma tomada.
+  // seguida, e daí em diante, sempre — a detecção desligada não volta enquanto a página estiver aberta:
+  // o vigia é um por página, e o aparelho lento numa tomada é lento na seguinte.
   function Orcamento(teto, limite) {
     this.teto = teto === undefined ? TETO_DA_LEITURA : teto;
     this.limite = limite === undefined ? LEITURAS_LENTAS : limite;

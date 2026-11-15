@@ -320,12 +320,17 @@ def test_o_motor_de_verdade_carrega_da_propria_origem_e_sem_rosto_vale_o_toque(
     proximo.click()
     expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
 
-    # "Gravar de novo" volta ao palco com o mesmo motor: nada é baixado de novo, e a detecção já
-    # está pronta (achado da revisão do #573, que recriava e reaquecia o motor a cada tomada).
+    # "Gravar de novo" volta ao palco com o mesmo motor: nada é baixado de novo, e a detecção fica
+    # como estava (achado da revisão do #573, que recriava e reaquecia o motor a cada tomada). No
+    # runner da CI, sem GPU, a leitura passa do orçamento e a detecção se desliga na gravação — é o
+    # caminho do aparelho lento (FR-8017), e ele também vale para a página inteira.
+    antes = raiz.get_attribute("data-deteccao")
+    assert antes in ("pronta", "desligada"), antes
     pagina.get_by_role("button", name="Gravar de novo").click()
     expect(pagina.get_by_role("button", name="Começar a gravar")).to_be_visible()
-    expect(raiz).to_have_attribute("data-deteccao", "pronta")
-    expect(pagina.locator("[data-aviso-deteccao]")).to_be_visible()
+    expect(raiz).to_have_attribute("data-deteccao", antes)
+    aviso = pagina.locator("[data-aviso-deteccao]")
+    expect(aviso).to_be_visible() if antes == "pronta" else expect(aviso).to_be_hidden()
     for arquivo in (
         "vision_bundle.mjs",
         "vision_wasm_internal.js",

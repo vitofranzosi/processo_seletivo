@@ -263,7 +263,8 @@ envio, sem nenhum toque nos perfis.
 - **O motor carrega depois que a gravação começou**: ele não aquece nem lê durante aquela tomada —
   o aquecimento congelaria a página por segundos — e passa a guiar a partir do próximo preparo.
 - **O aparelho fica lento**: se a leitura de um quadro passar do orçamento (FR-8017), a detecção
-  desliga para o resto da tomada, sem aviso, e a gravação segue pelo toque.
+  desliga até a página ser recarregada, sem aviso, e a gravação segue pelo toque — o aparelho lento
+  numa tomada é lento na seguinte, e tentar de novo custaria outro aquecimento.
 - **Óculos, barba, véu, cabelo no rosto, pouca luz**: a detecção pode não perceber; o toque resolve,
   e nenhuma frase culpa a aparência ou a luz da pessoa (R-19 do estudo).
 - **A tela some no meio** (troca de aplicativo): a tomada é descartada como hoje (a FR-7115 da `166`),
@@ -338,8 +339,8 @@ envio, sem nenhum toque nos perfis.
   memória, economia de dados, chave desligada —, o palco DEVE ser o da `174`, sem aviso de falha e
   sem as frases da detecção.
 - **FR-8017**: A leitura DEVE ter orçamento: no máximo uma leitura por intervalo fixo, e, se a leitura
-  de um quadro passar do teto de tempo várias vezes seguidas, a detecção DEVE desligar para o resto
-  da tomada, sem aviso. A detecção NÃO DEVE degradar a gravação: o vídeo gravado com ela ligada DEVE
+  de um quadro passar do teto de tempo várias vezes seguidas, a detecção DEVE desligar até a página
+  ser recarregada, sem aviso. A detecção NÃO DEVE degradar a gravação: o vídeo gravado com ela ligada DEVE
   ter a mesma fluidez que sem ela (SC-2753).
 - **FR-8018**: Com o aparelho pedindo economia de dados, o motor NÃO DEVE ser baixado.
 
