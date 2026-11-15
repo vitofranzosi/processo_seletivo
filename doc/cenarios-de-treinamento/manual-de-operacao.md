@@ -6,8 +6,8 @@ o servidor de homologação. O roteiro de cada exercício, para a equipe de sele
 
 ## O que o gerador faz, e o que ele não faz
 
-Ele **acrescenta** ao banco até dezessete Processos fictícios, `SIM-TREINAMENTO-001` a `017`, cada um
-parado numa etapa do certame e pronto para a próxima ação. Cria tudo pelos mesmos comandos que a
+Ele **acrescenta** ao banco um Processo fictício por cenário do catálogo, `SIM-TREINAMENTO-001` em
+diante, cada um parado numa etapa do certame e pronto para a próxima ação. Cria tudo pelos mesmos comandos que a
 tela usa: publica, inscreve, avalia, classifica, convoca. Por isso cada cenário tem a trilha de
 auditoria e o histórico completos.
 
@@ -67,6 +67,12 @@ comando, e não no `.env` permanente.
 **Para os cenários de sorteio (C06 e C07)**, o servidor web e o comando precisam também de
 `SORTEIO_FONTE_DE_DEMONSTRACAO=true`. As configurações de desenvolvimento, que a VM de testes usa,
 já a ligam. Sem ela, a pré-visualização mostra C06 e C07 como `RECUSAR`, e os outros treze seguem.
+
+**Para o cenário do vídeo (C19)**, o servidor web e o comando precisam de
+`VERIFICACAO_POR_VIDEO=true`. As configurações de desenvolvimento **não** a ligam: ponha-a no
+ambiente dos dois. Sem ela, a pré-visualização mostra o C19 como `RECUSAR`, e os outros seguem.
+Produção recusa subir com a chave. O vídeo que o cenário envia em nome do 02 e do 03 é o arquivo de
+treinamento do gerador, e vai para a mesma pasta privada dos documentos dos candidatos.
 
 ## Antes da primeira carga no banco compartilhado
 
@@ -207,6 +213,7 @@ As datas de cada cenário contam do dia da carga. Os que têm prazo correndo val
 | C02, C13 | 30 dias | período de inscrições aberto |
 | C08 | 5 dias | janela recursal do resultado preliminar |
 | C11, C12 | 30 dias | prazo da convocação |
+| C20 | 27 dias | o período da Entrevista começa na primeira segunda-feira depois de 27 dias da carga |
 
 Os demais não dependem do calendário. Antes de uma sessão de treinamento, rode a verificação e
 restaure o que ela apontar.
@@ -246,6 +253,15 @@ Os candidatos fictícios têm e-mail em `treinamento.exemplo.test`, que não ent
 código de acesso ao portal chega ao **mailpit** do ambiente, na porta 8025 do servidor, e é de lá
 que a equipe o lê para agir como candidato (C08, C11). O mailpit não guarda nada em disco:
 reiniciá-lo esvazia a caixa, e basta pedir um código novo.
+
+**Os avisos aos candidatos** (C18 e C20) não saem no clique: a tela grava o aviso, e quem envia é o
+`despachar_avisos`, que na homologação roda no timer de cada minuto. Na instalação nativa de
+desenvolvimento ninguém o roda: rode-o à mão depois da publicação, e as mensagens saem no terminal
+**do comando**, e não no do servidor:
+
+```bash
+uv run python manage.py despachar_avisos
+```
 
 Sem o mailpit, o GPS imprime a mensagem no log do app, e só quem acessa o servidor a lê:
 

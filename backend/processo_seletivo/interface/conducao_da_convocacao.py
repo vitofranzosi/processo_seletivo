@@ -235,7 +235,7 @@ class SituacaoDoAviso:
     @property
     def oferece_o_aviso(self):
         """O link para o gesto: só se ele a alcançaria **e** o envio está habilitado — com
-        `AVISOS_AOS_CANDIDATOS` desligado, o padrão de produção, a seção diz que está desabilitado
+        `AVISOS_AOS_CANDIDATOS` desligado no ambiente, a seção diz que está desabilitado
         e não tem botão, e o cartão não pode mandar a pessoa até lá (revisão do #453)."""
         return bool(
             self.pendencia_em and self.aviso_em is None and self.alcancavel and self.habilitado
