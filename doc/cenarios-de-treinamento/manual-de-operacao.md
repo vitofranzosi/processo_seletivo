@@ -68,6 +68,12 @@ comando, e não no `.env` permanente.
 `SORTEIO_FONTE_DE_DEMONSTRACAO=true`. As configurações de desenvolvimento, que a VM de testes usa,
 já a ligam. Sem ela, a pré-visualização mostra C06 e C07 como `RECUSAR`, e os outros treze seguem.
 
+**Para o cenário do vídeo (C19)**, o servidor web e o comando precisam de
+`VERIFICACAO_POR_VIDEO=true`. As configurações de desenvolvimento **não** a ligam: ponha-a no
+ambiente dos dois. Sem ela, a pré-visualização mostra o C19 como `RECUSAR`, e os outros seguem.
+Produção recusa subir com a chave. O vídeo que o cenário envia em nome do 02 e do 03 é o arquivo de
+treinamento do gerador, e vai para a mesma pasta privada dos documentos dos candidatos.
+
 ## Antes da primeira carga no banco compartilhado
 
 1. **Atualize o GPS como sempre**, pelo script de atualização do servidor. A release traz a
