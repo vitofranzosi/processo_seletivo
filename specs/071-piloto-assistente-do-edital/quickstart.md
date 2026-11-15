@@ -70,6 +70,11 @@ set -a && . ./.env && set +a && export DB_NAME=piloto_assistente
 export ASSISTENTE_PILOTO=true ASSISTENTE_SERVICO=openrouter ASSISTENTE_ENDERECO=https://openrouter.ai/api/v1 ASSISTENTE_MODELO=qwen/qwen3.8-27b ASSISTENTE_TOKENIZER="$HOME/.config/processo-seletivo/qwen3.8-27b/tokenizer.json" INTERFACE_SELETOR_IDENTIDADE=true
 ```
 
+> **Desde a `170`, `ASSISTENTE_PILOTO=true` é o atalho de demonstração**: dispensa a habilitação na
+> administração institucional, e só fora de produção, que recusa subir com ele. Sem o atalho, o
+> piloto se liga pela página "Assistente do Edital", com a entrada institucional — o roteiro C do
+> quickstart da `170`.
+
 ```bash
 export ASSISTENTE_CREDENCIAL="$(cat "$HOME/.config/processo-seletivo/openrouter")"
 ```

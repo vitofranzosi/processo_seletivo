@@ -710,6 +710,16 @@
       "url": "http://localhost:8176"
     },
     {
+      "name": "habilitacao-do-assistente-170",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DJANGO_DEBUG=true DB_NAME=ps_170_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=false GESTAO_PROVEDOR_INSTITUCIONAL=tests.homologacao.provedor.ProvedorDeHomologacao ASSISTENTE_SERVICO=openrouter ASSISTENTE_ENDERECO=https://openrouter.ai/api/v1 ASSISTENTE_MODELO=qwen/qwen3.8-27b ASSISTENTE_PROVEDOR=parasail ASSISTENTE_TOKENS_POR_CHAMADA=0 ASSISTENTE_TOKENS_POR_MENSAGEM=9 ASSISTENTE_TOKENIZER=\"$HOME/.config/processo-seletivo/qwen3.8-27b/tokenizer.json\" ASSISTENTE_CREDENCIAL=\"$(cat \"$HOME/.config/processo-seletivo/openrouter\")\" uv run python manage.py runserver 8170"
+      ],
+      "port": 8170,
+      "url": "http://localhost:8170"
+    },
+    {
       "name": "novidades-168",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
