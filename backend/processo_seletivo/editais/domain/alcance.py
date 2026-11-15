@@ -112,6 +112,23 @@ def alcanca_a_inscricao(conteudo, etapa, modality_id) -> bool:
     return alcanca(etapa, codigo_da_modalidade(conteudo, modality_id))
 
 
+def nome_da_modalidade(conteudo, perfil_id, modalidade_id) -> str:
+    """O nome publicado da Modalidade de uma inscrição, ou o código, ou vazio.
+
+    Pura, sobre o conteúdo já lido: o degrau do acompanhamento (`171`) e a página do vídeo (`174`,
+    FR-7853) dizem "você se inscreveu em …" pelo nome que o Edital deu, e nenhuma das duas consulta
+    o banco para isso. Mora aqui, e não no portal, porque o app `verificacao` também a usa.
+    """
+    perfil_id, modalidade_id = str(perfil_id), str(modalidade_id)
+    for perfil in (conteudo or {}).get("profiles") or []:
+        if str(perfil.get("id")) != perfil_id:
+            continue
+        for modalidade in perfil.get("competitionModalities") or []:
+            if str(modalidade.get("id")) == modalidade_id:
+                return modalidade.get("name") or modalidade.get("code") or ""
+    return ""
+
+
 def _rotulo_da_modalidade(modalidade) -> str:
     return str(modalidade.get("name") or modalidade.get("code") or "").strip()
 

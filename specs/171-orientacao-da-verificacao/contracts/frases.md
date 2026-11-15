@@ -24,7 +24,9 @@ Em todo `FALTA`:
 Com o vídeo, só com a chave ligada:
 
 - **`PODE_GRAVAR`**: "Você pode gravar um vídeo curto ou fazer a entrevista ao vivo. As duas formas
-  valem igual. O vídeo pode ser enviado até {fim}." Link: "Ver como funciona".
+  valem igual." Link: "Escolher entre vídeo e entrevista ao vivo". O prazo, "Prazo: até {fim}.", vem
+  em linha própria, antes do porquê. *Revisto pela `174` (a FR-7857 e a FR-7858 da `174`), em 15/11;
+  até ali o prazo vinha no fim da frase principal e o link era "Ver como funciona".*
 - **`RECEBIDO`**: "Seu vídeo chegou em {data}. A comissão ainda não o abriu." Link: "Ver o
   comprovante".
 - **`EM_ANALISE`**: "A comissão está analisando o seu vídeo." Link: "Ver o comprovante".

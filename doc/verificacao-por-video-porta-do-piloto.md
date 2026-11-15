@@ -51,6 +51,25 @@ O merge desse PR é do usuário, como todo merge deste repositório.
 **A chave não fecha a Mesa** (achado I1 da spec): desligada depois de vídeos recebidos, a comissão
 continua os assistindo e deliberando, e a R-11 continua valendo.
 
+## A detecção do giro do rosto tem porta própria (176)
+
+A `176` acrescentou ao palco uma estimativa, **no aparelho**, de para onde o rosto aponta, para que os
+dois perfis avancem sozinhos. Ela fica atrás de uma chave própria, `VERIFICACAO_DETECCAO_DO_GIRO`, que
+só vale com a do vídeo e que a produção também recusa. Abrir a porta do vídeo **não** abre esta. Antes
+dela, dois passos a mais:
+
+- **P-13 — a validação na LGPD.** A CPVA e o encarregado de dados precisam conhecer a revisão da
+  FR-7150 (o servidor continua sem analisar nada; o aparelho estima o giro e não guarda nem envia nada
+  — D-001 da `176`), a base legal do tratamento (art. 11), o aviso e a escolha "Prefiro avançar só
+  tocando" (D-003 da `176`), e registrar o tratamento no relatório de impacto. Se pedirem
+  consentimento expresso, a troca é de padrão: o aviso passa a perguntar antes de ligar.
+- **A compressão do motor no `nginx`.** O guia de implantação não declara `gzip_types`; sem
+  `application/wasm` e `application/octet-stream` nele, o candidato baixa 15,4 MB em vez de cerca de
+  6,7 (`doc/deteccao-do-giro-2026-11/`).
+
+A política de conteúdo da página de gravação ganha `'wasm-unsafe-eval'` só com a chave ligada, e
+nenhuma outra diretiva muda.
+
 ## O que fica de fora mesmo com a porta aberta
 
 Está registrado na spec, em *Out of Scope* e *Achados*:

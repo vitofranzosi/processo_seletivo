@@ -1,0 +1,8 @@
+{% comment %}
+Os ícones do candidato (174, research T-008), em SVG escrito no próprio HTML. A política de conteúdo
+tem `img-src 'self'`, e um SVG em `data:` na folha seria recusado; o desenhado aqui não é carga de
+imagem, e herda a cor do texto. O traço de 1,75 é o da barra lateral da gestão.
+
+Nenhum ícone diz nada sozinho: todos são `aria-hidden`, e a palavra vem sempre ao lado (UX-873).
+Uso: `{% include "portal/_icone.html" with nome="relogio" %}`.
+{% endcomment %}<svg class="icone" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{% if nome == "relogio" %}<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>{% elif nome == "confirmado" %}<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.6 2.5L16 9.5"/>{% elif nome == "luz" %}<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>{% elif nome == "rosto" %}<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 15c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/>{% elif nome == "documento" %}<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M6 16c.5-1.3 1.4-2 2.5-2s2 .7 2.5 2M14 10h4M14 13h4"/>{% elif nome == "tempo" %}<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9.5 2h5"/>{% endif %}</svg>

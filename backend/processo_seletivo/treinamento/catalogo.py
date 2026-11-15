@@ -54,6 +54,8 @@ class Cenario:
     # corre: o período de inscrições aberto, a janela recursal. `None` é sem prazo.
     validade_dias: int | None = None
     exige_fonte_de_demonstracao: bool = False
+    # O C19 só monta com a chave do vídeo (171, FR-7337), que produção recusa.
+    exige_verificacao_por_video: bool = False
     # O C16 e o C17 provisionam a pessoa do setor e o vínculo dela (FR-6720 a FR-6729); só eles.
     provisiona_formalizacao: bool = False
     restauracao: str = (
@@ -444,6 +446,226 @@ def montar_c18(m):
         )
 
 
+# Os estados do C19 (171, FR-7337), pela ordem dos candidatos: três na cota, cada um num ponto do
+# caminho do vídeo, e o 04, na ampla.
+VAI_GRAVAR_DO_C19 = 1
+VIDEO_A_ASSISTIR_DO_C19 = 2
+VIDEO_QUE_NAO_CONFIRMOU_DO_C19 = 3
+NA_AMPLA_DO_C19 = 4
+
+
+def _enviar_o_video_de_treinamento(m, inscricao, etapa_id):
+    """O vídeo de treinamento, enviado pelo serviço do portal, em partes, como o titular enviaria.
+
+    Pelo mesmo `envio` do portal, e não por gravação direta: o resumo, a duração lida do contêiner e
+    o comprovante saem da mesma conferência que vale para o vídeo de verdade (166).
+    """
+    from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+    from processo_seletivo.verificacao.application import envio
+    from processo_seletivo.verificacao.domain import conteiner, roteiro
+
+    dados = c.VIDEO_DE_TREINAMENTO.read_bytes()
+    with c.VIDEO_DE_TREINAMENTO.open("rb") as arquivo:
+        duracao = float(conteiner.ler(arquivo).duracao)
+    passo = duracao / len(roteiro.CHAVES)
+    marcas = [
+        {"passo": chave, "instante": round(i * passo, 3)} for i, chave in enumerate(roteiro.CHAVES)
+    ]
+    identidade = IdentidadeDoCandidato(
+        subject=inscricao.identity_subject, nome=inscricao.nome, cpf="", email=""
+    )
+    chaves = {"identidade": identidade, "inscricao_id": inscricao.id, "etapa_id": etapa_id}
+    novo = envio.iniciar(
+        **chaves,
+        tamanho=len(dados),
+        formato="video/mp4",
+        duracao=duracao,
+        marcas=marcas,
+        roteiro_versao=roteiro.VERSAO,
+        maioridade=True,
+    )
+    parte = 64 * 1024
+    for inicio in range(0, len(dados), parte):
+        envio.receber_parte(
+            **chaves, envio_id=novo.id, deslocamento=inicio, dados=dados[inicio : inicio + parte]
+        )
+    return envio.concluir(
+        **chaves,
+        envio_id=novo.id,
+        sha256=hashlib.sha256(dados).hexdigest(),
+        correlation_id=m.correlacao,
+    )
+
+
+def montar_c19(m):
+    """A Etapa restrita do C18, admitindo o vídeo, para a equipe gravar e avaliar (171, FR-7337).
+
+    Três alcançados, nos três pontos do caminho do vídeo que um período só comporta: o 01 ainda vai
+    gravar — é a equipe que grava, pelo portal —; o 02 enviou, e a comissão ainda não abriu; o 03
+    enviou, os dois avaliadores abriram, e um parecer não confirma, de modo que a consolidação pede
+    o encaminhamento à entrevista ao vivo (R-11: o vídeo só confirma). Os três estão distribuídos
+    aos dois avaliadores, para que o vídeo que a equipe gravar no 01 chegue à Mesa sem passo a
+    mais. O 04 está só na ampla. **Ninguém avisado**, como no C18.
+
+    **Só com a chave do vídeo** (`VERIFICACAO_POR_VIDEO`): sem ela o portal não deixa gravar, e o
+    cenário não teria o que mostrar. A recusa é a de `conflitos_de_montagem`, antes de qualquer
+    escrita e já na pré-visualização (`exige_verificacao_por_video`).
+    """
+    from types import SimpleNamespace
+
+    from processo_seletivo.avaliacoes.application.avaliacao import concluir
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.verificacao.application import abertura
+
+    m.criar()
+    m.elaborar(
+        perfis=c.perfil_de_notas(),
+        inicio=m.agora - timedelta(days=10),
+        duracao_dias=40,
+        documentos=c.documentos_de_notas(),
+        etapas_a_mais=[c.etapa_da_verificacao(video=True)],
+        eventos_a_mais=[
+            c.evento_da_verificacao(m.agora - timedelta(hours=1), m.agora + timedelta(days=7))
+        ],
+    )
+    m.publicar()
+    inscricoes = m.inscrever(
+        NA_AMPLA_DO_C19,
+        reservada=(VAI_GRAVAR_DO_C19, VIDEO_A_ASSISTIR_DO_C19, VIDEO_QUE_NAO_CONFIRMOU_DO_C19),
+    )
+    m.encerrar_inscricoes(timezone.now())
+    m.constituir_comissao(alocar_em=(c.ETAPA_VERIFICACAO,))
+    etapa = m.id(c.ETAPA_VERIFICACAO)
+    na_cota = inscricoes[VAI_GRAVAR_DO_C19 - 1 : VIDEO_QUE_NAO_CONFIRMOU_DO_C19]
+    m.distribuir(c.ETAPA_VERIFICACAO, na_cota, avaliadores=(AVALIACAO_1, AVALIACAO_2))
+    m.dizer("Enviando o vídeo de treinamento do 02 e do 03…")
+    for posicao in (VIDEO_A_ASSISTIR_DO_C19, VIDEO_QUE_NAO_CONFIRMOU_DO_C19):
+        _enviar_o_video_de_treinamento(m, inscricoes[posicao - 1], etapa)
+    versao = effective_version(edital_id=m.edital.id)
+    nao_confirmou = inscricoes[VIDEO_QUE_NAO_CONFIRMOU_DO_C19 - 1]
+    for avaliador, sentido in ((AVALIACAO_1, "FAVORAVEL"), (AVALIACAO_2, "DESFAVORAVEL")):
+        # Abrir é ato, e o parecer pelo vídeo o exige (FR-7134 da 166). A sessão é só onde a
+        # abertura guarda o identificador para o reprodutor; aqui ninguém reproduz.
+        abertura.abrir_pela_comissao(
+            SimpleNamespace(session={}),
+            ator=m.ator(avaliador),
+            edital=m.edital,
+            etapa_id=etapa,
+            inscricao_id=nao_confirmou.id,
+            correlation_id=m.correlacao,
+        )
+        concluir(
+            ator=m.ator(avaliador),
+            edital=m.edital,
+            etapa_id=etapa,
+            inscricao_id=nao_confirmou.id,
+            pontuacao=None,
+            sentido=sentido,
+            parecer=f"Parecer de treinamento. {c.MARCA}.",
+            expected_revision=1,
+            versao_reconhecida=versao.id,
+            correlation_id=m.correlacao,
+        )
+
+
+# O C20 (167). **Vinte participantes**, o teto de pessoas por rodada (`PESSOAS_POR_RODADA`): é o que
+# faz a agenda de um dia não bastar. Com 20 minutos de entrevista e 10 de intervalo, um dia de
+# manhã e tarde (08:00–12:00 e 13:00–17:00) dá 16 horários, e o simulador diz "Faltam 4 horários
+# para as 20 pessoas" — a falta que o exercício resolve acrescentando um dia.
+PARTICIPANTES_DO_C20 = 20
+# Dois na cota, para que a lista da agenda mostre as duas modalidades lado a lado sem diferença: a
+# Entrevista alcança todos, e a página pública mostra nome e protocolo de cada um (D-009 da 167).
+COTISTAS_DO_C20 = (4, 11)
+# A Prova de todos acima da mínima (6,0): ninguém é eliminado, e os vinte seguem para a Entrevista.
+NOTAS_DA_PROVA_DO_C20 = (
+    "9.5",
+    "9.0",
+    "8.5",
+    "8.5",
+    "8.0",
+    "8.0",
+    "7.5",
+    "7.5",
+    "7.5",
+    "7.0",
+    "7.0",
+    "7.0",
+    "6.5",
+    "6.5",
+    "6.5",
+    "6.5",
+    "6.0",
+    "6.0",
+    "6.0",
+    "6.0",
+)
+# O período da Entrevista: três dias úteis, de segunda a quarta, a partir do 27º depois da carga —
+# depois da Prova do molde (25º) e antes do "Resultado final" (50º), para que o cronograma se leia
+# na ordem do certame.
+INICIO_DA_ENTREVISTA_DO_C20 = 27
+DIAS_DA_ENTREVISTA_DO_C20 = 3
+
+
+def periodo_da_entrevista(agora):
+    """`(início, fim)` do Evento: de segunda a quarta, das 08:00 do primeiro dia às 18:00 do último.
+
+    **Em datas locais**, e não em horas contadas da carga: a agenda compara dias do calendário de
+    Brasília (`leitura.periodo_da_etapa`), e um Evento contado em horas começaria às 14:37 de um
+    dia e terminaria às 14:37 de outro.
+
+    **Na primeira segunda-feira a partir do 27º dia**: contado direto, o período caía no sábado
+    conforme o dia da carga (visto no banco local, numa carga de domingo), e a equipe montava
+    entrevistas num fim de semana. Começa, portanto, entre o 27º e o 33º dia.
+    """
+    from datetime import datetime, time
+
+    from processo_seletivo.shared.tempo import ZONA
+
+    primeiro = timezone.localtime(agora, ZONA).date() + timedelta(days=INICIO_DA_ENTREVISTA_DO_C20)
+    primeiro += timedelta(days=-primeiro.weekday() % 7)
+    ultimo = primeiro + timedelta(days=DIAS_DA_ENTREVISTA_DO_C20 - 1)
+    return (
+        datetime.combine(primeiro, time(8), tzinfo=ZONA),
+        datetime.combine(ultimo, time(18), tzinfo=ZONA),
+    )
+
+
+def perfil_da_entrevista():
+    """O Perfil de notas, com o marco somando a Prova e a Entrevista, no lugar dos Títulos."""
+    (perfil,) = c.perfil_de_notas()
+    marco = perfil["classificationMilestones"][0]
+    marco["stages"] = [ETAPA_PROVA, c.ETAPA_ENTREVISTA]
+    return [perfil]
+
+
+def montar_c20(m):
+    """A Prova consolidada, e a Entrevista com vinte participantes e a agenda vazia (167).
+
+    **A agenda não é tocada**: configurar, montar, conferir e publicar são o exercício inteiro, e um
+    cenário que já trouxesse a configuração tiraria da equipe o simulador, que é a primeira tela.
+    Por isso também ninguém foi distribuído na Entrevista — a avaliação dela vem depois do dia.
+
+    **A autoridade que assina a agenda é a da carga**, já usada pela publicação do Edital: a
+    conferência a oferece entre as vigentes, e escolhê-la não congela cadastro nenhum (FR-1121).
+    """
+    m.criar()
+    m.elaborar(
+        perfis=perfil_da_entrevista(),
+        inicio=m.agora - timedelta(days=10),
+        duracao_dias=40,
+        documentos=c.documentos_de_notas(),
+        etapas=(ETAPA_PROVA, ETAPA_DOCUMENTAL),
+        etapas_a_mais=[c.etapa_da_entrevista()],
+        eventos_a_mais=[c.evento_da_entrevista(*periodo_da_entrevista(m.agora))],
+        ordem_cronologica=True,
+    )
+    m.publicar()
+    inscricoes = m.inscrever(PARTICIPANTES_DO_C20, reservada=COTISTAS_DO_C20)
+    m.encerrar_inscricoes(timezone.now())
+    m.constituir_comissao(alocar_em=(ETAPA_PROVA, c.ETAPA_ENTREVISTA, ETAPA_DOCUMENTAL))
+    m.avaliar(ETAPA_PROVA, notas_de(inscricoes, NOTAS_DA_PROVA_DO_C20))
+
+
 _SELECAO = "Professor substituto (Perfil docente de Informática, com cota PPP)"
 _CURSO = "Curso técnico EaD (ampla concorrência e cota PPP)"
 _EQUIPE_DA_PUBLICACAO = (
@@ -831,6 +1053,92 @@ CENARIOS = (
         limitacoes=(
             "O período vencido e o resultado visível ao candidato não cabem num período em curso: "
             "ficam na suíte (FR-7333 da 171).",
+        ),
+    ),
+    Cenario(
+        codigo="C19",
+        nome="Verificação da autodeclaração por vídeo",
+        objetivo=(
+            "Percorrer o vídeo da verificação: o candidato grava e envia, a comissão assiste e dá "
+            "o parecer, e a presidência encaminha à entrevista ao vivo quem o vídeo não confirmou."
+        ),
+        tipo_de_selecao=_SELECAO,
+        metodo=(
+            "A Etapa restrita do C18, admitindo o vídeo: cota PPP, dois pareceres, unanimidade; "
+            "o vídeo só confirma"
+        ),
+        estado_inicial=(
+            "3 inscritos na cota no período da Etapa, distribuídos aos dois avaliadores: 1 ainda "
+            "vai gravar; 1 com vídeo enviado, que ninguém abriu; 1 com vídeo e dois pareceres, um "
+            "que não confirma; 1 inscrito só na ampla; ninguém avisado."
+        ),
+        precondicoes=(
+            "A verificação por vídeo ligada no ambiente (`VERIFICACAO_POR_VIDEO`), o que só é "
+            "possível fora de produção.",
+            "O envio de avisos ligado no ambiente (`AVISOS_AOS_CANDIDATOS`).",
+        ),
+        papeis=(
+            f"Presidência ({PRESIDENCIA})",
+            f"Avaliadores ({AVALIACAO_1}, {AVALIACAO_2})",
+            "Candidato (01 a 03, na cota; 04, na ampla)",
+        ),
+        proxima_acao=(
+            "Candidato 01: gravar e enviar pelo portal; avaliadores: abrir os vídeos do 01 e do 02 "
+            "e dar os pareceres; presidência: consolidar e encaminhar o 03 à entrevista ao vivo."
+        ),
+        resultado_esperado=(
+            "Vídeo do 01 enviado, com comprovante; pareceres pelo vídeo completos; o 03 "
+            "encaminhado à entrevista ao vivo, sem Resultado desfavorável pelo vídeo."
+        ),
+        dependencias=(
+            "Correio do ambiente para o código de acesso do candidato.",
+            "Para gravar: navegador com câmera, em localhost ou HTTPS; ou a imagem de teste do "
+            "portal, que só existe fora de produção.",
+        ),
+        montar=montar_c19,
+        validade_dias=7,
+        exige_verificacao_por_video=True,
+        limitacoes=(
+            "O vídeo do 02 e do 03 é o vídeo de treinamento, com barras de cor e a faixa de "
+            "dado fictício: não há rosto a avaliar, e o exercício é o caminho, não o juízo.",
+            "O resultado publicado e o período vencido ficam fora, como no C18.",
+        ),
+    ),
+    Cenario(
+        codigo="C20",
+        nome="Agendamento da Etapa",
+        objetivo=(
+            "Configurar, montar, conferir e publicar a agenda de uma Entrevista, avisar as pessoas "
+            "e remarcar uma delas."
+        ),
+        tipo_de_selecao=_SELECAO,
+        metodo="Notas (prova + entrevista)",
+        estado_inicial=(
+            f"Prova consolidada; {PARTICIPANTES_DO_C20} pessoas participam da Entrevista, com "
+            f"Evento de {DIAS_DA_ENTREVISTA_DO_C20} dias no cronograma; agenda sem configurar."
+        ),
+        precondicoes=(
+            "Todos acima da nota mínima na Prova: a lista da Entrevista está fechada.",
+            "O Evento da Entrevista vai de segunda a quarta, a partir da primeira segunda-feira "
+            f"depois de {INICIO_DA_ENTREVISTA_DO_C20} dias da carga.",
+            "Uma autoridade vigente e já usada, para assinar a agenda.",
+            "O envio de avisos ligado no ambiente (`AVISOS_AOS_CANDIDATOS`).",
+        ),
+        papeis=(f"Presidência ({PRESIDENCIA})", "Candidato (portal)"),
+        proxima_acao=(
+            "Presidência: configurar a agenda e resolver a falta que o simulador acusa, preencher, "
+            "ajustar uma pessoa, conferir e publicar; depois, remarcar alguém."
+        ),
+        resultado_esperado=(
+            "Agenda publicada, com documento e avisos; o horário na página pública e na área do "
+            "candidato; a remarcação com um aviso só."
+        ),
+        dependencias=("Correio do ambiente para o aviso e para o código de acesso do candidato.",),
+        montar=montar_c20,
+        validade_dias=INICIO_DA_ENTREVISTA_DO_C20,
+        limitacoes=(
+            "A inclusão e o cancelamento depois da publicação pedem alguém que passe a participar "
+            "ou deixe de participar, e todos os vinte já participam: ficam na suíte (167, US5).",
         ),
     ),
 )

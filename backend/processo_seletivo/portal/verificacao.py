@@ -21,6 +21,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from processo_seletivo.portal import deteccao
 from processo_seletivo.portal import identidade as identidade_do_candidato
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.http import marcar_como_privada
@@ -67,6 +68,7 @@ def pagina(request, inscricao_id, etapa_id):
     inscricao, etapa, situacao = envio.contexto_do_titular(
         identidade=_identidade(request), inscricao_id=inscricao_id, etapa_id=etapa_id
     )
+    detectar = deteccao.ligada() and situacao.pode_enviar
     resposta = render(
         request,
         "portal/verificacao.html",
@@ -83,10 +85,17 @@ def pagina(request, inscricao_id, etapa_id):
             # A imagem de teste da prova de conceito, para verificar sem câmera e sem gravar ninguém
             # (research T-007). Só no desenvolvimento, que é o único lugar onde a chave liga.
             "fonte_sintetica": settings.DEBUG,
+            # A detecção do giro do rosto (176): os endereços do motor e os passos que avançam
+            # sozinhos. Sem a chave, nada disso chega ao HTML, e a página é a da 174 (SC-2751).
+            "deteccao": (
+                {"enderecos": deteccao.enderecos(), "giro_do_passo": deteccao.GIRO_DO_PASSO}
+                if detectar
+                else None
+            ),
             "rotas": _rotas(inscricao.id, etapa["id"]),
         },
     )
-    return marcar_como_privada(com_midia_local(resposta))
+    return marcar_como_privada(com_midia_local(resposta, compilar_wasm=detectar))
 
 
 @require_POST

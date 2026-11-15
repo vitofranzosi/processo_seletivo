@@ -277,11 +277,14 @@ EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 # envios de uma vez: código, comprovante, convocação e aviso (066, `R-006`, `FR-1270`).
 EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
 
-# Os avisos complementares aos candidatos (066). **Desligados por padrão**, e é produção quem herda
-# o padrão: a ativação depende da validação institucional de LGPD e da infraestrutura de correio
-# (`D-009`). Desligada, ninguém confirma aviso e o despacho não tenta nada; o histórico e os modelos
-# continuam (`FR-1282`).
-AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "false").lower() == "true"
+# Os avisos complementares aos candidatos (066). **Ligados por padrão desde 15/11/2026**, por
+# decisão do usuário: desligados, a agenda da Etapa (167) era publicada e ninguém era avisado do
+# horário, e o candidato perdia a Etapa por não ter visto a publicação. Até então ficavam
+# desligados em produção à espera da validação de LGPD e do correio (`D-009` da 066); a decisão e
+# o que ela substitui estão em `doc/decisao-avisos-ligados-por-padrao-2026-11-15.md`. O ambiente
+# sem correio pronto os desliga com `AVISOS_AOS_CANDIDATOS=false`: desligada, ninguém confirma
+# aviso e o despacho não tenta nada; o histórico e os modelos continuam (`FR-1282`).
+AVISOS_AOS_CANDIDATOS = os.getenv("AVISOS_AOS_CANDIDATOS", "true").lower() == "true"
 # A peça visual do kit de divulgação (111, `D-010`). **Desligada por padrão**, e é produção quem
 # herda o padrão: a marca entrou versionada, mas o template com ela espera a aprovação da
 # comunicação (SC-1054). Desligada, a tela diz que a peça está em
@@ -392,6 +395,12 @@ VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = (
     if os.getenv("VERIFICACAO_POR_VIDEO_RETENCAO_DIAS", "").strip()
     else None
 )
+# A detecção do giro do rosto na gravação (176, `FR-8020`). **Desligada por padrão, só vale com a
+# do vídeo, e recusada em produção** (`production.py`): o aparelho estima para onde o rosto aponta,
+# para passar sozinho aos perfis, e isso é tratamento de dado biométrico (LGPD, art. 11), cuja
+# validação com a CPVA e o encarregado de dados é a P-13, aberta. Chave própria, e não a do vídeo,
+# porque ela abre uma exceção própria da política de conteúdo (`'wasm-unsafe-eval'`, D-004).
+VERIFICACAO_DETECCAO_DO_GIRO = os.getenv("VERIFICACAO_DETECCAO_DO_GIRO", "false").lower() == "true"
 ASSISTENTE_CONVERSAS_POR_SESSAO = int(os.getenv("ASSISTENTE_CONVERSAS_POR_SESSAO", "3"))
 ASSISTENTE_ENDERECO = os.getenv("ASSISTENTE_ENDERECO", "").strip().rstrip("/")
 ASSISTENTE_MODELO = os.getenv("ASSISTENTE_MODELO", "").strip()

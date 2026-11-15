@@ -43,6 +43,7 @@ from .base import (
     REST_FRAMEWORK,
     SECRET_KEY,
     SORTEIO_FONTE_DE_DEMONSTRACAO,
+    VERIFICACAO_DETECCAO_DO_GIRO,
     VERIFICACAO_POR_VIDEO,
 )
 
@@ -267,6 +268,17 @@ _exigir(
     "VERIFICACAO_POR_VIDEO",
     "a verificação da autodeclaração por vídeo é só do desenvolvimento; o vídeo assíncrono depende "
     "de ato do Conselho Superior, de protocolo da CPVA e de Edital que o cite (P-0).",
+)
+
+# A detecção do giro do rosto (176, `FR-8021`): a do vídeo já é recusada, e esta tem pendência
+# própria — a validação do tratamento no aparelho com a CPVA e o encarregado de dados, e o registro
+# no relatório de impacto (P-13). A recusa é própria para não cair sozinha no dia em que a do vídeo
+# for liberada.
+_exigir(
+    not VERIFICACAO_DETECCAO_DO_GIRO,
+    "VERIFICACAO_DETECCAO_DO_GIRO",
+    "a detecção do giro do rosto é só do desenvolvimento; depende da porta do piloto do vídeo "
+    "(P-0) e da validação do tratamento no aparelho com a CPVA e o encarregado de dados (P-13).",
 )
 
 # A entrada institucional da gestão (106, `D-009`). **Sem provedor, a gestão continua bloqueada**:

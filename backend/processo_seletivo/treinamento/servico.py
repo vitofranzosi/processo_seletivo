@@ -245,6 +245,15 @@ def conflitos_de_montagem(cenario, unidade, rodada, ano):
                 f"o concurso {concurso} da fonte de demonstração já foi observado por outro "
                 "certame."
             )
+    if cenario.exige_verificacao_por_video and not getattr(
+        settings, "VERIFICACAO_POR_VIDEO", False
+    ):
+        # Sem a chave o portal não deixa gravar, e o cenário não teria o que mostrar (171,
+        # FR-7337). A recusa é a da pré-visualização, como a da fonte do sorteio.
+        conflitos.append(
+            "a verificação por vídeo não está ligada neste ambiente (VERIFICACAO_POR_VIDEO); "
+            "ela só existe fora de produção."
+        )
     return conflitos
 
 

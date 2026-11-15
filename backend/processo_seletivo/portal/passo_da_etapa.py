@@ -50,17 +50,6 @@ class Passo:
     video: object = None
 
 
-def _nome_da_modalidade(conteudo, perfil_id, modalidade_id) -> str:
-    perfil_id, modalidade_id = str(perfil_id), str(modalidade_id)
-    for perfil in (conteudo or {}).get("profiles") or []:
-        if str(perfil.get("id")) != perfil_id:
-            continue
-        for modalidade in perfil.get("competitionModalities") or []:
-            if str(modalidade.get("id")) == modalidade_id:
-                return modalidade.get("name") or modalidade.get("code") or ""
-    return ""
-
-
 def _restritas_que_alcancam(conteudo, modalidade_id, visiveis) -> list[dict]:
     """As Etapas restritas que alcançam a inscrição e cujo Resultado ela ainda não vê. Puro."""
     if modalidade_id is None:
@@ -153,7 +142,7 @@ def passos_da_inscricao(inscricao, *, conteudo, resultados_visiveis, agora) -> l
     etapas = _restritas_que_alcancam(conteudo, inscricao.modality_id, visiveis)
     if not etapas:
         return []
-    modalidade = _nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
+    modalidade = alcance.nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id)
     passos = []
     for etapa in etapas:
         etapa_id = UUID(str(etapa["id"]))

@@ -82,7 +82,15 @@ Uma seção, `data-tela="palco"`, com `data-estado` = `preparo` | `gravando`. De
 | faixa de cima: `[data-passo-rotulo]` "Passo N de 4", `[data-passo-titulo]`, `[data-passo-atual]` (instrução) | não | sim |
 | `[data-selo]` "Gravando" + `[data-tempo]` "0:42 de 3:00" | não | sim |
 | `[data-recomecar]` "Parar e recomeçar", canto de cima | não | sim |
-| `[data-proximo]` "Próximo" / "Terminar a gravação", terço de baixo | não | sim |
+| "Voltar" (`data-ir="acolhimento"`), canto de cima | sim | não |
+| `[data-comecar]` "Começar a gravar", faixa de baixo | sim | não |
+| `[data-proximo]` "Próximo" / "Terminar a gravação", faixa de baixo | não | sim |
+| "Não consigo usar a câmera" (`data-ir="nao-consigo"`), faixa de baixo | sim | sim |
+
+*Revisão da implementação (15/11, CI do #568)*: "Começar a gravar" e "Não consigo usar a câmera"
+estavam no pé do painel do preparo, e no computador a altura dele, que muda com a fonte do sistema,
+os empurrava para fora da tela. O gesto principal passou à faixa de baixo do vídeo, o mesmo lugar de
+"Próximo"; o painel ficou só com a informação.
 
 Fora da grade, no preparo (abaixo da prévia no computador; numa folha sobre a parte de baixo no
 celular):
@@ -94,11 +102,10 @@ celular):
    "Estamos ouvindo você." / "Não encontramos o microfone. Você pode mostrar a frase escrita num papel.";
 4. `[data-aviso-tela-acesa][hidden]`: "Mantenha a tela acesa: se ela apagar, a gravação para e você
    grava de novo.";
-5. `[data-aviso-gravacao][hidden]`: o aviso do descarte (166);
-6. principal "Começar a gravar" (`data-comecar`);
-7. discreta "Voltar" (`data-ir="acolhimento"`).
+5. `[data-aviso-gravacao][hidden]`: o aviso do descarte (166).
 
-Sempre, nos dois estados: "Não consigo usar a câmera" (`data-ir="nao-consigo"`), alcançável sem rolar.
+Os dois avisos vêm no topo do painel, antes da lista. "Começar a gravar" cita a lista e o teto por
+`aria-describedby`, porque vem antes deles na ordem do documento.
 
 O anúncio ao leitor de tela, a cada passo: "Passo {N} de 4: {título}. {instrução}" (UX-875).
 

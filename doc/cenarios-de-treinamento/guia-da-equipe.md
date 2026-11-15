@@ -59,7 +59,7 @@ Cada exercício diz **quem** faz cada passo. Quando um passo é de outro papel, 
 com o papel indicado: o GPS separa quem elabora, quem homologa e quem publica, e é parte do
 treinamento perceber essa separação.
 
-**Exercícios no portal do candidato** (C02, C08, C11): o candidato entra com um código enviado ao
+**Exercícios no portal do candidato** (C02, C08, C11, C18, C20): o candidato entra com um código enviado ao
 e-mail. Os candidatos dos cenários têm e-mails que não existem. Para se inscrever, use o seu próprio
 e-mail (C02). Para agir como um candidato já inscrito (C08, C11):
 
@@ -79,8 +79,8 @@ quem cobre o quê:
 
 | Frente | Por que a pessoa está nela | Cenário | Identidade |
 |---|---|---|---|
-| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C18 | `treino.presidencia` |
-| Avaliar uma Etapa | membro alocado à Etapa | C05, C18 | `treino.avaliacao1`, `treino.avaliacao2` (C18) |
+| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C20 | `treino.presidencia` |
+| Avaliar uma Etapa | membro alocado à Etapa | C05, C18, C19 | `treino.avaliacao1`, `treino.avaliacao2` (C18, C19) |
 | Conferir os documentos da convocação | membro **alocado à conferência** — sem presidir | C12 | `treino.avaliacao2` |
 | Receber os documentos para formalizar | **designada** para o Edital, sem integrar a comissão | C16 (designada), C17 (a designar) | `treino.formalizacao` |
 | Decidir recursos | papel Julgador de recursos da unidade | C08 (um recurso admitido) | Julgador de recursos |
@@ -524,6 +524,104 @@ concluídos e a Etapa consolidada pela regra.
 **Atenção:** o período vencido sem nada registrado e o resultado visível ao candidato não cabem num
 cenário com a Etapa em curso. Para vê-los, a equipe conclui os pareceres, consolida e publica o
 resultado do marco.
+
+## C20 — Agendamento da Etapa
+
+**Objetivo:** marcar o dia e o horário de cada pessoa numa Entrevista — configurar a agenda, montá-la
+sem planilha, conferir e publicar, avisar as pessoas e remarcar uma delas.
+
+**Você começa com:** o Edital `SIM20`, com a **Prova objetiva** já avaliada e consolidada e todos
+acima da nota mínima: as **20 pessoas** seguem para a **Entrevista**. No cronograma, a Entrevista tem
+três dias, de segunda a quarta, cerca de um mês depois da carga. **A agenda ainda não existe**: nada
+foi configurado.
+
+**Quem faz:** a presidência (`treino.presidencia`); depois, o candidato, pelo portal.
+
+**Seu desafio:**
+
+1. Entre como a presidência e abra **Minhas atividades**. Siga **Distribuir 20 inscrições** da
+   Entrevista: é a página da Etapa. No alto, a seção **Agenda** diz *"Esta Etapa ainda não tem
+   agenda"* e para que ela serve. Clique em **Configurar a agenda**.
+2. Configure assim: **Videoconferência**; duração **20** minutos e intervalo **10**; o primeiro dia do
+   período, com as janelas **08:00–12:00** e **13:00–17:00**; uma banca, **Banca 1**, com um endereço
+   de sala qualquer (`https://…`); e uma orientação ao candidato. Clique em **Recalcular**.
+3. O simulador diz **"Faltam 4 horários para as 20 pessoas."** e oferece três atalhos, cada um com o
+   ganho. Escolha **Acrescentar** o dia seguinte: agora **"Cabem todas as 20 pessoas. Sobram 12
+   horários."** Clique em **Salvar e montar a agenda**.
+4. Na montagem, **Preencher automaticamente**. A prévia diz quantos ficam em cada dia, e nada é
+   gravado até você **Aplicar**. Aplique.
+5. Ajuste uma pessoa à mão: clique nela na grade, escolha o outro dia e um horário livre, e **Mudar de
+   horário**. A tela diz de onde para onde ela passou.
+6. **Conferir e publicar.** Leia as quatro linhas de prontidão e o que será público (nome e número de
+   inscrição, nunca a sala). Escolha **Na página pública da seleção, no GPS**, escreva o item do
+   Edital que admite esse veículo (por exemplo, *item 9.3 do Edital*), escolha a autoridade
+   signatária e clique em **Publicar a agenda e avisar as pessoas**.
+7. A agenda publicada diz *"20 na fila"*. Os e-mails só saem quando o administrador rodar
+   `manage.py despachar_avisos` — e aparecem no terminal desse comando: um por pessoa, com o dia, o
+   horário, a sala e as orientações.
+8. **Remarque** alguém: na lista da agenda publicada, **Remarcar**, escolha um horário livre, escreva
+   o motivo e confirme. Rode o despacho de novo: sai **um** e-mail só, que diz que o horário anterior
+   não vale mais.
+9. Veja o lado público: na página da seleção (Edital `SIM20`), a seção **Agendas** leva à agenda da
+   Entrevista. Procure uma pessoa pelo número de inscrição; a remarcada aparece com *"remarcado em"*,
+   e há dois documentos — o da publicação e o da remarcação.
+10. Entre no portal como a pessoa remarcada (o e-mail segue o padrão de *Como entrar*:
+    `cefor-c20r1p02@treinamento.exemplo.test` é o candidato 02 na primeira rodada). Em **Acompanhar**,
+    **Seu horário** mostra o dia novo, a sala, as orientações e o aviso de que o horário mudou.
+
+**Resultado esperado:** agenda publicada, com documento e avisos; o horário na página pública e na
+área do candidato; a remarcação com o próprio documento e um aviso só.
+
+**Atenção:** depois de publicada, a agenda não se edita mais em bloco — cada mudança é um ato de uma
+pessoa, com motivo. Incluir quem passou a participar ou cancelar quem deixou de participar pede
+alguém que entre ou saia da Entrevista, e neste cenário todos os 20 participam: esses dois atos
+ficam fora do exercício.
+
+---
+
+## C19 — Verificação da autodeclaração por vídeo
+
+**Objetivo:** percorrer o vídeo da verificação de ponta a ponta — o candidato grava e envia, a
+comissão assiste e dá o parecer, e a presidência encaminha à entrevista ao vivo quem o vídeo não
+confirmou.
+
+**Só fora de produção.** O cenário exige a verificação por vídeo ligada no ambiente
+(`VERIFICACAO_POR_VIDEO=true`), e produção recusa a chave até o ato do Conselho Superior. Sem ela, a
+carga recusa o C19 antes de gravar qualquer coisa. Para gravar, o navegador precisa de câmera e o
+endereço precisa ser `localhost` ou HTTPS; quem não quiser aparecer marca **Usar imagem de teste** no
+teste da câmera.
+
+**Você começa com:** o Edital `SIM19`, com a mesma Etapa do C18 — só para a cota PPP, dois pareceres,
+"confirma só por unanimidade" —, agora **admitindo o vídeo**. Três candidatos na cota, todos
+distribuídos aos dois avaliadores: o 01 **ainda vai gravar**; o 02 **já enviou** o vídeo, e ninguém
+o abriu; o 03 enviou, os dois avaliadores abriram, e **um parecer não confirma**. O 04 está só na
+ampla. **Ninguém foi avisado.** O vídeo do 02 e do 03 é o vídeo de treinamento: barras de cor e a
+faixa "TREINAMENTO — VÍDEO FICTÍCIO". Não há rosto a avaliar; o exercício é o caminho.
+
+**Quem faz:** o candidato 01, pelo portal; os avaliadores (`treino.avaliacao1` e
+`treino.avaliacao2`); e a presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Entre no portal como o candidato 01 (o e-mail é `cefor-c19r1p01@treinamento.exemplo.test`, e o
+   código de acesso sai no terminal do servidor). Em **Minhas inscrições**, o cartão diz **Falta um
+   passo seu**. No acompanhamento, escolha gravar o vídeo, siga o roteiro — documento, perfil
+   esquerdo, perfil direito, de frente —, assista, envie e guarde o comprovante.
+2. Entre como `treino.avaliacao1` e abra **Minhas atividades**: **Avaliar 2 inscrições** — o 01 e o
+   02; o parecer do 03 já está dado. Na Mesa, abra o vídeo do 02 e o do 01 (que você acabou de
+   gravar) e dê o parecer — "Confirmo" ou "Não dá para confirmar pelo vídeo". Repita como
+   `treino.avaliacao2`.
+3. Entre como a presidência e abra o Edital `SIM19`. No Centro: **Encaminhar 1 inscrição à entrevista
+   ao vivo** (o 03) e **Avisar 3 inscrições**. Siga **Encaminhar**: o 03 vai à entrevista ao vivo, e
+   nenhum Resultado desfavorável sai do vídeo — o vídeo só confirma.
+4. Volte ao portal como o candidato 03 (`cefor-c19r1p03@treinamento.exemplo.test`): o acompanhamento
+   diz que a comissão quer conversar ao vivo, e que **isso não é reprovação**.
+
+**Resultado esperado:** o vídeo do 01 enviado, com comprovante; os pareceres pelo vídeo completos; o
+03 encaminhado à entrevista ao vivo; os confirmados por unanimidade, consolidados pela presidência.
+
+**Atenção:** abrir o vídeo é ato registrado na trilha, uma vez por abertura. Depois que alguém da
+comissão abre o vídeo, o candidato não pode mais trocá-lo.
 
 ---
 
