@@ -4,10 +4,12 @@
 
 **Created**: 2026-11-14
 
-**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia, sem plan nem tasks. As três
-perguntas ao usuário foram respondidas no mesmo dia (ver *Clarifications*), e a experiência visual —
+**Status**: Especificada em 14/11/2026, a partir do estudo do mesmo dia; plan e tasks no mesmo dia,
+divididos nas entregas A, B, C e D (ver [plan.md](plan.md)); a D fica fora desta implementação. As
+três perguntas ao usuário foram respondidas no mesmo dia, e os três pontos do plano numa segunda
+rodada, que acrescentou o documento PDF (ver *Clarifications*), e a experiência visual —
 o protótipo da segunda rodada do estudo — foi aprovada pelo usuário em 14/11, o marco anterior à
-implementação. Pronta para o plan. Pendentes: os SC-2390 e SC-2398, humanos.
+implementação. Pendentes: os SC-2390 e SC-2398, humanos.
 
 **Input**: o pedido de 14/11/2026 para especificar o agendamento de participantes em Etapas que
 exigem comparecimento em dia e horário — entrevista, verificação da autodeclaração, arguição —, como
@@ -77,12 +79,25 @@ partes. Ver *Out of Scope*.
 - Q: A lista fechada da FR-084 da `010` é revista para incluir o aviso de agenda, como origem do aviso
   complementar e sem envio novo (A), ou a agenda fica sem e-mail (B)? → A: **A** (`D-010`).
 
+### Session 2026-11-14 (segunda rodada, sobre os pontos do plano)
+
+- Q: Com os avisos aos candidatos desabilitados — o padrão de produção da `066` —, a publicação
+  cria o aviso mesmo assim (A), ou acontece sem aviso, dizendo isso na tela, com a habilitação da
+  `066` como controle único (B)? → A: **B** (`D-011`).
+- Q: A agenda publicada tem documento PDF, como a relação de convocados (A), ou só o conteúdo
+  público em bytes canônicos (B)? → A: **A**, pela composição existente, sem infraestrutura nova
+  (`D-012`).
+- Q: Publica só a presidência (A), ou quem já pode gerir a comissão, a presidência inclusive, com a
+  autoridade signatária como responsabilidade distinta (B)? → A: **B**, sem papel novo (`D-013`).
+
 ---
 
 ## User Scenarios & Testing *(mandatory)*
 
-Os atores são a **comissão** da Etapa — quem pode geri-la, e a presidência, que publica — e o
-**candidato**, que lê a área dele, a página pública da seleção e o e-mail.
+Os atores são a **comissão** da Etapa — quem pode geri-la, e que também publica, a presidência
+inclusive; a autoridade signatária, que quem publica escolhe na confirmação, é quem assina o ato, e
+não quem o pratica (`D-013`) — e o **candidato**, que lê a área dele, a página pública da seleção, o
+documento do ato e o e-mail.
 
 ### User Story 1 — A comissão configura a agenda e vê se cabe todo mundo (Priority: P1)
 
@@ -204,6 +219,11 @@ endereço da sala e as orientações.
    em destaque, a duração prevista, a banca, o local ou o botão da sala virtual, e as orientações.
 9. **Given** a agenda ainda não publicada, **When** o candidato abre a área dele, **Then** lê que o
    horário ainda não foi publicado, e o período da Etapa no cronograma.
+10. **Given** a agenda publicada, **When** qualquer pessoa abre o documento da publicação, **Then** o
+    PDF diz o mesmo que a página pública no instante da publicação, com a autoridade e o veículo, e
+    nunca o endereço da sala; na Etapa restrita por Modalidade, identifica só pelo protocolo.
+11. **Given** um integrante da comissão sem escopo no Edital, **When** ele confirma a publicação,
+    **Then** a publicação é negada pelo servidor, ainda que a tela tenha sido aberta antes.
 
 ---
 
@@ -230,6 +250,9 @@ de origem "agenda", um por pessoa, cada um citando a publicação.
    e oferece o reenvio.
 4. **Given** uma Etapa remota, **When** o aviso é composto, **Then** ele traz o endereço da sala
    daquela pessoa, e só dela.
+5. **Given** os avisos aos candidatos desabilitados, **When** a comissão confere e publica, **Then**
+   a conferência e a tela publicada dizem que os avisos estão desligados, a agenda é publicada e
+   nenhum aviso é criado; habilitados depois, nenhum aviso nasce desta publicação.
 
 ---
 
@@ -269,6 +292,9 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 8. **Given** a agenda publicada sem horário livre, **When** a comissão abre a remarcação, **Then** a
    tela diz que não há horário livre e leva à configuração, onde só se pode acrescentar dia, janela
    ou banca.
+9. **Given** uma remarcação confirmada, **When** qualquer pessoa abre a página pública, **Then** o
+   documento da publicação continua o mesmo, o da remarcação aparece depois dele, e a agenda vigente
+   mostra o horário novo.
 
 ---
 
@@ -358,7 +384,9 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   impedimento MUST nomear o que está errado e levar ao lugar de corrigir.
 - **FR-7222**: A conferência MUST mostrar os fatos da publicação (Etapa, período do cronograma,
   dias, duração e intervalo, bancas, forma de atendimento, pessoas e horários), a prévia da página
-  pública, o assunto e o texto da mensagem, e a escolha da autoridade signatária.
+  pública, o assunto e o texto da mensagem, e a escolha da autoridade signatária. Com os avisos aos
+  candidatos habilitados, MUST mostrar quantos avisos a publicação criará e para quem; desabilitados,
+  MUST dizer que nenhum aviso será criado (`D-011`).
 - **FR-7223**: A confirmação MUST levar a assinatura do que foi conferido (configuração e pares
   pessoa-horário) e MUST ser recusada se a agenda mudou desde a conferência. A confirmação repetida
   MUST devolver o ato já criado, sem criar outro e sem aviso novo.
@@ -366,13 +394,17 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   instante, e o conteúdo público tal como foi publicado, com o seu resumo criptográfico. Ela MUST
   ter a mesma natureza da relação de convocados da `149`, e o veículo MUST ser escolhido na
   confirmação como na `159`: publicar no GPS, declarando onde o Edital admite a página pública como
-  veículo, ou registrar depois a publicação feita fora dele (`D-008`).
+  veículo, ou registrar depois a publicação feita fora dele (`D-008`). A publicação MUST ter um
+  documento PDF composto do mesmo conteúdo público congelado, pela composição dos documentos
+  oficiais que a relação de convocados usa, gerado uma vez, no ato, e servido daí em diante como foi
+  gerado, de modo que concluir o ato não dependa de planilha ou documento montado fora do GPS
+  (`D-012`).
 - **FR-7225**: O conteúdo público MUST ter, por pessoa: o dia, o horário, o nome da banca quando há
   mais de uma, e a identificação da pessoa. A identificação MUST ser o nome e o protocolo, como a
   FR-5712 da `149`, salvo na Etapa cujo alcance é restrito por Modalidade, em que a identificação
   MUST ser só o protocolo (`D-009`). Na área do candidato, identificado, nada muda: ele vê tudo o que
   é dele.
-- **FR-7226**: O conteúdo público MUST NOT conter o endereço da sala, o CPF inteiro ou parcial, o
+- **FR-7226**: O conteúdo público e o documento dele MUST NOT conter o endereço da sala, o CPF inteiro ou parcial, o
   e-mail, o telefone, a Modalidade ou o desfecho de Etapa alguma.
 - **FR-7227**: A página pública da seleção MUST mostrar a agenda publicada por dia, e MUST permitir
   encontrar um horário pelo protocolo, e também pelo nome quando o nome é público.
@@ -384,18 +416,22 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 #### Os avisos
 
-- **FR-7230**: A publicação MUST criar um aviso por pessoa publicada, que cita o ato, pela origem
+- **FR-7230**: Com os avisos aos candidatos habilitados, a publicação MUST criar um aviso por
+  pessoa publicada, que cita o ato, pela origem
   "agenda" dos avisos complementares; a confirmação MUST NOT enviar, e o envio MUST ser o do
   despacho de avisos. A lista fechada da FR-084 da `010` MUST ser revista para incluir o aviso de
   agenda — na publicação, na remarcação e na inclusão — como origem do aviso complementar, sem envio
-  novo (`D-010`).
+  novo (`D-010`). Com os avisos desabilitados, a publicação MUST acontecer do mesmo jeito, sem criar
+  aviso, e a conferência, a confirmação e a tela da agenda publicada MUST dizer que os avisos estão
+  desligados; habilitá-los depois MUST NOT criar aviso de ato anterior. A habilitação dos avisos aos
+  candidatos MUST ser o controle único: a agenda MUST NOT ter chave nem envio próprios (`D-011`).
 - **FR-7231**: O aviso MUST trazer o dia, a hora, a duração prevista, a banca quando há mais de uma,
   o local ou o endereço da sala, as orientações, o protocolo, e a frase de que o que vale é a agenda
   publicada.
 - **FR-7232**: Uma pessoa MUST NOT receber dois avisos do mesmo ato.
 - **FR-7233**: A falha de envio MUST NOT desfazer nem suspender o ato. A tela da agenda publicada
   MUST mostrar quantos avisos saíram, quantos estão na fila e quais falharam, com o reenvio dos
-  avisos complementares.
+  avisos complementares; com os avisos desabilitados, MUST dizer isso no lugar das contagens.
 
 #### Depois da publicação
 
@@ -408,13 +444,18 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   Etapa depois da publicação, pelo mesmo ato da remarcação, sem horário anterior.
 - **FR-7243**: O cancelamento MUST tirar da agenda vigente, com motivo, quem estava agendado e
   deixou de participar, sem apagar o que foi publicado, e MUST liberar o horário.
-- **FR-7244**: A remarcação e a inclusão MUST gerar aviso só à pessoa afetada; a remarcação MUST
+- **FR-7244**: Com os avisos habilitados, a remarcação e a inclusão MUST gerar aviso só à pessoa afetada; a remarcação MUST
   dizer que o horário anterior não vale mais.
 - **FR-7245**: A página pública e a área do candidato MUST mostrar o horário vigente, com "remarcado
   em" e a data quando houve remarcação.
 - **FR-7246**: O motivo da remarcação, da inclusão e do cancelamento MUST ficar na trilha e MUST NOT
   aparecer ao candidato nem na página pública.
 - **FR-7247**: As regras da FR-7211 MUST valer também para a remarcação e a inclusão.
+- **FR-7248**: Cada remarcação, inclusão e cancelamento MUST ter documento PDF próprio, composto do
+  conteúdo público do próprio ato — o horário e a identificação da FR-7225 da pessoa afetada, sem o
+  motivo —, e o documento da publicação MUST NOT mudar depois dela. A página pública MUST oferecer o
+  documento da publicação e o de cada ato posterior, em ordem, e MUST mostrar a agenda vigente
+  dizendo que ela é a publicação com os atos posteriores (`D-012`).
 
 #### O que a agenda não faz
 
@@ -428,8 +469,11 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 #### Autorização e trilha
 
-- **FR-7255**: Configurar e montar a agenda MUST exigir a permissão de gerir a Etapa; publicar,
-  remarcar, incluir e cancelar MUST exigir também o escopo do Edital, e MUST ser negados por padrão.
+- **FR-7255**: Configurar e montar a agenda MUST exigir a permissão de gerir a Etapa. Publicar,
+  remarcar, incluir e cancelar MUST exigir a permissão de gerir a comissão — que a presidência tem — e
+  o escopo do Edital, conferidos no servidor e negados por padrão, sem papel novo. A escolha da
+  autoridade signatária MUST ser responsabilidade distinta da de publicar: quem publica escolhe uma
+  autoridade vigente, e o ato registra os dois (`D-013`).
 - **FR-7256**: Configuração salva, preenchimento aplicado, agendamento à mão, publicação,
   remarcação, inclusão, cancelamento e reenvio MUST gerar registro na trilha, com ator, instante,
   estado anterior e posterior, e motivo quando houver; o registro MUST NOT conter e-mail nem endereço
@@ -463,7 +507,8 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   avaliadores.
 - **Agendamento**: quem está em que horário de que banca agora, com origem, autor e instante.
 - **Ato da agenda**: a publicação, a remarcação, a inclusão ou o cancelamento; imutável, com autor,
-  instante, motivo nos individuais e autoridade na publicação.
+  instante, motivo nos individuais e autoridade na publicação, e um documento PDF composto do
+  conteúdo público dele.
 - **Horário publicado**: o que cada ato publicou, por pessoa; o de uma remarcação substitui o
   anterior sem apagá-lo.
 - Já existem e não mudam: a **Etapa de Avaliação**, o **Evento de Cronograma**, a **Inscrição**, a
@@ -488,11 +533,15 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
   banca sem local — 100% dos casos impeditivos recusados, e nenhum caso completo recusado.
 - **SC-2394**: Em 100% das publicações, o conteúdo da página pública não contém endereço de sala,
   CPF, e-mail, telefone ou Modalidade.
-- **SC-2395**: Cada pessoa publicada recebe exatamente um aviso por ato; numa remarcação, exatamente
+- **SC-2395**: Com os avisos habilitados, cada pessoa publicada recebe exatamente um aviso por ato; numa remarcação, exatamente
   uma pessoa recebe aviso.
 - **SC-2396**: A confirmação repetida da publicação cria um ato e zero avisos a mais.
 - **SC-2397**: Todas as telas da feature abrem a 375 px de largura sem rolagem horizontal da página,
   e passam na política de conteúdo sem violação.
+- **SC-2399**: Em 100% dos atos da agenda, o documento PDF sai do conteúdo público congelado do
+  ato, uma vez, e o documento servido é o gravado no ato; o texto dele diz o que o conteúdo público
+  diz, e não contém endereço de sala, CPF, e-mail, telefone, Modalidade nem motivo, nem o nome na
+  Etapa restrita por Modalidade.
 - **SC-2398**: *(humano)* Um candidato que não participou desta feature encontra o próprio horário
   na página pública, pelo celular, em menos de 1 minuto.
 
@@ -600,3 +649,32 @@ Decisão do usuário em 14/11/2026, entre revisar a lista fechada (A) e não avi
 (o registro de 09/10). O aviso entra como origem do aviso complementar da `066`, e não como envio
 novo: a lista ganha uma situação, e o mecanismo, nenhum. O texto da FR-084 na `010` é revisto na
 entrega que implementa os avisos, como a `019` e a `066` fizeram.
+
+### D-011 — Os avisos da agenda obedecem à habilitação da `066`
+
+Decisão do usuário em 14/11/2026, depois do plano. Os avisos aos candidatos têm uma habilitação só,
+desligada em produção até a validação de proteção de dados da `066`. A agenda não ganha chave nem
+envio próprios: desligada a habilitação, a publicação acontece e a tela diz que os avisos estão
+desligados; ligada, a confirmação mostra os avisos, os destinatários e a prévia, e o despacho é o da
+`066`. Ligar depois não cria aviso de publicação anterior: o aviso é efeito do ato, no instante dele,
+e não pendência que se acumula.
+
+### D-012 — A agenda publicada tem documento PDF, um por ato
+
+Decisão do usuário em 14/11/2026, depois do plano, que não previa PDF. A publicação é formal, com
+autoridade e veículo (`D-008`), e no piloto o PDF do sistema é o documento do ato; sem ele, concluir
+a publicação exigiria um documento montado fora. O documento segue o da relação de convocados: é
+composto do conteúdo público congelado do ato, sem consulta ao banco, e gerado uma vez, na mesma
+transação do ato. Os bytes são guardados, como a `149` guarda os dela, porque o que se preserva é o
+documento tal como foi publicado: o compositor muda com o tempo — fonte, margem, cabeçalho —, e
+recompor depois daria outro arquivo para o mesmo ato. Nenhuma infraestrutura nova de documentos:
+uma tabela do próprio app, no molde da da `149`. A remarcação, a inclusão e o cancelamento têm documento próprio, e o da publicação não
+muda; a página pública mostra o vigente e os documentos em ordem.
+
+### D-013 — Publica quem gere a comissão; a autoridade assina
+
+Decisão do usuário em 14/11/2026, depois do plano. A redação anterior chamava de presidência quem
+publica, e a FR-7255 pedia a permissão de gerir a comissão. Vale a permissão: quem pode gerir a
+comissão, a presidência inclusive, publica, com o escopo do Edital conferido no servidor, sem papel
+novo. A autoridade signatária é outra responsabilidade: quem publica a escolhe entre as vigentes, e o
+ato registra os dois.
