@@ -209,6 +209,15 @@ TABELAS_APPEND_ONLY = (
     # o último ato; reescrever um deles mudaria quem decidiu abrir o assistente, e por quê
     # (FR-7527).
     "duvidas_habilitacao_do_assistente",
+    # Os atos da agenda da Etapa (167): o ato — publicação, e depois remarcação, inclusão e
+    # cancelamento — e o horário que ele publicou para cada pessoa. Append-only pela razão das
+    # demais, e com um agravante próprio: o horário publicado é o de que a ausência conta, e o
+    # Edital pune a ausência. Reescrevê-lo mudaria, sem rastro, quando alguém foi chamado.
+    "agendamento_atodaagenda",
+    "agendamento_horariopublicado",
+    # E o documento de cada ato (`D-012`): os bytes do PDF como saíram. Um compositor que mudasse
+    # depois não pode mudar o documento publicado, e o banco é quem garante.
+    "agendamento_documentodoatodaagenda",
 )
 
 

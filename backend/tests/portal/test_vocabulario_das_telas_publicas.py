@@ -82,3 +82,30 @@ def test_as_telas_de_acesso_a_caminho_da_convocacao(client, selecao, settings):
     for pagina in paginas:
         assert "direto para a convocação" in visivel(pagina)
         assert proibidas_em(visivel(pagina)) == []
+
+
+def test_a_agenda_publicada_e_o_horario_na_area_do_candidato(client, gestor, edital_a, etapa_a2):
+    """167, T058: a página da agenda, a seleção com a seção "Agendas" e o bloco "Seu horário".
+
+    A agenda diz quando comparecer; ela não diz que alguém foi classificado, aprovado ou tem vaga.
+    """
+    from tests.fixtures.agenda_da_etapa import montar_completa, publicar_agenda
+    from tests.fixtures.comissao import inscrever
+    from tests.fixtures.divulgacao import entrar_como_titular
+
+    inscricoes = inscrever(edital_a, 3)
+    montar_completa(gestor, edital_a, etapa_a2)
+    ato = publicar_agenda(gestor, edital_a, etapa_a2)
+    entrar_como_titular(client, inscricoes[0])
+
+    paginas = [
+        client.get(reverse("portal:agenda-da-etapa", args=[ato.agenda_id])),
+        client.get(reverse("portal:agenda-da-etapa", args=[ato.agenda_id]), {"busca": "x"}),
+        client.get(reverse("portal:selecao", args=[edital_a.id])),
+        client.get(reverse("portal:acompanhamento", args=[inscricoes[0].id])),
+    ]
+
+    assert "Seu horário: " in visivel(paginas[-1])
+    for pagina in paginas:
+        assert pagina.status_code == 200
+        assert proibidas_em(visivel(pagina)) == []

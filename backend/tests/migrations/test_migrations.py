@@ -41,8 +41,8 @@ APPS = (
     # A entrega documental à formalização da 117: quatro tabelas append-only e a coerência da
     # exportação contra a designação e a definição do mesmo Edital.
     "formalizacao",
-    # A agenda da Etapa da 167: quatro tabelas operacionais, com as duas unicidades do agendamento.
-    # Nenhum gatilho na entrega A; os atos append-only chegam na B.
+    # A agenda da Etapa da 167: quatro tabelas operacionais, com as duas unicidades do agendamento,
+    # e, na entrega B, os dois atos append-only e a coerência do horário publicado.
     "agendamento",
     # A publicação de convocados da 149: três tabelas append-only e a coerência do vínculo entre a
     # convocação, a comunicação e o ato.
@@ -215,6 +215,15 @@ TRIGGERS_POR_APP = {
         "convocacao_publicada_append_only",
         "documento_da_publicacao_de_convocados_append_only",
         "convocacao_publicada_coerente",
+    ),
+    # Os atos da agenda da Etapa (167, entrega B). As três de imutabilidade são **absolutas**: o
+    # horário que muda é ato novo, que substitui o anterior sem apagá-lo. A terceira confere que o
+    # substituído é da mesma inscrição e da mesma agenda, e que a banca é da agenda do ato.
+    "agendamento": (
+        "ato_da_agenda_append_only",
+        "horario_publicado_append_only",
+        "documento_do_ato_da_agenda_append_only",
+        "horario_publicado_coerente",
     ),
 }
 TRIGGERS = tuple(nome for grupo in TRIGGERS_POR_APP.values() for nome in grupo)

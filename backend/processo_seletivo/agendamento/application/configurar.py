@@ -20,8 +20,11 @@ trilha `agenda.configuracao_salva`            # sem o local nem o endereço da s
 comissão configura antes de a Etapa anterior ter Resultado, e a capacidade é comparada com quem
 participa naquele momento.
 
-**A entrega A não conhece publicação.** Depois do ato da entrega B, esta função passa a recusar o
-que não for acréscimo (FR-7208, T-015); até lá, toda configuração válida é aceita.
+**Publicada a agenda, a configuração só cresce** (FR-7208, T-015): acrescentar dia, janela a um
+dia, ou banca. Remover o horário de quem foi publicado é `horario_publicado_removido`; mudar a
+duração, o intervalo, a forma, as orientações, uma janela existente, ou o nome, o local ou o
+endereço de uma banca existente é `parametro_publicado_alterado`. O aviso já levou o endereço e as
+orientações à pessoa, e nenhuma situação de mensagem desta spec corrigiria a mudança silenciosa.
 """
 
 from dataclasses import dataclass
@@ -76,6 +79,10 @@ def salvar(*, actor, edital, etapa_id, configuracao, correlation_id=""):
     with transaction.atomic():
         agora = timezone.now()
         agenda = _travar_ou_criar(edital, etapa_id, configuracao, actor, agora)
+        if agenda.revision and leitura.publicacao(agenda) is not None:
+            recusadas = so_acrescimo(agenda, configuracao)
+            if recusadas:
+                raise recusas.configuracao_recusada(recusadas)
         anterior = _descricao(leitura.configuracao_da_agenda(agenda)) if agenda.revision else None
         revisao_anterior = agenda.revision
 
@@ -120,6 +127,54 @@ def salvar(*, actor, edital, etapa_id, configuracao, correlation_id=""):
     return Salva(
         agenda=agenda, devolvidos=[item["nome"] for item in devolvidos_com_nome(devolvidos)]
     )
+
+
+def so_acrescimo(agenda, configuracao):
+    """O que a configuração nova faria ao que foi publicado: `[Recusa, …]`, vazia no acréscimo.
+
+    Compara com a agenda gravada, que depois da publicação só cresceu: o que existia no dia do ato
+    continua existindo, igual. Uma banca existente é a que o formulário carrega com o `id` dela.
+    """
+    lista = []
+    atual = leitura.configuracao_da_agenda(agenda)
+    parametros_iguais = (
+        atual.forma == configuracao.forma
+        and atual.duracao == configuracao.duracao
+        and (atual.intervalo or 0) == (configuracao.intervalo or 0)
+        and (atual.orientacoes or "").strip() == (configuracao.orientacoes or "").strip()
+    )
+    janelas_novas = {
+        (dia, inicio, fim) for dia, pares in configuracao.dias for inicio, fim in pares
+    }
+    janelas_mantidas = all(
+        (janela.dia, janela.inicio, janela.fim) in janelas_novas
+        for janela in agenda.janelas_em_ordem
+    )
+    novas = {str(banca.id): banca for banca in configuracao.bancas}
+    bancas_mantidas = all(
+        str(banca.id) in novas
+        and novas[str(banca.id)].nome.strip() == banca.nome
+        and (novas[str(banca.id)].acesso or "").strip() == (banca.acesso or "").strip()
+        for banca in agenda.bancas_em_ordem
+    )
+    if not (parametros_iguais and janelas_mantidas and bancas_mantidas):
+        lista.append(
+            recusas.parametro_publicado_alterado(
+                agenda.duracao_minutos, agenda.intervalo_minutos, agenda.forma
+            )
+        )
+    derivados = {horario.chave for horario in derivar(configuracao)}
+    for item in leitura.vigentes_da_agenda(agenda):
+        if (str(item.banca_id), item.inicio) not in derivados:
+            lista.append(
+                recusas.horario_publicado_removido(
+                    item.inscricao.nome or item.inscricao.protocolo,
+                    item.inscricao.protocolo,
+                    item.inicio,
+                    item.banca_nome,
+                )
+            )
+    return lista
 
 
 def _travar_ou_criar(edital, etapa_id, configuracao, actor, agora):

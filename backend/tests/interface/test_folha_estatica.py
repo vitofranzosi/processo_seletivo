@@ -236,12 +236,19 @@ MODELOS = RAIZ / "interface/templates/interface"
 # Quem carrega cada arquivo de `telas/` e de `grupos/`. Escrito à mão, e não derivado dos modelos: é
 # a afirmação que o teste confere — "o estilo de uma tela não viaja nas outras" (040, FR-2096).
 QUEM_CARREGA = {
-    # A agenda da Etapa (167): configurar e montar, com o medidor e as larguras de Minhas etapas.
-    "interface/telas/agenda-da-etapa.css": {"agenda_configurar.html", "agenda_montar.html"},
+    # A agenda da Etapa (167): configurar e montar, com o medidor e as larguras de Minhas etapas; e,
+    # na entrega B, a conferência e a agenda publicada.
+    "interface/telas/agenda-da-etapa.css": {
+        "agenda_configurar.html",
+        "agenda_montar.html",
+        "agenda_conferir.html",
+        "agenda_publicada.html",
+    },
     "interface/telas/minhas-etapas.css": {
         "minhas_etapas.html",
         "agenda_configurar.html",
         "agenda_montar.html",
+        "agenda_publicada.html",
     },
     "interface/grupos/acesso.css": {
         "base_de_acesso.html",
@@ -264,6 +271,8 @@ QUEM_CARREGA = {
         "modelo_de_aviso.html",
         # A mensagem da convocação, conferida antes de sair, na moldura da prévia dos avisos (140).
         "convocacao_conferir.html",
+        # A conferência da agenda da Etapa (167), na mesma moldura: a mensagem de exemplo.
+        "agenda_conferir.html",
     },
     "interface/grupos/lista-exigida.css": {"inscricao_detalhe.html", "mesa_inscricao.html"},
     # A coluna das três telas que conduzem um recorte (polimento de 11/11).
@@ -361,8 +370,6 @@ QUEM_CARREGA = {
             # A seção Barema do cartão da Etapa (146).
             "compor-etapas",
             "compor-revisao",
-            # A conferência antes de convocar os titulares (polish da 140).
-            "convocacao-conferir",
             # Os documentos de uma convocação (115).
             "convocacao-documentos",
             "duvidas",
@@ -381,6 +388,9 @@ QUEM_CARREGA = {
             "visao-geral",
         )
     },
+    # A conferência antes de convocar os titulares (polish da 140), e a da agenda da Etapa (167),
+    # que o protótipo aprovado pôs na mesma moldura.
+    "interface/telas/convocacao-conferir.css": {"convocacao_conferir.html", "agenda_conferir.html"},
     # A convocação pelas perguntas de quem conduz (143): o passo da chamada e o aviso da pendência
     # são os mesmos na convocação e nos documentos de uma convocação, e a folha também.
     "interface/telas/convocacao.css": {"convocacao.html", "convocacao_documentos.html"},

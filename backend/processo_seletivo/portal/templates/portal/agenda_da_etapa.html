@@ -1,0 +1,51 @@
+{% extends "portal/base.html" %}
+{% block titulo %}Agenda: {{ cabecalho.etapa }} — {{ cabecalho.edital }}{% endblock %}
+{% block conteudo %}
+{% comment %}
+**A agenda publicada de uma Etapa** (167, FR-7225 a FR-7227, FR-7245; protótipo `publica.html`).
+
+Lê só o que foi publicado (T-016): o cabeçalho, dos bytes do ato; a lista, dos horários vigentes.
+Nunca o endereço da sala, o CPF, o e-mail, o telefone ou a Modalidade (FR-7226) — a página não os
+filtra, ela não os recebe. Na Etapa restrita por Modalidade, só o número de inscrição (`D-009`).
+
+**A busca é um formulário `GET`**, sem script (T-016): funciona no celular, cabe na CSP, e o endereço
+com `?busca=` pode ser guardado. Sem tabela, como as demais listas públicas: uma lista por dia.
+{% endcomment %}
+<p class="meta"><a href="{% url 'portal:selecao' edital.id %}">{{ cabecalho.edital }}</a>{% if cabecalho.unidade.sigla %} · {{ cabecalho.unidade.sigla }}{% endif %}</p>
+<h1>Agenda: {{ cabecalho.etapa }}</h1>
+<p class="sub">Publicada em {{ ato.praticado_em|date:"d/m/Y" }}, assinada por {% if cabecalho.signatario.nome %}{{ cabecalho.signatario.nome }} — {% endif %}{{ cabecalho.signatario.cargo }}{% if ato.veiculo == "EXTERNO" %}; publicada também em {{ ato.publicado_fora_onde }}, em {{ ato.publicado_fora_em|date:"d/m/Y" }}{% endif %}.{% if remarcacoes %} Depois, {{ remarcacoes }} remarcaç{{ remarcacoes|pluralize:"ão individual,ões individuais" }}, marcada{{ remarcacoes|pluralize:"s" }} na lista.{% endif %}</p>
+
+<section class="painel busca-na-agenda" aria-labelledby="busca-titulo">
+  <h2 id="busca-titulo">Encontre o seu horário</h2>
+  <form method="get" role="search">
+    <p class="campo"><label for="busca">Número de inscrição{% if com_nome %} ou nome{% endif %}</label>
+      <input id="busca" name="busca" type="search" value="{{ busca }}" autocomplete="off" placeholder="INS-2026-…"></p>
+    <p class="acoes-da-busca"><button type="submit" class="acao-aparente">Buscar</button>{% if busca %} <a href="{% url 'portal:agenda-da-etapa' ato.agenda_id %}">Ver a agenda inteira</a>{% endif %}</p>
+  </form>
+  {% if busca %}<p class="meta" role="status">{% if achados %}{{ achados }} horário{{ achados|pluralize:"s" }} encontrado{{ achados|pluralize:"s" }}.{% else %}Nenhum horário com esse número{% if com_nome %} ou nome{% endif %}. Confira o número na sua área: Minhas inscrições.{% endif %}</p>{% endif %}
+  <p class="meta">Inscrito? Na sua área, em <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a>, você vê o seu horário, o endereço da sala ou o local, e as orientações.</p>
+</section>
+
+{% for dia in dias %}
+<section class="dia-publico" aria-labelledby="dia-{{ forloop.counter }}">
+  <h2 id="dia-{{ forloop.counter }}">{{ dia.dia }}</h2>
+  <ol class="horarios-publicos">
+    {% for item in dia.horarios %}
+    <li><span class="hora">{{ item.hora }}</span><span class="quem">{% if item.nome %}{{ item.nome }} <span class="inscricao-publica">{{ item.protocolo }}</span>{% else %}<span class="inscricao-so">{{ item.protocolo }}</span>{% endif %}</span>{% if item.banca %}<span class="banca-publica">{{ item.banca }}</span>{% endif %}{% if item.remarcado_em %}<span class="remarcado">remarcado em {{ item.remarcado_em|date:"d/m/Y" }}</span>{% endif %}</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endfor %}
+
+{% if documentos %}
+<section class="documentos-da-agenda" aria-labelledby="documentos-titulo">
+  <h2 id="documentos-titulo">Documentos</h2>
+  <ul class="lista-de-documentos-da-agenda">
+    {% for item in documentos %}<li><a class="documento secundaria" href="{% url 'portal:documento-da-agenda' ato.agenda_id item.ato.id %}">{{ item.titulo }} (PDF)<span class="oculto"> — {{ item.ato.praticado_em|date:"d/m/Y" }}</span></a> <span class="meta">{{ item.ato.praticado_em|date:"d/m/Y" }}</span></li>{% endfor %}
+  </ul>
+  {% if documentos|length > 1 %}<p class="meta">A agenda vigente é a publicação com os atos posteriores, que a lista acima já mostra.</p>{% endif %}
+</section>
+{% endif %}
+
+<p class="meta integridade-da-publicacao">Resumo SHA-256 do conteúdo publicado: <code>{{ ato.conteudo_publico_hash }}</code>.</p>
+{% endblock %}

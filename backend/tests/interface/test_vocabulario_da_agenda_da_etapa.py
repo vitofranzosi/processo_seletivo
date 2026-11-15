@@ -6,7 +6,8 @@ avaliadores; e a agenda não convoca para vaga. Uma frase basta para prometer o 
 a varredura lê o texto visível de cada tela.
 
 **A lista é literal**, como nas varreduras irmãs: uma lista calculada deixaria de ver a tela que
-sumisse dela. As entregas seguintes acrescentam os templates delas aqui.
+sumisse dela. Cada entrega acrescenta os templates dela aqui; os do portal, que a B trouxe, estão na
+varredura das telas públicas, sobre a página renderizada.
 """
 
 import re
@@ -23,6 +24,9 @@ DA_167 = [
     "agenda_montar.html",
     "_agenda_grade.html",
     "_agenda_painel.html",
+    # A entrega B: conferir e a agenda publicada.
+    "agenda_conferir.html",
+    "agenda_publicada.html",
 ]
 
 PROIBIDAS = [

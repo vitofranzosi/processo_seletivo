@@ -1,0 +1,149 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Conferir a agenda — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/aviso.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/convocacao-conferir.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <a href="{% url 'interface:agenda-montar' edital.id etapa_id %}">Montar a agenda</a> › <span aria-current="page">Conferir</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A conferência antes de publicar a agenda (167, US3, FR-7220 a FR-7223; protótipo `conferir.html`).
+
+**Na moldura da conferência da convocação** (`convocacao_conferir.html`, `140`): o ato irreversível
+em destaque, a mensagem recolhida com "Ler a mensagem inteira, como sai", a autoridade e o clique
+juntos no fim. **Abre com as quatro linhas de prontidão** (04-redesign, decisão 2): "posso
+publicar?" se responde antes de ler o resto.
+
+**Esta página não grava nada** (FR-7220): ela é a resposta do pedido, e a confirmação leva a
+assinatura do que foi conferido (FR-7223). O veículo é escolhido aqui, como na `159` (`D-008`), e
+nenhum dos dois é presumido.
+{% endcomment %}
+<h1>Confira antes de publicar a agenda</h1>
+<div class="tela-da-conferencia">
+<p class="sub">{{ etapa.name }} · Edital {{ edital.number }}/{{ edital.year }}. Nada foi gravado nem enviado até aqui: a publicação acontece quando você confirmar, no fim desta página.</p>
+{% if erro %}<p class="{% if refeita %}aviso{% else %}erro{% endif %}" role="alert" tabindex="-1" autofocus>{{ erro.detail }}</p>{% endif %}
+{% if mensagem %}<p class="{{ mensagem.tipo }}" role="status">{{ mensagem.texto }}</p>{% endif %}
+
+<section aria-label="Pronto para publicar?">
+  <ul class="lista-de-prontidao">
+    {% for linha in conferencia.prontidao %}<li class="{{ linha.classe }}"><span class="marca-de-prontidao" aria-hidden="true">{% if linha.pronta %}✓{% elif linha.pronta is False %}!{% else %}·{% endif %}</span><span class="oculto">{% if linha.pronta %}Pronto: {% elif linha.pronta is False %}Pendente: {% else %}A fazer: {% endif %}</span>{{ linha.texto }}</li>{% endfor %}
+  </ul>
+</section>
+
+{% if impedimentos %}
+<section class="consequencias impedimentos" aria-labelledby="impedimentos-titulo">
+  <h2 id="impedimentos-titulo">Antes de publicar, resolva</h2>
+  {% for item in impedimentos %}
+  <div class="impedimento">
+    <h3>{{ item.impedimento.titulo }}</h3>
+    <p>{{ item.impedimento.frase }}</p>
+    {% if item.pessoas %}<ul>{% for pessoa in item.pessoas %}<li>{{ pessoa }}</li>{% endfor %}{% if item.mais %}<li>e mais {{ item.mais }}</li>{% endif %}</ul>{% endif %}
+    {% if item.caminho %}<p><a class="acao" href="{{ item.caminho }}">{{ item.impedimento.rotulo_do_caminho }}</a></p>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+{% for aviso in conferencia.avisos %}<p class="aviso">{{ aviso }}</p>{% endfor %}
+
+<section class="consequencias irreversivel" aria-labelledby="publica-titulo">
+  <h2 id="publica-titulo">Será publicada</h2>
+  <dl class="fatos-da-operacao">
+    {% for rotulo, valor in conferencia.fatos %}<div><dt>{{ rotulo }}</dt><dd>{{ valor }}</dd></div>{% endfor %}
+  </dl>
+</section>
+
+<section class="consequencias" aria-labelledby="publico-titulo">
+  <h2 id="publico-titulo">Na página pública da seleção</h2>
+  <p>Dia, horário{% if varias_bancas %} e banca{% endif %} de cada pessoa, identificada {% if so_protocolo %}só pelo <strong>número de inscrição</strong>{% else %}pelo <strong>nome e número de inscrição</strong>{% endif %}. Nada além: nem CPF, nem e-mail, nem telefone, nem o endereço da sala.</p>
+  {% if so_protocolo %}<p class="ajuda">Só o número de inscrição, porque esta Etapa é restrita por Modalidade: a lista dela revelaria quem concorre pela reserva.</p>{% endif %}
+  <div class="previa-publica">
+    {% for dia in previa %}
+    <section class="dia-publico" aria-label="{{ dia.rotulo }}">
+      <h3>{{ dia.rotulo }}</h3>
+      <ol class="horarios-publicos">
+        {% for item in dia.horarios %}<li><span class="hora">{{ item.hora }}</span><span class="quem">{% if item.nome %}{{ item.nome }} <span class="numero-de-inscricao">{{ item.protocolo }}</span>{% else %}<span class="numero-de-inscricao">{{ item.protocolo }}</span>{% endif %}</span>{% if item.banca %}<span class="banca">{{ item.banca }}</span>{% endif %}</li>{% endfor %}
+        {% if dia.mais %}<li class="mais">e mais {{ dia.mais }} neste dia</li>{% endif %}
+      </ol>
+    </section>
+    {% empty %}
+    <p class="vazio">Ninguém tem horário ainda.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="consequencias comunicacao-e-prazo" aria-labelledby="mensagem-titulo">
+  <h2 id="mensagem-titulo">O que cada pessoa recebe</h2>
+  <div class="colunas-da-comunicacao">
+    <dl class="dados-da-comunicacao">
+      <dt>Na área do candidato</dt><dd>O próprio horário, a banca, o endereço da sala ou o local, e as orientações, a partir da publicação.</dd>
+      <dt>Por e-mail</dt><dd>{% if conferencia.avisos_ligados %}Um aviso por pessoa, enviado depois da publicação. O aviso não é o ato: se um e-mail falhar, a agenda continua publicada e vale do mesmo jeito.{% else %}{{ conferencia.frase_dos_avisos }}{% endif %}</dd>
+      <dt>Efeito</dt><dd>A agenda informa quando e onde comparecer. A consequência da ausência é a que o Edital já prevê para esta Etapa, e continua sendo registrada como Ocorrência.</dd>
+    </dl>
+    <div class="mensagens-da-conferencia">
+      {% if conferencia.mensagem_de_exemplo %}
+      {% if conferencia.avisos_ligados and conferencia.destinatarios %}
+      <details class="destinatarios-dos-avisos">
+        <summary>Quem recebe o aviso ({{ conferencia.destinatarios|length }})</summary>
+        <ul>{% for nome, protocolo in conferencia.destinatarios %}<li>{{ nome }} <span class="numero-de-inscricao">{{ protocolo }}</span></li>{% endfor %}</ul>
+      </details>
+      {% endif %}
+      <h3>Exemplo da mensagem, para a primeira pessoa da agenda</h3>
+      <p class="assunto"><strong>Assunto:</strong> {{ conferencia.mensagem_de_exemplo.assunto }}</p>
+      <details class="mensagem-inteira">
+        <summary>Ler a mensagem inteira, como sai</summary>
+        <pre class="texto-do-aviso">{{ conferencia.mensagem_de_exemplo.corpo }}</pre>
+      </details>
+      {% else %}
+      <p>Ninguém tem horário ainda: não há mensagem a mostrar.</p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<form method="post" action="{% url 'interface:agenda-publicar' edital.id etapa_id %}" class="confirmar">
+  {% csrf_token %}
+  <input type="hidden" name="assinatura" value="{{ conferencia.assinatura }}">
+  <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <section class="consequencias publicacao-na-conferencia" aria-labelledby="veiculo-titulo">
+    <h2 id="veiculo-titulo">Onde a agenda é publicada</h2>
+    <fieldset class="veiculo-da-agenda">
+      <legend>Veículo da publicação <span class="obrigatorio" aria-hidden="true">*</span></legend>
+      <p class="opcao-de-veiculo"><label><input type="radio" name="veiculo" value="GPS"{% if veiculo == "GPS" %} checked{% endif %}> Na página pública da seleção, no GPS</label></p>
+      <p class="campo">
+        <label for="declaracao">Item do Edital que admite a página pública do GPS como veículo</label>
+        <input type="text" id="declaracao" name="declaracao" value="{{ declaracao }}" placeholder="por exemplo, item 7.2 do Edital" aria-describedby="ajuda-declaracao">
+        <span class="ajuda" id="ajuda-declaracao">Exigido para publicar no GPS: fica gravado no ato.</span>
+      </p>
+      <p class="opcao-de-veiculo"><label><input type="radio" name="veiculo" value="EXTERNO"{% if veiculo == "EXTERNO" %} checked{% endif %}> Fora do GPS, onde o Edital manda publicar</label></p>
+      <div class="campos-em-linha">
+        <p class="campo"><label for="onde">Onde foi publicada</label><input type="text" id="onde" name="onde" value="{{ onde }}" placeholder="por exemplo, site do campus"></p>
+        <p class="campo"><label for="quando">Quando</label><input type="date" id="quando" name="quando" value="{{ quando }}"></p>
+      </div>
+      <p class="ajuda">Fora do GPS, a agenda continua aparecendo na página da seleção e na área de cada pessoa, com a indicação de onde foi publicada.</p>
+    </fieldset>
+  </section>
+
+  <section class="consequencias" aria-labelledby="autoridade-titulo">
+    <h2 id="autoridade-titulo">Quem assina</h2>
+    {% if autoridades %}
+    <p class="campo">
+      <label for="autoridade">Autoridade signatária da publicação <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <select id="autoridade" name="autoridade" aria-required="true" aria-describedby="ajuda-autoridade">
+        <option value="">— escolha a autoridade —</option>
+        {% for opcao in autoridades %}<option value="{{ opcao.valor }}"{% if opcao.escolhida %} selected{% endif %}>{{ opcao.rotulo }}</option>{% endfor %}
+      </select>
+      <span class="ajuda" id="ajuda-autoridade">Nome, cargo e ato de nomeação ficam gravados na publicação.</span>
+    </p>
+    {% else %}
+    <p class="aviso" role="status">A unidade do Edital não tem autoridade signatária vigente hoje: sem quem assine, a agenda não pode ser publicada.</p>
+    {% endif %}
+  </section>
+
+  <div class="confirmacao-da-convocacao">
+    <p><strong>Ao confirmar, a agenda é publicada e não se edita mais em bloco.</strong> Depois disso, cada mudança é ato de uma pessoa, com motivo{% if conferencia.avisos_ligados %}, e só ela é avisada{% endif %}.</p>
+    <p class="frase-dos-avisos">{{ conferencia.frase_dos_avisos }}</p>
+    <p class="salvar">
+      <button type="submit" class="botao perigoso"{% if not conferencia.pode_publicar %} disabled{% endif %}>{{ conferencia.botao }}</button>
+      <a class="acao" href="{% url 'interface:agenda-montar' edital.id etapa_id %}">Voltar à montagem</a>
+    </p>
+  </div>
+</form>
+</div>
+{% endblock %}

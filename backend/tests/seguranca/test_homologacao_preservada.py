@@ -176,8 +176,14 @@ def test_as_tabelas_append_only_anteriores_continuam_todas():
     )
     # E a 170, a dos atos de habilitação do assistente, depois das da 166.
     da_170 = ("duvidas_habilitacao_do_assistente",)
-    assert TABELAS_APPEND_ONLY[-23:] == (
-        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166 + da_170
+    # E a 167, o ato da agenda, o horário publicado e o documento de cada ato, depois das da 170.
+    da_167 = (
+        "agendamento_atodaagenda",
+        "agendamento_horariopublicado",
+        "agendamento_documentodoatodaagenda",
     )
-    assert len(TABELAS_APPEND_ONLY) == 66
-    assert len(set(TABELAS_APPEND_ONLY)) == 66
+    assert TABELAS_APPEND_ONLY[-26:] == (
+        novas + da_107 + da_115 + da_117 + da_149 + da_155 + da_165 + da_166 + da_170 + da_167
+    )
+    assert len(TABELAS_APPEND_ONLY) == 69
+    assert len(set(TABELAS_APPEND_ONLY)) == 69

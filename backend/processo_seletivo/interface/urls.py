@@ -535,9 +535,9 @@ urlpatterns = [
         views.distribuicao,
         name="distribuicao",
     ),
-    # A agenda da Etapa (167): configurar e montar. Segmento próprio, `agenda-da-etapa`, e nunca
-    # `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`, pela decisão de rotas da
-    # 011. A porta é a da Distribuição, e as recusas que a montagem diz estão no contrato.
+    # A agenda da Etapa (167): configurar, montar, conferir e publicar. Segmento próprio,
+    # `agenda-da-etapa`, e nunca `agenda`, que é a Agenda dos Editais da 101 (T-001); sem `etapas/`,
+    # pela decisão de rotas da 011. A porta é a da Distribuição, e as recusas estão no contrato.
     *[
         path(
             f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}",
@@ -552,6 +552,9 @@ urlpatterns = [
             ("preencher", agenda_da_etapa.preencher),
             ("agendar", agenda_da_etapa.agendar),
             ("liberar", agenda_da_etapa.liberar),
+            ("conferir", agenda_da_etapa.conferir),
+            ("publicar", agenda_da_etapa.publicar),
+            ("publicada", agenda_da_etapa.publicada),
         )
     ],
     # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é

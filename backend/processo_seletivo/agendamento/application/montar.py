@@ -11,7 +11,9 @@ fora sobreviver e a tela dizer a frase.
 prévia e a aplicação mudaria os pares propostos sem subir versão nenhuma. A assinatura leva os pares
 propostos, e por isso vê.
 
-A recusa `agenda_publicada` chega com o ato, na entrega B.
+**Publicada a agenda, a montagem acabou** (FR-7240): agendar, liberar e preencher recusam
+`agenda_publicada`, sob a trava — a mudança depois da publicação é ato individual, com motivo, e
+mora na agenda publicada (entrega C).
 """
 
 from dataclasses import dataclass
@@ -50,6 +52,8 @@ def _agenda_travada(edital, etapa_id):
     agenda = leitura.agenda_da_etapa(edital, etapa_id, travar=True)
     if agenda is None:
         raise recusas.sem_configuracao()
+    if leitura.publicacao(agenda) is not None:
+        raise recusas.agenda_publicada()
     return agenda
 
 
@@ -244,6 +248,8 @@ def previa_do_preenchimento(*, actor, edital, etapa_id, montagem_=None):
         if agenda is None:
             raise recusas.sem_configuracao()
         montagem_ = leitura.montagem(edital, etapa_id, agenda)
+    if leitura.publicacao(montagem_.agenda) is not None:
+        raise recusas.agenda_publicada()
     return _previa(montagem_.agenda, montagem_)
 
 
