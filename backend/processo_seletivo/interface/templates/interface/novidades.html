@@ -1,0 +1,77 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Novidades do GPS{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <span aria-current="page">{{ navegacao.secao_atual }}</span></nav>{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/novidades.css' %}">{% endblock %}
+{% block conteudo %}
+{% comment %}
+As Novidades do GPS (168). O que mudou no produto, em linguagem de quem opera: nenhum número de PR,
+de requisito ou de spec no texto visível (FR-7407). O detalhe fica recolhido (UX-802), e o "Saiba
+mais" leva à seção da Documentação do Sistema em vez de repeti-la.
+{% endcomment %}
+<h1>Novidades do GPS</h1>
+<p class="sub">O que mudou no sistema, da mudança mais recente para a mais antiga: o que é novo, o que melhorou e o que foi corrigido.</p>
+
+{% if indisponivel %}
+<p class="aviso">As novidades estão indisponíveis neste momento. O restante do sistema funciona normalmente.</p>
+{% else %}
+
+{% if recentes %}
+<section class="desde-a-ultima-visita" aria-labelledby="titulo-desde-a-ultima-visita">
+  <h2 id="titulo-desde-a-ultima-visita">Desde sua última visita</h2>
+  <p class="ajuda">{{ recentes|length }} mudança{{ recentes|length|pluralize }} desde <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>.</p>
+  <ul>
+    {% for recente in recentes %}
+    <li><span class="categoria-da-novidade c-{{ recente.nota.categoria.codigo }}">{{ recente.nota.categoria.rotulo }}</span> <a href="{{ recente.endereco }}">{{ recente.nota.titulo }}</a></li>
+    {% endfor %}
+  </ul>
+</section>
+{% elif primeira_visita %}
+<p class="nota">Esta é a sua primeira visita: a página reúne as mudanças desde {{ inicio|date:"j \d\e F \d\e Y"|lower }}. Da próxima vez, o topo dirá o que chegou desde a visita anterior.</p>
+{% else %}
+<p class="nota">Nada novo desde a sua última visita, em <time datetime="{{ visita_anterior|date:'c' }}">{{ visita_anterior|date:"d/m/Y" }}</time>.</p>
+{% endif %}
+
+<nav class="filtros-das-novidades" aria-label="Filtrar por categoria">
+  {% for filtro in filtros %}<a href="{{ filtro.endereco }}"{% if filtro.codigo == categoria %} aria-current="page"{% endif %}>{{ filtro.rotulo }} <span class="quantidade-do-filtro">{{ filtro.quantidade }}</span></a>{% endfor %}
+</nav>
+
+{% for mes in meses %}
+<section class="mes-de-novidades" aria-labelledby="mes-de-novidades-{{ forloop.counter }}">
+  <h2 id="mes-de-novidades-{{ forloop.counter }}">{{ mes.data|date:"F \d\e Y" }}</h2>
+  <ol class="linha-do-tempo">
+    {% for cartao in mes.cartoes %}{% with nota=cartao.nota %}
+    <li class="novidade" id="{{ nota.id }}">
+      <p class="cabeca-da-novidade"><span class="categoria-da-novidade c-{{ nota.categoria.codigo }}">{{ nota.categoria.rotulo }}</span> <time datetime="{{ nota.data|date:'Y-m-d' }}">{{ nota.data|date:"j \d\e F"|lower }}</time></p>
+      <h3>{{ nota.titulo }}</h3>
+      <p>{{ nota.resumo }}</p>
+      {% if nota.exemplo %}<p class="exemplo-da-novidade"><strong>Na prática:</strong> {{ nota.exemplo }}</p>{% endif %}
+      {% if nota.beneficio %}<p class="beneficio-da-novidade"><strong>Para que serve:</strong> {{ nota.beneficio }}</p>{% endif %}
+      {% if nota.onde or nota.passos %}
+      <details class="como-usar">
+        <summary>Como usar</summary>
+        {% if nota.onde %}<p><strong>Onde:</strong> {{ nota.onde }}</p>{% endif %}
+        {% if nota.passos %}<ol>{% for passo in nota.passos %}<li>{{ passo }}</li>{% endfor %}</ol>{% endif %}
+      </details>
+      {% endif %}
+      {% if cartao.destino or cartao.saiba_mais %}
+      <p class="acoes-da-novidade">{% if cartao.destino %}<a href="{{ cartao.destino }}">Abrir {{ cartao.rotulo_do_destino }}</a>{% endif %}{% if cartao.saiba_mais %}<a href="{{ cartao.saiba_mais }}">Saiba mais na documentação</a>{% endif %}</p>
+      {% endif %}
+    </li>
+    {% endwith %}{% endfor %}
+  </ol>
+</section>
+{% empty %}
+<p class="vazio">Nenhuma novidade nesta categoria.</p>
+{% endfor %}
+
+{% if anteriores or seguintes %}
+<nav class="paginas-das-novidades" aria-label="Páginas das novidades">
+  {% if seguintes %}<a href="{{ seguintes }}">Novidades mais recentes</a>{% endif %}
+  <span>Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
+  {% if anteriores %}<a href="{{ anteriores }}">Novidades anteriores</a>{% endif %}
+</nav>
+{% endif %}
+
+<p class="nota rodape-das-novidades">As datas são as de chegada da mudança ao GPS. Cada ambiente recebe as mudanças na sua própria atualização, e esta página mostra só o que já está disponível aqui.</p>
+{% endif %}
+{% endblock %}

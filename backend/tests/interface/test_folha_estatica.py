@@ -357,6 +357,8 @@ QUEM_CARREGA = {
             "kit-de-divulgacao",
             "marco",
             "minhas-etapas",
+            # As Novidades do GPS (168).
+            "novidades",
             "prototipo-do-assistente",
             "relatorio-do-edital",
             "retificar",
