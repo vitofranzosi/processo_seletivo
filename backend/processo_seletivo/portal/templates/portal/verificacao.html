@@ -165,6 +165,16 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
         {% if deteccao %}<p class="confirmacao-do-giro" data-confirmacao hidden></p>{% endif %}
       </div>
     </div>
+    {% comment %}
+    **O sinal do gesto** (176, FR-8050 a FR-8054, D-008). Nos perfis e no documento, o que fazer cabe
+    numa seta ou num pictograma: com o rosto virado ninguém lê três linhas. A frase do roteiro
+    continua inteira na faixa de cima (a D-003 da 174), em tamanho de leitura. A prévia é espelhada:
+    a esquerda da tela é a esquerda da pessoa. Decorativo para o leitor de tela, que ouve o anúncio.
+    {% endcomment %}<div class="gesto-do-passo" data-so-gravando aria-hidden="true">
+      <span class="gesto gesto-esquerda">{% include "portal/_icone.html" with nome="seta-esquerda" %}<span>Sua esquerda</span></span>
+      <span class="gesto gesto-direita">{% include "portal/_icone.html" with nome="seta-direita" %}<span>Sua direita</span></span>
+      <span class="gesto gesto-documento">{% include "portal/_icone.html" with nome="documento" %}<span>Mostre o documento</span></span>
+    </div>
     <div class="faixa-de-baixo">
       <button type="button" class="proximo" data-comecar data-so-preparo aria-describedby="o-que-voce-vai-fazer">Começar a gravar</button>
       <button type="button" class="proximo" data-proximo data-so-gravando>Próximo</button>
@@ -186,7 +196,7 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
     <div id="o-que-voce-vai-fazer">
       <h3>O que você vai fazer</h3>
       <ol class="passos-do-roteiro" data-passos>
-        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
+        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% for chave, gesto in gestos.items %}{% if chave == passo.chave %} data-gesto="{{ gesto }}"{% endif %}{% endfor %}{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
       </ol>
       <p class="ajuda"{% if deteccao %} data-ajuda-toque{% endif %}>O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
       {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>O vídeo tem até {{ teto_minutos }} minutos. Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo», no seu tempo.</p>{% endif %}

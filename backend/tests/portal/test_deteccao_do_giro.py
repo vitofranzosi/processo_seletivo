@@ -221,3 +221,30 @@ def test_a_deteccao_nao_faz_pedido_de_rede():
     fonte = _sem_comentarios((ESTATICOS / "deteccao.js").read_text(encoding="utf-8"))
     for proibido in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "envios", "pedir("):
         assert proibido not in fonte, proibido
+
+
+# --- o sinal do gesto (emenda de 15/11) ---------------------------------------------------------
+
+
+def test_os_gestos_sao_de_passos_do_roteiro_e_a_frente_nao_tem():
+    """FR-8050, D-008: o sinal é dos três passos de gesto; a frase do passo de frente é a fala."""
+    from processo_seletivo.portal.verificacao import GESTO_DO_PASSO
+
+    assert set(GESTO_DO_PASSO) <= set(roteiro.CHAVES)
+    assert "frente" not in GESTO_DO_PASSO
+
+
+@pytest.mark.parametrize("ligada", [False, True], ids=["sem-deteccao", "com-deteccao"])
+def test_o_sinal_do_gesto_vale_com_ou_sem_a_deteccao(cenario, client, settings, ligada):
+    """FR-8050, FR-8054, SC-2751: navegação, e não leitura do rosto — e decorativo para o leitor."""
+    settings.VERIFICACAO_DETECCAO_DO_GIRO = ligada
+    corpo = _abrir(client, cenario).content.decode()
+    gestos = dict(re.findall(r'data-passo="([\w-]+)"[^>]*?data-gesto="(\w+)"', corpo))
+    assert gestos == {
+        "documento": "documento",
+        "perfil-esquerdo": "esquerda",
+        "perfil-direito": "direita",
+    }
+    assert re.search(r'class="gesto-do-passo" data-so-gravando aria-hidden="true"', corpo)
+    for palavra in ("Sua esquerda", "Sua direita", "Mostre o documento"):
+        assert palavra in corpo

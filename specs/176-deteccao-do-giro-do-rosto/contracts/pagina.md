@@ -14,6 +14,15 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 | `data-giro` em `[data-passo]` | ausente | `esquerda` no perfil esquerdo, `direita` no perfil direito |
 | rotas, corpos e respostas do envio | os da `166` | **os mesmos** (FR-8030) |
 
+## O sinal do gesto (emenda de 15/11), com ou sem a chave
+
+| O quê | Onde |
+|---|---|
+| `data-gesto` em `[data-passo]` | `documento`, `esquerda`, `direita`; ausente no passo de frente |
+| `.gesto-do-passo` (`aria-hidden`) | sobre a prévia, só gravando; `.gesto-esquerda`, `.gesto-direita`, `.gesto-documento` |
+| `data-gesto` e `data-confirmado` no palco | escritos por `gravacao.js`; a folha mostra o sinal do passo e o esconde quando visto |
+| frases | "Sua esquerda", "Sua direita", "Mostre o documento" |
+
 ## Os ganchos do script
 
 | Gancho | Em | Quem escreve | O que significa |

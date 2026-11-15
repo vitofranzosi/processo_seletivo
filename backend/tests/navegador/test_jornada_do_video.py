@@ -31,6 +31,13 @@ from tests.fixtures.verificacao import montar_com_video  # noqa: E402
 pytestmark = pytest.mark.django_db(transaction=True)
 
 CELULAR = {"width": 375, "height": 667}
+# O sinal de cada passo durante a gravação (176, FR-8050); o passo de frente não tem.
+GESTOS = {
+    "documento": "documento",
+    "perfil-esquerdo": "esquerda",
+    "perfil-direito": "direita",
+    "frente": "",
+}
 TABLET = {"width": 768, "height": 1024}
 DESKTOP = {"width": 1280, "height": 800}
 LARGO = {"width": 1920, "height": 1080}
@@ -195,9 +202,24 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
             assert _na_tela(pagina, pagina.locator(".link-no-palco"))
         assert pagina.locator(".passos-do-roteiro").is_hidden()
         assert pagina.evaluate("document.activeElement.hasAttribute('data-proximo')")
+        # O sinal do gesto (176, FR-8050 a FR-8052): seta nos perfis, pictograma no documento,
+        # nenhum na frente; o oval sai na gravação; a frase continua inteira, menor nos gestos.
+        esperado = GESTOS[roteiro.PASSOS[indice].chave]
+        for gesto in ("esquerda", "direita", "documento"):
+            visivel = pagina.locator(f".gesto-{gesto}").is_visible()
+            assert visivel is (gesto == esperado), (titulo, gesto)
+        if esperado:
+            assert _na_tela(pagina, pagina.locator(f".gesto-{esperado}"))
+        assert pagina.locator(".oval").is_hidden()
+        corpo_da_frase = pagina.evaluate(
+            "parseFloat(getComputedStyle(document.querySelector('.texto-do-passo')).fontSize)"
+        )
+        assert (corpo_da_frase <= 16.5) is bool(esperado), (titulo, corpo_da_frase)
         if indice == 0:
             assert _contraste_da_faixa(pagina) >= 4.5
             tela.capturar(pagina, "palco-gravando")
+        if indice == 1:
+            tela.capturar(pagina, "palco-perfil")
         pagina.wait_for_timeout(600)
         if celular:
             proximo.click()

@@ -220,6 +220,8 @@
       titulo: item.getAttribute("data-titulo"),
       // "esquerda" ou "direita" nos dois perfis, com a detecção (176); ausente no resto.
       giro: item.getAttribute("data-giro"),
+      // O sinal sobre a prévia: "esquerda", "direita", "documento", ou nenhum (176, FR-8050).
+      gesto: item.getAttribute("data-gesto") || "",
     };
   });
   var estado = {
@@ -515,6 +517,10 @@
     q("[data-passo-rotulo]").textContent = rotulo;
     q("[data-passo-titulo]").textContent = atual.titulo;
     q("[data-passo-atual]").textContent = atual.texto;
+    // O sinal do gesto e o tamanho da frase saem da folha, por estes dois atributos (FR-8050,
+    // FR-8051); a confirmação do perfil anterior não vale para o novo.
+    palco.setAttribute("data-gesto", atual.gesto);
+    palco.removeAttribute("data-confirmado");
     q("[data-proximo]").textContent = estado.passo < passos.length - 1 ? "Próximo" : "Terminar a gravação";
     // Quem avançou pelo giro ouve a confirmação antes do passo novo (176, FR-8012).
     q("[data-anuncio]").textContent = estado.prefixo + rotulo + ": " + atual.titulo + ". " + atual.texto;
@@ -655,6 +661,8 @@
       caixa.textContent = frase;
       caixa.setAttribute("data-tipo", "visto");
       caixa.hidden = false;
+      // A confirmação toma o lugar da seta (FR-8053).
+      palco.setAttribute("data-confirmado", "");
       if (estado.confirmando) clearTimeout(estado.confirmando);
       estado.confirmando = setTimeout(function () {
         estado.confirmando = null;

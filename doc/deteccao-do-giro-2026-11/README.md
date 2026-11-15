@@ -65,3 +65,9 @@ seguro, e nada sai da máquina), toque em "Abrir a câmera e carregar o motor" e
 Se o sinal sair trocado, o defeito é da D-005 (o referencial do quadro), e não do limiar. Se o perfil
 pedido pelo roteiro passar muito de 0,30, ou não chegar a ele, o limiar se ajusta em `deteccao.js`
 (`LIMIAR_DO_GIRO`), e este registro ganha a medida.
+
+## O sinal do gesto (emenda de 15/11)
+
+Capturas da jornada no navegador (câmera simulada do Chromium e imagem de teste), em `capturas/`: o
+documento e o perfil esquerdo a 375 px, o perfil esquerdo a 1280 px e o perfil visto a 375 px. O oval
+sai durante a gravação; a frase do roteiro fica inteira, em tamanho de leitura, nos passos de gesto.
