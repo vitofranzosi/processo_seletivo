@@ -61,6 +61,7 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-7334 | `tests/integration/treinamento/test_cenario_c18.py` | C18 |
 | FR-7335 | o C18 usa os atores e a carga dos outros cenários | C18, G |
 | FR-7336 | `editais/domain/validation.py` (`_nome_da_restrita_com_termo_tecnico`) | UE |
+| FR-7337 | `treinamento/catalogo.py` (`montar_c19`), `treinamento/servico.py` (`exige_verificacao_por_video`), `treinamento/amostras/video-de-treinamento.mp4` | `tests/integration/treinamento/test_cenario_c19.py` |
 
 ## Requisitos de experiência
 

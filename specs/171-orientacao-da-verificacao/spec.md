@@ -533,6 +533,15 @@ Cada caso-limite é requisito: a linha cita o requisito que o resolve.
   domínio.
 - **FR-7335**: O cenário DEVE obedecer às regras dos cenários: nada se exclui, os atores de treino ficam
   fora das sugestões da página de acesso, e o gerador não concede papel além da exceção já registrada.
+- **FR-7337**: O catálogo DEVE ganhar um segundo cenário, o da mesma Etapa restrita **admitindo o
+  vídeo** da `166` (*acrescentado em 15/11/2026, a pedido do usuário depois da demonstração: a equipe
+  não tinha onde percorrer a gravação e a avaliação do vídeo*). Os alcançados, todos distribuídos aos
+  dois avaliadores, ficam nos três pontos do caminho do vídeo que um período comporta: ainda vai
+  gravar; vídeo enviado e não aberto; vídeo aberto pelos dois e um parecer que não confirma, à espera
+  do encaminhamento à entrevista ao vivo. Mais um inscrito só na ampla, e ninguém avisado. O vídeo
+  enviado DEVE passar pelo mesmo envio do portal, e DEVE ser um arquivo de treinamento sem rosto nem
+  voz de ninguém, marcado como fictício. O cenário DEVE ser recusado, antes de qualquer escrita e já na
+  pré-visualização, onde a verificação por vídeo não está ligada; e obedece à FR-7335.
 
 #### Advertência na composição
 

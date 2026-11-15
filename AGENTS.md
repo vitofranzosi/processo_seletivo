@@ -202,8 +202,12 @@ como armadilha — `production.py` recusa subir com ela ligada (`portal/identida
 **Os avisos aos candidatos (066) não saem no clique.** A confirmação grava o aviso e responde; quem
 envia é `manage.py despachar_avisos`, que em produção roda num timer a cada minuto e, em
 desenvolvimento, **ninguém roda por você**: rode-o à mão depois de confirmar, e a mensagem sai no
-terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem ligada no
-`development` e no `test`, e desligada em produção até a validação de LGPD.
+terminal **do comando**, e não no do `runserver`. A chave `AVISOS_AOS_CANDIDATOS` vem **ligada
+por padrão em todo ambiente** desde 15/11, por decisão do usuário
+([doc/decisao-avisos-ligados-por-padrao-2026-11-15.md](doc/decisao-avisos-ligados-por-padrao-2026-11-15.md));
+antes, produção a herdava desligada à espera da validação de LGPD. Ela vale para todas as origens —
+resultado, chamada, pendência e agenda —, e quem precisa desligá-la num ambiente sem correio pronto
+põe `AVISOS_AOS_CANDIDATOS=false`.
 
 **As jornadas da gestão de acessos (107) rodam num navegador de verdade, e pedem o grupo
 `navegador`.** `uv sync --extra dev --extra navegador` traz o Playwright, e `uv run playwright install

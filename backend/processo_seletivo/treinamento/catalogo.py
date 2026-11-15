@@ -54,6 +54,8 @@ class Cenario:
     # corre: o período de inscrições aberto, a janela recursal. `None` é sem prazo.
     validade_dias: int | None = None
     exige_fonte_de_demonstracao: bool = False
+    # O C19 só monta com a chave do vídeo (171, FR-7337), que produção recusa.
+    exige_verificacao_por_video: bool = False
     # O C16 e o C17 provisionam a pessoa do setor e o vínculo dela (FR-6720 a FR-6729); só eles.
     provisiona_formalizacao: bool = False
     restauracao: str = (
@@ -437,6 +439,128 @@ def montar_c18(m):
             inscricao_id=inscricao.id,
             pontuacao=None,
             sentido="FAVORAVEL",
+            parecer=f"Parecer de treinamento. {c.MARCA}.",
+            expected_revision=1,
+            versao_reconhecida=versao.id,
+            correlation_id=m.correlacao,
+        )
+
+
+# Os estados do C19 (171, FR-7337), pela ordem dos candidatos: três na cota, cada um num ponto do
+# caminho do vídeo, e o 04, na ampla.
+VAI_GRAVAR_DO_C19 = 1
+VIDEO_A_ASSISTIR_DO_C19 = 2
+VIDEO_QUE_NAO_CONFIRMOU_DO_C19 = 3
+NA_AMPLA_DO_C19 = 4
+
+
+def _enviar_o_video_de_treinamento(m, inscricao, etapa_id):
+    """O vídeo de treinamento, enviado pelo serviço do portal, em partes, como o titular enviaria.
+
+    Pelo mesmo `envio` do portal, e não por gravação direta: o resumo, a duração lida do contêiner e
+    o comprovante saem da mesma conferência que vale para o vídeo de verdade (166).
+    """
+    from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+    from processo_seletivo.verificacao.application import envio
+    from processo_seletivo.verificacao.domain import conteiner, roteiro
+
+    dados = c.VIDEO_DE_TREINAMENTO.read_bytes()
+    with c.VIDEO_DE_TREINAMENTO.open("rb") as arquivo:
+        duracao = float(conteiner.ler(arquivo).duracao)
+    passo = duracao / len(roteiro.CHAVES)
+    marcas = [
+        {"passo": chave, "instante": round(i * passo, 3)} for i, chave in enumerate(roteiro.CHAVES)
+    ]
+    identidade = IdentidadeDoCandidato(
+        subject=inscricao.identity_subject, nome=inscricao.nome, cpf="", email=""
+    )
+    chaves = {"identidade": identidade, "inscricao_id": inscricao.id, "etapa_id": etapa_id}
+    novo = envio.iniciar(
+        **chaves,
+        tamanho=len(dados),
+        formato="video/mp4",
+        duracao=duracao,
+        marcas=marcas,
+        roteiro_versao=roteiro.VERSAO,
+        maioridade=True,
+    )
+    parte = 64 * 1024
+    for inicio in range(0, len(dados), parte):
+        envio.receber_parte(
+            **chaves, envio_id=novo.id, deslocamento=inicio, dados=dados[inicio : inicio + parte]
+        )
+    return envio.concluir(
+        **chaves,
+        envio_id=novo.id,
+        sha256=hashlib.sha256(dados).hexdigest(),
+        correlation_id=m.correlacao,
+    )
+
+
+def montar_c19(m):
+    """A Etapa restrita do C18, admitindo o vídeo, para a equipe gravar e avaliar (171, FR-7337).
+
+    Três alcançados, nos três pontos do caminho do vídeo que um período só comporta: o 01 ainda vai
+    gravar — é a equipe que grava, pelo portal —; o 02 enviou, e a comissão ainda não abriu; o 03
+    enviou, os dois avaliadores abriram, e um parecer não confirma, de modo que a consolidação pede
+    o encaminhamento à entrevista ao vivo (R-11: o vídeo só confirma). Os três estão distribuídos
+    aos dois avaliadores, para que o vídeo que a equipe gravar no 01 chegue à Mesa sem passo a
+    mais. O 04 está só na ampla. **Ninguém avisado**, como no C18.
+
+    **Só com a chave do vídeo** (`VERIFICACAO_POR_VIDEO`): sem ela o portal não deixa gravar, e o
+    cenário não teria o que mostrar. A recusa é a de `conflitos_de_montagem`, antes de qualquer
+    escrita e já na pré-visualização (`exige_verificacao_por_video`).
+    """
+    from types import SimpleNamespace
+
+    from processo_seletivo.avaliacoes.application.avaliacao import concluir
+    from processo_seletivo.publicacoes.application.selectors import effective_version
+    from processo_seletivo.verificacao.application import abertura
+
+    m.criar()
+    m.elaborar(
+        perfis=c.perfil_de_notas(),
+        inicio=m.agora - timedelta(days=10),
+        duracao_dias=40,
+        documentos=c.documentos_de_notas(),
+        etapas_a_mais=[c.etapa_da_verificacao(video=True)],
+        eventos_a_mais=[
+            c.evento_da_verificacao(m.agora - timedelta(hours=1), m.agora + timedelta(days=7))
+        ],
+    )
+    m.publicar()
+    inscricoes = m.inscrever(
+        NA_AMPLA_DO_C19,
+        reservada=(VAI_GRAVAR_DO_C19, VIDEO_A_ASSISTIR_DO_C19, VIDEO_QUE_NAO_CONFIRMOU_DO_C19),
+    )
+    m.encerrar_inscricoes(timezone.now())
+    m.constituir_comissao(alocar_em=(c.ETAPA_VERIFICACAO,))
+    etapa = m.id(c.ETAPA_VERIFICACAO)
+    na_cota = inscricoes[VAI_GRAVAR_DO_C19 - 1 : VIDEO_QUE_NAO_CONFIRMOU_DO_C19]
+    m.distribuir(c.ETAPA_VERIFICACAO, na_cota, avaliadores=(AVALIACAO_1, AVALIACAO_2))
+    m.dizer("Enviando o vídeo de treinamento do 02 e do 03…")
+    for posicao in (VIDEO_A_ASSISTIR_DO_C19, VIDEO_QUE_NAO_CONFIRMOU_DO_C19):
+        _enviar_o_video_de_treinamento(m, inscricoes[posicao - 1], etapa)
+    versao = effective_version(edital_id=m.edital.id)
+    nao_confirmou = inscricoes[VIDEO_QUE_NAO_CONFIRMOU_DO_C19 - 1]
+    for avaliador, sentido in ((AVALIACAO_1, "FAVORAVEL"), (AVALIACAO_2, "DESFAVORAVEL")):
+        # Abrir é ato, e o parecer pelo vídeo o exige (FR-7134 da 166). A sessão é só onde a
+        # abertura guarda o identificador para o reprodutor; aqui ninguém reproduz.
+        abertura.abrir_pela_comissao(
+            SimpleNamespace(session={}),
+            ator=m.ator(avaliador),
+            edital=m.edital,
+            etapa_id=etapa,
+            inscricao_id=nao_confirmou.id,
+            correlation_id=m.correlacao,
+        )
+        concluir(
+            ator=m.ator(avaliador),
+            edital=m.edital,
+            etapa_id=etapa,
+            inscricao_id=nao_confirmou.id,
+            pontuacao=None,
+            sentido=sentido,
             parecer=f"Parecer de treinamento. {c.MARCA}.",
             expected_revision=1,
             versao_reconhecida=versao.id,
@@ -931,8 +1055,55 @@ CENARIOS = (
             "ficam na suíte (FR-7333 da 171).",
         ),
     ),
-    # **O C19 é da `171`** (a verificação por vídeo), preparado noutra entrega: o número fica
-    # reservado, e o catálogo segue a ordem dos códigos quando ele entrar.
+    Cenario(
+        codigo="C19",
+        nome="Verificação da autodeclaração por vídeo",
+        objetivo=(
+            "Percorrer o vídeo da verificação: o candidato grava e envia, a comissão assiste e dá "
+            "o parecer, e a presidência encaminha à entrevista ao vivo quem o vídeo não confirmou."
+        ),
+        tipo_de_selecao=_SELECAO,
+        metodo=(
+            "A Etapa restrita do C18, admitindo o vídeo: cota PPP, dois pareceres, unanimidade; "
+            "o vídeo só confirma"
+        ),
+        estado_inicial=(
+            "3 inscritos na cota no período da Etapa, distribuídos aos dois avaliadores: 1 ainda "
+            "vai gravar; 1 com vídeo enviado, que ninguém abriu; 1 com vídeo e dois pareceres, um "
+            "que não confirma; 1 inscrito só na ampla; ninguém avisado."
+        ),
+        precondicoes=(
+            "A verificação por vídeo ligada no ambiente (`VERIFICACAO_POR_VIDEO`), o que só é "
+            "possível fora de produção.",
+            "O envio de avisos ligado no ambiente (`AVISOS_AOS_CANDIDATOS`).",
+        ),
+        papeis=(
+            f"Presidência ({PRESIDENCIA})",
+            f"Avaliadores ({AVALIACAO_1}, {AVALIACAO_2})",
+            "Candidato (01 a 03, na cota; 04, na ampla)",
+        ),
+        proxima_acao=(
+            "Candidato 01: gravar e enviar pelo portal; avaliadores: abrir os vídeos do 01 e do 02 "
+            "e dar os pareceres; presidência: consolidar e encaminhar o 03 à entrevista ao vivo."
+        ),
+        resultado_esperado=(
+            "Vídeo do 01 enviado, com comprovante; pareceres pelo vídeo completos; o 03 "
+            "encaminhado à entrevista ao vivo, sem Resultado desfavorável pelo vídeo."
+        ),
+        dependencias=(
+            "Correio do ambiente para o código de acesso do candidato.",
+            "Para gravar: navegador com câmera, em localhost ou HTTPS; ou a imagem de teste do "
+            "portal, que só existe fora de produção.",
+        ),
+        montar=montar_c19,
+        validade_dias=7,
+        exige_verificacao_por_video=True,
+        limitacoes=(
+            "O vídeo do 02 e do 03 é o vídeo de treinamento, com barras de cor e a faixa de "
+            "dado fictício: não há rosto a avaliar, e o exercício é o caminho, não o juízo.",
+            "O resultado publicado e o período vencido ficam fora, como no C18.",
+        ),
+    ),
     Cenario(
         codigo="C20",
         nome="Agendamento da Etapa",

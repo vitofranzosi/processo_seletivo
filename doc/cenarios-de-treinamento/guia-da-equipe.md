@@ -79,8 +79,8 @@ quem cobre o quê:
 
 | Frente | Por que a pessoa está nela | Cenário | Identidade |
 |---|---|---|---|
-| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C18, C20 | `treino.presidencia` |
-| Avaliar uma Etapa | membro alocado à Etapa | C05, C18 | `treino.avaliacao1`, `treino.avaliacao2` (C18) |
+| Conduzir o certame | preside a comissão do Processo | C04 a C12, C14 a C20 | `treino.presidencia` |
+| Avaliar uma Etapa | membro alocado à Etapa | C05, C18, C19 | `treino.avaliacao1`, `treino.avaliacao2` (C18, C19) |
 | Conferir os documentos da convocação | membro **alocado à conferência** — sem presidir | C12 | `treino.avaliacao2` |
 | Receber os documentos para formalizar | **designada** para o Edital, sem integrar a comissão | C16 (designada), C17 (a designar) | `treino.formalizacao` |
 | Decidir recursos | papel Julgador de recursos da unidade | C08 (um recurso admitido) | Julgador de recursos |
@@ -576,6 +576,52 @@ foi configurado.
 pessoa, com motivo. Incluir quem passou a participar ou cancelar quem deixou de participar pede
 alguém que entre ou saia da Entrevista, e neste cenário todos os 20 participam: esses dois atos
 ficam fora do exercício.
+
+---
+
+## C19 — Verificação da autodeclaração por vídeo
+
+**Objetivo:** percorrer o vídeo da verificação de ponta a ponta — o candidato grava e envia, a
+comissão assiste e dá o parecer, e a presidência encaminha à entrevista ao vivo quem o vídeo não
+confirmou.
+
+**Só fora de produção.** O cenário exige a verificação por vídeo ligada no ambiente
+(`VERIFICACAO_POR_VIDEO=true`), e produção recusa a chave até o ato do Conselho Superior. Sem ela, a
+carga recusa o C19 antes de gravar qualquer coisa. Para gravar, o navegador precisa de câmera e o
+endereço precisa ser `localhost` ou HTTPS; quem não quiser aparecer marca **Usar imagem de teste** no
+teste da câmera.
+
+**Você começa com:** o Edital `SIM19`, com a mesma Etapa do C18 — só para a cota PPP, dois pareceres,
+"confirma só por unanimidade" —, agora **admitindo o vídeo**. Três candidatos na cota, todos
+distribuídos aos dois avaliadores: o 01 **ainda vai gravar**; o 02 **já enviou** o vídeo, e ninguém
+o abriu; o 03 enviou, os dois avaliadores abriram, e **um parecer não confirma**. O 04 está só na
+ampla. **Ninguém foi avisado.** O vídeo do 02 e do 03 é o vídeo de treinamento: barras de cor e a
+faixa "TREINAMENTO — VÍDEO FICTÍCIO". Não há rosto a avaliar; o exercício é o caminho.
+
+**Quem faz:** o candidato 01, pelo portal; os avaliadores (`treino.avaliacao1` e
+`treino.avaliacao2`); e a presidência (`treino.presidencia`).
+
+**Seu desafio:**
+
+1. Entre no portal como o candidato 01 (o e-mail é `cefor-c19r1p01@treinamento.exemplo.test`, e o
+   código de acesso sai no terminal do servidor). Em **Minhas inscrições**, o cartão diz **Falta um
+   passo seu**. No acompanhamento, escolha gravar o vídeo, siga o roteiro — documento, perfil
+   esquerdo, perfil direito, de frente —, assista, envie e guarde o comprovante.
+2. Entre como `treino.avaliacao1` e abra **Minhas atividades**: **Avaliar 2 inscrições** — o 01 e o
+   02; o parecer do 03 já está dado. Na Mesa, abra o vídeo do 02 e o do 01 (que você acabou de
+   gravar) e dê o parecer — "Confirmo" ou "Não dá para confirmar pelo vídeo". Repita como
+   `treino.avaliacao2`.
+3. Entre como a presidência e abra o Edital `SIM19`. No Centro: **Encaminhar 1 inscrição à entrevista
+   ao vivo** (o 03) e **Avisar 3 inscrições**. Siga **Encaminhar**: o 03 vai à entrevista ao vivo, e
+   nenhum Resultado desfavorável sai do vídeo — o vídeo só confirma.
+4. Volte ao portal como o candidato 03 (`cefor-c19r1p03@treinamento.exemplo.test`): o acompanhamento
+   diz que a comissão quer conversar ao vivo, e que **isso não é reprovação**.
+
+**Resultado esperado:** o vídeo do 01 enviado, com comprovante; os pareceres pelo vídeo completos; o
+03 encaminhado à entrevista ao vivo; os confirmados por unanimidade, consolidados pela presidência.
+
+**Atenção:** abrir o vídeo é ato registrado na trilha, uma vez por abertura. Depois que alguém da
+comissão abre o vídeo, o candidato não pode mais trocá-lo.
 
 ---
 
