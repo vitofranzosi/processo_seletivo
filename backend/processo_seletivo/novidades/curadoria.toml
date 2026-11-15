@@ -1,0 +1,104 @@
+# O registro da curadoria das Novidades do GPS (spec 168). Não vai para a página.
+#
+# A curadoria cobre todo PR mergeado na main desde `inicio`. Cada um deles termina num de três
+# lugares, e o roteiro `scripts/rascunhar_novidades.py` lista como pendente o que não estiver em
+# nenhum:
+#   1. citado por uma nota de novidades.toml;
+#   2. listado aqui, em [[sem_nota]], com o motivo;
+#   3. só de documentação (spec, estudo, auditoria, guia) — o roteiro o reconhece pelos arquivos.
+#
+# O corte é pela data do merge, e não pelo número do PR: o número diz quando o PR foi aberto, e um PR
+# antigo pode entrar na main depois de um novo. Na conferência de 14/11, 55 dos 249 PRs da janela
+# entraram fora da ordem do número.
+
+inicio = 2026-09-15
+
+[[sem_nota]]
+motivo = "Só testes, CI, desempenho da suíte ou o filme de lançamento: nada muda para quem usa."
+prs = [295, 296, 313, 379, 444, 460, 474, 478, 517, 523]
+
+[[sem_nota]]
+motivo = "Estrutura interna sem efeito visível: o estilo em arquivo e a política de conteúdo."
+prs = [306, 308, 309]
+
+[[sem_nota]]
+motivo = "Integridade e privilégios no banco, e proteção de comandos de demonstração: segurança interna, sem tela."
+prs = [343, 354, 357]
+
+[[sem_nota]]
+motivo = "A entrada institucional ainda não tem o provedor do Ifes: nenhum ambiente a oferece a quem opera."
+prs = [345, 349]
+
+[[sem_nota]]
+motivo = "Ajuste visual menor ou página de erro rara, sem mudar o que a pessoa faz."
+prs = [311, 312, 322]
+
+[[sem_nota]]
+motivo = "Repetição do mesmo envio de julgamento; sem efeito no fluxo normal."
+prs = [356]
+
+[[sem_nota]]
+motivo = "Registro de um achado com uma correção de fuso na mensagem de recusa do sorteio; a capacidade já está na nota do sorteio viável."
+prs = [335]
+
+[[sem_nota]]
+motivo = "Estudo, com protótipo e entradas do launch.json: não muda o produto."
+prs = [445]
+
+[[sem_nota]]
+motivo = "Só no ambiente de desenvolvimento, atrás de chave que a produção recusa: não chega a quem opera."
+prs = [547]
+
+# ---- a curadoria de setembro (15/09 a 16/10), revista em 14/11 ------------------------------------
+
+[[sem_nota]]
+motivo = "Só CI: a suíte deixou de rodar duas vezes no mesmo commit; nada muda para quem usa."
+prs = [154]
+
+[[sem_nota]]
+motivo = "Corrigia o limite digitado do cadastro de reserva limitado, que deixou de ser digitado: hoje o limite sai do corte (nota limite-do-cadastro-pelo-corte)."
+prs = [159]
+
+[[sem_nota]]
+motivo = "Só teste ou comentário no código: nada muda para quem usa."
+prs = [180, 189]
+
+[[sem_nota]]
+motivo = "Integridade no banco dos fatos congelados no envio: proteção interna, sem tela."
+prs = [183]
+
+[[sem_nota]]
+motivo = "Recusa que só alcança quem chama a API: a tela da Retificação já alterava campo a campo."
+prs = [217]
+
+[[sem_nota]]
+motivo = "Aviso da Revisão sobre o Perfil só de cadastro de reserva, reescrito depois pela vaga acrescida: a capacidade de hoje está na nota da vaga acrescida."
+prs = [198]
+
+[[sem_nota]]
+motivo = "Só testes: nada muda para quem usa."
+prs = [238, 259, 267]
+
+[[sem_nota]]
+motivo = "Só documentação: estudo, auditoria, inventário de telas, roteiro de configuração ou o filme de lançamento."
+prs = [273, 281, 284, 286, 289, 290]
+
+[[sem_nota]]
+motivo = "Polimento visual das telas da gestão e da folha de estilo, refeitas depois sobre a nova barra lateral e o novo cabeçalho."
+prs = [242, 244, 245, 246, 248, 256]
+
+[[sem_nota]]
+motivo = "Ajuste menor no painel do documento da Mesa, absorvido depois pelo visualizador de documentos refeito em novembro."
+prs = [258]
+
+[[sem_nota]]
+motivo = "Protótipo de avaliação interna do assistente, sem link na gestão: só se abre pelo endereço."
+prs = [280]
+
+[[sem_nota]]
+motivo = "Procedimento de implantação do correio e do serviço do assistente: só para a equipe técnica."
+prs = [283]
+
+[[sem_nota]]
+motivo = "Só no ambiente de desenvolvimento, atrás de chave que a produção recusa: não chega a quem opera."
+prs = [287]
