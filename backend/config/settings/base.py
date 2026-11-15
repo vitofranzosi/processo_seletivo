@@ -150,6 +150,10 @@ INSTALLED_APPS = [
     # mais. **Nenhum app do domínio o conhece**: ele chama os comandos da aplicação como qualquer
     # ator, e some inteiro sem que o produto perceba.
     "processo_seletivo.treinamento",
+    # As Novidades do GPS (168): as notas moram num arquivo versionado do próprio app, e o banco
+    # guarda só o que cada identidade da gestão já viu. **Nenhum app do domínio o conhece**: ele lê
+    # a sessão da gestão e nada do certame.
+    "processo_seletivo.novidades",
 ]
 
 # **Só o *acesso* à fonte da semente mora aqui**: quanto tempo esperar e quantas vezes tentar são

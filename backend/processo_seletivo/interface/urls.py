@@ -10,6 +10,7 @@ from processo_seletivo.interface import (
     habilitacao_do_assistente,
     inscricoes_publicadas,
     kit_de_divulgacao,
+    novidades_do_gps,
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
@@ -167,6 +168,8 @@ urlpatterns = [
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),
+    # As Novidades do GPS (168): o que mudou no produto, e o que a identidade ainda não viu.
+    path("novidades", novidades_do_gps.novidades, name="novidades"),
     # A Visão do Sistema (105). **Com barra no fim**, ao contrário das vizinhas: o manual pede os
     # arquivos dele por endereço relativo (`assets/style.css`), e sem a barra o navegador os
     # procuraria em `/gestao/assets/`.
