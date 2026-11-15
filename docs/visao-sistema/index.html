@@ -191,7 +191,7 @@
       <tr><td>Exportador de matrículas</td><td>Gera o arquivo para o Registro Acadêmico</td><td>Gestão: exportação do Edital</td></tr>
       <tr><td>Comunicação</td><td>Gera textos e peças de divulgação de um Edital publicado</td><td>Gestão: Kit de divulgação</td></tr>
       <tr><td>Auditor</td><td>Lê a trilha e o trabalho, sem agir</td><td>Gestão: Trilha da unidade e as consultas</td></tr>
-      <tr><td>Administração de acessos e de unidades</td><td>Concede e revoga papéis na unidade, com motivo e sem autoconcessão; suspende pessoas; o Administrador institucional cadastra as unidades</td><td>Gestão: Acessos da unidade, Administração de acessos, Unidades</td></tr>
+      <tr><td>Administração de acessos e de unidades</td><td>Concede e revoga papéis na unidade, com motivo e sem autoconcessão; suspende pessoas; o Administrador institucional cadastra as unidades e habilita o assistente do Edital</td><td>Gestão: Acessos da unidade, Administração de acessos, Unidades, Assistente do Edital</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -389,7 +389,7 @@
     <a class="cartao" href="#conferencia-nos-atos-irreversiveis"><span class="etiqueta">Prevenir <span class="selo selo-parc">Parcial</span></span><h4>Conferências antes do irreversível</h4><p>Prévia do alcance antes de publicar, ordenar, cortar e convocar; o desfecho oferece só o que cabe; o texto que chega ao candidato é conferido antes do envio.</p></a>
     <a class="cartao" href="#painel"><span class="etiqueta">Acompanhar <span class="selo selo-impl">Implementado</span></span><h4>Painel, Visão Geral e Agenda</h4><p>Pulso de inscrições e sinais de atenção por Processo, panorama da unidade por Perfil, cronogramas num mês.</p></a>
     <a class="cartao" href="#relatorio-do-edital"><span class="etiqueta">Relatar <span class="selo selo-impl">Implementado</span></span><h4>Relatórios do Edital e da unidade</h4><p>Página e PDF para quem não opera o sistema. O consolidado da unidade é parcial.</p></a>
-    <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-parc">Parcial</span></span><h4>E-mails aos candidatos</h4><p>Código de acesso, comprovante e convocação por mensagem sempre; avisos de resultado, de chamada e de pendência documental desligados em produção até a validação de LGPD.</p></a>
+    <a class="cartao" href="#resultados"><span class="etiqueta">Avisar <span class="selo selo-parc">Parcial</span></span><h4>E-mails aos candidatos</h4><p>Código de acesso, comprovante e convocação por mensagem sempre; avisos de resultado, de chamada, de pendência documental e de agenda desligados em produção até a validação de LGPD.</p></a>
     <a class="cartao" href="#kit-de-divulgacao"><span class="etiqueta">Divulgar <span class="selo selo-parc">Parcial</span></span><h4>Kit de divulgação</h4><p>Textos prontos, peças por família e formato e o pacote .zip, tirados do Edital publicado. A peça espera a comunicação.</p></a>
     <a class="cartao" href="#cenarios-de-treinamento"><span class="etiqueta">Treinar <span class="selo selo-impl">Implementado</span></span><h4>Cenários de treinamento</h4><p>Editais fictícios parados em fases diferentes, para treinar a equipe e homologar, fora de produção.</p></a>
     <a class="cartao" href="#assistente-do-edital"><span class="etiqueta">Tirar dúvidas <span class="selo selo-parc">Parcial</span></span><h4>Assistente de dúvidas, só interno</h4><p>Respostas prontas sobre o Edital publicado e um piloto com modelo de linguagem, para participantes escolhidos. Nenhum candidato real o vê.</p></a>
@@ -444,8 +444,8 @@
       listas de inscrições, resultados e convocações ficam publicados com documento; o sorteio tem
       página de verificação e manifesto que qualquer pessoa confere, inclusive fora do sistema
       (<a href="#sorteio-verificacao">ver</a>).</li>
-    <li><strong>O sistema escreve ao candidato em cinco situações</strong>, e duas delas — os avisos
-      de resultado e de chamada, e o de pendência documental — ficam desligadas em produção até a
+    <li><strong>O sistema escreve ao candidato em seis situações no código</strong> (a norma da FR-084 diz sete: a do desfecho, da 156, ainda não tem código), e três delas — os avisos
+      de resultado e de chamada, o de pendência documental e o de agenda — ficam desligadas em produção até a
       validação de LGPD (<a href="#area-do-candidato">ver</a>).</li>
   </ul>
 </section>
@@ -468,8 +468,8 @@
     <thead><tr><th>Situação</th><th>O que entra aqui</th></tr></thead>
     <tbody>
       <tr><td><span class="selo selo-impl">Implementado</span></td><td>O certame inteiro pela interface, para as famílias do piloto — ampla concorrência com cotas, sorteio, classificação por nota com barema e análise documental: composição, rito, Retificação, inscrição, avaliação, classificação, sorteio verificável, resultado, recurso, convocação com documentos e conferência, publicação de inscrições e de convocações, encerramento; Centro de Controle, Minhas atividades, gestão de acessos e de unidades, trilha.</td></tr>
-      <tr><td><span class="selo selo-parc">Parcial</span></td><td>Cadastro de reserva (o limite não é aplicado), Requerimento de Matrícula e exportação ao Registro Acadêmico (sem validação no sistema de destino), entrega à formalização, conferências nos atos irreversíveis (152), a convocação depois do envio (154), a vaga reservada sem ocupante (155, entrega mínima), a comunicação do desfecho (156: frase simples e fundamento no portal; sem pedido de desistência nem aviso por e-mail), consolidado da unidade, Kit de divulgação, assistente de dúvidas (interno).</td></tr>
-      <tr><td><span class="selo selo-prev">Previsto</span></td><td>Só especificado, sem código: a passagem da vaga entre cotas (158), “Quem faz o quê neste Edital” (161), o MVP de UX da Retificação (123), ordenar o cronograma por data e a prévia compacta (144, B e C), e o que a 112 decide sobre quem lê o que ainda não foi publicado.</td></tr>
+      <tr><td><span class="selo selo-parc">Parcial</span></td><td>Cadastro de reserva (o limite não é aplicado), Requerimento de Matrícula e exportação ao Registro Acadêmico (sem validação no sistema de destino), entrega à formalização, conferências nos atos irreversíveis (152), a convocação depois do envio (154), a vaga reservada sem ocupante (155, entrega mínima), a comunicação do desfecho (156: frase simples e fundamento no portal; sem pedido de desistência nem aviso por e-mail), consolidado da unidade, Kit de divulgação, assistente de dúvidas (interno), a verificação da autodeclaração por vídeo (166, só em desenvolvimento).</td></tr>
+      <tr><td><span class="selo selo-prev">Previsto</span></td><td>Só especificado, sem código: a passagem da vaga entre cotas (158), “Quem faz o quê neste Edital” (161), a habilitação do vídeo pela interface (169), o MVP de UX da Retificação (123), ordenar o cronograma por data e a prévia compacta (144, B e C), e o que a 112 decide sobre quem lê o que ainda não foi publicado.</td></tr>
       <tr><td>Esperando pessoas</td><td>Decisões de produto e institucionais, validação com operadores e candidatos, e o que depende do Ifes — listados em <a href="#pg-evolucoes">O que ainda precisa evoluir</a>.</td></tr>
     </tbody>
   </table></div>
@@ -2119,7 +2119,7 @@ INSCRIÇÃO (candidato × Perfil × lista)
       <tr><th>Quando faz sentido</th><td>Qualquer seleção com reserva legal de vagas.</td></tr>
       <tr><th>O que configurar</th><td>Modalidades com percentual, fundamento, versão e arredondamento; quadro de vagas; reversão; documento de autodeclaração com alcance “Modalidade em todos os Perfis”.</td></tr>
       <tr><th>Decisões</th><td>As quantidades (o percentual sugere); se a cota reverte e quando.</td></tr>
-      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. A heteroidentificação entra como Etapa decisória restrita às Modalidades que alcança (163), com o efeito por lista do desfecho (164) e a deliberação da comissão (165) — as três em PRs empilhados, sem merge na <code>main</code>; o vídeo não existe. <a href="#deliberacao">Mais</a></td></tr>
+      <tr><th>Limites</th><td>Não há submodalidades (PPI de escola pública e renda, por exemplo, são Modalidades distintas, cada uma com linha). Nada confere percentuais entre Perfis. A heteroidentificação entra como Etapa decisória restrita às Modalidades que alcança (163), com o efeito por lista do desfecho (164) e a deliberação da comissão (165) — as três na <code>main</code> desde 14/11; o vídeo gravado pelo candidato existe só em desenvolvimento (166), e a produção recusa subir com ele. <a href="#deliberacao">Mais</a></td></tr>
     </tbody></table></div>
 
     <h3 id="r-reserva">Receita 7 — Suplentes e cadastro de reserva</h3>
@@ -2210,7 +2210,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <tr><td>Requerimento de Matrícula e exportação</td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
         <tr><td>Cadastro de reserva (declarado)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
         <tr><td>Barema (146: critérios independentes)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
-        <tr><td>Heteroidentificação (rito ao vivo, sem vídeo; 163 a 165, sem merge)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
+        <tr><td>Heteroidentificação (rito ao vivo; o vídeo, só em desenvolvimento; 163 a 166 e 171)</td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td></tr>
         <tr><td>Submodalidades</td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td></tr>
       </tbody>
     </table></div>
@@ -3001,7 +3001,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h2>A Agenda dos Editais <span class="selo selo-impl">Implementado</span></h2>
     <p class="lead">
       Os cronogramas publicados de todos os Editais da unidade, num mês e numa lista — para quem coordena
-      vários certames ao mesmo tempo e precisa ver onde os marcos se acumulam (101).
+      vários certames ao mesmo tempo e precisa ver onde os marcos se acumulam (101). Não é a
+      <a href="#agenda-da-etapa">agenda da Etapa</a> (167), que diz quando cada <em>pessoa</em> é atendida.
     </p>
     <div class="conceito" id="c-agenda">
       <header><h3>Agenda dos Editais</h3><span class="selo selo-impl">Implementado</span>
@@ -3268,6 +3269,67 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>A próxima ação de cada cenário, provada</dt><dd><code>tests/integration/treinamento/test_proxima_acao.py</code></dd>
       <dt>Especificação e guias</dt><dd><code>specs/134-cenarios-de-treinamento/</code> · <code>doc/cenarios-de-treinamento/</code> (o guia da equipe e o manual de operação)</dd>
     </dl></div></details>
+  </section>
+
+  <!-- ============================================================ NOVIDADES -->
+  <section id="novidades">
+    <h2>As Novidades do GPS <span class="selo selo-impl">Implementado</span></h2>
+    <p class="lead">
+      O que mudou no produto, contado em linguagem de quem opera: o que é novo, o que melhorou e o que foi
+      corrigido, da mudança mais recente para a mais antiga, numa página da gestão que diz o que a pessoa
+      ainda não viu (168).
+    </p>
+    <div class="conceito" id="c-novidades">
+      <header><h3>Novidades do GPS</h3><span class="selo selo-impl">Implementado</span>
+        <p class="frase">Um anúncio por mudança, e não um relatório: o ganho, um exemplo, e o caminho até a tela.</p></header>
+      <dl>
+        <dt>Por que existe</dt><dd>Quem opera o GPS vê as telas mudarem entre uma semana e outra e não tem onde ler o que mudou, nem em que tela. A Documentação do Sistema descreve o que o sistema <em>é</em>; as Novidades dizem o que <em>acabou de mudar</em>.</dd>
+        <dt>Quem usa</dt><dd>Toda identidade da gestão, sem permissão própria. A rota é <code>/gestao/novidades</code>, e o item <span class="rotulo-ui">Novidades</span> fica no grupo Ajuda, antes da Documentação do Sistema.</dd>
+        <dt>O que faz</dt><dd>Mostra, numa linha do tempo por mês, 12 notas por página, com filtro <span class="rotulo-ui">Todas</span>, <span class="rotulo-ui">Novidades</span>, <span class="rotulo-ui">Melhorias</span> e <span class="rotulo-ui">Correções</span>. Cada cartão traz o título que promete o ganho, o resumo, <em>Na prática:</em> (um exemplo), <em>Para que serve:</em>, <span class="rotulo-ui">Como usar</span> recolhido, <span class="rotulo-ui">Abrir…</span> a tela — só se a barra a oferece à pessoa — e <span class="rotulo-ui">Saiba mais na documentação</span>.</dd>
+        <dt>O que não faz</dt><dd>Não cita número de PR, de requisito ou de especificação no texto visível. Não tem “marcar como lida” por cartão: abrir a página é ver.</dd>
+      </dl>
+    </div>
+
+    <h3>O que a pessoa vê de novo</h3>
+    <ul>
+      <li><strong>O selo na barra.</strong> Ao lado de <span class="rotulo-ui">Novidades</span>, a contagem das notas que a identidade ainda não viu; <em>9+</em> acima de nove, e um ponto no canto do ícone com a barra recolhida. Some quando não há nada novo. A contagem é calculada na entrada da gestão e na abertura da página, e guardada na sessão: a barra continua sem consulta ao banco. O preço é que, numa mesma sessão, ela não acompanha uma visita feita em outro navegador. Trocar de unidade a recalcula, porque mudam as capacidades.</li>
+      <li><strong>O bloco <span class="rotulo-ui">Desde sua última visita</span>.</strong> No topo, as mudanças que chegaram depois da última visita, cada uma com a categoria e o título, que levam ao cartão. Fica na sessão e não some ao recarregar. Na primeira visita, a página diz que reúne as mudanças desde 15 de setembro de 2026; sem novidade, <em>“Nada novo desde a sua última visita, em dd/mm/aaaa.”</em></li>
+      <li><strong>O que é “novo para você”</strong> se decide pelo identificador da nota, e não pela data: uma nota integrada antes da última visita e implantada depois continua não vista.</li>
+    </ul>
+
+    <h3>De onde vêm as notas, e a regra que não se negocia</h3>
+    <p>
+      As notas moram num arquivo do código (<code>novidades/novidades.toml</code>) e <strong>viajam com
+      ele</strong>: cada ambiente mostra as notas do commit que roda, e nenhum anuncia o que não roda.
+      <strong>Uma nota só entra depois de todos os PRs que ela cita estarem na <code>main</code></strong>, e
+      descreve só o que eles entregaram. A nota presa a uma configuração (<code>requer_configuracao</code>)
+      some onde a configuração está desligada, e a presa a uma capacidade (<code>para_capacidade</code>) só
+      aparece a quem a tem. O registro <code>novidades/curadoria.toml</code> dá a todo PR mergeado desde 15/09 um
+      destino — numa nota, <em>sem nota</em> com o motivo, ou só documentação —, e a suíte reprova o PR sem
+      destino. O roteiro <code>scripts/rascunhar_novidades.py</code> <strong>só rascunha</strong> as notas
+      pendentes a partir dos PRs mergeados: não escreve no arquivo, não chama modelo, não publica.
+    </p>
+    <div class="aviso aviso-chave">
+      <span class="titulo">Nota é anúncio, e não relatório</span>
+      <p>Decisão do usuário em 14/11: título que promete o ganho, duas frases em “você”, um exemplo concreto e nenhuma palavra do sistema. A suíte cobra o tamanho (título até 70 caracteres, resumo e exemplo até 300), o vocabulário e o exemplo de toda nota de <em>novidade</em>; o tom, só a leitura. O guia está em <code>doc/curadoria-das-novidades.md</code>.</p>
+    </div>
+    <p>
+      Hoje são <strong>90 notas</strong>, de 15/09 a 14/11 — 36 <em>Novidades</em>, 41 <em>Melhorias</em> e 13
+      <em>Correções</em> —, e <strong>nenhuma ainda sobre as specs 166 a 171</strong>: as notas do vídeo, da agenda
+      da Etapa, da orientação, das próprias Novidades e da habilitação do assistente ainda não foram escritas. A nota do piloto do assistente
+      continua presa a <code>ASSISTENTE_PILOTO</code>, que desde a 170 é só atalho de demonstração: em
+      produção, mesmo com o piloto habilitado por ato, ela não aparece. Não foi verificado se isso é
+      intencional.
+    </p>
+
+    <details class="evidencia"><summary>Onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>Tela e rota</dt><dd><code>interface/novidades_do_gps.py</code> · <code>interface/templates/interface/novidades.html</code> · <code>interface/navegacao.py</code> (<code>AJUDA</code>)</dd>
+      <dt>Notas e registro</dt><dd><code>novidades/novidades.toml</code> · <code>novidades/curadoria.toml</code> · <code>novidades/catalogo.py</code></dd>
+      <dt>Leitura da pessoa</dt><dd><code>novidades/leitura.py</code> · <code>novidades/models.py</code> (<code>LeituraDasNovidades</code>: <code>subject</code>, <code>vistas</code>, <code>ultima_visita</code>) · migration <code>novidades/0001</code> — tabela <strong>mutável</strong>, fora das append-only, sem dado do certame; duas pessoas que declaram o mesmo identificador no seletor de demonstração dividem a linha</dd>
+      <dt>Ganchos</dt><dd><code>interface/identidade.py</code>: <code>ao_entrar</code> na identificação e na entrada institucional, <code>recontar</code> na troca de unidade</dd>
+      <dt>Especificação</dt><dd><code>specs/168-novidades-do-gps/</code></dd>
+    </dl></div></details>
+    <p class="miudo">Não foi percorrida em navegador a entrada institucional nem a troca de unidade com o selo, só por teste com o provedor simulado; o SC-2501 é validação humana.</p>
   </section>
 
   <!-- ============================================================ ESCALA -->
@@ -5363,9 +5425,9 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       Três telas da gestão respondem perguntas sobre um Edital publicado: a validação interna das
       respostas prontas (070), o piloto do assistente que conversa com um modelo de linguagem (071) e
       um protótipo de como isso apareceria ao candidato. Desde a 074, o painel do protótipo abre também
-      na própria página pública da seleção, mas só na máquina de desenvolvimento. O selo é
-      <em>Parcial</em> porque o ator a quem tudo isso se destina — o candidato — não tem, fora do
-      ambiente local, canal para chegar a elas.
+      na própria página pública da seleção — fora de produção, e desde a 170 por ato do Administrador
+      institucional, Edital a Edital. O selo é <em>Parcial</em> porque o ator a quem tudo isso se destina
+      — o candidato — não tem, em produção, canal para chegar a elas.
     </p>
     <div class="aviso aviso-chave">
       <span class="titulo">Nada disto está aberto ao público</span>
@@ -5373,9 +5435,11 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         As três telas estão sob <code>/gestao/</code>, que exige identificação, e não há rota do
         assistente na API pública. O piloto é <strong>interno</strong>, com participantes escolhidos; o
         protótipo é uma tela de avaliação da experiência, sem especificação própria. As únicas rotas do
-        assistente no portal são as três da 074, que respondem <code>404</code> enquanto a chave
-        <code>ASSISTENTE_NA_PAGINA_DO_EDITAL</code> não estiver ligada — e a configuração de produção
-        recusa subir com ela ligada. Nenhuma spec abre o assistente ao candidato real.
+        assistente no portal são as três da 074, que respondem <code>404</code> enquanto a página pública
+        do Edital não estiver habilitada — pela chave <code>ASSISTENTE_NA_PAGINA_DO_EDITAL</code>, que
+        é demonstração local, ou por ato do Administrador institucional (170), e só fora de produção. Em
+        produção a página pública não abre, nem por ato gravado: a recusa nomeia os doze requisitos da
+        abertura. Nenhuma spec abre o assistente ao candidato real.
         Sem Edital publicado e vigente, nenhuma das três responde.
       </p>
     </div>
@@ -5385,7 +5449,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
         <thead><tr><th></th><th>Validação interna (070)</th><th>Piloto (071)</th><th>Protótipo (Fase C)</th></tr></thead>
         <tbody>
           <tr><td><strong>Onde</strong></td><td><code>/gestao/editais/&lt;id&gt;/duvidas/</code>; na página do Edital publicado, <span class="rotulo-ui">Ver as respostas do assistente de dúvidas (validação interna)</span></td><td><code>…/assistente/</code>; na página do Edital publicado, <span class="rotulo-ui">Conversar com o assistente (piloto)</span></td><td><code>…/assistente/prototipo/</code>; <strong>nenhum link</strong> leva a ela, só o endereço</td></tr>
-          <tr><td><strong>Quem abre</strong></td><td>Quem alcança a página do Edital; não há permissão própria</td><td>Quem tem o papel <em>Participante do piloto do assistente</em> (<code>assistente:piloto</code>) e o Edital no escopo, com a chave <code>ASSISTENTE_PILOTO</code> ligada; faltando qualquer dos três, <code>404</code></td><td>O mesmo acesso do piloto</td></tr>
+          <tr><td><strong>Quem abre</strong></td><td>Quem alcança a página do Edital; não há permissão própria</td><td>Quem tem o papel <em>Participante do piloto do assistente</em> (<code>assistente:piloto</code>) e o Edital no escopo, com o piloto habilitado — por ato do Administrador institucional (170) ou, só fora de produção, pelo atalho de demonstração <code>ASSISTENTE_PILOTO</code>; faltando qualquer dos três, <code>404</code></td><td>O mesmo acesso do piloto</td></tr>
           <tr><td><strong>O que faz</strong></td><td>Doze perguntas fixas (<em>“Até quando posso me inscrever?”</em>, <em>“Quantas vagas há neste Perfil?”</em>, <em>“Posso recorrer? Em que prazo?”</em>…), respondidas pelo sistema a partir da versão vigente no <span class="rotulo-ui">Instante de referência</span>, sem modelo; e os <span class="rotulo-ui">Pontos para revisão antes da abertura pública</span></td><td>Pergunta livre, respondida por um modelo de linguagem; cada resposta é conferida antes de aparecer</td><td>A página pública real da seleção com um painel <em>“Assistente do edital”</em> por cima: três perguntas sugeridas, respondidas pela 070 sem modelo, e a pergunta livre pelo mesmo caminho do piloto; tem um modo de estados simulados, que não chama o modelo</td></tr>
           <tr><td><strong>O que grava</strong></td><td>Nada</td><td>Cada troca, com a pergunta mascarada</td><td>Cada troca, numa conversa própria; o modo simulado não grava</td></tr>
           <tr><td><strong>O que a tela diz de si</strong></td><td><em>“Validação interna: … Nada dela é exibido a candidatos.”</em></td><td><em>“Piloto interno do assistente do Edital. As respostas podem conter erros: confira cada uma nas fontes. Nada desta tela é visto por candidatos.”</em></td><td><em>“Protótipo interno, não visto por candidatos”</em></td></tr>
@@ -5393,10 +5457,10 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       </table>
     </div>
 
-    <h3>Na página da seleção, só no desenvolvimento local (074)</h3>
+    <h3>Na página da seleção, só fora de produção (074 e 170)</h3>
     <p>
-      Com <code>ASSISTENTE_NA_PAGINA_DO_EDITAL=true</code> no ambiente — nenhum módulo de configuração a
-      liga —, a página pública de cada seleção (<code>/selecoes/&lt;edital&gt;/</code>) traz o botão
+      Com <code>ASSISTENTE_NA_PAGINA_DO_EDITAL=true</code> no ambiente — atalho de demonstração — ou com a
+      página pública do Edital habilitada por ato (<a href="#habilitar-assistente">abaixo</a>), a página pública de cada seleção (<code>/selecoes/&lt;edital&gt;/</code>) traz o botão
       <span class="rotulo-ui">Dúvidas sobre este Edital</span>. Ele abre o mesmo painel do protótipo, com o
       selo <em>“Ambiente local de desenvolvimento”</em>. Não pede a identidade da gestão nem a do portal, e
       não depende da chave do piloto: as sugestões respondem pela 070, sem modelo; a pergunta livre segue
@@ -5408,11 +5472,44 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       protótipo.
     </p>
     <p>
-      <strong>O que o candidato vê: nada disso.</strong> A chave vem desligada; desligada, a página não traz
-      o painel e as três rotas respondem <code>404</code>; e a produção recusa subir com ela ligada. Com o
+      <strong>O que o candidato vê: nada disso, em produção.</strong> A chave vem desligada, e a produção
+      recusa subir com ela ligada; sem chave e sem ato, a página não traz o painel e as três rotas
+      respondem <code>404</code>. Com o ato, num ambiente que não é de produção, o painel aparece, e
+      quem desabilita no meio da conversa deixa o visitante com <em>“O assistente desta seleção foi
+      encerrado. As informações oficiais estão nesta página e no Edital.”</em>. Com o
       OpenRouter, a pergunta livre sai da máquina e custa — o limite da chave continua sendo a única
       barreira de gasto. A entrada <code>assistente-074</code> do <code>.claude/launch.json</code> sobe o
       servidor local com a chave ligada.
+    </p>
+
+    <h3 id="habilitar-assistente">Quem liga o assistente: o ato do Administrador institucional (170)</h3>
+    <p>
+      Desde a 170, ligar o assistente é <strong>ato na interface</strong>, e não variável de ambiente. O
+      ambiente guarda só a configuração técnica — serviço, endereço, modelo, tokenizer e credencial —; quem
+      decide é o Administrador institucional, na página <span class="rotulo-ui">Assistente do Edital</span>
+      (<code>/gestao/administracao-do-assistente</code>, no grupo <em>Unidade</em>, ao lado de
+      <em>Unidades</em>), com <strong>motivo obrigatório</strong>, e só pela entrada institucional: a sessão
+      de demonstração é recusada. A permissão é <code>assistente:habilitar</code>.
+    </p>
+    <table>
+      <thead><tr><th>Seção da página</th><th>O que mostra ou faz</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rotulo-ui">Configuração do serviço</span></td><td>Diz <em>“Configuração completa”</em> ou o que falta, em palavras (serviço, endereço, modelo, tokenizer, credencial presente ou ausente). <strong>Não chama o modelo</strong>: completa não é disponível, e a conexão continua sendo verificada pelo comando da 073.</td></tr>
+        <tr><td><span class="rotulo-ui">Piloto da gestão</span></td><td><span class="rotulo-ui">Habilitar o piloto</span> / <span class="rotulo-ui">Desabilitar o piloto</span>, uma vez por implantação. Habilitar exige a configuração completa.</td></tr>
+        <tr><td><span class="rotulo-ui">Página pública dos Editais</span></td><td>A tabela dos Editais com página pública, cada um com <em>Habilitado desde…</em> ou <em>Não habilitado</em> e a ação <span class="rotulo-ui">Habilitar</span> / <span class="rotulo-ui">Desabilitar</span>. A linha <em>Assistente na página pública: aberto desde…</em> aparece também na página do Edital e no Centro de Controle.</td></tr>
+        <tr><td><span class="rotulo-ui">Requisitos da abertura em produção</span></td><td>Os doze requisitos, <code>RA-1</code> a <code>RA-12</code>: cinco institucionais, dois por Edital e cinco de software, estes por entrega futura. São texto da recusa e da documentação, e não dado cadastrado.</td></tr>
+        <tr><td><span class="rotulo-ui">Histórico</span></td><td>Cada <em>Habilitação</em> e <em>Desabilitação</em>, com quando, onde, quem e o motivo. <em>“Sem ato, o assistente está desabilitado.”</em></td></tr>
+      </tbody>
+    </table>
+    <p>
+      O ato é <strong>append-only</strong> (<code>duvidas_habilitacao_do_assistente</code>, migration
+      <code>duvidas/0003</code>): desabilitar é um ato novo, e nada se exclui. O estado de cada frente é o do
+      último ato, lido do banco a cada requisição — desabilitado no meio da conversa, a próxima pergunta já
+      recebe a negativa, e habilitar de novo começa conversa nova. Os atos aparecem na trilha da unidade,
+      com o assunto <em>Assistente do Edital</em>. <strong>Em produção</strong>, o piloto pode ser habilitado
+      por ato, com a configuração completa; a <strong>página pública não abre, nem por ato</strong>, e o ato
+      que a abriria é recusado, com os doze requisitos nomeados.
+      <code>ASSISTENTE_PILOTO</code> virou atalho de demonstração e a produção recusa subir com ele.
     </p>
 
     <h3>De onde vem a resposta</h3>
@@ -5448,7 +5545,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <ul>
       <li>O grupo opcional de dependências <code>assistente</code> (<code>uv sync --extra dev --extra assistente</code>), que traz a biblioteca <code>tokenizers</code>. A imagem de contêiner instala só o grupo de desenvolvimento, e a release do guia de implantação só as dependências base: o passo 1 do §10.4 manda acrescentar <code>--extra assistente</code>, e o script de construção não foi alterado (decisão pendente, em <code>doc/achado-release-sem-o-grupo-do-assistente.md</code>).</li>
       <li>O <code>tokenizer.json</code> do modelo, num caminho fora do repositório apontado por <code>ASSISTENTE_TOKENIZER</code>. Faltando ele ou a biblioteca, toda pergunta termina em <em>“O piloto não está pronto: falta o tokenizer do modelo.”</em>, sem chamada ao serviço.</li>
-      <li>O serviço de inferência — um Ollama local ou, só em desenvolvimento, o OpenRouter, com a credencial em <code>ASSISTENTE_CREDENCIAL</code>, lida do ambiente e nunca do <code>.env</code>. A configuração de produção recusa subir com o piloto ligado e serviço que não seja o Ollama. No OpenRouter, a única barreira de gasto é o limite da própria chave.</li>
+      <li>O serviço de inferência — um Ollama local ou, só em desenvolvimento, o OpenRouter, com a credencial em <code>ASSISTENTE_CREDENCIAL</code>, lida do ambiente e nunca do <code>.env</code>. A configuração de produção recusa subir com qualquer serviço declarado que não seja o Ollama, com tempo-limite acima de 110 segundos e com a chave <code>ASSISTENTE_PILOTO</code> ligada. No OpenRouter, a única barreira de gasto é o limite da própria chave.</li>
     </ul>
     <p>
       Dois comandos sustentam a avaliação: <code>manage.py verificar_servico_de_inferencia</code> confere
@@ -5464,7 +5561,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <li><strong>O piloto no serviço local</strong> (T058 a T060 da 071): a verificação, a rodada completa com revisão humana e as medições de GPU esperam acesso à máquina; até lá, o que houve foi um ensaio no OpenRouter, em 14/10.</li>
       <li><strong>A sessão acompanhada com o setor</strong> (T065 da 071).</li>
       <li><strong>A pergunta livre pela página da seleção, com o modelo real</strong> (T013 da 074): é do responsável pelo produto, porque sai para o OpenRouter e custa. As sugestões foram percorridas no navegador.</li>
-      <li><strong>Os requisitos para abrir ao público</strong>, que a 074 lista e não cumpre: autenticação, limites por visitante e proteção contra uso automatizado, LGPD e retenção do texto livre, texto definitivo das falhas, revisão das fontes de cada Edital e critério de aceite da qualidade. O teto de conversas por sessão escapa a quem descarta o cookie.</li>
+      <li><strong>Os doze requisitos para abrir ao público</strong> (<code>RA-1</code> a <code>RA-12</code>, da 170), que a recusa de produção nomeia e nenhum cadastro cumpre ainda: o relatório final do piloto com os critérios de aceite, a revisão da fonte de consulta com o setor de seleção, a manifestação do encarregado de dados sobre o texto livre e a retenção, o texto da natureza não oficial das respostas, a medição da carga pública, a cláusula de exclusividade do canal de dúvidas no Edital, a revisão das fontes de cada Edital, o limite por visitante e a proteção contra uso automatizado, o texto definitivo das falhas e do painel, a correção do documento ligado, a emenda do canal de dúvidas e a retenção própria dos registros da página pública. O teto de conversas por sessão escapa a quem descarta o cookie.</li>
       <li>A validação interna já acusa, como ponto para revisão, quando o documento que a página pública oferece como Edital completo não contém uma Retificação publicada depois dele; a correção ficou para depois.</li>
     </ul>
 
@@ -5475,7 +5572,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dt>A pergunta, os limites e a conferência</dt><dd><code>duvidas/application/perguntar.py</code> · <code>duvidas/domain/conferencia.py</code> · <code>duvidas/domain/mascara.py</code></dd>
       <dt>Registros e exclusão</dt><dd><code>duvidas/models.py</code> (<code>TrocaDoPiloto</code>) · <code>duvidas/management/commands/</code></dd>
       <dt>Configuração</dt><dd><code>config/settings/base.py</code> (<code>ASSISTENTE_*</code>) · <code>config/settings/production.py</code> · <code>backend/pyproject.toml</code> (grupo <code>assistente</code>)</dd>
-      <dt>Especificações</dt><dd><code>specs/070-fonte-de-consulta-do-edital/</code> · <code>specs/071-piloto-assistente-do-edital/</code> (o quickstart tem o roteiro inteiro) · <code>specs/074-assistente-na-pagina-do-edital-local/</code></dd>
+      <dt>A habilitação (170)</dt><dd><code>interface/habilitacao_do_assistente.py</code> · <code>duvidas/application/habilitacao.py</code> · <code>duvidas/domain/habilitacao.py</code> (<code>REQUISITOS_DA_ABERTURA</code>) · <code>duvidas/models.py</code> (<code>HabilitacaoDoAssistente</code>)</dd>
+      <dt>Especificações</dt><dd><code>specs/070-fonte-de-consulta-do-edital/</code> · <code>specs/071-piloto-assistente-do-edital/</code> (o quickstart tem o roteiro inteiro) · <code>specs/074-assistente-na-pagina-do-edital-local/</code> · <code>specs/170-habilitacao-do-assistente/</code></dd>
     </dl></div></details>
   </section>
 
@@ -7104,8 +7202,8 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h3>Perguntas frequentes sobre a mesa</h3>
     <details class="pergunta"><summary>Todos os membros veem todas as inscrições?</summary><div><p>Não. A autorização é composta: alocação na Etapa, atribuição ativa naquela inscrição e inscrição participante da Etapa. Faltando qualquer uma, a rota individual devolve <em>não encontrado</em> (404).</p></div></details>
     <details class="pergunta"><summary>A presidente vê a Mesa dos avaliadores?</summary><div><p>Não. Quem gere a comissão abre a página da Etapa com o aviso <em>“Você chegou aqui pela gestão da comissão, e não por atribuição: você não está alocado nesta Etapa.”</em>, sem Mesa e sem inscrições. Por essa porta, o caminho no topo é o da Alocação — <em>GPS › Processos Seletivos › código › Alocação por Etapa › Etapa</em>. O acompanhamento da gestão é pela tela de distribuição, pelos Resultados e pela trilha.</p></div></details>
-    <details class="pergunta"><summary>Existe mais de um avaliador por inscrição? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa <strong>decisória</strong>, sim: o Edital declara a regra de deliberação, cada membro dá o parecer às cegas, e a consolidação aplica a regra — ver <a href="#deliberacao">A deliberação da comissão</a> (165, sem merge). Na Etapa <strong>pontuada</strong>, a distribuição respeita o número, mas a consolidação recusa a Etapa inteira, e por isso a publicação também recusa quando a Etapa é eliminatória ou usada por marco — ver <a href="#consolidacao-recusas">recusas de Etapa inteira</a>.</p></div></details>
-    <details class="pergunta"><summary>Como divergências entre avaliadores são tratadas? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa decisória, pela regra que o Edital publicou: a divergência é contada, e o desfecho sai da contagem — o motivo diz, por exemplo, <em>“2 de 3 pareceres Indeferido, por maioria”</em> (165, sem merge). Na pontuada não há mecanismo: a divergência de notas se apura à mão.</p></div></details>
+    <details class="pergunta"><summary>Existe mais de um avaliador por inscrição? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa <strong>decisória</strong>, sim: o Edital declara a regra de deliberação, cada membro dá o parecer às cegas, e a consolidação aplica a regra — ver <a href="#deliberacao">A deliberação da comissão</a> (165). Na Etapa <strong>pontuada</strong>, a distribuição respeita o número, mas a consolidação recusa a Etapa inteira, e por isso a publicação também recusa quando a Etapa é eliminatória ou usada por marco — ver <a href="#consolidacao-recusas">recusas de Etapa inteira</a>.</p></div></details>
+    <details class="pergunta"><summary>Como divergências entre avaliadores são tratadas? <span class="selo selo-parc">Parcial</span></summary><div><p>Na Etapa decisória, pela regra que o Edital publicou: a divergência é contada, e o desfecho sai da contagem — o motivo diz, por exemplo, <em>“2 de 3 pareceres Indeferido, por maioria”</em> (165). Na pontuada não há mecanismo: a divergência de notas se apura à mão.</p></div></details>
     <details class="pergunta"><summary>O que impede atuar fora da própria Etapa?</summary><div><p>A composição é verificada no servidor a cada acesso. A listagem não a chama por linha: resolve o conjunto de Etapas autorizadas uma vez e filtra.</p></div></details>
 
     <h3>Um exemplo completo</h3>
@@ -7279,9 +7377,9 @@ Se já houver Resultado
         sistema inventando a exigência.</p>
     </div>
 
-    <h3 id="deliberacao">A deliberação da comissão <span class="selo selo-prev">Previsto</span></h3>
-    <p class="miudo">Spec 165, implementada no PR #545, empilhado sobre a 164 (#543) e a 163 (#542):
-      nenhuma das três tem merge na <code>main</code>. É a terceira entrega da camada A do estudo da
+    <h3 id="deliberacao">A deliberação da comissão <span class="selo selo-impl">Implementado</span></h3>
+    <p class="miudo">Spec 165, mergeada em 14/11 (#545), depois da 163 (#542) e da 164 (#543):
+      as três estão na <code>main</code>. É a terceira entrega da camada A do estudo da
       verificação da autodeclaração (decisão P-3 de 13/11).</p>
     <p>
       A Etapa <strong>decisória</strong> com mais de uma avaliação por inscrição declara a
@@ -7337,6 +7435,78 @@ Se já houver Resultado
         diz: <em>“Mais de uma avaliação pede uma regra que diga como combiná-las … e o sistema ainda
         não publica essa regra.”</em></p>
     </div>
+
+    <h3 id="verificacao-por-video">A verificação da autodeclaração por vídeo <span class="selo selo-parc">Parcial</span></h3>
+    <p class="miudo">Spec 166, mergeada em 14/11 (#547): <strong>só em desenvolvimento</strong>. A produção recusa
+      subir com <code>VERIFICACAO_POR_VIDEO</code> ligada, porque o vídeo assíncrono depende de ato do
+      Conselho Superior, de protocolo da CPVA e de Edital que o cite (P-0). É a camada B do estudo da
+      verificação, sobre a Etapa colegiada das 163 a 165.</p>
+    <p>
+      A Etapa decisória com alcance e período declarados pode <strong>admitir o vídeo</strong>
+      (<span class="rotulo-ui">Admite vídeo gravado pelo candidato</span>, que na composição fica desabilitado
+      sem a chave). O candidato alcançado escolhe entre gravar um vídeo curto e a entrevista ao vivo, e
+      <strong>as duas formas valem igual</strong>. O princípio é um só: <strong>o vídeo só confirma</strong>.
+      Ninguém perde reserva sem ter sido visto ao vivo.
+    </p>
+    <div class="rolagem"><table>
+      <thead><tr><th>Quem</th><th>O que vê e faz</th></tr></thead>
+      <tbody>
+        <tr><td>Quem elabora</td><td>A linha <em>Vídeo</em> na Etapa, na Revisão e no documento oficial, com a frase fixa que diz que o vídeo só confirma e que só a entrevista ao vivo pode concluir pela não confirmação. A Retificação pode acrescentar a admissão (só com a chave); <strong>retirar a admissão depois do primeiro vídeo recebido é recusado</strong> (<code>video_ja_recebido</code>). A publicação recusa o vídeo fora da Etapa colegiada, sem alcance ou sem período.</td></tr>
+        <tr><td>Candidato</td><td>Na página <em>Verificação da autodeclaração</em>: <span class="rotulo-ui">Gravar um vídeo curto</span> ou <span class="rotulo-ui">Prefiro entrevista ao vivo</span>; a declaração <span class="rotulo-ui">Tenho 18 anos ou mais</span> (quem tem menos faz a entrevista ao vivo); o teste da câmera; a gravação em quatro passos — documento, perfil esquerdo, perfil direito, de frente — com teto de 3 minutos; a revisão <span class="rotulo-ui">Assista antes de enviar</span>; e o envio em partes de até 8 MiB, retomável, com <strong>comprovante e resumo SHA-256</strong>. Pode gravar outro vídeo enquanto nenhum membro da comissão o abriu, e assiste ao próprio vídeo (<span class="rotulo-ui">Assistir ao vídeo</span>, sem baixar). Sem script, a verificação é por entrevista ao vivo.</td></tr>
+        <tr><td>Membro da comissão</td><td>Na Mesa, a seção <em>Vídeo da verificação</em>: só quem está alocado à Etapa e tem a Atribuição da inscrição abre — qualquer outro recebe 404, até a presidência sem Atribuição. <span class="rotulo-ui">Abrir o vídeo</span> é <strong>um evento de trilha</strong> por abertura, e não por trecho. Os pareceres em modo vídeo são <span class="rotulo-ui">Confirmo</span> e <span class="rotulo-ui">Não dá para confirmar pelo vídeo</span>; concluir sem abrir o vídeo é recusado: <em>“Abra o vídeo antes de dar o parecer.”</em></td></tr>
+        <tr><td>Presidência</td><td>Na conferência da consolidação, <span class="rotulo-ui">Encaminhar à entrevista ao vivo as inscrições que o vídeo não confirmou</span>. O encaminhamento é irreversível, reabre as Avaliações pela reabertura da 012 e deixa o candidato ler <em>“A comissão quer conversar com você ao vivo. Isso não é reprovação.”</em></td></tr>
+      </tbody>
+    </table></div>
+    <p>
+      <strong>Nenhum caminho grava desfavorável pelo vídeo</strong>: a consolidação, a correção fixada do
+      recurso e a Ocorrência de ausência recusam a inscrição em modo vídeo (<code>desfavoravel_pelo_video</code>).
+      O sistema <strong>não analisa o vídeo</strong>: só confere o contêiner (MP4 ou WebM), o tamanho, a
+      duração e o resumo, e um teste guardião barra dependência de visão computacional. A autoridade recursal
+      não abre o vídeo nesta entrega.
+    </p>
+    <ul>
+      <li><strong>O que fica no banco.</strong> Quatro tabelas append-only — o vídeo recebido, a abertura, o encaminhamento e a eliminação —, mais o envio em andamento, que é mutável e transitório. Nenhuma guarda o conteúdo: o arquivo vai para o armazenamento privado dos arquivos de candidatos, e a trilha nunca o leva. O Edital publicado ganha o degrau 25 do conteúdo (<code>videoOption</code>); o publicado antes lê-se <em>não admite</em>.</li>
+      <li><strong>A chave fecha o portal, e não a Mesa.</strong> Desligada depois de vídeos recebidos, a comissão continua assistindo e deliberando.</li>
+      <li><strong>A guarda.</strong> O prazo de retenção não tem valor padrão (P-10): o comando <code>eliminar_videos_da_verificacao</code> recusa sem prazo, com o Edital não encerrado e dentro do prazo; elimina só o arquivo e preserva o resumo, a duração, as aberturas e a trilha.</li>
+      <li><strong>A única página com exceção de CSP.</strong> A de gravação libera a câmera e o microfone (<code>Permissions-Policy</code>) e a mídia por <code>blob:</code>; o resto do sistema segue sem.</li>
+    </ul>
+    <div class="aviso aviso-nota">
+      <span class="titulo">A habilitação pela interface (169) é só especificação</span>
+      <p>A 169 propõe que a variável passe a dizer só que o servidor pode oferecer o vídeo e que o Administrador institucional registre, na administração institucional, a base normativa — ato do Conselho Superior, protocolo da CPVA, roteiro, regra do menor, prazo de guarda e unidades alcançadas —, que o Edital citaria. <strong>Nada disso existe no código</strong>: o Edital publicado hoje não cita ato nem protocolo, e as perguntas Q-1 a Q-4 seguem abertas.</p>
+    </div>
+    <p class="miudo">Pendentes: P-0, P-7 (o menor), P-8 (o roteiro), P-10 (o prazo e o marco da guarda) e a matriz de navegadores com câmera real (SC-2377, humano). Não foi verificado no código se <em>Não dá para confirmar pelo vídeo</em> exige motivo, como a spec diz, nem se há jornada em navegador do vídeo. A porta do piloto está em <code>doc/verificacao-por-video-porta-do-piloto.md</code>.</p>
+
+    <h3 id="orientacao-do-passo">A orientação de quem a Etapa restrita alcança <span class="selo selo-impl">Implementado</span></h3>
+    <p class="miudo">Spec 171, mergeada em 15/11 (#551). Vale para <strong>toda Etapa restrita</strong>, pelo nome publicado,
+      e não só para a de autodeclaração: não cria natureza nova nem tabela.</p>
+    <p>
+      A inscrição enviada que uma Etapa restrita alcança, e cujo Resultado ainda não é visível, ganha no
+      acompanhamento do candidato um degrau derivado, nunca gravado:
+    </p>
+    <table>
+      <thead><tr><th>Degrau</th><th>Quando</th><th>O que diz</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rotulo-ui">Falta um passo seu</span></td><td>Antes ou durante o período da Etapa</td><td>Por que (<em>“Você se inscreveu em {Modalidade}, e quem se inscreve nela passa também por esta etapa”</em>), quando, e que <em>“A comissão vai informar o dia, a hora e como participar”</em>; e o que acontece se faltar, pelo efeito da ausência da 164 — <em>“deixa de concorrer pela reserva de vagas e continua concorrendo pela ampla concorrência”</em> ou <em>“é eliminado desta seleção”</em>. Link <span class="rotulo-ui">Ver o Edital vigente</span>.</td></tr>
+        <tr><td><span class="rotulo-ui">Aguardando a comissão</span></td><td>Período encerrado, sem parecer concluído nem Resultado</td><td><em>“O período desta etapa terminou em {d}. Aguarde a comissão”</em> — e não diz que a análise começou.</td></tr>
+        <tr><td><span class="rotulo-ui">Aguardando o resultado</span></td><td>Há parecer concluído ou Resultado ainda invisível ao titular</td><td><em>“O resultado desta etapa aparece neste acompanhamento quando for publicado.”</em> Não diz o sentido.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      O degrau fica <strong>abaixo</strong> da convocação, do desfecho e da eliminação, e acima de classificada,
+      não classificada e inscrição enviada; quem foi convocado lê o passo como linha do porquê. Com o vídeo
+      ligado e admitido, o degrau <strong>absorve o cartão de acesso ao vídeo</strong> da 166 (<em>Ver como
+      funciona</em>, <em>Ver o comprovante</em>); com a chave desligada, não há a palavra <em>vídeo</em> em
+      lugar nenhum do degrau. Nenhum texto fixo do candidato usa <em>heteroidentificação</em>, <em>fenótipo</em>,
+      <em>aferição</em> ou <em>indeferido</em>, e a composição acrescenta uma <strong>advertência</strong>, que
+      não impede, quando o nome da Etapa restrita usa um desses termos.
+    </p>
+    <ul>
+      <li><strong>O aviso por e-mail.</strong> Uma quinta origem nos avisos da 066, <em>Passo</em>: a presidência, ou quem já confirma avisos, o manda pela pendência <span class="rotulo-ui">Avisar</span> do Centro, <strong>com prévia</strong>. O e-mail diz que há <em>“um passo a mais para você”</em>, com a Etapa e o período, e <strong>não cita Modalidade, reserva nem lista</strong>: isso a pessoa lê no acompanhamento. O quarto modelo inicial, <em>Aviso do passo de uma etapa</em>, nasce uma vez por unidade (migration <code>avisos/0004</code>). A chave <code>AVISOS_AOS_CANDIDATOS</code> vale para ele como para os outros: desligada em produção até a validação de LGPD.</li>
+      <li><strong>O Centro de Controle.</strong> Pendências da presidência: <span class="rotulo-ui">Avisar N inscrições sobre {Etapa}</span>, <span class="rotulo-ui">Registrar a ausência ou os pareceres de N inscrições</span> (período vencido sem desfecho) e <span class="rotulo-ui">Encaminhar N inscrições à entrevista ao vivo</span> (esta aparece mesmo com a chave desligada). O ato de avaliar lista os pareceres que faltam <strong>por membro</strong> — o nome e a contagem, nunca o sentido.</li>
+      <li><strong>Minhas atividades.</strong> A linha de avaliar de <strong>toda</strong> Etapa com período traz o prazo (<em>até dd/mm</em>).</li>
+      <li><strong>O treinamento.</strong> O cenário <strong>C18</strong>, <em>Verificação da autodeclaração</em>: Etapa restrita à Modalidade de pretos e pardos, dois pareceres, unanimidade, período em curso e cinco candidatos em pontos diferentes; ninguém avisado, porque o aviso é o exercício da presidência.</li>
+    </ul>
+    <p class="miudo">Em aberto: o degrau para Etapa não restrita, o aviso do encaminhamento e do resultado do vídeo, o relato de falha técnica, a Etapa restrita posterior à última Etapa do marco (que ficaria em <em>Aguardando o resultado</em> para sempre) e a validação humana do SC-2416 (a equipe entender em menos de dois minutos).</p>
 
     <h3>Recusa de linha × erro do pedido</h3>
     <p>
@@ -7406,6 +7576,91 @@ Se já houver Resultado
   </section>
 
   <!-- ============================================================ OCORRENCIA -->
+  <section id="agenda-da-etapa">
+    <h2>A agenda da Etapa: quando cada pessoa é atendida <span class="selo selo-parc">Parcial</span></h2>
+    <p class="lead">
+      Para a Etapa em que cada pessoa precisa comparecer num dia e horário — a entrevista, a verificação ao
+      vivo —, a comissão monta uma agenda, a publica como ato imutável, e cada pessoa lê o seu horário e é
+      avisada (167). O selo é <em>Parcial</em> porque os avisos por e-mail continuam desligados em produção
+      até a validação de LGPD, e porque duas validações humanas esperam o usuário.
+    </p>
+    <div class="aviso aviso-nota">
+      <span class="titulo">Não é a Agenda dos Editais</span>
+      <p>A <a href="#agenda">Agenda dos Editais</a> (101) mostra o <em>cronograma</em> de todos os Editais da unidade, só leitura. A agenda da Etapa mostra <em>pessoas e horários</em> de uma Etapa. As duas não se ligam no código. A <em>banca</em> daqui é um ponto de atendimento — atende uma pessoa por vez —, e não o grupo de avaliadores da comissão.</p>
+    </div>
+
+    <h3>Quem conduz, e onde</h3>
+    <p>
+      Quem tem a permissão de gerir a comissão (<code>comissao:gerir</code>, o Gestor) ou preside o Processo.
+      Nenhum papel novo: a porta é a da Distribuição, e a agenda mora na seção <span class="rotulo-ui">Agenda</span>
+      da página da Etapa, sem item na barra. Sem agenda, a página diz <em>“Esta Etapa ainda não tem agenda”</em>,
+      com <span class="rotulo-ui">Configurar a agenda</span>; em montagem, <span class="rotulo-ui">Agenda em montagem</span>,
+      <em>“Nada é público até a agenda ser conferida e publicada”</em>; depois, <span class="rotulo-ui">Agenda publicada</span>.
+    </p>
+
+    <ol class="linha-tempo">
+      <li><span class="passo">1</span><span class="titulo"><span class="rotulo-ui">Configurar a agenda</span></span>
+        <p>A forma (<em>Videoconferência</em> ou <em>Presencial</em>), a duração e o intervalo, os dias com as janelas, as bancas — com o endereço da sala virtual ou o local — e as orientações ao candidato. <strong>A capacidade aparece ao digitar</strong>, sem gravar: <em>“Faltam 11 horários para as 43 pessoas”</em>, com atalhos que mostram o ganho exato — <span class="rotulo-ui">Acrescentar dd/mm</span>, <span class="rotulo-ui">Acrescentar uma banca</span>, <span class="rotulo-ui">Tirar o intervalo</span>. Capacidade insuficiente <strong>não impede salvar</strong>, nem salvar antes de a lista de participantes fechar: a agenda acompanha a lista. Os dias têm de caber no período da Etapa no cronograma; mudar o período pede Retificação.</p></li>
+      <li><span class="passo">2</span><span class="titulo"><span class="rotulo-ui">Montar a agenda</span></span>
+        <p>Uma grade de horário por banca, por dia, e um painel com quem está <em>sem horário</em>. Nada se arrasta: escolhe-se a pessoa, depois o horário livre, e <span class="rotulo-ui">Agendar</span>. <span class="rotulo-ui">Preencher automaticamente</span> mostra uma <strong>prévia</strong> antes de gravar — pessoas pelo nome, e pelo protocolo no empate, nos horários do mais cedo ao mais tarde — e só aloca quem não tem horário. Cada agendamento guarda se foi à mão ou automático, por quem e quando. Os horários são <strong>derivados</strong> da configuração, nunca gravados, e a agenda <strong>não guarda lista própria de participantes</strong>: quem precisa de horário é quem a participação da Etapa põe nela, relida a cada abertura.</p></li>
+      <li><span class="passo">3</span><span class="titulo"><em>“Confira antes de publicar a agenda”</em></span>
+        <p>Não grava, não envia, não reserva. Mostra a prontidão e os impedimentos — pessoas sem horário, horário de quem deixou de participar, banca sem endereço ou local, nenhuma autoridade signatária vigente —, a prévia exata da página pública e o <strong>exemplo da mensagem</strong> que cada pessoa receberá. Pede <strong>onde a agenda é publicada</strong>, sem presumir: <em>“Na página pública da seleção, no GPS”</em> (com o item do Edital que a admite) ou <em>“Fora do GPS, onde o Edital manda publicar”</em> (com onde e quando); e a <strong>autoridade signatária</strong>, entre as vigentes da unidade, cujo nome, cargo e ato de nomeação ficam gravados.</p></li>
+      <li><span class="passo">4</span><span class="titulo"><span class="rotulo-ui">Publicar a agenda e avisar as pessoas</span></span>
+        <p><em>“Ao confirmar, a agenda é publicada e não se edita mais em bloco.”</em> Uma publicação por agenda; repetir a confirmação devolve o mesmo ato, sem segundo aviso. Se a agenda mudou desde a conferência, a confirmação é recusada. Na mesma transação grava-se o ato, o horário de cada pessoa, o documento em PDF e os avisos.</p></li>
+    </ol>
+
+    <h3>Depois de publicada: um ato por pessoa, com motivo</h3>
+    <p>
+      Publicada, a configuração <strong>só cresce</strong> — dia, janela ou banca; <em>“para mudar uma pessoa, use Remarcar”</em>.
+      Há três atos individuais, cada um com <strong>motivo obrigatório</strong> (que fica na trilha e no ato, e nunca
+      aparece ao candidato ou ao público) e <strong>documento próprio</strong>:
+    </p>
+    <table>
+      <thead><tr><th>Ato</th><th>Quando</th><th>Quem é avisado</th></tr></thead>
+      <tbody>
+        <tr><td><span class="rotulo-ui">Remarcar</span></td><td>A pessoa muda para um horário livre; o anterior deixa de valer</td><td>Só ela</td></tr>
+        <tr><td><span class="rotulo-ui">Agendar</span> (inclusão)</td><td>Quem passou a participar depois da publicação</td><td>Só ela</td></tr>
+        <tr><td><span class="rotulo-ui">Cancelar o agendamento</span></td><td>Quem deixou de participar; só cabe a ela</td><td>Ninguém: <em>“Ninguém recebe e-mail.”</em></td></tr>
+      </tbody>
+    </table>
+
+    <h3>O que o candidato e o público leem</h3>
+    <ul>
+      <li><strong>Na área do candidato</strong>, no acompanhamento da inscrição, o bloco <em>Seu horário: {Etapa}</em>: o dia, a hora, a duração, a banca (só se há mais de uma), o <span class="rotulo-ui">Entrar na sala virtual</span> ou o local, as orientações e <em>“Se você faltar, vale o que o Edital diz sobre a ausência nesta Etapa.”</em> Remarcada: <em>“Seu horário mudou em dd/mm. O horário anterior não vale mais.”</em> Ainda não publicada: <em>“Seu horário na {Etapa} ainda não foi publicado.”</em> <strong>O endereço da sala só aparece aqui.</strong> O bloco não é situação da inscrição.</li>
+      <li><strong>Na página pública da seleção</strong>, a seção <em>Agendas</em>, e a página <code>/selecoes/agendas/&lt;id&gt;/</code>, sem login: a busca <em>Encontre o seu horário</em> por número de inscrição, a lista por dia, a marca <em>remarcado em dd/mm</em>, os PDF de cada ato e o resumo SHA-256 do conteúdo. Identifica por nome e número de inscrição — <strong>só pelo número na Etapa restrita por Modalidade</strong>, porque a lista revelaria quem concorre pela reserva. Nunca traz o endereço da sala, CPF, e-mail, telefone, Modalidade nem motivo.</li>
+      <li><strong>O documento.</strong> Um PDF por ato, gerado uma vez na transação, do conteúdo público congelado, e servido como saiu; nunca recomposto. O da publicação não muda quando há remarcação: cada remarcação, inclusão e cancelamento tem o seu.</li>
+    </ul>
+
+    <h3>Os avisos</h3>
+    <p>
+      A agenda é a quinta origem dos avisos da 066 — <em>AGENDA</em> — e usa o <strong>mesmo controle único</strong>:
+      <code>AVISOS_AOS_CANDIDATOS</code>, desligada em produção até a validação de LGPD. Desligada, a agenda é
+      publicada do mesmo jeito e <strong>nenhum aviso é criado</strong>; ligar depois não cria aviso de ato anterior.
+      É <strong>um aviso por pessoa</strong>, porque o corpo leva a banca e a sala daquela pessoa e só dela
+      (<em>“Seu horário: {Etapa} — {Edital}”</em>; na remarcação, <em>“Seu horário mudou: …”</em>). A confirmação
+      grava o aviso e não envia: quem envia é o despacho dos avisos. A falha de um e-mail <strong>não desfaz nem
+      suspende o ato</strong>: a agenda publicada conta <em>“N avisos enviados. K na fila. J não entregues.”</em> e
+      oferece <span class="rotulo-ui">Reenviar o aviso</span> pessoa a pessoa; a tela de reenvio da 066 recusa o aviso
+      de agenda.
+    </p>
+
+    <h3>Para a comissão</h3>
+    <ul>
+      <li><strong>No Centro de Controle e em Minhas atividades</strong>, a providência <span class="rotulo-ui">Montar a agenda</span> (enquanto há pessoa sem horário ou horário de quem não participa mais) e <span class="rotulo-ui">Publicar a agenda</span> (montagem completa), de <em>quem conduz a seleção</em>. <strong>Só a Etapa com agenda configurada pede agenda</strong>: sem configuração, nada se cobra.</li>
+      <li><strong>No registro da <a href="#ocorrencia">Ocorrência</a></strong>, a coluna <em>Horário publicado</em> — <em>“O horário é o que a agenda publicada da Etapa deu a cada pessoa, para você conferir. Ele não registra nada: a ausência se registra aqui, como ocorrência.”</em></li>
+      <li>A agenda <strong>não registra presença, ausência, nota nem prazo</strong>.</li>
+    </ul>
+
+    <details class="evidencia"><summary>O que fica no banco, e onde isso mora no código</summary><div class="evidencia-corpo"><dl>
+      <dt>Tabelas operacionais</dt><dd><code>agendamento_agendadaetapa</code>, <code>…_janeladaagenda</code>, <code>…_bancadaagenda</code> e <code>…_agendamento</code> (a montagem cria, muda e apaga; a história está na trilha e no append-only). Fora das 69.</dd>
+      <dt>Append-only (3)</dt><dd><code>agendamento_atodaagenda</code> (publicação, remarcação, inclusão, cancelamento), <code>agendamento_horariopublicado</code> (o que cada ato publicou por pessoa; o novo <em>substitui</em> o anterior sem apagá-lo) e <code>agendamento_documentodoatodaagenda</code> (o PDF como saiu). A página, a área do candidato e a Ocorrência leem só o horário <em>vigente</em> do append-only, nunca o rascunho.</dd>
+      <dt>Migrations</dt><dd><code>agendamento/0001</code>, <code>agendamento/0002</code> e <code>avisos/0003_origem_agenda</code>.</dd>
+      <dt>Trilha</dt><dd><code>agenda.configuracao_salva</code>, <code>agenda.agendamento</code>, <code>agenda.preenchimento_aplicado</code>, <code>agenda.publicacao</code>, <code>agenda.remarcacao</code>, <code>agenda.inclusao</code>, <code>agenda.cancelamento</code>, <code>agenda.reenvio</code>. Nunca leva e-mail nem endereço de sala.</dd>
+      <dt>Código</dt><dd><code>agendamento/</code> (domínio, aplicação, <code>infrastructure/documento.py</code>) · <code>interface/agenda_da_etapa.py</code> · <code>interface/andamento.py</code> (<code>situacao_da_agenda</code>) · <code>portal/templates/portal/_horario_da_inscricao.html</code> · <code>specs/167-agendamento-da-etapa/</code></dd>
+    </dl></div></details>
+    <p class="miudo">Pendentes: SC-2390 (uma comissão novata monta 43 pessoas em menos de 15 minutos) e SC-2398 (o candidato acha o horário pelo celular em menos de um minuto), ambos humanos, e a opinião do encarregado de dados sobre o nome na página pública antes da implantação. Fora de escopo: o candidato escolher o horário, a disponibilidade dos avaliadores, o calendário institucional, a videoconferência embutida, o lembrete da véspera e o aviso do cancelamento. Não verificado aqui: o e-mail em SMTP real e a largura de 375 px (há testes, que não rodei).</p>
+  </section>
+
   <section id="ocorrencia">
     <h2>Ocorrência <span class="selo selo-impl">Implementado</span></h2>
     <p class="lead">O desfecho de quem <strong>não foi avaliado</strong> — faltou à entrevista,
@@ -9312,7 +9567,7 @@ FILA        = chamáveis
         <li><span class="selo selo-impl">Implementado</span> O modelo inteiro: congelamento depois das inscrições, ocorrência externa, normalização declarada, manifesto, verificação pública, anulação por sucessão, sorteio visível no portal antes de acontecer.</li>
         <li><span class="selo selo-impl">Implementado</span> A consulta à Loteria Federal (Caixa). As duas <strong>fontes de demonstração</strong> — a de semente fixa e, desde a 102, a que publica só a data — só existem quando a configuração as liga: em produção ela não é oferecida nem aceita, porque um Edital que a declarasse publicaria um sorteio de resultado conhecido de antemão.</li>
         <li><span class="selo selo-parc">Parcial</span> O teste contra o serviço real da Caixa existe, mas fica desligado por padrão e não roda em nenhuma rotina: se a Caixa mudar o formato, o sistema descobre no dia do sorteio.</li>
-        <li><span class="selo selo-na">Não se aplica</span> A transmissão ao vivo, o lembrete do dia e o endereço do vídeo: o sistema não agenda nem avisa o sorteio.</li>
+        <li><span class="selo selo-na">Não se aplica</span> A transmissão ao vivo, o lembrete do dia e o endereço do vídeo: o sorteio não tem agenda nem aviso (a agenda da Etapa, da 167, é de quem participa de uma Etapa de avaliação).</li>
       </ul>
     </div>
 
@@ -10808,7 +11063,7 @@ Em paralelo, se o Edital pede:
       <dt>O gesto e a prévia</dt><dd><code>avisos/application/pendencias.py</code> · <code>avisar_pendencias_view</code> em <code>interface/views.py</code> (rota <code>avisar-pendencias</code>) · a seção em <code>convocacao.html</code></dd>
       <dt>O texto</dt><dd><code>avisos/domain/pendencia.py</code> · <code>avisos/domain/nomes.py</code> (códigos de recusa e operações)</dd>
       <dt>O despacho</dt><dd><code>avisos/application/despacho.py</code> (a releitura antes de enviar e <code>REVISAO_DA_FR_084_PELA_134</code>) · <code>avisos/migrations/0002_origem_pendencia.py</code></dd>
-      <dt>A guarda das situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code> (cinco situações)</dd>
+      <dt>A guarda das situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code> (seis situações)</dd>
       <dt>Especificação</dt><dd><code>specs/134-aviso-de-pendencia-documental/</code> — há duas specs 134, e por isso esta Visão diz “134, aviso” e “134, cenários”</dd>
     </dl></div></details>
 
@@ -11442,6 +11697,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td>Teto</td><td>Quando o Edital declara, a frase do documento; atingido, o convite dá lugar a <em>“Limite atingido: você já enviou N inscrições neste Edital.”</em></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Sorteio público</td><td>Só o andamento do Edital inteiro, e a garantia de que a lista fecha antes dos números (145). Vem antes das vagas. O sorteio de cada vaga está no <strong>cartão dela</strong>. Ver <a href="#sorteio-no-cartao-da-vaga">O sorteio de cada vaga, no cartão dela</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Convocações</td><td>Só com publicação (149): as três mais recentes à vista, <em>“Publicações anteriores (N)”</em> e a orientação <em>“Foi convocado? As providências … estão em Minhas inscrições.”</em> A página de cada ato (<code>/selecoes/convocacoes/&lt;id&gt;/</code>, sem login) traz <em>“Está nesta relação?”</em>, o prazo, o resumo SHA-256 e o PDF, com nome, protocolo, vaga, lista e vencimento — e nada além</td><td><span class="selo selo-impl">Implementado</span></td></tr>
+          <tr><td>Agendas</td><td>Só com agenda publicada de uma Etapa (167): <em>“Agenda: {Etapa}”</em>, com o período e a data da publicação, que levam à página da agenda, com a busca <em>Encontre o seu horário</em> e os PDF de cada ato. Na Etapa restrita por Modalidade, só o número da inscrição. O endereço da sala nunca aparece. <a href="#agenda-da-etapa">Mais</a></td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Cronograma</td><td>Os Eventos com a fase de cada um</td><td><span class="selo selo-impl">Implementado</span></td></tr>
           <tr><td>Edital e documentos</td><td>O documento oficial, anexos e, se houve Retificação, <em>“Este Edital foi retificado…”</em> com o que mudou em linguagem de domínio</td><td><span class="selo selo-impl">Implementado</span></td></tr>
         </tbody>
@@ -11814,11 +12070,11 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
 
     <h3>Os e-mails que o sistema envia</h3>
     <p>
-      O sistema envia mensagem em exatamente cinco situações — o código de acesso, com o aviso de mudança de credencial, é a primeira —, e uma varredura
+      O sistema envia mensagem em exatamente seis situações — o código de acesso, com o aviso de mudança de credencial, é a primeira —, e uma varredura
       na suíte reprova qualquer envio num módulo não declarado — a próxima não entra calada. A quarta
       entrou em 09/10 com a 066, revisando a regra da área do candidato (FR-084 da <code>010</code>): o
       <strong>aviso complementar</strong>, vinculado a ato oficial já publicado e sem efeito sobre prazo,
-      classificação, situação ou direito. A quinta entrou em 08/11 com a <a href="#aviso-de-pendencia">134, aviso</a>, que revisou a mesma regra: o <strong>aviso de pendência documental</strong>, por gesto da comissão, sem o motivo e sem efeito sobre o prazo.
+      classificação, situação ou direito. A quinta entrou em 08/11 com a <a href="#aviso-de-pendencia">134, aviso</a>, que revisou a mesma regra: o <strong>aviso de pendência documental</strong>, por gesto da comissão, sem o motivo e sem efeito sobre o prazo. A sexta entrou em 14/11 com a <a href="#agenda-da-etapa">167, agenda</a>, que revisou a mesma regra, com a revisão datada de 14/11: o <strong>aviso do horário</strong>, um por pessoa, criado pela publicação, pela remarcação ou pela inclusão, e nunca pelo cancelamento.
     </p>
     <div class="rolagem">
       <table>
@@ -11830,6 +12086,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
           <tr><td>Convocação, quando o Edital comunica por mensagem individual</td><td><em>“Convocação — Edital N/AAAA”</em></td><td>O e-mail principal (ou o da Inscrição)</td><td>O Edital, o prazo e o atendimento, e o endereço de <span class="rotulo-ui">Minhas inscrições</span>. Sem CPF, sem posição, sem link que autentica. Ver <a href="#convocacao">Convocação</a></td></tr>
           <tr><td>Aviso complementar, quando alguém da seleção o envia</td><td>O do modelo; os três iniciais usam o neutro <em>“Processo Seletivo Ifes — Nova publicação disponível”</em></td><td>O e-mail principal (ou o da Inscrição)</td><td>O texto do modelo, com variáveis controladas, e um rodapé fixo que aponta a publicação oficial e diz que o aviso não a substitui. Sem posição, sem resultado individual, sem a situação de ninguém: orienta a consulta na área do candidato. Ver <a href="#resultados">Resultados</a></td></tr>
           <tr><td>Aviso de pendência documental, quando a comissão o aciona na condução da convocação</td><td><em>“Ifes · Edital N/AAAA: há documento da sua convocação para revisar”</em></td><td>O e-mail principal (ou o da Inscrição) de quem tem item pendente</td><td>O nome publicado de cada documento pendente — o de modalidade, como <em>“um documento da sua modalidade de concorrência”</em> —, o vencimento e o link da convocação. Sem o motivo da pendência, sem nome, sem CPF; o rodapé diz que não é a convocação e não altera o prazo. Ver <a href="#aviso-de-pendencia">o aviso de pendência</a></td></tr>
+          <tr><td>Aviso do horário, quando a comissão publica, remarca ou inclui na agenda da Etapa</td><td><em>“Seu horário: {Etapa} — {Edital}”</em> / <em>“Seu horário mudou: {Etapa} — {Edital}”</em></td><td>O e-mail principal (ou o da Inscrição) de cada pessoa afetada, um aviso para cada uma</td><td>O dia, o horário e a duração, a banca, a sala virtual ou o local e as orientações — da própria pessoa. Sem CPF e sem motivo; o rodapé diz que o que vale é a agenda publicada. O cancelamento não avisa. Ver <a href="#agenda-da-etapa">a agenda da Etapa</a></td></tr>
         </tbody>
       </table>
     </div>
@@ -11837,8 +12094,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <p>Desde a 134 (aviso), a comissão pode avisar quem tem documento pendente na convocação. Desde a 066, a seleção pode avisar por e-mail quem participou de um resultado publicado — inclusive
       de uma publicação que retifica outra — e quem foi convocado numa chamada por publicação. O aviso
       <strong>nunca é automático</strong>: publicar ou comunicar não o dispara, só o gesto de uma pessoa.
-      Continuam sem e-mail a decisão de recurso, o requerimento pendente, a Retificação do <em>Edital</em>
-      e o lembrete de prazo; o candidato volta ao portal para saber. Acrescentar um deles exige rever a
+      Continuam sem e-mail a decisão de recurso, o requerimento pendente, a Retificação do <em>Edital</em>,
+      o lembrete de prazo e o cancelamento de um horário; o candidato volta ao portal para saber. Acrescentar um deles exige rever a
       regra de novo, como a 066 fez — não acrescentar um remetente. E a chave
       <code>AVISOS_AOS_CANDIDATOS</code> vem desligada em produção até a validação de LGPD.
       <span class="selo selo-parc">Parcial</span></p>
@@ -11850,7 +12107,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <dt>Convocação</dt><dd><a href="https://github.com/vitofranzosi/processo_seletivo/blob/main/backend/processo_seletivo/convocacao/application/comunicar.py">convocacao/application/comunicar.py</a></dd>
       <dt>Aviso de pendência documental</dt><dd><code>avisos/application/pendencias.py</code> · <code>avisos/domain/pendencia.py</code> · <code>avisos/migrations/0002_origem_pendencia.py</code></dd>
       <dt>Aviso complementar</dt><dd><code>avisos/application/despacho.py</code> · <code>avisos/domain/modelos_iniciais.py</code> · <code>interface/avisos.py</code></dd>
-      <dt>A varredura das cinco situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code></dd>
+      <dt>A varredura das seis situações</dt><dd><code>tests/test_situacoes_de_mensagem.py</code></dd>
       <dt>O que a gestão lê de uma inscrição</dt><dd><code>inscricoes/application/consulta.py</code> · <code>interface/templates/interface/inscricao_detalhe.html</code></dd>
     </dl></div></details>
   </section>
@@ -12151,6 +12408,8 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
         <tr><td><span class="rotulo-ui">Acessos da unidade</span> (107)</td><td>Unidade</td><td>Administrador de acessos da unidade (<code>acesso:consultar</code>)</td></tr>
         <tr><td><span class="rotulo-ui">Administração de acessos</span> (107)</td><td>Unidade</td><td>Administrador institucional, atuando em <em>Administração institucional</em></td></tr>
         <tr><td><span class="rotulo-ui">Unidades</span> (110)</td><td>Unidade</td><td>Administrador institucional (<code>unidade:administrar</code>), idem</td></tr>
+        <tr><td><span class="rotulo-ui">Assistente do Edital</span> (170)</td><td>Unidade</td><td>Administrador institucional (<code>assistente:habilitar</code>), idem</td></tr>
+        <tr><td><span class="rotulo-ui">Novidades</span> (168), com o selo das não vistas</td><td>Ajuda</td><td>Toda identidade</td></tr>
         <tr><td><span class="rotulo-ui">Documentação do Sistema</span> (105)</td><td>Ajuda</td><td>Toda identidade</td></tr>
       </tbody>
     </table></div>
@@ -12158,7 +12417,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       Modelos de aviso; o Publicador, Processos Seletivos, Minhas atividades, Agenda e Modelos de aviso; o
       Auditor, a Trilha da unidade além das três comuns. Os demais papéis, e quem só tem vínculo de
       comissão, veem Processos Seletivos, Minhas atividades e Agenda (a Formalização vê também a seção dela), sem o grupo Unidade. Toda identidade vê
-      a <span class="rotulo-ui">Documentação do Sistema</span>, no grupo Ajuda, por último: ela abre
+      <span class="rotulo-ui">Novidades</span> e a <span class="rotulo-ui">Documentação do Sistema</span>, no grupo Ajuda, esta por último: ela abre
       esta página, fora da moldura da gestão, com um <span class="rotulo-ui">Voltar</span> no pé da barra
       dela. As seções de acesso só existem na entrada institucional: a demonstração não as alcança. <span class="rotulo-ui">Novo Processo Seletivo</span> fica na lista, porque é ação
       e não lugar; comissão, alocação, Edital e recursos se alcançam pelo Processo.</p>
@@ -12219,7 +12478,7 @@ enviado              estado TERMINAL de leitura (conferido antes de “disponív
       <tbody>
         <tr><td><strong>Integrante da unidade</strong></td><td>nenhuma</td><td>—</td><td>O Administrador de acessos. Serve a quem só atua em comissão: dá a entrada na unidade, e nada mais</td></tr>
         <tr><td><strong>Administrador de acessos da unidade</strong></td><td><code>acesso:gerir</code>, <code>acesso:consultar</code></td><td>Os dez papéis de operação e o Integrante, na unidade dele; e designa para a formalização (117)</td><td>O Administrador institucional</td></tr>
-        <tr><td><strong>Administrador institucional</strong></td><td><code>acesso:administrar</code>, <code>unidade:administrar</code> (110)</td><td>O Administrador de acessos de cada unidade; suspende e reativa pessoas; cadastra unidades</td><td>Ninguém pela tela: é designado por ato, e entra pelos comandos <code>conceder_</code>, <code>retirar_</code> e <code>substituir_administracao_institucional</code></td></tr>
+        <tr><td><strong>Administrador institucional</strong></td><td><code>acesso:administrar</code>, <code>unidade:administrar</code> (110), <code>assistente:habilitar</code> (170)</td><td>O Administrador de acessos de cada unidade; suspende e reativa pessoas; cadastra unidades; habilita o assistente do Edital</td><td>Ninguém pela tela: é designado por ato, e entra pelos comandos <code>conceder_</code>, <code>retirar_</code> e <code>substituir_administracao_institucional</code></td></tr>
       </tbody>
     </table></div>
     <ol class="linha-tempo">
@@ -12880,7 +13139,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
         <rect class="cx-z" x="480" y="30" width="390" height="150" rx="10"/>
         <text class="rt-t" x="500" y="56">2 · Privilégio ausente</text>
         <text class="rt-p" x="500" y="78">O papel de runtime tem SELECT e INSERT nas</text>
-        <text class="rt-p" x="500" y="96">59 tabelas append-only (61 com a 165) — e nada mais.</text>
+        <text class="rt-p" x="500" y="96">69 tabelas append-only — e nada mais.</text>
         <text class="rt-p" x="500" y="122">Recusa antes, mesmo que o gatilho seja removido.</text>
         <text class="rt-p" x="500" y="152">Quem migra é outro papel, e nenhuma das duas</text>
         <text class="rt-p" x="500" y="168">camadas depende de a aplicação se comportar.</text>
@@ -12901,7 +13160,7 @@ admitido ──julgar (recurso:julgar)──▶ julgado: INDEFERIDO | CORRECAO_F
       <p><strong>Exemplo:</strong> o valor que a inscrição congelou no envio (<code>ValorDeFato</code>) estava na lista e não tinha gatilho — uma camada só. Desde 26/09 tem gatilho e recusa no modelo.</p>
       <details><summary>Em detalhes</summary>
         <p>
-          Hoje são 91 gatilhos, em 36 migrations, sobre 73 tabelas (recontados em 14/11, sem mudança desde 13/11), com 59 append-only; com a 165, sem merge, 96 gatilhos em 38 migrations sobre 75 tabelas, e 61 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
+          Hoje são 100 gatilhos, em 39 migrations, sobre 78 tabelas (recontados em 15/11 sobre a <code>main</code> em <code>bd64e423</code>; eram 91 em 36 migrations sobre 73 tabelas em 13/11), com 69 append-only. A repartição que segue é a de quando eram 83 gatilhos sobre 67 tabelas, e não foi refeita: as 53 append-only (a posição na
           ordem tem só o gatilho de coerência, e é protegida contra mutação pelo privilégio) e catorze
           que não são append-only mas travam o que ficou final ou não se exclui — o artefato de anexo
           congelado, a alteração normativa e a Retificação finais, o Requerimento de Matrícula enviado,
@@ -13220,7 +13479,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr class="grupo-linha"><td colspan="6">Etapas e avaliação</td></tr>
 <tr data-marca="impl"><td><a href="#etapas">Etapa com pontuação ou com decisão</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#etapas">Caráter eliminatório e classificatório, peso, mínima, máxima</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
-<tr data-marca="parc"><td><a href="#etapas">Mais de uma avaliação por inscrição</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>A decisória delibera pela regra do Edital (165, sem merge); a pontuada distribui e não consolida.</td></tr>
+<tr data-marca="parc"><td><a href="#etapas">Mais de uma avaliação por inscrição</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>A decisória delibera pela regra do Edital (165); com o vídeo, só em desenvolvimento, o vídeo só confirma (166); a pontuada distribui e não consolida.</td></tr>
 <tr data-marca="impl"><td><a href="#barema-da-etapa">Barema da Etapa: critérios publicados e pontuação por critério (146)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Critérios independentes; a confirmação de que os títulos de cada Edital não são exclusivos espera a CPS/Cefor (P-1).</td></tr>
 <tr data-marca="lacun"><td><a href="#etapas">Ficha de avaliação por Perfil</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>A Etapa é do Edital, e o barema também (DP-10).</td></tr>
 <tr data-marca="impl"><td><a href="#comissao">Comissão com presidente e membros</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só duas funções.</td></tr>
@@ -13306,6 +13565,11 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#auditoria">Recusa do formulário expirado na moldura da área</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>403 em português, na gestão e no portal, no lugar da página do Django (093).</td></tr>
 <tr data-marca="impl"><td><a href="#acoes-disponiveis">Ações disponíveis para você, no topo da Lista</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Edital, Retificação, recursos e avaliação; um item por objeto; classificação e divulgação ficam fora, por decisão (104).</td></tr>
 <tr data-marca="impl"><td><a href="#agenda">Agenda dos Editais da unidade, em mês e em lista</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Só leitura, da versão vigente; datas sempre previstas (101).</td></tr>
+<tr data-marca="parc"><td><a href="#agenda-da-etapa">Agenda da Etapa: configurar, montar, publicar e remarcar, com aviso do horário</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Publicação como ato imutável e documento por ato; o aviso por e-mail está desligado em produção até a validação de LGPD (167).</td></tr>
+<tr data-marca="parc"><td><a href="#verificacao-por-video">Verificação da autodeclaração por vídeo</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td class="centro"><span class="m m-parc">◐</span></td><td>Só em desenvolvimento: a produção recusa a chave até o ato do Conselho Superior e o protocolo da CPVA (166); a habilitação pela interface é só especificação (169).</td></tr>
+<tr data-marca="impl"><td><a href="#orientacao-do-passo">“Falta um passo seu”: a orientação de quem a Etapa restrita alcança</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Degrau do acompanhamento, aviso do passo e pendências no Centro (171).</td></tr>
+<tr data-marca="impl"><td><a href="#habilitar-assistente">Habilitar o assistente do Edital pela interface</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Ato do Administrador institucional, com motivo e trilha; a página pública nunca abre em produção (170).</td></tr>
+<tr data-marca="impl"><td><a href="#novidades">Novidades do GPS: o que mudou, com selo das não vistas</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Toda identidade da gestão; as notas viajam com o código e só entram depois do merge (168).</td></tr>
 <tr class="grupo-linha"><td colspan="6">Portal e acompanhamento</td></tr>
 <tr data-marca="impl"><td><a href="#area-do-candidato">Acesso sem senha por código no e-mail</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
 <tr data-marca="impl"><td><a href="#jornada">Rascunho, documentos, envio, protocolo, comprovante</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td></td></tr>
@@ -13323,7 +13587,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 <tr data-marca="impl"><td><a href="#convocacao-fluxo">Avisar os convocados de uma chamada por publicação</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Provado pela suíte, não percorrido na tela (066).</td></tr>
 <tr data-marca="impl"><td><a href="#quem-ve-o-que">Modelos de aviso por unidade, com três iniciais</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Editáveis, inativáveis, nunca excluídos.</td></tr>
 <tr data-marca="impl"><td><a href="#quem-ve-o-que">Interromper e reenviar um aviso</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>O reenvio alcança falhas e expirados, ou, com justificativa, os indeterminados.</td></tr>
-<tr data-marca="lacun"><td><a href="#quem-ve-o-que">Avisos de recurso decidido, Retificação do Edital ou convocação para Etapa</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Heteroidentificação, entrevista e títulos não têm ato no sistema.</td></tr>
+<tr data-marca="lacun"><td><a href="#quem-ve-o-que">Avisos de recurso decidido, Retificação do Edital ou convocação para Etapa</a></td><td><span class="selo selo-lacun">Lacuna</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td class="centro"><span class="m m-nao">—</span></td><td>Recurso decidido e Retificação do Edital não têm aviso. A convocação para uma Etapa com horário tem: o ato é a <a href="#agenda-da-etapa">agenda publicada</a> e o aviso é o do horário (167), desligado em produção até a validação de LGPD; a Etapa sem agenda continua sem ato.</td></tr>
 <tr data-marca="impl"><td><a href="#painel">Painel do Processo (pulso e atenção por papel)</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>8 espécies de sinal.</td></tr>
 <tr data-marca="impl"><td><a href="#relatorio-do-edital">Relatório do Edital, em página e PDF, com emissão na trilha</a></td><td><span class="selo selo-impl">Implementado</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Espécie derivada; fato não público só por Perfil a partir de 5 inscrições; conversa com destinatários pendente (099).</td></tr>
 <tr data-marca="parc"><td><a href="#relatorio-consolidado">Relatório consolidado de um conjunto de Editais</a></td><td><span class="selo selo-parc">Parcial</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td class="centro"><span class="m m-sim">✓</span></td><td>Na main, sem autorização de produção; conversa com destinatários pendente (100).</td></tr>
@@ -13415,7 +13679,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
     <details class="pergunta"><summary>O que o candidato acompanha?</summary><div><p>A própria situação — rótulo, por quê, o que fazer —, a posição em cada lista, a situação em cada Etapa com o motivo, o prazo de recurso, os recursos, o comprovante, a convocação e o requerimento pedido nela. <a href="#quem-ve-o-que">Quem vê o quê</a></p></div></details>
     <details class="pergunta"><summary>Quem pode publicar um resultado?</summary><div><p>Quem tem a permissão de publicar (papel Publicador). Quem emitiu a ordem não ganha, por isso, o poder de publicá-la. <a href="#pg-permissoes">Matriz de permissões</a></p></div></details>
     <details class="pergunta"><summary>Somos duas ou três pessoas. Dá para acumular papéis?</summary><div><p>Sim, com dois cuidados: a mesma pessoa não pode submeter, homologar <em>e</em> publicar o mesmo Edital; e quem julga recursos não pode ter avaliado, consolidado, ordenado ou publicado o que se contesta. Escolha primeiro quem vai julgar. <a href="#pg-permissoes">Mais</a></p></div></details>
-    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); combinação de notas para dupla avaliação pontuada; barema de critérios exclusivos ou por Perfil e submodalidades; a heteroidentificação por vídeo (o rito ao vivo e a deliberação da comissão estão em PRs sem merge, 163 a 165); comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para heteroidentificação, entrevista ou títulos; avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
+    <details class="pergunta"><summary>O que o sistema ainda não faz?</summary><div><p>Autenticação institucional real (a gestão está pronta para ela; falta o adaptador do provedor do Ifes); combinação de notas para dupla avaliação pontuada; barema de critérios exclusivos ou por Perfil e submodalidades; a heteroidentificação por vídeo em produção (o rito ao vivo, a deliberação da comissão e a orientação do candidato estão na <code>main</code>, 163 a 165 e 171; o vídeo existe só em desenvolvimento, e a produção o recusa até o ato do Conselho Superior e o protocolo da CPVA, P-0); comissão por Perfil ou polo; executar o cadastro de reserva; desempate por sorteio; avisar por e-mail a convocação para uma Etapa sem agenda publicada (com agenda, o aviso do horário existe e está desligado em produção); avisos aos candidatos ligados em produção, que esperam a validação de LGPD; integração validada com o Registro Acadêmico; um assistente de dúvidas aberto ao candidato. E o sistema, como um todo, ainda não está em produção. <a href="#pg-evolucoes">Lista completa</a></p></div></details>
     <details class="pergunta"><summary>O sistema já está em produção?</summary><div><p>Não. Sem o seletor de identidade de desenvolvimento, que a configuração de produção recusa, a gestão responde <code>503</code>; a autenticação institucional (o LDAP do Ifes, resposta de 28/08) tem a gestão preparada desde 31/10, mas o adaptador do provedor não existe, e não há política de retenção dos dados pessoais. O caminho de implantação está escrito, e esses são os dois bloqueadores que ele declara. <a href="#estado-atual">Estado atual</a></p></div></details>
     <details class="pergunta"><summary>O candidato já pode tirar dúvidas com um assistente?</summary><div><p>Não. Existem, só na gestão, as respostas prontas sobre o Edital publicado, para validação interna (070), e um piloto com modelo de linguagem para participantes escolhidos (071), com um protótipo de como o painel apareceria na página pública. Na máquina de desenvolvimento, uma chave abre esse painel na própria página da seleção (074), para testar a visão do candidato; a produção recusa subir com ela. <a href="#assistente-do-edital">Mais</a></p></div></details>
     <details class="pergunta"><summary>Por que o PDF do Edital novo tem resumo e perguntas como títulos?</summary><div><p>Desde a 069, o Edital novo sai em linguagem simples: um resumo que remete aos itens, um sumário, as seções reunidas sob as perguntas do candidato e as frases do sistema reescritas sem mudar regra. O documento já publicado não se regenera, e o Edital que nasceu antes, mesmo retificado depois, mantém a forma plana. As frases novas esperam a aprovação do responsável pelo produto antes do primeiro Edital real. <a href="#publicacao">Mais</a></p></div></details>
@@ -13856,7 +14120,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-cronograma">Cronograma</a> · <a href="#g-teto">Teto de inscrições</a></dd>
   <dd class="mais"><a href="#cronograma">Saiba mais →</a></dd>
   <dt id="g-piloto-do-assistente" data-letra="P">Piloto do assistente</dt>
-  <dd class="def">O uso interno e controlado do assistente com modelo de linguagem (071), por quem tem o papel Participante do piloto do assistente, com a chave do piloto ligada. Cada troca é gravada com a pergunta mascarada e se exclui 90 dias depois do relatório final.</dd>
+  <dd class="def">O uso interno e controlado do assistente com modelo de linguagem (071), por quem tem o papel Participante do piloto do assistente, com o piloto habilitado pelo Administrador institucional (170). Cada troca é gravada com a pergunta mascarada e se exclui 90 dias depois do relatório final.</dd>
   <dd class="ex">Uma servidora do setor pergunta pelo prazo de recurso e confere a resposta nas fontes citadas.</dd>
   <dd class="rel"><a href="#g-assistente-de-duvidas">Assistente de dúvidas</a> · <a href="#g-papel">Papel</a></dd>
   <dd class="mais"><a href="#assistente-do-edital">Saiba mais →</a></dd>
@@ -14021,7 +14285,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
   <dd class="rel"><a href="#g-semente">Semente</a> · <a href="#g-sorteio">Sorteio</a></dd>
   <dd class="mais"><a href="#previa-do-sorteio">Saiba mais →</a></dd>
   <dt id="g-situacao-da-inscricao" data-letra="S">Situação da inscrição</dt>
-  <dd class="def">O que o acompanhamento diz primeiro ao candidato: um rótulo, o por quê e o que fazer, derivados a cada leitura e nunca gravados. Precedência fechada: o desfecho da convocação, Convocado, Eliminado, Aguardando chamada, Aguardando resultado definitivo, Não classificado, Inscrição enviada. Nenhuma afirma perda.</dd>
+  <dd class="def">O que o acompanhamento diz primeiro ao candidato: um rótulo, o por quê e o que fazer, derivados a cada leitura e nunca gravados. Precedência fechada: o desfecho da convocação, Convocado, Eliminado, o passo de uma Etapa restrita (<em>Falta um passo seu</em>, <em>Aguardando a comissão</em>, <em>Aguardando o resultado</em>; 171), Aguardando chamada, Aguardando resultado definitivo, Não classificado, Inscrição enviada. Nenhuma afirma perda.</dd>
   <dd class="ex">“Aguardando chamada” — só depois de publicação definitiva, e antes de qualquer convocação.</dd>
   <dd class="rel"><a href="#g-situacao-divulgada">Situação divulgada</a> · <a href="#g-desfecho">Desfecho</a></dd>
   <dd class="mais"><a href="#jornada">Saiba mais →</a></dd>
@@ -14144,33 +14408,31 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       provedor do Ifes não foi integrado, e não há caminho de produção no ar.
     </p>
 
-    <h3>Os números de 14/11, contra os de 13/11</h3>
-    <p class="miudo">Cada número é o da <code>main</code> em <code>37ed0ad0</code>. Entre parênteses, quando
-      difere, o desta branch — a <code>main</code> com a 163, a 164 e a 165, nos PRs #542, #543 e #545, sem
-      merge.</p>
+    <h3>Os números de 15/11, contra os de 14/11</h3>
+    <p class="miudo">Cada número é o da <code>main</code> em <code>bd64e423</code>, com a 163 a 171 e a P0 de interface já mergeadas. Entre parênteses, o que eram em 14/11, na <code>main</code> de <code>37ed0ad0</code>.</p>
     <div class="numeros">
-      <div><b>163</b><span>pastas de especificação (eram 162 em 13/11), até a 162 — as 133 e 134 em duas pastas cada (166 com a camada A)</span></div>
-      <div><b>59</b><span>tabelas append-only, sem mudança (61 com a 165: os pareceres da deliberação e a exposição ao parecer)</span></div>
-      <div><b>91</b><span>gatilhos de banco, sem mudança, em 36 migrations, sobre 73 tabelas (96, em 38 migrations, sobre 75 tabelas, com a 165)</span></div>
-      <div><b>119</b><span>migrations (eram 118; 126 com a camada A)</span></div>
-      <div><b>24</b><span>módulos de domínio (sem mudança)</span></div>
-      <div><b>583</b><span>arquivos Python de aplicação (eram 580; 587 com a camada A)</span></div>
-      <div><b>266</b><span>templates (eram 259; a camada A não acrescenta nenhum)</span></div>
-      <div><b>1 233</b><span>arquivos de teste Python, + 25 de JavaScript (eram 1 220 + 25; 1 260 + 25 com a camada A)</span></div>
-      <div><b>180</b><span>rotas da gestão (sem mudança); o portal tem 42 (sem mudança)</span></div>
+      <div><b>172</b><span>pastas de especificação (eram 163), até a 171 — as 133 e 134 em duas pastas cada</span></div>
+      <div><b>69</b><span>tabelas append-only (eram 59: dez a mais — os pareceres da deliberação e a exposição ao parecer da 165; o vídeo, a abertura, o encaminhamento e a eliminação da 166; o ato de habilitação do assistente da 170; o ato, o horário publicado e o documento da agenda da 167)</span></div>
+      <div><b>100</b><span>gatilhos de banco, em 39 migrations, sobre 78 tabelas (eram 91, em 36, sobre 73)</span></div>
+      <div><b>134</b><span>migrations (eram 119)</span></div>
+      <div><b>27</b><span>módulos de domínio (eram 24: entraram <code>agendamento</code>, <code>novidades</code> e <code>verificacao</code>)</span></div>
+      <div><b>645</b><span>arquivos Python de aplicação (eram 583), 182,3 mil linhas (eram 167,1 mil)</span></div>
+      <div><b>287</b><span>templates (eram 266)</span></div>
+      <div><b>1 320</b><span>arquivos de teste Python, + 26 de JavaScript (eram 1 233 + 25)</span></div>
+      <div><b>190</b><span>rotas da gestão (eram 180); o portal tem 52 (eram 42)</span></div>
       <div><b>8</b><span>espécies de sinal na Atenção (sem mudança)</span></div>
     </div>
     <details class="evidencia"><summary>Como cada número foi medido</summary><div class="evidencia-corpo"><dl>
       <dt>Especificações</dt><dd><code>ls -d specs/*/ | wc -l</code></dd>
       <dt>Append-only</dt><dd>itens de <code>TABELAS_APPEND_ONLY</code> em <code>seguranca/papeis.py</code></dd>
-      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> e <code>CREATE CONSTRAINT TRIGGER</code> nas migrations — 91, em 36 migrations, sobre 73 tabelas. Os dois adiáveis da 165 são <code>CONSTRAINT TRIGGER</code>, e é por isso que a contagem os inclui pelo nome</dd>
+      <dt>Gatilhos</dt><dd>nomes únicos de <code>CREATE TRIGGER</code> e <code>CREATE CONSTRAINT TRIGGER</code> nas migrations — 100, em 39 migrations, sobre 78 tabelas (as tabelas são as que vêm depois de <code>ON</code>). Os dois adiáveis da 165 são <code>CONSTRAINT TRIGGER</code>, e é por isso que a contagem os inclui pelo nome</dd>
       <dt>Migrations</dt><dd>arquivos em <code>*/migrations/</code>, sem <code>__init__</code></dd>
       <dt>Módulos</dt><dd>apps com <code>apps.py</code>, sem o <code>interface</code>, que ganhou o seu na 089 e não é domínio (o <code>shared</code> não tem)</dd>
-      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 167,1 mil linhas (eram 165,6 mil; 170,4 mil com a camada A)</dd>
-      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte rodou contra PostgreSQL em 14/11 na branch da 165, com a camada A inteira: 20 042 passando, 24 pulados e nenhuma falha (4 workers, 582s). Não rodou sobre a <code>main</code> nesta revisão</dd>
+      <dt>Python de aplicação</dt><dd>sem <code>tests/</code> e sem <code>migrations/</code>: 182,3 mil linhas (eram 167,1 mil)</dd>
+      <dt>Testes</dt><dd><code>find tests -name 'test_*.py'</code> e <code>*.test.js</code>. A suíte não rodou sobre a <code>main</code> nesta revisão: a medição que a página cita é a da branch da 165 em 14/11, 20 042 passando e 24 pulados, e cada PR de 14/11 e 15/11 passou pela CI em três fatias antes do merge</dd>
       <dt>Rotas</dt><dd><code>path(</code> em <code>interface/urls.py</code> e <code>portal/urls.py</code></dd>
       <dt>Espécies de sinal</dt><dd><code>ESPECIES</code> em <code>interface/supervisao.py</code></dd>
-      <dt>Linha de base</dt><dd>a <code>main</code> da revisão de 13/11, <code>214c8cd7</code>, medida em 14/11 pelo mesmo método, reproduz ali, sem exceção, os números publicados naquela data. As linhas de base anteriores (21/10, 30/10, 02/11, 04/11) também reproduziam as suas</dd>
+      <dt>Linha de base</dt><dd>a <code>main</code> de 14/11, <code>37ed0ad0</code>, medida em 15/11 pelo mesmo roteiro, reproduz ali, sem exceção, os dez números publicados naquela data (59, 91 em 36 sobre 73, 119, 24, 583, 266, 1 233 + 25, 180 e 42). A de 13/11, <code>214c8cd7</code>, também reproduzia os seus. As linhas de base anteriores (21/10, 30/10, 02/11, 04/11) também reproduziam as suas</dd>
     </dl></div></details>
 
     <h3>Domínio a domínio</h3>
@@ -14211,7 +14473,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#mesa">Avaliação</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso. Na Etapa colegiada, o parecer é às cegas no servidor, e quem recebeu o parecer alheio não avalia a inscrição (165, sem merge)</td>
+            <td>Mesa, proposta de rodízio conferível, prontidão por inscrição, conclusões preservadas, impedimento. A Mesa recusa concluir avaliação de quem já tem Resultado na Etapa, salvo a reavaliação determinada por recurso. Na Etapa colegiada, o parecer é às cegas no servidor, e quem recebeu o parecer alheio não avalia a inscrição (165)</td>
             <td>A reavaliação determinada se cumpre pelas telas, mas elas não orientam o próximo passo</td>
           </tr>
           <tr>
@@ -14295,7 +14557,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr>
             <td><strong><a href="#auditoria">Auditoria e imutabilidade</a></strong></td>
             <td class="centro"><span class="selo selo-impl">Implementado</span></td>
-            <td>59 tabelas em duas camadas independentes, com 91 gatilhos (recontados em 14/11; 61 e 96 com a 165, sem merge) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
+            <td>69 tabelas em duas camadas independentes, com 100 gatilhos (recontados em 15/11) — desde 01/11 também sobre a inscrição enviada, a avaliação concluída e a homologação (A-03) —, trilha com ator/ato/estados/motivo e, nos gestos em lote, o alcance; a <a href="#trilha-da-unidade">trilha da unidade</a> mostra ao Auditor os atos administrativos (108)</td>
             <td>Quem audita o nível institucional é decisão pendente (108, 110)</td>
           </tr>
           <tr>
@@ -14659,7 +14921,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Inscrições recebidas · Inscrição · documento</td><td><code>/gestao/editais/&lt;id&gt;/inscricoes</code> · <code>/gestao/inscricoes/&lt;id&gt;/</code> · <code>…/documentos/&lt;req&gt;</code></td><td>Gestor (<code>inscricao:consultar</code>); cada documento aberto é registrado</td></tr>
         <tr><td>Exportar para matrícula</td><td><code>/gestao/editais/&lt;id&gt;/matriculas</code></td><td>Exportador de matrículas</td></tr>
         <tr><td>Respostas do assistente de dúvidas (validação interna) <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/duvidas/</code></td><td>quem alcança a página do Edital; só GET</td></tr>
-        <tr><td>Assistente do Edital (piloto) · começar outra conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/</code> · <code>…/assistente/nova/</code></td><td>Participante do piloto do assistente, com <code>ASSISTENTE_PILOTO</code> ligada; senão, 404</td></tr>
+        <tr><td>Assistente do Edital (piloto) · começar outra conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/</code> · <code>…/assistente/nova/</code></td><td>Participante do piloto do assistente, com o piloto habilitado (ato da 170, ou o atalho <code>ASSISTENTE_PILOTO</code> fora de produção); senão, 404</td></tr>
         <tr><td>Protótipo do painel de dúvidas · perguntar · sugestão · nova conversa <span class="selo selo-impl">nova</span></td><td><code>/gestao/editais/&lt;id&gt;/assistente/prototipo/</code> e sub-rotas</td><td>o mesmo acesso do piloto; nenhum link leva a ela</td></tr>
         <tr><td>Fragmentos do assistente e da Retificação (Perfil, Modalidade, quadro, fato, marco, critério, Evento, Anexo, linha do quadro; duplicar Perfil <span class="selo selo-impl">nova</span>; Modalidade e critério acrescentados <span class="selo selo-impl">nova</span>; prévia da classificação do marco <span class="selo selo-impl">nova</span>)</td><td><code>/gestao/fragmentos/…</code> · <code>/gestao/editais/&lt;id&gt;/fragmentos/…</code></td><td>pedaços de tela carregados pela própria composição</td></tr>
       </tbody>
@@ -14675,6 +14937,8 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td>Acessos da unidade · conceder · revogar <span class="selo selo-impl">nova</span></td><td><code>/gestao/acessos</code> · <code>…/conceder</code> · <code>…/vinculos/&lt;id&gt;/revogar</code></td><td>Administrador de acessos da unidade; a demonstração não alcança</td></tr>
         <tr><td>Administração de acessos · conceder · revogar · pessoas · suspender · reativar <span class="selo selo-impl">nova</span></td><td><code>/gestao/administracao-de-acessos</code> e sub-rotas</td><td>Administrador institucional, atuando em <em>Administração institucional</em></td></tr>
         <tr><td>Unidades · cadastrar · ficha · editar · desativar · reativar <span class="selo selo-impl">nova</span></td><td><code>/gestao/administracao-de-unidades</code> e sub-rotas</td><td>Administrador institucional (<code>unidade:administrar</code>)</td></tr>
+        <tr><td>Assistente do Edital · habilitar e desabilitar o piloto · habilitar e desabilitar a página pública de um Edital <span class="selo selo-impl">nova</span></td><td><code>/gestao/administracao-do-assistente</code> · <code>…/piloto/&lt;habilitar|desabilitar&gt;</code> · <code>…/editais/&lt;id&gt;/&lt;habilitar|desabilitar&gt;</code></td><td>Administrador institucional (<code>assistente:habilitar</code>), só pela entrada institucional</td></tr>
+        <tr><td>Novidades do GPS <span class="selo selo-impl">nova</span></td><td><code>/gestao/novidades</code></td><td>toda identidade</td></tr>
         <tr><td>Trilha da unidade <span class="selo selo-impl">nova</span></td><td><code>/gestao/trilha-da-unidade</code></td><td>Auditor, fora do nível institucional; os demais, recusa explicada</td></tr>
         <tr><td>Documentação do Sistema (esta página) <span class="selo selo-impl">nova</span></td><td><code>/gestao/documentacao/</code> · <code>…/&lt;arquivo&gt;</code></td><td>toda identidade; arquivo fora da lista, 404</td></tr>
       </tbody>
@@ -14856,7 +15120,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>Alocação de avaliação e distribuição sem Perfil nem polo</strong></td><td>A conferência documental ganhou o Perfil (115). A alocação à Etapa e a distribuição não: com 7 polos, a comissão inteira alcança os sete, e nenhuma comissão local recebe só o que é dela (DP-11)</td><td><code>comissoes/models.py</code>; <code>distribuicao.html</code> sem <em>“Perfil”</em></td></tr>
         <tr><td><strong>A reabilitação antes do marco alcança o corte só pelo Centro</strong></td><td>A 141 faz o Centro esperar a avaliação do reabilitado antes de oferecer a ordem e o corte. O serviço não mudou: fora do Centro a janela permanece, e o teste ainda prende o achado. A escolha entre as três saídas é do usuário (<a href="#evolucoes-decisoes">grupo 2</a>)</td><td><code>classificacao/application/corte.py</code> (<code>_reingressou</code>); <code>interface/andamento.py</code>; <code>doc/achado-reabilitado-antes-do-marco-nao-alcanca-o-corte.md</code></td></tr>
         <tr><td><strong>Cadastro de reserva: só a ampla com linha geral</strong></td><td>A 097 faz a convocação chamar o cadastro, e só na ampla de Perfil cujo quadro tem só a linha geral. Os Editais de bolsista, que repartem o cadastro entre Modalidades, não têm spec, e a Revisão avisa que a convocação será feita fora do sistema. O Perfil só de reserva com uma única cota ainda põe todo inscrito nela</td><td><code>ocupacao/application/acrescimo.py</code>; <code>editais/domain/validation.py</code> (<code>reserve_only_convocation_external</code>); <code>inscricoes/application/rascunho.py</code>, <code>portal/views.py</code> (<code>_modalidade_unica</code>). Ver <a href="#cadastro-de-reserva">Cadastro de reserva</a></td></tr>
-        <tr><td><strong>A convocação para heteroidentificação, entrevista ou títulos não tem ato</strong></td><td>Por isso não tem aviso: o aviso só aponta ato publicado, e a 066 declara que isso não encerra a demanda do setor. O que o ato seria também é decisão do setor</td><td>nenhuma spec de 105 a 161 a trata; <code>specs/066-avisos-complementares/spec.md</code></td></tr>
+        <tr><td><strong>A convocação para heteroidentificação, entrevista ou títulos só tem ato quando a Etapa tem agenda</strong></td><td>Com a agenda publicada (167), o ato existe e o aviso do horário o cita — desligado em produção até a validação de LGPD. Sem agenda, a convocação continua sem ato e sem aviso, e a 066 declara que isso não encerra a demanda do setor. Quem avisa quem a Etapa restrita alcança, sem horário, é o aviso do passo (171)</td><td><code>specs/167-agendamento-da-etapa/</code>, <code>specs/171-orientacao-da-verificacao/</code>, <code>specs/066-avisos-complementares/spec.md</code></td></tr>
         <tr><td><strong>Cronograma e janela recursal podem dizer datas diferentes</strong></td><td>O Evento <em>“prazo para recurso”</em> é texto livre, e nada o liga ao marco que abre a janela. A Revisão os põe lado a lado, sem afirmar que correspondem (decidido: depois do piloto)</td><td><code>editais/domain/validation.py</code>; <code>interface/revisao.py</code></td></tr>
         <tr><td><strong>O membro da comissão ainda é texto livre</strong></td><td>A busca de pessoa da gestão de acessos não chegou à comissão: com os identificadores opacos do provedor real, digitar o do membro é erro esperado</td><td><code>interface/forms.py</code>; <code>interface/views.py</code> (<code>identity_subject</code> digitado)</td></tr>
         <tr><td><strong>Os downloads do Kit têm o mesmo nome</strong></td><td>Post, story e banner do mesmo Edital baixam como <code>kit-{numero}-{ano}.{ext}</code>; quem divulga confunde as três peças</td><td><code>interface/kit_de_divulgacao.py</code></td></tr>
@@ -14906,9 +15170,9 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
       <thead><tr><th>O quê</th><th>Por quê</th></tr></thead>
       <tbody>
         <tr><td>Somar fora o barema que não é de critérios independentes e digitar o total</td><td>O barema da 146 só pontua critério a critério; “só o maior título” e o teto por expectativa do candidato não têm representação</td></tr>
-        <tr><td>Verificar a autodeclaração por vídeo</td><td>O rito ao vivo já entra como Etapa (163 a 165, sem merge); o vídeo assíncrono pede ato do Conselho Superior, protocolo da CPVA e Edital que o cite (P-0 do estudo de 13/11)</td></tr>
+        <tr><td>Verificar a autodeclaração por vídeo</td><td>O rito ao vivo já entra como Etapa (163 a 165, na <code>main</code>), com a orientação do candidato (171); o vídeo assíncrono existe só em desenvolvimento (166) e pede ato do Conselho Superior, protocolo da CPVA e Edital que o cite (P-0 do estudo de 13/11). A habilitação do vídeo pela interface (169) é só especificação</td></tr>
         <tr><td>Conferir a prévia contra o Edital original na homologação</td><td>Decidido em 28/09: o setor redige fora e transcreve</td></tr>
-        <tr><td>Avisar os convocados para heteroidentificação, entrevista ou títulos</td><td>Essas convocações não têm ato no sistema, e o aviso só aponta ato publicado (066)</td></tr>
+        <tr><td>Avisar os convocados para heteroidentificação, entrevista ou títulos, quando a Etapa não tem agenda</td><td>Sem agenda publicada, essas convocações não têm ato, e o aviso só aponta ato publicado (066). Com agenda, o aviso do horário existe (167), e o aviso do passo (171) cobre quem a Etapa restrita alcança</td></tr>
         <tr><td>Publicar nos sítios do Ifes/Cefor; transmitir o sorteio; importar no Registro Acadêmico</td><td>São sistemas fora deste (a 148 e a 149 só registram a publicação feita fora)</td></tr>
         <tr><td>Contar prazos em dias úteis</td><td>A janela conta dias corridos; o operador digita a data (R-004)</td></tr>
         <tr><td>Comunicar o cancelamento de um Edital</td><td>O cancelamento gera ato e trilha, e nenhuma Publicação (decidido: agora não)</td></tr>
@@ -14942,7 +15206,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <tr><td><strong>DP-07</strong></td><td>As três recusas em <code>404</code> passam a <code>403</code>?</td><td>Decidido <em>quando</em> (com a preparação de produção); não executado, e nenhum commit a cita</td></tr>
         <tr><td><strong>DP-08</strong> (itens 1 e 3)</td><td>A spec 039 (catálogo de Modalidades no Edital) está encerrada? Para onde vai o alcance da Etapa por Perfil ou Modalidade?</td><td>Item 1: registrar o encerramento (a 039 segue <code>Draft</code>, e o inventário de 13/11 a dá como bloqueada por decisão sua). Item 3: espera a DP-10, e a 146 manda o barema por Perfil esperar o alcance</td></tr>
         <tr><td><strong>DP-09</strong></td><td>A proibição de prova nova no recurso continua?</td><td>Recomendação “manter”, sem decisão registrada depois de 26/09. O recurso não aceita anexo (spec 018, D-011)</td></tr>
-        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo? Hoje há o barema de critérios independentes (146), e a heteroidentificação foi decidida em 13/11 (camada A do estudo: 163, 164 e 165, sem merge); seguem fora o barema exclusivo ou por Perfil, a cascata de grupos e as submodalidades de PPI/PPIQ (AX-15, excluídas pela 044)</td><td>Decidir por família, com o Edital na mão. A 158, de cascata entre cotas, está em <code>Draft</code>, sem plano nem código, com as perguntas P-1 a P-8</td></tr>
+        <tr><td><strong>DP-10</strong></td><td>Quais famílias de Edital entram no alvo? Hoje há o barema de critérios independentes (146), e a heteroidentificação foi decidida em 13/11 (camada A do estudo: 163, 164 e 165, mergeadas em 14/11; camada B, o vídeo: 166, só em desenvolvimento); seguem fora o barema exclusivo ou por Perfil, a cascata de grupos e as submodalidades de PPI/PPIQ (AX-15, excluídas pela 044)</td><td>Decidir por família, com o Edital na mão. A 158, de cascata entre cotas, está em <code>Draft</code>, sem plano nem código, com as perguntas P-1 a P-8</td></tr>
         <tr><td><strong>DP-11</strong></td><td>A comissão local enxerga só o seu Perfil ou polo?</td><td>A resposta mudou só na conferência documental (115). Falta, na distribuição e na alocação de avaliação, a coluna e o filtro de Perfil — recomendação da DP-11 — ou o recorte de autorização</td></tr>
         <tr><td><strong>DP-12</strong></td><td>O campo <code>Status</code> das specs é mantido ou abolido?</td><td>Aberta. O #530 (13/11) corrigiu 35 linhas à mão, sem decidir e sem guardião do campo; ver <a href="#evolucoes-higiene">Divergências entre código e documentação</a></td></tr>
         <tr><td><strong>DP-15</strong></td><td>Documento público por marco, em vez de por recorte?</td><td>Aberta; <em>“só se o setor precisar”</em></td></tr>
@@ -15051,7 +15315,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
 
     <h3 id="evolucoes-higiene">Divergências entre código e documentação</h3>
     <ul>
-      <li><strong>O campo <code>Status</code> das specs.</strong> Das 163 pastas, 160 têm a linha, e <strong>73 começam com <code>Draft</code></strong> (eram 67 de 114 na revisão anterior), inclusive as implementadas — entre elas a 069, 070, 071, 072, 097, 100, 101, 102, 113, 114, 116 e 118. O #530 (13/11) corrigiu 35 linhas à mão e guardou a antiga como <em>“Status anterior”</em>, sem decidir a DP-12: nada guarda o campo, o guardião do README só confere a existência da pasta na tabela de incrementos, e o <code>spec-template.md</code> ainda nasce <code>Draft</code>. A 103, a 104 e as 105 a 109 ainda dizem <em>“merge não autorizado”</em>; a 099 diz <em>“PR aberto, merge é do usuário”</em>; a 076 diz <em>“Em emenda”</em>. <strong>Dezesseis</strong> specs — da 077 à 087, a 089, a 091 a 093 e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>. Todas as conferidas estão na <code>main</code>.</li>
+      <li><strong>O campo <code>Status</code> das specs.</strong> Das 172 pastas, 169 têm a linha, e <strong>74 começam com <code>Draft</code></strong> (contadas em 15/11) (eram 67 de 114 na revisão anterior), inclusive as implementadas — entre elas a 069, 070, 071, 072, 097, 100, 101, 102, 113, 114, 116 e 118. O #530 (13/11) corrigiu 35 linhas à mão e guardou a antiga como <em>“Status anterior”</em>, sem decidir a DP-12: nada guarda o campo, o guardião do README só confere a existência da pasta na tabela de incrementos, e o <code>spec-template.md</code> ainda nasce <code>Draft</code>. A 103, a 104 e as 105 a 109 ainda dizem <em>“merge não autorizado”</em>; a 099 diz <em>“PR aberto, merge é do usuário”</em>; a 076 diz <em>“Em emenda”</em>. <strong>Dezesseis</strong> specs — da 077 à 087, a 089, a 091 a 093 e a 096 — ainda dizem <em>“PR aberto, merge com o usuário”</em>. Todas as conferidas estão na <code>main</code>.</li>
       <li>A 099 e a 100 dizem <em>“Baixar PDF”</em>, e a tela diz <span class="rotulo-ui">Emitir e baixar PDF</span>; a 104 diz <em>“Mostrar as outras N”</em>, e uma tela diz <em>“os outros N”</em>.</li>
       <li>O cabeçalho da 071 ainda diz que ela está empilhada sobre a 070, que <em>“não está na <code>main</code>”</em>; as duas estão. A verificação da 071 diz <em>“Nenhuma chamada externa aconteceu”</em> e, adiante, registra o ensaio no OpenRouter de 14/10.</li>
       <li>A 071 manda excluir <em>todo</em> o registro do piloto; o comando exclui as trocas criadas até o dia do relatório final, como diz o contrato do comando.</li>
@@ -15207,6 +15471,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>95904252</code></td><td>A seção <a href="#pg-evolucoes">O que ainda precisa evoluir</a> refeita: 186 itens conferidos de novo no código, nas specs e no histórico, separados em <a href="#evolucoes-codigo">falta código</a>, <a href="#evolucoes-decisoes">decisão do usuário</a>, <a href="#evolucoes-validacao">validação com pessoas</a> e <a href="#evolucoes-externo">depende de fora</a>, com <a href="#evolucoes-resolvidas">o que já fechou</a> à parte. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td>PRs 524 e 526, sobre a <code>main</code> em <code>26748113</code></td><td>A <a href="#vitrine-em-andamento-e-paginas">vitrine</a> separa <em>Em andamento</em> de <em>Seleções encerradas</em> pelo desfecho, ordena cada grupo pelo que importa a quem lê e mostra de dez em dez o que já fechou as inscrições; a etiqueta <em>“Em andamento”</em> chega também à página do Edital. Sem spec própria. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
           <tr><td>13/11/2026</td><td><code>main</code> em <code>214c8cd7</code></td><td>Consolidação da visão do produto. A página <a href="#pg-inicio">Início</a> passou a ser a visão do GPS: propósito, públicos, princípios, ciclo de vida, jornadas da gestão e do portal, capacidades por fase, governança multiunidade, transparência, onde o sistema está e referências; o nome do produto, GPS — Gestão de Processos Seletivos, como nas telas. A 156 deixou de ser Previsto (três histórias entraram); a lacuna da mensagem de reenvio fechou; as contagens de <a href="#maturidade">Maturidade</a> foram refeitas e o veredito reescrito como estado presente; o mapa ganhou a unidade, os documentos da convocação e a formalização. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
+          <tr><td>15/11/2026</td><td><code>main</code> em <code>bd64e423</code>, specs 163 a 171 e a P0 de interface</td><td>As specs 163 a 165 (a heteroidentificação como Etapa restrita, o efeito do desfecho e a deliberação da comissão) deixam de ser “sem merge”. Descritas como entregues: a <a href="#verificacao-por-video">verificação por vídeo</a> (166, só em desenvolvimento), a <a href="#agenda-da-etapa">agenda da Etapa</a> (167, entregas A a D), as <a href="#novidades">Novidades do GPS</a> (168), a <a href="#habilitar-assistente">habilitação do assistente pela interface</a> (170) e a <a href="#orientacao-do-passo">orientação de quem a Etapa restrita alcança</a> (171); a 169 aparece como só especificada. Os dez números de <a href="#maturidade">Maturidade</a> foram recontados sobre a <code>main</code>. Nas confirmações de ato, a P0 de interface passou a abrir os avisos por <em>Impedimento:</em> e <em>Atenção:</em>.</td></tr>
           <tr><td>13/11/2026</td><td>PR #537, a 162, sobre a <code>main</code> em <code>84cbeeb5</code></td><td>O <a href="#cadastro-de-reserva">cadastro de reserva</a> reescrito: o número do limitado vem do corte do marco que convoca, a espécie é conferida contra a continuação, o Perfil só de reserva abre pelo cadastro, e o Edital publicado antes diz o número digitado com uma nota na condução. O tutorial (passos 4 e 8, o INF-VIT sem continuação), a Receita 7, as tabelas de configuração, a Retificação, as perguntas e o glossário acompanham; o item <em>“O limite do cadastro de reserva não é aplicado”</em> foi para <a href="#evolucoes-resolvidas">O que já fechou</a>. Registro em <code>CHANGELOG-2026-11.md</code>.</td></tr>
         </tbody>
       </table>
@@ -15230,6 +15495,7 @@ detalhe              o alcance de um gesto em lote (nulo nos demais)</pre>
         <li>A atualização de 10/11 sobre o incremento A da 144 foi feita por leitura do código da <code>main</code> em <code>d184fcee</code>, conferindo o olho, as frases da Revisão, a numeração do PDF e a regra de omissão da seção. Não rodou a suíte inteira, e a tela não foi percorrida; o número de testes vem do <code>verificacao.md</code> da spec.</li>
         <li>A atualização de 11/11 sobre a 145 e a 146 foi feita por leitura das specs e do código da <code>main</code> em <code>04797399</code>: os rótulos das telas, as frases da ficha, do portal e da Revisão, o PDF e as regras de cálculo. Não rodou a suíte inteira, e nenhuma tela foi percorrida aqui — a jornada do barema no navegador está registrada em <code>specs/146-barema-da-etapa/capturas/jornada/</code>. A medida de tempo da Mesa com o barema (hoje de 10 a 20 minutos por inscrição, sem ele) não foi refeita, e a confirmação institucional dos Editais (P-1) continua aberta.</li>
         <li>A atualização de 13/11 (147 a 161) foi feita por leitura das specs, dos corpos dos PRs e do código da <code>main</code> em <code>60f9ff24</code>, em quatro frentes que escreveram fichas de fatos conferidas contra os templates e o código; os rótulos das telas vêm dos templates. Não rodou a suíte inteira, e nenhuma tela foi percorrida aqui. Ficaram sem verificar: se o seletor de demonstração oferece a presidência sem os cenários (a designação pela presidência), em que grupo do Centro de Controle aparece a Ação <em>Publicações das inscrições</em>, e a validação humana de 149, 150, 157, 159 e 160. Os READMEs das specs 150, 154, 152 e 157 estavam defasados em relação ao código e foram corrigidos junto; as specs 149 e 159 ainda dizem <em>Em implementação</em> e a 134 ainda diz <em>sem merge</em>, embora mergeadas.</li>
+        <li>A atualização de 15/11 (163 a 171) foi feita depois dos merges, por três leituras paralelas — 166, 169 e 171; 167; 168, 170 e a P0 de interface — que escreveram fichas de fatos conferidas contra os templates e o código da <code>main</code> em <code>bd64e423</code>; onde spec e código divergiram, valeu o código. Os dez números de <em>Maturidade</em> foram recontados pelo mesmo roteiro, depois de ele reproduzir os de 14/11 sobre <code>37ed0ad0</code>. A suíte inteira não rodou nesta revisão, e nenhuma tela foi percorrida; a página passou pelos guardiões de documentação. O PR #544 (só números de linha do guia de implantação), o #549 e o #541 (estudos) e o #552 (só a spec da 169) não mudam o produto. Ficaram sem verificar: se <em>Não dá para confirmar pelo vídeo</em> exige motivo no código, se há jornada em navegador do vídeo, e se a nota do piloto do assistente, presa a <code>ASSISTENTE_PILOTO</code>, deve aparecer em produção quando o piloto é habilitado por ato.</li>
         <li>A atualização de 13/11 sobre a 162 foi feita junto da implementação, no próprio PR #537: os rótulos e as frases vêm do código da branch (<code>cadastro_de_reserva.py</code>, <code>pdf.py</code>, <code>_perfil.html</code>, as recusas de <code>incoerencias</code>), e a suíte inteira rodou contra PostgreSQL (19 564 passando, 24 pulados). Nenhuma tela foi percorrida, e o roteiro manual da 162 (T046) não rodou.</li>
         <li>A revisão de 29/09 foi feita por leitura do código, sem executar a suíte nem percorrer o produto no navegador. Rótulos de tela foram copiados dos <em>templates</em>; medições de comportamento em tela vêm das auditorias do repositório, citadas onde usadas. Itens marcados <em>[a validar]</em> foram lidos no código e não reproduzidos.</li>
         <li>Os Editais reais de amostra ficam fora do repositório; as afirmações sobre “o que os Editais do Cefor de fato fazem” vêm dos comentários do código e dos estudos em <code>doc/</code>, que os citam por número.</li>
