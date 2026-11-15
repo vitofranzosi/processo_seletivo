@@ -1,0 +1,20 @@
+{% extends "interface/base.html" %}{% load estaticos %}
+{% block titulo %}Configurar a agenda — {{ etapa.name }}{% endblock %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/telas/minhas-etapas.css' %}"><link rel="stylesheet" href="{% estatico 'interface/telas/agenda-da-etapa.css' %}">{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">{{ etapa.name }}</a> › <span aria-current="page">Configurar a agenda</span></nav>{% endblock %}
+{% block conteudo %}
+{% comment %}
+A configuração da agenda como simulador (167, US1, UX-760, UX-766; protótipo `configurar.html`).
+
+Uma superfície por assunto — atendimento, dias, bancas, orientações —, e ao lado, abaixo no
+estreito, o simulador: o veredito primeiro, depois o medidor, depois a conta (04-redesign, decisões 1
+e 2). Os atalhos resolvem a falta onde ela é dita (decisão 3). Nada aqui é estilo ou script em linha:
+a política de conteúdo os recusaria em silêncio.
+{% endcomment %}
+<header class="cabecalho-da-tela">
+  <h1>Configurar a agenda</h1>
+  <p class="sub">{{ etapa.name }} · {% if periodo %}período no cronograma: {{ periodo_por_extenso }}{% else %}esta Etapa não tem período publicado no cronograma{% endif %}</p>
+</header>
+{% include "interface/_agenda_formulario.html" %}
+{% load static %}<script src="{% static 'interface/htmx.min.js' %}" defer></script>
+{% endblock %}

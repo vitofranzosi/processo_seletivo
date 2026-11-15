@@ -1402,3 +1402,41 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
   .dados-do-video{grid-template-columns:auto 1fr;column-gap:1rem;}
   .dados-do-video dt{margin-top:0;}
 }
+/* A agenda da Etapa (167, FR-7227, FR-7228). Peças próprias, sem reusar `.protocolo`, que tem regra
+   de outra tela (o achado do protótipo). Sem `[hidden]` a forçar: a busca é no servidor (T-016), e a
+   lista que volta já é a filtrada. */
+.agendas-da-selecao{margin:0 0 1.5rem}
+.agendas-publicadas{list-style:none;margin:0;padding:0;display:grid;gap:.6rem;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr))}
+.agenda-publicada{display:flex;flex-wrap:wrap;gap:.1rem .9rem;align-items:baseline;padding:.6rem .8rem;
+  background:var(--branco);border:1px solid var(--borda);border-radius:6px}
+.titulo-da-agenda{font-weight:600}
+.agenda-publicada .meta{flex-basis:100%;margin:0;color:var(--texto-fraco);font-size:.875rem}
+.busca-na-agenda input{max-width:24rem}
+.acoes-da-busca{display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:baseline;margin:0 0 .75rem}
+.dia-publico{background:var(--branco);border:1px solid var(--borda);border-radius:8px;
+  padding:.75rem 1rem;margin-bottom:1rem;max-width:var(--leitura)}
+.dia-publico h2{margin:0 0 .5rem;font-size:1.05rem}
+.horarios-publicos{list-style:none;margin:0;padding:0}
+.horarios-publicos li{display:grid;grid-template-columns:4rem minmax(0,1fr) auto;gap:.25rem .75rem;
+  align-items:baseline;padding:.45rem 0;border-top:1px solid var(--borda)}
+.horarios-publicos li:first-child{border-top:0}
+.horarios-publicos .hora{font-weight:700;font-variant-numeric:tabular-nums}
+.horarios-publicos .quem{overflow-wrap:anywhere}
+.inscricao-publica{display:block;font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.inscricao-so{font-variant-numeric:tabular-nums}
+.banca-publica{font-size:.8125rem;color:var(--texto-fraco)}
+.remarcado{grid-column:2 / -1;justify-self:start;font-size:.75rem;font-weight:600;padding:.05rem .45rem;
+  border-radius:999px;background:var(--amarelo-fundo);color:var(--amarelo)}
+.quando-grande{font-size:1.35rem;margin:.25rem 0 .75rem}
+.campos-do-horario{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.25rem 1rem;margin:0 0 .75rem}
+.campos-do-horario dt{font-weight:600}
+.campos-do-horario dd{margin:0;overflow-wrap:anywhere}
+.horario-da-etapa h3{font-size:1rem;margin:1rem 0 .25rem}
+.orientacoes-do-horario{max-width:var(--leitura)}
+.remarcacao{margin-bottom:1rem}
+/* Os documentos dos atos da agenda (167, `D-012`): um por linha, o da publicação primeiro. */
+.documentos-da-agenda{margin:0 0 1.5rem;max-width:var(--leitura)}
+.lista-de-documentos-da-agenda{list-style:none;margin:0;padding:0}
+.lista-de-documentos-da-agenda li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline;margin:0 0 .5rem}
+.lista-de-documentos-da-agenda .documento{margin-top:0}

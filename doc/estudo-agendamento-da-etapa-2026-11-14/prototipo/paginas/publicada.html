@@ -1,0 +1,25 @@
+<!--
+titulo: Agenda publicada
+trilha: <a href="/">Processos Seletivos</a> › <a href="/"><span data-texto="edital">Edital</span></a> › <a href="etapa.html" data-texto="etapaCurta">Etapa</a> › <span aria-current="page">Agenda publicada</span>
+moldura: gestao
+folhas: interface/telas/minhas-etapas.css
+-->
+<h1>Agenda publicada</h1>
+<p class="sub"><span data-texto="etapa"></span>. <a href="publica.html">Ver como o público vê</a> · <a href="email.html">Ver o aviso por e-mail</a></p>
+<div id="mensagem" aria-live="polite"></div>
+<div id="estado-publicado"></div>
+<div id="falhas"></div>
+<div id="novas"></div>
+
+<section aria-labelledby="lista-titulo">
+  <h2 id="lista-titulo">Horários publicados</h2>
+  <p class="ajuda">Para mudar o horário de alguém, use "Remarcar": o horário anterior fica no histórico, e só essa pessoa é avisada. Para abrir horários novos, <a href="configurar.html">acrescente um dia, uma janela ou uma banca</a>.</p>
+  <div class="tabela-rolavel">
+    <table class="tabela lista-publicada" id="lista-publicada"></table>
+  </div>
+</section>
+
+<details class="prototipo-controle">
+  <summary>Simulações do protótipo</summary>
+  <p><button type="button" class="acao" data-simular-recurso>Simular recurso deferido</button> Uma pessoa passa a participar da Etapa depois da publicação.</p>
+</details>

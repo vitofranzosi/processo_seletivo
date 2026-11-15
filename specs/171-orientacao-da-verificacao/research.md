@@ -63,7 +63,7 @@ vivo, pela `166`).
 
 ## T-004 — A origem `PASSO` cita a Etapa, e não um marco
 
-**Decisão.** Na migration `avisos/0003_origem_passo`:
+**Decisão.** Na migration `avisos/0004_origem_passo`:
 
 - `Aviso.marco_id` passa a aceitar nulo, e entra `Aviso.etapa_id` (UUID, nulo);
 - o CHECK da origem exige `etapa_id` e `marco_id` nulo em `PASSO`, e o contrário nas outras três;

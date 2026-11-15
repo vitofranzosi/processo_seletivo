@@ -37,7 +37,7 @@ durante e depois do período.
 
 **Independent Test**: confirmar, despachar e ler a mensagem; conferir universo, já avisado e CHECK.
 
-- [x] T010 [US2] Origem `PASSO` em `processo_seletivo/avisos/domain/nomes.py`; `etapa_id`, `marco_id` nulo, `chave_inicial` e os CHECKs em `processo_seletivo/avisos/models.py`; migration `processo_seletivo/avisos/migrations/0003_origem_passo.py` (T-004, T-005)
+- [x] T010 [US2] Origem `PASSO` em `processo_seletivo/avisos/domain/nomes.py`; `etapa_id`, `marco_id` nulo, `chave_inicial` e os CHECKs em `processo_seletivo/avisos/models.py`; migration `processo_seletivo/avisos/migrations/0004_origem_passo.py` (T-004, T-005)
 - [x] T011 [US2] `universo_do_passo` e o já avisado em `processo_seletivo/avisos/application/destinatarios.py`; `confirmar_aviso_do_passo` em `processo_seletivo/avisos/application/confirmar.py` (um Aviso por Perfil); a porta explícita em `comando.py`; os valores em `previa.py`; a variável `periodo_da_etapa` e a origem em `processo_seletivo/avisos/domain/variaveis.py` (FR-7315 a FR-7318)
 - [x] T012 [US2] Quarto modelo inicial com `chave_inicial="PASSO"` em `processo_seletivo/avisos/domain/modelos_iniciais.py` e a guarda em `processo_seletivo/avisos/application/modelos.py` (FR-7319, FR-7320)
 - [x] T013 [US2] Rota, view e ramos de template da confirmação: `processo_seletivo/interface/urls.py`, `processo_seletivo/interface/avisos.py`, `aviso_previa.html`, `aviso.html`, `avisos_do_edital.html`

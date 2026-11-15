@@ -448,6 +448,15 @@ def recusar_reenvio_da_pendencia(anterior):
             "pela tela de condução da convocação, a partir do dia seguinte.",
             409,
         )
+    # **O aviso de agenda (167) também não**: o texto dele é o de uma pessoa, e o reenvio da `066`
+    # recompõe um texto só para o universo inteiro. O reenvio é o da agenda publicada, que repete o
+    # texto da pessoa num aviso filho (`agendamento/application/reenviar.py`).
+    if anterior.origem == nomes.AGENDA:
+        raise DomainError(
+            nomes.AVISO_DE_AGENDA_SEM_REENVIO,
+            "O aviso de agenda se reenvia pela agenda publicada da Etapa, pessoa a pessoa.",
+            409,
+        )
 
 
 def confirmar_reenvio(

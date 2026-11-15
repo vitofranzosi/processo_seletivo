@@ -30,7 +30,7 @@ Com o vídeo, os estados `RECEBIDO` e `EM_ANALISE` da `166` dão `AGUARDA_RESULT
 `faltam_por_membro` (lista de nome × contagem, só contagem > 0, decrescente), `nao_avisadas`,
 `sem_desfecho_vencido`, `fim` e, com o vídeo admitido, `a_encaminhar`. Ver T-006 e T-007.
 
-## Gravados (migration `avisos/0003_origem_passo`)
+## Gravados (migration `avisos/0004_origem_passo`)
 
 ### `Aviso` (append-only; gatilhos sem mudança)
 

@@ -470,6 +470,7 @@ def test_o_envio_da_convocacao_continua_em_comunicar():
         modulos_que_enviam,
     )
 
-    assert len(SITUACOES) == 5
+    # Seis desde a `167` (o aviso de agenda), e cinco antes; a da `156` ainda não tem código.
+    assert len(SITUACOES) == 6
     assert modulos_que_enviam() <= MODULOS_DAS_SITUACOES
     assert modulo_do_envio.__name__.endswith("convocacao.application.comunicar")

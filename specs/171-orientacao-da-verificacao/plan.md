@@ -35,7 +35,7 @@ em [quickstart.md](quickstart.md).
 
 **Primary Dependencies**: as do projeto; nenhuma nova.
 
-**Storage**: PostgreSQL, com **uma** migration, `avisos/0003_origem_passo`:
+**Storage**: PostgreSQL, com **uma** migration, `avisos/0004_origem_passo`:
 
 - a origem `PASSO` nas choices e nos CHECKs;
 - `aviso.marco_id` e `aviso.perfil_id` nulos e `aviso.etapa_id` novo, nulo, com o CHECK "`PASSO` ⇔
@@ -124,7 +124,7 @@ backend/processo_seletivo/
 │   ├── domain/{nomes,variaveis,modelos_iniciais}.py
 │   ├── application/{destinatarios,confirmar,comando,previa,modelos}.py
 │   ├── models.py
-│   └── migrations/0003_origem_passo.py
+│   └── migrations/0004_origem_passo.py
 ├── interface/
 │   ├── andamento.py               # fatos e células da Etapa restrita (T-006, T-007)
 │   ├── centro.py, conceitos.py    # a natureza AVISAR

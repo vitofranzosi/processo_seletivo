@@ -12,16 +12,21 @@ CHAMADA = "CHAMADA"
 # **A quinta situação da `FR-084` da `010`** (134, FR-4618): o aviso de pendência documental. Não
 # cita publicação nem referência; cita a convocação, pelo destinatário, e o texto é da pessoa.
 PENDENCIA = "PENDENCIA"
+# **A sétima situação da `FR-084` da `010`** (167, FR-7230, `D-010`): o aviso de agenda — o horário
+# de uma pessoa na agenda publicada de uma Etapa. Cita o ato da agenda pela referência; não tem
+# marco, porque a agenda é da Etapa, e o texto é da pessoa, como o da pendência.
+AGENDA = "AGENDA"
 # **O aviso do passo** (171, FR-7315): parte de uma Etapa restrita publicada, e não de uma
 # publicação nem de uma chamada. Cita a Etapa, e não o marco nem o Perfil: o passo é de todas as
 # inscrições que a Etapa alcança, em qualquer Perfil (research T-004).
 PASSO = "PASSO"
-ORIGENS = (RESULTADO, CHAMADA, PENDENCIA, PASSO)
+ORIGENS = (RESULTADO, CHAMADA, PENDENCIA, AGENDA, PASSO)
 #: A origem por extenso, para as frases que nomeiam onde uma variável tem valor.
 ORIGEM_POR_EXTENSO = {
     RESULTADO: "resultado",
     CHAMADA: "chamada",
     PENDENCIA: "pendência",
+    AGENDA: "agenda",
     PASSO: "passo de uma etapa",
 }
 #: A marca do modelo inicial do aviso do passo (171, FR-7320, T-005).
@@ -119,6 +124,7 @@ AVISO_NAO_ENCONTRADO = "aviso_nao_encontrado"
 # 134: o gesto sem ninguém a avisar, e o reenvio que o aviso de pendência não tem (FR-4609, D-008).
 AVISO_SEM_PENDENCIA_A_AVISAR = "aviso_sem_pendencia_a_avisar"
 AVISO_DE_PENDENCIA_SEM_REENVIO = "aviso_de_pendencia_sem_reenvio"
+AVISO_DE_AGENDA_SEM_REENVIO = "aviso_de_agenda_sem_reenvio"
 MODELO_NAO_ENCONTRADO = "modelo_de_aviso_nao_encontrado"
 MODELO_COM_NOME_REPETIDO = "modelo_de_aviso_com_nome_repetido"
 

@@ -70,6 +70,12 @@ Sua inscrição continua valendo sob a versão que você aceitou.
 Os dados da convocação, sem as frases de estado, que subiram para o topo (063, D-008): duas redações
 do mesmo estado fazem a pessoa achar que são dois estados.
 {% endcomment %}
+{% comment %}
+O horário da Etapa com agenda (167), antes da convocação: é o compromisso marcado de quem ainda está
+nas Etapas, e a convocação vem depois delas.
+{% endcomment %}
+{% if horarios %}{% include "portal/_horario_da_inscricao.html" %}{% endif %}
+
 {% include "portal/_convocacao_da_inscricao.html" %}
 
 {% comment %}

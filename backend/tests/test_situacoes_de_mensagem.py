@@ -18,6 +18,11 @@ primeira situação sem efeito nenhum. A data está declarada em `avisos/applica
 gesto de quem confere e enviado pelo mesmo despacho da `066`. Por isso a lista deixou de ser um
 dicionário por módulo: duas situações moram no mesmo remetente, e a contagem é das situações, e não
 dos arquivos. A data da revisão está declarada no despacho, ao lado da da `066`.
+
+**A `167` acrescentou a sétima, também sem módulo novo.** O aviso de agenda é gravado pela
+confirmação de quem publica, remarca ou inclui, e enviado pelo mesmo despacho. A sexta da norma, o
+aviso do desfecho da `156`, está escrita e ainda não tem código: por isso a lista abaixo tem seis
+pares e a norma diz sete. Quando a `156` for implementada, ela acrescenta o par dela aqui.
 """
 
 import io
@@ -29,6 +34,7 @@ import pytest
 from processo_seletivo.avisos.application.despacho import (
     REVISAO_DA_FR_084_PELA_066,
     REVISAO_DA_FR_084_PELA_134,
+    REVISAO_DA_FR_084_PELA_167,
 )
 from processo_seletivo.convocacao.application.comunicar import REVISAO_DA_FR_084
 
@@ -48,6 +54,7 @@ SITUACOES = (
     ),
     ("avisos/application/despacho.py", "o aviso complementar vinculado a ato oficial (066)"),
     ("avisos/application/despacho.py", "o aviso de pendência documental (134)"),
+    ("avisos/application/despacho.py", "o aviso de agenda da Etapa (167)"),
 )
 
 #: Os módulos que podem pôr mensagem na fila: os das situações, sem repetição.
@@ -114,16 +121,18 @@ def test_a_varredura_le_o_codigo_e_nao_a_prosa(tmp_path):
     assert _nomes_do_codigo(envia) & REMETENTES
 
 
-def test_sao_cinco_situacoes_e_a_quinta_e_o_aviso_de_pendencia():
-    """Cinco: a contagem asseverada é a da regra revisada pela `134` (FR-4602, SC-1446).
+def test_sao_seis_situacoes_no_codigo_e_a_ultima_e_o_aviso_de_agenda():
+    """Seis no código: as cinco da revisão da `134` e o aviso de agenda da `167` (FR-7230).
 
-    A quarta (`066`, `FR-1280`) e a quinta saem do mesmo despacho: são duas situações e um módulo.
+    A quarta (`066`, `FR-1280`), a quinta (`134`) e a da agenda saem do mesmo despacho: são três
+    situações e um módulo. A sexta da norma, a da `156`, ainda não tem código.
     """
-    assert len(SITUACOES) == 5
+    assert len(SITUACOES) == 6
     assert "convocacao/application/comunicar.py" in MODULOS_DAS_SITUACOES
     despacho = [s for m, s in SITUACOES if m == "avisos/application/despacho.py"]
-    assert len(despacho) == 2
+    assert len(despacho) == 3
     assert any("pendência documental" in situacao for situacao in despacho)
+    assert any("agenda" in situacao for situacao in despacho)
 
 
 @pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
@@ -185,4 +194,21 @@ def test_a_revisao_da_134_esta_na_norma_escrita():
     assert "Redação anterior, da revisão da `066`" in trecho
     assert "**quatro**" in trecho, "a redação da 066, preservada, dizia quantas admitia"
     assert "Redação da revisão da `019`" in trecho
+    assert "Redação original" in trecho
+
+
+@pytest.mark.skipif(not SPEC_DA_010.exists(), reason="a árvore de specs não está neste checkout")
+def test_a_revisao_da_167_esta_na_norma_escrita():
+    """A sétima situação só existe porque a `FR-084` foi revisada de novo (167, FR-7230, D-010).
+
+    **A redação da `156` fica**, como ficaram as anteriores: revisar é acrescentar por cima.
+    """
+    texto = SPEC_DA_010.read_text(encoding="utf-8")
+    trecho = texto[texto.index("- **FR-084**") : texto.index("- **FR-084a**")]
+    assert f"pela `167` em {REVISAO_DA_FR_084_PELA_167}" in trecho
+    assert "**sete**" in trecho, "a regra vigente precisa dizer quantas situações admite"
+    assert "aviso de agenda" in trecho
+    assert "Redação anterior, da revisão da `156`" in trecho
+    assert "**seis**" in trecho, "a redação da 156, preservada, dizia quantas admitia"
+    assert "Redação anterior, da revisão da `134`" in trecho
     assert "Redação original" in trecho

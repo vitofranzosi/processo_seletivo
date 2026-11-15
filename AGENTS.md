@@ -37,7 +37,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, eram **55** com a publicação das inscrições da `148`, eram **58** com a publicação de convocados da `149`, eram **59** com a vaga não preenchida da `155`, eram **61** com os pareceres da deliberação e a exposição ao parecer da `165`, eram **65** com o vídeo, a abertura, o encaminhamento e a eliminação da verificação por vídeo da `166`, são **66** com os atos de habilitação do assistente da `170` — e é por isso que a armadilha é o zero,
+— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, eram **55** com a publicação das inscrições da `148`, eram **58** com a publicação de convocados da `149`, eram **59** com a vaga não preenchida da `155`, eram **61** com os pareceres da deliberação e a exposição ao parecer da `165`, eram **65** com o vídeo, a abertura, o encaminhamento e a eliminação da verificação por vídeo da `166`, eram **66** com os atos de habilitação do assistente da `170`, são **69** com o ato, o horário publicado e o documento da agenda da `167` — e é por isso que a armadilha é o zero,
 e não o total.
 
 **Depois dos três, o `make preparar` semeia as Unidades** de
@@ -57,7 +57,7 @@ que precisa do registro vazio — os da semente — leva o marcador `sem_unidade
 `Modelos de aviso: C criados` — **quatro** num banco novo, e zero daí em diante, para sempre: a
 unidade que editou ou inativou os modelos continua com os dela. São os três da `066` e o do aviso do
 passo da `171`, que tem marca própria (`chave_inicial`): num banco que já existia, a primeira passada
-depois da migration `avisos/0003` imprime **1** por unidade, e não é defeito. A fixture `autouse`
+depois da migration `avisos/0004` imprime **1** por unidade, e não é defeito. A fixture `autouse`
 **não** os cria, de propósito: gravaria quatro modelos e quatro eventos de trilha em todo caso, e os
 testes que contam a trilha quebrariam em bloco. Quem precisa deles chama `garantir_modelos_iniciais()`.
 

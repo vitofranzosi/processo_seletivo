@@ -570,21 +570,23 @@ remover o antigo e corrigir o nome.
 - **FR-083**: Falha de envio DEVE produzir mensagem neutra, idêntica à do caminho feliz, e registro
   técnico no servidor.
 - **FR-084** *(revisada pela `019` em 2026-09-12, pela `066` em 2026-10-09,
-  pela `134` em 2026-11-08 e pela `156` em 2026-11-11, esta com vigência na implementação
-  dela — as redações anteriores estão ao fim desta alínea)*:
-  Além do desafio, o sistema envia mensagem em exatamente **seis** situações, todas nominais: a
+  pela `134` em 2026-11-08, pela `156` em 2026-11-11 e pela `167` em 2026-11-14, as duas últimas
+  com vigência na implementação de cada uma — as redações anteriores estão ao fim desta alínea)*:
+  Além do desafio, o sistema envia mensagem em exatamente **sete** situações, todas nominais: a
   confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
   endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
   (`FR-018b`); a **convocação**, quando o Perfil publicado declara que este Edital comunica por
   mensagem individual (`019`, `FR-287`); o **aviso complementar vinculado a ato oficial** (`066`),
   que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado identifica;
   o **aviso de pendência documental** (`134`), que quem confere os documentos da convocação decide
-  enviar, num gesto, às pessoas convocadas que têm documento pendente e prazo em curso; e o **aviso
+  enviar, num gesto, às pessoas convocadas que têm documento pendente e prazo em curso; o **aviso
   do desfecho da convocação** (`156`), que quem registra o desfecho pede, de forma explícita, na
-  confirmação do registro. O canal passar a existir não torna comunicação transacional escopo
+  confirmação do registro; e o **aviso de agenda** (`167`), com o horário de cada pessoa na agenda
+  publicada de uma Etapa, que a comissão gera ao confirmar a publicação da agenda, a remarcação ou a
+  inclusão de uma pessoa. O canal passar a existir não torna comunicação transacional escopo
   implícito: lembrete, campanha, aviso que nenhum ato oficial fundamente e aviso disparado pela
   publicação, pela conferência ou pelo registro do desfecho sem decisão humana continuam fora, e
-  acrescentar uma sétima situação exige revisar esta regra de novo.
+  acrescentar uma oitava situação exige revisar esta regra de novo.
 
   **A sexta diz que há resultado, e não qual.** O aviso do desfecho não é o ato, não intima e não
   altera prazo, resultado nem direito; o resultado e o fundamento ficam na área do candidato. O texto
@@ -592,6 +594,39 @@ remover o antigo e corrigir o nome.
   modalidade. A opção de pedi-lo vem desmarcada, e só existe com a chave própria da `156` e a da
   `066` ligadas, que dependem da validação institucional descrita naquela spec. As regras de conteúdo,
   de quem recebe e de envio são da `156`, e o envio é o mesmo despacho da `066`.
+
+  **A sétima diz o horário, e não é a agenda.** O aviso de agenda não é o ato: o que vale é o horário
+  publicado na página da seleção, e o aviso o diz. A decisão humana que o fundamenta é a confirmação
+  de quem publica, remarca ou inclui, depois de ver, na conferência, quantos avisos sairão e para quem
+  (a decisão dos avisos da `167`); por isso ele não é "aviso disparado pela publicação sem decisão humana". Sai uma
+  vez por pessoa por ato, só à pessoa afetada nos atos individuais, nunca no cancelamento, e só com a
+  habilitação dos avisos da `066` ligada — desligada, o ato acontece sem aviso, e ligá-la depois não
+  cria aviso de ato anterior. É o único texto que leva o endereço da sala virtual, e o de uma pessoa
+  só: a dela. As regras de conteúdo, de quem recebe e de envio são da `167`, e o envio é o mesmo
+  despacho da `066`.
+
+  > **Redação anterior, da revisão da `156` em 2026-11-11, preservada porque a regra mandava
+  > revisá-la e não substituí-la em silêncio:**
+  > Além do desafio, o sistema envia mensagem em exatamente **seis** situações, todas nominais: a
+  > confirmação do envio da inscrição, endereçada à credencial que praticou o ato; o aviso de que um
+  > endereço passou a alcançar — ou deixou de alcançar — a conta, endereçado à credencial principal
+  > (`FR-018b`); a **convocação**, quando o Perfil publicado declara que este Edital comunica por
+  > mensagem individual (`019`, `FR-287`); o **aviso complementar vinculado a ato oficial** (`066`),
+  > que a equipe do certame redige e decide enviar aos destinatários que um ato já publicado identifica;
+  > o **aviso de pendência documental** (`134`), que quem confere os documentos da convocação decide
+  > enviar, num gesto, às pessoas convocadas que têm documento pendente e prazo em curso; e o **aviso
+  > do desfecho da convocação** (`156`), que quem registra o desfecho pede, de forma explícita, na
+  > confirmação do registro. O canal passar a existir não torna comunicação transacional escopo
+  > implícito: lembrete, campanha, aviso que nenhum ato oficial fundamente e aviso disparado pela
+  > publicação, pela conferência ou pelo registro do desfecho sem decisão humana continuam fora, e
+  > acrescentar uma sétima situação exige revisar esta regra de novo.
+  >
+  > **A sexta diz que há resultado, e não qual.** O aviso do desfecho não é o ato, não intima e não
+  > altera prazo, resultado nem direito; o resultado e o fundamento ficam na área do candidato. O texto
+  > é o mesmo para todas as espécies de desfecho, sem espécie, fundamento, nome, CPF, protocolo nem
+  > modalidade. A opção de pedi-lo vem desmarcada, e só existe com a chave própria da `156` e a da
+  > `066` ligadas, que dependem da validação institucional descrita naquela spec. As regras de conteúdo,
+  > de quem recebe e de envio são da `156`, e o envio é o mesmo despacho da `066`.
 
   > **Redação anterior, da revisão da `134` em 2026-11-08, preservada porque a regra mandava
   > revisá-la e não substituí-la em silêncio:**

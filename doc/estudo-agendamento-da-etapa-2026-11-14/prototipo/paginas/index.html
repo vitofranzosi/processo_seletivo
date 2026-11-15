@@ -1,0 +1,42 @@
+<!--
+titulo: Roteiro do protótipo
+trilha: <span aria-current="page">Protótipo do agendamento da Etapa</span>
+moldura: gestao
+-->
+<h1>Agendamento da Etapa · protótipo</h1>
+<p class="sub">Da lista de participantes à agenda conferida, publicada e avisada, sem planilha. Cenário em uso: <strong data-cenario-atual></strong>.</p>
+
+<div class="colunas roteiro-cenarios">
+  <section class="cartao" aria-labelledby="cenario-a">
+    <h2 id="cenario-a">A · Entrevista</h2>
+    <p>43 pessoas, uma banca, por videoconferência. Entrevistas de 10 minutos com 5 de intervalo, das 8h às 12h e das 13h às 17h. Num dia cabem 32: faltam 11, e a tela mostra isso antes de qualquer publicação.</p>
+    <p><a class="botao" href="etapa.html?cenario=a">Começar pelo cenário A</a></p>
+  </section>
+  <section class="cartao" aria-labelledby="cenario-b">
+    <h2 id="cenario-b">B · Verificação da autodeclaração</h2>
+    <p>23 pessoas, duas bancas simultâneas da comissão, por videoconferência. A página pública mostra só o protocolo, porque a lista revela quem concorre pela reserva para pretos e pardos.</p>
+    <p><a class="botao secundario" href="etapa.html?cenario=b">Começar pelo cenário B</a></p>
+  </section>
+</div>
+
+<h2>O percurso</h2>
+<ol class="roteiro">
+  <li><a href="etapa.html">A Etapa</a>: onde a agenda mora, e o estado vazio que diz o que fazer.</li>
+  <li><a href="configurar.html">Configurar a agenda</a>: dias, janelas, duração, intervalo e bancas, e a capacidade calculada enquanto você digita.</li>
+  <li><a href="montar.html">Montar a agenda</a>: a grade por dia e banca, "Pessoas sem horário" ao lado, "Preencher horários livres" com prévia, e o ajuste à mão sem arrastar nada.</li>
+  <li><a href="conferir.html">Conferir antes de publicar</a>: o que impede, o que será público, a mensagem de cada pessoa e a autoridade.</li>
+  <li><a href="publicada.html">A agenda publicada</a>: o estado dos avisos, a falha que não desfaz o ato e quem passou a participar depois.</li>
+  <li><a href="remarcar.html?pessoa=p3-0">Remarcar uma pessoa</a>: só ela muda, só ela é avisada.</li>
+  <li><a href="publica.html">Página pública da seleção</a> e <a href="candidato.html">área do candidato</a>, no celular.</li>
+  <li><a href="email.html">O aviso por e-mail</a>, na moldura dos e-mails do GPS.</li>
+</ol>
+
+<h2>O que simular</h2>
+<ul>
+  <li><strong>Dois operadores no mesmo horário:</strong> em "Montar a agenda", use "Simular outro operador" e depois agende alguém no primeiro horário livre do dia.</li>
+  <li><strong>Configuração incompatível:</strong> em "Configurar", ponha uma janela de 12:00 a 12:05 ou um dia fora do período do cronograma.</li>
+  <li><strong>Publicar com alguém sem horário:</strong> vá à conferência antes de terminar a montagem.</li>
+  <li><strong>Recurso deferido depois da publicação:</strong> em "A agenda publicada", use "Simular recurso deferido".</li>
+  <li><strong>Celular:</strong> abra qualquer tela com a janela estreita; a grade vira lista cronológica.</li>
+</ul>
+<p class="ajuda">O estado do percurso fica nesta aba do navegador. "Recomeçar", na faixa do alto, volta ao início do cenário em uso.</p>

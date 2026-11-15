@@ -1,0 +1,235 @@
+/* A agenda da Etapa (167): configurar e montar, como no protótipo aprovado (04-redesign). O nome é
+   "agenda da Etapa", e nunca "agenda" sozinho, que é a folha da Agenda dos Editais (101).
+
+   Três regras guiam a folha: uma superfície por assunto, sem caixa dentro de caixa; o espaçamento
+   é a escala que a gestão já usa (.5, .75, 1, 1.5rem); e o que reaproveita peça real não a
+   redesenha. As peças que valem para outras telas estão na folha comum. */
+
+.cabecalho-da-tela{margin-bottom:1.5rem}
+.cabecalho-da-tela .sub{margin-bottom:0}
+
+/* ------------------------------------------------------------ configurar */
+
+.configuracao{margin:0}
+.configuracao-colunas{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:1.5rem;align-items:start}
+.secao-da-configuracao{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.25rem 1.5rem;margin:0 0 1rem}
+.secao-da-configuracao>header{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.secao-da-configuracao h2{margin:0}
+.secao-da-configuracao>.ajuda{margin:0 0 .75rem}
+.secao-da-configuracao>p:last-child{margin-bottom:0}
+.secoes-da-configuracao>.erro{margin:0 0 1rem}
+.numero-da-secao{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
+  background:var(--verde-claro);color:var(--verde-escuro);font-weight:600;font-size:.8125rem}
+.campos-em-linha{display:flex;flex-wrap:wrap;gap:1rem 2rem;align-items:flex-end}
+.campos-em-linha .campo{margin:0;flex:0 0 auto}
+.campos-em-linha label{display:block;font-size:.8125rem;font-weight:600;margin-bottom:.35rem}
+.com-unidade{display:inline-flex;align-items:center;gap:.4rem;color:var(--texto-fraco)}
+.com-unidade input{width:5rem;font-variant-numeric:tabular-nums}
+
+/* Um dia por linha: a data, as janelas como pares de horas, e quantos horários o dia dá. */
+.lista-de-dias,.lista-de-bancas{list-style:none;margin:0 0 .75rem;padding:0;border-top:1px solid var(--borda)}
+.linha-de-dia{display:grid;grid-template-columns:10rem minmax(0,1fr) 6.5rem 2rem;gap:.75rem;align-items:center;
+  padding:.6rem 0;border-bottom:1px solid var(--borda)}
+.rotulo-do-dia{font-weight:600}
+.rotulo-do-dia .campo-do-dia{width:100%;font-weight:600}
+.janelas-do-dia{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.janela{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .25rem .15rem .4rem;
+  border:1px solid var(--borda);border-radius:4px;background:var(--fundo)}
+.janela input[type=time]{border:0;background:transparent;font-variant-numeric:tabular-nums;padding:0;width:auto;
+  box-shadow:none;height:2rem}
+.horarios-do-dia{font-size:.8125rem;color:var(--texto-fraco);text-align:right;font-variant-numeric:tabular-nums}
+.remover-item{border:0;background:transparent;color:var(--texto-fraco);font-size:1.1rem;line-height:1;
+  width:1.75rem;height:1.75rem;border-radius:4px;cursor:pointer;margin:0;padding:0}
+.remover-item:hover{background:var(--vermelho-fundo);color:var(--vermelho)}
+.cabecalho-de-bancas{display:grid;grid-template-columns:11rem minmax(0,1fr) 2rem;gap:.75rem;
+  font-size:.75rem;font-weight:600;color:var(--texto-fraco);text-transform:uppercase;letter-spacing:.04em;
+  padding-bottom:.35rem}
+.linha-de-banca{display:grid;grid-template-columns:11rem minmax(0,1fr) 2rem;gap:.75rem;align-items:center;
+  padding:.5rem 0;border-bottom:1px solid var(--borda)}
+.linha-de-banca input{width:100%;}
+.secao-da-configuracao textarea{width:100%;}
+
+/* O simulador: o veredito primeiro, depois o medidor real, depois a conta. */
+.simulador{position:sticky;top:1rem;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:1.25rem 1.5rem}
+.conta-da-capacidade{list-style:none;margin:0 0 1rem;padding:0;font-size:.8125rem;color:var(--texto-fraco)}
+.conta-da-capacidade span{font-variant-numeric:tabular-nums;color:var(--texto)}
+.lista-aberta{margin-top:.75rem}
+.acao-do-simulador{border-top:1px solid var(--borda);padding-top:1rem;margin-top:1rem;display:flex;flex-wrap:wrap;
+  gap:.5rem;align-items:center}
+.acao-do-simulador .botao{flex:1 1 100%;padding:.6rem 1rem;font-size:.9375rem}
+.acao-do-simulador .ajuda{margin:0}
+
+/* ------------------------------------------------------------ montar */
+
+.cabecalho-do-workspace{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;
+  margin-bottom:1rem}
+.titulo-do-workspace h1{display:inline;margin-right:.6rem}
+.titulo-do-workspace .sub{margin:.35rem 0 0}
+.acoes-do-workspace{display:flex;gap:.5rem;flex-wrap:wrap;margin:0}
+.acoes-do-workspace .botao{padding:.55rem 1rem}
+#mensagem>p{margin:0 0 1rem}
+
+/* Um resumo só, no lugar de cinco números de mesmo peso: o progresso, e os fatos que contam. */
+.progresso-da-agenda{display:grid;grid-template-columns:minmax(14rem,26rem) minmax(0,1fr);gap:.5rem 2rem;
+  align-items:center;background:var(--branco);border:1px solid var(--borda);border-radius:6px;
+  padding:.9rem 1.25rem;margin:0 0 1rem}
+.progresso-da-agenda .medidor{margin:0}
+.fatos-da-agenda{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;margin:0;font-size:.9375rem;color:var(--texto-fraco)}
+.fatos-da-agenda span+span::before{content:"·";margin-right:1.25rem;color:var(--borda)}
+.fatos-da-agenda .falta{color:var(--amarelo)}
+
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 22rem;gap:1.5rem;align-items:start}
+.agenda-do-dia{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem 1rem}
+.dias-da-agenda{display:flex;gap:.25rem;list-style:none;padding:0;margin:0 0 .5rem;flex-wrap:wrap}
+.dias-da-agenda a{display:inline-block;padding:.4rem .8rem;border-radius:4px;text-decoration:none;color:var(--texto);
+  font-size:.9375rem}
+.dias-da-agenda a:hover{background:var(--fundo)}
+.dias-da-agenda a[aria-current]{background:var(--verde-claro);color:var(--verde-escuro);font-weight:600}
+.dias-da-agenda .contagem{font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;font-weight:400}
+
+/* A grade compacta: uma linha por horário, a célula inteira é o link. Ocupada mostra quem; livre
+   fica quieta; escolhida ganha o contorno — e nenhum texto novo aparece pela grade. */
+.grade-compacta{width:100%;border-collapse:collapse}
+.grade-compacta th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;color:var(--texto-fraco);
+  text-align:left;font-weight:600;padding:.4rem .5rem;border-bottom:1px solid var(--borda)}
+.grade-compacta .coluna-hora{width:4.5rem;font-variant-numeric:tabular-nums}
+.grade-compacta tbody th{font-size:.875rem;text-transform:none;letter-spacing:0;color:var(--texto);font-weight:600;
+  border-bottom:1px solid var(--fundo);vertical-align:middle}
+.grade-compacta td{padding:.15rem .25rem;border-bottom:1px solid var(--fundo)}
+.vaga{display:flex;align-items:baseline;gap:.5rem;width:100%;min-height:2.25rem;text-align:left;
+  border:1px solid transparent;border-radius:4px;background:transparent;padding:.3rem .5rem;color:inherit;
+  text-decoration:none}
+.vaga:hover{background:var(--fundo);border-color:var(--borda)}
+.vaga:focus-visible{outline:2px solid var(--verde);outline-offset:1px}
+.vaga .quem{display:inline;font-weight:600;font-size:.9375rem}
+.vaga .inscricao{display:inline;font-size:.75rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+.vaga .origem{margin-left:auto;font-size:.6875rem;color:var(--texto-fraco);border:1px solid var(--borda);
+  border-radius:999px;padding:0 .4rem}
+.vaga .situacao{margin-left:auto}
+.vaga.ocupada{cursor:pointer}
+.vaga.livre .livre-rotulo{color:var(--texto-fraco);font-size:.875rem}
+.vaga.livre:hover .livre-rotulo::after{content:" — escolher quem";color:var(--verde-texto)}
+.vaga.escolhido{border-color:var(--verde);background:var(--verde-claro)}
+.vaga.sem-participacao{background:var(--amarelo-fundo)}
+.banca-no-estreito{display:none}
+
+.pergunta-do-painel{margin:0 0 .5rem}
+.alocacao{margin:0}
+.nao-participam{margin-top:1.25rem;border-top:1px solid var(--borda);padding-top:1rem}
+.nao-participam li{padding:.5rem 0}
+.nao-participam p{margin:0 0 .25rem;font-size:.875rem}
+.nao-participam form{margin:.35rem 0 0}
+
+/* A prévia no painel: veredito, a tabela dia × banca, e a relação nominal recolhida. */
+.distribuicao-da-previa{width:100%;margin:0 0 .75rem;font-size:.875rem}
+.relacao-nominal summary{cursor:pointer;color:var(--verde-texto);font-size:.875rem}
+.relacao-nominal ol{position:relative;margin:.5rem 0 0;padding-left:1.25rem;font-size:.8125rem;max-height:14rem;overflow:auto}
+.relacao-nominal li span{color:var(--texto-fraco);font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------------------ larguras */
+
+/* Notebook: até 80rem a barra lateral e o painel disputam a largura; o painel encolhe antes de a
+   grade apertar. */
+@media (max-width:80rem){
+  .workspace{grid-template-columns:minmax(0,1fr) 19rem;}
+  .configuracao-colunas{grid-template-columns:minmax(0,1fr) 18rem;}
+  .linha-de-dia{grid-template-columns:9.5rem minmax(0,1fr) 2rem;}
+  .horarios-do-dia{display:none;}
+}
+@media (max-width:64rem){
+  .configuracao-colunas,.workspace{grid-template-columns:minmax(0,1fr);}
+  .simulador,.painel-de-acao{position:static;max-height:none;}
+  .painel-de-acao{order:-1;}
+  .progresso-da-agenda{grid-template-columns:minmax(0,1fr);}
+}
+
+/* Celular: a grade vira lista cronológica, com a banca dentro de cada horário. A marcação é a
+   mesma, e nenhum segundo desenho fica para manter em sincronia (UX-763). */
+@media (max-width:40rem){
+  .grade-compacta thead{display:none;}
+  .grade-compacta,.grade-compacta tbody,.grade-compacta tr,.grade-compacta th,.grade-compacta td{display:block;width:auto;}
+  .grade-compacta tr{display:grid;grid-template-columns:3.5rem minmax(0,1fr);border-bottom:1px solid var(--borda);padding:.25rem 0;}
+  .grade-compacta tbody th{border:0;padding:.55rem .25rem 0;grid-row:span 4;}
+  .grade-compacta td{border:0;grid-column:2;}
+  .vaga{flex-direction:column;align-items:flex-start;gap:0;}
+  .vaga .origem,.vaga .situacao{margin-left:0;}
+  .banca-no-estreito{display:inline;font-size:.75rem;color:var(--texto-fraco);}
+  .linha-de-dia{grid-template-columns:minmax(0,1fr) 2rem;}
+  .rotulo-do-dia{grid-column:1 / -1;}
+  .linha-de-banca,.cabecalho-de-bancas{grid-template-columns:minmax(0,1fr) 2rem;}
+  .linha-de-banca input:not([type=hidden]){grid-column:1;}
+  .cabecalho-de-bancas{display:none;}
+  .acoes-do-workspace{width:100%;}
+  .acoes-do-workspace .botao{flex:1 1 auto;text-align:center;}
+  .secao-da-configuracao,.simulador{padding:1rem;}
+  .lista-com-rolagem{max-height:16rem;}
+}
+
+/* --- a conferência e a agenda publicada (entrega B) ------------------------------------------- */
+
+/* A conferência começa respondendo "posso publicar?", em quatro linhas (04-redesign, decisão 2). */
+.lista-de-prontidao{list-style:none;margin:0 0 1.5rem;padding:.75rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:6px;display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:.5rem 1.5rem;}
+.lista-de-prontidao li{display:flex;gap:.5rem;align-items:baseline;font-size:.9375rem;}
+.marca-de-prontidao{display:inline-grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;
+  font-size:.75rem;font-weight:700;flex:none;}
+.lista-de-prontidao .pronto .marca-de-prontidao{background:var(--sucesso-fundo);color:var(--sucesso);}
+.lista-de-prontidao .pendente{font-weight:600;}
+.lista-de-prontidao .pendente .marca-de-prontidao{background:var(--amarelo-fundo);color:var(--amarelo);}
+.lista-de-prontidao .a-fazer .marca-de-prontidao{background:var(--cinza-fundo);color:var(--texto-fraco);}
+
+/* Cada impedimento com o caminho de corrigir, em amarelo: impede, e não é erro de quem confere. */
+.consequencias.impedimentos{border-left:4px solid var(--amarelo);background:var(--amarelo-fundo);}
+.consequencias.impedimentos h2{color:var(--amarelo);}
+.impedimento{margin-bottom:1rem;}
+.impedimento h3{margin:0 0 .25rem;}
+.impedimento p{margin:0 0 .5rem;max-width:var(--leitura);}
+
+/* A prévia pública com a moldura tracejada: é o que a página mostrará, e ainda não está nela. */
+.previa-publica{border:1px dashed var(--borda);border-radius:4px;padding:.75rem 1rem;background:var(--fundo);}
+.dia-publico h3{margin:.5rem 0;}
+.horarios-publicos{list-style:none;margin:0 0 .75rem;padding:0;}
+/* Em grade, como na página pública: hora, pessoa e banca numa linha também a 375 px. */
+.horarios-publicos li{display:grid;grid-template-columns:3.5rem minmax(0,1fr) auto;gap:.25rem .75rem;
+  align-items:baseline;padding:.3rem 0;border-bottom:1px solid var(--borda);}
+.horarios-publicos .quem{overflow-wrap:anywhere;}
+.horarios-publicos .hora{font-variant-numeric:tabular-nums;font-weight:600;min-width:3.5rem;}
+.horarios-publicos .banca{color:var(--texto-fraco);font-size:.875rem;}
+.horarios-publicos .mais{display:block;color:var(--texto-fraco);border-bottom:0;}
+.numero-de-inscricao{font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;}
+
+/* O veículo: as duas escolhas, cada uma com o que exige logo abaixo dela. */
+.veiculo-da-agenda{border:0;margin:0;padding:0;max-width:var(--leitura);}
+.veiculo-da-agenda legend{font-weight:600;margin-bottom:.5rem;}
+.opcao-de-veiculo{margin:.75rem 0 .35rem;}
+.veiculo-da-agenda .campo{margin:0 0 .5rem 1.5rem;}
+.veiculo-da-agenda .campos-em-linha{margin-left:1.5rem;}
+.veiculo-da-agenda .campos-em-linha input[type=text]{width:20rem;max-width:100%;}
+
+/* A agenda publicada: um resumo só, e a lista vigente. */
+.resumo-da-publicacao{margin:0 0 1.5rem;}
+.resumo-da-publicacao p{margin:0 0 .35rem;}
+.remarcado{display:inline-block;font-size:.75rem;font-weight:600;padding:.05rem .45rem;border-radius:999px;
+  background:var(--amarelo-fundo);color:var(--amarelo);}
+.lista-publicada td{vertical-align:top;}
+/* Quem recebe o aviso, recolhido: pessoa e protocolo, nunca o e-mail (`D-011`). */
+.destinatarios-dos-avisos{margin:0 0 .75rem;}
+.destinatarios-dos-avisos ul{margin:.35rem 0 0;padding-left:1.2rem;max-height:12rem;overflow-y:auto;position:relative;}
+.frase-dos-avisos{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem;}
+
+/* Depois da publicação (entrega C): os avisos num número só, o que não saiu com o reenvio, e os
+   documentos dos atos em ordem. Remarcar e cancelar usam a moldura da configuração. */
+.documentos-da-publicada{margin:0 0 1rem;font-size:.9375rem;}
+.resumo-dos-avisos{margin:0 0 1.5rem;}
+.resumo-dos-avisos p{margin:0 0 .35rem;}
+.falhas-dos-avisos{list-style:none;margin:.5rem 0 0;padding:0;border-top:1px solid var(--borda);}
+.falhas-dos-avisos li{padding:.5rem 0;border-bottom:1px solid var(--borda);}
+.falhas-dos-avisos form{margin:.35rem 0 0;}
+.remarcacao{margin:0;}
+.quem-remarca{margin:0 0 .5rem;font-size:1.0625rem;}
+.troca{margin:0 0 .75rem;font-variant-numeric:tabular-nums;}
+.efeitos{margin:0 0 .5rem;padding-left:1.1rem;font-size:.875rem;color:var(--texto-fraco);}
+.efeitos li{margin:0 0 .35rem;}

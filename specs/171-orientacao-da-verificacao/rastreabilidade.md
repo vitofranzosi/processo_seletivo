@@ -39,7 +39,7 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-7312 | `portal/passo_da_etapa.py` (`_estado_do_video`), `portal/situacao.py` | PV, VP |
 | FR-7313 | `portal/passo_da_etapa.py` (o vídeo enviado com a chave desligada) | PV |
 | FR-7314 | `portal/views.py`, `acompanhamento.html`, `_verificacao_por_video.html` removido | PD, PV |
-| FR-7315 | `avisos/domain/nomes.py` (`PASSO`), `avisos/models.py`, `avisos/0003_origem_passo` | AV |
+| FR-7315 | `avisos/domain/nomes.py` (`PASSO`), `avisos/models.py`, `avisos/0004_origem_passo` | AV |
 | FR-7316 | `avisos/application/comando.py`, `confirmar.py` (`confirmar_aviso_do_passo`), `interface/avisos.py` | AV |
 | FR-7317 | `avisos/application/comando.py` (a chave de sempre) | AV |
 | FR-7318 | `avisos/application/destinatarios.py` (`universo_do_passo`) | AV |

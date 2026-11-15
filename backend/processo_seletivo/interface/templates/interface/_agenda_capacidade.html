@@ -1,0 +1,43 @@
+{% comment %}
+O simulador: o veredito primeiro, em palavras; depois o medidor real da gestão; depois a conta numa
+linha (04-redesign, decisão 2). Quando falta, os atalhos dizem o ganho e o que resolve sozinho tem
+destaque (decisão 3). Nada aqui grava: os atalhos devolvem o formulário acrescido (UX-760).
+{% endcomment %}
+{% url 'interface:agenda-configurar' edital.id etapa_id as endereco %}
+{% if problemas %}
+<div class="veredito invalido" role="alert">
+  <p class="titulo-do-veredito">Corrija para continuar</p>
+  <ul>{% for problema in problemas %}<li>{{ problema.frase }}</li>{% endfor %}</ul>
+</div>
+{% elif capacidade.falta %}
+<div class="veredito falta">
+  <p class="titulo-do-veredito">{{ capacidade.veredito }}</p>
+  <p>{{ capacidade.explicacao }}</p>
+  {% if atalhos %}
+  <p class="resolver">Resolva com um clique:</p>
+  <ul class="sugestoes">
+    {% for atalho in atalhos %}
+    <li><button type="submit" class="acao sugestao{% if atalho.resolve %} resolve{% endif %}" name="acao" value="atalho-{{ atalho.codigo }}" hx-post="{{ endereco }}" hx-target="#form-da-agenda" hx-swap="outerHTML" hx-include="#form-da-agenda"><span>{{ atalho.rotulo }}</span><span class="ganho">+{{ atalho.ganho }}</span></button></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% else %}
+<div class="veredito cabe">
+  <p class="titulo-do-veredito">{{ capacidade.veredito }}</p>
+  <p>{{ capacidade.explicacao }}{% if capacidade.sobra %} Os horários livres servem a remarcações e inclusões.{% endif %}</p>
+</div>
+{% endif %}
+<div class="medidor{% if not problemas and capacidade.cabe %} completo{% endif %}">
+  <p class="numeros"><span class="restante"><strong>{{ capacidade.horarios }}</strong> horário{{ capacidade.horarios|pluralize:"s" }} para {{ capacidade.participantes }} pessoa{{ capacidade.participantes|pluralize:"s" }}</span><span class="taxa">{{ capacidade.taxa }}%</span></p>
+  <div class="trilha-do-medidor" aria-hidden="true"><div class="feito largura-{{ capacidade.taxa }}"></div></div>
+</div>
+{% if capacidade.conta %}
+<ul class="conta-da-capacidade">
+  {% for linha in capacidade.conta %}<li><span>{{ linha.dia }}, {{ linha.janela }}</span> {{ linha.frase }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% for frase in capacidade.frases_de_sobra %}<p class="ajuda">{{ frase }}</p>{% endfor %}
+{% if capacidade.frase_da_lista_aberta %}<p class="ajuda lista-aberta">{{ capacidade.frase_da_lista_aberta }}</p>{% endif %}
+{% if fora_da_area %}{% comment %} O número de cada dia mora na linha do dia, fora do simulador: a mesma resposta o
+   atualiza ali, para a linha não mostrar a conta de antes da última tecla. {% endcomment %}{% for dia in dias %}<span class="horarios-do-dia" id="horarios-do-dia-{{ dia.indice }}" hx-swap-oob="true">{{ dia.horarios }} horário{{ dia.horarios|pluralize:"s" }}</span>{% endfor %}{% endif %}
