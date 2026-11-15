@@ -13,6 +13,13 @@ uma pasta em `specs/`"), e o usuário aprovou a correção. Esta spec registra c
 branch fez, com a medida, e diz o que ela **não** tem: **a validação com a equipe não aconteceu, e a
 aprovação da migração depende do usuário.** O merge é do usuário.
 
+**A exceção à ordem dos artefatos foi aceita pelo usuário em 15/11/2026.** O `/speckit-analyze` acusou
+um crítico que não se corrige por edição: a implementação veio antes da spec e do plano, contra a
+Constituição ("Implementação substancial NÃO DEVE começar antes de especificação clara e plano
+aprovado"). Perguntado *"Você aceita a exceção da spec 175 escrita depois da migração?"*, o usuário
+respondeu: *"Aceito a exceção"*. **O aceite cobre só a ordem dos artefatos.** A validação com a equipe
+e a aprovação da migração (FR-7911, SC-2704) continuam pendentes.
+
 **Input**: a decisão do usuário em 15/11, depois do piloto da `172`: *"seguir com a migração. Mostre o
 antes e depois da migração."* A base é o que o usuário aprovou no piloto: o texto na largura do
 conteúdo e os três padrões da segunda leitura (a decisão do usuário sobre a largura do texto, na `172`).
@@ -64,6 +71,9 @@ para decidir depois de o usuário ver o resultado.
   eles: os dois-pontos gerados pela folha depois do rótulo saem (D-002); a migração ganha esta spec; e
   a folha do piloto deixa de repetir a comum.
 - A tela de um notebook citada pelo usuário no piloto foi só exemplo, e não critério de medida.
+- Q: Você aceita a exceção da spec 175 escrita depois da migração? → A: **"Aceito a exceção"**
+  (15/11/2026). Cobre só a ordem dos artefatos; a validação com a equipe e a aprovação da migração
+  (FR-7911, SC-2704) continuam pendentes.
 
 ---
 

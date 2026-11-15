@@ -45,7 +45,7 @@ folha como texto; nenhum texto gerado pela folha (D-002).
 | II. Imutabilidade | nenhuma regra de negócio nem migration | passa |
 | III. Segurança | nenhuma permissão, rota ou escopo muda | passa |
 | IV. Regras explícitas | a contradição com a FR-7702 da `172` está escrita (FR-7910, D-003) | passa |
-| V. Rastreabilidade | **a implementação veio antes da spec**, a pedido do usuário; esta spec e as tarefas registram o feito, e a revisão o apontou | passa com ressalva registrada |
+| V. Rastreabilidade | **a implementação veio antes da spec**, a pedido do usuário; esta spec e as tarefas registram o feito, e a revisão o apontou. A exceção à ordem dos artefatos foi **aceita pelo usuário em 15/11/2026** ("Aceito a exceção"); o aceite não cobre a validação nem a aprovação | exceção aceita pelo usuário |
 | VI. Completude de jornada | a capacidade é a mesma ação, em telas que usam a largura; o cenário demonstrável é a equipe fazendo as tarefas do roteiro nas duas versões, que **ainda não aconteceu** (SC-2704) | pendente da validação |
 
 ## Project Structure
