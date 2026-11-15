@@ -1000,19 +1000,24 @@ form.convite{margin:.75rem 0 0}
 .oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip-path:inset(50%);white-space:nowrap;border:0}
 /* A situação da inscrição, antes de qualquer documento (063, FR-1166). Painel com borda de
-   destaque porque é a resposta da página; o resto é evidência. O rótulo é texto em caixa — a cor só
-   acompanha a palavra, e o provisório se distingue do registrado também pela borda tracejada, que
-   sobrevive ao preto e branco (UX-155). */
+   destaque porque é a resposta da página; o resto é evidência. O rótulo é selo em pílula — a cor só
+   acompanha a palavra, e o provisório se distingue do registrado também pelo ícone (relógio ou
+   confirmação), que sobrevive ao preto e branco (UX-155 da 063). Até a 174 a distinção era a borda
+   tracejada, e ela parecia marcador de depuração (D-008 da 174). */
 .situacao-da-inscricao{background:var(--branco);border:1px solid var(--borda);
   border-left:4px solid var(--verde);border-radius:0 8px 8px 0;padding:1rem 1.25rem;
   margin:0 0 1.5rem;max-width:var(--leitura)}
 .situacao-da-inscricao>h2{margin:0 0 .5rem;font-size:1.05rem}
 .situacao-da-inscricao>h3{margin:1rem 0 .35rem;font-size:.9375rem}
 .situacao-da-inscricao p:last-child{margin-bottom:0}
-.rotulo-da-situacao{display:inline-block;margin:0;padding:.2rem .7rem;border-radius:4px;
-  font-size:1.125rem;font-weight:700;border:2px solid var(--verde);color:var(--verde-escuro)}
-.rotulo-da-situacao.provisoria{border-style:dashed;border-color:var(--amarelo);color:var(--texto)}
+.rotulo-da-situacao{display:inline-flex;align-items:center;gap:.4rem;margin:0;padding:.3rem .9rem .3rem .65rem;
+  border-radius:var(--raio-pilula);font-size:1.125rem;font-weight:700;border:1px solid var(--verde);
+  color:var(--verde-escuro)}
+.rotulo-da-situacao .icone{flex:none}
+.rotulo-da-situacao.provisoria{border-color:var(--amarelo);background:var(--amarelo-fundo);color:var(--texto)}
+.rotulo-da-situacao.provisoria .icone{color:var(--amarelo)}
 .rotulo-da-situacao.registrada{background:var(--verde-claro)}
+.prazo-do-passo{margin:.6rem 0 0;font-size:1.0625rem}
 .porque{margin:0;padding-left:1.1rem;display:grid;gap:.3rem}
 .acao-principal{font-weight:600;margin:0 0 .5rem}
 .prazo-da-convocacao,.consequencia{margin:0 0 .5rem}
@@ -1360,49 +1365,170 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
   .cartao-de-acesso h1{font-size:1.75rem;}
 }
 
-/* --- A verificação da autodeclaração por vídeo (166) ---------------------------------------- */
-/* Celular primeiro: coluna única, botões de largura cheia, a câmera em retrato, e os botões da
-   gravação dentro da primeira tela a 375 px (UX-771). Nenhuma cor sozinha diz estado: o passo atual
-   é negrito e marcado, o feito é riscado, e o selo diz "Gravando" por extenso. */
-.verificacao,.verificacao-estado,.comprovante-do-video{max-width:var(--leitura);}
+/* --- A verificação da autodeclaração por vídeo (166; o polimento da 174) --------------------- */
+/* A jornada centrada (174, FR-7850): uma coluna de 44rem no meio da página, e não a medida de
+   leitura encostada à esquerda, que deixava metade da tela vazia e parecia tela de desenvolvimento.
+   Celular primeiro: abaixo de 40rem, coluna única e ações de largura cheia; o palco ocupa a tela.
+   Nenhuma cor sozinha diz estado: "Gravando" é palavra, o passo é "Passo N de 4", o momento atual é
+   negrito e sublinhado (UX-873). */
+.jornada{max-width:var(--coluna);margin-inline:auto}
+/* O `hidden` vence qualquer regra de classe aqui dentro (174, FR-7854, A-2): `.recusa` declara
+   `display:block`, e a recusa da idade nascia vermelha antes de qualquer tentativa. */
+.jornada [hidden]{display:none !important}
+.icone{flex:none;vertical-align:-.25em}
+.jornada-momentos{display:flex;flex-wrap:wrap;gap:.25rem 1.25rem;list-style:none;margin:0 0 1.5rem;
+  padding:0;font-size:.875rem;color:var(--texto-fraco)}
+.jornada-momentos li{padding-bottom:.3rem;border-bottom:3px solid var(--borda)}
+.jornada-momentos [aria-current]{color:var(--texto);font-weight:700;border-bottom-color:var(--verde)}
+.verificacao-estado,.gravacao-do-video,.comprovante-do-video{margin:0 0 2rem}
 .verificacao-tela{margin:0 0 1.5rem;}
-.verificacao-tela p{margin:.5rem 0;}
-.opcoes-do-meio{display:grid;gap:.75rem;margin:1rem 0;}
-.opcao-do-meio{padding:.9rem 1rem;border:2px solid var(--verde);border-radius:6px;background:var(--branco);
-  color:var(--verde-texto);font-weight:600;font-size:1rem;font-family:inherit;cursor:pointer;width:100%;}
-.opcao-do-meio:hover{background:var(--verde-claro);}
-.acolhimento,.autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
-.acolhimento li,.autoconferencia li{margin:.35rem 0;}
-.maioridade{margin:1rem 0;padding:.75rem 1rem;border:1px solid var(--borda);border-radius:6px;}
-.maioridade label{display:block;margin:.4rem 0;}
-.moldura-da-camera{position:relative;width:100%;max-width:24rem;aspect-ratio:3/4;max-height:45vh;
-  margin:.5rem 0;background:var(--texto);border-radius:6px;overflow:hidden;}
-.botoes-da-gravacao{display:grid;gap:.5rem;margin:.5rem 0;}
-.previa{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
-.previa.sem-espelho{transform:none;}
-.oval{position:absolute;left:18%;top:10%;width:64%;height:62%;border:3px dashed rgba(255,255,255,.8);
-  border-radius:50%;pointer-events:none;}
-.selo-gravando{position:absolute;left:.5rem;top:.5rem;padding:.2rem .5rem;border-radius:4px;
-  background:var(--vermelho);color:var(--branco);font-weight:700;font-size:.875rem;}
+.verificacao-tela>p,.verificacao-estado>p{margin:.6rem 0}
+.acoes-da-tela{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1.25rem;margin:1.25rem 0 0}
+.jornada .principal{display:inline-flex;align-items:center;justify-content:center;
+  min-height:var(--controle-g);max-width:none}
+.prazo-do-passo strong{color:var(--texto)}
+/* A escolha (174, FR-7860): dois cartões do mesmo tamanho e do mesmo desenho, porque as duas formas
+   valem igual (FR-7108 da 166); cada um diz o que a forma é, e o botão é o mesmo nos dois. */
+.formas{display:grid;gap:1rem;margin:1.25rem 0 0}
+.forma{display:flex;flex-direction:column;padding:1.25rem;border:1px solid var(--borda);
+  border-radius:10px;background:var(--branco)}
+.forma h3{margin:0 0 .5rem;font-size:1.0625rem}
+.forma-itens{flex:1;margin:0 0 1.25rem;padding-left:1.1rem}
+.forma-itens li{margin:.3rem 0}
+.forma-acao{width:100%;min-height:var(--controle-g);padding:.6rem 1rem;border:2px solid var(--verde);
+  border-radius:6px;background:var(--branco);color:var(--verde-texto);font:inherit;font-weight:600;
+  cursor:pointer}
+.forma-acao:hover{background:var(--verde-claro)}
+/* O preparo em três itens com ícone, e "Quem vê o seu vídeo" num bloco próprio (FR-7863, FR-7864). */
+.preparo{list-style:none;margin:.5rem 0 1rem;padding:0;display:grid;gap:.6rem}
+.preparo li,.teto-do-video{display:flex;gap:.75rem;align-items:flex-start}
+.preparo .icone,.teto-do-video .icone{width:1.5rem;height:1.5rem;color:var(--verde-texto)}
+.quem-ve{margin:1.25rem 0;padding:1rem 1.25rem;background:var(--fundo);border:1px solid var(--borda);
+  border-radius:10px}
+.quem-ve h3{margin:0 0 .5rem;font-size:1rem}
+.quem-ve ul{margin:0;padding-left:1.1rem}
+.quem-ve li{margin:.35rem 0}
+.maioridade{margin:1.25rem 0 0;padding:0;border:0;min-width:0}
+.maioridade legend{margin:0 0 .5rem;padding:0;font-weight:700}
+.maioridade:focus{outline:3px solid var(--vermelho);outline-offset:4px}
+.maioridade .recusa{margin:.5rem 0 0}
+.opcao-grande{display:flex;align-items:center;gap:.75rem;min-height:var(--controle-g);margin:.5rem 0;
+  padding:.6rem 1rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco);
+  cursor:pointer}
+.opcao-grande:has(:checked){border:2px solid var(--verde);background:var(--verde-claro);font-weight:600}
+.opcao-grande input{width:1.15rem;height:1.15rem;margin:0;accent-color:var(--verde)}
 .fonte-de-teste{font-size:.875rem;color:var(--texto-fraco);}
 .nao-consigo{margin-top:1rem;}
 .link-do-meio{padding:0;border:0;background:transparent;color:var(--verde-texto);text-decoration:underline;
   font:inherit;cursor:pointer;}
-.passo-atual{font-size:1.25rem;font-weight:700;}
-.passo-proximo{color:var(--texto-fraco);}
-.tempo-da-gravacao{font-variant-numeric:tabular-nums;}
-.passos-do-roteiro{margin:.5rem 0;padding-left:1.25rem;font-size:.9375rem;}
-.passos-do-roteiro .atual{font-weight:700;}
-.passos-do-roteiro .feito{text-decoration:line-through;color:var(--texto-fraco);}
-.revisao,.video-do-titular{width:100%;max-width:24rem;background:var(--texto);border-radius:6px;}
-.dados-do-video{display:grid;grid-template-columns:1fr;gap:.15rem;margin:.5rem 0 1rem;}
-.dados-do-video dt{font-weight:600;margin-top:.4rem;}
-.dados-do-video dd{margin:0;min-width:0;}
+/* O palco (174, FR-7866 a FR-7879): a prévia e as camadas na mesma célula de grade. A instrução fica
+   no alto, perto da câmera frontal, numa faixa escura de 0,78 que dá mais de 4,5:1 ao texto branco
+   mesmo sobre um quadro branco puro (SC-2656), e rola dentro de si quando passa de um terço — é o
+   passo 4. "Próximo" fica embaixo, ao alcance do polegar; "Parar e recomeçar", no canto oposto. As
+   unidades `cq*` medem o próprio palco, para o guia caber em retrato e em paisagem. */
+.palco{position:relative;display:grid;container-type:size;width:100%;aspect-ratio:16/9;max-height:70vh;
+  background:var(--texto);border-radius:10px;overflow:hidden;color:var(--branco)}
+.palco>*{grid-area:1/1;min-width:0;min-height:0}
+/* As camadas acima da prévia por `z-index`, e não pela ordem: o espelho (`transform`) põe o vídeo
+   na camada dos posicionados, e ele interceptava o toque em "Próximo" (achado da jornada no
+   navegador, 15/11). */
+.palco>:not(.previa){position:relative;z-index:1}
+.previa{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.previa.sem-espelho{transform:none}
+.oval{place-self:center;width:40%;width:min(70cqw,54cqh);aspect-ratio:3/4;
+  border:3px solid rgba(255,255,255,.75);border-radius:50%;pointer-events:none}
+.canto-do-palco{align-self:start;justify-self:start;margin:.6rem}
+.guia-do-oval{align-self:start;justify-self:center;margin:3.25rem .75rem 0;padding:.35rem .8rem;
+  border-radius:var(--raio-pilula);background:rgba(0,0,0,.65);font-size:.875rem;text-align:center}
+.faixa-de-cima{align-self:start;display:grid;gap:.5rem;padding:.6rem}
+.linha-do-selo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:0}
+.linha-do-selo .botao-no-palco{margin-left:auto}
+.selo-gravando{padding:.2rem .55rem;border-radius:4px;background:var(--vermelho);color:var(--branco);
+  font-weight:700;font-size:.875rem}
+.selo-gravando::before{content:"";display:inline-block;width:.55rem;height:.55rem;margin-right:.35rem;
+  border-radius:50%;background:currentColor}
+.tempo-da-gravacao{padding:.2rem .5rem;border-radius:4px;background:rgba(0,0,0,.65);font-size:.875rem;
+  font-variant-numeric:tabular-nums}
+.botao-no-palco{min-height:32px;padding:.25rem .6rem;border:1px solid rgba(255,255,255,.75);
+  border-radius:6px;background:rgba(0,0,0,.65);color:var(--branco);font:inherit;font-size:.8125rem;
+  cursor:pointer}
+.instrucao-do-passo{max-height:33%;max-height:33cqh;overflow:auto;padding:.75rem 1rem;border-radius:8px;
+  background:rgba(0,0,0,.78)}
+.rotulo-do-passo{margin:0 0 .25rem;font-size:.875rem;font-weight:700}
+.texto-do-passo{margin:0;font-size:1.1875rem;font-weight:600;line-height:1.35}
+.faixa-de-baixo{align-self:end;display:grid;justify-items:center;gap:.35rem;padding:.75rem;
+  background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.proximo{width:100%;max-width:22rem;min-height:56px;border:0;border-radius:var(--raio-pilula);
+  background:var(--verde);color:var(--branco);font:inherit;font-size:1.125rem;font-weight:700;cursor:pointer;
+  box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+.proximo:focus-visible,.botao-no-palco:focus-visible,.link-no-palco:focus-visible{outline:3px solid var(--branco);
+  outline-offset:3px}
+.link-no-palco{min-height:32px;padding:.25rem .5rem;border:0;background:transparent;color:var(--branco);
+  text-decoration:underline;font:inherit;font-size:.875rem;cursor:pointer}
+.palco-da-gravacao[data-estado="preparo"] [data-so-gravando],
+.palco-da-gravacao[data-estado="gravando"] [data-so-preparo]{display:none}
+.preparo-do-palco{padding:1rem 0 0}
+.preparo-do-palco h3{margin:0 0 .4rem;font-size:1rem}
+.preparo-do-palco>.aviso{margin:0 0 .75rem}
+.passos-do-roteiro{margin:.25rem 0 .75rem;padding-left:1.3rem}
+.sugestao-do-retrato{display:none}
+.nivel-do-som{display:flex;align-items:center;gap:.75rem;margin:.75rem 0 .25rem}
+.nivel-do-som meter{flex:1;height:14px}
+.estado-do-som{margin:0 0 .5rem;font-weight:600}
+.revisao,.video-do-titular{display:block;width:100%;max-height:70vh;background:var(--texto);border-radius:10px;}
+.autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
+.autoconferencia li{margin:.35rem 0;}
+.progresso-do-video{width:100%;height:14px;margin:.5rem 0 0}
+@media (min-width:40rem){
+  .formas{grid-template-columns:1fr 1fr}
+  .dados-do-video{grid-template-columns:max-content minmax(0,1fr);row-gap:.35rem}
+  .dados-do-video dt{margin-top:0}
+}
+/* No celular, o palco ocupa a tela pela composição, e não pelo modo de tela cheia do navegador, que
+   no iPhone entrega o vídeo ao reprodutor do sistema e esconde a instrução e os botões (D-005). No
+   preparo, o painel de baixo rola e as ações ficam sempre à vista; gravando, só o vídeo e as faixas. */
+@media (max-width:39.99rem){
+  .jornada .acoes-da-tela .principal{width:100%;}
+  .palco-da-gravacao{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;margin:0;
+    height:100vh;height:100dvh;background:var(--texto)}
+  .palco{flex:1;aspect-ratio:auto;max-height:none;border-radius:0}
+  .faixa-de-cima{padding-top:calc(.6rem + env(safe-area-inset-top))}
+  .faixa-de-baixo{padding-bottom:calc(.75rem + env(safe-area-inset-bottom))}
+  .preparo-do-palco{flex:none;max-height:42%;overflow:auto;
+    padding:1rem 1rem calc(1rem + env(safe-area-inset-bottom));background:var(--branco);
+    color:var(--texto);border-radius:14px 14px 0 0}
+}
+/* O celular deitado continua usável, e sugere o retrato sem impedir (FR-7878). */
+@media (max-width:59.99rem) and (orientation:landscape) and (max-height:30rem){
+  .palco-da-gravacao{position:fixed;inset:0;z-index:30;display:flex;flex-direction:row;margin:0;
+    height:100vh;height:100dvh;background:var(--texto)}
+  .palco{flex:1;aspect-ratio:auto;max-height:none;border-radius:0}
+  .preparo-do-palco{flex:none;width:45%;max-height:none;overflow:auto;padding:.75rem 1rem;
+    background:var(--branco);color:var(--texto)}
+  .sugestao-do-retrato{display:block}
+}
+@media (prefers-reduced-motion:reduce){
+  .palco-da-gravacao *{transition:none !important;animation:none !important}
+}
+/* O comprovante abre pela confirmação (174, FR-7882): o que a pessoa procura é saber que deu certo.
+   Os dados para conferência vão para o fim, visíveis e em texto menor (D-009), e saem na impressão. */
+.confirmacao-do-envio{display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;align-items:center;
+  margin:0 0 1.5rem;padding:1.25rem;border:1px solid var(--verde);border-left:4px solid var(--verde);
+  border-radius:10px;background:var(--verde-claro)}
+.confirmacao-do-envio .icone{grid-row:span 2;width:2.5rem;height:2.5rem;color:var(--verde-texto)}
+.confirmacao-do-envio h2{margin:0;font-size:1.375rem}
+.confirmacao-do-envio p{margin:0}
+.confirmacao-do-envio .aviso{grid-column:1/-1;margin-top:.75rem}
+.dados-do-video{display:grid;grid-template-columns:minmax(0,1fr);gap:.1rem 1rem;margin:.5rem 0 0;
+  font-size:.875rem;color:var(--texto-fraco)}
+.dados-do-video dt{font-weight:600;margin-top:.5rem}
+.dados-do-video dd{margin:0;min-width:0;overflow-wrap:anywhere}
 .resumo-do-video{word-break:break-all;}
-@media (min-width:48rem){
-  .opcoes-do-meio{grid-template-columns:1fr 1fr;}
-  .dados-do-video{grid-template-columns:auto 1fr;column-gap:1rem;}
-  .dados-do-video dt{margin-top:0;}
+.comprovante-do-video a.secundario{display:inline-flex;align-items:center;min-height:var(--controle-g);
+  text-decoration:none}
+@media print{
+  .jornada{max-width:none}
+  .jornada .voltar,.video-do-titular,.assistir-ao-video,.jornada .acoes-da-tela{display:none}
 }
 /* A agenda da Etapa (167, FR-7227, FR-7228). Peças próprias, sem reusar `.protocolo`, que tem regra
    de outra tela (o achado do protótipo). Sem `[hidden]` a forçar: a busca é no servidor (T-016), e a

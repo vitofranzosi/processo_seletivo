@@ -1,16 +1,19 @@
 {% extends "portal/base.html" %}{% load estaticos %}
-{% block titulo %}Verificação da autodeclaração{% endblock %}
+{% block titulo %}{{ situacao.nome_da_etapa }}{% endblock %}
 {% block conteudo %}
-<p class="voltar"><a href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
-<h1>Verificação da autodeclaração</h1>
-<p class="sub">{{ situacao.nome_da_etapa }}</p>
-
 {% comment %}
 **Uma página, várias telas** (166, US2). O script mostra uma de cada vez; sem script, a página diz o
 que acontece e a entrevista ao vivo continua sendo o caminho, que é o padrão (FR-7108). Nada aqui
 escreve estilo nem script embutido: a CSP desta página é a comum mais `media-src 'self' blob:`, e só
 isso (FR-7117).
+
+**A jornada centrada** (174, FR-7850, FR-7852): uma coluna no meio da página, o nome publicado da
+Etapa como título — e não "Verificação da autodeclaração", que a Etapa restrita pode não ser (UX-790
+da 171) — e os três momentos sem número, para não competir com o "Passo N de 4" do roteiro.
 {% endcomment %}
+<div class="jornada">
+<p class="voltar"><a href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
+<h1>{{ situacao.nome_da_etapa }}</h1>
 
 {% if not pode_gravar %}
 <section class="verificacao-estado" aria-labelledby="estado-titulo">
@@ -24,12 +27,17 @@ isso (FR-7117).
   {% elif situacao.estado == "RECEBIDO" %}
   <p>O período de envio terminou. O seu vídeo foi recebido e está com a comissão.</p>
   {% else %}
-  <p>O envio do vídeo ainda não está aberto.{% if situacao.inicio %} Ele abre em {{ situacao.inicio|date:"d/m/Y \à\s H:i" }}.{% endif %}</p>
+  <p>O envio do vídeo ainda não está aberto.{% if situacao.inicio %} Ele abre em {{ situacao.inicio|date:"d/m/Y \à\s H\hi" }}.{% endif %}</p>
   {% endif %}
-  {% if situacao.video %}<p><a class="principal" href="{{ rotas.comprovante }}">Ver o comprovante do vídeo</a></p>{% endif %}
+  <p class="acoes-da-tela">{% if situacao.video %}<a class="principal" href="{{ rotas.comprovante }}">Ver o comprovante do vídeo</a>{% else %}<a class="principal" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a>{% endif %}</p>
 </section>
 {% else %}
-<div class="verificacao" data-verificacao
+<ol class="jornada-momentos" data-momentos>
+  <li data-momento="preparar" aria-current="step">Preparar</li>
+  <li data-momento="gravar">Gravar</li>
+  <li data-momento="enviar">Conferir e enviar</li>
+</ol>
+<div class="gravacao-do-video" data-verificacao
      data-envios="{{ rotas.envios }}"
      data-comprovante="{{ rotas.comprovante }}"
      data-roteiro="{{ roteiro_versao }}"
@@ -39,15 +47,36 @@ isso (FR-7117).
 {% csrf_token %}
 <noscript><p class="aviso">A gravação do vídeo precisa de JavaScript. Sem ele, a sua verificação é por entrevista ao vivo, e você não precisa fazer nada agora.</p></noscript>
 
+{% comment %}
+**A escolha diz o que cada forma é** (174, FR-7860). Dois botões iguais, sem explicação, deixavam a
+pessoa adivinhar quanto tempo o vídeo leva e quem marca a entrevista. Os dois cartões têm o mesmo
+desenho e o mesmo botão, porque as duas formas valem igual (FR-7108 da 166).
+{% endcomment %}
 <section class="verificacao-tela" data-tela="escolha" aria-labelledby="t-escolha">
   <h2 id="t-escolha">Falta um passo seu</h2>
-  <p>Você se inscreveu na vaga para pessoas pretas e pardas. A comissão precisa confirmar a sua autodeclaração.</p>
-  {% if situacao.fim %}<p>Você pode enviar o vídeo até <strong>{{ situacao.fim|date:"d/m/Y \à\s H:i" }}</strong>.</p>{% endif %}
+  <p>{% if situacao.modalidade %}Você se inscreveu em {{ situacao.modalidade }}, e quem se inscreve nela passa também por esta etapa.{% else %}Quem se inscreveu na sua lista passa também por esta etapa.{% endif %}</p>
+  {% if situacao.fim %}<p class="prazo-do-passo"><strong>Prazo:</strong> até {{ situacao.fim|date:"d/m/Y \à\s H\hi" }}.</p>{% endif %}
   {% if situacao.video %}<p class="informativo">Você já enviou um vídeo. Se gravar outro agora, o novo substitui o anterior, porque a comissão ainda não o abriu.</p>{% endif %}
   <p><strong>As duas formas valem igual.</strong> Escolha a que for melhor para você.</p>
-  <div class="opcoes-do-meio">
-    <button type="button" class="opcao-do-meio" data-ir="acolhimento">Gravar um vídeo curto</button>
-    <button type="button" class="opcao-do-meio" data-ir="ao-vivo">Prefiro entrevista ao vivo</button>
+  <div class="formas">
+    <article class="forma" aria-labelledby="f-video">
+      <h3 id="f-video">Vídeo gravado agora</h3>
+      <ul class="forma-itens">
+        <li>Você grava pelo celular ou pelo computador, de onde estiver.</li>
+        <li>O vídeo tem até {{ teto_minutos }} minutos.</li>
+        <li>Você assiste antes de enviar e pode gravar de novo.</li>
+      </ul>
+      <button type="button" class="forma-acao" data-ir="acolhimento">Gravar um vídeo curto</button>
+    </article>
+    <article class="forma" aria-labelledby="f-ao-vivo">
+      <h3 id="f-ao-vivo">Entrevista ao vivo</h3>
+      <ul class="forma-itens">
+        <li>A comissão informa o dia, a hora e como participar.</li>
+        <li>Você conversa com a comissão, presencialmente ou por vídeo, como o Edital disser.</li>
+        <li>Você não precisa fazer nada agora.</li>
+      </ul>
+      <button type="button" class="forma-acao" data-ir="ao-vivo">Prefiro entrevista ao vivo</button>
+    </article>
   </div>
 </section>
 
@@ -55,85 +84,117 @@ isso (FR-7117).
   <h2 id="t-ao-vivo">Entrevista ao vivo</h2>
   <p>Tudo certo. Você não precisa fazer nada agora: a comissão vai informar a data, a hora e como entrar.</p>
   <p>Se mudar de ideia, você pode gravar o vídeo até o fim do período.</p>
-  <p><a class="secundario" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a> <button type="button" class="secundario" data-ir="escolha">Voltar à escolha</button></p>
+  <p class="acoes-da-tela"><a class="principal" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a> <button type="button" class="link-do-meio" data-ir="escolha">Voltar à escolha</button></p>
 </section>
 
+{% comment %}
+**O preparo em três itens, e o resto num bloco próprio** (174, FR-7863, FR-7864). As seis frases de
+hoje continuam todas aqui (D-010), e o documento com foto entrou: é o primeiro passo do roteiro, e o
+preparo não o pedia (A-3). A recusa da idade só aparece depois de "Continuar" sem resposta — antes,
+a regra da classe vencia o `hidden` e ela nascia vermelha (A-2).
+{% endcomment %}
 <section class="verificacao-tela" data-tela="acolhimento" hidden aria-labelledby="t-acolhimento">
   <h2 id="t-acolhimento">Antes de gravar</h2>
-  <ul class="acolhimento">
-    <li><strong>A comissão olha só a sua aparência.</strong> Ela não olha família, documentos antigos nem fotos.</li>
-    <li>Escolha um lugar claro, com o rosto sem óculos escuros, boné ou filtro.</li>
-    <li>O vídeo tem até {{ teto_minutos }} minutos. Não há pressa em nenhum passo.</li>
-    <li>Só a comissão da verificação assiste ao vídeo, e só pelo sistema. Ninguém mais o recebe.</li>
-    <li>O vídeo fica guardado pelo prazo que a instituição definir para a guarda dos documentos do processo seletivo.</li>
-    <li>Se o vídeo não bastar, a comissão vai querer conversar com você ao vivo. <strong>Isso não é reprovação.</strong></li>
+  <p>Antes de começar, confira:</p>
+  <ul class="preparo">
+    <li>{% include "portal/_icone.html" with nome="luz" %}<span>Um lugar claro, com luz de frente para o rosto.</span></li>
+    <li>{% include "portal/_icone.html" with nome="rosto" %}<span>O rosto descoberto: sem óculos escuros, boné ou filtro.</span></li>
+    <li>{% include "portal/_icone.html" with nome="documento" %}<span>O seu documento de identidade com foto.</span></li>
   </ul>
-  <fieldset class="maioridade">
+  <p class="teto-do-video">{% include "portal/_icone.html" with nome="tempo" %}<span>O vídeo tem até {{ teto_minutos }} minutos. Não há pressa em nenhum passo.</span></p>
+  <section class="quem-ve" aria-labelledby="t-quem-ve">
+    <h3 id="t-quem-ve">Quem vê o seu vídeo</h3>
+    <ul>
+      <li><strong>A comissão olha só a sua aparência.</strong> Ela não olha família, documentos antigos nem fotos.</li>
+      <li>Só a comissão da verificação assiste ao vídeo, e só pelo sistema. Ninguém mais o recebe.</li>
+      <li>O vídeo fica guardado pelo prazo que a instituição definir para a guarda dos documentos do processo seletivo.</li>
+      <li>Se o vídeo não bastar, a comissão vai querer conversar com você ao vivo. <strong>Isso não é reprovação.</strong></li>
+    </ul>
+  </section>
+  <fieldset class="maioridade" data-pergunta-maioridade tabindex="-1" aria-describedby="erro-maioridade">
     <legend>Qual é a sua idade?</legend>
-    <label><input type="radio" name="maioridade" value="sim" data-maioridade> Tenho 18 anos ou mais</label>
-    <label><input type="radio" name="maioridade" value="nao" data-maioridade> Tenho menos de 18 anos</label>
+    <label class="opcao-grande"><input type="radio" name="maioridade" value="sim" data-maioridade> Tenho 18 anos ou mais</label>
+    <label class="opcao-grande"><input type="radio" name="maioridade" value="nao" data-maioridade> Tenho menos de 18 anos</label>
+    <p class="recusa" id="erro-maioridade" data-erro-maioridade hidden>Escolha uma das duas respostas.</p>
   </fieldset>
-  <p class="recusa" data-erro-maioridade hidden>Escolha uma das duas respostas.</p>
-  <p><button type="button" class="principal" data-continuar-acolhimento>Continuar</button></p>
-  <p><button type="button" class="secundario" data-ir="escolha">Voltar</button></p>
+  {% if fonte_sintetica %}<p class="fonte-de-teste"><label><input type="checkbox" data-sintetica> Usar imagem de teste (só no desenvolvimento; nada é gravado de verdade)</label></p>{% endif %}
+  <p class="acoes-da-tela"><button type="button" class="principal" data-continuar-acolhimento>Continuar</button> <button type="button" class="link-do-meio" data-ir="escolha">Voltar</button></p>
 </section>
 
 <section class="verificacao-tela" data-tela="menor" hidden aria-labelledby="t-menor">
   <h2 id="t-menor">Para quem tem menos de 18 anos</h2>
   <p>A sua verificação é por entrevista ao vivo, com um responsável ou um servidor da instituição ao seu lado. Um vídeo gravado em casa não garante esse acompanhamento.</p>
   <p>Você não precisa fazer nada agora: a comissão vai informar a data, a hora e como entrar.</p>
-  <p><a class="secundario" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
+  <p class="acoes-da-tela"><a class="principal" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
 </section>
 
-<section class="verificacao-tela" data-tela="camera" hidden aria-labelledby="t-camera">
-  <h2 id="t-camera">Teste da câmera e do microfone</h2>
-  <div class="moldura-da-camera">
+{% comment %}
+**O palco: o teste da câmera e a gravação numa tela só** (174, FR-7866 a FR-7879, D-004). Um vídeo
+de prévia, e não dois; "Continuar" já abre a câmera. A instrução, o "Passo N de 4", o selo e
+"Próximo" ficam **sobre** a prévia, na mesma célula de grade — a instrução no alto, perto da câmera
+frontal; "Próximo" embaixo, ao alcance do polegar. O texto da instrução é o do roteiro, inteiro (D-003):
+é a versão que viaja com o vídeo. No celular, a seção ocupa a tela pela composição, e não pelo modo
+de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
+
+`data-estado` decide o que aparece: `preparo` (a lista, o medidor, "Começar a gravar") ou `gravando`.
+{% endcomment %}
+<section class="verificacao-tela palco-da-gravacao" data-tela="palco" data-estado="preparo" hidden aria-labelledby="t-palco">
+  <h2 id="t-palco" class="oculto">Gravação do vídeo</h2>
+  {% comment %}
+  **O gesto principal fica sempre no mesmo lugar** (174, FR-7869, FR-7875): "Começar a gravar" e
+  depois "Próximo" ocupam a faixa de baixo do vídeo, ao alcance do polegar, e "Não consigo usar a
+  câmera" fica logo abaixo deles, nos dois estados. Até 15/11 "Começar a gravar" vinha no pé do
+  painel do preparo, e no computador a altura daquele painel — que muda com a fonte do sistema —
+  o empurrava para fora da tela (achado da CI do #568, no Linux).
+  {% endcomment %}
+  <div class="palco">
     <video class="previa" data-previa autoplay muted playsinline></video>
     <span class="oval" aria-hidden="true"></span>
+    <p class="canto-do-palco" data-so-preparo><button type="button" class="botao-no-palco" data-ir="acolhimento">Voltar</button></p>
+    <p class="guia-do-oval" data-so-preparo>Encaixe o rosto no oval. Ele não aparece no vídeo.</p>
+    <div class="faixa-de-cima" data-so-gravando>
+      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span> <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
+      <div class="instrucao-do-passo">
+        <p class="rotulo-do-passo"><span data-passo-rotulo></span> · <span data-passo-titulo></span></p>
+        <p class="texto-do-passo" data-passo-atual></p>
+      </div>
+    </div>
+    <div class="faixa-de-baixo">
+      <button type="button" class="proximo" data-comecar data-so-preparo aria-describedby="o-que-voce-vai-fazer">Começar a gravar</button>
+      <button type="button" class="proximo" data-proximo data-so-gravando>Próximo</button>
+      <button type="button" class="link-no-palco" data-ir="nao-consigo">Não consigo usar a câmera</button>
+    </div>
   </div>
-  <p class="ajuda">O oval ajuda a enquadrar o rosto e não aparece no vídeo.</p>
-  <p><label for="nivel-do-som">Som do microfone</label> <meter id="nivel-do-som" data-nivel min="0" max="100" value="0"></meter></p>
-  <p data-checagem-camera>A câmera ainda não foi aberta.</p>
-  {% if fonte_sintetica %}<p class="fonte-de-teste"><label><input type="checkbox" data-sintetica> Usar imagem de teste (só no desenvolvimento; nada é gravado de verdade)</label></p>{% endif %}
-  <p><button type="button" class="secundario" data-abrir-camera>Abrir a câmera</button></p>
-  <p><button type="button" class="principal" data-ir-gravar disabled>Ir para a gravação</button></p>
-  <p class="nao-consigo"><button type="button" class="link-do-meio" data-ir="nao-consigo">Não consigo usar a câmera</button></p>
+  <p class="oculto" data-anuncio aria-live="assertive"></p>
+  <div class="preparo-do-palco" data-so-preparo>
+    <p class="aviso" data-aviso-gravacao hidden></p>
+    <p class="aviso" data-aviso-tela-acesa hidden>Mantenha a tela acesa: se ela apagar, a gravação para e você grava de novo.</p>
+    <div id="o-que-voce-vai-fazer">
+      <h3>O que você vai fazer</h3>
+      <ol class="passos-do-roteiro" data-passos>
+        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}">{{ passo.titulo }}</li>{% endfor %}
+      </ol>
+      <p class="ajuda">O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
+    </div>
+    <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
+    <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
+    <p class="nivel-do-som"><label for="nivel-do-som">Microfone</label> <meter id="nivel-do-som" data-nivel min="0" max="100" value="0"></meter></p>
+    <p class="estado-do-som" data-estado-do-som aria-live="polite">Fale alguma coisa para testar o microfone.</p>
+  </div>
 </section>
 
 <section class="verificacao-tela" data-tela="permissao" hidden aria-labelledby="t-permissao">
   <h2 id="t-permissao">A câmera não abriu</h2>
   <p data-motivo-permissao></p>
   <p data-como-liberar></p>
-  <p><button type="button" class="principal" data-abrir-camera>Tentar de novo</button></p>
+  <p class="acoes-da-tela"><button type="button" class="principal" data-abrir-camera>Tentar de novo</button></p>
   <p class="nao-consigo"><button type="button" class="link-do-meio" data-ir="nao-consigo">Não consigo usar a câmera</button></p>
 </section>
 
 <section class="verificacao-tela" data-tela="nao-consigo" hidden aria-labelledby="t-nao-consigo">
   <h2 id="t-nao-consigo">Sem câmera, sem problema</h2>
   <p>A entrevista ao vivo continua disponível, e vale igual. Você não perde nada e não precisa fazer nada agora: a comissão vai informar a data, a hora e como entrar.</p>
-  <p><a class="secundario" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
-</section>
-
-<section class="verificacao-tela" data-tela="gravacao" hidden aria-labelledby="t-gravacao">
-  <h2 id="t-gravacao">Gravação</h2>
-  <div class="moldura-da-camera">
-    <video class="previa" data-previa-gravacao autoplay muted playsinline></video>
-    <span class="oval" aria-hidden="true"></span>
-    <span class="selo-gravando" data-selo hidden>Gravando</span>
-  </div>
-  <p class="passo-atual" data-passo-atual aria-live="assertive"></p>
-  <p class="passo-proximo" data-passo-proximo></p>
-  {% comment %} Os botões logo abaixo do passo, e não depois da lista: no celular eles ficam na primeira
-  tela, e quem grava não rola a página no meio da tomada (UX-771). {% endcomment %}
-  <p class="botoes-da-gravacao"><button type="button" class="principal" data-comecar>Começar a gravar</button>
-    <button type="button" class="principal" data-proximo hidden>Próximo passo</button>
-    <button type="button" class="secundario" data-recomecar hidden>Parar e recomeçar</button></p>
-  <p class="tempo-da-gravacao"><span data-tempo>0:00</span> de até {{ teto_minutos }}:00</p>
-  <p class="aviso" data-aviso-gravacao hidden></p>
-  <ol class="passos-do-roteiro" data-passos>
-    {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"><strong>{{ passo.titulo }}.</strong> {{ passo.instrucao }}</li>{% endfor %}
-  </ol>
-  <p class="nao-consigo"><button type="button" class="link-do-meio" data-ir="nao-consigo">Não consigo usar a câmera</button></p>
+  <p class="acoes-da-tela"><a class="principal" href="{{ rotas.acompanhamento }}">Voltar ao acompanhamento</a></p>
 </section>
 
 <section class="verificacao-tela" data-tela="revisao" hidden aria-labelledby="t-revisao">
@@ -146,19 +207,20 @@ isso (FR-7117).
     <li>A sua fala, ou o papel com a frase, aparece no fim?</li>
   </ul>
   <p><strong>Só o vídeo que você enviar chega à comissão.</strong> Se não gostou, grave de novo quantas vezes quiser: este vídeo não sai do seu aparelho.</p>
-  <p><button type="button" class="principal" data-enviar>Enviar este vídeo</button></p>
-  <p><button type="button" class="secundario" data-regravar>Gravar de novo</button></p>
+  <p class="acoes-da-tela"><button type="button" class="principal" data-enviar>Enviar este vídeo</button> <button type="button" class="secundario" data-regravar>Gravar de novo</button></p>
 </section>
 
 <section class="verificacao-tela" data-tela="envio" hidden aria-labelledby="t-envio">
   <h2 id="t-envio">Enviando</h2>
-  <p><label for="progresso-do-envio">Progresso</label> <progress id="progresso-do-envio" data-progresso max="100" value="0"></progress></p>
+  <progress class="progresso-do-video" id="progresso-do-envio" data-progresso max="100" value="0" aria-label="Progresso do envio"></progress>
   <p data-estado-do-envio aria-live="polite">Preparando o envio.</p>
+  <p class="ajuda">Não feche esta página enquanto o envio não terminar.</p>
   <p class="erro" data-erro-do-envio hidden></p>
-  <p><button type="button" class="principal" data-tentar-de-novo hidden>Tentar de novo</button></p>
+  <p class="acoes-da-tela"><button type="button" class="principal" data-tentar-de-novo hidden>Tentar de novo</button></p>
   <p data-sugestao-ao-vivo hidden>Se o envio continuar falhando, a entrevista ao vivo continua disponível: <button type="button" class="link-do-meio" data-ir="nao-consigo">prefiro a entrevista ao vivo</button>.</p>
 </section>
 </div>
 <script src="{% estatico 'portal/gravacao.js' %}" defer></script>
 {% endif %}
+</div>
 {% endblock %}

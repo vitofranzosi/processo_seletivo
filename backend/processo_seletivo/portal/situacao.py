@@ -158,7 +158,10 @@ VIDEO_OU_AO_VIVO = (
     "Você pode gravar um vídeo curto ou fazer a entrevista ao vivo. As duas formas valem igual."
 )
 QUER_CONVERSAR_AO_VIVO = "A comissão quer conversar com você ao vivo. Isso não é reprovação."
-VER_COMO_FUNCIONA = "Ver como funciona"
+# **O rótulo diz o que a pessoa encontra ao chegar** (174, FR-7858): "Ver como funciona" não dizia
+# para onde levava, e a primeira tela do outro lado é justamente a escolha entre as duas formas.
+ESCOLHER_VIDEO_OU_AO_VIVO = "Escolher entre vídeo e entrevista ao vivo"
+
 VER_O_COMPROVANTE = "Ver o comprovante"
 
 NADA_POR_ENQUANTO = "Nada por enquanto."
@@ -228,6 +231,10 @@ class Situacao:
     provisoria: bool
     porque: tuple = field(default_factory=tuple)
     o_que_fazer: Acao = None
+    # "até {data} às {hora}", só no passo com o vídeo disponível e período com fim (174, FR-7857).
+    # O template o põe em linha própria, antes do porquê: no meio da frase principal, a data que
+    # decide tudo ficava enterrada.
+    prazo_do_passo: str = ""
 
 
 def ordenar_cartoes(cartoes, perfil):
@@ -508,18 +515,18 @@ def _situacao_do_passo(inscricao, passos, em_analise, recurso):
         )
     consequencia = CONSEQUENCIA_DA_AUSENCIA.get(passo.efeito_da_ausencia, "")
     if estado_do_video == video.PODE_GRAVAR:
-        prazo = f" O vídeo pode ser enviado até {_data_e_hora(passo.fim)}." if passo.fim else ""
         return _situacao(
             PASSO_PENDENTE,
             porque=porque,
             acao=Acao(
-                f"{VIDEO_OU_AO_VIVO}{prazo}",
+                VIDEO_OU_AO_VIVO,
                 link=reverse("portal:verificacao", args=[inscricao.id, passo.etapa_id]),
-                link_rotulo=VER_COMO_FUNCIONA,
+                link_rotulo=ESCOLHER_VIDEO_OU_AO_VIVO,
                 consequencia=consequencia,
                 recurso=recurso,
                 **no_edital,
             ),
+            prazo_do_passo=f"até {_data_e_hora(passo.fim)}." if passo.fim else "",
         )
     principal = (
         f"{QUER_CONVERSAR_AO_VIVO} {COMISSAO_INFORMA}"
@@ -687,13 +694,14 @@ def nome_da_lista_da_convocacao(convocacao, perfil, cartoes):
     return ""
 
 
-def _situacao(codigo, rotulo=None, *, porque, acao):
+def _situacao(codigo, rotulo=None, *, porque, acao, prazo_do_passo=""):
     return Situacao(
         codigo=codigo,
         rotulo=rotulo or ROTULOS[codigo],
         provisoria=codigo in PROVISORIAS,
         porque=tuple(porque),
         o_que_fazer=acao,
+        prazo_do_passo=prazo_do_passo,
     )
 
 

@@ -53,6 +53,9 @@ class Situacao:
     aberturas_da_comissao: int = 0
     eliminado_em: object = None
     extras: dict = field(default_factory=dict)
+    #: O nome publicado da Modalidade da inscrição (174, FR-7853): a página do vídeo diz "você se
+    #: inscreveu em …" por ele, e não pelo texto fixo que nomeava a cota.
+    modalidade: str = ""
 
     @property
     def pode_enviar(self) -> bool:
@@ -157,7 +160,7 @@ def situacao(*, inscricao, etapa, conteudo, exigir_chave=True) -> Situacao | Non
 
     `exigir_chave=False` é a leitura da gestão: a chave fecha o portal, e não a Mesa (achado I1).
     """
-    from processo_seletivo.editais.domain.alcance import alcanca_a_inscricao
+    from processo_seletivo.editais.domain.alcance import alcanca_a_inscricao, nome_da_modalidade
     from processo_seletivo.inscricoes.models import Inscricao
 
     if not admissao.admite_video(etapa):
@@ -169,7 +172,12 @@ def situacao(*, inscricao, etapa, conteudo, exigir_chave=True) -> Situacao | Non
     edital = inscricao.edital
     etapa_id = etapa.get("id")
     inicio, fim = periodo(conteudo, etapa)
-    base = {"etapa": etapa, "inicio": inicio, "fim": fim}
+    base = {
+        "etapa": etapa,
+        "inicio": inicio,
+        "fim": fim,
+        "modalidade": nome_da_modalidade(conteudo, inscricao.profile_id, inscricao.modality_id),
+    }
     if exigir_chave and not settings.VERIFICACAO_POR_VIDEO:
         return Situacao(INDISPONIVEL, motivo="chave", **base)
     encaminhamento = EncaminhamentoAoVivo.objects.filter(

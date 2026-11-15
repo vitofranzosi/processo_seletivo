@@ -99,3 +99,36 @@ test("o resumo sai em hexadecimal, e o tempo em minutos e segundos", () => {
   assert.equal(g.hex(new Uint8Array([0, 15, 255]).buffer), "000fff");
   assert.equal(g.mmss(65.4), "1:05");
 });
+
+/* As funções do palco (174, contracts/telas.md). */
+
+test("o passo diz a posição no roteiro, contando de um", () => {
+  assert.equal(g.rotuloDoPasso(0, 4), "Passo 1 de 4");
+  assert.equal(g.rotuloDoPasso(3, 4), "Passo 4 de 4");
+});
+
+test("dois toques a menos de meio segundo contam como um, e não há tempo mínimo além disso", () => {
+  assert.equal(g.aceitaAvanco(1000, null), true);
+  assert.equal(g.aceitaAvanco(1499, 1000), false);
+  assert.equal(g.aceitaAvanco(1500, 1000), true);
+});
+
+test("os megabytes saem com vírgula e uma casa", () => {
+  assert.equal(g.megabytes(9856000), "9,4");
+  assert.equal(g.megabytes(0), "0,0");
+});
+
+test("a duração sai em minutos e segundos, como o filtro do comprovante", () => {
+  assert.equal(g.duracaoPorExtenso(72.3), "1 min 12 s");
+  assert.equal(g.duracaoPorExtenso(45), "45 s");
+  assert.equal(g.duracaoPorExtenso(180), "3 min");
+  assert.equal(g.duracaoPorExtenso(4.5), "5 s");
+});
+
+test("a fala só conta com nível alto por 300 ms seguidos", () => {
+  const amostras = (niveis, passo = 100) => niveis.map((nivel, i) => ({ nivel, ms: i * passo }));
+  assert.equal(g.ouviuFala(amostras([30, 30, 30, 30])), true);
+  assert.equal(g.ouviuFala(amostras([30, 30, 5, 30, 30])), false);
+  assert.equal(g.ouviuFala(amostras([10, 10, 10, 10, 10])), false);
+  assert.equal(g.ouviuFala([]), false);
+});
