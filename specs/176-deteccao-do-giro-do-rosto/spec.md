@@ -124,8 +124,8 @@ Nada sai do aparelho, mas a imagem do rosto é lida por uma máquina, ainda que 
 #### Q-4 — Qual motor, e quanto ele pesa?
 
 O motor tem duas partes: o programa que roda o modelo (cerca de **2,8 MB** a baixar, comprimido; 14,7
-MB no disco) e o modelo. Os dois candidatos, da mesma família, de licença Apache 2.0, sem chamada de
-rede nenhuma:
+MB no disco, na versão medida antes da pergunta) e o modelo. Os dois candidatos, da mesma família, de
+licença Apache 2.0:
 
 | Opção | O que é | Implicações |
 |---|---|---|
@@ -423,8 +423,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
 
 - A `166`, a `171` e a `174` estão na `main` (15/11) e não mudam antes da implementação desta.
 - O motor de referência é o da família de visão do MediaPipe, de licença Apache 2.0, que roda no
-  navegador em WebAssembly e não faz chamada de rede (conferido no pacote em 15/11). A política de
-  conteúdo de qualquer forma recusaria chamada a outra origem (`connect-src 'self'`).
+  navegador em WebAssembly, na versão **0.10.35**, que só busca o que a página lhe dá (D-007). A
+  política de conteúdo recusaria de qualquer forma chamada a outra origem (`connect-src 'self'`).
 - Os navegadores do público — Safari no iPhone, Chrome no Android e os três do computador, dos
   últimos dois anos — rodam WebAssembly e aceitam a diretiva que libera a compilação dele sem liberar
   `eval`. Onde não aceitarem, o motor não carrega e vale a FR-8016.
@@ -456,6 +456,20 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
   revisão da FR-7150 da `166` (D-001), a base legal do tratamento (art. 11), a escolha da pessoa (Q-3)
   e o registro no relatório de impacto. Até lá, a chave fica recusada em produção (FR-8021). Esta spec
   não decide nada disso.
+
+## Achados (registro, e não escopo)
+
+- **A-1 — O motor 1.x manda medidas de uso ao Google.** A partir da 1.0.0, o `@mediapipe/tasks-vision`
+  traz um registrador que envia, a cada minuto e ao fechar, o tipo da tarefa, o modo e as medidas de
+  tempo a `odml.pa.googleapis.com`, com uma chave embutida. Nada da imagem vai junto. A jornada no
+  navegador o pegou em 15/11 pela violação da política de conteúdo, que o recusou; a varredura de
+  endereços feita no pacote antes da escolha tinha a saída cortada nas vinte primeiras linhas, e o
+  endereço ficou de fora dela. A
+  entrega ficou com a 0.10.35 (D-007), e um guardião recusa o registrador. Quem for atualizar o motor
+  precisa saber que a versão nova volta a trazê-lo.
+- **A-2 — O `nginx` do guia de implantação não comprime o motor.** Sem `gzip_types` para
+  `application/wasm` e para o modelo, o navegador baixaria 15,4 MB em vez de cerca de 6,7. Vai para a
+  porta do piloto (FR-8042), porque a implantação não liga a chave.
 
 ## Decisões
 
@@ -501,3 +515,12 @@ inteiro toca em "Próximo".
 Recomendação da Q-4. O roteiro pede o perfil ("até a câmera ver o seu perfil"), e o detector leve perde
 o rosto antes dele. Os pontos do rosto dão o ângulo do giro diretamente, e custam cerca de 6,5 MB a
 mais, uma vez por navegador, baixados depois que a câmera abriu e nunca em economia de dados.
+
+### D-007 — A versão 0.10.35 do motor, e não a 1.x
+
+Achado A-1. A promessa é que nada sai do aparelho por causa da detecção (FR-8000), e a 1.x tenta mandar
+medidas de uso para fora; a política de conteúdo a recusaria, mas o pedido recusado continuaria sendo
+uma tentativa, visível a quem olha a rede, e a garantia passaria a depender de uma barreira só. A
+0.10.35, de 27/04/2026, tem a mesma interface, é menor (11,2 MB no disco, cerca de 3,3 MB em gzip) e
+só busca o modelo e o grafo, nos endereços que a página lhe dá. A política continua como segunda
+barreira, e o guardião recusa o registrador em qualquer versão copiada.

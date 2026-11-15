@@ -131,3 +131,18 @@ def test_so_a_pagina_da_gravacao_carrega_a_deteccao():
         or any(m in modelo.read_text(encoding="utf-8") for m in MARCAS_DE_MOTOR)
     )
     assert citam == ["portal/templates/portal/verificacao.html"]
+
+
+def test_o_motor_nao_traz_registrador_de_uso():
+    """FR-8000, research T-013: a 1.x do motor manda medidas de uso a um endereço do Google; a
+    versão copiada não pode trazê-lo, no módulo, no carregador nem no binário. A política de
+    conteúdo recusaria o pedido de todo modo; este caso garante que ele nem é tentado."""
+    proibidos = (b"odml.pa.googleapis.com", b"_mediapipeLoggerGetEncodedApiKey", b"sendBeacon")
+    achados = [
+        f"{arquivo.name}: {marca.decode()}"
+        for arquivo in sorted(PASTA_DO_MOTOR.rglob("*"))
+        if arquivo.is_file()
+        for marca in proibidos
+        if marca in arquivo.read_bytes()
+    ]
+    assert not achados, achados

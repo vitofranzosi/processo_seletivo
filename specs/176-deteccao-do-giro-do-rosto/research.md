@@ -2,27 +2,31 @@
 
 Decisões técnicas da `176`, de `T-001` a `T-012`. Conferidas no pacote em 15/11/2026.
 
-## T-001 — O motor: `@mediapipe/tasks-vision` 1.2.0, Face Landmarker
+## T-001 — O motor: `@mediapipe/tasks-vision` 0.10.35, Face Landmarker
 
-- **Decisão**: a versão **1.2.0** (publicada em 27/10/2026), e não a 1.2.3 (11/11): a regra da casa
-  para dependência nova é versão com pelo menos duas semanas. Licença Apache 2.0. Do pacote entram
-  três arquivos — `vision_bundle.mjs` (o módulo, 156 kB), `wasm/vision_wasm_internal.js` (o carregador,
-  334 kB) e `wasm/vision_wasm_internal.wasm` (14,5 MB, cerca de 2,8 MB em brotli e 4,1 MB em gzip) —
-  e a licença. O modelo é o `face_landmarker.task`, float16, versão 1 (3,76 MB), Apache 2.0.
+- **Decisão**: a versão **0.10.35** (publicada em 27/04/2026). O plano aprovado previa a 1.2.0 (27/10), a
+  mais nova com pelo menos duas semanas; a jornada no navegador mostrou que a 1.x manda medidas de uso
+  ao Google (T-013), e a entrega desceu à última versão sem isso. Licença Apache 2.0. Do pacote entram
+  três arquivos — `vision_bundle.mjs` (o módulo, 137 kB), `wasm/vision_wasm_internal.js` (o carregador,
+  322 kB) e `wasm/vision_wasm_internal.wasm` (11,2 MB, cerca de 2,3 MB em brotli e 3,3 MB em gzip) —,
+  e, ao lado, o texto da licença Apache 2.0, que o pacote não traz. O modelo é o `face_landmarker.task`,
+  float16, versão 1 (3,76 MB), Apache 2.0; ele traz também o modelo das expressões, que a página não
+  liga (`outputFaceBlendshapes: false`).
 - **Por quê**: a Q-4 (D-006). Os pontos do rosto acompanham até perto do perfil, e o giro sai deles
   sem treinar nada.
-- **Sem rede**: o módulo e o carregador não têm endereço de outra origem nem `sendBeacon`, e a
-  política de conteúdo (`connect-src 'self'`) recusaria de todo modo. Nenhum `eval(` nem `new
+- **Sem rede**: na 0.10.35, os únicos `fetch` do módulo e do carregador são o do modelo e o do grafo,
+  nos endereços que a página dá; nenhum `sendBeacon`. A política de conteúdo (`connect-src 'self'`)
+  recusaria qualquer outro. Nenhum `eval(` nem `new
   Function` no módulo nem no carregador — o guardião da `092` (`test_nenhum_script_escreve_estilo_que_
   a_politica_recusaria`) passa a lê-los, e passa.
 - **Descartado**: a variante sem SIMD (12,9 MB a mais no repositório) — o Safari tem SIMD desde a 16.4
-  (2023), e o aparelho sem ele cai no toque (FR-8016); a variante `module` (duplicata); a 1.2.3, nova
-  demais; TensorFlow.js (em manutenção, e o mesmo peso de modelo); a API `FaceDetector` do navegador
+  (2023), e o aparelho sem ele cai no toque (FR-8016); a variante `module` (duplicata); a 1.x, pelo
+  registrador de uso (T-013); TensorFlow.js (em manutenção, e o mesmo peso de modelo); a API `FaceDetector` do navegador
   (não existe no Safari).
 
 ## T-002 — Onde moram os arquivos, e como se conferem
 
-- **Decisão**: `portal/static/portal/deteccao/tasks-vision-1.2.0/` com os três arquivos do pacote,
+- **Decisão**: `portal/static/portal/deteccao/tasks-vision-0.10.35/` com os três arquivos do pacote,
   **sem nenhuma alteração** (o resumo bate com o do pacote publicado), e o `LICENSE`; o modelo em
   `portal/static/portal/deteccao/face_landmarker-float16-1.task`. O manifesto — versão, caminho e
   SHA-256 de cada arquivo — mora em `processo_seletivo/portal/deteccao.py`, e um teste confere cada
@@ -30,7 +34,7 @@ Decisões técnicas da `176`, de `T-001` a `T-012`. Conferidas no pacote em 15/1
 - **Por quê**: servidos pelo `nginx` da implantação como o resto de `/static/portal/`, com o cache
   longo que o `?v=` dá (`doc/implantacao-em-producao-ubuntu.md`, `map $arg_v`). A versão no nome da
   pasta e o `?v=` do conteúdo nos endereços fazem o navegador baixar uma vez por versão (FR-8016).
-- **O peso no repositório**: cerca de 18 MB num repositório de 560 MB. Baixar na implantação,
+- **O peso no repositório**: cerca de 15 MB num repositório de 560 MB. Baixar na implantação,
   conferindo o resumo, seria o caminho do tokenizer da `071`; aqui o arquivo é servido ao navegador e
   precisa estar no mesmo lugar em todo ambiente, e um passo a mais na implantação só trocaria o peso
   por uma falha possível.
@@ -139,5 +143,20 @@ Decisões técnicas da `176`, de `T-001` a `T-012`. Conferidas no pacote em 15/1
   da `166`; (c) a jornada conta os pedidos de rede e só admite os do motor, uma vez (SC-2754).
 - **A compressão em produção**: o `nginx` do guia de implantação não declara `gzip_types`, e o padrão
   dele comprime só HTML; o navegador baixaria 14,5 MB em vez de 4,1. O `runserver` também não comprime:
-  no desenvolvimento, o peso medido é o sem compressão. Fica como registro para a porta do
+  no desenvolvimento, o peso medido é o sem compressão.
+
+## T-013 — O registrador de uso da 1.x, e por que a entrega ficou na 0.10.35
+
+- **O achado**: a primeira jornada no navegador com o motor de verdade (1.2.0) falhou pela fixture que
+  recusa violação da política de conteúdo: o módulo tentou `POST https://odml.pa.googleapis.com/v1/log`,
+  com uma chave embutida no binário (`_mediapipeLoggerGetEncodedApiKey`). O registrador nasce em todo
+  `createFromOptions`, junta o tipo da tarefa, o modo de execução e as medidas de tempo, e manda a cada
+  60 s e ao fechar; não leva a imagem. A política o recusou. A varredura de endereços feita no pacote
+  antes da escolha tinha a saída cortada nas vinte primeiras linhas, e ele ficou de fora: a lição é
+  que a garantia mora no guardião e na política, e não numa leitura à mão.
+- **As versões**: o registrador entra na 1.0.0 (28/07/2026); a 0.10.14, a 0.10.20, a 0.10.32 e a
+  0.10.35 não o têm. A interface usada aqui — `FilesetResolver.isSimdSupported`, o conjunto de arquivos
+  explícito, `FaceLandmarker.createFromOptions`, `detectForVideo` — é a mesma.
+- **Decisão**: a 0.10.35 (D-007 da spec), com o guardião `test_o_motor_nao_traz_registrador_de_uso`,
+  que lê os bytes dos arquivos copiados. Atualizar o motor exige conferir isso de novo. Fica como registro para a porta do
   piloto (FR-8042), porque a implantação não liga a chave.

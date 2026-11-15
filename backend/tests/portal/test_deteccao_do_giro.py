@@ -177,9 +177,9 @@ def test_nenhuma_frase_chama_a_deteccao_de_biometria_ou_prova_de_vida(cenario, c
         assert termo not in texto, termo
 
 
-def test_o_inicio_do_envio_nao_aceita_campo_da_deteccao(cenario, client, settings):
-    """FR-8030, FR-8031: o contrato do envio é o da 166. Um campo a mais é ignorado, e não guardado —
-    e nada no vídeo diz como um passo avançou."""
+def test_o_video_nao_guarda_nada_da_deteccao(cenario, client, settings):
+    """FR-8030, FR-8031: o contrato do envio é o da 166, e nenhum campo do vídeo diz como um passo
+    avançou — pelo giro ou pelo toque."""
     settings.VERIFICACAO_DETECCAO_DO_GIRO = True
     maria = cenario["inscricoes"][0]
     video = enviar_video(maria, cenario["hetero"])

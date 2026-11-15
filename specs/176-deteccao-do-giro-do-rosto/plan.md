@@ -10,7 +10,7 @@ Q-1 a Q-4 do usuário (as recomendações).
 
 Comportamento no aparelho, e nada no servidor além da chave e da política de conteúdo.
 
-1. **O motor, servido pela própria origem.** Três arquivos do `@mediapipe/tasks-vision` 1.2.0 e o modelo
+1. **O motor, servido pela própria origem.** Três arquivos do `@mediapipe/tasks-vision` 0.10.35 e o modelo
    dos pontos do rosto, sem alteração, em `portal/static/portal/deteccao/`, com o manifesto de resumos
    em `portal/deteccao.py` e o teste que os confere (T-001, T-002).
 2. **`deteccao.js`, um script novo do portal.** As funções puras — o giro a partir dos pontos, o rosto
@@ -33,7 +33,7 @@ Comportamento no aparelho, e nada no servidor além da chave e da política de c
 
 **Language/Version**: Python 3.13, Django 5.2; JavaScript sem empacotador, como o resto do portal.
 
-**Primary Dependencies**: uma nova, **no navegador**: `@mediapipe/tasks-vision` 1.2.0 (Apache 2.0) e o
+**Primary Dependencies**: uma nova, **no navegador**: `@mediapipe/tasks-vision` 0.10.35 (Apache 2.0) e o
 modelo `face_landmarker` float16/1 (Apache 2.0), copiados, sem gerenciador de pacotes JS. Nenhuma
 dependência Python nova; o guardião continua recusando visão computacional no lock.
 
@@ -114,7 +114,8 @@ backend/
 │           ├── gravacao.js        # os ganchos e a imagem de teste que gira
 │           ├── portal.css         # o oval, a confirmação, o aviso
 │           └── deteccao/
-│               ├── tasks-vision-1.2.0/{vision_bundle.mjs, vision_wasm_internal.js, vision_wasm_internal.wasm, LICENSE}
+│               ├── tasks-vision-0.10.35/{vision_bundle.mjs, vision_wasm_internal.js, vision_wasm_internal.wasm}
+│               ├── LICENSE-2.0.txt
 │               └── face_landmarker-float16-1.task
 └── tests/
     ├── javascript/deteccao.test.js          # novo
@@ -135,4 +136,4 @@ do servidor e continua sem visão computacional.
 | Exceção | Por que é preciso | Alternativa mais simples descartada |
 |---|---|---|
 | `'wasm-unsafe-eval'` na gravação | o motor é WebAssembly, e a compilação dele é bloqueada por `script-src 'self'` | nenhuma: sem compilar, não há motor; `'unsafe-eval'` abriria mais |
-| 18 MB de arquivos copiados no repositório | o navegador precisa deles na própria origem, em todo ambiente | baixar na implantação: um passo a mais que pode falhar, e o mesmo arquivo servido |
+| 15 MB de arquivos copiados no repositório | o navegador precisa deles na própria origem, em todo ambiente | baixar na implantação: um passo a mais que pode falhar, e o mesmo arquivo servido |

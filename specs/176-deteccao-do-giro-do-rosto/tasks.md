@@ -14,7 +14,7 @@ Os caminhos são relativos a `backend/`, salvo os de `doc/` e de `specs/`.
 ## Phase 1: Setup
 
 - [ ] T001 Preparar o banco de teste da worktree (`DB_NAME=ps_176`), conferir `manage.py migrate --check`, e rodar a linha de base: `tests/portal`, `tests/test_sem_inferencia_sobre_o_video.py`, `tests/interface/test_politica_de_conteudo.py` e `node --test tests/javascript/gravacao.test.js`, guardando a contagem
-- [ ] T002 Copiar do pacote `@mediapipe/tasks-vision` 1.2.0, sem alteração, `vision_bundle.mjs`, `wasm/vision_wasm_internal.js`, `wasm/vision_wasm_internal.wasm` e a licença para `processo_seletivo/portal/static/portal/deteccao/tasks-vision-1.2.0/`, e o `face_landmarker.task` float16/1 para `processo_seletivo/portal/static/portal/deteccao/face_landmarker-float16-1.task`, anotando o SHA-256 de cada um (T-001, T-002)
+- [ ] T002 Copiar do pacote `@mediapipe/tasks-vision` 0.10.35 (a 1.2.0 do plano trazia o registrador de uso, T-013), sem alteração, `vision_bundle.mjs`, `wasm/vision_wasm_internal.js` e `wasm/vision_wasm_internal.wasm` para `processo_seletivo/portal/static/portal/deteccao/tasks-vision-0.10.35/`, o texto da licença Apache 2.0 para `deteccao/LICENSE-2.0.txt`, e o `face_landmarker.task` float16/1 para `processo_seletivo/portal/static/portal/deteccao/face_landmarker-float16-1.task`, anotando o SHA-256 de cada um (T-001, T-002)
 
 ## Phase 2: Foundational
 
