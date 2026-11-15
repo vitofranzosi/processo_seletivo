@@ -10,9 +10,9 @@ import pytest
 from django.urls import reverse
 
 from processo_seletivo.ocupacao.models import AcrescimoDeVagas
-from tests.fixtures.convocacao import convocar, habilitar_na_etapa_governada
+from tests.fixtures import ocupacao_da_tela
+from tests.fixtures.convocacao import convocar
 from tests.fixtures.corte import MARCO
-from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
 from tests.interface.conftest import identificar
 
 pytestmark = [pytest.mark.django_db(transaction=True), pytest.mark.integration]
@@ -23,18 +23,8 @@ FUNDAMENTO = "Vaga não preenchida no Edital regular"
 
 @pytest.fixture
 def reserva(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
-    """O Perfil do TMD: 0 vagas, cadastro de reserva, faixa de dois e três habilitadas."""
-    edital, _, inscricoes = montar_cenario_da_ocupacao(
-        gestor,
-        api_client,
-        manager_headers,
-        process_payload,
-        prefixo="interface-097",
-        geral=0,
-        reserva="UNLIMITED",
-    )
-    habilitar_na_etapa_governada(edital, inscricoes[:3])
-    return edital, inscricoes
+    """O Perfil do TMD (agora em `tests/fixtures/ocupacao_da_tela.py`)."""
+    return ocupacao_da_tela.reserva(gestor, api_client, manager_headers, process_payload)
 
 
 def abrir(client, edital):

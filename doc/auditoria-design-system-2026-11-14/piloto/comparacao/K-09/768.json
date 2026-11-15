@@ -1,0 +1,45 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "aprovada",
+  "K-S1": "aprovada",
+  "K-S2": "aprovada",
+  "K-S3": "aprovada",
+  "K-S4": "aprovada"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado aind",
+   "maior_linha": 82
+  },
+  {
+   "bloco": "A vaga passa a aparecer como não preenchida: deixa de contar como \"a ocupar\", e ",
+   "maior_linha": 106
+  },
+  {
+   "bloco": "O fundamento diz por que a vaga fica sem ocupante, e não a leva a lugar nenhum. ",
+   "maior_linha": 106
+  },
+  {
+   "bloco": "A declaração não se apaga. Se estiver errada, desfaça-a por outro ato, com motiv",
+   "maior_linha": 82
+  },
+  {
+   "bloco": "Obrigatório. Fica no registro, com o seu nome e a data, e aparece onde a vaga é ",
+   "maior_linha": 100
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

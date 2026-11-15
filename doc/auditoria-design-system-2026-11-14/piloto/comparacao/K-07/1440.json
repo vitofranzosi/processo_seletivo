@@ -1,0 +1,37 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "não se aplica",
+  "K-S1": "não se aplica",
+  "K-S2": "aprovada",
+  "K-S3": "aprovada",
+  "K-S4": "aprovada"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado aind",
+   "maior_linha": 82
+  },
+  {
+   "bloco": "1 vaga de Pretos, pardos e indígenas (PPI) não preenchida, em ‹data›, por carlos",
+   "maior_linha": 90
+  },
+  {
+   "bloco": "O ato desfeito não é alterado: o desfazimento o cita, e os dois continuam legíve",
+   "maior_linha": 83
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

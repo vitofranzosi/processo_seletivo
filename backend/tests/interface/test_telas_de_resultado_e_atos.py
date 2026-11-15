@@ -86,7 +86,8 @@ def test_a_trilha_mora_no_bloco_do_cabecalho(tela):
     corpo = fonte.split("{% block conteudo %}", 1)[1]
     assert "Trilha de navegação" not in corpo
     assert 'class="trilha"' not in corpo
-    assert corpo.lstrip().startswith("<h1>")
+    # O contêiner de escopo do piloto do design system (172) é moldura, sem texto.
+    assert corpo.lstrip().removeprefix('<div class="piloto-ds">').lstrip().startswith("<h1>")
 
 
 def test_os_niveis_do_edital_tem_uma_fonte_so():

@@ -1,0 +1,52 @@
+{
+ "faltaram": [],
+ "sobraram": [],
+ "associacoes": [],
+ "quantidades": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "acoes": {
+  "faltaram": [],
+  "sobraram": []
+ },
+ "sequencias": {
+  "T-S2": "aprovada",
+  "T-S3": "aprovada",
+  "C-S1": "aprovada",
+  "C-S2": "aprovada",
+  "C-S3": "aprovada",
+  "C-S4": "aprovada",
+  "C-S5": "não se aplica",
+  "C-S6": "não se aplica"
+ },
+ "ordem_fora_das_sequencias": [],
+ "linhas_acima_de_80": [
+  {
+   "bloco": "Impedimento: Segregação de funções. Você elaborou e homologou esta revisão, entã",
+   "maior_linha": 86
+  },
+  {
+   "bloco": "Atenção: Nenhum Evento do Cronograma está marcado como período de inscrições. O ",
+   "maior_linha": 86
+  },
+  {
+   "bloco": "Atenção: O Evento 'Inscrições' começou em ‹data›, que já passou. O Edital será p",
+   "maior_linha": 86
+  },
+  {
+   "bloco": "Atenção: A seção «Apresentação» está vazia e não sairá no documento, e todos os ",
+   "maior_linha": 90
+  },
+  {
+   "bloco": "Atenção: A seção «Disposições finais» está vazia e não sairá no documento, e tod",
+   "maior_linha": 85
+  },
+  {
+   "bloco": "Correções posteriores só são possíveis por Retificação, com novo fluxo de aprova",
+   "maior_linha": 84
+  }
+ ],
+ "dobra": null,
+ "falhas": []
+}

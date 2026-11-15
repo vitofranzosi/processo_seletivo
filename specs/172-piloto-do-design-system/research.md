@@ -152,6 +152,10 @@ resultado entra no relatório.
 
 ## 8. O banco da validação
 
+> **Revisto na implementação (15/11):** o risco abaixo se confirmou. O banco da referência não tem
+> os estados das tarefas e as fixtures supõem banco vazio; ficou um banco por tarefa, gravado pela
+> jornada `test_banco_da_validacao_do_piloto.py`, nas portas 8172 e 8173 (ver `validacao.md`).
+
 **Escolhido.** `doc/auditoria-design-system-2026-11-14/piloto/scripts/montar_banco_da_validacao.sh`:
 
 1. cria dois bancos novos, `ps_piloto_antiga` e `ps_piloto_nova`, por `pg_restore --no-owner` da cópia

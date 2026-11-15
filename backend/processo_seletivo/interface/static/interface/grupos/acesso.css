@@ -12,12 +12,12 @@ superfície só; do lado do acesso ele aparece na ação principal e no foco.
 Desde a 091 o parcial é este arquivo, e o bloco de cada tela de acesso o carrega por `<link>`; o
 guardião de classes lê o arquivo pelo endereço do bloco, como lia o `include`.
 */
+/* Os neutros, o raio e a sombra da entrada subiram para `shared/tokens.css` com o piloto do design
+   system (172), com os mesmos nomes e valores: os tokens têm um lugar só, e a entrada não mudou. */
 :root{
-  --tinta:#0f1a14;--tinta-2:#36433b;--tinta-3:#5f6b64;--linha:#e3e7e4;--linha-forte:#cfd6d1;
-  --fundo-p:#f6f7f6;--verde-50:#eef7f1;--verde-100:#d9eee0;--verde-profundo:#0c3b24;
+  --verde-profundo:#0c3b24;
   --fonte:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
-  --raio:10px;--raio-p:6px;--sombra-1:0 1px 2px rgba(15,26,20,.06),0 1px 1px rgba(15,26,20,.04);
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--fonte);color:var(--tinta);background:var(--branco);font-size:16px;line-height:1.5;

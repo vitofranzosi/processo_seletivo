@@ -31,7 +31,12 @@ def cenario(gestor, api_client, manager_headers, raiz_de_arquivos):
 
 
 def comeca_pelo_titulo(corpo):
-    return conteudo(corpo).split(">", 1)[1].lstrip().startswith("<h1>")
+    resto = conteudo(corpo).split(">", 1)[1].lstrip()
+    # O contêiner de escopo do piloto do design system (172) é moldura, sem texto: o título continua
+    # sendo a primeira coisa que se lê.
+    if resto.startswith('<div class="piloto-ds'):
+        resto = resto.split(">", 1)[1].lstrip()
+    return resto.startswith("<h1>")
 
 
 def niveis_em_ordem(trilha, niveis):

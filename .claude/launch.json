@@ -759,6 +759,26 @@
       ],
       "port": 8268,
       "url": "http://localhost:8268"
+    },
+    {
+      "name": "piloto-antiga",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd \"$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep '/piloto-172-antiga$')/backend\" && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_piloto_validacao DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-piloto-arquivos uv run python manage.py runserver 8172"
+      ],
+      "port": 8172,
+      "url": "http://localhost:8172"
+    },
+    {
+      "name": "piloto-nova",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_piloto_validacao DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-piloto-arquivos uv run python manage.py runserver 8173"
+      ],
+      "port": 8173,
+      "url": "http://localhost:8173"
     }
   ]
 }
