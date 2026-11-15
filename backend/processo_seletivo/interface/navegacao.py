@@ -18,6 +18,7 @@ from django.utils.functional import SimpleLazyObject
 
 from processo_seletivo.interface import identidade
 from processo_seletivo.interface import visao_geral as visao_institucional
+from processo_seletivo.novidades import leitura as leitura_das_novidades
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 
 
@@ -89,6 +90,8 @@ class Secao:
     icone: str
 
 
+ROTA_DAS_NOVIDADES = "interface:novidades"
+
 TRABALHO = "Trabalho"
 UNIDADE = "Unidade"
 AJUDA = "Ajuda"
@@ -123,6 +126,9 @@ SECOES = (
         pode_ver_trilha_da_unidade,
         "i-trilha",
     ),
+    # O que mudou no produto (168, FR-7413): na ajuda, antes do manual, porque é o que muda toda
+    # semana e o manual descreve o todo. Toda identidade, pela razão da Agenda.
+    Secao("Novidades", ROTA_DAS_NOVIDADES, AJUDA, _toda_identidade, "i-novidades"),
     # Por último e em grupo próprio: não é lugar de trabalho, e abre o manual fora da moldura da
     # gestão (105, `D-004`). Toda identidade, pela razão da Agenda (`D-001`).
     Secao("Documentação do Sistema", "interface:documentacao", AJUDA, _toda_identidade, "i-livro"),
@@ -165,6 +171,11 @@ def _secoes_da_barra():
 TELAS_LARGAS = frozenset({"interface:alocacoes"})
 
 
+def secao_da_rota(rota):
+    """A seção da barra daquela rota, ou None — a mesma lista que a barra percorre."""
+    return next((secao for secao in _secoes_da_barra() if secao.rota == rota), None)
+
+
 def secao_do_caminho(caminho, enderecos=None):
     """A seção a que pertence a tela daquele endereço — a de prefixo mais longo.
 
@@ -200,8 +211,12 @@ def _enderecos():
     return {secao.rota: reverse(secao.rota) for secao in _secoes_da_barra()}
 
 
-def grupos_da_barra(ator, caminho, atual, enderecos):
-    """Os grupos com os itens que o ator alcança. Grupo sem item não vem (`FR-1714`)."""
+def grupos_da_barra(ator, caminho, atual, enderecos, novidades=0):
+    """Os grupos com os itens que o ator alcança. Grupo sem item não vem (`FR-1714`).
+
+    `novidades` é quantas notas a identidade não viu, lida da sessão pelo chamador (168): a barra
+    continua sem consultar o banco.
+    """
     grupos = {}
     for secao in _secoes_da_barra():
         if not secao.alcanca(ator):
@@ -214,6 +229,8 @@ def grupos_da_barra(ator, caminho, atual, enderecos):
                 "icone": secao.icone,
                 # Na própria página, `page`; abaixo dela, `true` — a tela é daquela seção.
                 "atual": ("page" if caminho == endereco else "true") if secao is atual else "",
+                "contagem": novidades if secao.rota == ROTA_DAS_NOVIDADES else 0,
+                "rotulo_da_contagem": leitura_das_novidades.rotulo_da_contagem(novidades),
             }
         )
     return [{"nome": nome, "itens": itens} for nome, itens in grupos.items()]
@@ -236,7 +253,9 @@ def _navegacao(request):
     enderecos = _enderecos()
     atual = _secao_da_tela(request, enderecos)
     return {
-        "barra": grupos_da_barra(ator, request.path, atual, enderecos),
+        "barra": grupos_da_barra(
+            ator, request.path, atual, enderecos, leitura_das_novidades.contagem(request, ator)
+        ),
         "no_topo": getattr(request.resolver_match, "view_name", None) in TELAS_LARGAS,
         # Do nome, e não do identificador (107, `FR-3103`): `pessoa-1b4e…` dava "P1".
         "iniciais": iniciais(identidade.nome_do_ator(request, ator)),

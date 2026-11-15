@@ -284,6 +284,11 @@ verde local e quebra no CI — já aconteceu com quatro checkpoints seguidos.
   invente requisito fora dela: a rastreabilidade é verificada por teste.
 - **Governança é do usuário.** Achado encontrado no meio de uma feature vira registro, não escopo
   da seguinte.
+- **Nota das Novidades do GPS é anúncio, e não relatório** (decisão do usuário em 14/11, `168`).
+  Quem escreve ou revisa uma nota em `backend/processo_seletivo/novidades/novidades.toml` segue
+  [doc/curadoria-das-novidades.md](doc/curadoria-das-novidades.md): título que promete o ganho,
+  duas frases em "você", um exemplo concreto ("Na prática") e nenhuma palavra do sistema. A suíte
+  cobra o tamanho, o vocabulário e o exemplo; o tom, só a leitura.
 
 ## Verificação
 

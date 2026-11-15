@@ -415,6 +415,22 @@ def escopos_da_pessoa(request):
     ]
 
 
+def _contar_novidades(request, *, recomecar):
+    """O que a identidade não viu das Novidades, para a barra (168, FR-7415).
+
+    Aqui, onde a sessão da gestão nasce, e não em cada view de entrada: um caminho novo de entrar
+    herda a contagem sem lembrar de pedi-la. Import tardio — `novidades` não é dependência do
+    restante da identidade.
+    """
+    from processo_seletivo.novidades import leitura
+
+    ator = ator_da_sessao(request)
+    if recomecar:
+        leitura.ao_entrar(request, ator)
+    else:
+        leitura.recontar(request, ator)
+
+
 def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM_DEMONSTRACAO):
     request.session[CHAVE_SESSAO] = {
         "subject": subject,
@@ -422,6 +438,7 @@ def identificar(request, *, subject, papeis, escopo=ESCOPO_PADRAO, origem=ORIGEM
         "papeis": list(papeis),
         "origem": origem,
     }
+    _contar_novidades(request, recomecar=True)
 
 
 def encerrar(request):
@@ -497,6 +514,7 @@ def entrar_institucional(request, identidade, *, correlation_id=""):
     if hasattr(request, _ATOR_DA_REQUISICAO):
         delattr(request, _ATOR_DA_REQUISICAO)
     _registrar_sessao("ENTRADA", pessoa.username, unidade, externa, timezone.now(), correlation_id)
+    _contar_novidades(request, recomecar=True)
     return pessoa
 
 
@@ -532,6 +550,8 @@ def trocar_unidade(request, escopo, *, correlation_id=""):
     _registrar_sessao(
         "TROCA_DE_UNIDADE", pessoa.username, escopo, externa, timezone.now(), correlation_id
     )
+    # Outra unidade, outras capacidades: as notas que esta pessoa alcança mudam (168, `D-004`).
+    _contar_novidades(request, recomecar=False)
 
 
 def sair(request, *, correlation_id=""):

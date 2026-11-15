@@ -1,0 +1,132 @@
+tela,identidade,folhas_proprias,h1_px,n_h2,tamanhos_de_fonte,caixas,profundidade_de_caixa,assinaturas_de_botao,campos,tabelas,altura_1440,nos_abaixo_do_contraste,alvos_menores_que_24,transborda_375,transborda_768,metade_direita_1280,metade_direita_1440,metade_direita_1920,terco_direito_1440,terco_direito_1920,cpl_max_1440,cpl_max_1920,margem_esq_1920,margem_dir_1920
+/gestao/,treino.presidencia,lista,25.6,20,6,20,1,2,1,0,3210,0,22,False,False,36,32,26,27,25,82,91,344,115
+/gestao/?situacao,treino.presidencia,lista,25.6,20,6,20,1,2,1,0,3210,0,22,False,False,36,32,26,27,25,82,91,344,115
+/gestao/agenda,paulo.presidente,agenda,25.6,3,6,5,1,1,2,1,2898,0,1,False,False,48,36,35,24,29,84,88,344,99
+/gestao/agenda?dia&visao,paulo.presidente,agenda,25.6,1,7,1,1,1,2,0,900,0,1,False,False,29,21,10,10,5,84,84,344,555
+/gestao/agenda?janela&visao,paulo.presidente,agenda,25.6,3,6,5,1,1,2,0,6748,0,69,False,False,34,24,3,3,3,84,84,344,305
+/gestao/agenda?mes&visao,paulo.presidente,agenda,25.6,3,6,5,1,1,2,1,2898,0,1,False,False,48,36,35,24,29,84,88,344,99
+/gestao/agenda?visao,paulo.presidente,agenda,25.6,3,6,5,1,1,2,0,4236,0,35,False,False,31,26,5,4,4,84,84,344,305
+/gestao/autoridades,paulo.presidente,,25.6,4,7,4,2,2,7,0,1552,0,1,False,False,31,29,22,10,16,,,344,168
+/gestao/documentacao/,paulo.presidente,style,34.4,132,14,25,1,0,2,2,11238,144,24,False,False,48,43,36,38,22,159,159,348,492
+/gestao/editais/<id>/,paulo.presidente,terminais andamento centro,25.6,5,9,16,2,2,0,3,2766,0,4,False,False,53,46,44,39,36,58,58,344,102
+/gestao/editais/<id>/?fase,paulo.presidente,terminais andamento centro,25.6,5,9,16,2,2,0,2,2766,0,3,False,False,42,37,34,32,28,57,57,344,102
+/gestao/editais/<id>/atos/cancelar,paulo.presidente,,25.6,1,5,2,1,1,1,0,900,0,1,False,False,27,23,5,5,3,88,176,344,202
+/gestao/editais/<id>/atos/devolver,complemento,,25.6,1,6,2,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/editais/<id>/atos/encerrar,paulo.presidente,,25.6,1,5,2,1,1,1,0,999,0,1,False,False,25,20,2,2,2,88,176,344,202
+/gestao/editais/<id>/atos/homologar,complemento,,25.6,1,6,2,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/editais/<id>/atos/publicar,complemento,,25.6,1,5,3,2,1,1,0,945,0,1,,,,,,,,,,,
+/gestao/editais/<id>/atos/submeter,paulo.presidente,,25.6,1,2,2,1,1,0,0,1853,0,1,False,False,25,19,16,15,16,94,117,344,115
+/gestao/editais/<id>/auditoria,paulo.presidente,,25.6,0,6,0,0,1,0,0,1980,0,1,False,False,48,45,30,31,18,158,195,344,97
+/gestao/editais/<id>/auditoria?cursor,paulo.presidente,,25.6,0,7,0,0,0,0,0,900,0,1,False,False,33,31,15,15,0,91,91,344,778
+/gestao/editais/<id>/avisos,paulo.presidente,,25.6,2,6,0,1,1,0,0,900,0,1,False,False,13,14,9,5,5,,,344,484
+/gestao/editais/<id>/compor/anexos,paulo.presidente,compor-anexos,25.6,1,6,2,1,1,2,0,1060,0,1,False,False,34,32,18,21,18,93,117,344,104
+/gestao/editais/<id>/compor/classificacao,paulo.presidente,vista previa-da-classificacao,25.6,1,5,6,3,2,34,0,2247,0,6,False,False,58,57,30,26,25,72,72,344,88
+/gestao/editais/<id>/compor/conteudo,paulo.presidente,compor-conteudo,25.6,1,4,18,1,2,17,0,3052,0,2,False,False,46,43,5,6,5,116,117,344,88
+/gestao/editais/<id>/compor/cronograma,paulo.presidente,compor-cronograma,25.6,1,5,4,1,2,15,0,1807,0,3,False,False,47,38,42,37,42,93,117,344,88
+/gestao/editais/<id>/compor/etapas,paulo.presidente,compor-etapas,25.6,1,6,5,1,2,39,0,2351,0,14,False,False,41,40,32,27,28,93,117,344,88
+/gestao/editais/<id>/compor/identificacao,paulo.presidente,,25.6,1,7,1,1,1,2,0,969,0,1,False,False,42,37,15,19,15,93,117,344,88
+/gestao/editais/<id>/compor/inscricao,paulo.presidente,,25.6,3,6,5,1,2,34,0,2938,0,4,False,False,52,52,31,32,27,93,117,344,88
+/gestao/editais/<id>/compor/perfis,paulo.presidente,vista,25.6,1,5,4,2,2,31,0,2536,0,4,False,False,45,44,26,25,24,112,112,344,88
+/gestao/editais/<id>/compor/revisao,paulo.presidente,compor-revisao,25.6,3,5,11,1,3,0,0,8904,0,5,False,False,25,20,14,15,11,110,173,344,104
+/gestao/editais/<id>/convocacoes/publicacao,paulo.presidente,publicacao-de-convocados,25.6,1,7,3,1,2,2,0,1172,0,2,False,False,17,15,4,4,2,122,122,344,112
+/gestao/editais/<id>/convocacoes/publicacao?escolha&recorte,paulo.presidente,publicacao-de-convocados,25.6,1,7,3,1,2,2,0,1172,0,2,False,False,17,15,4,4,2,122,122,344,112
+/gestao/editais/<id>/cortes/<id>,paulo.presidente,,25.6,4,8,3,1,0,0,1,1200,0,1,False,False,27,23,12,12,12,,,344,181
+/gestao/editais/<id>/distribuicao/<id>,treino.presidencia,,25.6,3,7,5,1,3,23,2,2433,0,22,False,False,30,28,13,12,11,102,102,344,139
+/gestao/editais/<id>/distribuicao/<id>/conclusoes,paulo.presidente,ficha-do-barema,25.6,0,5,1,1,1,1,0,900,0,1,False,False,27,15,5,0,0,121,121,344,667
+/gestao/editais/<id>/distribuicao/<id>/impedimentos,paulo.presidente,,25.6,2,6,0,1,1,3,0,900,0,1,False,False,26,26,3,3,0,88,88,344,606
+/gestao/editais/<id>/distribuicao/<id>/ocorrencia,treino.presidencia,,25.6,0,5,0,0,1,11,1,997,0,11,False,False,36,36,22,12,0,85,85,344,623
+/gestao/editais/<id>/distribuicao/<id>/resultados,paulo.presidente,,25.6,0,4,0,1,0,0,0,900,0,1,False,False,12,12,7,0,0,90,90,344,648
+/gestao/editais/<id>/distribuicao/<id>/resultados?consequencia,paulo.presidente,,25.6,0,4,0,1,0,0,0,900,0,1,False,False,12,12,7,0,0,90,90,344,648
+/gestao/editais/<id>/distribuicao/<id>/trilha,treino.presidencia,,25.6,0,6,1,1,1,3,0,1561,0,1,False,False,26,21,26,18,22,125,125,344,139
+/gestao/editais/<id>/distribuicao/<id>/trilha?inscricao,paulo.presidente,,25.6,0,7,1,1,1,3,0,900,0,1,False,False,41,27,22,16,14,125,125,344,147
+/gestao/editais/<id>/distribuicao/<id>?cobertura,treino.presidencia,,25.6,3,7,5,1,3,17,2,2211,0,16,False,False,30,26,9,9,7,102,102,344,139
+/gestao/editais/<id>/distribuicao/<id>?prontidao,treino.presidencia,,25.6,3,7,5,1,3,17,2,2211,0,16,False,False,30,26,9,9,7,102,102,344,139
+/gestao/editais/<id>/duvidas/,paulo.presidente,assistente duvidas,25.6,2,7,2,1,2,13,0,1167,0,11,False,False,25,23,7,7,7,95,95,344,105
+/gestao/editais/<id>/formalizacao,treino.presidencia,formalizacao,25.6,3,7,0,0,1,7,0,1293,0,5,False,False,24,23,0,0,0,80,80,344,891
+/gestao/editais/<id>/inscricoes,paulo.presidente,,25.6,0,6,1,1,1,2,1,900,0,1,False,False,42,44,28,41,21,,,344,147
+/gestao/editais/<id>/inscricoes/publicacoes,paulo.presidente,publicacoes-das-inscricoes,25.6,2,7,1,1,1,1,1,1303,0,2,False,False,40,36,16,16,16,87,174,344,130
+/gestao/editais/<id>/inscricoes/publicacoes?natureza,paulo.presidente,publicacoes-das-inscricoes,25.6,2,6,1,1,1,2,1,1489,0,2,False,False,43,38,15,15,15,110,110,344,130
+/gestao/editais/<id>/kit-de-divulgacao/,paulo.presidente,kit-de-divulgacao,25.6,1,4,1,1,0,0,0,900,0,1,False,False,16,8,0,0,0,,,344,1001
+/gestao/editais/<id>/marcos/<id>,treino.presidencia,conducao-do-recorte,25.6,3,5,1,1,1,0,1,1329,0,1,False,False,35,25,18,18,16,112,112,344,474
+/gestao/editais/<id>/marcos/<id>/atos/<id>,paulo.presidente,,25.6,3,5,0,0,1,0,2,2256,0,1,False,False,43,40,27,36,26,,,344,102
+/gestao/editais/<id>/marcos/<id>/atos/<id>/publicar,paulo.presidente,,25.6,2,5,1,1,1,2,1,1387,0,1,False,False,33,31,16,14,15,88,176,344,144
+/gestao/editais/<id>/marcos/<id>/avisos/novo,complemento,aviso,25.6,3,6,1,1,2,5,1,2657,0,2,,,,,,,,,,,
+/gestao/editais/<id>/marcos/<id>/avisos/novo?de&natureza,paulo.presidente,aviso,25.6,3,6,1,1,2,5,1,2657,0,2,False,False,30,27,6,6,6,57,85,344,271
+/gestao/editais/<id>/marcos/<id>/avisos/novo?natureza,paulo.presidente,aviso,25.6,3,6,1,1,2,5,1,2657,0,2,False,False,30,27,6,6,6,57,85,344,271
+/gestao/editais/<id>/marcos/<id>/conducao,paulo.presidente,marco,25.6,2,7,0,1,1,2,1,975,0,1,False,False,44,34,38,13,25,106,106,344,259
+/gestao/editais/<id>/marcos/<id>/convocacao,treino.presidencia,conducao-do-recorte convocacao,25.6,6,5,30,3,5,32,0,4325,0,4,False,False,23,16,12,11,2,94,94,344,464
+/gestao/editais/<id>/marcos/<id>/convocacao/<id>/documentos,treino.presidencia,convocacao convocacao-documentos visualizador,25.6,4,9,6,3,2,6,0,1942,0,8,False,False,21,19,5,5,0,65,65,344,656
+/gestao/editais/<id>/marcos/<id>/convocacao/historico,paulo.presidente,,25.6,0,5,0,0,0,0,1,900,0,1,False,False,43,34,19,18,19,60,60,344,117
+/gestao/editais/<id>/marcos/<id>/convocacao/historico?lista,paulo.presidente,,25.6,0,2,0,0,0,0,0,900,0,1,False,False,25,25,0,0,0,60,60,344,902
+/gestao/editais/<id>/marcos/<id>/convocacao?lista,paulo.presidente,conducao-do-recorte convocacao,25.6,5,7,5,2,1,0,0,1938,0,2,False,False,21,17,3,3,1,62,62,344,501
+/gestao/editais/<id>/marcos/<id>/convocacao?ordem,treino.presidencia,conducao-do-recorte convocacao,25.6,6,5,30,3,5,32,0,4325,0,4,False,False,23,16,12,12,2,94,94,344,464
+/gestao/editais/<id>/marcos/<id>/corte,treino.presidencia,corte,25.6,1,7,8,1,1,0,1,1114,0,1,False,False,39,37,28,28,12,88,88,344,469
+/gestao/editais/<id>/marcos/<id>/corte?lista,paulo.presidente,corte,25.6,0,4,0,1,0,0,0,900,0,1,False,False,47,40,6,6,6,88,88,344,501
+/gestao/editais/<id>/marcos/<id>/ocupacao,treino.presidencia,,25.6,2,6,0,1,1,1,0,1146,0,1,False,False,27,20,4,6,2,90,90,344,108
+/gestao/editais/<id>/marcos/<id>/ocupacao/historico,paulo.presidente,,25.6,4,6,0,0,0,0,0,2329,0,1,False,False,5,5,1,1,0,59,59,344,760
+/gestao/editais/<id>/marcos/<id>/publicacoes,paulo.presidente,,25.6,1,5,0,0,1,0,1,900,0,1,False,False,22,18,9,18,9,,,344,170
+/gestao/editais/<id>/marcos/<id>/sorteio,treino.presidencia,andamento sorteio,25.6,5,6,8,1,2,0,2,3296,0,6,False,False,36,27,12,13,11,96,96,344,117
+/gestao/editais/<id>/marcos/<id>?lista,paulo.presidente,conducao-do-recorte,25.6,3,6,1,1,1,0,0,912,0,1,False,False,33,19,5,5,2,112,112,344,489
+/gestao/editais/<id>/matriculas,complemento,,25.6,0,6,1,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/editais/<id>/pagina-anterior/,paulo.presidente,terminais andamento,25.6,7,9,7,1,3,0,1,1956,0,1,False,False,25,22,19,17,17,97,97,344,111
+/gestao/editais/<id>/previa,paulo.presidente,,25.6,0,4,0,1,1,0,0,900,0,1,False,False,40,30,30,30,30,70,70,344,88
+/gestao/editais/<id>/previa?origem,paulo.presidente,,25.6,0,4,0,1,1,0,0,900,0,1,False,False,40,30,30,30,30,70,70,344,88
+/gestao/editais/<id>/reaproveitar,paulo.presidente,,25.6,3,5,4,1,2,20,1,4640,0,20,False,False,24,23,15,11,14,126,126,344,88
+/gestao/editais/<id>/recursos,paulo.presidente,,25.6,0,6,1,1,1,1,1,900,0,1,False,False,29,18,11,18,11,,,344,125
+/gestao/editais/<id>/relatorio,paulo.presidente,relatorio-do-edital,25.6,7,8,7,1,1,0,3,2185,0,1,False,False,38,35,24,21,19,76,76,344,176
+/gestao/editais/<id>/retificar,treino.presidencia,retificar,25.6,8,5,37,1,1,168,0,11631,0,15,False,False,48,48,20,22,17,114,114,344,103
+/gestao/formalizacao/,paulo.presidente,formalizacao,25.6,0,3,0,0,0,0,0,900,0,1,False,False,23,12,0,0,0,,,344,912
+/gestao/formalizacao/editais/<id>,treino.formalizacao,formalizacao,25.6,2,6,3,1,2,3,0,1119,0,4,False,False,13,8,7,7,5,,,344,117
+/gestao/identificar,paulo.presidente,acesso,32,0,7,0,1,0,0,0,900,0,1,False,False,29,21,3,8,3,,,1055,72
+/gestao/identificar/demonstracao,paulo.presidente,acesso,32,2,5,2,1,6,12,0,2503,0,12,False,False,72,68,60,64,56,,,1055,72
+/gestao/identificar/demonstracao?proximo,anonimo,acesso,32,2,5,2,1,6,12,0,2503,0,12,False,False,72,68,60,64,56,,,1055,72
+/gestao/identificar?proximo,anonimo,acesso,32,0,7,0,1,0,0,0,900,0,1,False,False,23,18,3,10,3,,,1055,72
+/gestao/inscricoes/<id>/,paulo.presidente,lista-exigida inscricao-detalhe,25.6,2,6,1,1,1,0,0,900,0,1,False,False,10,6,3,3,3,,,344,117
+/gestao/minhas-etapas,treino.presidencia,andamento minhas-etapas,25.6,2,5,0,0,1,1,0,1296,0,4,False,False,28,20,15,9,15,,,344,190
+/gestao/minhas-etapas/<id>/<id>,treino.avaliacao1,,25.6,1,7,1,1,0,0,1,900,0,1,False,False,30,3,0,0,0,,,344,995
+/gestao/minhas-etapas/<id>/<id>/inscricoes/<id>,treino.avaliacao1,lista-exigida ficha-do-barema visualizador,25.6,3,8,2,1,3,2,0,1098,0,1,False,False,25,23,6,4,2,81,81,344,569
+/gestao/minhas-etapas/<id>/<id>?filtro,treino.avaliacao1,,25.6,1,8,1,1,0,0,1,900,0,1,False,False,27,3,0,0,0,,,344,995
+/gestao/modelos-de-aviso,paulo.presidente,,25.6,0,5,0,0,2,0,1,900,0,1,False,False,33,33,28,28,28,,,344,255
+/gestao/modelos-de-aviso/<id>,paulo.presidente,aviso,25.6,0,5,0,1,1,3,0,1315,0,1,False,False,41,36,0,0,0,,,344,889
+/gestao/modelos-de-aviso/novo,paulo.presidente,aviso,25.6,0,5,0,1,1,3,0,1243,0,1,False,False,42,36,0,0,0,,,344,889
+/gestao/processos/<id>/,paulo.presidente,terminais serie lista centro processo,25.6,5,11,5,2,2,0,0,1106,0,1,False,False,24,22,20,14,9,59,78,344,100
+/gestao/processos/<id>/alocacoes,treino.presidencia,alocacoes,25.6,1,9,6,2,3,12,1,1394,0,19,False,False,22,21,14,14,14,,,216,223
+/gestao/processos/<id>/atos/ativar,complemento,,25.6,1,7,2,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/processos/<id>/atos/cancelar,complemento,,25.6,1,7,2,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/processos/<id>/atos/encerrar,complemento,,25.6,1,7,2,1,1,1,0,900,0,1,,,,,,,,,,,
+/gestao/processos/<id>/auditoria,paulo.presidente,,25.6,0,6,1,1,1,2,0,1008,0,1,False,False,28,28,22,22,0,117,117,344,599
+/gestao/processos/<id>/comissao,paulo.presidente,comissao,25.6,3,8,6,2,3,10,0,2102,0,2,False,False,29,28,14,9,12,97,97,344,174
+/gestao/processos/<id>/editais/criar,paulo.presidente,,25.6,1,7,1,1,1,4,0,900,0,1,False,False,39,39,15,15,15,84,84,344,88
+/gestao/processos/<id>/supervisao,paulo.presidente,serie,25.6,2,9,3,1,0,0,2,1117,0,2,False,False,23,23,21,4,3,,,344,187
+/gestao/processos/criar,paulo.presidente,,25.6,2,6,2,1,1,6,0,900,0,1,False,False,34,31,17,16,17,84,84,344,88
+/gestao/recursos/<id>,paulo.presidente,ficha-do-barema,25.6,6,7,1,1,2,7,0,1847,0,2,False,False,34,29,5,5,4,115,115,344,198
+/gestao/retificacoes/<id>/,paulo.presidente,terminais,25.6,4,7,4,1,0,0,1,947,0,1,False,False,16,14,12,9,9,,,344,195
+/gestao/retificacoes/<id>/atos/cancelar,complemento,,25.6,1,6,2,1,1,1,0,900,0,2,,,,,,,,,,,
+/gestao/retificacoes/<id>/atos/homologar,complemento,,25.6,2,6,3,1,1,1,1,982,0,2,,,,,,,,,,,
+/gestao/retificacoes/<id>/atos/publicar,complemento,,25.6,2,7,4,2,1,1,1,1129,0,2,,,,,,,,,,,
+/gestao/retificacoes/<id>/atos/submeter,complemento,,25.6,1,5,2,1,1,0,0,900,0,2,,,,,,,,,,,
+/gestao/trilha-da-unidade,paulo.presidente,trilha-da-unidade,25.6,0,6,1,1,1,1,0,900,0,1,False,False,31,27,21,20,7,103,103,344,312
+/gestao/visao-geral,paulo.presidente,visao-geral,25.6,1,9,6,2,1,7,20,3389,155,2,False,True,42,41,44,41,43,81,81,344,130
+/gestao/visao-geral/relatorio,paulo.presidente,relatorio-consolidado,25.6,1,6,0,0,1,25,0,1886,0,20,False,False,48,39,4,4,4,112,112,344,127
+/gestao/visao-geral/relatorio/conjunto,complemento,relatorio-consolidado,25.6,5,9,7,1,1,0,2,2970,0,1,,,,,,,,,,,
+/selecoes/,anonimo,portal,25.6,2,5,14,2,1,4,0,3052,0,15,False,False,37,35,34,17,12,,,216,505
+/selecoes/<id>/,paulo.presidente,portal,25.6,4,6,2,1,0,0,0,1752,0,3,False,False,19,19,17,12,12,,,216,218
+/selecoes/<id>/?pagina,anonimo,portal,25.6,3,6,2,1,1,0,0,1694,0,4,False,False,29,28,24,18,14,,,216,222
+/selecoes/?pagina,anonimo,portal,25.6,2,6,10,2,1,4,0,2167,0,11,False,False,31,29,24,12,11,,,216,505
+/selecoes/acesso,anonimo,portal,28,0,3,1,1,1,1,0,900,0,1,False,False,53,53,53,0,0,,,757,757
+/selecoes/acesso/codigo,cand2,portal,28,0,5,1,1,2,1,0,900,0,1,False,False,0,0,0,0,0,,,216,1153
+/selecoes/acesso?destino,paulo.presidente,portal,28,0,3,1,1,1,1,0,900,0,1,False,False,53,53,53,0,0,,,757,757
+/selecoes/conta,cand2,portal,25.6,3,4,1,1,1,1,0,900,0,2,False,False,3,0,0,0,0,,,216,1063
+/selecoes/inscricoes/,cand2,portal,25.6,0,5,1,1,0,0,0,900,0,3,False,False,0,0,0,0,0,,,216,1153
+/selecoes/inscricoes/<id>/,cand2,portal,25.6,2,5,1,1,0,0,0,1247,0,2,False,False,1,1,0,0,0,,,216,995
+/selecoes/inscricoes/<id>/acompanhamento,cand2,portal,25.6,6,4,6,2,0,0,0,1982,0,2,False,False,3,0,0,0,0,,,216,1067
+/selecoes/inscricoes/<id>/comprovante,cand2,portal,25.6,1,8,2,1,0,0,0,1386,0,2,False,False,17,17,17,14,10,162,162,216,233
+/selecoes/inscricoes/<id>/convocacao,cand4,portal,25.6,1,4,1,1,0,0,0,900,0,2,False,False,3,0,0,0,0,,,216,1029
+/selecoes/inscricoes/<id>/recorrer,cand2,portal,25.6,0,3,0,0,1,2,0,900,0,2,False,False,0,0,0,0,0,,,216,1192
+/selecoes/inscricoes/<id>/requerimento,cand4,portal,25.6,2,4,0,0,0,0,0,2877,0,2,False,False,3,0,0,0,0,83,83,216,1019
+/selecoes/inscricoes/<id>/requerimento?atualizando,cand4,portal,25.6,2,7,0,0,1,25,0,2310,0,2,False,False,23,13,13,13,13,,,216,216
+/selecoes/meus-dados,cand2,portal,25.6,0,2,0,0,1,2,0,900,0,2,False,False,4,0,0,0,0,,,216,1022
+/selecoes/recursos/<id>,cand2,portal,25.6,1,6,1,1,0,0,0,900,0,2,False,False,11,9,9,9,9,178,178,216,233
+/selecoes/resultados/<id>/,paulo.presidente,portal,25.6,1,5,0,0,0,0,1,900,0,2,False,False,17,11,11,11,11,,,216,228
+/selecoes/sorteio/<id>/verificar,complemento,portal,25.6,3,5,0,0,0,0,0,1184,0,2,,,,,,,,,,,
+/selecoes/sorteio/relacoes/<id>/,treino.presidencia,portal,25.6,3,6,0,0,0,0,1,1158,0,2,False,False,23,19,19,19,19,86,86,216,228
