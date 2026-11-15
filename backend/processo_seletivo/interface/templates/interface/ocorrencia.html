@@ -48,7 +48,7 @@ ser efeito colateral de um clique numa lista longa.
     <strong>Confirme antes de registrar.</strong>
     {{ confirmacao|length }} inscriç{{ confirmacao|length|pluralize:"ão,ões" }} ser{{ confirmacao|length|pluralize:"á,ão" }}
     <strong>eliminada{{ confirmacao|length|pluralize:"s" }}</strong> desta Etapa por ocorrência:
-    {% for inscricao in confirmacao %}{{ inscricao.protocolo|default:inscricao.id }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+    {% for inscricao in confirmacao %}{{ inscricao.protocolo|default:inscricao.id }}{% if com_agenda %} ({% if inscricao.horario_publicado %}horário publicado: {{ inscricao.horario_publicado.quando }}{% if inscricao.horario_publicado.banca %}, {{ inscricao.horario_publicado.banca }}{% endif %}{% else %}sem horário publicado{% endif %}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}.
     Motivo registrado: <em>{{ motivo }}</em>
   </p>
   <p class="acoes">
@@ -73,6 +73,11 @@ ser efeito colateral de um clique numa lista longa.
       Edital que a sustenta — por exemplo: “não compareceu à Entrevista (item 6.3 do Edital)”.</span>
   </p>
 
+  {% comment %} O horário que a agenda publicou (167, R-23): **informação**, e nunca efeito. A agenda
+     não registra ausência (FR-7250) — quem faltou ao horário continua tendo a Ocorrência, aqui, com o
+     motivo que a presidência escreve. A coluna só existe quando a Etapa tem agenda publicada. {% endcomment %}
+  {% if com_agenda %}<p class="ajuda">O horário é o que a agenda publicada da Etapa deu a cada pessoa, para
+    você conferir. Ele não registra nada: a ausência se registra aqui, como ocorrência.</p>{% endif %}
   <div class="tabela-rolavel">
   <table class="tabela" data-selecionavel>
     <caption class="oculto">Inscrições desta Etapa que ainda não têm Resultado</caption>
@@ -81,6 +86,7 @@ ser efeito colateral de um clique numa lista longa.
         <th scope="col"><span class="oculto">Selecionar</span></th>
         <th scope="col">Inscrição</th>
         <th scope="col">Candidata ou candidato</th>
+        {% if com_agenda %}<th scope="col">Horário publicado</th>{% endif %}
       </tr>
     </thead>
     <tbody>
@@ -94,6 +100,7 @@ ser efeito colateral de um clique numa lista longa.
         </td>
         <td><label for="ocorrencia-{{ inscricao.id }}">{{ inscricao.protocolo|default:inscricao.id }}</label></td>
         <td>{{ inscricao.nome }}</td>
+        {% if com_agenda %}<td>{% if inscricao.horario_publicado %}{{ inscricao.horario_publicado.quando }}{% if inscricao.horario_publicado.banca %} · {{ inscricao.horario_publicado.banca }}{% endif %}{% else %}Sem horário publicado{% endif %}</td>{% endif %}
       </tr>
       {% endfor %}
     </tbody>

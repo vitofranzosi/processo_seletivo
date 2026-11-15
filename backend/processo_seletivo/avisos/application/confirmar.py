@@ -93,6 +93,7 @@ def _gravar(
         justificativa=justificativa,
         perfil_id=universo.perfil_id,
         marco_id=universo.marco_id,
+        etapa_id=universo.etapa_id,
         lista_id=universo.lista_id,
         natureza=universo.natureza,
         referencia_da_publicacao=universo.referencia,
@@ -122,12 +123,15 @@ def _gravar(
     contagens = universo.contagens()
     # **A trilha diz o que foi decidido, e não para quem**: os endereços já estão nos destinatários,
     # e copiá-los aqui aumentaria a exposição sem acrescentar prova (`FR-1278`).
-    ato = (
-        f"{len(universo.publicacoes)} publicação(ões) do marco {universo.marco_id}, "
-        f"natureza {universo.natureza}"
-        if universo.origem == nomes.RESULTADO
-        else f"chamada do marco {universo.marco_id} publicada em {universo.referencia!r}"
-    )
+    if universo.origem == nomes.RESULTADO:
+        ato = (
+            f"{len(universo.publicacoes)} publicação(ões) do marco {universo.marco_id}, "
+            f"natureza {universo.natureza}"
+        )
+    elif universo.origem == nomes.PASSO:
+        ato = f"o passo da etapa {universo.etapa_id}"
+    else:
+        ato = f"chamada do marco {universo.marco_id} publicada em {universo.referencia!r}"
     auditar(
         actor=actor,
         permissao=ctx.base.permissao,
@@ -320,6 +324,89 @@ def confirmar_aviso_da_chamada(
             modelo=modelo,
             motivo=motivo,
             justificativa=justificativa if universo.ja_avisado else "",
+            anterior=anterior,
+            idempotency_key=idempotency_key,
+            correlation_id=correlation_id,
+        )
+
+
+def confirmar_aviso_do_passo(
+    *,
+    actor,
+    processo_id,
+    edital_id,
+    etapa_id,
+    assunto,
+    corpo,
+    assinatura,
+    enderecos,
+    idempotency_key,
+    correlation_id,
+    modelo_id=None,
+    justificativa="",
+):
+    """Confirma o aviso do passo de uma Etapa restrita (171, FR-7315 a FR-7319).
+
+    O caminho é o do aviso de resultado: a prévia, a assinatura, o gesto de quem pode avisar.
+    **Sem justificativa, só quem nenhum aviso do passo citou.** Com ela, é o reenvio intencional a
+    todos os que ainda participam sem Resultado (`R-011` da `066`).
+    """
+    from processo_seletivo.processos.models import Edital
+
+    processo_do_ator(actor, processo_id)
+    justificativa = (justificativa or "").strip()
+    motivo = nomes.REENVIO_JUSTIFICADO if justificativa else nomes.PRIMEIRO_AVISO
+    payload = {
+        "origem": nomes.PASSO,
+        "etapa": str(etapa_id),
+        "assinatura": assinatura,
+        "assunto": assunto,
+        "corpo": corpo,
+        "justificativa": justificativa,
+    }
+    with comando_de_aviso(
+        actor=actor,
+        processo_id=processo_id,
+        origem=nomes.PASSO,
+        operation=nomes.ATO_CONFIRMAR,
+        payload=payload,
+        idempotency_key=idempotency_key,
+    ) as ctx:
+        if ctx.repetido:
+            return ctx.desfecho_anterior
+        edital = Edital.objects.get(pk=edital_id, processo_id=processo_id)
+        universo = destinatarios.universo_do_passo(
+            edital=edital, etapa_id=etapa_id, reenvio=bool(justificativa)
+        )
+        if not universo.linhas:
+            raise DomainError(
+                nomes.AVISO_SEM_PUBLICACAO_NOVA,
+                "Todas as inscrições desta etapa já foram avisadas. Avisar de novo exige "
+                "justificativa escrita.",
+                409,
+            )
+        _recusar_defasada(universo, assinatura, motivo=motivo)
+        _recusar_sem_elegivel(universo)
+        modelo = _modelo_da_unidade(actor, modelo_id)
+        assunto_final, corpo_final = previa.congelar(
+            universo, assunto=assunto, corpo=corpo, enderecos=enderecos
+        )
+        anterior = None
+        if justificativa:
+            anterior = (
+                Aviso.objects.filter(edital=edital, origem=nomes.PASSO, etapa_id=universo.etapa_id)
+                .order_by("-solicitado_em")
+                .first()
+            )
+        return _gravar(
+            ctx,
+            universo,
+            actor=actor,
+            assunto=assunto_final,
+            corpo=corpo_final,
+            modelo=modelo,
+            motivo=motivo,
+            justificativa=justificativa if anterior else "",
             anterior=anterior,
             idempotency_key=idempotency_key,
             correlation_id=correlation_id,

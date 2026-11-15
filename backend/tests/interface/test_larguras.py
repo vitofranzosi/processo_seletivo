@@ -204,14 +204,65 @@ def test_a_folha_da_visao_geral_so_usa_cor_de_token():
     sem_comentario = re.sub(r"/\*.*?\*/", "", folha, flags=re.S)
 
     assert re.findall(r"#[0-9a-fA-F]{3,8}\b", sem_comentario) == []
+    assert re.findall(r"\b(?:rgba?|hsla?)\(", sem_comentario, flags=re.I) == []
+    # O nome de cor (`gray`, `white`, `darkslategray`…) é o terceiro caminho, e a lista dos nomes
+    # tem 148: em vez dela, a propriedade de cor só admite `var(--…)`, medida e as palavras que
+    # não são cor. Uma palavra nova fora desta lista reprova até alguém decidir que não é cor.
+    nao_sao_cor = {
+        "transparent", "currentcolor", "inherit", "initial", "unset", "none",
+        "solid", "dashed", "dotted", "double", "hidden", "thin", "medium", "thick", "underline",
+    }  # fmt: skip
+    declaracoes = re.findall(r"(?<![\w-])([a-z-]+)\s*:\s*([^;{}]+)(?=[;}])", sem_comentario)
+    de_cor = [
+        (propriedade, valor)
+        for propriedade, valor in declaracoes
+        if re.fullmatch(
+            r"color|background(-color)?|border(-(top|right|bottom|left))?(-color)?"
+            r"|outline(-color)?|box-shadow|text-decoration(-color)?|fill|stroke",
+            propriedade,
+        )
+    ]
+    assert de_cor, "a leitura das declarações deixou de achar a cor da folha"
+    fora = [
+        (propriedade, valor)
+        for propriedade, valor in de_cor
+        for palavra in re.findall(r"[a-z][a-z-]*", re.sub(r"var\([^)]*\)", "", valor), re.I)
+        if palavra.lower() not in nao_sao_cor and not re.fullmatch(r"px|rem|em|%", palavra)
+    ]
+    assert fora == []
 
 
 def test_a_tabela_da_visao_geral_rola_na_moldura_comum():
     """P0: a moldura própria só rolava abaixo de 40 rem, e a 768 px o documento media 880 px. A
-    comum, `.tabela-rolavel`, rola em toda largura."""
-    modelo = (GESTAO / "visao_geral.html").read_text()
+    comum, `.tabela-rolavel`, rola em toda largura.
 
-    assert '<div class="tabela-rolavel">\n<table class="tabela-da-visao">' in modelo
+    A conferência é pela árvore, e não pelo texto: a tabela é filha direta da moldura, com o
+    espaço que for entre as duas."""
+    from html.parser import HTMLParser
+
+    class Pais(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.pilha, self.pai_da_tabela = [], None
+
+        def handle_starttag(self, tag, attrs):
+            classes = (dict(attrs).get("class") or "").split()
+            if tag == "table" and "tabela-da-visao" in classes:
+                self.pai_da_tabela = self.pilha[-1] if self.pilha else None
+            if tag not in {"br", "img", "input", "meta", "link", "hr", "wbr", "col", "source"}:
+                self.pilha.append((tag, classes))
+
+        def handle_endtag(self, tag):
+            while self.pilha and self.pilha.pop()[0] != tag:
+                pass
+
+    modelo = (GESTAO / "visao_geral.html").read_text()
+    leitor = Pais()
+    leitor.feed(re.sub(r"{%.*?%}|{{.*?}}", "", modelo, flags=re.S))
+
+    assert leitor.pai_da_tabela is not None, "a tabela da Visão Geral saiu do modelo"
+    assert leitor.pai_da_tabela[0] == "div"
+    assert "tabela-rolavel" in leitor.pai_da_tabela[1]
     assert "rolagem-da-tabela" not in modelo
 
 

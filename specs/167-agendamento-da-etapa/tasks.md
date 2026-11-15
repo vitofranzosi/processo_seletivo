@@ -240,16 +240,21 @@ anterior, o novo, o autor e o motivo.
 
 ---
 
-# Entrega D — Orientação *(opcional; fora desta implementação)*
+# Entrega D — Orientação *(opcional)*
 
 Decisão do usuário em 14/11: a implementação faz A, B e C, e a D fica para quando a comissão de uso a
-pedir. As tarefas ficam como registro.
+pedir. Feita em 14/11, num PR empilhado sobre o da C, a pedido da sessão que conduziu a 167.
+
+Dois pontos que a tarefa não dizia, e que a implementação decidiu: a agenda é cobrada também na Etapa
+"sem efeito no GPS" — ela ainda pede comparecimento, e a agenda é operacional (`D-001`) —, e a
+providência é "Montar a agenda" enquanto houver participante sem horário **ou** horário de quem não
+participa mais, que são os dois impedimentos da conferência que só a montagem resolve.
 
 ## Phase 13: Orientação
 
-- [ ] T083 [P] "Montar a agenda" e "Publicar a agenda" como pendência da Etapa com agenda em montagem, em `processo_seletivo/interface/centro.py` (`136`) e `processo_seletivo/interface/atividades.py` (`160`), com testes em `tests/interface/test_agenda_nas_pendencias.py` (T-023)
-- [ ] T084 [P] O horário publicado da pessoa, como informação, em `processo_seletivo/interface/templates/interface/ocorrencia.html`, sem nenhum efeito na Ocorrência, com teste em `tests/interface/test_horario_na_ocorrencia.py` (R-23, FR-7250)
-- [ ] T085 `make lint check`, a suíte inteira e o PR da D
+- [x] T083 [P] "Montar a agenda" e "Publicar a agenda" como pendência da Etapa com agenda em montagem, em `processo_seletivo/interface/centro.py` (`136`) e `processo_seletivo/interface/atividades.py` (`160`), com testes em `tests/interface/test_agenda_nas_pendencias.py` (T-023)
+- [x] T084 [P] O horário publicado da pessoa, como informação, em `processo_seletivo/interface/templates/interface/ocorrencia.html`, sem nenhum efeito na Ocorrência, com teste em `tests/interface/test_horario_na_ocorrencia.py` (R-23, FR-7250)
+- [x] T085 `make lint check`, a suíte inteira e o PR da D
 
 ---
 
@@ -311,7 +316,7 @@ publicar. É o que o pedido mede no SC-2390, até a conferência.
 1. **A** → demonstrar configurar e montar → PR.
 2. **B** → demonstrar publicar e o candidato encontrar o horário → PR. O `M` vai a 68.
 3. **C** → demonstrar avisar e remarcar → PR. A FR-084 revista.
-4. **D**, fora desta implementação: quando a comissão de uso pedir.
+4. **D** → a agenda como pendência no Centro e em Minhas atividades, e o horário na Ocorrência → PR.
 
 ### Armadilhas a lembrar em cada sessão
 

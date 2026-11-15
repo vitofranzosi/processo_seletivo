@@ -117,6 +117,11 @@ def test_homologar_avisa_que_a_publicacao_ficara_com_outra_pessoa(
     corpo = client.get(reverse("interface:ato", args=[edital.id, "homologar"])).content.decode()
 
     assert "Depois de homologar, você não poderá publicar esta revisão" in corpo
+    # A espécie no texto, e não só no amarelo (P0 do estudo de design system; WCAG 1.4.1).
+    assert (
+        "<strong>Atenção:</strong> <strong>Depois de homologar, você não poderá publicar esta "
+        "revisão.</strong>"
+    ) in " ".join(corpo.split())
     # Aviso, e não impedimento: acumular os dois papéis é permitido, e o ato continua oferecido.
     assert "Homologar é permitido" in corpo
 

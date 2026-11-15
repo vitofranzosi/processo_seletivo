@@ -87,6 +87,46 @@ def carga_por_avaliador(*, edital, etapa_id):
     ]
 
 
+def pendentes_por_membro(*, edital, etapa_id, participantes):
+    """`[(nome, quantas)]`: as Atribuições ativas sem parecer concluído, por membro (171, FR-7321).
+
+    **A conta da Mesa** (FR-7328): Atribuição ativa de inscrição que participa, menos a concluída —
+    a mesma de `mesa()` e de `carga_nas_etapas`, para os números do Centro e da Mesa coincidirem.
+    Uma consulta. **Nunca o sentido**: o que se conta é a ausência de conclusão, e não o que alguém
+    concluiu. Quem não deve nada não aparece; a ordem é a do que falta, decrescente (UX-793).
+    """
+    linhas = (
+        Atribuicao.objects.filter(
+            edital=edital, etapa_id=etapa_id, ativo=True, inscricao_id__in=list(participantes)
+        )
+        .exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+        .values("membro__display_label", "membro__identity_subject")
+        .annotate(total=Count("id"))
+    )
+    linhas = list(linhas)
+    # **O nome, e não `pessoa-<uuid>`** (107, FR-3150): sem rótulo, o membro institucional sai pelo
+    # nome legível, numa consulta só; o da demonstração não tem o prefixo, e não custa nada.
+    from processo_seletivo.seguranca.application.acessos import nomes_dos_autores
+    from processo_seletivo.seguranca.autenticacao import PREFIXO_DO_IDENTIFICADOR
+
+    institucionais = [
+        linha["membro__identity_subject"]
+        for linha in linhas
+        if not linha["membro__display_label"]
+        and linha["membro__identity_subject"].startswith(PREFIXO_DO_IDENTIFICADOR)
+    ]
+    nomes = nomes_dos_autores(institucionais) if institucionais else {}
+    pares = [
+        (
+            linha["membro__display_label"]
+            or nomes.get(linha["membro__identity_subject"], linha["membro__identity_subject"]),
+            linha["total"],
+        )
+        for linha in linhas
+    ]
+    return sorted(pares, key=lambda par: (-par[1], par[0]))
+
+
 def _cobertura(atribuidas, previstas):
     if atribuidas == 0:
         return SEM_NENHUM

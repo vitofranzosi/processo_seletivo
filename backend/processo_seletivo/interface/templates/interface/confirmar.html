@@ -13,11 +13,15 @@
 {% comment %}
 **A espécie de cada bloco está no texto, e não só na cor** (P0 do estudo de design system, 14/11;
 WCAG 1.4.1). Encerrar empilhava três faixas — o que impede, o que continua e o que não se desfaz —,
-e duas delas só se distinguiam pelo vermelho e pelo amarelo. Onde a primeira frase não dizia a
-espécie, ela ganhou a marca: **Impedimento:** no que recusa o ato, **Atenção:** no que o deixa
-seguir. Onde já dizia — "Aviso:", "Não foi possível concluir:", "Este ato não pode ser desfeito",
-"Nenhuma pendência registrada no GPS impede o encerramento" —, nada mudou. As palavras são as que a
-própria tela e a da Retificação já usavam; o texto que segue a marca é o mesmo de antes.
+e duas delas só se distinguiam pelo vermelho e pelo amarelo. Toda caixa `.erro` que recusa o ato
+abre por **Impedimento:**, e toda caixa `.aviso` que o deixa seguir, por **Atenção:** — aqui, em
+`_impedimento.html`, na confirmação do Processo e na da Retificação. Uma palavra só por espécie: a
+mesma caixa amarela dizia "Aviso:" nas pendências e "Atenção:" nas advertências do desfecho, e duas
+palavras para a mesma coisa fazem o leitor procurar a diferença. "Atenção:" ficou porque a
+Retificação já a usava. O texto que segue a marca é o mesmo de antes. Ficaram sem marca só as
+frases que não são caixa de espécie: "Não foi possível concluir:" (a recusa do envio, não do ato),
+"Este ato não pode ser desfeito" e as frases de nada em aberto ("Nenhuma pendência registrada no GPS
+impede o encerramento", e a do Processo).
 {% endcomment %}
 
 {% if impedido_por_segregacao %}
@@ -57,7 +61,7 @@ terceiro. Quem publica precisa ver, no instante em que confirma, o que o Edital 
 a apuração vai alcançar — e os dois em números, para não ter de abrir outra tela para comparar.
 {% endcomment %}
 {% for item in pendencias %}{% if item.severidade == 'aviso' %}
-<p class="aviso" role="status"><strong>Aviso:</strong> {{ item.mensagem }}</p>
+<p class="aviso" role="status"><strong>Atenção:</strong> {{ item.mensagem }}</p>
 {% endif %}{% endfor %}
 
 {% comment %}

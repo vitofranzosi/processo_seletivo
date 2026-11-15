@@ -183,6 +183,16 @@ CONCEITOS = {
         "registra-se o desfecho.",
         "ao_confirmar": "A pendência volta ao candidato, que pode reenviar no prazo.",
     },
+    # O aviso do passo (171, FR-7323): o e-mail que diz a quem a Etapa restrita alcança que há um
+    # passo a mais. Pelo gesto, com prévia, como os outros avisos (FR-1243 da `066`).
+    a.AVISAR: {
+        "simples": "Avisar quem tem o passo",
+        "termo": "aviso do passo",
+        "curta": "Manda um e-mail a quem a etapa alcança, com o nome dela e o período.",
+        "porque": "O candidato só sabe que tem um passo a mais se alguém disser; o e-mail não diz "
+        "a lista, e o acompanhamento explica o resto.",
+        "ao_confirmar": "O aviso é gravado e sai pelo despacho; não muda prazo nem situação.",
+    },
     a.ETAPA: {
         "simples": "Avaliar a Etapa",
         "termo": "Etapa",
@@ -191,6 +201,17 @@ CONCEITOS = {
         "ao_confirmar": "Consolidar fecha os resultados; mudá-los depois é reavaliação, por "
         "recurso.",
     },
+}
+#: A agenda da Etapa que pede comparecimento (167, T-023). Conceito próprio, e não o da Etapa:
+#: montar e publicar a agenda não é avaliar, e a frase da avaliação diria o que ela não faz.
+CONCEITOS[a.AGENDA] = {
+    "simples": "Montar e publicar a agenda",
+    "termo": "agenda",
+    "curta": "Dá a cada pessoa que participa da Etapa um dia, um horário e uma banca, e publica a "
+    "agenda.",
+    "porque": "Sem a agenda publicada, ninguém sabe quando comparecer.",
+    "ao_confirmar": "Montar não publica nada, e até a publicação os horários se ajustam à mão. "
+    "Publicada, a agenda só muda por remarcação, uma pessoa de cada vez.",
 }
 #: Os atos da Etapa leem o mesmo conceito: distribuir, avaliar, consolidar e reavaliar são partes
 #: de "avaliar a Etapa", e a frase vale para todos.

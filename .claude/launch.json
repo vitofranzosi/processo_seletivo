@@ -659,10 +659,10 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_p0_referencia DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-p0-referencia-arquivos uv run python manage.py runserver 8165"
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_p0_referencia DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-p0-referencia-arquivos uv run python manage.py runserver 8166"
       ],
-      "port": 8165,
-      "url": "http://localhost:8165"
+      "port": 8166,
+      "url": "http://localhost:8166"
     },
     {
       "name": "roteiro-equipe",
@@ -724,6 +724,13 @@
       "url": "http://localhost:8167"
     },
     {
+      "name": "agenda-da-etapa-167d",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_167d DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8169"],
+      "port": 8169,
+      "url": "http://localhost:8169"
+    },
+    {
       "name": "habilitacao-do-assistente-170",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
@@ -742,6 +749,16 @@
       ],
       "port": 8168,
       "url": "http://novidades.localhost:8168"
+    },
+    {
+      "name": "orientacao-171",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=gps_168_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8268"
+      ],
+      "port": 8268,
+      "url": "http://localhost:8268"
     }
   ]
 }

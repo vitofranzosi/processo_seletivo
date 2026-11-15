@@ -59,7 +59,7 @@ dele.
 | FR-7246 | T073 | `agendamento/application/atos_individuais.py`, `agendamento/domain/conteudo.py`, `agendamento/infrastructure/documento.py`, `agendamento/models.py` | I:atos_individuais |
 | FR-7247 | T074, T077 | `agendamento/application/atos_individuais.py` | I:atos_individuais, I:concorrencia_dos_atos |
 | FR-7248 | T091 | `agendamento/application/atos_individuais.py`, `agendamento/application/leitura.py`, `agendamento/domain/conteudo.py` | I:atos_individuais, P:agenda_publica |
-| FR-7250 | T059, T081, T084 | — | I:fronteira, GI:vocabulario_da_agenda_da_etapa |
+| FR-7250 | T059, T081, T084 | `agendamento/application/leitura.py` (`horarios_na_ocorrencia`), `interface/views.py` (`registrar_ocorrencia`) | I:fronteira, GI:vocabulario_da_agenda_da_etapa, GI:horario_na_ocorrencia |
 | FR-7251 | T059 | — | I:fronteira, GI:vocabulario_da_agenda_da_etapa |
 | FR-7252 | T059 | — | I:fronteira, GI:vocabulario_da_agenda_da_etapa |
 | FR-7255 | T012, T016, T047, T089 | `agendamento/application/conferir.py`, `agendamento/application/configurar.py`, `interface/agenda_da_etapa.py` | I:publicacao, GI:agenda_da_etapa_conferir, GI:agenda_da_etapa_configurar |

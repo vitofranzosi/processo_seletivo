@@ -1,12 +1,20 @@
 #!/bin/sh
-# Roda o instrumento do estudo inteiro contra o servidor `referencia-p0` (porta 8165) e grava, em
+# Roda o instrumento do estudo inteiro contra o servidor `referencia-p0` (porta 8166) e grava, em
 # <pasta>, os rastreios, as larguras, as capturas e o telas.csv. Rode a partir de backend/.
+# O instrumento traz a porta 8165 fixa, que é a da `auditoria-visual`, com o banco do estudo: as
+# cópias em <pasta>/instrumento/ trocam só o endereço, para as duas entradas conviverem e o
+# rastreio não medir o banco errado em silêncio. PORTA=8165 mede a `auditoria-visual`.
 # O portal autenticado pede o código de acesso, que sai no terminal do servidor: o passo 3 espera
 # um arquivo <pasta>/codigo-candN.txt para cada candidato, escrito à mão por quem lê o código.
 set -e
 W=${1:?pasta de trabalho}; M=../doc/auditoria-design-system-2026-11-14/medicoes
 R=../doc/auditoria-design-system-2026-11-14/referencia-p0/scripts
-mkdir -p "$W"; cp $M/metricas.js $M/largura.js "$W"/
+mkdir -p "$W/instrumento"; cp $M/metricas.js $M/largura.js "$W"/
+PORTA=${PORTA:-8166}
+for f in rastrear complemento portal larguras; do
+  sed "s#localhost:8165#localhost:$PORTA#" $M/$f.py > "$W/instrumento/$f.py"
+done
+M="$W/instrumento"
 T=elaborador,homologador,publicador,gestor,julgador,auditor,exportador,comunicacao,formalizacao,participante-piloto-assistente
 # 1. A gestão, por quatro identidades, e o público sem identidade.
 uv run python $M/rastrear.py "$W" paulo.presidente $T /gestao/ 900 3
