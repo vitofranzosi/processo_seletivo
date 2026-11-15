@@ -370,7 +370,9 @@ def test_cada_item_tem_icone_decorativo_e_nome_acessivel(client, seletor_ligado)
 
     itens = re.findall(
         r'<li><a href="[^"]+"[^>]*><svg class="icone-da-secao" aria-hidden="true">'
-        r'<use href="#([\w-]+)"/></svg><span class="rotulo-da-secao">([^<]+)</span></a></li>',
+        r'<use href="#([\w-]+)"/></svg><span class="rotulo-da-secao">([^<]+)</span>'
+        # A contagem das Novidades (168), quando há o que a identidade não viu.
+        r'(?:<span class="contagem-de-novidades">.*?</span></span>)?</a></li>',
         moldura,
     )
     assert [rotulo for _, rotulo in itens] == [secao.rotulo for secao in navegacao.SECOES]

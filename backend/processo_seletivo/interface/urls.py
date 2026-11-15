@@ -8,8 +8,10 @@ from processo_seletivo.interface import (
     centro_do_edital,
     documentacao,
     duvidas,
+    habilitacao_do_assistente,
     inscricoes_publicadas,
     kit_de_divulgacao,
+    novidades_do_gps,
     prototipo_do_assistente,
     relatorio,
     trilha_da_unidade,
@@ -145,11 +147,30 @@ urlpatterns = [
         unidades.reativar,
         name="unidade-reativar",
     ),
+    # A habilitação do assistente (170), do Administrador institucional, ao lado de Unidades. O
+    # piloto é um por implantação; a página pública, por Edital (Q-1).
+    path(
+        "administracao-do-assistente",
+        habilitacao_do_assistente.pagina,
+        name="administracao-do-assistente",
+    ),
+    path(
+        "administracao-do-assistente/piloto/<str:ato>",
+        habilitacao_do_assistente.piloto,
+        name="administracao-do-assistente-piloto",
+    ),
+    path(
+        "administracao-do-assistente/editais/<uuid:edital_id>/<str:ato>",
+        habilitacao_do_assistente.pagina_publica,
+        name="administracao-do-assistente-edital",
+    ),
     # A trilha da unidade (108): só leitura, sem identificador no endereço — a unidade é a do ator.
     path("trilha-da-unidade", trilha_da_unidade.trilha_da_unidade, name="trilha-da-unidade"),
     path("visao-geral", views.visao_geral, name="visao-geral"),
     # A Agenda dos Editais (101): só leitura, as duas visualizações na mesma rota.
     path("agenda", views.agenda, name="agenda"),
+    # As Novidades do GPS (168): o que mudou no produto, e o que a identidade ainda não viu.
+    path("novidades", novidades_do_gps.novidades, name="novidades"),
     # A Visão do Sistema (105). **Com barra no fim**, ao contrário das vizinhas: o manual pede os
     # arquivos dele por endereço relativo (`assets/style.css`), e sem a barra o navegador os
     # procuraria em `/gestao/assets/`.

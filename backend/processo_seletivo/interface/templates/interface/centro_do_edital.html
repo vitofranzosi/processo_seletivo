@@ -351,6 +351,7 @@ pela mesma razão. Só os Perfis que a pessoa alcança, como lá.
         <li><a href="{% url 'interface:duvidas' edital.id %}">Ver as respostas do assistente de dúvidas (validação interna)</a></li>
         {% if pode_conversar_com_o_assistente %}<li><a href="{% url 'interface:assistente' edital.id %}">Conversar com o assistente (piloto)</a></li>{% endif %}
       </ul>
+      {% if assistente_na_pagina_publica %}{% include "interface/_assistente_na_pagina_publica.html" %}{% endif %}
       {% comment %} O aviso de conteúdo imutável, com a condução da 037 que cala para quem pode retificar (FR-541b). {% endcomment %}
       {% if edital.status == 'PUBLICADO' %}<p class="imutavel em-uma-linha"><strong>Conteúdo imutável.</strong> Correções ocorrem por Retificação, com novo fluxo de aprovação.{% if conducao_do_imutavel %} {{ conducao_do_imutavel }}{% endif %}</p>{% endif %}
     </div>

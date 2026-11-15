@@ -205,6 +205,10 @@ TABELAS_APPEND_ONLY = (
     "verificacao_abertura_do_video",
     "verificacao_encaminhamento",
     "verificacao_eliminacao_do_video",
+    # A habilitação do assistente (170): cada ato de habilitar ou desabilitar uma frente. O estado é
+    # o último ato; reescrever um deles mudaria quem decidiu abrir o assistente, e por quê
+    # (FR-7527).
+    "duvidas_habilitacao_do_assistente",
     # Os atos da agenda da Etapa (167): o ato — publicação, e depois remarcação, inclusão e
     # cancelamento — e o horário que ele publicou para cada pessoa. Append-only pela razão das
     # demais, e com um agravante próprio: o horário publicado é o de que a ausência conta, e o

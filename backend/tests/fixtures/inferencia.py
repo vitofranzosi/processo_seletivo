@@ -139,3 +139,26 @@ def log_do_projeto():
     for alvo, nivel in zip(alvos, niveis, strict=True):
         alvo.removeHandler(coletor)
         alvo.setLevel(nivel)
+
+
+@pytest.fixture
+def configuracao_completa(settings, tmp_path, monkeypatch):
+    """A configuração do serviço completa, sem rede (170, FR-7501): serviço, endereço, modelo e um
+    arquivo de tokenizer. A biblioteca `tokenizers` é do grupo opcional `assistente`; sem ela no
+    ambiente da suíte, a conferência a enxerga assim mesmo, porque o que se prova aqui é o ato, e
+    não a contagem de tokens."""
+    import importlib.util
+
+    tokenizer = tmp_path / "tokenizer.json"
+    tokenizer.write_text("{}", encoding="utf-8")
+    settings.ASSISTENTE_SERVICO = "ollama"
+    settings.ASSISTENTE_ENDERECO = "http://servico.invalid"
+    settings.ASSISTENTE_MODELO = MODELO
+    settings.ASSISTENTE_TOKENIZER = str(tokenizer)
+    original = importlib.util.find_spec
+    monkeypatch.setattr(
+        importlib.util,
+        "find_spec",
+        lambda nome, *a, **k: object() if nome == "tokenizers" else original(nome, *a, **k),
+    )
+    return tokenizer
