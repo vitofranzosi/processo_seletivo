@@ -75,6 +75,9 @@ bloco de 40rem), `test_polish_da_056.py` (a seção gerada sem a medida; a lista
 nova), `test_polish_da_058.py` (o motivo da sucessão continua o mesmo controle, sem a medida) e duas
 classes que perderam a única regra entraram em `CLASSES_SEM_DESENHO`.
 
+`cd backend && make lint check test-pg`, em 15/11: `lint` e `check` verdes, e a suíte em **21 380
+passando e 15 pulados, sem falha** (787 s, 4 workers), os mesmos números do piloto.
+
 ## O que a branch faz
 
 Leva para todas as telas da gestão os cinco padrões que o usuário aprovou no piloto, sem a classe de
