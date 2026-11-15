@@ -132,3 +132,12 @@ test("a fala só conta com nível alto por 300 ms seguidos", () => {
   assert.equal(g.ouviuFala(amostras([10, 10, 10, 10, 10])), false);
   assert.equal(g.ouviuFala([]), false);
 });
+
+test("a imagem de teste gira de frente, à esquerda, de frente e à direita, a cada dez segundos (176)", () => {
+  assert.equal(g.giroDaImagemDeTeste(1), 0);
+  assert.equal(g.giroDaImagemDeTeste(4), 1);
+  assert.equal(g.giroDaImagemDeTeste(6), 0);
+  assert.equal(g.giroDaImagemDeTeste(8), -1);
+  assert.equal(g.giroDaImagemDeTeste(14), 1);
+  assert.ok(g.giroDaImagemDeTeste(2.75) > 0 && g.giroDaImagemDeTeste(2.75) < 1);
+});

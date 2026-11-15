@@ -189,6 +189,9 @@ def test_os_cenarios_de_treinamento_vem_desligados_por_padrao():
         # A verificação por vídeo é só do desenvolvimento (166, `FR-7101`, SC-2376): a porta do
         # piloto é um PR revisado, depois da P-0, e não uma variável.
         ({"VERIFICACAO_POR_VIDEO": "true"}, "VERIFICACAO_POR_VIDEO"),
+        # A detecção do giro tem recusa própria (176, `FR-8021`): ela não cai sozinha no dia em que
+        # a do vídeo for liberada, porque depende também da P-13.
+        ({"VERIFICACAO_DETECCAO_DO_GIRO": "true"}, "VERIFICACAO_DETECCAO_DO_GIRO"),
     ],
 )
 def test_configuracao_insegura_impede_a_inicializacao(alteracoes, variavel):

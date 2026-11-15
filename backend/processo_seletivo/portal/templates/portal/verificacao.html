@@ -43,7 +43,12 @@ da 171) — e os três momentos sem número, para não competir com o "Passo N d
      data-roteiro="{{ roteiro_versao }}"
      data-teto="{{ teto_segundos }}"
      data-limite="{{ limite_bytes }}"
-     data-parte="{{ parte_bytes }}">
+     data-parte="{{ parte_bytes }}"{% if deteccao %}
+     data-deteccao="carregando"
+     data-deteccao-motor="{{ deteccao.enderecos.motor }}"
+     data-deteccao-carregador="{{ deteccao.enderecos.carregador }}"
+     data-deteccao-binario="{{ deteccao.enderecos.binario }}"
+     data-deteccao-modelo="{{ deteccao.enderecos.modelo }}"{% endif %}>
 {% csrf_token %}
 <noscript><p class="aviso">A gravação do vídeo precisa de JavaScript. Sem ele, a sua verificação é por entrevista ao vivo, e você não precisa fazer nada agora.</p></noscript>
 
@@ -149,14 +154,15 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
   {% endcomment %}
   <div class="palco">
     <video class="previa" data-previa autoplay muted playsinline></video>
-    <span class="oval" aria-hidden="true"></span>
+    <span class="oval" aria-hidden="true"{% if deteccao %} data-oval data-rosto="fora"{% endif %}></span>
     <p class="canto-do-palco" data-so-preparo><button type="button" class="botao-no-palco" data-ir="acolhimento">Voltar</button></p>
-    <p class="guia-do-oval" data-so-preparo>Encaixe o rosto no oval. Ele não aparece no vídeo.</p>
+    <p class="guia-do-oval" data-so-preparo data-guia-do-oval>Encaixe o rosto no oval. Ele não aparece no vídeo.</p>
     <div class="faixa-de-cima" data-so-gravando>
-      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span> <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
+      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span>{% if deteccao %} <span class="ouvindo-voce" data-ouvindo hidden>Estamos ouvindo você.</span>{% endif %} <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
       <div class="instrucao-do-passo">
         <p class="rotulo-do-passo"><span data-passo-rotulo></span> · <span data-passo-titulo></span></p>
         <p class="texto-do-passo" data-passo-atual></p>
+        {% if deteccao %}<p class="confirmacao-do-giro" data-confirmacao hidden></p>{% endif %}
       </div>
     </div>
     <div class="faixa-de-baixo">
@@ -167,14 +173,23 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
   </div>
   <p class="oculto" data-anuncio aria-live="assertive"></p>
   <div class="preparo-do-palco" data-so-preparo>
+    {% if deteccao %}{% comment %}
+    **O que a tela faz com o rosto, antes de começar** (176, FR-8004, FR-8005; Q-3, D-003). No topo do
+    painel, para estar à vista sem rolar no celular. Escondido até o motor ficar pronto: quem grava
+    sem a detecção não lê nada sobre ela (UX-923).
+    {% endcomment %}<div class="aviso-da-deteccao" data-aviso-deteccao hidden>
+      <p data-frase-deteccao>A tela acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece só neste aparelho: nada dessa leitura é enviado nem guardado.</p>
+      <p><button type="button" class="secundario" data-so-tocando>Prefiro avançar só tocando</button></p>
+    </div>{% endif %}
     <p class="aviso" data-aviso-gravacao hidden></p>
     <p class="aviso" data-aviso-tela-acesa hidden>Mantenha a tela acesa: se ela apagar, a gravação para e você grava de novo.</p>
     <div id="o-que-voce-vai-fazer">
       <h3>O que você vai fazer</h3>
       <ol class="passos-do-roteiro" data-passos>
-        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}">{{ passo.titulo }}</li>{% endfor %}
+        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
       </ol>
       <p class="ajuda">O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
+      {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo».</p>{% endif %}
     </div>
     <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
     <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
@@ -220,7 +235,8 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
   <p data-sugestao-ao-vivo hidden>Se o envio continuar falhando, a entrevista ao vivo continua disponível: <button type="button" class="link-do-meio" data-ir="nao-consigo">prefiro a entrevista ao vivo</button>.</p>
 </section>
 </div>
-<script src="{% estatico 'portal/gravacao.js' %}" defer></script>
+{% if deteccao %}<script src="{% estatico 'portal/deteccao.js' %}" defer></script>
+{% endif %}<script src="{% estatico 'portal/gravacao.js' %}" defer></script>
 {% endif %}
 </div>
 {% endblock %}

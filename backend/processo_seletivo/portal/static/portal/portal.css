@@ -1475,6 +1475,20 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .nivel-do-som{display:flex;align-items:center;gap:.75rem;margin:.75rem 0 .25rem}
 .nivel-do-som meter{flex:1;height:14px}
 .estado-do-som{margin:0 0 .5rem;font-weight:600}
+/* A detecção do giro do rosto (176). O oval com o rosto dentro fica com o traço mais grosso e
+   opaco, e a frase muda: nenhum estado só pela cor (UX-922). Fora dele, o oval é o da 174 — também
+   quando o motor não carregou, para a ausência da detecção não se ver (UX-923). A confirmação fica
+   na faixa escura da instrução, em texto grande, sem piscar (UX-921); "visto" leva o sinal de
+   feito, e "para o outro lado" não leva nada, para não soar como erro (FR-8015). */
+.oval[data-rosto="dentro"]{border:5px solid var(--branco)}
+.confirmacao-do-giro{margin:.5rem 0 0;font-size:1.375rem;font-weight:700;line-height:1.25}
+.confirmacao-do-giro[data-tipo="visto"]::before{content:"✓";margin-right:.4rem}
+.ouvindo-voce{padding:.2rem .5rem;border-radius:4px;background:rgba(0,0,0,.65);font-size:.875rem;
+  font-weight:700}
+.aviso-da-deteccao{margin:0 0 .75rem;padding:.6rem .75rem;border-left:4px solid var(--verde);
+  border-radius:6px;background:var(--fundo-p)}
+.aviso-da-deteccao p{margin:0 0 .4rem}
+.aviso-da-deteccao p:last-child{margin:0}
 .revisao,.video-do-titular{display:block;width:100%;max-height:70vh;background:var(--texto);border-radius:10px;}
 .autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
 .autoconferencia li{margin:.35rem 0;}

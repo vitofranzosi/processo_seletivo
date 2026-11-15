@@ -29,6 +29,9 @@ ASSISTENTE_NA_PAGINA_DO_EDITAL = False
 # chave desligada a desligam por `settings`. O prazo de retenção continua sem valor (P-10).
 VERIFICACAO_POR_VIDEO = True
 VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = None
+# Desligada: os testes da 166 e da 174 medem a página de hoje, política de conteúdo inclusive; os da
+# 176 a ligam por `settings` (research T-009).
+VERIFICACAO_DETECCAO_DO_GIRO = False
 
 # A peça do kit (111) ligada, e fixada aqui pela razão do painel acima: o `.env` não decide a suíte.
 # Os casos da chave desligada a desligam por `settings` (EC-21).
