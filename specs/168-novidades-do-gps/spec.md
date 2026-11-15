@@ -19,6 +19,12 @@ consulta ao GitHub durante a navegação, com revisão humana antes de publicar.
 > mil duzentos e cinquenta e seis, o critério dois mil trezentos e noventa e oito e o requisito de
 > experiência setecentos e setenta e quatro. As pastas `166` e `167` estão em PRs abertos. O
 > intervalo até a abertura fica livre para specs paralelas. As decisões começam em `D-001`.
+>
+> **A revisão editorial de 14/11 abre em FR-7601, SC-2511 e UX-821.** A `169`, especificada e
+> mergeada depois da `168`, tomou a faixa FR-7400 a 7435 e UX-800 a 803, que se sobrepõe à desta spec
+> (FR-7401 a 7427, UX-801 a 806): os mesmos identificadores estão definidos em duas specs. Qual delas
+> renumera é decisão do usuário (P-5); os requisitos novos desta revisão foram para uma faixa livre,
+> acima do teto medido em 14/11 na `main` e nas branches abertas (FR-7537, SC-2506, UX-814).
 
 ---
 
@@ -302,9 +308,39 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
   título que promete o ganho (até 70 caracteres), resumo de duas frases curtas em "você" (até 300),
   sem palavras do sistema ("marco", "recorte", "derivação", "apuração") nem siglas internas, e um
   **exemplo** — uma cena concreta, mostrada como "Na prática" (até 300) —, obrigatório na categoria
-  Novidade. As melhorias miúdas de um período se reúnem numa nota "Pequenas melhorias". A suíte cobra
+  Novidade. *Revista em 14/11 (`D-012`): o ajuste miúdo é uma nota incremental de uma linha, e não um
+  pacote "Pequenas melhorias" com assuntos distintos.* A suíte cobra
   os tamanhos, o vocabulário e o exemplo; o guia `doc/curadoria-das-novidades.md` traz a diretriz com
   antes e depois (`D-011`).
+
+**A relevância e a vitrine das capacidades** *(revisão editorial de 14/11, `D-012`, `D-013`; faixa
+própria — ver "Faixa de identificadores"). A vitrine foi retirada em 15/11 (`D-014`); os
+identificadores dela ficam definidos, riscados, para não serem reaproveitados.*
+
+- **FR-7601**: Toda nota DEVE declarar a **relevância** para quem opera — *transformadora* (cria uma
+  capacidade ou elimina uma operação trabalhosa), *relevante* (melhora uma jornada existente) ou
+  *incremental* (ajuste, legibilidade, correção pontual) —, medida pelo benefício e nunca pelo número
+  de PRs. A relevância decide o peso do cartão: a incremental é uma linha enxuta, sem exemplo nem
+  "Como usar".
+- **FR-7602**: *Retirado em 15/11 (`D-014`).* ~~A página DEVE abrir, antes do histórico, a seção **"Descubra o que o GPS já faz"**, com
+  as capacidades do produto — no máximo dez, seis à vista e o resto recolhido —, só na primeira
+  página e sem filtro. Cada cartão traz ícone, título, duas frases, "Veja como funciona" recolhido
+  (por onde começar, até três passos, quantas atualizações a construíram e desde quando, e os links)
+  e nenhuma data de lançamento.~~
+- **FR-7603**: *Retirado em 15/11 (`D-014`).* ~~A nota que faz parte de uma capacidade DEVE dizer "faz parte de" com o link para
+  o cartão dela; a nota pertence a uma capacidade no máximo.~~
+- **FR-7604**: O bloco "Desde sua última visita" DEVE abrir pela mudança de maior relevância, e não
+  pela mais recente; as demais vêm contadas por tipo, e só três delas nomeadas, com o resto apontando
+  para o histórico.
+- **FR-7605**: *Retirado em 15/11 (`D-014`).* ~~A capacidade DEVE ser escrita pela ordem "o que agora é possível", "por que isso
+  facilita" e "por onde começar": título até 70 caracteres, resumo até 240, até três passos, sem
+  palavra do sistema nem jargão.~~
+- **FR-7606**: *Retirado em 15/11 (`D-014`).* ~~A capacidade DEVE obedecer às mesmas regras de disponibilidade da nota (configuração e
+  público) e só entrar no arquivo quando o que ela promete estiver disponível; o que está em
+  desenvolvimento, só no desenvolvimento local, ou atrás de chave desligada por padrão não é
+  anunciado como entregue.~~ A regra continua valendo para a nota (FR-7410, FR-7411, `D-013`). A
+  matriz das capacidades, com a disponibilidade e a evidência de cada uma, fica em
+  [capacidades.md](capacidades.md) como estudo para um guia do produto fora desta página.
 
 ### Requisitos de experiência
 
@@ -315,6 +351,11 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
 - **UX-803**: A categoria DEVE se distinguir por texto, e não só por cor.
 - **UX-804**: A página DEVE funcionar sem rolagem horizontal a 375 px, 1.280 px e 1.440 px, e não
   pressupor tela ultralarga.
+- **UX-821**: *Retirado em 15/11 (`D-014`).* ~~A vitrine é uma grade de cartões compactos, sem cor nova nem selo; o detalhe fica em
+  "Veja como funciona", e o excesso, em "Ver mais N capacidades", para o histórico não ir para longe
+  da primeira tela.~~
+- **UX-822**: O peso visual segue a relevância, e não a cor: a transformadora ganha filete e marcador
+  cheio; a relevante, o cartão de sempre; a incremental, uma linha sem moldura.
 - **UX-806**: O exemplo aparece logo abaixo do resumo, rotulado "Na prática", destacado por um filete
   e pelo fundo neutro da gestão, sem competir com o título.
 - **UX-805**: A contagem da barra DEVE ser discreta (um número pequeno ao lado do rótulo, e um ponto na
@@ -344,6 +385,10 @@ depois da referência mais recente do arquivo, sem tocar o arquivo das notas.
 - **SC-2504**: A página abre sem erro no console e sem rolagem horizontal a 375, 1.280 e 1.440 px.
 - **SC-2505**: Publicar uma nota nova é editar um arquivo e abrir um PR; nota malformada reprova a
   suíte antes do merge.
+- **SC-2511**: *Retirado em 15/11 (`D-014`).* ~~Teste de descoberta: em cinco capacidades da vitrine, alguém da comissão que não
+  acompanhou o desenvolvimento responde, em até 15 segundos cada, o que agora consegue fazer, por que
+  isso facilita o trabalho e onde encontra. *Validação humana, pendente; a avaliação desta revisão é
+  heurística, e nenhum teste com operador foi feito.*~~
 - **SC-2506**: Nenhum texto visível de nota cita PR, requisito, spec, commit ou arquivo de código.
 
 ---
@@ -451,6 +496,51 @@ padrão sem depender de quem lembra dele.
 
 ---
 
+### D-012 — A unidade editorial é a capacidade, e não o PR
+
+O usuário leu a página reescrita e a achou um changelog bem apresentado: títulos como "Pequenas
+melhorias no Edital, nos e-mails e nas páginas" descreviam pacotes de PRs, e uma capacidade que
+substitui planilha tinha o mesmo peso de um ajuste de alinhamento. A avaliação que ele trouxe pedia o
+"aha moment" — "eu não sabia que o GPS já fazia isso". A página passa a ter duas camadas: a vitrine das
+capacidades (FR-7602), que reúne as notas que as construíram, e o histórico, com peso pela relevância
+(FR-7601). A categoria continua dizendo o que a mudança é, e "Novidade" passa a se chamar "Nova
+funcionalidade", porque o filtro "Novidades" dentro da página Novidades não dizia o que separava. As
+notas "Pequenas melhorias" que juntavam assuntos distintos foram desfeitas: cada assunto é uma nota
+incremental, e a linha enxuta é o que impede o histórico de pesar. *Revista em 15/11 (`D-014`): a
+vitrine saiu; ficam a relevância, o peso e as notas desfeitas.*
+
+### D-013 — Só se anuncia o que está disponível, e sem data inventada
+
+A auditoria das capacidades (`capacidades.md`) separou o que existe no código e sem chave do que não
+pode ser anunciado: o assistente para candidatos (a página pública é só do desenvolvimento local), o
+vídeo da autodeclaração (só no desenvolvimento) e as peças visuais do kit (atrás da lista de modelos
+aprovados, vazia por padrão — a nota delas declara a chave, e a capacidade do kit promete só os
+textos). O agendamento da Etapa estava em PRs abertos no começo da revisão e entrou na `main` durante
+ela; só então ganhou nota e cartão. A capacidade não tem data de lançamento: o cartão diz quantas
+atualizações a construíram e a mais antiga que a página conhece. *Desde 15/11 (`D-014`) não há
+cartão; a regra de disponibilidade continua, nota a nota.*
+
+### D-014 — A página é do que mudou; o tour do produto mora noutro lugar
+
+O usuário viu a vitrine no painel e a achou estranha, e a causa foi nomeada assim: a página chama
+"Novidades", mas abria com capacidades de setembro no mesmo peso das de ontem, e passava a ter dois
+propósitos — o que mudou e um tour do produto. Ele decidiu, em 15/11, que o objetivo da página são as
+novidades e melhorias, e que o resto da revisão de 14/11 fica: a relevância e o peso visual
+(FR-7601, UX-822), o bloco da visita aberto pela mudança de maior peso (FR-7604), uma nota por
+assunto e o tom de anúncio (FR-7427). A vitrine sai inteira — a seção, os cartões, a tabela
+`[[capacidade]]` do arquivo e o "faz parte de" (FR-7602, FR-7603, FR-7605, FR-7606, UX-821, SC-2511).
+Uma tabela `[[capacidade]]` que voltasse ao arquivo reprova a leitura, porque seria lida por ninguém.
+
+A necessidade que a vitrine atendia é real — "eu não sabia que o GPS já fazia isso" —, mas é de quem
+quer aprender a usar o GPS, e não de quem volta para ver o que mudou. Ela já tem lugar: a Documentação
+do Sistema (`105`) traz "Comece por aqui", "Monte um processo seletivo" e "O que eu consigo
+configurar?". A ponte é a nota, pelo "Saiba mais na documentação", e a primeira visita, que aponta
+"Comece por aqui". Dar ao manual um nome e uma entrada por tarefas — um "Guia do GPS" — é proposta
+registrada para uma spec própria, e não escopo desta (Constituição, governança): a matriz e os textos
+dos dez cartões ficam em `capacidades.md` como matéria-prima.
+
+---
+
 ## Perguntas ao usuário
 
 Nenhuma bloqueia o MVP; todas são de governança.
@@ -461,5 +551,8 @@ Nenhuma bloqueia o MVP; todas são de governança.
   implantação?
 - **P-4 — O período do histórico inicial.** *Respondida em 14/11: estender.* O histórico cobre de
   15/09 a 14/11 (`D-010`).
+- **P-5 — A faixa repetida com a 169.** A `169` define FR-7400 a 7435 e UX-800 a 803, e a `168`,
+  mergeada antes, FR-7401 a 7427 e UX-801 a 806. Qual das duas renumera? A `169` é só especificação,
+  sem código que a cite.
 - **P-3 — Versão.** O guia de implantação recomenda uma tag anotada por release (`vAAAA.MM.N`). Se ela
   for adotada, a página pode agrupar por versão em vez de mês. Adotar?

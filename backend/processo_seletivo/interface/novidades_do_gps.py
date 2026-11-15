@@ -1,4 +1,4 @@
-"""A página Novidades do GPS (168, FR-7401 a FR-7418).
+"""A página Novidades do GPS (168, FR-7401 a FR-7418, FR-7601, FR-7604).
 
 **Toda identidade da gestão entra**, como na Agenda: a página só diz o que mudou no produto, e a
 nota que é de um público se esconde de quem não o integra (`D-004`). **Não há 404**: é listagem, e
@@ -15,6 +15,11 @@ from processo_seletivo.interface import identidade, navegacao
 from processo_seletivo.novidades import catalogo, leitura
 
 POR_PAGINA = 12
+# Quantas mudanças além da principal o bloco nomeia; as outras ficam na contagem (FR-7604). Sem o
+# teto, a implantação de uma quinzena virava um segundo histórico no topo da página.
+DEMAIS_A_VISTA = 3
+# O que abre o "Desde sua última visita" (FR-7604): a mudança de maior peso, e não a mais recente.
+PESO = {relevancia: indice for indice, relevancia in enumerate(catalogo.RELEVANCIAS)}
 
 
 def _cartao(nota, ator, documentacao):
@@ -78,6 +83,12 @@ def novidades(request):
         if visita_anterior
         else []
     )
+    # A de maior peso abre o bloco; as demais vêm contadas por tipo, e listadas em linha (FR-7604).
+    recentes.sort(key=lambda r: PESO[r["nota"].relevancia])
+    principal, demais = (recentes[0], recentes[1:]) if recentes else (None, [])
+    resumo_das_demais = [
+        (c, sum(1 for r in demais if r["nota"].categoria is c)) for c in catalogo.CATEGORIAS
+    ]
 
     categoria = request.GET.get("categoria", "")
     if categoria not in catalogo.POR_CODIGO:
@@ -100,6 +111,12 @@ def novidades(request):
         {
             "meses": _meses([_cartao(nota, ator, documentacao) for nota in pagina]),
             "recentes": recentes,
+            "principal": principal,
+            "demais": demais[:DEMAIS_A_VISTA],
+            "outras": len(demais) - len(demais[:DEMAIS_A_VISTA]),
+            "resumo_das_demais": [
+                {"categoria": c, "quantidade": q} for c, q in resumo_das_demais if q
+            ],
             "primeira_visita": visita_anterior is None,
             "visita_anterior": visita_anterior,
             "filtros": filtros,

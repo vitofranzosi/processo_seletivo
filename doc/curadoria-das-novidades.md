@@ -84,9 +84,9 @@ para entender falhou, por mais correta que seja.
    "apuração", "predicado", "estado", "ato", "comando", "persistir", "renderizar" nem siglas
    internas — se a tela usa o termo, explique-o com palavras comuns na primeira vez. Nada de número de
    PR, spec, requisito ou arquivo.
-5. **Uma ideia por nota, e só o que vale anunciar.** Se a mudança não daria um bom aviso no mural da
-   equipe, ela não precisa de nota própria: junte as pequenas numa nota "Pequenas melhorias" do
-   período, com uma lista curta do que se percebe. Correção se anuncia pelo alívio: "Resolvido: …".
+5. **Uma ideia por nota, e o peso certo.** O valor vem antes do funcionamento: diga o que ficou
+   possível, e só depois a regra. O ajuste pequeno é uma nota *incremental*, de uma linha — nunca um
+   pacote de assuntos. Correção se anuncia pelo alívio: "Resolvido: …".
 
 ### Antes e depois
 
@@ -116,11 +116,32 @@ para entender falhou, por mais correta que seja.
 - **Categoria**: *novidade* é o que não existia; *melhoria*, o que existia e ficou melhor;
   *correção*, o problema que deixou de acontecer.
 
+### O peso de cada nota: a relevância
+
+*Revisão de 14/11 (`D-012` da 168).* A categoria diz o que a mudança é; a **relevância**
+(`relevancia`) diz quanto ela muda o trabalho de quem opera:
+
+- *transformadora*: cria capacidade ou elimina operação trabalhosa — cartão com filete, e é ela que
+  abre o "Desde sua última visita";
+- *relevante*: melhora uma jornada que já existia — cartão normal;
+- *incremental*: ajuste, legibilidade, correção pontual — uma linha enxuta, sem "Na prática".
+
+Meça pelo benefício para quem opera, nunca pelo número de PRs nem pela dificuldade técnica.
+
+### A página é do que mudou
+
+*Decisão do usuário em 15/11 (`D-014` da 168).* As Novidades respondem "o que mudou desde que eu estive
+aqui", e não "o que o GPS faz". Não há vitrine de capacidades, e o arquivo só aceita `[[nota]]`. **A
+mudança grande se explica na própria nota transformadora**: o título promete o ganho, o exemplo mostra a
+cena, e o "Saiba mais" leva à seção da Documentação do Sistema, que é onde se aprende a usar o GPS do
+começo. Uma capacidade construída em vários PRs aparece em várias notas, cada uma com o que trouxe.
+
 ### Como agrupar
 
-**Uma nota por capacidade que alguém perceberia, e não por PR.** O Centro de Controle são sete PRs e
-uma nota; o Kit de divulgação, onze. As melhorias miúdas de um período vão juntas numa nota
-"Pequenas melhorias". Um PR nunca está em duas notas — a suíte recusa.
+**Uma nota por mudança que alguém perceberia, e não por PR.** O Centro de Controle são sete PRs e uma
+nota. **Não junte assuntos distintos numa nota só** — "Pequenas melhorias no Edital, nos e-mails e nas
+páginas" esconde o que cada um vale: cada assunto é uma nota, e a incremental, uma linha enxuta, não
+pesa no histórico. Um PR nunca está em duas notas — a suíte recusa.
 
 ## Lista da revisão
 
@@ -132,5 +153,7 @@ uma nota; o Kit de divulgação, onze. As melhorias miúdas de um período vão 
 - [ ] Lida em voz alta para alguém da comissão, a nota se entende de primeira?
 - [ ] O título promete um ganho, e o exemplo mostra esse ganho numa cena concreta?
 - [ ] Nenhuma palavra do sistema ("marco", "recorte", "derivação", "ato", "estado")?
+- [ ] A relevância está pelo benefício, e não pelo tamanho do PR?
+- [ ] Um servidor que não acompanhou o desenvolvimento entende, em 15 segundos, o benefício?
 - [ ] A capacidade depende de configuração desligada em algum ambiente? Então `requer_configuracao`.
 - [ ] A nota não expõe falha de segurança nem problema interno sem efeito para quem opera?

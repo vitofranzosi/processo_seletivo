@@ -745,10 +745,10 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_novidades DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true uv run python manage.py runserver 8168"
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_novidades DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true DJANGO_ALLOWED_HOSTS=localhost,novidades.localhost uv run python manage.py runserver 8168"
       ],
       "port": 8168,
-      "url": "http://localhost:8168"
+      "url": "http://novidades.localhost:8168"
     },
     {
       "name": "orientacao-171",

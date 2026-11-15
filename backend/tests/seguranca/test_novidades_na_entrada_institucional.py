@@ -19,7 +19,7 @@ from tests.seguranca.apoio import entrar, pessoa, vincular
 pytestmark = pytest.mark.django_db
 
 SO_DO_GESTOR = (
-    '[[nota]]\nid = "vg"\ndata = 2026-10-01\ncategoria = "novidade"\n'
+    '[[nota]]\nid = "vg"\ndata = 2026-10-01\ncategoria = "novidade"\nrelevancia = "relevante"\n'
     'titulo = "Título vg"\nresumo = "R."\nprs = [9]\nspecs = []\n'
     'para_capacidade = "visao:consultar"\n'
 )

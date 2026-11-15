@@ -29,14 +29,21 @@ class Categoria:
 # A ordem é a do filtro. Três, e não mais (FR-7404): "novidade" é o que não existia, "melhoria" é o
 # que existia e ficou melhor, "correção" é o comportamento errado que deixou de acontecer.
 CATEGORIAS = (
-    Categoria("novidade", "Novidade", "Novidades"),
+    # "Nova funcionalidade", e não "Novidade": a página inteira se chama Novidades, e o filtro
+    # "Novidades" dentro dela não dizia o que separava (revisão editorial de 14/11, `D-012`).
+    Categoria("novidade", "Nova funcionalidade", "Funcionalidades"),
     Categoria("melhoria", "Melhoria", "Melhorias"),
     Categoria("correcao", "Correção", "Correções"),
 )
 POR_CODIGO = {categoria.codigo: categoria for categoria in CATEGORIAS}
 
+# O peso da nota para quem opera, independente do tipo (FR-7601, `D-012`). A categoria diz o que
+# a mudança é; a relevância diz quanto ela muda o trabalho — e decide o tamanho do cartão e o que
+# abre o "Desde sua última visita". Medida pelo benefício, nunca pelo número de PRs.
+RELEVANCIAS = ("transformadora", "relevante", "incremental")
+
 IDENTIFICADOR = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-OBRIGATORIOS = ("id", "data", "categoria", "titulo", "resumo", "prs", "specs")
+OBRIGATORIOS = ("id", "data", "categoria", "relevancia", "titulo", "resumo", "prs", "specs")
 OPCIONAIS = (
     "exemplo",
     "beneficio",
@@ -58,6 +65,7 @@ class Nota:
     id: str
     data: datetime.date
     categoria: Categoria
+    relevancia: str
     titulo: str
     resumo: str
     # Fora do que se mostra (FR-7407): servem à rastreabilidade e ao roteiro de curadoria.
@@ -125,6 +133,11 @@ def _nota(numero, entrada):
             f"nota {numero} ({nome}): categoria {entrada['categoria']!r} não é "
             f"{', '.join(POR_CODIGO)}"
         )
+    if entrada["relevancia"] not in RELEVANCIAS:
+        raise CatalogoInvalido(
+            f"nota {numero} ({nome}): relevância {entrada['relevancia']!r} não é "
+            f"{', '.join(RELEVANCIAS)}"
+        )
     prs = entrada["prs"]
     if (
         not prs
@@ -142,6 +155,7 @@ def _nota(numero, entrada):
         id=nome,
         data=data,
         categoria=categoria,
+        relevancia=entrada["relevancia"],
         titulo=_texto(numero, entrada, "titulo", obrigatorio=True),
         resumo=_texto(numero, entrada, "resumo", obrigatorio=True),
         prs=tuple(prs),
@@ -163,6 +177,13 @@ def ler(conteudo):
         dados = tomllib.loads(conteudo)
     except tomllib.TOMLDecodeError as erro:
         raise CatalogoInvalido(f"o arquivo não é TOML válido: {erro}") from erro
+    # Só notas. A vitrine de capacidades saiu da página (`D-014`): uma tabela [[capacidade]] que
+    # voltasse ao arquivo seria lida por ninguém, e o curador acharia que publicou um destaque.
+    outras = set(dados) - {"nota"}
+    if outras:
+        raise CatalogoInvalido(
+            f"o arquivo só tem tabelas [[nota]]; sobra {', '.join(sorted(outras))}"
+        )
     entradas = dados.get("nota", [])
     if not isinstance(entradas, list):
         raise CatalogoInvalido("as notas devem ser tabelas [[nota]]")
@@ -188,7 +209,7 @@ _LIDO = {}
 
 
 def notas():
-    """As notas do arquivo da release. Relidas só quando o arquivo muda — em produção, nunca.
+    """As notas do arquivo da release, lidas. Relido só quando o arquivo muda — em produção, nunca.
 
     **A falha também se guarda**, pela mesma marca: com o arquivo inválido, a barra e a página o
     releriam e reinterpretariam a cada tela, e o erro é o mesmo até o arquivo mudar.

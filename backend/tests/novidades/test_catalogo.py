@@ -97,11 +97,13 @@ def test_a_ancora_existe_na_documentacao_do_sistema():
         assert not nota.documentacao or nota.documentacao in ancoras, (nota.id, nota.documentacao)
 
 
-def test_a_configuracao_existe_e_e_booleana():
-    """FR-7410: uma configuração escrita errado esconderia a nota em todo ambiente, sem aviso."""
-    for nota in NOTAS:
-        if nota.requer_configuracao:
-            assert isinstance(getattr(settings, nota.requer_configuracao, None), bool), nota.id
+def test_a_configuracao_existe_e_e_booleana_ou_lista():
+    """FR-7410: uma configuração escrita errado esconderia a nota em todo ambiente, sem aviso. A
+    lista vale pela presença de item — a dos modelos aprovados do kit, vazia em produção."""
+    for item in NOTAS:
+        if item.requer_configuracao:
+            valor = getattr(settings, item.requer_configuracao, None)
+            assert isinstance(valor, bool | tuple | list), item.id
 
 
 def test_a_capacidade_existe():
@@ -157,6 +159,7 @@ VALIDA = """
 id = "uma"
 data = 2026-11-10
 categoria = "novidade"
+relevancia = "relevante"
 titulo = "Título"
 resumo = "Resumo."
 prs = [1]
@@ -166,7 +169,7 @@ specs = []
 
 def test_a_nota_valida_se_le():
     (nota,) = catalogo.ler(VALIDA)
-    assert nota.categoria.rotulo == "Novidade"
+    assert nota.categoria.rotulo == "Nova funcionalidade"
     assert nota.data == datetime.date(2026, 11, 10)
 
 
@@ -224,3 +227,38 @@ def test_a_ordem_e_da_mais_recente_para_a_mais_antiga():
     catalogo.ler(VALIDA + antiga)
     with pytest.raises(catalogo.CatalogoInvalido, match="da mais recente para a mais antiga"):
         catalogo.ler(antiga + VALIDA)
+
+
+# ---- a relevância (FR-7601) e o que saiu com a vitrine (`D-014`) -------------------------------
+
+
+def test_toda_nota_tem_relevancia_e_ha_de_cada_peso():
+    """FR-7601: a relevância é medida pelo benefício, e as três aparecem no histórico."""
+    assert {nota.relevancia for nota in NOTAS} == set(catalogo.RELEVANCIAS)
+
+
+def test_o_arquivo_so_tem_notas():
+    """`D-014`: a vitrine saiu, e uma tabela [[capacidade]] que voltasse seria lida por ninguém."""
+    capacidade = '[[capacidade]]\nid = "cap"\ntitulo = "T"\n'
+    with pytest.raises(catalogo.CatalogoInvalido, match="sobra capacidade"):
+        catalogo.ler(VALIDA + capacidade)
+
+
+def test_a_primeira_visita_aponta_uma_secao_que_existe():
+    """`D-014`: quem chega e quer aprender a usar vai à Documentação do Sistema, e não a um cartão
+    nas Novidades — o link tem de cair numa seção do manual."""
+    pagina = (
+        Path(catalogo.__file__).resolve().parents[1]
+        / "interface"
+        / "templates"
+        / "interface"
+        / "novidades.html"
+    ).read_text(encoding="utf-8")
+    ancoras = set(re.findall(r'\bid="([^"]+)"', DOCUMENTACAO.read_text(encoding="utf-8")))
+    citadas = re.findall(r"interface:documentacao' %\}#([\w-]+)", pagina)
+    assert citadas and set(citadas) <= ancoras, citadas
+
+
+def test_relevancia_desconhecida_e_recusada():
+    with pytest.raises(catalogo.CatalogoInvalido, match="relevância 'enorme'"):
+        catalogo.ler(VALIDA.replace('relevancia = "relevante"', 'relevancia = "enorme"'))
