@@ -227,3 +227,166 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
     expect(pagina.locator(".dados-do-video")).to_contain_text("Código de conferência do arquivo")
     _sem_rolagem_horizontal(pagina)
     tela.capturar(pagina, "comprovante")
+
+
+# --- a detecção do giro do rosto (176) ---------------------------------------------------------
+
+
+def _ate_o_palco(tela, pagina, cenario, maria, *, imagem_de_teste=False):
+    """Da página da gravação ao palco, pelo caminho do candidato."""
+    pagina.goto(
+        tela.servidor.url + reverse("portal:verificacao", args=[maria.id, cenario["hetero"]])
+    )
+    pagina.get_by_role("button", name="Gravar um vídeo curto").click()
+    pagina.get_by_text("Tenho 18 anos ou mais").click()
+    if imagem_de_teste:
+        pagina.get_by_label("Usar imagem de teste").check()
+    pagina.get_by_role("button", name="Continuar").click()
+    expect(pagina.get_by_role("button", name="Começar a gravar")).to_be_visible()
+
+
+def test_o_motor_de_verdade_carrega_da_propria_origem_e_sem_rosto_vale_o_toque(
+    tela, gestor, api_client, manager_headers, settings
+):
+    """176, SC-2751, SC-2754, SC-2756; research T-003, T-004, T-010.
+
+    O motor de verdade, baixado do servidor da suíte e compilado sob a política da página — a
+    fixture `tela` recusa qualquer violação no console. A câmera simulada do Chromium não mostra
+    rosto: os perfis não avançam sozinhos, e o toque continua valendo (FR-8014)."""
+    settings.VERIFICACAO_DETECCAO_DO_GIRO = True
+    cenario = montar_com_video(gestor, api_client, manager_headers, seed=17610, quantas=2)
+    maria = cenario["inscricoes"][0]
+    pagina = tela.candidato(maria, viewport=DESKTOP)
+    pedidos = []
+    pagina.on("request", lambda pedido: pedidos.append(pedido.url))
+
+    _ate_o_palco(tela, pagina, cenario, maria)
+    raiz = pagina.locator("[data-verificacao]")
+    expect(raiz).to_have_attribute("data-deteccao", "pronta", timeout=90_000)
+    aviso = pagina.locator("[data-aviso-deteccao]")
+    expect(aviso).to_be_visible()
+    expect(aviso).to_contain_text("nada dessa leitura é enviado nem guardado")
+    expect(pagina.locator("[data-ajuda-deteccao]")).to_be_visible()
+    tela.capturar(pagina, "deteccao-pronta")
+
+    # Nenhum pedido a outra origem; o motor veio, uma vez cada arquivo (SC-2754).
+    origem = tela.servidor.url
+    assert [url for url in pedidos if not url.startswith((origem, "blob:", "data:"))] == []
+    for arquivo in (
+        "vision_bundle.mjs",
+        "vision_wasm_internal.js",
+        "vision_wasm_internal.wasm",
+        "face_landmarker-float16-1.task",
+    ):
+        assert sum(arquivo in url for url in pedidos) == 1, arquivo
+
+    pagina.get_by_role("button", name="Começar a gravar").click()
+    proximo = pagina.locator("[data-proximo]")
+    expect(pagina.locator("[data-passo-rotulo]")).to_have_text("Passo 1 de 4")
+    pagina.wait_for_timeout(600)
+    proximo.click()
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+    # Sem rosto, nada avança sozinho e nada aparece (FR-8014, UX-923).
+    pagina.wait_for_timeout(2_000)
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+    expect(pagina.locator("[data-confirmacao]")).to_be_hidden()
+    proximo.click()
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil direito")
+    pagina.wait_for_timeout(600)
+    proximo.click()
+    pagina.wait_for_timeout(600)
+    proximo.click()
+    expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
+
+
+def test_prefiro_avancar_so_tocando_desliga_a_deteccao(
+    tela, gestor, api_client, manager_headers, settings
+):
+    """176, FR-8005, D-003: o aviso vira a confirmação da escolha, e nada avança sozinho."""
+    settings.DEBUG = True
+    settings.VERIFICACAO_DETECCAO_DO_GIRO = True
+    cenario = montar_com_video(gestor, api_client, manager_headers, seed=17620, quantas=2)
+    maria = cenario["inscricoes"][0]
+    pagina = tela.candidato(maria, viewport=CELULAR)
+    _ate_o_palco(tela, pagina, cenario, maria, imagem_de_teste=True)
+    raiz = pagina.locator("[data-verificacao]")
+    expect(raiz).to_have_attribute("data-deteccao", "simulada")
+    # O aviso fica no topo do painel do preparo, à vista sem rolar no celular (US3).
+    assert _na_tela(pagina, pagina.get_by_role("button", name="Prefiro avançar só tocando"))
+    pagina.get_by_role("button", name="Prefiro avançar só tocando").click()
+    expect(raiz).to_have_attribute("data-deteccao", "recusada")
+    expect(pagina.locator("[data-aviso-deteccao]")).to_contain_text("Combinado")
+    expect(pagina.locator("[data-ajuda-deteccao]")).to_be_hidden()
+    pagina.get_by_role("button", name="Começar a gravar").click()
+    pagina.wait_for_timeout(600)
+    pagina.locator("[data-proximo]").click()
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+    # O vulto gira à esquerda entre 3 e 5 segundos do ciclo: em 11 segundos ele passou por lá.
+    pagina.wait_for_timeout(11_000)
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+
+
+@pytest.mark.parametrize("viewport", [CELULAR, DESKTOP], ids=["375", "1280"])
+def test_com_a_imagem_de_teste_os_perfis_avancam_sozinhos(
+    tela, gestor, api_client, manager_headers, settings, viewport
+):
+    """176, SC-2750, SC-2752; FR-8011 a FR-8013, FR-8040.
+
+    A imagem de teste gira o vulto, e a detecção simulada lê o giro desenhado: dois toques além de
+    "Começar a gravar" — o "Próximo" do documento e o "Terminar a gravação" —, e o pedido de envio
+    com as mesmas chaves e marcas que o gravado pelo toque."""
+    settings.DEBUG = True
+    settings.VERIFICACAO_DETECCAO_DO_GIRO = True
+    cenario = montar_com_video(gestor, api_client, manager_headers, seed=17630, quantas=2)
+    maria = cenario["inscricoes"][0]
+    pagina = tela.candidato(maria, viewport=viewport)
+    pedidos = []
+    pagina.on(
+        "request",
+        lambda pedido: (
+            pedidos.append(pedido.post_data)
+            if pedido.method == "POST" and pedido.url.endswith("/envios")
+            else None
+        ),
+    )
+    motor = []
+    pagina.on(
+        "request", lambda pedido: motor.append(pedido.url) if "deteccao/" in pedido.url else None
+    )
+
+    _ate_o_palco(tela, pagina, cenario, maria, imagem_de_teste=True)
+    expect(pagina.locator("[data-verificacao]")).to_have_attribute("data-deteccao", "simulada")
+    expect(pagina.locator("[data-oval]")).to_have_attribute("data-rosto", "dentro", timeout=15_000)
+    expect(pagina.locator("[data-guia-do-oval]")).to_have_text(
+        "Rosto no oval. Ele não aparece no vídeo."
+    )
+    tela.capturar(pagina, "deteccao-rosto-no-oval")
+    toques = 0
+    pagina.get_by_role("button", name="Começar a gravar").click()
+    pagina.wait_for_timeout(600)
+    pagina.locator("[data-proximo]").click()
+    toques += 1
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+    confirmacao = pagina.locator("[data-confirmacao]")
+    expect(confirmacao).to_have_text("Perfil esquerdo visto", timeout=15_000)
+    tela.capturar(pagina, "deteccao-perfil-visto")
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil direito", timeout=5_000)
+    expect(pagina.locator("[data-anuncio]")).to_contain_text("Perfil esquerdo visto. Passo 3 de 4")
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("De frente", timeout=20_000)
+    expect(pagina.locator("[data-anuncio]")).to_contain_text("Perfil direito visto. Passo 4 de 4")
+    # O passo de frente não termina sozinho (FR-8013).
+    pagina.wait_for_timeout(1_500)
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("De frente")
+    pagina.locator("[data-proximo]").click()
+    toques += 1
+    assert toques == 2
+    expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
+    pagina.get_by_role("button", name="Enviar este vídeo").click()
+    pagina.wait_for_url("**/comprovante*", timeout=30_000)
+    corpo = json.loads(pedidos[-1])
+    assert set(corpo) == {"tamanho", "formato", "duracao", "marcas", "roteiro", "maioridade"}
+    assert corpo["roteiro"] == roteiro.VERSAO
+    assert [marca["passo"] for marca in corpo["marcas"]] == list(roteiro.CHAVES)
+    assert all(set(marca) == {"passo", "instante"} for marca in corpo["marcas"])
+    # A imagem de teste não baixa o motor (research T-010).
+    assert motor == []

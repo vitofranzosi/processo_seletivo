@@ -395,6 +395,12 @@ VERIFICACAO_POR_VIDEO_RETENCAO_DIAS = (
     if os.getenv("VERIFICACAO_POR_VIDEO_RETENCAO_DIAS", "").strip()
     else None
 )
+# A detecção do giro do rosto na gravação (176, `FR-8020`). **Desligada por padrão, só vale com a
+# do vídeo, e recusada em produção** (`production.py`): o aparelho estima para onde o rosto aponta,
+# para passar sozinho aos perfis, e isso é tratamento de dado biométrico (LGPD, art. 11), cuja
+# validação com a CPVA e o encarregado de dados é a P-13, aberta. Chave própria, e não a do vídeo,
+# porque ela abre uma exceção própria da política de conteúdo (`'wasm-unsafe-eval'`, D-004).
+VERIFICACAO_DETECCAO_DO_GIRO = os.getenv("VERIFICACAO_DETECCAO_DO_GIRO", "false").lower() == "true"
 ASSISTENTE_CONVERSAS_POR_SESSAO = int(os.getenv("ASSISTENTE_CONVERSAS_POR_SESSAO", "3"))
 ASSISTENTE_ENDERECO = os.getenv("ASSISTENTE_ENDERECO", "").strip().rstrip("/")
 ASSISTENTE_MODELO = os.getenv("ASSISTENTE_MODELO", "").strip()

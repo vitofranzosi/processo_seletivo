@@ -69,9 +69,25 @@ PERMISSOES = "Permissions-Policy"
 PERMISSOES_DA_GRAVACAO = "camera=(self), microphone=(self)"
 
 
-def com_midia_local(resposta):
-    """A resposta da página de gravação, com a exceção e as permissões (FR-7117)."""
-    resposta[CABECALHO] = POLITICA_COM_MIDIA_LOCAL
+# **A compilação de WebAssembly, só para a detecção do giro** (176, FR-8022, research T-004). O
+# motor que estima para onde o rosto aponta é WebAssembly, e `script-src 'self'` recusa compilá-lo.
+# `'wasm-unsafe-eval'` libera a compilação e **só** ela: `eval` e `new Function` continuam
+# recusados, e o código continua tendo de vir da própria origem. `'unsafe-eval'` abriria os dois, e
+# a diretiva na política comum abriria a compilação em todas as páginas sem motivo — por isso ela
+# vale só na gravação, e só com a chave da detecção.
+COMPILACAO_DE_WASM = ("script-src", "'self' 'wasm-unsafe-eval'")
+POLITICA_COM_MIDIA_LOCAL_E_WASM = "; ".join(
+    f"{diretiva} {COMPILACAO_DE_WASM[1] if diretiva == 'script-src' else valor}"
+    for diretiva, valor in (*DIRETIVAS, MIDIA_LOCAL)
+)
+
+
+def com_midia_local(resposta, compilar_wasm=False):
+    """A resposta da página de gravação, com a exceção e as permissões (FR-7117); com
+    `compilar_wasm`, também a compilação de WebAssembly da detecção do giro (FR-8022)."""
+    resposta[CABECALHO] = (
+        POLITICA_COM_MIDIA_LOCAL_E_WASM if compilar_wasm else POLITICA_COM_MIDIA_LOCAL
+    )
     resposta[PERMISSOES] = PERMISSOES_DA_GRAVACAO
     return resposta
 

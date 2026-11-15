@@ -166,6 +166,23 @@
     return false;
   }
 
+  /* O giro da imagem de teste no instante `t`, em segundos (176, FR-8040, research T-010): um ciclo
+     previsível de dez segundos — de frente, esquerda, de frente, direita —, de -1 a 1, positivo à
+     esquerda da pessoa, como o giro dos pontos. A detecção simulada lê este número, e não a imagem. */
+  var CICLO_DA_IMAGEM_DE_TESTE = [
+    [0, 0], [2.5, 0], [3, 1], [5, 1], [5.5, 0], [7, 0], [7.5, -1], [9.5, -1], [10, 0],
+  ];
+
+  function giroDaImagemDeTeste(t) {
+    var x = ((Number(t) || 0) % 10 + 10) % 10;
+    for (var i = 1; i < CICLO_DA_IMAGEM_DE_TESTE.length; i += 1) {
+      var a = CICLO_DA_IMAGEM_DE_TESTE[i - 1];
+      var b = CICLO_DA_IMAGEM_DE_TESTE[i];
+      if (x <= b[0]) return a[1] + ((b[1] - a[1]) * (x - a[0])) / (b[0] - a[0] || 1);
+    }
+    return 0;
+  }
+
   var api = {
     FORMATOS: FORMATOS,
     escolherFormato: escolherFormato,
@@ -179,6 +196,7 @@
     megabytes: megabytes,
     duracaoPorExtenso: duracaoPorExtenso,
     ouviuFala: ouviuFala,
+    giroDaImagemDeTeste: giroDaImagemDeTeste,
   };
   raiz.GravacaoDoVideo = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -200,6 +218,8 @@
       chave: item.getAttribute("data-passo"),
       texto: item.getAttribute("data-texto"),
       titulo: item.getAttribute("data-titulo"),
+      // "esquerda" ou "direita" nos dois perfis, com a detecção (176); ausente no resto.
+      giro: item.getAttribute("data-giro"),
     };
   });
   var estado = {
@@ -207,6 +227,10 @@
     inicio: 0, relogio: null, limiteDaTomada: null, descartar: "", tomada: null, envio: null,
     medidor: null, contexto: null, quedaSimulada: 0, ultimoAvanco: null, telaAcesa: null,
     amostras: [], ouviu: false, tela: "escolha",
+    // A detecção do giro (176): o vigia do palco, a escolha de tocar, a confirmação em curso e a fala
+    // do passo de frente.
+    vigia: null, soTocando: false, deteccaoAtiva: false, confirmando: null, prefixo: "",
+    amostrasDaFrente: [], ouviuNaFrente: false,
   };
 
   // Em que momento da jornada cada tela fica (FR-7852): o cabeçalho diz onde a pessoa está.
@@ -228,9 +252,15 @@
         else item.removeAttribute("aria-current");
       });
     }
-    // A tela acesa só enquanto o palco está aberto (FR-7877, research T-004).
-    if (nome === "palco") pedirTelaAcesa();
-    else soltarTelaAcesa();
+    // A tela acesa só enquanto o palco está aberto (FR-7877, research T-004), e a detecção também:
+    // fora do palco o rosto não é lido (176, FR-8003).
+    if (nome === "palco") {
+      pedirTelaAcesa();
+      ligarDeteccao();
+    } else {
+      soltarTelaAcesa();
+      desligarDeteccao();
+    }
     var titulo = pagina.querySelector('[data-tela="' + nome + '"] h2');
     if (titulo) {
       titulo.setAttribute("tabindex", "-1");
@@ -298,17 +328,29 @@
     var ctx = tela.getContext("2d");
     var comeco = performance.now();
     var ativo = true;
+    // O vulto gira de um lado para o outro num ciclo previsível, e o nariz mostra o lado (176,
+    // FR-8040). A prévia da imagem de teste não é espelhada: o giro à esquerda da pessoa põe o nariz
+    // à direita do quadro, como na câmera frontal de verdade.
+    function giroAgora() {
+      return giroDaImagemDeTeste((performance.now() - comeco) / 1000);
+    }
     function desenhar() {
       if (!ativo) return;
       var t = (performance.now() - comeco) / 1000;
       ctx.fillStyle = "#3a4250";
       ctx.fillRect(0, 0, tela.width, tela.height);
-      var giro = Math.sin(t * 0.8) * 40;
+      var giro = giroAgora() * 40;
       ctx.fillStyle = "#9aa3b2";
       ctx.beginPath();
       ctx.ellipse(240 + giro, 260, 100, 135, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillRect(140 + giro / 2, 400, 200, 240);
+      ctx.fillStyle = "#6b7484";
+      ctx.beginPath();
+      ctx.moveTo(240 + giro * 2.2, 270);
+      ctx.lineTo(240 + giro * 1.4 - 12, 300);
+      ctx.lineTo(240 + giro * 1.4 + 12, 300);
+      ctx.fill();
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 24px system-ui, sans-serif";
       ctx.textAlign = "center";
@@ -328,6 +370,17 @@
     oscilador.connect(volume).connect(destino);
     oscilador.start();
     estado.sintetica = {
+      // A leitura da detecção simulada (176, FR-8040): a caixa e o giro do vulto desenhado, na
+      // mesma forma que os pontos do rosto dão. O giro do desenho vai de -1 a 1; o da leitura passa
+      // do limiar só perto do extremo, como um giro de verdade.
+      ler: function () {
+        var g = giroAgora();
+        var centro = 240 + g * 40;
+        return {
+          caixa: { x: (centro - 100) / 480, y: 125 / 640, largura: 200 / 480, altura: 270 / 640 },
+          giro: g * 0.6,
+        };
+      },
       parar: function () {
         ativo = false;
         oscilador.stop();
@@ -432,6 +485,20 @@
           frase.textContent = "Estamos ouvindo você.";
         }
       }
+      // No passo de frente, com a detecção, a mesma leitura de nível diz que a fala chegou — sem
+      // reconhecer palavra e sem terminar a gravação (176, FR-8013).
+      if (
+        estado.deteccaoAtiva && !estado.ouviuNaFrente && estado.passo === passos.length - 1 &&
+        palco.getAttribute("data-estado") === "gravando"
+      ) {
+        estado.amostrasDaFrente.push({ nivel: nivel, ms: performance.now() });
+        if (estado.amostrasDaFrente.length > 120) estado.amostrasDaFrente.shift();
+        if (ouviuFala(estado.amostrasDaFrente)) {
+          estado.ouviuNaFrente = true;
+          var ouvindo = q("[data-ouvindo]");
+          if (ouvindo) ouvindo.hidden = false;
+        }
+      }
       estado.medidor = requestAnimationFrame(quadro);
     }
     quadro();
@@ -449,7 +516,138 @@
     q("[data-passo-titulo]").textContent = atual.titulo;
     q("[data-passo-atual]").textContent = atual.texto;
     q("[data-proximo]").textContent = estado.passo < passos.length - 1 ? "Próximo" : "Terminar a gravação";
-    q("[data-anuncio]").textContent = rotulo + ": " + atual.titulo + ". " + atual.texto;
+    // Quem avançou pelo giro ouve a confirmação antes do passo novo (176, FR-8012).
+    q("[data-anuncio]").textContent = estado.prefixo + rotulo + ": " + atual.titulo + ". " + atual.texto;
+    estado.prefixo = "";
+    var confirmacao = q("[data-confirmacao]");
+    if (confirmacao) confirmacao.hidden = true;
+    var ouvindo = q("[data-ouvindo]");
+    if (ouvindo) ouvindo.hidden = true;
+    estado.amostrasDaFrente = [];
+    estado.ouviuNaFrente = false;
+    observarPasso();
+  }
+
+  // --- a detecção do giro (176) --------------------------------------------------------------
+
+  /* A página só conversa com a detecção se o script dela veio e a página traz os endereços do motor:
+     sem a chave, nenhum dos dois, e tudo abaixo é inerte (SC-2751). A detecção avisa; quem confirma
+     e avança é esta página, pelo mesmo `avancar()` do toque (FR-8012, FR-8014). */
+  var Deteccao = raiz.DeteccaoDoGiro;
+  var detectar = Boolean(Deteccao && pagina.hasAttribute("data-deteccao-motor"));
+  var GUIA_FORA = "Encaixe o rosto no oval. Ele não aparece no vídeo.";
+  var GUIA_DENTRO = "Rosto no oval. Ele não aparece no vídeo.";
+
+  function ligarDeteccao() {
+    if (!detectar || estado.soTocando || estado.vigia) return;
+    var previa = q("[data-previa]");
+    estado.vigia = new Deteccao.Vigia({
+      enderecos: {
+        motor: pagina.getAttribute("data-deteccao-motor"),
+        carregador: pagina.getAttribute("data-deteccao-carregador"),
+        binario: pagina.getAttribute("data-deteccao-binario"),
+        modelo: pagina.getAttribute("data-deteccao-modelo"),
+      },
+      video: previa,
+      oval: q("[data-oval]"),
+      espelhada: !previa.classList.contains("sem-espelho"),
+      simulada: estado.sintetica ? estado.sintetica.ler : null,
+      aoEstado: aoEstadoDaDeteccao,
+      aoRosto: aoRosto,
+      aoGiro: aoGiro,
+    });
+    // Depois do primeiro quadro do palco: o motor não está no caminho da câmera (FR-8016).
+    var vigia = estado.vigia;
+    setTimeout(function () {
+      if (estado.vigia === vigia) vigia.carregar();
+    }, 0);
+    observarPasso();
+  }
+
+  function desligarDeteccao() {
+    if (estado.confirmando) clearTimeout(estado.confirmando);
+    estado.confirmando = null;
+    if (!estado.vigia) return;
+    estado.vigia.parar();
+    estado.vigia = null;
+  }
+
+  // O que o vigia olha agora: o oval antes de começar, o lado nos perfis, nada no resto.
+  function observarPasso() {
+    if (!estado.vigia) return;
+    if (palco.getAttribute("data-estado") !== "gravando") {
+      estado.vigia.observar("oval");
+      return;
+    }
+    // Gravando, o oval não é mais pedido: volta ao traço da 174.
+    aoRosto(false);
+    var atual = passos[estado.passo];
+    estado.vigia.observar(atual && atual.giro ? atual.giro : null);
+  }
+
+  function aoEstadoDaDeteccao(situacao) {
+    pagina.setAttribute("data-deteccao", situacao);
+    estado.deteccaoAtiva = situacao === "pronta" || situacao === "simulada";
+    var aviso = q("[data-aviso-deteccao]");
+    var ajuda = q("[data-ajuda-deteccao]");
+    var ajudaDoToque = q("[data-ajuda-toque]");
+    if (aviso) aviso.hidden = !(estado.deteccaoAtiva || situacao === "recusada");
+    // Uma frase de ajuda por vez: a do toque (a da 174) ou a da detecção, que diz o mesmo e mais.
+    if (ajuda) ajuda.hidden = !estado.deteccaoAtiva;
+    if (ajudaDoToque) ajudaDoToque.hidden = estado.deteccaoAtiva;
+    if (situacao === "recusada") {
+      q("[data-frase-deteccao]").textContent = "Combinado: você avança tocando em «Próximo».";
+      q("[data-so-tocando]").hidden = true;
+    }
+    // Sem a detecção, a página é a da 174, sem frase de falha (FR-8016, UX-923).
+    if (!estado.deteccaoAtiva) {
+      aoRosto(false);
+      var confirmacao = q("[data-confirmacao]");
+      if (confirmacao) confirmacao.hidden = true;
+      var ouvindo = q("[data-ouvindo]");
+      if (ouvindo) ouvindo.hidden = true;
+    }
+  }
+
+  // O oval muda de traço e a frase muda: nenhum estado só pela cor (FR-8010, UX-922).
+  function aoRosto(dentro) {
+    var oval = q("[data-oval]");
+    if (oval) oval.setAttribute("data-rosto", dentro ? "dentro" : "fora");
+    var guia = q("[data-guia-do-oval]");
+    if (guia) guia.textContent = dentro ? GUIA_DENTRO : GUIA_FORA;
+  }
+
+  function aoGiro(situacao) {
+    if (palco.getAttribute("data-estado") !== "gravando") return;
+    var caixa = q("[data-confirmacao]");
+    if (!caixa) return;
+    if (situacao === "visto") {
+      // "Perfil esquerdo visto": o gesto bem feito, e não uma aprovação (UX-920).
+      var frase = passos[estado.passo].titulo + " visto";
+      caixa.textContent = frase;
+      caixa.setAttribute("data-tipo", "visto");
+      caixa.hidden = false;
+      if (estado.confirmando) clearTimeout(estado.confirmando);
+      estado.confirmando = setTimeout(function () {
+        estado.confirmando = null;
+        estado.prefixo = frase + ". ";
+        avancar();
+      }, Deteccao.CONFIRMACAO);
+    } else if (situacao === "outro-lado") {
+      caixa.textContent = "Para o outro lado";
+      caixa.setAttribute("data-tipo", "outro-lado");
+      caixa.hidden = false;
+    } else {
+      caixa.hidden = true;
+    }
+  }
+
+  // "Prefiro avançar só tocando" (FR-8005, D-003): o vigia para, e nada é guardado — vale até a
+  // página ser recarregada.
+  function soTocando() {
+    estado.soTocando = true;
+    desligarDeteccao();
+    aoEstadoDaDeteccao("recusada");
   }
 
   function entrarNoPalco(aviso) {
@@ -502,6 +700,11 @@
 
   // Só pelo gesto, sem relógio (FR-7869, D-001); o toque duplo conta uma vez (FR-7870).
   function avancar() {
+    // O toque durante a confirmação do giro avança na hora, e uma vez só (176, FR-8014).
+    if (estado.confirmando) {
+      clearTimeout(estado.confirmando);
+      estado.confirmando = null;
+    }
     var agora = performance.now();
     if (!aceitaAvanco(agora, estado.ultimoAvanco)) return;
     estado.ultimoAvanco = agora;
@@ -518,6 +721,8 @@
   function pararRelogios() {
     clearInterval(estado.relogio);
     clearTimeout(estado.limiteDaTomada);
+    if (estado.confirmando) clearTimeout(estado.confirmando);
+    estado.confirmando = null;
   }
 
   function terminar() {
@@ -711,6 +916,8 @@
       enviar();
     } else if (alvo.hasAttribute("data-tentar-de-novo")) {
       continuarEnvio();
+    } else if (alvo.hasAttribute("data-so-tocando")) {
+      soTocando();
     }
   });
 
