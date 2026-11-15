@@ -220,25 +220,37 @@ _exigir(
     "sozinho: CPF congelado e participação anterior não confirmada.",
 )
 
-# O piloto do assistente (071) nasce na máquina da equipe, e não aqui. Ligado em produção, só com
-# o serviço local: a pergunta não sai da rede institucional (`FR-1503`). E com o tempo-limite
-# abaixo do gunicorn do guia de implantação (§12.1), que não é versionado e não se lê daqui.
+# O assistente (071), em produção, só com o serviço local: a pergunta não sai da rede institucional
+# (`FR-1503`). E com o tempo-limite abaixo do gunicorn do guia de implantação (§12.1), que não é
+# versionado e não se lê daqui. **Desde a 170, sempre que houver serviço declarado** (FR-7505): a
+# decisão de ligar passou para a administração institucional, e um serviço configurado é o que a
+# interface permite habilitar — a recusa não pode mais esperar uma chave que produção não aceita.
 _exigir(
-    not ASSISTENTE_PILOTO or ASSISTENTE_SERVICO == "ollama",
+    not ASSISTENTE_SERVICO or ASSISTENTE_SERVICO == "ollama",
     "ASSISTENTE_SERVICO",
-    "o piloto do assistente, em produção, só fala com o serviço local; o OpenRouter é para a "
+    "o assistente, em produção, só fala com o serviço local; o OpenRouter é para a "
     "avaliação na máquina da equipe, com perguntas sintéticas.",
 )
 _exigir(
-    not ASSISTENTE_PILOTO or ASSISTENTE_TEMPO_LIMITE_SEGUNDOS <= 110,
+    not ASSISTENTE_SERVICO or ASSISTENTE_TEMPO_LIMITE_SEGUNDOS <= 110,
     "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
     "o tempo-limite da inferência precisa ficar abaixo dos 120 s do servidor de aplicação, para "
     "que a pessoa receba 'tempo esgotado', e não um erro do servidor.",
 )
+# O atalho de demonstração do piloto (170, FR-7506). Em produção, o piloto se liga pelo ato do
+# Administrador institucional, com motivo e trilha; a chave ligada aqui seria uma segunda decisão,
+# sem autor, que a interface não mostraria.
+_exigir(
+    not ASSISTENTE_PILOTO,
+    "ASSISTENTE_PILOTO",
+    "a chave é o atalho de demonstração local; em produção, o piloto do assistente se habilita na "
+    'página "Assistente do Edital" da administração institucional, com motivo.',
+)
 
 # O painel na página pública (074) deixa qualquer visitante conversar com o modelo, sem
 # autenticação nem os requisitos da abertura ao público, que são da implantação (`FR-1684`). Como o
-# seletor de identidade, ele existe só na máquina de desenvolvimento.
+# seletor de identidade, ele existe só na máquina de desenvolvimento. A habilitação pela interface
+# (170) também não abre a página aqui: a regra lê `AMBIENTE_DE_PRODUCAO` (FR-7519).
 _exigir(
     not ASSISTENTE_NA_PAGINA_DO_EDITAL,
     "ASSISTENTE_NA_PAGINA_DO_EDITAL",

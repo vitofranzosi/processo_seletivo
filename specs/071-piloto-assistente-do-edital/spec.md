@@ -599,6 +599,9 @@ do Ollama, e depois contra o serviço real.
 - **FR-1462**: O piloto MUST NOT ter rota pública, API pública nem entrada no portal.
   *Nota de 14/10:* a `074` abre o painel na página pública **só no desenvolvimento local**, por
   chave que produção recusa; este requisito continua valendo para o piloto e para a implantação.
+  *Nota de 14/11:* a `170` abre a página pública também pelo ato do Administrador institucional,
+  Edital a Edital, e só fora de produção (a FR-7520 da `170`); em produção, este requisito continua
+  valendo na prática, porque a página pública não abre (a FR-7519 da `170`).
 - **FR-1463**: O piloto com o setor de seleção MUST acontecer em **sessões acompanhadas pela equipe,
   na máquina da equipe**, com as configurações de desenvolvimento e o seletor de identidade
   existente. MUST NOT exigir instância exposta em rede nem autenticação nova. No início de cada
@@ -606,6 +609,9 @@ do Ollama, e depois contra o serviço real.
   candidato (`D-012`).
 - **FR-1464**: O piloto MUST vir desligado por padrão, por chave de configuração. Desligado, a entrada
   MUST NOT aparecer, e o endereço direto MUST receber a negativa.
+  *Revisto em 14/11 pela `170`:* o piloto liga **por ato** na administração institucional, e não por
+  chave; a chave passou a ser atalho de demonstração, recusado em produção (a FR-7506 e a FR-7515
+  da `170`). Desligado por padrão e a mesma negativa continuam.
 
 #### A seleção consultada e a versão
 
@@ -794,7 +800,8 @@ do Ollama, e depois contra o serviço real.
     sobre Editais públicos sem dado de pessoa, nas sessões acompanhadas;
   - a retenção de dados pelo provedor MUST ser recusada onde o serviço permitir escolhê-la, e o que
     ele não permitir MUST ficar registrado na configuração da rodada;
-  - a configuração de produção MUST recusar subir (`D-005`).
+  - a configuração de produção MUST recusar subir (`D-005`). *Desde a `170`, sempre que houver
+    serviço declarado, e não só com o piloto ligado (a FR-7505 da `170`).*
 - **FR-1504**: A integração MUST se limitar ao que os dois serviços têm em comum, com as diferenças em
   adaptadores pequenos. MUST NOT existir mecanismo para acrescentar serviço por configuração, nem
   camada genérica de provedores (`D-004`).

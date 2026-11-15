@@ -753,9 +753,13 @@ def selecao(request, edital_id, *, assistente=True):
         "moment"
     ) == "AT_ENROLLMENT"
     contexto["volta"] = _volta_para(request, identidade, edital_id, versao.content, contexto)
-    # **O assistente na página, só no desenvolvimento local** (074, `FR-1680`).
+    # **O assistente na página, só fora de produção** (074, `FR-1680`; 170, FR-7520): pela chave da
+    # demonstração ou pelo ato na administração institucional.
     contexto["painel_do_assistente"] = (
         assistente_do_edital.painel(request, versao.edital, agora) if assistente else ""
+    )
+    contexto["assistente_encerrado"] = assistente and assistente_do_edital.encerrado(
+        request, bool(contexto["painel_do_assistente"])
     )
     # **A moldura é a da unidade do ato** (109, FR-3207), e não a da implantação nem a de quem
     # estiver na gestão no mesmo navegador: a página é a do Edital. A da Publicação que originou a

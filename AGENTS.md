@@ -37,7 +37,7 @@ ficou anos sem efeito nenhum.
 novo. Não é redundância — a segunda passada é a que concede privilégio sobre as tabelas que as
 migrations acabaram de criar. O comando informa quantas protegeu, no formato `N de M`; se o
 primeiro número vier `0`, a segunda passada não rodou. O `M` cresce a cada tabela append-only nova
-— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, eram **55** com a publicação das inscrições da `148`, eram **58** com a publicação de convocados da `149`, eram **59** com a vaga não preenchida da `155`, eram **61** com os pareceres da deliberação e a exposição ao parecer da `165`, são **65** com o vídeo, a abertura, o encaminhamento e a eliminação da verificação por vídeo da `166` — e é por isso que a armadilha é o zero,
+— eram 18, depois 34, depois 40 com os avisos da `066`, eram **41** com as vagas acrescidas da `097`, eram **44** com a identidade institucional da `106`, eram **46** com a suspensão de pessoa da `107`, eram **49** com os documentos da convocação da `115`, eram **53** com a entrega documental à formalização da `117`, eram **55** com a publicação das inscrições da `148`, eram **58** com a publicação de convocados da `149`, eram **59** com a vaga não preenchida da `155`, eram **61** com os pareceres da deliberação e a exposição ao parecer da `165`, eram **65** com o vídeo, a abertura, o encaminhamento e a eliminação da verificação por vídeo da `166`, são **66** com os atos de habilitação do assistente da `170` — e é por isso que a armadilha é o zero,
 e não o total.
 
 **Depois dos três, o `make preparar` semeia as Unidades** de
@@ -244,10 +244,23 @@ não manda a conversa sintética. O corpus da avaliação se publica por
 `scripts/publicar_corpus_do_piloto.py`, num banco **sem** `seed_demo`, cujo 01/2026 toma o número do
 01/2026 do corpus. O roteiro inteiro está no quickstart da `071`.
 
-**O assistente na página pública da seleção (074) é só local**, pela chave
-`ASSISTENTE_NA_PAGINA_DO_EDITAL` — a entrada `assistente-074` do `.claude/launch.json` a liga. É a
-visão do candidato sem a gestão; produção recusa subir com ela. As sugestões não chamam o modelo; a
-pergunta livre chama, e custa.
+**Desde a `170`, ligar o assistente é ato na interface, e não variável.** O ambiente guarda só a
+configuração técnica — serviço, endereço, modelo, tokenizer, credencial —; quem decide é o
+Administrador institucional, na página "Assistente do Edital", ao lado de Unidades, com motivo e
+trilha: o piloto da gestão uma vez por implantação, a página pública Edital a Edital. **Fora de
+produção, o ato basta**, sem chave nenhuma. `ASSISTENTE_PILOTO` virou atalho de demonstração —
+dispensa o ato, e só fora de produção, que recusa subir com ele —, e o `test.py` o deixa ligado para
+que as suítes da `071` e da `074` continuem como eram; quem testa a habilitação o desliga por
+`settings`. A página diz "configuração completa" ou o que falta, e **não chama o modelo**: completa
+não é disponível, e a conexão continua sendo verificada pelo comando da `073`. Habilitar de novo
+começa conversa nova, porque a chave da conversa leva a marca do ato.
+
+**A página pública da seleção (074) não abre em produção, nem por ato.** Fora de produção, abre pela
+chave `ASSISTENTE_NA_PAGINA_DO_EDITAL` — a entrada `assistente-074` do `.claude/launch.json` a liga —,
+para todos os Editais, ou pelo ato, para um. Em produção, a regra lê `AMBIENTE_DE_PRODUCAO` a cada
+requisição, e a recusa nomeia os doze requisitos da abertura (`RA-1` a `RA-12`, na spec da `170`),
+cujo cadastro é de uma entrega futura. As sugestões não chamam o modelo; a pergunta livre chama, e
+custa.
 
 **404 na gestão costuma ser autorização, não rota quebrada.** Reproduza com o papel exato do ator
 antes de sair caçando URL.

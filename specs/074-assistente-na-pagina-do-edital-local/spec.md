@@ -87,6 +87,8 @@ chave desligada, nem o painel nem as rotas existem.
   pública de cada seleção MUST oferecer o painel do assistente, sem exigir a identidade da gestão nem
   a do candidato. Desligada — o padrão em todo módulo de configuração —, a página MUST NOT trazer o
   painel, e as rotas do assistente no portal MUST responder 404.
+  *Nota de 14/11:* a `170` abre o painel também pelo ato do Administrador institucional, Edital a
+  Edital, fora de produção; a chave continua a demonstração local (a FR-7507 e a FR-7520 da `170`).
 - **FR-1681**: O painel e os envios MUST ser os do protótipo da Fase C: as sugestões respondidas pela
   `070`, a pergunta livre pela `perguntar` da `071`, a espera, a falha e a mudança de versão como já
   estão. Nenhuma arquitetura de conversa nova; os estados simulados ficam só no protótipo da gestão.
@@ -96,6 +98,9 @@ chave desligada, nem o painel nem as rotas existem.
 - **FR-1683**: Produção MUST recusar subir com a chave ligada, como recusa o seletor de identidade.
 - **FR-1684**: Os requisitos da abertura ao público MUST ficar registrados como pendências da
   implantação, e MUST NOT bloquear o desenvolvimento local (ver *Pendências para a implantação*).
+  *Revisto em 14/11 pela `170`:* os requisitos estão reunidos na `170` (`RA-1` a `RA-12`); fora de
+  produção eles continuam sem bloquear os testes, e em produção a página pública fica fechada pelo
+  backend até a entrega da abertura (a FR-7518 e a FR-7533 da `170`).
 - **FR-1685**: Os envios MUST manter o que já protege o piloto: as fontes vigentes no instante, a
   credencial só no servidor, o registro sem identidade, e os limites existentes — tamanho da
   pergunta, turnos por conversa, teto de chamadas simultâneas e o limite de gasto da chave. Como o

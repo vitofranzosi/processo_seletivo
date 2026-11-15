@@ -174,20 +174,16 @@ def test_os_cenarios_de_treinamento_vem_desligados_por_padrao():
         # Sem canal de atendimento declarado, duas telas do candidato viram beco sem saída.
         ({"PORTAL_ATENDIMENTO": None}, "PORTAL_ATENDIMENTO"),
         ({"PORTAL_ATENDIMENTO": "   "}, "PORTAL_ATENDIMENTO"),
-        # O piloto do assistente (071): ligado em produção, só com o serviço local, e com o
-        # tempo-limite abaixo do servidor de aplicação (`FR-1503`, `FR-1500`).
+        # O assistente (071): em produção, só com o serviço local, e com o tempo-limite abaixo do
+        # servidor de aplicação (`FR-1503`, `FR-1500`) — **desde a 170, com o piloto desligado**:
+        # basta o serviço declarado, porque a decisão de ligar está na interface (FR-7505).
+        ({"ASSISTENTE_SERVICO": "openrouter"}, "ASSISTENTE_SERVICO"),
         (
-            {"ASSISTENTE_PILOTO": "true", "ASSISTENTE_SERVICO": "openrouter"},
-            "ASSISTENTE_SERVICO",
-        ),
-        (
-            {
-                "ASSISTENTE_PILOTO": "true",
-                "ASSISTENTE_SERVICO": "ollama",
-                "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS": "115",
-            },
+            {"ASSISTENTE_SERVICO": "ollama", "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS": "115"},
             "ASSISTENTE_TEMPO_LIMITE_SEGUNDOS",
         ),
+        # O atalho de demonstração do piloto (170, FR-7506): em produção, o piloto se liga pelo ato.
+        ({"ASSISTENTE_PILOTO": "true", "ASSISTENTE_SERVICO": "ollama"}, "ASSISTENTE_PILOTO"),
         # O assistente na página pública é só do desenvolvimento local (074, `FR-1683`).
         ({"ASSISTENTE_NA_PAGINA_DO_EDITAL": "true"}, "ASSISTENTE_NA_PAGINA_DO_EDITAL"),
         # A verificação por vídeo é só do desenvolvimento (166, `FR-7101`, SC-2376): a porta do
@@ -407,10 +403,13 @@ def test_manage_py_continua_em_desenvolvimento():
     assert resultado.stdout.split() == ["config.settings.development", "True"]
 
 
-def test_o_piloto_em_producao_aceita_o_servico_local():
-    """071: o piloto ligado com o Ollama e o tempo-limite padrão sobe (`FR-1503`)."""
-    configuracao = _carregar(ASSISTENTE_PILOTO="true", ASSISTENTE_SERVICO="ollama")
-    assert configuracao.ASSISTENTE_PILOTO is True
+def test_o_servico_local_em_producao_sobe_sem_o_atalho():
+    """071, 170: o Ollama com o tempo-limite padrão sobe (`FR-1503`), e o atalho fica desligado —
+    o piloto se liga pelo ato na administração institucional (FR-7506)."""
+    configuracao = _carregar(ASSISTENTE_SERVICO="ollama")
+    assert configuracao.ASSISTENTE_SERVICO == "ollama"
+    assert configuracao.ASSISTENTE_PILOTO is False
+    assert configuracao.AMBIENTE_DE_PRODUCAO is True
 
 
 @pytest.fixture
