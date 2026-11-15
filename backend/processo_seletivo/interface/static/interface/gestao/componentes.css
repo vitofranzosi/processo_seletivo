@@ -1,9 +1,11 @@
 /* Os componentes comuns: botões e ações, marcas, cartões, a ajuda, o vazio, a situação. A área de
    cada regra é a do seletor; as poucas que ficaram noutro arquivo para não trocar de ordem com uma
    regra que disputa a mesma propriedade estão listadas no R-002 da 091. */
-/* Texto corrido e ajuda de campo em linha curta. Dentro de cartão ou coluna estreita o limite não
-   morde — ele só age onde havia largura sobrando. */
-main>p,main>section>p,.sub,.ajuda,legend+p{max-width:var(--leitura)}
+/* **O texto ocupa a largura do conteúdo** (migração do design system, 15/11, a partir da D-012 da
+   `172`). Aqui ficava a medida de leitura de `main>p`, `.sub`, `.ajuda` e `legend+p`, a 68ch. O
+   usuário viu as duas composições no piloto e preferiu a linha na largura que a moldura já limita a
+   `--pagina`: a linha curta custava altura e deixava a direita vazia. As medidas das folhas de tela
+   saíram junto. */
 /* As caixas são painel, e não texto corrido: vão até a largura da página, como `.consequencias` e a
    tabela abaixo delas. Escritas como `p` filho de `main`, herdavam a medida de leitura de cima — e,
    como ela é em `ch`, cada uma parava num ponto: `.imutavel` em 642 px, `.aviso` em 685, `.sucesso`
@@ -19,9 +21,14 @@ main>p,main>section>p,.sub,.ajuda,legend+p{max-width:var(--leitura)}
 .conferencia>header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
 .conferencia h3{margin:0 0 .5rem}
 .conferencia .detalhe{display:block;color:var(--texto-fraco);font-size:.875rem}
-.resumo{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;padding:0;list-style:none}
-.resumo li{background:var(--branco);border:1px solid var(--borda);border-radius:4px;
-  padding:.5rem .85rem;font-size:.875rem}
+/* **Os indicadores de um grupo dividem a linha em partes iguais** (migração do design system, 15/11,
+   pedido do usuário no piloto da `172`). Do tamanho do texto, eles ficavam empilhados à esquerda,
+   cada um de uma largura, e a direita vazia; em grade, a linha se reparte entre eles, e no estreito
+   a grade quebra em duas ou numa coluna. O tamanho do número não muda: muda a caixa, e não a letra. */
+.resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:var(--e-3);
+  margin-bottom:1.5rem;padding:0;list-style:none}
+.resumo li{background:var(--branco);border:1px solid var(--linha);border-radius:var(--raio);
+  padding:var(--e-2) var(--e-4);font-size:.875rem;min-width:0;box-shadow:var(--sombra-1)}
 .resumo strong{font-size:1.25rem;display:block;font-weight:600}
 .codigo{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
   background:var(--verde-claro);color:var(--verde-escuro);padding:.15rem .5rem;border-radius:3px}
@@ -45,8 +52,8 @@ main>p,main>section>p,.sub,.ajuda,legend+p{max-width:var(--leitura)}
 .oculto{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip-path:inset(50%);white-space:nowrap;border:0}
 /* A microcópia que explica a decisão, e que precisa ser vista para explicar (027, UX-041). */
-.ajuda{display:block;color:var(--texto-fraco);font-size:.8125rem;margin-top:.2rem;max-width:44rem}
-.explicacao{color:var(--texto-fraco);font-size:.8125rem;margin:.2rem 0 .6rem;max-width:44rem}
+.ajuda{display:block;color:var(--texto-fraco);font-size:.8125rem;margin-top:.2rem}
+.explicacao{color:var(--texto-fraco);font-size:.8125rem;margin:.2rem 0 .6rem}
 .acao{font-size:.8125rem;padding:.25rem .7rem;border:1px solid var(--verde);color:var(--verde-texto);
   background:var(--branco);border-radius:3px;text-decoration:none;white-space:nowrap;cursor:pointer}
 .acao:hover{background:var(--verde-claro)}

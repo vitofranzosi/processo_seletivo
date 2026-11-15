@@ -4,7 +4,6 @@
    --verde-escuro sobre --verde-claro, --texto sobre --fundo e --texto-fraco sobre --branco. A
    categoria se lê pelo texto, e a cor só a acompanha (UX-803). */
 
-.desde-a-ultima-visita,.historico,.rodape-das-novidades{max-width:var(--leitura)}
 
 /* ---- Desde sua última visita: a mudança de maior peso primeiro (FR-7604) ---- */
 .desde-a-ultima-visita{margin:1rem 0 1.5rem;padding:.9rem 1.1rem;border:1px solid var(--verde);

@@ -128,14 +128,12 @@
 
 .nada-no-processo {
   margin: 0 0 .5rem;
-  max-width: var(--leitura);
 }
 
 .cobertura-no-processo {
   margin: .6rem 0 0;
   font-size: .8125rem;
   color: var(--texto-fraco);
-  max-width: var(--leitura);
 }
 
 .atencao-por-edital {

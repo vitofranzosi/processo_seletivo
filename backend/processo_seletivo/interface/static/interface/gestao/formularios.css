@@ -1,13 +1,9 @@
 /* Os formulários: campos, linhas de campos, escolhas, filtros, a barra de gravação, os controles.
    Depois dos componentes, na ordem em que as regras já se aplicavam (091). */
-/* O que se escreve acompanha a medida do que se lê: o parecer de uma avaliação se esticava por
-   1.052 px, e ninguém redige assim. Campos dentro de `.campos` já flexionam e não são tocados. */
-.campo>textarea,.campo>input[type=text],.campo>input[type=search],.campo>input[type=email]{
-  max-width:var(--leitura)}
-/* E o mesmo teto para `select`: escolher entre cinco nomes não precisa de 1.200 px. A regra já
-   valia para o que se escreve; valer também para o que se escolhe é a mesma ideia — o campo tem
-   a largura do que recebe, e não a da página. */
-.campo>select{max-width:var(--leitura)}
+/* **O campo de texto, a área de texto e a seleção ocupam a largura do formulário** (migração do
+   design system, 15/11, pedido do usuário no piloto da `172`). Aqui ficava o teto de `--leitura`:
+   com ele, o campo do fundamento cobria metade da área, e o texto ao lado já não tem medida. O
+   número e a data continuam do tamanho do que recebem (abaixo, e `.campo.curto`). */
 /* Data não tem medida de leitura: o conteúdo é `dd/mm/aaaa, --:--` e quem desenha o tamanho é o
    navegador. Fora da lista do teto, o campo esticava com a linha — 647 px para dezesseis
    caracteres, no Cronograma —, e eram os dois deles que empurravam o Evento para duas linhas.

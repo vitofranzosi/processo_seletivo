@@ -2,20 +2,9 @@
    encerrar e cancelar), a do Processo e a da Retificação. Folha de grupo, e não regra comum: o que
    ela muda vale só nestas três telas (P0 do estudo de design system, 14/11).
 
-   **A medida de leitura volta aos blocos que se leem antes de confirmar.** Desde a regra de
-   `componentes.css`, aviso, erro e bastão vão até a largura da página, como as consequências — e
-   numa janela de 1920 px a linha passava de 160 caracteres: medido, 162 na lista do que impede o
-   encerramento e 117 no aviso de submeter e de publicar, contra os 65 a 75 que se leem sem perder
-   a linha. É a tela em que menos se pode ler errado.
-
-   **A medida é a mesma para os cinco, e é por isso que não volta a escada** que aquela regra
-   corrigiu. A escada vinha de cada caixa parar num ponto, porque o limite herdado era em `ch` e
-   cada uma tinha a sua fonte. Aqui o limite é declarado na própria caixa, que tem a fonte da página
-   em todas, e a caixa inclui o preenchimento (`box-sizing:border-box`): as cinco terminam na mesma
-   linha vertical. O acréscimo de 2,5 rem é o preenchimento mais o filete, para que o texto, e não a
-   caixa, tenha a medida de leitura.
-
-   **Tabela não entra**: o que a Retificação altera e o conteúdo que passará a vigorar são tabelas,
-   e tabela é medida de página. */
-main>:is(.aviso,.erro,.bastao,.consequencias,form.confirmar),
-main>.avisos-anteriores>.aviso{max-width:calc(var(--leitura) + 2.5rem)}
+   **A medida de leitura saiu** (migração do design system, 15/11, a partir da D-012 da `172`). A
+   P0 a devolvia aos blocos que se leem antes de confirmar — aviso, erro, bastão, consequências e o
+   formulário —, a 68ch mais o preenchimento, porque a 1920 px a linha passava de 160 caracteres. O
+   usuário viu as duas composições no piloto e preferiu o texto na largura do conteúdo: a página
+   fica mais baixa e o botão mais perto do topo, sem a direita vazia. A folha fica, carregada pelas
+   três telas, como o lugar do que for só delas. */

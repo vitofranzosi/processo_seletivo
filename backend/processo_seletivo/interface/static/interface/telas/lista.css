@@ -35,7 +35,7 @@
 .demais-acoes summary{cursor:pointer;color:var(--verde);font-size:.9rem}
 /* A nota de cobertura logo abaixo do título, em tamanho de texto (129, FR-4324): no fim e a .8rem
    ela não era lida, e é ela que impede a faixa de se passar por fila completa. */
-.cobertura-da-faixa{margin:0 0 .6rem;font-size:.9rem;color:var(--texto);max-width:var(--leitura)}
+.cobertura-da-faixa{margin:0 0 .6rem;font-size:.9rem;color:var(--texto);}
 .sem-acoes{margin:.8rem 0;font-size:.9rem;color:var(--texto-fraco)}
 /* O caminho para a página pessoal (160, FR-6881): a nota diz o que fica de fora, e o link leva até
    onde está o que é da presidência e da alocação. */
@@ -62,7 +62,7 @@
 .campo-da-busca{display:flex;gap:.5rem;min-width:0}
 .campo-da-busca input{flex:1 1 12rem;min-width:0}
 .dica-da-busca{font-size:.85rem;color:var(--texto-fraco)}
-.frase-do-recorte{margin:.5rem 0 1rem;max-width:var(--leitura)}
+.frase-do-recorte{margin:.5rem 0 1rem;}
 /* O cartão do Processo, só desta tela: a linha dele em cima, as dos Editais embaixo. **Compacto**
    (129, SC-1310): com 1rem de respiro, o título em 1,15rem e 1,25rem entre cartões, cada Processo
    media 149 px, e 20 deles davam 4,2 telas no computador; a maquete V1 mediu 82. Os dois grupos do

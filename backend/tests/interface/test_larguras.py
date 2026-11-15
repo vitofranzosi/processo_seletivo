@@ -111,17 +111,23 @@ def test_a_pagina_serve_a_estrutura(base, da_gestao, do_portal):
     assert not re.search(r"main\{max-width:\d+px", css)
 
 
-@pytest.mark.parametrize("base", ["gestao", "portal"])
-def test_o_texto_corrido_tem_medida_propria(base, da_gestao, do_portal):
-    """Sem isto, alargar a página levaria as linhas de 147 para mais de 200 caracteres."""
-    css = da_gestao if base == "gestao" else do_portal
-
-    assert re.search(r"main>p[^{]*\{[^}]*max-width:var\(--leitura\)", css)
+def test_o_texto_corrido_do_portal_tem_medida_propria(do_portal):
+    """Sem isto, alargar a página levaria as linhas de 147 para mais de 200 caracteres. A migração
+    do design system é da gestão: o portal continua com a medida."""
+    assert re.search(r"main>p[^{]*\{[^}]*max-width:var\(--leitura\)", do_portal)
 
 
-def test_o_que_se_escreve_acompanha_o_que_se_le(da_gestao):
-    """O parecer de uma avaliação se esticava por 1.052 px, e ninguém redige assim."""
-    assert re.search(r"\.campo>textarea[^{]*\{[^}]*max-width:var\(--leitura\)", da_gestao)
+def test_o_texto_da_gestao_ocupa_a_largura_do_conteudo(da_gestao):
+    """Migração do design system (15/11, D-012 da `172`): o usuário viu as duas composições e
+    preferiu o texto na largura do conteúdo. A medida de 68ch não volta por nenhuma regra comum."""
+    assert "var(--leitura)" not in da_gestao
+
+
+def test_o_campo_de_texto_ocupa_a_largura_do_formulario(da_gestao):
+    """Pedido do usuário no piloto da `172`: o campo do fundamento cobria metade da área. O número
+    e a data continuam do tamanho do que recebem (`.campo.curto>input`, `input[type=date]`)."""
+    assert not re.search(r"\.campo>(?:textarea|select|input)[^{]*\{[^}]*max-width", da_gestao)
+    assert re.search(r"\.campo\.curto>input\{max-width:10rem\}", da_gestao)
 
 
 def test_a_vitrine_usa_a_tela_em_duas_colunas(do_portal):
@@ -277,7 +283,9 @@ def test_a_consulta_estreita_nao_alcanca_a_tabela_aninhada(da_visao_geral):
     Nada acusava, e nada poderia: `display:none` não muda o HTML, de modo que toda asserção sobre a
     marcação continuava verde. Por isso o guardião é sobre a **forma do seletor**.
     """
-    estreita = re.search(r"@media \(max-width:40rem\)\{(.*?)\n\}", da_visao_geral, re.S).group(1)
+    # O bloco da Visão Geral, e não o primeiro de 40rem da folha: a folha comum também tem um.
+    blocos = re.findall(r"@media \(max-width:40rem\)\{(.*?)\n\}", da_visao_geral, re.S)
+    estreita = next(b for b in blocos if ".tabela-da-visao" in b)
 
     assert ".tabela-da-visao th:nth-child(" not in estreita
     assert ".tabela-da-visao td:nth-child(" not in estreita

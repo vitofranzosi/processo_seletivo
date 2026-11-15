@@ -131,4 +131,4 @@
   .quando-do-marco{grid-row:auto}
 }
 
-.legenda-da-agenda{margin-top:2rem;font-size:.85rem;color:var(--texto-fraco);max-width:var(--leitura)}
+.legenda-da-agenda{margin-top:2rem;font-size:.85rem;color:var(--texto-fraco);}

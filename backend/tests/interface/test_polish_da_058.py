@@ -305,14 +305,12 @@ MOTIVO_EM_AREA = re.compile(
     ],
 )
 def test_o_motivo_de_sucessao_tem_o_mesmo_controle_nas_quatro_telas(pagina, rotulo):
-    """FR-1082, D-007: área de texto de três linhas em `p.campo`, que é o que dá a largura de
-    leitura (`.campo>textarea`). O nome do campo não muda."""
+    """FR-1082, D-007: área de texto de três linhas em `p.campo`. O nome do campo não muda. A
+    largura, que era a de leitura, é a do formulário desde a migração do design system (15/11): é
+    o mesmo `.campo>textarea` nas quatro telas, e por isso o mesmo controle."""
     fonte = (GESTAO / pagina).read_text()
     assert MOTIVO_EM_AREA.search(fonte), pagina
     assert f">{rotulo}" in fonte
-    assert "max-width:var(--leitura)" in regra(
-        ".campo>textarea,.campo>input[type=text],.campo>input[type=search],.campo>input[type=email]"
-    )
 
 
 def test_o_motivo_da_anulacao_fica_como_esta():

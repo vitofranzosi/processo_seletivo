@@ -7,19 +7,16 @@
    iam à página inteira; e a convocação ainda fixava 56rem no índice e 72rem nos números. Cinco
    larguras numa tela só, nenhuma escolhida.
 
-   A coluna dá uma largura só a todos os blocos, e o texto continua com medida própria: o parágrafo
-   corrido para em `--leitura`, e o aviso ocupa a coluna com o texto parado a 80ch, de modo que a
-   borda dos blocos alinha sem que a linha de texto cresça. */
+   A coluna dá uma largura só a todos os blocos, e o texto vai até ela: desde a migração do design
+   system (15/11, D-012 da `172`), o parágrafo não para em `--leitura` nem o aviso em 80ch. */
 .conducao{max-width:72rem}
-.conducao>p,.conducao section>p,.conducao nav>p{max-width:var(--leitura)}
-.conducao :is(.aviso,.imutavel,.sucesso,.erro){max-width:none;
-  padding-right:max(1rem,calc(100% - 80ch))}
+.conducao :is(.aviso,.imutavel,.sucesso,.erro){max-width:none}
 
 /* O vazio de uma lista, do tamanho de uma linha: a caixa de página inteira, com 2,5rem de respiro e
    texto centrado, parecia erro de carga no meio da tela, e não "ninguém aqui". */
 .conducao .vazio{max-width:none;padding:.85rem 1.1rem;text-align:left;margin:0}
 
-/* O formulário recolhido ocupa a coluna como os demais; o glossário continua na medida de leitura. */
+/* O formulário recolhido ocupa a coluna como os demais. */
 .conducao .como-preencher:has(>form){max-width:none}
 
 /* A barra de gravação dentro do cartão de confirmação: o filete e o rodapé de 2rem são da barra solta

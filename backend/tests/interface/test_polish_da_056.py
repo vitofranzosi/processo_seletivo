@@ -100,7 +100,8 @@ def test_a_secao_gerada_nao_tem_caixa_e_o_caminho_fica_na_frase(conteudo):
     assert "Ir para Cronograma</a>" in paragrafo
     regras = estilo_do_bloco((GESTAO / "compor_conteudo.html").read_text())
     assert "fieldset.secao.gerada{border:0;" in regras
-    assert "fieldset.secao{max-width:calc(var(--leitura)" in regras
+    # Sem a medida de leitura desde a migração do design system (15/11): a seção ocupa a largura.
+    assert "fieldset.secao{padding:" in regras
 
 
 # --- F2 — os cartões de coleção (FR-1023 a FR-1028) --------------------------------------------
@@ -253,7 +254,7 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
         reverse("interface:compor-etapa", args=[composto.id, "revisao"])
     ).content.decode()
 
-    assert '<dl class="dados-da-inscricao"><dt>Início:</dt> <dd>' in corpo
+    assert '<dl class="dados-da-inscricao rotulo-com-dois-pontos"><dt>Início:</dt> <dd>' in corpo
     corridas = re.findall(r'<span class="detalhe">([^<]*)</span>', corpo)
     for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
         assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo

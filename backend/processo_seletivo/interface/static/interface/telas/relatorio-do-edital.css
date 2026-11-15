@@ -8,7 +8,7 @@
 
 .relatorio-do-edital{container-type:inline-size}
 
-.cabecalho-do-relatorio .nota{max-width:var(--leitura);margin-top:.35rem}
+.cabecalho-do-relatorio .nota{margin-top:.35rem}
 .especie-do-relatorio{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .6rem;
   margin:.4rem 0 0}
 /* O selo da espécie é neutro: acompanhamento, encerramento e interrupção se distinguem pelo texto,
@@ -41,7 +41,7 @@
 .secao-do-relatorio{margin-top:2.25rem}
 .secao-do-relatorio h2{margin-bottom:.6rem}
 
-.visao-geral-do-relatorio{max-width:var(--leitura);line-height:1.65;margin:0}
+.visao-geral-do-relatorio{line-height:1.65;margin:0}
 
 /* Três por linha, em duas linhas para os seis; duas, e depois uma, quando a área estreita. A
    medida é a da área do relatório, e não a da janela: a barra lateral recolhida ou aberta muda o
@@ -65,7 +65,7 @@
   line-height:1.45}
 
 .atencao-do-relatorio{border-left:3px solid var(--borda);padding:.1rem 0 .1rem 1rem}
-.atencao-do-relatorio ol{margin:0;padding-left:1.2rem;max-width:var(--leitura)}
+.atencao-do-relatorio ol{margin:0;padding-left:1.2rem;}
 .atencao-do-relatorio li{margin:.45rem 0;line-height:1.55}
 
 .natureza-da-data{white-space:nowrap}

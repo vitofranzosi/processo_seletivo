@@ -45,14 +45,13 @@
 .selo{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
   color:var(--texto-fraco);border:1px dashed var(--texto-fraco);border-radius:3px;padding:0 .35rem}
 .fonte{margin:0 0 .5rem;font-size:.8125rem;color:var(--texto-fraco)}
-.distincao{max-width:var(--leitura);margin:0 0 .75rem}
+.distincao{margin:0 0 .75rem}
 .distincao strong{color:var(--texto)}
 
 /* As explicações recolhidas (FR-5025): um "?" discreto, e no máximo três frases. */
-.explicacao-do-termo{margin:.25rem 0 .5rem;max-width:var(--leitura);font-size:.875rem}
+.explicacao-do-termo{margin:.25rem 0 .5rem;font-size:.875rem}
 .explicacao-do-termo>summary{cursor:pointer;color:var(--verde-texto);font-weight:600;font-size:.8125rem}
 .explicacao-do-termo p{margin:.35rem 0;color:var(--texto)}
-.explicacao-curta{max-width:var(--leitura)}
 
 /* Os momentos da tela (FR-5008, D-001): a situação, convocar, acompanhar e a fila. Um rótulo e uma
    frase; as seções seguem como eram. A classe era `area-de-trabalho`, a mesma da moldura do shell, e
@@ -64,7 +63,7 @@
 .rotulo-da-area{margin:0;font-size:.8125rem;font-weight:700;text-transform:uppercase;
   letter-spacing:.06em;color:var(--verde-texto)}
 .excecoes .rotulo-da-area{color:var(--texto-fraco)}
-.momento>.ajuda{display:block;margin:-.4rem 0 .75rem;max-width:var(--leitura)}
+.momento>.ajuda{display:block;margin:-.4rem 0 .75rem;}
 
 /* O cartão da chamada: o passo primeiro, com a borda do tom (FR-5011, UX-371). A palavra do passo
    diz o mesmo que a cor. */
@@ -84,7 +83,7 @@
   color:var(--texto-fraco)}
 .passo-da-chamada .acao-do-passo{background:var(--verde);color:var(--branco);border-color:var(--verde)}
 .aviso-da-pendencia{margin:0 0 .6rem;padding:.4rem .6rem;border-left:3px solid var(--amarelo);
-  font-size:.875rem;max-width:var(--leitura);overflow-wrap:anywhere}
+  font-size:.875rem;overflow-wrap:anywhere}
 .aviso-da-pendencia a{font-weight:600}
 .desfecho-da-chamada.acao-do-passo>summary{background:var(--verde);color:var(--branco);
   border-color:var(--verde)}
@@ -105,4 +104,3 @@
 /* A publicação no gesto de convocar (159, FR-6816): a frase do que fica público, a autoridade e a
    declaração, logo antes dos botões. */
 .publicacao-no-gesto{margin:.75rem 0 .25rem;padding-top:.5rem;border-top:1px solid var(--borda)}
-.publicacao-no-gesto .nota{max-width:var(--leitura)}
