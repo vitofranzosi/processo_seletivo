@@ -10,6 +10,10 @@ revisão do usuário), planejada, analisada e implementada em 14/11, com a `orig
 do merge da `165` (#545). PR sem merge. Nada aqui ativa o vídeo fora do desenvolvimento. Pendentes: o
 SC-2377 (humano) e as decisões P-0, P-7, P-8 e P-10.
 
+**Revisão**: a spec `169` (14/11) revê a porta do piloto desta: a chave passa a dizer só a capacidade
+do servidor, e a base normativa se registra pela interface. Os requisitos revistos estão listados lá,
+em *O que a `166` deixa de valer*. Até a `169` ser implementada, esta spec vale como está.
+
 **Input**: as entregas 5 a 8 do plano do estudo da verificação da autodeclaração
 (`doc/estudo-verificacao-da-autodeclaracao-2026-11-13/`, PR #541): o lado do candidato, o lado da
 comissão, a retenção do arquivo e a porta do piloto. É a **camada B** do estudo — o vídeo gravado pelo
