@@ -219,3 +219,17 @@
 .destinatarios-dos-avisos{margin:0 0 .75rem;}
 .destinatarios-dos-avisos ul{margin:.35rem 0 0;padding-left:1.2rem;max-height:12rem;overflow-y:auto;position:relative;}
 .frase-dos-avisos{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem;}
+
+/* Depois da publicação (entrega C): os avisos num número só, o que não saiu com o reenvio, e os
+   documentos dos atos em ordem. Remarcar e cancelar usam a moldura da configuração. */
+.documentos-da-publicada{margin:0 0 1rem;font-size:.9375rem;}
+.resumo-dos-avisos{margin:0 0 1.5rem;}
+.resumo-dos-avisos p{margin:0 0 .35rem;}
+.falhas-dos-avisos{list-style:none;margin:.5rem 0 0;padding:0;border-top:1px solid var(--borda);}
+.falhas-dos-avisos li{padding:.5rem 0;border-bottom:1px solid var(--borda);}
+.falhas-dos-avisos form{margin:.35rem 0 0;}
+.remarcacao{margin:0;}
+.quem-remarca{margin:0 0 .5rem;font-size:1.0625rem;}
+.troca{margin:0 0 .75rem;font-variant-numeric:tabular-nums;}
+.efeitos{margin:0 0 .5rem;padding-left:1.1rem;font-size:.875rem;color:var(--texto-fraco);}
+.efeitos li{margin:0 0 .35rem;}

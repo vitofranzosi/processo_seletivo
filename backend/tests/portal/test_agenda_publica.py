@@ -121,3 +121,28 @@ def test_o_numero_de_consultas_nao_cresce_com_as_pessoas(client, publicada, insc
     # Três leituras: o ato com o Edital, os vigentes com a inscrição e o ato, e os documentos.
     agenda = [q for q in consultas.captured_queries if "agendamento_" in q["sql"]]
     assert len(agenda) == 3, [q["sql"] for q in agenda]
+
+
+def test_a_remarcacao_aparece_com_a_marca_e_o_documento_depois_do_da_publicacao(
+    client, gestor, edital_a, etapa_a2, publicada, inscricoes
+):
+    """US5 cenário 3, FR-7245, FR-7248: o horário novo marcado, e dois documentos em ordem."""
+    from processo_seletivo.agendamento.application import atos_individuais, leitura
+
+    agenda = leitura.agenda_da_etapa(edital_a, etapa_a2)
+    livre = leitura.montagem(edital_a, etapa_a2, agenda).livres[0]
+    atos_individuais.remarcar(
+        actor=gestor,
+        edital=edital_a,
+        etapa_id=etapa_a2,
+        inscricao_id=inscricoes[0].id,
+        banca_id=livre.banca_id,
+        inicio=livre.inicio,
+        motivo="falha de conexão comprovada",
+        idempotency_key="remarcar-portal",
+    )
+    corpo = _pagina(client, publicada)
+    assert "remarcado em" in corpo
+    assert "falha de conexão" not in corpo
+    assert corpo.index("Documento da publicação") < corpo.index("Documento da remarcação")
+    assert "A agenda vigente é a publicação com os atos posteriores" in corpo

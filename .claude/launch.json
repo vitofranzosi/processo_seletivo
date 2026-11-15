@@ -717,6 +717,13 @@
       "url": "http://localhost:8166"
     },
     {
+      "name": "agenda-da-etapa-167c",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_demo_167c DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true AVISOS_AOS_CANDIDATOS=true uv run python manage.py runserver 8167"],
+      "port": 8167,
+      "url": "http://localhost:8167"
+    },
+    {
       "name": "habilitacao-do-assistente-170",
       "runtimeExecutable": "sh",
       "runtimeArgs": [

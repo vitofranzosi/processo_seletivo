@@ -56,6 +56,11 @@ REVISAO_DA_FR_084_PELA_066 = "2026-10-09"
 #: A data da revisão que admite a quinta situação, o aviso de pendência documental (134, FR-4602).
 REVISAO_DA_FR_084_PELA_134 = "2026-11-08"
 
+#: A data da revisão que admite a sétima situação, o aviso de agenda da Etapa (167, FR-7230). A
+#: sexta, o aviso do desfecho da `156`, está escrita na norma e ainda não tem código: por isso a
+#: contagem do código é seis, e a da norma, sete.
+REVISAO_DA_FR_084_PELA_167 = "2026-11-14"
+
 #: A trava da execução, uma constante só: duas execuções do despacho nunca correm juntas.
 TRAVA_DO_DESPACHO = int.from_bytes(hashlib.sha256(b"avisos:despacho").digest()[:8], "big") >> 1
 
@@ -446,6 +451,7 @@ __all__ = [
     "ConexaoNaoAbriu",
     "REVISAO_DA_FR_084_PELA_066",
     "REVISAO_DA_FR_084_PELA_134",
+    "REVISAO_DA_FR_084_PELA_167",
     "Resumo",
     "TRAVA_DO_DESPACHO",
     "despachar",

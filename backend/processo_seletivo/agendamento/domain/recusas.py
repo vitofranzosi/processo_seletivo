@@ -470,3 +470,120 @@ def completa(participantes):
 
 def _sem_ponto(texto):
     return (texto or "").rstrip().rstrip(".")
+
+
+# --- §5 a agenda publicada: remarcação, inclusão, cancelamento e reenvio (entrega C) ------------
+
+BOTAO_DA_REMARCACAO = {True: "Remarcar e avisar esta pessoa", False: "Remarcar esta pessoa"}
+BOTAO_DA_INCLUSAO = {True: "Agendar e avisar esta pessoa", False: "Agendar esta pessoa"}
+BOTAO_DO_CANCELAMENTO = "Cancelar o agendamento"
+SEM_HORARIO_LIVRE = (
+    "Não há horário livre. Acrescente um dia, uma janela ou uma banca na configuração."
+)
+AVISOS_NA_FILA = "Os avisos estão na fila e saem em até um minuto. A agenda já está pública."
+
+
+def motivo_ausente():
+    return DomainError(
+        nomes.MOTIVO_AUSENTE,
+        "Escreva o motivo. Ele fica na trilha e não aparece para o candidato.",
+        422,
+    )
+
+
+def horario_nao_escolhido():
+    return DomainError(nomes.HORARIO_NAO_ESCOLHIDO, "Escolha o novo horário.", 422)
+
+
+def mesmo_horario(nome):
+    return DomainError(nomes.MESMO_HORARIO, f"{nome} já está nesse horário. Escolha outro.", 409)
+
+
+def ja_tem_horario_publicado(nome):
+    return DomainError(
+        nomes.PESSOA_JA_TEM_HORARIO_PUBLICADO,
+        f"{nome} já tem horário publicado. Para mudá-la, use Remarcar.",
+        409,
+    )
+
+
+def inclusao_de_quem_nao_participa(nome, motivo):
+    return DomainError(
+        nomes.INCLUSAO_DE_QUEM_NAO_PARTICIPA,
+        f"{nome} não participa desta Etapa: {_sem_ponto(motivo)}.",
+        409,
+    )
+
+
+def cancelamento_de_quem_participa(nome):
+    return DomainError(
+        nomes.CANCELAMENTO_DE_QUEM_PARTICIPA,
+        f"{nome} ainda participa da Etapa. Cancelar o agendamento só cabe a quem deixou de "
+        "participar; para mudar o horário, use Remarcar.",
+        409,
+    )
+
+
+def agenda_nao_publicada():
+    return DomainError(
+        nomes.AGENDA_NAO_PUBLICADA,
+        "A agenda ainda não foi publicada. Antes da publicação, ajuste a pessoa na montagem.",
+        409,
+    )
+
+
+def sem_horario_publicado(nome):
+    return DomainError(
+        nomes.SEM_HORARIO_PUBLICADO,
+        f"{nome} não tem horário publicado. Para agendá-la, use Agendar esta pessoa.",
+        409,
+    )
+
+
+def aviso_nao_reenviavel(nome):
+    return DomainError(
+        nomes.AVISO_NAO_REENVIAVEL,
+        f"O aviso de {nome} não está entre os que não saíram. Não há o que reenviar.",
+        409,
+    )
+
+
+def remarcada(nome, inicio, quando, *, avisos):
+    aviso = "Só essa pessoa recebe aviso; a" if avisos else "A"
+    return (
+        f"Remarcação feita: {nome}, {horario_curto(inicio)}. {aviso} página pública mostra o "
+        f'horário novo, com a marca "remarcado em {quando:%d/%m}".'
+    )
+
+
+def incluida(nome, inicio, *, avisos):
+    final = " Só essa pessoa recebe aviso." if avisos else ""
+    return f"Agendamento feito: {nome}, {horario_curto(inicio)}.{final}"
+
+
+def cancelada(nome):
+    return (
+        f"Agendamento cancelado: {nome} saiu da agenda vigente, e o horário ficou livre. O que foi "
+        "publicado antes continua no histórico."
+    )
+
+
+def reenviado(nome):
+    return f"Aviso de {nome} posto de novo na fila. Ele sai pelo despacho dos avisos."
+
+
+def resumo_dos_avisos(aceitos, na_fila, falhas):
+    partes = [f"{plural(aceitos, 'aviso enviado', 'avisos enviados')}"]
+    if na_fila:
+        partes.append(f"{na_fila} na fila")
+    if falhas:
+        partes.append(f"{falhas} não {'entregue' if falhas == 1 else 'entregues'}")
+    return ". ".join(partes) + "."
+
+
+def nao_entregue(nome, motivo):
+    detalhe = f": {_sem_ponto(motivo)}" if motivo else ""
+    return (
+        f"O aviso de {nome} não foi entregue{detalhe}. A agenda vale para essa pessoa do mesmo "
+        "jeito, pela publicação."
+    )

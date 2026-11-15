@@ -243,6 +243,8 @@ QUEM_CARREGA = {
         "agenda_montar.html",
         "agenda_conferir.html",
         "agenda_publicada.html",
+        "agenda_remarcar.html",
+        "agenda_cancelar.html",
     },
     "interface/telas/minhas-etapas.css": {
         "minhas_etapas.html",

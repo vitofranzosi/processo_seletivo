@@ -27,11 +27,14 @@ inventário da `033`.
 | `publicada` | `agenda-publicada` | GET | "Documento da publicação" e o de cada ato posterior (`D-012`); resumo dos avisos num número só e o detalhe (enviados, na fila, não entregues com "Reenviar o aviso"; ou "avisos desligados"); "Passou a participar depois da publicação" com "Agendar esta pessoa"; "Tem horário e não participa mais" com "Cancelar o agendamento"; a lista vigente com "Remarcar" por linha (FR-7233, FR-7240) | `publicada.html` | B (lista, entrantes e saintes), C (avisos) |
 | `remarcar/<uuid:inscricao_id>` | `agenda-remarcar` | GET, POST | o horário atual, o seletor de horário (o mesmo componente), "de → para" à vista, o motivo e "Remarcar e avisar esta pessoa"; para quem não tem horário publicado, a mesma tela é a inclusão, com "Agendar e avisar esta pessoa" (FR-7241, FR-7242) | `remarcar.html` | C |
 | `cancelar/<uuid:inscricao_id>` | `agenda-cancelar` | GET, POST | quem deixou de participar, o motivo e "Cancelar o agendamento" (FR-7243) | *(não está no protótipo; segue a moldura de `remarcar.html`)* | C |
+| `reenviar` | `agenda-reenviar` | POST | `aviso`, `chave_idempotencia`: o aviso filho de quem não recebeu, com o mesmo texto; recusa `aviso_nao_reenviavel` (T-024) | *(não está no protótipo)* | C |
 
 `montar` com a agenda publicada não tem "Preencher automaticamente" nem "Liberar"; cada linha leva a
 "Remarcar" (US5, cenário 1). `agendar`, `liberar` e `preencher` recusam `agenda_publicada`.
 
-O reenvio é a tela da `066` (`aviso.html` e a confirmação de reenvio), à qual `publicada` leva.
+O reenvio é da própria agenda publicada (research T-024): `reenviar` (POST, `aviso`), que repete o
+texto da pessoa num aviso filho; a tela de reenvio da `066` recusa a origem `AGENDA`, como recusa a
+pendência da `134`.
 
 ## Portal
 

@@ -144,6 +144,9 @@ publicada, no lugar do resumo dos avisos.
 | `inclusao_de_quem_nao_participa` | incluir quem a projeção não põe na Etapa | «Fulana» não participa desta Etapa: «motivo». |
 | `cancelamento_de_quem_participa` | cancelar quem ainda participa | «Fulana» ainda participa da Etapa. Cancelar o agendamento só cabe a quem deixou de participar; para mudar o horário, use Remarcar. |
 | `agenda_nao_publicada` | ato individual antes da publicação | A agenda ainda não foi publicada. Antes da publicação, ajuste a pessoa na montagem. |
+| `sem_horario_publicado` | remarcar ou cancelar quem não tem horário publicado | «Fulana» não tem horário publicado. Para agendá-la, use Agendar esta pessoa. |
+| `aviso_nao_reenviavel` | reenviar aviso que saiu, que está na fila ou que já tem reenvio (T-024) | O aviso de «Fulana» não está entre os que não saíram. Não há o que reenviar. |
+| `aviso_de_agenda_sem_reenvio` | o reenvio pela tela da `066` (T-024) | O aviso de agenda se reenvia pela agenda publicada da Etapa, pessoa a pessoa. |
 
 | Situação | Frase |
 |---|---|

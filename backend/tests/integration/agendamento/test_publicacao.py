@@ -49,7 +49,8 @@ def test_a_publicacao_grava_o_ato_e_um_horario_por_pessoa(
     assert conteudo["cabecalho"]["publicadoEm"]
     horarios = HorarioPublicado.objects.filter(ato=ato)
     assert sorted(h.inscricao_id for h in horarios) == sorted(i.id for i in inscricoes)
-    assert all(h.situacao == nomes.AGENDADO and h.aviso_id is None for h in horarios)
+    # A chave da `066` vem ligada na suíte: cada pessoa já nasce com o aviso dela (entrega C).
+    assert all(h.situacao == nomes.AGENDADO and h.aviso_id is not None for h in horarios)
     # O ato é o que foi conferido: os pares do horário publicado são os do agendamento.
     assert {(h.inscricao_id, h.banca_id, h.inicio) for h in horarios} == {
         (a.inscricao_id, a.banca_id, a.inicio)

@@ -438,6 +438,21 @@ def agendas_publicadas_do_edital(edital_id):
     return linhas
 
 
+def documentos_da_agenda(agenda):
+    """Os documentos dos atos da agenda, em ordem — o da publicação primeiro (`D-012`, FR-7248).
+
+    Só os atos com documento gravado: a página não recompõe o que faltasse. Aceita a agenda ou a
+    identidade dela, porque a página pública só tem a identidade da rota.
+    """
+    agenda_id = getattr(agenda, "id", agenda)
+    return [
+        {"ato": item, "titulo": DOCUMENTOS.get(item.especie, "Documento")}
+        for item in AtoDaAgenda.objects.filter(
+            agenda_id=agenda_id, documento__isnull=False
+        ).order_by("praticado_em", "id")
+    ]
+
+
 def agenda_publica(agenda_id, busca=""):
     """A página pública de uma agenda publicada, ou `None` (T-016, FR-7227, FR-7245).
 
@@ -492,12 +507,7 @@ def agenda_publica(agenda_id, busca=""):
         )
     # Os documentos dos atos, em ordem — o da publicação primeiro e intacto (`D-012`). Só os que têm
     # documento gravado; a página não recompõe o que faltasse.
-    documentos = [
-        {"ato": item, "titulo": DOCUMENTOS.get(item.especie, "Documento")}
-        for item in AtoDaAgenda.objects.filter(
-            agenda_id=agenda_id, documento__isnull=False
-        ).order_by("praticado_em", "id")
-    ]
+    documentos = documentos_da_agenda(agenda_id)
     return {
         "ato": ato,
         "documentos": documentos,

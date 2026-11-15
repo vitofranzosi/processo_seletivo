@@ -486,6 +486,22 @@ O gatilho append-only é SQL na própria migration, com `RunPython` só em Postg
 informação, na tela da Ocorrência (`interface/templates/interface/ocorrencia.html`; R-23). Nenhum
 requisito da spec depende dela: a D fecha quando a comissão de uso a pedir.
 
+## T-024 — O reenvio do aviso de agenda é da agenda publicada (entrega C)
+
+**Decisão.** "Reenviar o aviso", na agenda publicada, cria um `Aviso` filho
+(`motivo=REENVIO_DE_FALHAS`, `aviso_anterior` apontando o que falhou) com o **mesmo** assunto e o
+mesmo corpo, e um `DestinatarioDoAviso` com o endereço relido
+(`agendamento/application/reenviar.py`). Só o que não saiu — falha definitiva ou expirado sem envio —,
+e só a partir do último da cadeia. A tela de reenvio da `066` recusa a origem nova
+(`aviso_de_agenda_sem_reenvio`), como recusa a pendência da `134`.
+
+**Por quê.** O reenvio da `066` recompõe um texto só para o universo do ato e o grava num aviso com
+muitos destinatários; o aviso de agenda tem o texto de uma pessoa — o horário dela e, na forma
+remota, a sala dela (FR-7229). Passar por lá exigiria um texto por destinatário, que a `066` não tem.
+
+**Descartado.** Levar a agenda publicada à tela da `066`, como o contrato dizia antes da
+implementação: ela mandaria a todos o texto de um só.
+
 ## O que o diagnóstico não dizia
 
 1. **"Agenda" já é nome**: a Agenda dos Editais da `101` (T-001).

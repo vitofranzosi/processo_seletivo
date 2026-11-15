@@ -555,6 +555,21 @@ urlpatterns = [
             ("conferir", agenda_da_etapa.conferir),
             ("publicar", agenda_da_etapa.publicar),
             ("publicada", agenda_da_etapa.publicada),
+            ("reenviar", agenda_da_etapa.reenviar),
+        )
+    ],
+    # Os atos individuais depois da publicação (entrega C): uma pessoa por vez, pela inscrição.
+    # `remarcar` é também a inclusão de quem não tem horário publicado (contracts/telas.md).
+    *[
+        path(
+            f"editais/<uuid:edital_id>/agenda-da-etapa/<uuid:etapa_id>/{segmento}/"
+            "<uuid:inscricao_id>",
+            view,
+            name=f"agenda-{segmento}",
+        )
+        for segmento, view in (
+            ("remarcar", agenda_da_etapa.remarcar),
+            ("cancelar", agenda_da_etapa.cancelar),
         )
     ],
     # A consequência do trabalho (013). Pende do mesmo caminho da organização da Etapa, porque é

@@ -26,15 +26,19 @@ from uuid import UUID, uuid4
 from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.agendamento.application import atos_individuais as atos_app
+from processo_seletivo.agendamento.application import avisos_da_agenda, leitura
 from processo_seletivo.agendamento.application import conferir as conferir_app
 from processo_seletivo.agendamento.application import configurar as configurar_app
-from processo_seletivo.agendamento.application import leitura
 from processo_seletivo.agendamento.application import montar as montar_app
 from processo_seletivo.agendamento.application import publicar as publicar_app
+from processo_seletivo.agendamento.application import reenviar as reenviar_app
 from processo_seletivo.agendamento.domain import capacidade as capacidade_
 from processo_seletivo.agendamento.domain import nomes
+from processo_seletivo.agendamento.domain import recusas as recusas_
 from processo_seletivo.agendamento.domain.configuracao import problemas
 from processo_seletivo.agendamento.domain.horarios import (
     Banca,
@@ -1058,7 +1062,8 @@ def publicada(request, edital_id, etapa_id):
 
     **Quem passou a participar depois** e **quem tem horário e não participa mais** são lidos da
     participação de hoje contra o vigente, como a montagem fazia contra o agendamento. As ações
-    sobre eles — incluir, cancelar, remarcar — são atos individuais da entrega C; aqui, só os nomes.
+    sobre eles — incluir, cancelar, remarcar — são atos individuais (entrega C), cada um com a sua
+    tela; os avisos, um resumo num número só e o detalhe do que não saiu (FR-7233).
     """
     ator, edital, etapa = _porta(request, edital_id, etapa_id)
     if ator is None:
@@ -1096,6 +1101,7 @@ def publicada(request, edital_id, etapa_id):
         if periodo
         else 0
     )
+    ligados = envio_habilitado()
     contexto = {
         "edital": edital,
         "processo": edital.processo,
@@ -1103,11 +1109,17 @@ def publicada(request, edital_id, etapa_id):
         "etapa_id": etapa_id,
         "agenda": agenda,
         "ato": ato,
+        "documentos": leitura.documentos_da_agenda(agenda),
         "veiculo_gps": ato.veiculo == nomes.VEICULO_GPS,
         "tem_documento": hasattr(ato, "documento"),
-        # `D-011`: desligados os avisos, a frase fica no lugar do resumo deles (a C traz o resumo).
-        "avisos_ligados": envio_habilitado(),
+        # `D-011`: desligados os avisos, a frase fica no lugar do resumo deles.
+        "avisos_ligados": ligados,
         "frase_dos_avisos": AVISOS_DESLIGADOS,
+        "avisos": avisos_da_agenda.situacao_dos_avisos(agenda, agora=timezone.now())
+        if ligados
+        else None,
+        "frase_da_fila": recusas_.AVISOS_NA_FILA,
+        "chave_idempotencia": f"ui-{uuid4().hex}",
         "linhas": [
             {
                 "quando": _rotulo_do_vigente(item, varias),
@@ -1122,3 +1134,212 @@ def publicada(request, edital_id, etapa_id):
         "mensagem": request.session.pop(MENSAGEM, None),
     }
     return marcar_como_privada(render(request, "interface/agenda_publicada.html", contexto))
+
+
+# --- depois da publicação: os atos individuais e o reenvio (entrega C) --------------------------
+
+
+def _agenda_publicada(edital, etapa_id):
+    """A agenda e a publicação, ou o redirecionamento para onde a pessoa deve estar."""
+    agenda = leitura.agenda_da_etapa(edital, etapa_id)
+    if agenda is None:
+        return None, None, redirect("interface:agenda-configurar", edital.id, etapa_id)
+    ato = leitura.publicacao(agenda)
+    if ato is None:
+        return agenda, None, redirect("interface:agenda-montar", edital.id, etapa_id)
+    return agenda, ato, None
+
+
+def _inscricao_da_rota(edital, inscricao_id):
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    inscricao = Inscricao.objects.filter(pk=inscricao_id, edital=edital).first()
+    if inscricao is None:
+        raise _inexistente()
+    return inscricao
+
+
+def _contexto_da_remarcacao(request, edital, etapa, etapa_id, agenda, inscricao, **extra):
+    """A tela de remarcar — que é também a de incluir, para quem não tem horário publicado."""
+    montagem = leitura.montagem(edital, etapa_id, agenda)
+    publicado = atos_app.vigente_da_inscricao(agenda, inscricao.id)
+    dados = request.POST if request.method == "POST" else {}
+    varias = len(agenda.bancas_em_ordem) > 1
+    escolhido = dados.get("horario", "")
+    chave = _chave_do_horario(escolhido)
+    para = next((h for h in montagem.horarios if chave and h.chave == chave), None)
+    nomes_das_bancas = {str(banca.id): banca.nome for banca in agenda.bancas_em_ordem}
+    ligados = envio_habilitado()
+    inclusao = publicado is None
+    return {
+        "edital": edital,
+        "processo": edital.processo,
+        "etapa": etapa,
+        "etapa_id": etapa_id,
+        "agenda": agenda,
+        "inscricao": inscricao,
+        "inclusao": inclusao,
+        "de": _rotulo_do_vigente(publicado, varias) if publicado else "",
+        "para": _rotulo_longo(para.inicio, nomes_das_bancas.get(para.banca_id, ""), montagem)
+        if para
+        else "",
+        "seletor": _seletor(montagem, _data(dados.get("ver_dia") or "")),
+        "escolhido": escolhido,
+        "motivo": dados.get("motivo", ""),
+        "avisos_ligados": ligados,
+        "botao": (recusas_.BOTAO_DA_INCLUSAO if inclusao else recusas_.BOTAO_DA_REMARCACAO)[
+            ligados
+        ],
+        "sem_horario_livre": recusas_.SEM_HORARIO_LIVRE,
+        "chave_idempotencia": dados.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+        **extra,
+    }
+
+
+@require_http_methods(["GET", "POST"])
+def remarcar(request, edital_id, etapa_id, inscricao_id):
+    """Remarcar uma pessoa, ou agendar quem passou a participar depois (FR-7241, FR-7242).
+
+    **Trocar o dia do seletor não grava**: o botão do dia volta a mesma tela, com o motivo já
+    escrito, como os acréscimos da configuração — e o motivo não vai para a URL.
+    """
+    ator, edital, etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    agenda, _ato, desvio = _agenda_publicada(edital, etapa_id)
+    if desvio is not None:
+        return desvio
+    inscricao = _inscricao_da_rota(edital, inscricao_id)
+    if request.method == "GET" or request.POST.get("ver_dia"):
+        contexto = _contexto_da_remarcacao(request, edital, etapa, etapa_id, agenda, inscricao)
+        return marcar_como_privada(render(request, "interface/agenda_remarcar.html", contexto))
+    chave = _chave_do_horario(request.POST.get("horario"))
+    publicado = atos_app.vigente_da_inscricao(agenda, inscricao.id)
+    gesto = atos_app.incluir if publicado is None else atos_app.remarcar
+    try:
+        ato = gesto(
+            actor=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            inscricao_id=inscricao.id,
+            banca_id=chave[0] if chave else None,
+            inicio=chave[1] if chave else None,
+            motivo=request.POST.get("motivo", ""),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise _inexistente() from recusa
+        extra = {"erro": recusa}
+        if recusa.code == nomes.HORARIO_OCUPADO:
+            # A lista mudou: o horário escolhido não vale mais, e a chave da tentativa também não.
+            extra["chave_idempotencia"] = f"ui-{uuid4().hex}"
+        contexto = _contexto_da_remarcacao(
+            request, edital, etapa, etapa_id, agenda, inscricao, **extra
+        )
+        if recusa.code == nomes.HORARIO_OCUPADO:
+            contexto["escolhido"] = ""
+            contexto["para"] = ""
+        return marcar_como_privada(
+            render(request, "interface/agenda_remarcar.html", contexto, status=recusa.status)
+        )
+    nome = inscricao.nome or inscricao.protocolo
+    ligados = envio_habilitado()
+    request.session[MENSAGEM] = {
+        "tipo": "sucesso",
+        "texto": recusas_.incluida(nome, chave[1], avisos=ligados)
+        if publicado is None
+        else recusas_.remarcada(
+            nome, chave[1], ato.praticado_em.astimezone(zona()), avisos=ligados
+        ),
+    }
+    return redirect("interface:agenda-publicada", edital.id, etapa_id)
+
+
+@require_http_methods(["GET", "POST"])
+def cancelar(request, edital_id, etapa_id, inscricao_id):
+    """Cancelar o agendamento de quem deixou de participar, com motivo (FR-7243)."""
+    ator, edital, etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    agenda, _ato, desvio = _agenda_publicada(edital, etapa_id)
+    if desvio is not None:
+        return desvio
+    inscricao = _inscricao_da_rota(edital, inscricao_id)
+    publicado = atos_app.vigente_da_inscricao(agenda, inscricao.id)
+    varias = len(agenda.bancas_em_ordem) > 1
+    participacao = leitura.participacao(edital, etapa_id)
+    dados = request.POST if request.method == "POST" else {}
+    contexto = {
+        "edital": edital,
+        "processo": edital.processo,
+        "etapa": etapa,
+        "etapa_id": etapa_id,
+        "inscricao": inscricao,
+        "horario": _rotulo_do_vigente(publicado, varias) if publicado else "",
+        "motivo_da_saida": participacao.motivo(inscricao.id)
+        if str(inscricao.id) not in participacao.participantes
+        else "",
+        "motivo": dados.get("motivo", ""),
+        "botao": recusas_.BOTAO_DO_CANCELAMENTO,
+        "chave_idempotencia": dados.get("chave_idempotencia") or f"ui-{uuid4().hex}",
+    }
+    if request.method == "GET":
+        return marcar_como_privada(render(request, "interface/agenda_cancelar.html", contexto))
+    try:
+        atos_app.cancelar(
+            actor=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            inscricao_id=inscricao.id,
+            motivo=request.POST.get("motivo", ""),
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise _inexistente() from recusa
+        contexto["erro"] = recusa
+        return marcar_como_privada(
+            render(request, "interface/agenda_cancelar.html", contexto, status=recusa.status)
+        )
+    request.session[MENSAGEM] = {
+        "tipo": "sucesso",
+        "texto": recusas_.cancelada(inscricao.nome or inscricao.protocolo),
+    }
+    return redirect("interface:agenda-publicada", edital.id, etapa_id)
+
+
+@require_http_methods(["POST"])
+def reenviar(request, edital_id, etapa_id):
+    """Reenviar o aviso de uma pessoa que não saiu (FR-7233): um aviso filho, o mesmo texto."""
+    ator, edital, _etapa = _porta(request, edital_id, etapa_id)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    aviso_id = request.POST.get("aviso") or ""
+    try:
+        UUID(aviso_id)
+    except ValueError:
+        raise _inexistente() from None
+    try:
+        filho = reenviar_app.reenviar(
+            actor=ator,
+            edital=edital,
+            etapa_id=etapa_id,
+            aviso_id=aviso_id,
+            idempotency_key=request.POST.get("chave_idempotencia", ""),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as recusa:
+        if recusa.status == 404:
+            raise _inexistente() from recusa
+        request.session[MENSAGEM] = {"tipo": "erro", "texto": recusa.detail}
+        return redirect("interface:agenda-publicada", edital.id, etapa_id)
+    destinatario = filho.destinatarios.select_related("inscricao").first()
+    pessoa = destinatario.inscricao if destinatario else None
+    request.session[MENSAGEM] = {
+        "tipo": "sucesso",
+        "texto": recusas_.reenviado((pessoa.nome or pessoa.protocolo) if pessoa else "a pessoa"),
+    }
+    return redirect("interface:agenda-publicada", edital.id, etapa_id)
