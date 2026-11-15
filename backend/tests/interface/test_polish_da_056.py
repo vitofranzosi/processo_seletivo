@@ -254,7 +254,7 @@ def test_a_revisao_poe_os_rotulos_numa_coluna(client, composto):  # noqa: F811
         reverse("interface:compor-etapa", args=[composto.id, "revisao"])
     ).content.decode()
 
-    assert '<dl class="dados-da-inscricao rotulo-com-dois-pontos"><dt>Início:</dt> <dd>' in corpo
+    assert '<dl class="dados-da-inscricao"><dt>Início:</dt> <dd>' in corpo
     corridas = re.findall(r'<span class="detalhe">([^<]*)</span>', corpo)
     for rotulo in ("Início", "Cadastro Reserva", "Exigência", "Caráter", "Por que não se corrige"):
         assert not any(linha.startswith(f"{rotulo}: ") for linha in corridas), rotulo

@@ -1,8 +1,16 @@
 # A migração do design system para toda a gestão: o antes e o depois
 
 *15/11/2026, na branch `claude/173-migracao-ds-antes-e-depois`, que parte da branch do piloto
-(`claude/172-piloto-implementacao`, PR #564, em `d6705ce5`). O "antes" é a `main` em `499491be`. Não há
-spec ainda: esta medição vem antes dela, a pedido do usuário, para ele decidir com as telas à vista.*
+(`claude/172-piloto-implementacao`, PR #564, em `d6705ce5`). O "antes" é a `main` em `499491be`. A
+medição veio antes da spec, a pedido do usuário; a spec é a
+[`175`](../../../specs/175-migracao-do-design-system/spec.md), escrita depois da revisão de código.*
+
+> **Depois da revisão de código (15/11, aprovada pelo usuário).** Os dois-pontos que a folha gerava
+> depois do rótulo das listas de definição saíram (escreviam "Volta atrás?:" nos rótulos do Sorteio
+> que são pergunta), e com eles a classe `rotulo-com-dois-pontos` da Revisão; a folha do piloto deixou
+> de repetir as regras que a migração levou à comum; e `grupos/confirmacao-de-ato.css`, que ficou sem
+> regra, foi retirada. As medidas abaixo são da branch antes dessas correções, que não mudam a
+> composição de nenhuma tela além do sinal de pontuação.
 
 ## O resultado
 
@@ -49,10 +57,9 @@ rastreado de novo, e o HTML é dessa segunda passada. Nela, nenhuma tela rola de
    por linha). A Ocupação do piloto já fazia isso, e o usuário a aprovou na largura de desktop. A
    saída mais simples é um mínimo menor no estreito (duas colunas a 375 px), e é decisão do padrão.
 2. **As fichas com rótulo em caixa alta acima do valor** (o Centro do Edital, a peça do recurso)
-   ganharam os dois-pontos e mantiveram o desenho delas: a regra comum tem a especificidade de um
-   elemento, e não desfaz lista com desenho próprio. Ficam "SITUAÇÃO ADMINISTRATIVA:" com o valor
-   embaixo. Ou elas também passam a "rótulo: valor" na linha (uma regra por ficha), ou ficam sem os
-   dois-pontos.
+   mantiveram o desenho delas: a regra comum tem a especificidade de um elemento, e não desfaz lista
+   com desenho próprio. Ou elas também passam a "rótulo e valor" na linha (uma regra por ficha), ou
+   ficam como estão (P-2 da spec).
 3. **Ainda há medidas de leitura fora de `--leitura`**: 80ch em `conducao-do-recorte.css` saiu, mas
    ficam larguras de coluna em rem que limitam texto (`.conducao` em 72rem, `.definicao-da-formalizacao`
    e `.lista-da-mesa` em 44rem, as da entrada em `acesso.css`). São colunas, e não prosa: a branch
@@ -88,7 +95,7 @@ escopo `.piloto-ds`. A folha do piloto continua carregada pelas cinco telas dele
 | **O texto ocupa a largura do conteúdo.** Saem as 52 declarações `max-width:var(--leitura)` das folhas da gestão — `main>p`, `.sub`, `.ajuda`, `legend+p`, a medida da P0 nas confirmações e as das folhas de grupo e de tela —, e os 44rem de `.ajuda` e `.explicacao` | `gestao/componentes.css`, `gestao/telas.css`, `grupos/*.css`, `telas/*.css` |
 | **Os indicadores de um grupo dividem a linha em partes iguais** (`.resumo` em grade `repeat(auto-fit,minmax(9rem,1fr))`) | `gestao/componentes.css` |
 | **O campo de texto, a área de texto e a seleção ocupam a largura do formulário**; número e data continuam do tamanho do que recebem | `gestao/formularios.css` |
-| **A lista de definição lê "rótulo: valor" na mesma linha**, com dois-pontos; no celular o valor desce. Pelo `:where(main)`, toda lista com desenho próprio continua com o dela; a que agrupa cada par num `div` fica em linha dentro do grupo; a da Revisão, que já escreve os dois-pontos no rótulo, não ganha o segundo | `gestao/telas.css`, `_linhas_da_revisao.html` |
+| **A lista de definição põe o rótulo e o valor na mesma linha**, o rótulo em peso maior e sem dois-pontos gerados; no celular o valor desce. Pelo `:where(main)`, toda lista com desenho próprio continua com o dela; a que agrupa cada par num `div` fica em linha dentro do grupo | `gestao/telas.css` |
 | **Os componentes**: cartão (`.consequencias`) com `--linha`, `--raio` e `--sombra-1`; aviso com o raio da escala; `.botao` e `.acao` de altura única (40 e 32 px); respiro menor na barra de gravação e no subtítulo | `gestao/telas.css` |
 
 O portal do candidato não muda: ele não carrega as folhas da gestão, e a varredura confirma (as 13
