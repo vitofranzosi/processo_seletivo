@@ -1,9 +1,11 @@
 # Registro das revisões de 14/11/2026
 
-*Um parecer de revisão, trazido pelo usuário depois da entrega do estudo, apontou seis correções.
-Todas foram conferidas contra os arquivos e todas procedem. Este documento registra o que cada uma
-dizia, o que foi conferido e o que mudou. Nada no produto foi alterado, e os protótipos, as
-capturas e as medições continuam os da primeira versão.*
+*Três pareceres, trazidos pelo usuário depois da entrega do estudo. O primeiro apontou seis
+correções, o segundo três, e todas foram conferidas contra os arquivos e todas procedem; o terceiro
+foi favorável ao merge e à P0, e pediu cuidados para o piloto. Este documento registra o que cada
+um dizia, o que foi conferido e o que mudou. Nas duas primeiras rodadas nada no produto foi
+alterado, e os protótipos, as capturas e as medições continuam os da primeira versão; a P0, que
+veio depois da terceira, está em [08-p0.md](08-p0.md).*
 
 ## Primeira rodada
 
@@ -67,6 +69,38 @@ continua sendo do usuário.
 **Próximo passo, segundo o parecer:** a especificação do piloto e o plano técnico, conforme a
 Constituição. A aprovação da migração completa continua dependendo dos resultados.
 
+## Terceira rodada
+
+Um terceiro parecer, também de 14/11, conferiu o estudo depois das duas rodadas. **É favorável ao
+merge do estudo e ao início da P0.** Não pediu correção nos documentos; pediu cuidados para o
+piloto, e confirmou a sequência que o usuário aprovou.
+
+### A sequência aprovada
+
+1. **A P0, as correções críticas**, como entrega própria e anterior ao piloto.
+2. **Uma nova referência medida depois da P0**: o instrumento roda de novo, no mesmo banco de
+   cenários, e o resultado é a base contra a qual o piloto se compara.
+3. **A spec do piloto pelo Spec Kit**, com a confirmação de ato, a Ocupação de vagas e a Lista de
+   Processos.
+4. **A validação com a equipe**, que executa as mesmas tarefas na versão antiga e na nova.
+
+### O que o parecer pede ao piloto
+
+| # | Pedido | Onde ele vale |
+|---|---|---|
+| 1 | Manter a fonte, os tamanhos, os textos completos e as ações existentes | já é o que o [roadmap](05-roadmap.md) diz em *O que entra, e como fica delimitado* e em *A primeira comparação*; o parecer o reforça como condição |
+| 2 | Deixar para depois a redução tipográfica, o recolhimento de explicações, a coluna "Fase e próximo passo" e as mudanças globais de CSS | os quatro já estavam fora do piloto: a Lista de Processos entra sem a coluna nova, e a coluna continua sendo a decisão 9 do [roadmap](05-roadmap.md). O parecer os confirma como adiados, e não só como fora do escopo |
+| 3 | A spec do piloto deve dizer **explicitamente** se as duas telas de conferência da Ocupação (`ocupacao_acrescimo.html` e `ocupacao_nao_preenchida.html`) entram | a spec do piloto; o roadmap deixava a decisão para ela sem exigir que fosse escrita |
+| 4 | As confirmações de ato devem ser avaliadas **pelo entendimento das consequências e pela prevenção de erro**, e não só pela composição | a spec do piloto, nos critérios de aceite e na validação com a equipe (passo 4): o que conta é se quem confirma sabe o que vai acontecer e se evita o ato errado |
+
+Os pedidos 3 e 4 são para a spec do piloto, que não é desta entrega. Ficam registrados aqui para
+que ela os encontre.
+
+### O que a P0 entregou
+
+A P0 está no PR que acompanha esta rodada, com o que mudou, as medições antes e depois e a nova
+referência em [08-p0.md](08-p0.md).
+
 ## O que continua aberto
 
 - **A comparação equivalente não foi feita.** Os protótipos são os da primeira versão. Ela pode ser
@@ -81,5 +115,8 @@ Constituição. A aprovação da migração completa continua dependendo dos res
   levar esses estados a imagem e a um banco que a equipe abra. O levantamento também corrigiu o
   plano: a tela tem sete formulários, e não cinco. Manter a Ocupação ou trocá-la continua sendo
   escolha do usuário.
-- **O rastreio não foi refeito** nestas revisões, nem pelos pareceres nem aqui. As medidas são as de
-  14/11, sobre `37ed0ad0`.
+- **O rastreio não foi refeito** nas duas primeiras revisões: as medidas dos documentos 01 a 05 são
+  as de 14/11, sobre `37ed0ad0`. Ele foi refeito ao fim da P0, num banco montado do zero, e o
+  resultado é a referência do piloto ([08-p0.md](08-p0.md)).
+- **As duas decisões do piloto que o terceiro parecer pediu escritas**: se as telas de conferência
+  da Ocupação entram, e como as confirmações serão avaliadas. São da spec do piloto.

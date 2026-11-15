@@ -655,6 +655,16 @@
       "url": "http://localhost:8162"
     },
     {
+      "name": "referencia-p0",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_p0_referencia DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true SORTEIO_FONTE_DE_DEMONSTRACAO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-p0-referencia-arquivos uv run python manage.py runserver 8165"
+      ],
+      "port": 8165,
+      "url": "http://localhost:8165"
+    },
+    {
       "name": "roteiro-equipe",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
