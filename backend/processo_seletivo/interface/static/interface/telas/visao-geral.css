@@ -1,26 +1,34 @@
 /* A visão institucional (040). As regras moram aqui porque é onde o CSS deste projeto mora: não
    há folha externa, e `interface/static/` só tem JavaScript.
    Desde a 091 há: este arquivo é a folha da visão geral, fora do HTML, e só ela o carrega — a
-   razão da 040 continua, e o cache do navegador a reforça. */
+   razão da 040 continua, e o cache do navegador a reforça.
+
+   **Só cor de token, desde a P0 do estudo de design system (14/11).** A folha tinha paleta própria,
+   cinza-azulada, e era a única tela da gestão com texto abaixo de 4,5:1: o instrumento contou 155
+   trechos, quase todos o `—` de `.sem-marca` em `#9aa3ad` sobre `#f8f8f8` (2,41:1), e os cabeçalhos
+   da tabela filha em `#6b7580` (4,41:1). O teste de contraste confere os pares de `tokens.css`, e
+   por isso não via cor literal; aqui, com os tokens, ele passa a valer também. Os três tons de
+   borda viraram dois — `--borda` e, na tabela filha, o `--cinza-fundo`, mais claro, que mantém a
+   régua interna subordinada à do grupo. */
 .filtros-da-visao{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;
-  padding:.85rem 1rem;border:1px solid #d7dce2;border-radius:6px;background:#fafbfc;margin:1rem 0}
+  padding:.85rem 1rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco);margin:1rem 0}
 .filtros-da-visao p{margin:0;display:flex;flex-direction:column;gap:.25rem}
-.filtros-da-visao label{font-size:.82rem;color:#4a5560}
+.filtros-da-visao label{font-size:.82rem;color:var(--texto-fraco)}
 
 /* Quatro números, e o denominador **embaixo** de cada um. Dois cartões lado a lado fariam o
    denominador competir com o número que ele existe para explicar (FR-585). */
 .consolidado{list-style:none;padding:0;margin:1.25rem 0;display:grid;gap:1rem;
   grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
-.consolidado li{padding:.9rem 1rem;border:1px solid #d7dce2;border-radius:6px;background:#fff}
+.consolidado li{padding:.9rem 1rem;border:1px solid var(--borda);border-radius:6px;background:var(--branco)}
 .consolidado strong{display:block;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
 .consolidado .rotulo{display:block;margin-top:.15rem;font-weight:600;font-size:.92rem}
-.consolidado .denominador{display:block;margin-top:.35rem;font-size:.8rem;color:#5a6470;line-height:1.35}
+.consolidado .denominador{display:block;margin-top:.35rem;font-size:.8rem;color:var(--texto-fraco);line-height:1.35}
 
 .tabela-da-visao{width:100%;border-collapse:collapse;margin:1rem 0}
-.tabela-da-visao caption{text-align:left;font-size:.85rem;color:#5a6470;padding-bottom:.4rem}
-.tabela-da-visao th,.tabela-da-visao td{border-bottom:1px solid #e3e7ec;padding:.55rem .5rem;
+.tabela-da-visao caption{text-align:left;font-size:.85rem;color:var(--texto-fraco);padding-bottom:.4rem}
+.tabela-da-visao th,.tabela-da-visao td{border-bottom:1px solid var(--borda);padding:.55rem .5rem;
   text-align:left;vertical-align:top}
-.tabela-da-visao thead th{font-size:.82rem;color:#37404a;border-bottom-width:2px}
+.tabela-da-visao thead th{font-size:.82rem;color:var(--texto);border-bottom-width:2px}
 /* **Cabeçalho e número dividem a borda** — a convenção já era da casa (`.tabela th.numero`, em
    `base.html`), e esta tela cobria só o `td`. O efeito era o rótulo colado à esquerda da coluna e
    o número colado à direita: medido, `Em preenchimento` punha `137 px` entre o começo de um e o
@@ -32,40 +40,43 @@
 .tabela-de-perfis td.numero,.tabela-de-perfis th.numero{text-align:right;
   font-variant-numeric:tabular-nums}
 .tabela-da-visao td.numero{white-space:nowrap}
-.tabela-da-visao .processo-da-linha{display:block;font-weight:400;font-size:.8rem;color:#5a6470}
-.tabela-da-visao .prazo{display:block;font-size:.8rem;color:#5a6470}
-.tabela-da-visao .vazio{padding:1.2rem .5rem;color:#5a6470}
+.tabela-da-visao .processo-da-linha{display:block;font-weight:400;font-size:.8rem;color:var(--texto-fraco)}
+.tabela-da-visao .prazo{display:block;font-size:.8rem;color:var(--texto-fraco)}
+.tabela-da-visao .vazio{padding:1.2rem .5rem;color:var(--texto-fraco)}
 
 /* A ausência é escrita. `—` sozinho é enigma; `—` com o motivo é informação (FR-594). */
-.ausente{color:#6b7580}
-.motivo-da-ausencia{display:block;font-size:.76rem;color:#6b7580;font-weight:400;white-space:normal}
-.parcial,.nota{display:block;font-size:.76rem;color:#5a6470;font-weight:400;white-space:normal}
+.ausente{color:var(--texto-fraco)}
+.motivo-da-ausencia{display:block;font-size:.76rem;color:var(--texto-fraco);font-weight:400;white-space:normal}
+.parcial,.nota{display:block;font-size:.76rem;color:var(--texto-fraco);font-weight:400;white-space:normal}
 
 /* A marca é texto; a cor é reforço, e nunca o único meio (FR-602).
    `main`, e não `.marca` solta: a marca do cabeçalho do `base.html` tem a mesma classe, e a regra
    sem escopo a pintava de caixa de atenção — fundo creme sob texto branco, a marca ilegível. */
 main .marca{display:block;font-size:.8rem;line-height:1.35;padding:.2rem .4rem;border-radius:4px;
-  border-left:3px solid #b8860b;background:#fdf8ec;color:#5a4a1f;margin-bottom:.25rem}
-main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d2525}
-.sem-marca{color:#9aa3ad}
+  border-left:3px solid var(--amarelo);background:var(--amarelo-fundo);color:var(--amarelo);margin-bottom:.25rem}
+main .marca.m-sem-procura{border-left-color:var(--vermelho);background:var(--vermelho-fundo);color:var(--vermelho)}
+.sem-marca{color:var(--texto-fraco)}
 
-.o-que-nao-medimos{margin:2rem 0 1rem;padding:1rem 1.1rem;border:1px solid #d7dce2;
-  border-radius:6px;background:#fafbfc}
+.o-que-nao-medimos{margin:2rem 0 1rem;padding:1rem 1.1rem;border:1px solid var(--borda);
+  border-radius:6px;background:var(--branco)}
 .o-que-nao-medimos h2{margin-top:0;font-size:1rem}
 .o-que-nao-medimos ul{margin:.5rem 0;padding-left:1.1rem}
 .o-que-nao-medimos li{margin:.35rem 0;font-size:.88rem;line-height:1.45}
-.o-que-nao-medimos .lido-em{margin:.6rem 0 0;font-size:.78rem;color:#5a6470}
+.o-que-nao-medimos .lido-em{margin:.6rem 0 0;font-size:.78rem;color:var(--texto-fraco)}
 
 /* No telefone a tabela recolhe as três colunas de contexto e mantém as que decidem — e o que
    ainda sobrar rola **dentro da moldura**, e não na página.
 
-   **A moldura só rola em tela estreita**, e a restrição é a lição que esta folha já registra em
-   outra tabela: `overflow-x:auto` faz o `overflow-y` computar para `auto` também, e um cabeçalho
-   `position:sticky` passaria a valer contra a moldura em vez da janela. Esta tabela não tem
-   cabeçalho fixo hoje; escopar a regra é o que impede que ela ganhe um e quebre calada.
+   **A moldura é a comum, `.tabela-rolavel`, e rola em toda largura** (P0 do estudo de design
+   system, 14/11). Até ali era uma própria, `.rolagem-da-tabela`, que só rolava abaixo de 40 rem —
+   e entre 40 e 60 rem as oito colunas não cabiam e não rolavam: a 768 px o documento media 880 px,
+   e a página inteira corria para o lado, a única das 116 telas medidas em que isso acontecia. A
+   razão de escopar a rolagem era um cabeçalho `position:sticky` que esta tabela nunca teve
+   (`overflow-x:auto` faz o `overflow-y` computar para `auto`, e o fixo passaria a valer contra a
+   moldura); quem lhe der um terá de devolver o escopo, como a `.distribuicao-moldura` faz.
 
-   Medido: sem isto, `documentElement.scrollWidth` dava 477 px contra 375 px de janela — a página
-   inteira rolava para o lado, e o cabeçalho e a declaração rolavam junto com a tabela. */
+   Medido antes da 040: sem moldura nenhuma, `documentElement.scrollWidth` dava 477 px contra 375 px
+   de janela — o cabeçalho e a declaração rolavam junto com a tabela. */
 @media (max-width:40rem){
   /* **O combinador é `>`, e a razão é cara** (`FR-627`). Escrito como descendente — o que ele era
      até aqui —, este seletor alcança a tabela **aninhada**, que vive dentro de um `<td>` desta.
@@ -76,7 +87,6 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
   .tabela-da-visao>thead>tr>*:nth-child(3),.tabela-da-visao>tbody>tr>*:nth-child(3),
   .tabela-da-visao>thead>tr>*:nth-child(6),.tabela-da-visao>tbody>tr>*:nth-child(6),
   .tabela-da-visao>thead>tr>*:nth-child(7),.tabela-da-visao>tbody>tr>*:nth-child(7){display:none}
-  .rolagem-da-tabela{overflow-x:auto}
   .consolidado{grid-template-columns:1fr 1fr}
   .consolidado strong{font-size:1.5rem}
 }
@@ -84,7 +94,7 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
    não ganha regra própria — ela é parágrafo do bloco, como sempre foi. */
 .o-que-nao-medimos .limite-permanente{margin:.4rem 0 .7rem;font-size:.88rem;line-height:1.45}
 .demais-limites>summary{display:inline-block;cursor:pointer;font-size:.82rem;font-weight:600;
-  color:var(--verde-texto);padding:.2rem .5rem;border:1px solid #d7dce2;border-radius:4px;
+  color:var(--verde-texto);padding:.2rem .5rem;border:1px solid var(--borda);border-radius:4px;
   max-width:100%;}
 .demais-limites>summary:hover{border-color:var(--verde-texto)}
 .demais-limites[open]>summary{margin-bottom:.5rem}
@@ -109,13 +119,13 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
 
    **Medido antes**: a filha ocupava **98%** da largura da principal, com cabeçalho de 12,16 px
    contra 13,12 px. Com 98% e a mesma espessura, ela não tinha como ler como subordinada. */
-.tabela-da-visao>tbody{border-bottom:1px solid #e3e7ec}
+.tabela-da-visao>tbody{border-bottom:1px solid var(--borda)}
 .tabela-da-visao>tbody>tr>th,.tabela-da-visao>tbody>tr>td{border-bottom:0}
 
 /* A régua e o recuo, que carregam o parentesco. O `padding-left` é o que **estreita** a filha —
    a largura menor não é regra própria, é consequência dele (`FR-623`). */
-.expansao-do-edital>td{padding:0 .5rem .7rem 2.5rem;border-left:3px solid #d7dce2;
-  border-bottom:0;background:#fcfdfd}
+.expansao-do-edital>td{padding:0 .5rem .7rem 2.5rem;border-left:3px solid var(--borda);
+  border-bottom:0;background:var(--fundo)}
 
 /* **A régua fica; o recuo encolhe** (`FR-623`, `R-004`). Em 375 px a tabela filha já rola dentro da
    moldura, e cada pixel de recuo sai da leitura das métricas. A largura **não** é forçada aqui: a
@@ -167,9 +177,9 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
 .tabela-de-perfis .c-preenchimento{width:15%;}
 .tabela-de-perfis .c-razao{width:14%;}
 .tabela-de-perfis .c-atencao{width:21%;}
-.tabela-de-perfis th,.tabela-de-perfis td{border-bottom:1px solid #eef1f4;padding:.35rem .5rem;
+.tabela-de-perfis th,.tabela-de-perfis td{border-bottom:1px solid var(--cinza-fundo);padding:.35rem .5rem;
   text-align:left;vertical-align:top;font-size:.84rem}
-.tabela-de-perfis thead th{font-size:.7rem;font-weight:500;color:#6b7580;
+.tabela-de-perfis thead th{font-size:.7rem;font-weight:500;color:var(--texto-fraco);
   text-transform:none;letter-spacing:.02em}
 .tabela-de-perfis tbody tr:last-child th,.tabela-de-perfis tbody tr:last-child td{border-bottom:0}
 /* Grade fixa corta o que não couber; a palavra longa quebra em vez de transbordar. */
@@ -183,5 +193,5 @@ main .marca.m-sem-procura{border-left-color:#a33;background:#fdf1f1;color:#6d252
   border-left-width:2px;margin-bottom:.2rem}
 
 /* A diferença que a `FR-613a` manda declarar — em texto, e nunca como linha da tabela. */
-.sem-perfil-vigente{margin:.5rem 0 0;font-size:.8rem;color:#5a4a1f;background:#fdf8ec;
-  border-left:3px solid #b8860b;padding:.35rem .5rem;border-radius:4px}
+.sem-perfil-vigente{margin:.5rem 0 0;font-size:.8rem;color:var(--amarelo);background:var(--amarelo-fundo);
+  border-left:3px solid var(--amarelo);padding:.35rem .5rem;border-radius:4px}

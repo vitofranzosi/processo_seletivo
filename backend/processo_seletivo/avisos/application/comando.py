@@ -55,6 +55,8 @@ def base_do_aviso(actor, processo, *, origem):
       O gesto que a grava tem porta própria, a da conferência (`pendencias.avisar_pendencias`).
     - **Agenda** (167, `D-013`): a mesma, porque o ato que o aviso cita — publicar, remarcar,
       incluir — é da gestão da comissão; o gesto que o grava é o próprio ato da agenda.
+    - **Passo** (171, FR-7316): a do resultado — `aviso:enviar`, ou a presidência ativa. O passo é
+      fato do Edital publicado, como o resultado, e quem divulga resultado pode anunciá-lo.
     """
     if actor is None or actor.institution_scope != processo.institution_scope:
         return None

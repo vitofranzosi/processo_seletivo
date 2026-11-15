@@ -61,6 +61,9 @@ class ModeloDeAviso(models.Model):
     # A marca dos três de `D-008`. **Nunca muda**, e é ela que torna a criação idempotente: a
     # unidade que já teve modelo inicial não ganha outro, ainda que tenha inativado os três.
     modelo_inicial = models.BooleanField(default=False)
+    # A marca do modelo inicial que nasceu **depois** dos três, e por isso precisa de guarda própria
+    # (171, T-005): o do aviso do passo. Vazia nos três de `D-008` e em todo modelo da unidade.
+    chave_inicial = models.CharField(max_length=16, blank=True, default="")
     criado_por = models.CharField(max_length=255)
     criado_em = models.DateTimeField()
     alterado_por = models.CharField(max_length=255, blank=True, default="")
@@ -103,10 +106,14 @@ class Aviso(_AppendOnly):
         "self", null=True, blank=True, on_delete=models.PROTECT, related_name="reenvios"
     )
     justificativa = models.TextField(blank=True, default="")
-    perfil_id = models.UUIDField()
-    # Nulo só no aviso de agenda (167): a agenda é da Etapa, e não de um marco. Um marco fictício
-    # seria dado falso numa tabela append-only (`ck_aviso_marco_da_origem`).
+    # Nulo só no aviso do passo (171, T-004), que cita a Etapa e vale para todo Perfil; o CHECK
+    # da origem o exige nas outras.
+    perfil_id = models.UUIDField(null=True, blank=True)
+    # Nulo só nos avisos de agenda (167) e do passo (171): os dois são da Etapa, e não de um marco.
+    # Um marco fictício seria dado falso numa tabela append-only (`ck_aviso_marco_da_origem`).
     marco_id = models.UUIDField(null=True, blank=True)
+    # A Etapa que o aviso do passo cita (171); só nele (`ck_aviso_etapa_da_origem`).
+    etapa_id = models.UUIDField(null=True, blank=True)
     lista_id = models.UUIDField(null=True, blank=True)
     natureza = models.CharField(
         max_length=16, choices=_escolhas(nomes.NATUREZAS), blank=True, default=""
@@ -134,6 +141,8 @@ class Aviso(_AppendOnly):
             # **Cada origem cita o seu ato, e só ele.** O resultado tem natureza e não tem
             # referência; a chamada tem a referência declarada e não tem natureza. A pendência
             # (134) não tem nenhuma das duas: o ato que ela aponta é a convocação do destinatário.
+            # A agenda (167) cita o ato dela pela frase ("Agenda da «Etapa», publicada em «data»"),
+            # como a chamada cita a referência declarada. O passo (171) cita a Etapa, pelo id.
             models.CheckConstraint(
                 condition=(
                     Q(
@@ -143,15 +152,26 @@ class Aviso(_AppendOnly):
                     )
                     | (Q(origem=nomes.CHAMADA, natureza="") & ~Q(referencia_da_publicacao=""))
                     | Q(origem=nomes.PENDENCIA, natureza="", referencia_da_publicacao="")
-                    # A agenda (167) cita o ato dela pela frase ("Agenda da «Etapa», publicada em
-                    # «data»"), como a chamada cita a referência declarada.
                     | (Q(origem=nomes.AGENDA, natureza="") & ~Q(referencia_da_publicacao=""))
+                    | Q(origem=nomes.PASSO, natureza="", referencia_da_publicacao="")
                 ),
                 name="ck_aviso_ato_da_origem",
             ),
             models.CheckConstraint(
-                condition=Q(marco_id__isnull=False) | Q(origem=nomes.AGENDA),
+                condition=Q(marco_id__isnull=False) | Q(origem__in=(nomes.AGENDA, nomes.PASSO)),
                 name="ck_aviso_marco_da_origem",
+            ),
+            # **A Etapa é obrigatória no passo, e o Perfil falta só nele** (171, T-004). O passo não
+            # tem marco, e a Etapa é o ato que ele cita. A agenda (167) pode citá-la também — o
+            # plano dela previu preenchê-la quando a coluna existisse —; as três primeiras, nunca.
+            models.CheckConstraint(
+                condition=Q(origem=nomes.PASSO, etapa_id__isnull=False, marco_id__isnull=True)
+                | (
+                    ~Q(origem=nomes.PASSO)
+                    & Q(perfil_id__isnull=False)
+                    & (Q(etapa_id__isnull=True) | Q(origem=nomes.AGENDA))
+                ),
+                name="ck_aviso_etapa_da_origem",
             ),
             # Reenvio sem o aviso de que ele é reenvio perderia a história (`R-011`).
             models.CheckConstraint(
@@ -165,6 +185,7 @@ class Aviso(_AppendOnly):
         ]
         indexes = [
             models.Index(fields=["edital", "marco_id"], name="ix_aviso_edital_marco"),
+            models.Index(fields=["edital", "etapa_id"], name="ix_aviso_edital_etapa"),
             models.Index(fields=["solicitado_em"], name="ix_aviso_solicitado_em"),
         ]
 

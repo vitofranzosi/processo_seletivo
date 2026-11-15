@@ -18,21 +18,25 @@ from processo_seletivo.avisos.domain import nomes
 from processo_seletivo.shared.api.problems import DomainError
 
 AMBAS = (nomes.RESULTADO, nomes.CHAMADA)
+# **O passo** (171): o aviso de uma Etapa restrita não tem publicação, Perfil nem data de
+# publicação — tem a Etapa e o período dela. E, como as outras, nenhuma variável diz a Modalidade.
+TODAS = (*AMBAS, nomes.PASSO)
 
 #: Cada variável e as origens em que ela tem valor (contracts/mensagem.md).
 VARIAVEIS = {
-    "nome_do_candidato": AMBAS,
-    "edital": AMBAS,
-    "processo_seletivo": AMBAS,
+    "nome_do_candidato": TODAS,
+    "edital": TODAS,
+    "processo_seletivo": TODAS,
     "perfil": AMBAS,
-    "etapa": (nomes.RESULTADO,),
+    "etapa": (nomes.RESULTADO, nomes.PASSO),
+    "periodo_da_etapa": (nomes.PASSO,),
     "natureza_do_resultado": (nomes.RESULTADO,),
     "data_da_publicacao": AMBAS,
     # Só quando o aviso cita **uma** publicação: com várias, não há URL inequívoca.
     "link_da_publicacao": (nomes.RESULTADO,),
-    "pagina_do_processo_seletivo": AMBAS,
+    "pagina_do_processo_seletivo": TODAS,
     "referencia_da_publicacao": (nomes.CHAMADA,),
-    "area_do_candidato": AMBAS,
+    "area_do_candidato": TODAS,
 }
 
 #: O que cada uma significa, para a lista ao lado do editor (`UX-176`).
@@ -41,7 +45,9 @@ SIGNIFICADO = {
     "edital": "o Edital, como em “Edital nº 57/2026”",
     "processo_seletivo": "o título do processo seletivo",
     "perfil": "o Perfil de vaga",
-    "etapa": "a etapa do resultado (só em aviso de resultado)",
+    "etapa": "a etapa do resultado ou do passo (em aviso de resultado ou de passo)",
+    "periodo_da_etapa": "o período da etapa, como em “, de 01/12/2026 a 05/12/2026” (só em aviso "
+    "de passo)",
     "natureza_do_resultado": "“preliminar” ou “definitivo” (só em aviso de resultado)",
     "data_da_publicacao": "a data e a hora da publicação",
     "link_da_publicacao": "o endereço da publicação (só quando o aviso cita uma publicação)",
@@ -85,7 +91,8 @@ def validar(texto, *, origem=None, publicacoes_citadas=None, campo="corpo"):
             raise DomainError(
                 nomes.AVISO_VARIAVEL_SEM_VALOR,
                 f"A variável {{{nome}}} não tem valor neste aviso: ela só existe em aviso de "
-                f"{'resultado' if origem == nomes.CHAMADA else 'chamada'}.",
+                + " ou de ".join(nomes.ORIGEM_POR_EXTENSO[o] for o in VARIAVEIS[nome])
+                + ".",
                 422,
                 campo=campo,
             )

@@ -7,9 +7,11 @@ de outro módulo a redefine no importador, e o `F811` acusa; importar uma funç�
 from processo_seletivo.avisos.application import destinatarios, previa
 from processo_seletivo.avisos.application.confirmar import (
     confirmar_aviso_da_chamada,
+    confirmar_aviso_do_passo,
     confirmar_aviso_do_resultado,
 )
 from processo_seletivo.avisos.domain import nomes
+from processo_seletivo.avisos.domain.modelos_iniciais import MODELO_DO_PASSO
 from tests.conftest import ator_institucional
 
 PUBLICADORA = ator_institucional("publicadora-aviso", nomes.PERMISSAO, "resultado:publicar")
@@ -63,6 +65,36 @@ def avisar_resultado(
         enderecos=enderecos(edital, universo.publicacoes),
         idempotency_key=chave,
         correlation_id="teste-066",
+        justificativa=justificativa,
+    )
+
+
+def avisar_passo(
+    edital,
+    etapa_id,
+    *,
+    ator=PUBLICADORA,
+    chave="avisar-passo-168",
+    assunto=MODELO_DO_PASSO[1],
+    corpo=MODELO_DO_PASSO[2],
+    justificativa="",
+):
+    """O aviso do passo (171), na ordem da tela: a assinatura sai da prévia e volta no POST."""
+    universo = destinatarios.universo_do_passo(
+        edital=edital, etapa_id=etapa_id, reenvio=bool(justificativa)
+    )
+    motivo = nomes.REENVIO_JUSTIFICADO if justificativa else nomes.PRIMEIRO_AVISO
+    return confirmar_aviso_do_passo(
+        actor=ator,
+        processo_id=edital.processo_id,
+        edital_id=edital.id,
+        etapa_id=etapa_id,
+        assunto=assunto,
+        corpo=corpo,
+        assinatura=previa.assinatura(universo, motivo=motivo),
+        enderecos=enderecos(edital),
+        idempotency_key=chave,
+        correlation_id="teste-168",
         justificativa=justificativa,
     )
 

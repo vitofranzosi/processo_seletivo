@@ -29,6 +29,7 @@ from processo_seletivo.avisos.application.comando import (
 )
 from processo_seletivo.avisos.application.confirmar import (
     confirmar_aviso_da_chamada,
+    confirmar_aviso_do_passo,
     confirmar_aviso_do_resultado,
 )
 from processo_seletivo.avisos.domain import nomes
@@ -81,11 +82,19 @@ def _modelos_ativos(ator):
     )
 
 
-def _texto_inicial(ator, modelos, modelo_id):
-    """Assunto e corpo do modelo escolhido; sem escolha, o primeiro modelo ativo, ou vazio."""
+def _texto_inicial(ator, modelos, modelo_id, *, origem=None):
+    """Assunto e corpo do modelo escolhido; sem escolha, o primeiro modelo ativo, ou vazio.
+
+    No aviso do passo (171), sem escolha, o modelo inicial do passo quando ativo: os outros três
+    falam de publicação e de chamada, e o primeiro em ordem alfabética seria o errado.
+    """
     escolhido = next((m for m in modelos if str(m.id) == str(modelo_id or "")), None)
-    if escolhido is None and not modelo_id and modelos:
-        escolhido = modelos[0]
+    if escolhido is None and not modelo_id:
+        # O do passo só é o padrão no aviso do passo; nos outros, ele usa variável sem valor.
+        do_passo = [m for m in modelos if m.chave_inicial == nomes.CHAVE_DO_MODELO_DO_PASSO]
+        candidatos = do_passo if origem == nomes.PASSO else []
+        candidatos += [m for m in modelos if m not in do_passo]
+        escolhido = candidatos[0] if candidatos else None
     if escolhido is None:
         return None, "", ""
     return escolhido, escolhido.assunto, escolhido.corpo
@@ -134,7 +143,7 @@ def _contexto_da_previa(request, ator, universo, *, motivo, acao, extra):
         assunto = request.POST.get("assunto", "")
         corpo = request.POST.get("corpo", "")
     else:
-        modelo, assunto, corpo = _texto_inicial(ator, modelos, modelo_id)
+        modelo, assunto, corpo = _texto_inicial(ator, modelos, modelo_id, origem=universo.origem)
     try:
         exemplo = int(request.POST.get("exemplo") or 0)
     except ValueError:
@@ -275,6 +284,57 @@ def _depois_de_confirmar(request, ator, declarado):
         request.session["modelo_salvo"] = request.POST.get("nome_do_modelo", "")
     except DomainError as erro:
         request.session["modelo_nao_salvo"] = erro.detail
+
+
+# --- O passo de uma Etapa restrita (171) ------------------------------------------------------
+
+
+@require_http_methods(["GET", "POST"])
+def aviso_do_passo(request, edital_id, etapa_id):
+    """A prévia e a confirmação do aviso do passo de uma Etapa restrita (171, FR-7315, FR-7316).
+
+    O caminho é o do aviso de resultado, e a porta também: chega-se aqui pela pendência "Avisar"
+    do Centro (FR-7323), e a prévia volta a ele.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    edital = _edital_do_ator(ator, edital_id)
+    exigir_base(ator, edital.processo, origem=nomes.PASSO)
+    dados = request.POST if request.method == "POST" else request.GET
+    reenvio = dados.get("reenvio") == "1"
+    universo = destinatarios.universo_do_passo(edital=edital, etapa_id=etapa_id, reenvio=reenvio)
+    motivo = nomes.REENVIO_JUSTIFICADO if reenvio else nomes.PRIMEIRO_AVISO
+    acao = reverse("interface:aviso-do-passo", args=[edital.id, etapa_id])
+    extra = {"voltar": reverse("interface:centro-do-edital", args=[edital.id])}
+    if request.method == "POST" and request.POST.get("acao") == "confirmar":
+        try:
+            declarado = confirmar_aviso_do_passo(
+                actor=ator,
+                processo_id=edital.processo_id,
+                edital_id=edital.id,
+                etapa_id=etapa_id,
+                assunto=request.POST.get("assunto", ""),
+                corpo=request.POST.get("corpo", ""),
+                assinatura=request.POST.get("assinatura", ""),
+                enderecos=_enderecos(request, edital),
+                idempotency_key=request.POST.get("chave") or uuid4().hex,
+                correlation_id=f"interface-aviso-{edital.id}",
+                modelo_id=_identificador(request.POST.get("modelo")),
+                justificativa=request.POST.get("justificativa", ""),
+            )
+        except DomainError as erro:
+            if erro.status == 404:
+                raise
+            contexto = _contexto_da_previa(
+                request, ator, universo, motivo=motivo, acao=acao, extra=extra
+            )
+            contexto["erro"] = erro
+            return _renderizar_previa(request, contexto, status=erro.status)
+        _depois_de_confirmar(request, ator, declarado)
+        return redirect(reverse("interface:aviso", args=[declarado["aviso"]]))
+    contexto = _contexto_da_previa(request, ator, universo, motivo=motivo, acao=acao, extra=extra)
+    return _renderizar_previa(request, contexto)
 
 
 # --- A chamada comunicada por publicação (US3) -----------------------------------------------

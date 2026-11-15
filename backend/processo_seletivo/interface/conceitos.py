@@ -183,6 +183,16 @@ CONCEITOS = {
         "registra-se o desfecho.",
         "ao_confirmar": "A pendência volta ao candidato, que pode reenviar no prazo.",
     },
+    # O aviso do passo (171, FR-7323): o e-mail que diz a quem a Etapa restrita alcança que há um
+    # passo a mais. Pelo gesto, com prévia, como os outros avisos (FR-1243 da `066`).
+    a.AVISAR: {
+        "simples": "Avisar quem tem o passo",
+        "termo": "aviso do passo",
+        "curta": "Manda um e-mail a quem a etapa alcança, com o nome dela e o período.",
+        "porque": "O candidato só sabe que tem um passo a mais se alguém disser; o e-mail não diz "
+        "a lista, e o acompanhamento explica o resto.",
+        "ao_confirmar": "O aviso é gravado e sai pelo despacho; não muda prazo nem situação.",
+    },
     a.ETAPA: {
         "simples": "Avaliar a Etapa",
         "termo": "Etapa",

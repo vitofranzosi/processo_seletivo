@@ -1444,6 +1444,58 @@ def _etapa_sem_evento(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
     return findings
 
 
+# **Os termos técnicos que o candidato não lê** (171, FR-7330): a tabela de linguagem do estudo da
+# verificação. O texto fixo das telas do candidato nunca os usa; o nome da Etapa é do Edital, e por
+# isso aqui só se adverte (FR-7336). Por raiz, e sem acento, para casar "Heteroidentificação",
+# "fenotípica" e "Aferição".
+TERMOS_TECNICOS_DO_CANDIDATO = {
+    "heteroidentifica": "heteroidentificação",
+    "fenotip": "fenótipo",
+    "aferi": "aferição",
+    "indeferid": "indeferido",
+}
+NOME_DA_ETAPA_RESTRITA_COM_TERMO_TECNICO = "restricted_stage_name_with_technical_term"
+
+
+def _nome_da_restrita_com_termo_tecnico(snapshot: dict, *, ato: str) -> list[ValidationFinding]:
+    """A Etapa restrita cujo nome traz termo técnico — advertência, e nunca recusa (171, FR-7336).
+
+    **Contextual, e sem sugerir nome**: a Etapa restrita pode ser a verificação da autodeclaração ou
+    a perícia de pessoa com deficiência, e o GPS não sabe qual (`163`, decisão do usuário de 14/11).
+    A mensagem diz o termo encontrado e por que importa: o candidato lê o nome no acompanhamento.
+    Só na publicação, como a Etapa sem Evento: o nome não se retifica por esta tela.
+    """
+    from processo_seletivo.editais.domain import alcance
+    from processo_seletivo.shared.texto import dobrar
+
+    if ato != ATO_DE_PUBLICACAO:
+        return []
+    itens = snapshot.get("stages")
+    if not isinstance(itens, list):
+        return []
+    findings = []
+    for posicao, item in enumerate(itens):
+        if not isinstance(item, dict) or not alcance.restrita(item):
+            continue
+        nome = str(item.get("name") or "").strip()
+        dobrado = dobrar(nome).lower()
+        termo = next(
+            (t for raiz, t in TERMOS_TECNICOS_DO_CANDIDATO.items() if raiz in dobrado), None
+        )
+        if termo is None:
+            continue
+        findings.append(
+            ValidationFinding(
+                Severity.WARNING,
+                NOME_DA_ETAPA_RESTRITA_COM_TERMO_TECNICO,
+                f"O nome da etapa «{nome}» usa o termo «{termo}», e o candidato lê esse nome no "
+                "acompanhamento. Se o Edital permitir, prefira um nome sem ele.",
+                f"{_caminho_da_entidade('stages', item, posicao)}/name",
+            )
+        )
+    return findings
+
+
 # **Os fatos do conteúdo publicado que continuam ditos depois da publicação** (046, `FR-755`,
 # `D-003`). Por nome, e só por decisão: a `045` levou a Etapa sem Evento da Atenção para a página
 # do Edital (`FR-739`, `UX-086`), e a convergência de 20/09 vetou silenciá-la. Cada entrada é a
@@ -2063,6 +2115,7 @@ def validate_for_publication(
     findings.extend(_coerencia_da_deliberacao(snapshot, ato=ato))
     findings.extend(_coerencia_do_video(snapshot, ato=ato))
     findings.extend(_etapa_sem_evento(snapshot, ato=ato))
+    findings.extend(_nome_da_restrita_com_termo_tecnico(snapshot, ato=ato))
     findings.extend(_faixa_do_percentual(snapshot))
     findings.extend(_faixa_do_teto(snapshot))
     findings.extend(_coerencia_dos_fatos(snapshot))
