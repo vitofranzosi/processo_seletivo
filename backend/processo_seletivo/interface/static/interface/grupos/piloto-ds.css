@@ -70,12 +70,14 @@
 
 /* **Rótulo e valor na mesma linha** (pedido do usuário em 15/11): toda lista de definição do escopo
    lê "De onde a vaga veio: Edital…", e não o valor quebrado e recuado abaixo do rótulo, como o
-   navegador desenha por padrão. Os dois-pontos são pontuação de apresentação: o texto do rótulo
-   no documento não muda, e é ele que a comparação confere. No celular, o valor desce. */
+   navegador desenha por padrão. O rótulo se distingue pelo peso e pela coluna da grade, e **não por
+   dois-pontos gerados**: a primeira versão os punha por `dt::after`, que é texto que o template não
+   tem e a comparação do conteúdo não vê (revisão de código de 15/11, aprovada pelo usuário); e, na
+   migração para a gestão, a mesma regra escrevia "Volta atrás?:" nos rótulos que são pergunta. No
+   celular, o valor desce. */
 .piloto-ds dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--e-1) var(--e-3);
   margin:0 0 var(--e-4)}
 .piloto-ds dt{font-weight:600;color:var(--tinta-2)}
-.piloto-ds dt::after{content:":"}
 .piloto-ds dd{margin:0}
 @media (max-width:40rem){
   .piloto-ds dl{grid-template-columns:minmax(0,1fr);gap:0}

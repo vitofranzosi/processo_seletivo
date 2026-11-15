@@ -229,7 +229,8 @@ comuns (a medida do parágrafo, o respiro antes da seção e a medida da confirm
 valer em silêncio — no piloto isso é proposital desde a D-012 (o texto ocupa a largura), e a
 folha repõe só o respiro; e o `ps_p0_referencia` ficou para trás das
 migrations da `167`, da `168` e da `170` — não o migre, restaure a cópia com
-`piloto/scripts/montar_banco_da_validacao.sh referencia`.
+`REFERENCIA_DUMP=<dump> piloto/scripts/montar_banco_da_validacao.sh referencia` (o cabeçalho do
+roteiro diz como regerar o dump).
 
 **Os cenários de treinamento (134) não rodam sozinhos, e restaurar não apaga.** Os quatro comandos
 (`carregar`, `listar`, `verificar` e `restaurar_cenario_de_treinamento`) exigem

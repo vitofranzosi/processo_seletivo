@@ -43,7 +43,7 @@ SC-2604).
 ## 3. Nada fora do piloto mudou
 
 O `ps_p0_referencia` ficou para trás das migrations da `main` e não se migra. Com
-`montar_banco_da_validacao.sh referencia` e as duas entradas do §4 no ar, o rastreio roda nas duas
+`REFERENCIA_DUMP=<dump> montar_banco_da_validacao.sh referencia` e as duas entradas do §4 no ar, o rastreio roda nas duas
 (`PORTA=8172` e `PORTA=8173`), sem o passo do portal, e os dois `telas.csv` se comparam:
 
 ```bash
