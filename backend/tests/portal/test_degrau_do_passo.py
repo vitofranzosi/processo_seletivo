@@ -103,6 +103,33 @@ def test_quem_esta_so_na_ampla_nao_ve_nada(antes, client, seletor_ligado):
     assert "Heteroidentificação" not in corpo.split("<h2", 2)[1]
 
 
+def _minhas_inscricoes(client, inscricao):
+    entrar_como_titular(client, inscricao)
+    resposta = client.get(reverse("portal:inscricoes"))
+    assert resposta.status_code == 200
+    return resposta.content.decode()
+
+
+def test_a_lista_de_inscricoes_mostra_o_passo(antes, client, seletor_ligado):
+    """Achado da demonstração de 15/11: o aviso do passo manda a pessoa para "Minhas inscrições", e
+    o cartão dizia só "Inscrição enviada"."""
+    corpo = _minhas_inscricoes(client, antes["inscricoes"][0])
+    assert "Falta um passo seu: Heteroidentificação" in corpo
+
+
+def test_a_lista_nao_mostra_passo_a_quem_esta_so_na_ampla(antes, client, seletor_ligado):
+    (pedro,) = inscrever(antes["edital"], 1, primeiro=91, perfil=antes["perfil"])
+    corpo = _minhas_inscricoes(client, pedro)
+    assert "Falta um passo seu" not in corpo
+
+
+def test_a_lista_nao_mostra_passo_depois_do_periodo(vencido, client, seletor_ligado):
+    """Vencido o período sem registro, o passo é "Aguardando a comissão", e não falta mais nada da
+    pessoa: o cartão não diz que falta."""
+    corpo = _minhas_inscricoes(client, vencido["inscricoes"][0])
+    assert "Falta um passo seu" not in corpo
+
+
 def test_o_periodo_vencido_sem_registro_aguarda_a_comissao(vencido, client, seletor_ligado):
     """US1, cenário 3; FR-7306: e não diz que a análise começou."""
     corpo = _acompanhamento(client, vencido["inscricoes"][0])

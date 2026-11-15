@@ -162,6 +162,10 @@ class PassoDoRoteiro:
     tem_acao: bool = False
     #: Por que o passo ainda não começou — a razão que a derivação já dá à célula *Depois*.
     razao: str = ""
+    #: A quem a Etapa restrita se aplica, pelos nomes das Modalidades (163), ou "" quando ela vale
+    #: para todas as inscrições. Sem isso, o passo da verificação dizia "vale para todas as listas"
+    #: (achado da demonstração de 15/11).
+    alcance: str = ""
 
     @property
     def rotulo(self):
@@ -450,7 +454,9 @@ def _passo(ponto):
     return dados["simples"], dados["termo"], dados
 
 
-def _roteiro(pontos, listas):
+def _roteiro(pontos, listas, perfil=None):
+    from processo_seletivo.editais.domain import alcance as alcance_da_etapa
+
     roteiro = []
     for ponto in pontos:
         celulas = [ponto.celula(lista_id) for lista_id, _ in listas]
@@ -469,6 +475,11 @@ def _roteiro(pontos, listas):
                 unico=ponto.tipo in (a.SEMENTE, a.ETAPA),
                 tem_acao=any(x.situacao in a.A_PRATICAR for x in validas),
                 razao=next((x.razao for x in validas if x.situacao == a.DEPOIS and x.razao), ""),
+                alcance=(
+                    alcance_da_etapa.nomes_do_alcance({"profiles": [perfil or {}]}, ponto.etapa)
+                    if ponto.tipo == a.ETAPA and alcance_da_etapa.restrita(ponto.etapa)
+                    else ""
+                ),
             )
         )
     return roteiro
@@ -607,7 +618,9 @@ def compor(edital, andamento, *, documentos=(), em_curso=(), alcance=None):
             if pontos[chave]:
                 detalhes[chave].append(
                     FaseNoPerfil(
-                        perfil, _roteiro(pontos[chave], perfil.listas), por_fase_e_lista[chave]
+                        perfil,
+                        _roteiro(pontos[chave], perfil.listas, perfil.perfil),
+                        por_fase_e_lista[chave],
                     )
                 )
         perfis_no_centro.append(PerfilNoCentro(perfil, listas, a.matricula_fora(perfil)))
