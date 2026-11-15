@@ -230,7 +230,7 @@ A fase **consultada** é a que a pessoa abriu para ler, e não uma fase do Edita
         <span class="cc-roteiro-numero" aria-hidden="true">{{ forloop.counter }}</span>
         <span class="cc-roteiro-texto">
           <span class="cc-roteiro-nome">{{ passo.simples }}</span>{% if passo.mostra_o_termo %} <span class="cc-no-gps">no GPS: {{ passo.termo }}</span>{% endif %}
-          <span class="cc-roteiro-situacao"><span aria-hidden="true">{{ passo.sinal }}</span> {{ passo.rotulo }}{% if passo.andamento == 'nao_iniciada' and passo.razao %}: {{ passo.razao }}{% endif %}{% if passo.tem_acao %} · <strong>há ação agora</strong>{% endif %}{% if not passo.unico and passo.total > 1 %} · {{ passo.feitas }} de {{ passo.total }} listas{% elif passo.unico and passo.total > 1 %} · vale para todas as listas{% endif %}</span>
+          <span class="cc-roteiro-situacao"><span aria-hidden="true">{{ passo.sinal }}</span> {{ passo.rotulo }}{% if passo.andamento == 'nao_iniciada' and passo.razao %}: {{ passo.razao }}{% endif %}{% if passo.tem_acao %} · <strong>há ação agora</strong>{% endif %}{% if not passo.unico and passo.total > 1 %} · {{ passo.feitas }} de {{ passo.total }} listas{% elif passo.alcance %} · só para quem se inscreveu em {{ passo.alcance }}{% elif passo.unico and passo.total > 1 %} · vale para todas as listas{% endif %}</span>
           <span class="cc-curta">{{ passo.curta }}</span>
         </span>
       </li>

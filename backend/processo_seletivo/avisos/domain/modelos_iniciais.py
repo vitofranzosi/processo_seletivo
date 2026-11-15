@@ -11,6 +11,11 @@ situação de ninguém**: orienta a consulta na área do candidato, que é auten
 """
 
 ASSUNTO_NEUTRO = "Processo Seletivo Ifes — Nova publicação disponível"
+# **O assunto do passo é outro, e tão neutro quanto** (171, FR-7320, revista em 15/11 depois da
+# demonstração): o aviso do passo não parte de publicação nenhuma, e "Nova publicação disponível"
+# mandava a pessoa procurar um ato que não existe. O assunto diz só que há um passo, sem a etapa —
+# o nome dela pode nomear o procedimento ("Heteroidentificação"), e o assunto aparece no celular.
+ASSUNTO_DO_PASSO = "Processo Seletivo Ifes — Há um passo a mais para você"
 
 MODELOS_INICIAIS = (
     (
@@ -49,11 +54,11 @@ MODELOS_INICIAIS = (
 # pessoa, e a autodeclaração é dado sensível. O resto, o titular lê no acompanhamento, autenticado.
 MODELO_DO_PASSO = (
     "Aviso do passo de uma etapa",
-    ASSUNTO_NEUTRO,
+    ASSUNTO_DO_PASSO,
     "Olá, {nome_do_candidato}.\n\n"
     "Há um passo a mais para você no {processo_seletivo}: a etapa {etapa}{periodo_da_etapa}.\n\n"
     "Veja na área do candidato quando e como participar:\n"
     "{area_do_candidato}",
 )
 
-__all__ = ["ASSUNTO_NEUTRO", "MODELOS_INICIAIS", "MODELO_DO_PASSO"]
+__all__ = ["ASSUNTO_DO_PASSO", "ASSUNTO_NEUTRO", "MODELOS_INICIAIS", "MODELO_DO_PASSO"]

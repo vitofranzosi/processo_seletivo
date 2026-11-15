@@ -8,7 +8,12 @@ seria um erro do próprio sistema.
 import pytest
 
 from processo_seletivo.avisos.domain import nomes
-from processo_seletivo.avisos.domain.modelos_iniciais import ASSUNTO_NEUTRO, MODELOS_INICIAIS
+from processo_seletivo.avisos.domain.modelos_iniciais import (
+    ASSUNTO_DO_PASSO,
+    ASSUNTO_NEUTRO,
+    MODELO_DO_PASSO,
+    MODELOS_INICIAIS,
+)
 from processo_seletivo.avisos.domain.variaveis import usadas, validar
 
 
@@ -48,3 +53,14 @@ def test_nenhum_diz_a_situacao_de_alguem():
         for proibido in ("posição", "classificad", "aprovad", "eliminad", "sem posição"):
             assert proibido not in corpo.lower()
         assert "{area_do_candidato}" in corpo
+
+
+def test_o_assunto_do_passo_nao_anuncia_publicacao_e_e_neutro():
+    """FR-7320, revista em 15/11: o aviso do passo não parte de publicação, e o assunto não diz que
+    houve uma. Continua sem lista, modalidade nem procedimento — nem o nome da etapa."""
+    assunto = MODELO_DO_PASSO[1]
+    assert assunto == ASSUNTO_DO_PASSO
+    assert "publicação" not in assunto.lower()
+    validar(assunto)
+    for palavra in ("ppi", "cota", "reserva", "heteroidentifica", "modalidade", "lista", "{etapa}"):
+        assert palavra not in assunto.lower()

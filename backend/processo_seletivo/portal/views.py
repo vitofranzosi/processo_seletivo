@@ -1511,7 +1511,28 @@ def _convocacoes_da_lista(minhas):
     )
 
 
-def _item_da_lista(registro, conteudo, agora, convocacao=None):
+def _passo_pendente_na_lista(registro, conteudo, agora):
+    """O nome da Etapa restrita em que falta um passo da pessoa, ou "" (171, achado de 15/11).
+
+    O aviso do passo manda a pessoa para esta lista, e o cartão dizia só "Inscrição enviada": quem
+    chegava pelo e-mail não via o passo sem abrir o acompanhamento. A derivação é a do
+    acompanhamento (`passo_da_etapa`), e só a inscrição que uma Etapa restrita alcança paga as
+    consultas dela — as demais não consultam nada a mais (FR-7311).
+    """
+    if registro.status != Inscricao.Status.SUBMETIDA or conteudo is None:
+        return ""
+    if not passo_da_etapa._restritas_que_alcancam(conteudo, registro.modality_id, set()):
+        return ""
+    passos = passo_da_etapa.passos_da_inscricao(
+        registro,
+        conteudo=conteudo,
+        resultados_visiveis=resultados_visiveis(registro),
+        agora=agora,
+    )
+    return next((x.etapa for x in passos if x.estado == passo_da_etapa.FALTA), "")
+
+
+def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -1552,6 +1573,7 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None):
         # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
         "fechada": fechada,
         "convocacao_aberta": aberta,
+        "passo_pendente": passo,
         # O rótulo do desfecho é o da FR-1172 da `063`, como no acompanhamento e na convocação, e
         # não a espécie crua (156, FR-6405).
         "convocacao_concluida": situacao_da_inscricao.DESFECHOS.get(
@@ -1798,6 +1820,9 @@ def inscricoes(request):
                     conteudos.get(registro.edital_id),
                     agora,
                     convocacoes.get(registro.id),
+                    passo=_passo_pendente_na_lista(
+                        registro, conteudos.get(registro.edital_id), agora
+                    ),
                 )
                 for registro in minhas
             ],

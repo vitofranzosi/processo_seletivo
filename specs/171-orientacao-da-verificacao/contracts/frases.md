@@ -37,7 +37,8 @@ Na convocação e nos passos seguintes, a linha do porquê é: "Também falta um
 ## Candidato: o modelo inicial do aviso do passo (FR-7319, FR-7320)
 
 - **Nome**: "Aviso do passo de uma etapa".
-- **Assunto**: o assunto neutro da `066`.
+- **Assunto**: "Processo Seletivo Ifes — Há um passo a mais para você". Neutro como o da `066`, sem
+  anunciar publicação (revisto em 15/11/2026).
 - **Corpo**, com as variáveis `{nome_do_candidato}`, `{etapa}`, `{periodo_da_etapa}`,
   `{processo_seletivo}` e `{area_do_candidato}`: "Olá, {nome_do_candidato}. Há um passo a mais para
   você no {processo_seletivo}: a etapa {etapa}{periodo_da_etapa}. Veja no seu acompanhamento quando e
