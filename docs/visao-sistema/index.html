@@ -3275,9 +3275,10 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
   <section id="novidades">
     <h2>As Novidades do GPS <span class="selo selo-impl">Implementado</span></h2>
     <p class="lead">
-      O que mudou no produto, contado em linguagem de quem opera: o que é novo, o que melhorou e o que foi
-      corrigido, da mudança mais recente para a mais antiga, numa página da gestão que diz o que a pessoa
-      ainda não viu (168).
+      O que mudou no produto, contado em linguagem de quem opera: o que ganhou uma funcionalidade, o que
+      melhorou e o que foi corrigido, numa página da gestão que diz o que a pessoa ainda não viu e abre pela
+      mudança que mais pesa no trabalho dela (168). A página é do que <em>mudou</em>, e não do que o GPS
+      faz: o tour do produto, se houver, mora na Documentação do Sistema.
     </p>
     <div class="conceito" id="c-novidades">
       <header><h3>Novidades do GPS</h3><span class="selo selo-impl">Implementado</span>
@@ -3285,7 +3286,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <dl>
         <dt>Por que existe</dt><dd>Quem opera o GPS vê as telas mudarem entre uma semana e outra e não tem onde ler o que mudou, nem em que tela. A Documentação do Sistema descreve o que o sistema <em>é</em>; as Novidades dizem o que <em>acabou de mudar</em>.</dd>
         <dt>Quem usa</dt><dd>Toda identidade da gestão, sem permissão própria. A rota é <code>/gestao/novidades</code>, e o item <span class="rotulo-ui">Novidades</span> fica no grupo Ajuda, antes da Documentação do Sistema.</dd>
-        <dt>O que faz</dt><dd>Mostra, numa linha do tempo por mês, 12 notas por página, com filtro <span class="rotulo-ui">Todas</span>, <span class="rotulo-ui">Novidades</span>, <span class="rotulo-ui">Melhorias</span> e <span class="rotulo-ui">Correções</span>. Cada cartão traz o título que promete o ganho, o resumo, <em>Na prática:</em> (um exemplo), <em>Para que serve:</em>, <span class="rotulo-ui">Como usar</span> recolhido, <span class="rotulo-ui">Abrir…</span> a tela — só se a barra a oferece à pessoa — e <span class="rotulo-ui">Saiba mais na documentação</span>.</dd>
+        <dt>O que faz</dt><dd>Mostra, numa linha do tempo por mês, 12 notas por página, sob o título <span class="rotulo-ui">Todas as atualizações</span>, com filtro <span class="rotulo-ui">Todas</span>, <span class="rotulo-ui">Funcionalidades</span>, <span class="rotulo-ui">Melhorias</span> e <span class="rotulo-ui">Correções</span>; a categoria da nota nova se chama <em>Nova funcionalidade</em>, porque a página inteira já se chama Novidades. <strong>Cada nota declara a relevância</strong> — <em>transformadora</em> (cria uma capacidade ou elimina uma operação trabalhosa), <em>relevante</em> (melhora uma jornada existente) ou <em>incremental</em> (ajuste, legibilidade, correção pontual) —, medida pelo benefício e nunca pelo número de PRs, e é ela que decide o peso do cartão. O cartão da nota transformadora e da relevante traz o título que promete o ganho, o resumo, <em>Na prática:</em> (um exemplo), <em>Para que serve:</em>, <span class="rotulo-ui">Como usar</span> recolhido, <span class="rotulo-ui">Abrir…</span> a tela — só se a barra a oferece à pessoa — e <span class="rotulo-ui">Saiba mais na documentação</span>; o da incremental é uma linha enxuta, sem exemplo nem <em>Como usar</em>.</dd>
         <dt>O que não faz</dt><dd>Não cita número de PR, de requisito ou de especificação no texto visível. Não tem “marcar como lida” por cartão: abrir a página é ver.</dd>
       </dl>
     </div>
@@ -3293,7 +3294,7 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
     <h3>O que a pessoa vê de novo</h3>
     <ul>
       <li><strong>O selo na barra.</strong> Ao lado de <span class="rotulo-ui">Novidades</span>, a contagem das notas que a identidade ainda não viu; <em>9+</em> acima de nove, e um ponto no canto do ícone com a barra recolhida. Some quando não há nada novo. A contagem é calculada na entrada da gestão e na abertura da página, e guardada na sessão: a barra continua sem consulta ao banco. O preço é que, numa mesma sessão, ela não acompanha uma visita feita em outro navegador. Trocar de unidade a recalcula, porque mudam as capacidades.</li>
-      <li><strong>O bloco <span class="rotulo-ui">Desde sua última visita</span>.</strong> No topo, as mudanças que chegaram depois da última visita, cada uma com a categoria e o título, que levam ao cartão. Fica na sessão e não some ao recarregar. Na primeira visita, a página diz que reúne as mudanças desde 15 de setembro de 2026; sem novidade, <em>“Nada novo desde a sua última visita, em dd/mm/aaaa.”</em></li>
+      <li><strong>O bloco <span class="rotulo-ui">Desde sua última visita</span>.</strong> No topo, <strong>a mudança de maior relevância</strong> que chegou depois da última visita — e não a mais recente —, com a categoria e o título, que levam ao cartão. As demais vêm contadas por tipo (<em>“Também chegaram 2 funcionalidades, 1 melhoria…”</em>), só três delas nomeadas, e o resto aponta para <em>Todas as atualizações</em> (<em>“E mais N”</em>). Fica na sessão e não some ao recarregar. Na primeira visita, a página diz que reúne as mudanças desde 15 de setembro de 2026 e aponta para a Documentação do Sistema, para quem quer aprender a usar o GPS do começo; sem novidade, <em>“Nada novo desde a sua última visita, em dd/mm/aaaa.”</em></li>
       <li><strong>O que é “novo para você”</strong> se decide pelo identificador da nota, e não pela data: uma nota integrada antes da última visita e implantada depois continua não vista.</li>
     </ul>
 
@@ -3314,9 +3315,14 @@ Só os 60 são analisados. 5 dos 40 primeiros são indeferidos.
       <p>Decisão do usuário em 14/11: título que promete o ganho, duas frases em “você”, um exemplo concreto e nenhuma palavra do sistema. A suíte cobra o tamanho (título até 70 caracteres, resumo e exemplo até 300), o vocabulário e o exemplo de toda nota de <em>novidade</em>; o tom, só a leitura. O guia está em <code>doc/curadoria-das-novidades.md</code>.</p>
     </div>
     <p>
-      Hoje são <strong>90 notas</strong>, de 15/09 a 14/11 — 36 <em>Novidades</em>, 41 <em>Melhorias</em> e 13
-      <em>Correções</em> —, e <strong>nenhuma ainda sobre as specs 166 a 171</strong>: as notas do vídeo, da agenda
-      da Etapa, da orientação, das próprias Novidades e da habilitação do assistente ainda não foram escritas. A nota do piloto do assistente
+      Hoje são <strong>112 notas</strong>, de 15/09 a 15/11 — 42 <em>funcionalidades</em>, 48 <em>melhorias</em> e 22
+      <em>correções</em> —, das quais 14 são transformadoras, 53 relevantes e 45 incrementais; 91 trazem exemplo.
+      A revisão editorial de 14/11 reescreveu o conjunto <strong>uma nota por assunto</strong> e só com o que
+      mudou, e o #561 tirou da página a vitrine de capacidades (<em>“Descubra o que o GPS já faz”</em>), que a
+      própria revisão tinha acrescentado: o arquivo agora só aceita tabelas <code>[[nota]]</code>, e a matriz
+      das capacidades fica na spec como estudo para um guia do produto. Há notas das specs 167 (a agenda da
+      Etapa, a remarcação e a agenda nas pendências), 168, 170 e 171; <strong>nenhuma ainda do vídeo (166)</strong>, que
+      só existe em desenvolvimento, e a 169 não tem código. A nota do piloto do assistente
       continua presa a <code>ASSISTENTE_PILOTO</code>, que desde a 170 é só atalho de demonstração: em
       produção, mesmo com o piloto habilitado por ato, ela não aparece. Não foi verificado se isso é
       intencional.

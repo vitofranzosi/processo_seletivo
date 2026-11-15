@@ -654,3 +654,18 @@ A documentação descrevia o sistema até a 165, ainda "sem merge". Entre 14/11 
 - se a nota do piloto do assistente, presa a `ASSISTENTE_PILOTO`, deve aparecer em produção quando o piloto é habilitado por ato: hoje não aparece;
 - o e-mail da agenda em SMTP real e a largura de 375 px (há testes);
 - as pendências humanas seguem abertas: SC-2390, SC-2398, SC-2416, SC-2501 e a matriz de navegadores com câmera real da 166.
+
+## Acréscimo de 15/11: as Novidades do GPS com relevância (#561)
+
+O #561 foi mergeado depois da revisão acima, e três frases da seção das Novidades ficaram falsas.
+
+**O que mudou na documentação:**
+
+- **A contagem:** de 90 para **112 notas**, de 15/09 a 15/11 — 42 funcionalidades, 48 melhorias e 22 correções; 14 transformadoras, 53 relevantes e 45 incrementais; 91 com exemplo. Contado lendo `novidades.toml` da `main` em `2337f306`.
+- **Os rótulos:** a categoria *Novidade* passou a *Nova funcionalidade*, e o filtro, a *Funcionalidades*. A listagem ganhou o título *Todas as atualizações*.
+- **A relevância:** toda nota declara se é transformadora, relevante ou incremental, e isso decide o peso do cartão — a incremental é uma linha, sem exemplo nem *Como usar*.
+- **O topo:** *Desde sua última visita* abre pela mudança de maior relevância, e não pela mais recente; as demais vêm contadas por tipo, três nomeadas, e o resto aponta para a lista.
+- **A vitrine de capacidades saiu** (`D-014`): o arquivo só aceita `[[nota]]`, e a matriz das capacidades fica em `specs/168-novidades-do-gps/capacidades.md`.
+- **A cobertura:** há notas das specs 167, 168, 170 e 171; nenhuma da 166, que só existe em desenvolvimento.
+
+**Não verificado:** nenhuma tela foi percorrida; a leitura é do diff e dos testes do PR, que passaram na CI.
