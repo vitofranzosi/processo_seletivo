@@ -132,8 +132,8 @@ def recusa_na_conferencia_do_acrescimo(request):
     cliente = _sessao(request, *QUEM_EMITE)
 
     def leitura_mudada(pagina):
-        # A pessoa abre a conferência; enquanto ela lê, outra confirma um acréscimo no mesmo recorte;
-        # quando ela confirma, a leitura que assinou não é mais a de agora.
+        # A pessoa abre a conferência; enquanto ela lê, outra confirma um acréscimo no mesmo
+        # recorte; quando ela confirma, a leitura que assinou não é mais a de agora.
         _preencher_o_acrescimo(pagina)
         nova = conferir(cliente, edital, chave="piloto-k05-outro").content.decode()
         confirmar(cliente, edital, nova)

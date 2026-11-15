@@ -201,11 +201,61 @@ depois = ["Página ", "=Anterior", "=Próxima"]
 
 # ── Estados que a fixture não reproduz igual ─────────────────────────────────────────────────────
 #
-# O R-10 monta a reversão por esgotamento sobre um sorteio, e a ordem do sorteio sai dos
-# identificadores das inscrições, que mudam a cada montagem: duas fotografias do mesmo código
-# deram 0 e 1 ocupadas na ampla concorrência (15/11). A recusa que o estado existe para mostrar é
-# da lista reservada, e a ampla sai da comparação dele.
+# Os estados montados sobre a desistência da cotista (`pela_desistencia`, da `155`) partem de um
+# sorteio, e a ordem do sorteio sai dos identificadores das inscrições, que mudam a cada montagem:
+# duas fotografias do mesmo código deram 0 e 1 ocupadas na ampla concorrência (15/11, no R-10 e no
+# R-09). O que esses estados existem para mostrar é da lista reservada, e a ampla sai da comparação
+# deles. Os outros recortes, e as ações deles, continuam comparados. O passo seguinte ("Próximo nesta
+# lista") também sai, porque é a fila da ampla que ele aponta.
+
+[[instavel]]
+codigo = "O-12"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-15"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-16"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-17"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "O-18"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-09"
+item = "recorte:Ampla concorrência"
 
 [[instavel]]
 codigo = "R-10"
 item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-11"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-12"
+item = "recorte:Ampla concorrência"
+
+[[instavel]]
+codigo = "R-09"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-10"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-11"
+trecho = "Próximo nesta lista"
+
+[[instavel]]
+codigo = "R-12"
+trecho = "Próximo nesta lista"

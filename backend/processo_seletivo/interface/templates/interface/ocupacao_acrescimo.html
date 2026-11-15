@@ -1,7 +1,8 @@
-{% extends "interface/base.html" %}{% load interface_extras %}
+{% extends "interface/base.html" %}{% load interface_extras estaticos %}
 {% block titulo %}{% if modo == "acrescimo" %}Conferir o acréscimo de vagas{% else %}Conferir o desfazimento de vaga acrescida{% endif %}{% endblock %}
 {% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} {% include "interface/_ate_o_edital_na_trilha.html" %} <a href="{% url 'interface:ocupacao' edital.id marco_id %}">Ocupação de vagas</a> › <span aria-current="page">{% if modo == "acrescimo" %}Acrescentar vagas{% else %}Desfazer acréscimo{% endif %}</span></nav>{% endblock %}
-{% block conteudo %}
+{% block estilo_da_pagina %}<link rel="stylesheet" href="{% estatico 'interface/grupos/piloto-ds.css' %}">{% endblock %}
+{% block conteudo %}<div class="piloto-ds">
 <h1>{% if modo == "acrescimo" %}Conferir o acréscimo de {{ quantidade|contagem:"vaga,vagas" }}{% else %}Desfazer {{ quantidade|contagem:"vaga,vagas" }} do acréscimo de {{ previa.acrescimo.registrado_em|date:"d/m/Y" }}{% endif %}</h1>
 <p class="sub">O que este ato muda nas vagas, antes de ele ser praticado. Nada foi gravado ainda.</p>
 <p class="definicoes"><dfn>Recorte</dfn> é a lista em que a pessoa concorre — aqui, a ampla
@@ -105,4 +106,4 @@ frase diz quantas ficam sem ninguem.
   </p>
 </form>
 {% endif %}
-{% endblock %}
+</div>{% endblock %}

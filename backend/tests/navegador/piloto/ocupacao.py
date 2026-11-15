@@ -3,11 +3,11 @@
 Os cenários são os dos testes de tela da `016`, da `034`, da `097` e da `155`, pelas funções de
 `tests/fixtures/ocupacao_da_tela.py` e pelos ajudantes que aqueles testes já exportam.
 
-**O retorno se monta pelo cliente da sessão, e não por clique.** A tela guarda o resultado do gesto na
-sessão e o devolve no GET seguinte (`resultado_da_ocupacao`, `erro_da_ocupacao`). A jornada usa o
-mesmo `sessionid` do cliente: o POST que o cliente faz antes de o navegador abrir a página é o mesmo
-gesto, e a página que abre é o retorno dele. Clicar exigiria, para as recusas, um botão que a tela
-de propósito não oferece.
+**O retorno se monta pelo cliente da sessão, e não por clique.** A tela guarda o resultado do
+gesto na sessão e o devolve no GET seguinte (`resultado_da_ocupacao`, `erro_da_ocupacao`). A
+jornada usa o mesmo `sessionid` do cliente: o POST que o cliente faz antes de o navegador abrir a
+página é o mesmo gesto, e a página que abre é o retorno dele. Clicar exigiria, para as recusas, um
+botão que a tela de propósito não oferece.
 """
 
 from django.test import Client
@@ -45,7 +45,7 @@ def _url(edital, marco=MARCO):
 
 
 def _cenario_padrao(request):
-    """O `cenario` de `tests/interface/conftest.py`: ampla com ordem, PPI sem ordem, nada apurado."""
+    """O `cenario` de `tests/interface/conftest.py`: ampla com ordem, PPI sem ordem, sem apurar."""
     from tests.fixtures.ocupacao import montar_cenario_da_ocupacao
 
     edital, _, inscricoes = montar_cenario_da_ocupacao(
@@ -113,7 +113,8 @@ def nao_apurado_com_ordem(request):
     from tests.fixtures.recortes import emitir_recorte
 
     edital, _ = _cenario_padrao(request)
-    emitir_recorte(edital, request.getfixturevalue("gestor"), lista_id=MODALIDADE_PPI, chave="piloto-o04")
+    gestor = request.getfixturevalue("gestor")
+    emitir_recorte(edital, gestor, lista_id=MODALIDADE_PPI, chave="piloto-o04")
     return Montagem(_url(edital), _sessao(request, *QUEM_EMITE))
 
 
@@ -440,9 +441,7 @@ def desfazimento_recusado(request):
     cliente = _sessao(request, *QUEM_EMITE)
     acrescimo = _acrescentar(cliente, edital)
     cliente.get(_url(edital))
-    convocar(
-        edital, request.getfixturevalue("gestor"), inscricoes[0], idempotency_key="piloto-r08"
-    )
+    convocar(edital, request.getfixturevalue("gestor"), inscricoes[0], idempotency_key="piloto-r08")
     desfazer(cliente, edital, acrescimo)
     return Montagem(_url(edital), cliente)
 

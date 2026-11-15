@@ -1,0 +1,25 @@
+/* O piloto do design system (172): a direção experimental do estudo de 14/11, em cinco telas — a
+   confirmação de ato do Edital (`confirmar.html`), a Ocupação de vagas (`ocupacao.html`), as duas
+   conferências dela (`ocupacao_acrescimo.html` e `ocupacao_nao_preenchida.html`) e a Lista de
+   Processos (`lista.html`).
+
+   **A delimitação é por construção, e não por cuidado** (D-003). Esta folha só é carregada pelas
+   cinco telas, e toda regra dela começa por `.piloto-ds`, a classe do contêiner que cada uma abre
+   logo depois do bloco de conteúdo. As outras telas não leem esta folha, e o `.acao` delas continua
+   como está. Nenhuma regra de `gestao/` muda (FR-7702).
+
+   **O que esta folha não faz** (contrato em `specs/172-piloto-do-design-system/contracts/`): não
+   muda fonte nem tamanho de fonte, não esconde nem recolhe texto, não gera texto, não usa cor
+   literal e não inverte na tela uma sequência que a spec declarou. O piloto mexe na composição; o
+   conteúdo e as ações são os de antes, e a comparação de cada estado o confere.
+
+   **A fundação: o que o contêiner desfaz, refeito sob o escopo.** Três regras comuns valem só para
+   o filho direto de `main` (`main>…`), e o contêiner tira o conteúdo de lá: a medida de leitura do
+   parágrafo (`componentes.css`), o respiro antes da seção que vem depois de um formulário (idem) e a
+   medida das caixas da confirmação de ato (`grupos/confirmacao-de-ato.css`, da P0). Sem isto, a
+   linha da confirmação de Encerrar voltaria de 81 a 162 caracteres em silêncio. Os valores são os
+   das regras originais, que não mudam. */
+.piloto-ds>p,.piloto-ds>section>p{max-width:var(--leitura)}
+.piloto-ds>:is(form,.tabela-rolavel)+section[aria-labelledby]{margin-top:2rem}
+.piloto-ds>:is(.aviso,.erro,.bastao,.consequencias,form.confirmar),
+.piloto-ds>.avisos-anteriores>.aviso{max-width:calc(var(--leitura) + 2.5rem)}

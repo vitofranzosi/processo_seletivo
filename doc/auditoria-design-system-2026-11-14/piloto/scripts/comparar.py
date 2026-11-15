@@ -71,20 +71,35 @@ def casa(bloco, trechos):
     return any(casa_um(bloco, t) for t in trechos)
 
 
-def sem_o_instavel(inventario, itens):
-    """Tira do inventário o que a fixture não reproduz de uma montagem para a outra."""
-    if not itens:
+def sem_o_instavel(inventario, instaveis):
+    """Tira do inventário o que a fixture não reproduz de uma montagem para a outra: o que está num
+    item (`item`) ou num bloco que contém um trecho (`trecho`), com as quantidades e as ações dele."""
+    if not instaveis:
         return inventario
-    fora = lambda item: any(item.startswith(i) or (" > " + i) in item for i in itens)  # noqa: E731
-    blocos = [b for b in inventario["blocos"] if not fora(b["item"])]
+    itens = [i["item"] for i in instaveis if "item" in i]
+    trechos = [i["trecho"] for i in instaveis if "trecho" in i]
+    no_item = lambda item: any(item.startswith(i) or (" > " + i) in item for i in itens)  # noqa: E731
+    fora = [b for b in inventario["blocos"] if no_item(b["item"]) or any(t in b["texto"] for t in trechos)]
+    ids_fora = {b["id"] for b in fora}
+    textos_fora = [b["texto"] for b in fora]
+    blocos = [b for b in inventario["blocos"] if b["id"] not in ids_fora]
     ids = {b["id"] for b in blocos}
     return {
         **inventario,
         "blocos": blocos,
-        "quantidades": [q for q in inventario["quantidades"] if not fora(q["item"])],
-        "acoes": [a for a in inventario["acoes"] if not fora(a.get("item", ""))],
+        "quantidades": [
+            q
+            for q in inventario["quantidades"]
+            if not no_item(q["item"]) and not any(t in q["rotulo"] for t in trechos)
+        ],
+        "acoes": [
+            a
+            for a in inventario["acoes"]
+            if not no_item(a.get("item", "")) and not any(a["rotulo"] and a["rotulo"] in t for t in textos_fora)
+        ],
         "ordem_documento": [i for i in inventario["ordem_documento"] if i in ids],
         "ordem_visual": [i for i in inventario["ordem_visual"] if i in ids],
+        "linhas": [linha for linha in inventario.get("linhas", []) if linha["bloco"] in ids],
     }
 
 
@@ -195,7 +210,7 @@ def main(pasta_antes, pasta_depois, pasta_saida):
     sequencias = dados["sequencia"]
     instaveis = {}
     for item in dados.get("instavel", []):
-        instaveis.setdefault(item["codigo"], []).append(item["item"])
+        instaveis.setdefault(item["codigo"], []).append(item)
     antes, depois = carregar(pasta_antes), carregar(pasta_depois)
     if set(antes) != set(depois):
         so_antes = sorted(set(antes) - set(depois))
