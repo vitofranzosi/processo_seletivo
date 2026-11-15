@@ -292,13 +292,6 @@ QUEM_CARREGA = {
         "recurso.html",
     },
     "interface/grupos/serie.css": {"processo_detalhe.html", "supervisao.html"},
-    # A medida de leitura das três confirmações de ato (P0 do estudo de design system, 14/11): o
-    # aviso e as consequências param na mesma linha, e só nestas telas.
-    "interface/grupos/confirmacao-de-ato.css": {
-        "confirmar.html",
-        "processo_confirmar.html",
-        "retificacao_confirmar.html",
-    },
     # O piloto do design system (172, D-003): a folha só viaja nas cinco telas dele, e toda regra
     # dela fica sob a classe de escopo `.piloto-ds`.
     "interface/grupos/piloto-ds.css": {

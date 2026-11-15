@@ -148,6 +148,10 @@ CLASSES_SEM_DESENHO = {
     "perfil",
     # Envolve um `.botao`, que é quem tem o peso; a classe nomeia o lugar, não o desenho.
     "proximo-passo",
+    # A única regra destas duas era a medida de leitura, que saiu na migração do design system
+    # (15/11): o desenho é o de `.ajuda` e o de `.consequencias`, e o nome diz qual é qual.
+    "explicacao-curta",
+    "publicacao-na-conferencia",
     # --- portal ---
     # O par de `.linha-do-tempo.pessoal`: aquela é a exceção e tem regra; esta é a linha comum, e
     # o nome existe para dizer qual é qual na marcação.

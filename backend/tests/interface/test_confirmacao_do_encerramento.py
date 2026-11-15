@@ -128,8 +128,9 @@ def test_sem_impedimento_as_advertencias_vem_a_parte_e_o_confirmar_aparece(
     assert "em revisão, não poderá mais prosseguir." in continuam
     # O que deixa o ato seguir diz a espécie também, e não só o amarelo (P0; WCAG 1.4.1).
     assert "<strong>Atenção:</strong> <strong>Continuam depois do encerramento</strong>" in corpo
-    # E a medida de leitura das confirmações viaja com a tela (P0.3).
-    assert "interface/grupos/confirmacao-de-ato.css" in corpo
+    # A medida de leitura da P0.3 saiu com a migração do design system (15/11): o texto da
+    # confirmação ocupa a largura do conteúdo, e a folha que a levava, sem regra, foi retirada.
+    assert "interface/grupos/confirmacao-de-ato.css" not in corpo
     assert "Abrir a Retificação" in continuam
     assert "Antes de encerrar" not in corpo
     assert CONFIRMAR in corpo

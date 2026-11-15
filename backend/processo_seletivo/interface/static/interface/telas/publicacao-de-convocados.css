@@ -7,12 +7,12 @@
   padding:.5rem 0;border-bottom:1px solid var(--borda);overflow-wrap:anywhere}
 .lista-de-publicacoes .nota{flex:1 1 16rem;margin:0}
 .escolha-dos-recortes fieldset{border:1px solid var(--borda);border-radius:6px;padding:.75rem 1rem;
-  margin:0 0 .5rem;max-width:var(--leitura)}
+  margin:0 0 .5rem;}
 .escolha-dos-recortes legend{font-weight:600;padding:0 .25rem}
 .escolha-dos-recortes .opcao label{overflow-wrap:anywhere}
 .o-que-sera-publico{margin:1.25rem 0}
 .grupo-da-previa{margin:0 0 1rem;padding-left:.75rem;border-left:3px solid var(--borda);
-  max-width:var(--leitura)}
+  }
 .grupo-da-previa h4{margin:.25rem 0;font-size:1rem}
 .grupo-da-previa .nota{margin:.15rem 0}
 .efeito-convoca,.efeito-divulga{display:inline-block;font-size:.75rem;font-weight:600;

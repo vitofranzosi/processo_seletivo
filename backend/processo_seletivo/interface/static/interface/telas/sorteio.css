@@ -10,7 +10,7 @@
 .contexto-do-sorteio strong{color:var(--texto);font-weight:600}
 .passos-do-sorteio{margin:1.25rem 0 2rem}
 .passos-do-sorteio>h2{margin:0 0 .35rem}
-.passos-do-sorteio>.meta{max-width:var(--leitura);margin:0 0 .75rem}
+.passos-do-sorteio>.meta{margin:0 0 .75rem}
 .passos{list-style:none;margin:0;padding:0;display:grid;gap:.6rem;
   grid-template-columns:repeat(auto-fit,minmax(13.5rem,1fr))}
 .passo{background:var(--branco);border:1px solid var(--borda);border-radius:6px;padding:.7rem .85rem;
@@ -40,14 +40,14 @@
 .passo-do-sorteio>h2{margin:0 0 .35rem}
 .passo-do-sorteio>h2 .passo-numero{width:1.75rem;height:1.75rem;font-size:.9375rem}
 .termo-do-gps{display:inline-block;font-size:.8125rem;font-weight:400;color:var(--texto-fraco)}
-.o-que-se-faz{margin:0 0 .5rem;max-width:var(--leitura)}
+.o-que-se-faz{margin:0 0 .5rem;}
 /* O que o passo pede, alcança, desencadeia e se volta atrás (FR-4901): curto, em duas colunas
    onde cabe, e uma sob a outra no estreito. */
 .contexto-do-passo{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:.15rem .9rem;
-  margin:0;max-width:var(--leitura)}
+  margin:0;}
 .contexto-do-passo dt{font-weight:600;color:var(--texto-fraco)}
 .contexto-do-passo dd{margin:0}
-.sobre-o-passo,.o-que-e-cada-coisa{margin:0 0 .75rem;max-width:var(--leitura);font-size:.875rem}
+.sobre-o-passo,.o-que-e-cada-coisa{margin:0 0 .75rem;font-size:.875rem}
 .sobre-o-passo>summary,.o-que-e-cada-coisa>summary{cursor:pointer;color:var(--verde-texto);
   font-weight:600}
 .sobre-o-passo[open]>summary{margin-bottom:.35rem}
@@ -59,7 +59,7 @@
 /* A conferência antes de fixar (FR-4908): no cartão, antes da tabela e do botão. Moldura de aviso
    leve, porque o ato não volta atrás. */
 .conferencia-do-ato{background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);
-  padding:.6rem 1rem;margin:0 0 .75rem;max-width:var(--leitura)}
+  padding:.6rem 1rem;margin:0 0 .75rem;}
 .conferencia-do-ato p{margin:0}
 .conferencia-do-ato ul{margin:.35rem 0 0;padding-left:1.2rem}
 .rotulo-do-gps{margin-left:.5rem}
@@ -77,5 +77,5 @@
 .execucao,.resultado-da-lista{border:1px solid var(--borda);border-radius:4px;padding:1rem;
   margin:1rem 0;background:var(--branco);min-width:0}
 .execucao h3,.resultado-da-lista h3{margin:0 0 .5rem}
-.situacao-da-divulgacao{margin:0 0 .5rem;max-width:var(--leitura)}
+.situacao-da-divulgacao{margin:0 0 .5rem;}
 .sem-ordem{margin:.5rem 0}

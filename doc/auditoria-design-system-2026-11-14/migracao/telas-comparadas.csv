@@ -1,0 +1,124 @@
+tela,familia,area,identidade,situacao,pixels_mudados_pct,altura_1440_antes,altura_1440_depois,altura_375_antes,altura_375_depois,cpl_1920_antes,cpl_1920_depois
+/gestao/editais/<id>/distribuicao/<id>/ocorrencia,P2.1 · Confirmação de ato,Avaliação,paulo.presidente,mudou,6.78,900,900,1233,1229,85,255
+/gestao/editais/<id>/avisos,P2.1 · Confirmação de ato,Avisos,paulo.presidente,mudou,1.91,900,900,842,843,,
+/gestao/editais/<id>/marcos/<id>/avisos/novo,P2.1 · Confirmação de ato,Avisos,treino.presidencia,mudou,100.0,2657,2512,3867,3861,85,85
+/gestao/editais/<id>/marcos/<id>/avisos/novo?de&natureza,P2.1 · Confirmação de ato,Avisos,paulo.presidente,mudou,100.0,2657,2512,3891,3885,85,85
+/gestao/editais/<id>/marcos/<id>/avisos/novo?natureza,P2.1 · Confirmação de ato,Avisos,paulo.presidente,mudou,100.0,2657,2512,3891,3885,85,85
+/gestao/processos/<id>/atos/ativar,P2.1 · Confirmação de ato,Processos e Editais,treino.presidencia,mudou,3.44,900,900,978,925,,
+/gestao/processos/<id>/atos/cancelar,P2.1 · Confirmação de ato,Processos e Editais,treino.presidencia,mudou,4.99,900,900,1306,1250,,
+/gestao/processos/<id>/atos/encerrar,P2.1 · Confirmação de ato,Processos e Editais,treino.presidencia,mudou,100.0,908,900,1357,1299,,
+/gestao/editais/<id>/atos/cancelar,P2.1 · Confirmação de ato,Publicação,paulo.presidente,mudou,100.0,933,900,1473,1357,59,176
+/gestao/editais/<id>/atos/devolver,P2.1 · Confirmação de ato,Publicação,treino.presidencia,mudou,4.38,900,900,1161,1060,,
+/gestao/editais/<id>/atos/encerrar,P2.1 · Confirmação de ato,Publicação,paulo.presidente,mudou,100.0,1023,905,1531,1437,59,176
+/gestao/editais/<id>/atos/homologar,P2.1 · Confirmação de ato,Publicação,treino.presidencia,mudou,4.04,900,900,1067,990,,
+/gestao/editais/<id>/atos/publicar,P2.1 · Confirmação de ato,Publicação,treino.presidencia,mudou,100.0,969,900,1422,1321,,
+/gestao/editais/<id>/atos/submeter,P2.1 · Confirmação de ato,Publicação,paulo.presidente,mudou,100.0,1237,1061,2002,1871,67,118
+/gestao/editais/<id>/marcos/<id>/atos/<id>/publicar,P2.1 · Confirmação de ato,Resultados,paulo.presidente,mudou,100.0,1387,1315,2320,2268,176,176
+/gestao/retificacoes/<id>/atos/cancelar,P2.1 · Confirmação de ato,Retificação,treino.presidencia,mudou,4.67,900,900,1011,957,,
+/gestao/retificacoes/<id>/atos/homologar,P2.1 · Confirmação de ato,Retificação,treino.presidencia,mudou,100.0,1006,904,1464,1410,,
+/gestao/retificacoes/<id>/atos/publicar,P2.1 · Confirmação de ato,Retificação,treino.presidencia,mudou,100.0,1175,1046,1782,1724,,
+/gestao/retificacoes/<id>/atos/submeter,P2.1 · Confirmação de ato,Retificação,treino.presidencia,mudou,3.95,900,900,932,878,,
+/gestao/editais/<id>/auditoria,"P2.2 · Lista, registro e histórico",Auditoria,paulo.presidente,mudou,100.0,1980,1958,5355,5351,195,195
+/gestao/editais/<id>/auditoria?cursor,"P2.2 · Lista, registro e histórico",Auditoria,paulo.presidente,mudou,2.38,900,900,812,812,91,181
+/gestao/editais/<id>/distribuicao/<id>/conclusoes,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,2.25,900,900,812,812,121,241
+/gestao/editais/<id>/distribuicao/<id>/impedimentos,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,3.51,900,900,1045,1041,88,175
+/gestao/editais/<id>/distribuicao/<id>/resultados,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,1.96,900,900,812,812,90,179
+/gestao/editais/<id>/distribuicao/<id>/resultados?consequencia,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,1.99,900,900,812,812,90,179
+/gestao/editais/<id>/distribuicao/<id>/trilha,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,3.65,900,900,1035,1031,125,250
+/gestao/editais/<id>/distribuicao/<id>/trilha?inscricao,"P2.2 · Lista, registro e histórico",Avaliação,paulo.presidente,mudou,6.88,900,900,1388,1384,125,250
+/gestao/modelos-de-aviso,"P2.2 · Lista, registro e histórico",Avisos,paulo.presidente,mudou,4.14,900,900,875,871,,
+/gestao/editais/<id>/cortes/<id>,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,100.0,1200,1196,2212,2267,,
+/gestao/editais/<id>/marcos/<id>/atos/<id>,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,100.0,2256,2226,3620,3637,,
+/gestao/editais/<id>/marcos/<id>/convocacao/historico,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,4.61,900,900,812,812,60,181
+/gestao/editais/<id>/marcos/<id>/convocacao/historico?lista,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,0.93,900,900,812,812,60,181
+/gestao/editais/<id>/marcos/<id>/ocupacao/historico,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,100.0,2329,1817,3072,3147,59,178
+/gestao/editais/<id>/marcos/<id>/publicacoes,"P2.2 · Lista, registro e histórico",Classificação e vagas,paulo.presidente,mudou,2.48,900,900,844,840,,
+/gestao/processos/<id>/auditoria,"P2.2 · Lista, registro e histórico",Comissão,paulo.presidente,mudou,100.0,1008,980,2292,2288,117,234
+/gestao/formalizacao/,"P2.2 · Lista, registro e histórico",Formalização,paulo.presidente,mudou,0.82,900,900,812,812,,
+/gestao/editais/<id>/inscricoes,"P2.2 · Lista, registro e histórico",Inscrições,paulo.presidente,mudou,9.36,900,900,1407,1403,,
+/gestao/minhas-etapas/<id>/<id>,"P2.2 · Lista, registro e histórico",Mesa de avaliação,treino.avaliacao1,mudou,0.7,900,900,1048,1056,,
+/gestao/minhas-etapas/<id>/<id>?filtro,"P2.2 · Lista, registro e histórico",Mesa de avaliação,treino.avaliacao1,mudou,0.7,900,900,929,937,,
+/gestao/editais/<id>/recursos,"P2.2 · Lista, registro e histórico",Recursos,paulo.presidente,mudou,2.21,900,900,812,812,,
+/gestao/editais/<id>/relatorio,"P2.2 · Lista, registro e histórico",Relatórios,paulo.presidente,mudou,100.0,2185,2066,3833,3806,76,146
+/gestao/trilha-da-unidade,"P2.2 · Lista, registro e histórico",Unidade,paulo.presidente,mudou,12.32,900,900,2001,1997,103,155
+/gestao/visao-geral/relatorio/conjunto,"P2.2 · Lista, registro e histórico",Visão Geral,treino.presidencia,mudou,100.0,2970,2871,6504,6497,86,171
+/gestao/modelos-de-aviso/<id>,P2.4 · Formulário de configuração,Avisos,paulo.presidente,mudou,100.0,1363,1269,1954,1950,,
+/gestao/modelos-de-aviso/novo,P2.4 · Formulário de configuração,Avisos,paulo.presidente,mudou,100.0,1291,1225,1858,1858,,
+/gestao/processos/<id>/alocacoes,P2.4 · Formulário de configuração,Comissão,paulo.presidente,mudou,100.0,914,900,1172,1217,,
+/gestao/processos/<id>/comissao,P2.4 · Formulário de configuração,Comissão,paulo.presidente,mudou,100.0,2102,2064,2754,2740,97,194
+/gestao/editais/<id>/compor/anexos,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,916,912,1339,1335,,
+/gestao/editais/<id>/compor/classificacao,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,2247,2231,3848,3874,72,180
+/gestao/editais/<id>/compor/conteudo,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,2812,2750,3795,3841,97,244
+/gestao/editais/<id>/compor/cronograma,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,1492,1488,3228,3224,117,117
+/gestao/editais/<id>/compor/etapas,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,2494,2490,4283,4279,,
+/gestao/editais/<id>/compor/identificacao,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,7.02,900,900,1302,1283,,
+/gestao/editais/<id>/compor/inscricao,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,1370,1294,1869,1865,24,28
+/gestao/editais/<id>/compor/perfis,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,2536,2518,4615,4649,112,223
+/gestao/editais/<id>/compor/revisao,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,7470,7431,13744,13537,173,173
+/gestao/editais/<id>/reaproveitar,P2.4 · Formulário de configuração,Composição do Edital,paulo.presidente,mudou,100.0,4640,4624,5453,5437,126,126
+/gestao/editais/<id>/formalizacao,P2.4 · Formulário de configuração,Formalização,paulo.presidente,mudou,100.0,963,914,1386,1382,80,120
+/gestao/processos/<id>/editais/criar,P2.4 · Formulário de configuração,Processos e Editais,paulo.presidente,mudou,4.36,900,900,1072,1068,84,167
+/gestao/processos/criar,P2.4 · Formulário de configuração,Processos e Editais,paulo.presidente,mudou,5.35,900,900,1321,1317,84,167
+/gestao/editais/<id>/retificar,P2.4 · Formulário de configuração,Retificação,paulo.presidente,mudou,100.0,11454,11414,20749,20733,114,197
+/gestao/autoridades,P2.4 · Formulário de configuração,Unidade,paulo.presidente,mudou,100.0,1391,1387,1729,1725,,
+/gestao/visao-geral/relatorio,P2.4 · Formulário de configuração,Visão Geral,paulo.presidente,mudou,100.0,1886,1858,3684,3680,112,112
+/gestao/agenda,P2.5 · Central de trabalho e página de entidade,Agenda,paulo.presidente,mudou,100.0,2898,2755,5142,5067,88,182
+/gestao/agenda?dia&visao,P2.5 · Central de trabalho e página de entidade,Agenda,paulo.presidente,mudou,7.3,900,900,1321,1309,84,168
+/gestao/agenda?janela&visao,P2.5 · Central de trabalho e página de entidade,Agenda,paulo.presidente,mudou,100.0,4193,4100,6977,6882,84,168
+/gestao/agenda?mes&visao,P2.5 · Central de trabalho e página de entidade,Agenda,paulo.presidente,mudou,100.0,2898,2755,5142,5067,88,182
+/gestao/agenda?visao,P2.5 · Central de trabalho e página de entidade,Agenda,paulo.presidente,mudou,100.0,1273,1181,2334,2259,84,168
+/gestao/editais/<id>/duvidas/,P2.5 · Central de trabalho e página de entidade,Assistente de dúvidas,paulo.presidente,mudou,100.0,1167,1119,1881,1875,95,190
+/gestao/editais/<id>/,P2.5 · Central de trabalho e página de entidade,Centro de Controle,paulo.presidente,mudou,100.0,2834,2810,5683,5763,58,58
+/gestao/editais/<id>/pagina-anterior/,P2.5 · Central de trabalho e página de entidade,Centro de Controle,paulo.presidente,mudou,100.0,1996,1970,3455,3465,97,194
+/gestao/editais/<id>/kit-de-divulgacao/,P2.5 · Central de trabalho e página de entidade,Divulgação,paulo.presidente,mudou,1.19,900,900,812,812,,
+/gestao/formalizacao/editais/<id>,P2.5 · Central de trabalho e página de entidade,Formalização,treino.formalizacao,mudou,3.18,1119,1119,1789,1792,,
+/gestao/inscricoes/<id>/,P2.5 · Central de trabalho e página de entidade,Inscrições,paulo.presidente,mudou,3.4,900,900,1119,1118,,
+/gestao/minhas-etapas,P2.5 · Central de trabalho e página de entidade,Minhas atividades,paulo.presidente,mudou,4.8,900,900,1050,1046,,
+/gestao/,P2.5 · Central de trabalho e página de entidade,Processos e Editais,paulo.presidente,mudou,100.0,2929,2709,5088,5229,91,163
+/gestao/processos/<id>/,P2.5 · Central de trabalho e página de entidade,Processos e Editais,paulo.presidente,mudou,100.0,1106,1094,1847,1860,78,78
+/gestao/processos/<id>/supervisao,P2.5 · Central de trabalho e página de entidade,Processos e Editais,paulo.presidente,mudou,100.0,1117,1073,1673,1618,,
+/gestao/retificacoes/<id>/,P2.5 · Central de trabalho e página de entidade,Retificação,paulo.presidente,mudou,100.0,947,919,1576,1572,,
+/gestao/visao-geral,P2.5 · Central de trabalho e página de entidade,Visão Geral,paulo.presidente,mudou,100.0,3421,3397,5952,5948,81,122
+/gestao/editais/<id>/distribuicao/<id>,"P2.6 · Operação, avaliação e conferência",Avaliação,paulo.presidente,mudou,100.0,2070,1997,3579,3596,102,204
+/gestao/editais/<id>/distribuicao/<id>?cobertura,"P2.6 · Operação, avaliação e conferência",Avaliação,paulo.presidente,mudou,100.0,2070,1997,3579,3596,102,204
+/gestao/editais/<id>/distribuicao/<id>?prontidao,"P2.6 · Operação, avaliação e conferência",Avaliação,paulo.presidente,mudou,100.0,1565,1533,2304,2321,102,204
+/gestao/editais/<id>/marcos/<id>,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,100.0,992,990,1683,1682,,
+/gestao/editais/<id>/marcos/<id>/conducao,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,100.0,975,965,1467,1456,106,211
+/gestao/editais/<id>/marcos/<id>/corte,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,100.0,1066,1062,2140,2137,88,88
+/gestao/editais/<id>/marcos/<id>/corte?lista,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,2.71,900,900,812,812,88,88
+/gestao/editais/<id>/marcos/<id>/ocupacao,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,100.0,1050,979,1509,1691,90,179
+/gestao/editais/<id>/marcos/<id>?lista,"P2.6 · Operação, avaliação e conferência",Classificação e vagas,paulo.presidente,mudou,100.0,912,900,1382,1378,112,112
+/gestao/editais/<id>/previa,"P2.6 · Operação, avaliação e conferência",Composição do Edital,paulo.presidente,mudou,1.89,900,900,826,822,70,70
+/gestao/editais/<id>/convocacoes/publicacao,"P2.6 · Operação, avaliação e conferência",Convocação,paulo.presidente,mudou,100.0,1172,1066,1766,1701,122,122
+/gestao/editais/<id>/convocacoes/publicacao?escolha&recorte,"P2.6 · Operação, avaliação e conferência",Convocação,paulo.presidente,mudou,100.0,1172,1066,1766,1701,122,122
+/gestao/editais/<id>/marcos/<id>/convocacao,"P2.6 · Operação, avaliação e conferência",Convocação,paulo.presidente,mudou,100.0,3452,3171,5280,5263,93,187
+/gestao/editais/<id>/marcos/<id>/convocacao/<id>/documentos,"P2.6 · Operação, avaliação e conferência",Convocação,treino.presidencia,mudou,100.0,1193,1151,1865,1989,65,194
+/gestao/editais/<id>/marcos/<id>/convocacao?lista,"P2.6 · Operação, avaliação e conferência",Convocação,paulo.presidente,mudou,100.0,1938,1761,2589,2586,62,187
+/gestao/editais/<id>/marcos/<id>/convocacao?ordem,"P2.6 · Operação, avaliação e conferência",Convocação,paulo.presidente,mudou,100.0,3452,3171,5280,5263,93,187
+/gestao/editais/<id>/inscricoes/publicacoes,"P2.6 · Operação, avaliação e conferência",Inscrições,paulo.presidente,mudou,100.0,1303,1204,2232,2219,174,174
+/gestao/editais/<id>/inscricoes/publicacoes?natureza,"P2.6 · Operação, avaliação e conferência",Inscrições,paulo.presidente,mudou,100.0,1303,1204,2232,2219,174,174
+/gestao/editais/<id>/matriculas,"P2.6 · Operação, avaliação e conferência",Matrículas,treino.presidencia,mudou,2.75,900,900,812,812,94,94
+/gestao/minhas-etapas/<id>/<id>/inscricoes/<id>,"P2.6 · Operação, avaliação e conferência",Mesa de avaliação,treino.avaliacao1,mudou,100.0,1098,1068,1659,1657,81,161
+/gestao/recursos/<id>,"P2.6 · Operação, avaliação e conferência",Recursos,paulo.presidente,mudou,100.0,1847,1757,2704,2747,115,200
+/gestao/editais/<id>/marcos/<id>/sorteio,"P2.6 · Operação, avaliação e conferência",Sorteio,treino.presidencia,mudou,100.0,3296,3013,5443,5427,96,191
+/gestao/identificar,Acesso (só tokens),Acesso à gestão,identidade,igual,0,900,900,812,812,,
+/gestao/identificar/demonstracao,Acesso (só tokens),Acesso à gestão,identidade,igual,0.02,2503,2503,3673,3673,,
+/gestao/identificar/demonstracao?proximo,Acesso (só tokens),Acesso à gestão,identidade,igual,0,2503,2503,3673,3673,,
+/gestao/identificar?proximo,Acesso (só tokens),Acesso à gestão,identidade,igual,0,900,900,812,812,,
+/gestao/documentacao/,Guia incorporado (P3.5),Ajuda,paulo.presidente,igual,0,11336,11336,26678,26678,159,159
+/gestao/?situacao,Outras telas da gestão,—,paulo.presidente,mudou,100.0,986,938,1429,1446,91,163
+/gestao/editais/<id>/?fase,Outras telas da gestão,—,paulo.presidente,mudou,100.0,2834,2810,5388,5468,57,57
+/gestao/editais/<id>/agenda-da-etapa/<id>/configurar,Outras telas da gestão,—,paulo.presidente,mais alta,100.0,1233,1245,2022,2041,86,172
+/gestao/editais/<id>/previa?origem,Outras telas da gestão,—,paulo.presidente,mudou,2.04,900,900,826,822,70,70
+/gestao/novidades,Outras telas da gestão,—,paulo.presidente,mudou,100.0,3957,3359,6552,6548,81,206
+/gestao/novidades?categoria,Outras telas da gestão,—,paulo.presidente,mudou,100.0,4171,3571,6839,6835,81,187
+/gestao/novidades?categoria&pagina,Outras telas da gestão,—,paulo.presidente,mudou,100.0,4242,3738,6946,6942,84,192
+/gestao/novidades?pagina,Outras telas da gestão,—,paulo.presidente,mudou,100.0,3258,2902,5282,5278,86,182
+/selecoes/,Público,Portal público,paulo.presidente,igual,0,3052,3052,6474,6474,,
+/selecoes/<id>/,Público,Portal público,paulo.presidente,igual,0,1343,1343,2370,2370,212,212
+/selecoes/<id>/?pagina,Público,Portal público,paulo.presidente,igual,0,1694,1694,2897,2897,,
+/selecoes/?pagina,Público,Portal público,paulo.presidente,igual,0,2167,2167,4064,4064,,
+/selecoes/acesso,Público,Portal público,paulo.presidente,igual,0,900,900,812,812,,
+/selecoes/resultados/<id>/,Público,Portal público,paulo.presidente,igual,0,900,900,1285,1285,,
+/selecoes/sorteio/<id>/verificar,Público,Portal público,paulo.presidente,igual,0,1184,1184,1829,1829,107,107
+/selecoes/sorteio/relacoes/<id>/,Público,Portal público,paulo.presidente,igual,0,1035,1035,1358,1358,85,85

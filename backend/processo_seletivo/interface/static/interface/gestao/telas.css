@@ -77,17 +77,20 @@ ação de linha continua pequena, que é o que ela é numa tabela.
 .exclusoes h3{font-size:.8125rem;text-transform:uppercase;letter-spacing:.03em;margin:.75rem 0 .25rem}
 .exclusoes dl{margin:0;padding-left:1rem;border-left:2px solid var(--borda)}
 .exclusoes dt{font-weight:600;margin-top:.5rem}
-.exclusoes dd{margin:.1rem 0 0;max-width:var(--leitura)}
+.exclusoes dd{margin:.1rem 0 0;}
 /* O fundo une visualmente as linhas que compartilham posição. O rótulo continua em cada linha
    para que a informação sobreviva à leitura por voz e ao recorte de uma linha isolada. */
 .grupo-empatado{background:var(--amarelo-fundo)}
 .grupo-empatado .situacao{display:block;width:max-content;margin-top:.25rem}
-.consequencias{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
-  padding:1rem 1.25rem;margin-bottom:1.5rem}
+/* O cartão (migração do design system, 15/11): o painel que agrupa, solto do fundo pela borda e
+   pela sombra discreta, com o raio e o respiro da escala. */
+.consequencias{background:var(--branco);border:1px solid var(--linha);border-radius:var(--raio);
+  box-shadow:var(--sombra-1);padding:var(--e-4);margin-bottom:var(--e-4)}
 .consequencias h2{margin-bottom:.6rem}
 .consequencias ul{margin:0;padding-left:1.2rem}
-.consequencias li{margin-bottom:.4rem;font-size:.9375rem}
-.consequencias.irreversivel{border-left:4px solid var(--vermelho);background:var(--vermelho-fundo)}
+.consequencias li{margin-bottom:var(--e-1);font-size:.9375rem}
+.consequencias.irreversivel{border-color:var(--vermelho);border-left:4px solid var(--vermelho);
+  background:var(--vermelho-fundo)}
 .consequencias.irreversivel h2{color:var(--vermelho)}
 /*
 As nove etapas numa linha (056, FR-1020, FR-1021, D-002). Era `flex:1 1 160px` com quebra: nove de
@@ -134,7 +137,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
 /* A ajuda da lista, uma só, no lugar de uma por cartão. Fechada por padrão: quem já compôs um
    Edital não a relê, e quem precisa dela acha pelo nome. `details` abre por teclado e por toque —
    é o mesmo elemento que a Comissão e o portal já usam. */
-.como-preencher{margin:0 0 1rem;max-width:var(--leitura)}
+.como-preencher{margin:0 0 1rem;}
 .como-preencher>summary{display:inline-block;cursor:pointer;font-size:.8125rem;font-weight:600;
   color:var(--verde-texto);padding:.3rem .6rem;border:1px solid var(--borda);border-radius:4px}
 .como-preencher>summary:hover{border-color:var(--verde-texto)}
@@ -223,7 +226,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
 .sinais{list-style:none;margin:0;padding:0;border-left:4px solid var(--amarelo);background:var(--branco)}
 .sinais .sinal{padding:.6rem 1rem}
 .sinais .sinal+.sinal{border-top:1px solid var(--borda)}
-.sinais .mensagem{margin:0;max-width:var(--leitura)}
+.sinais .mensagem{margin:0;}
 .sinais .medida{margin:.25rem 0 0;color:var(--texto-fraco);font-variant-numeric:tabular-nums}
 .sinais .acao{margin-top:.5rem}
 /* A série diária de submissões da supervisão (022, UX-008). As barras são **desenho** — o
@@ -415,7 +418,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
    que o termo e definido, que e exatamente o que a FR-424 pede —, e sai em negrito em vez do
    italico que os navegadores aplicam: a tela ja usa italico em nada, e uma segunda enfase visual
    para a mesma coisa confundiria com citacao. */
-.definicoes{color:var(--texto);font-size:.875rem;margin:.25rem 0 1rem;max-width:var(--leitura)}
+.definicoes{color:var(--texto);font-size:.875rem;margin:.25rem 0 1rem;}
 /* O que o sistema **afirma** no lugar de uma pergunta que deixou de fazer (030, FR-416).
 
    Não e ajuda, e por isso nao e `.ajuda`: ajuda explica como preencher um campo, e esta frase diz
@@ -424,7 +427,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
    ser lida por quem enxerga tanto quanto pela tecnologia assistiva.
 
    Peso de corpo de texto, e nao de rotulo: ela e consequencia, e nao instrucao. */
-.declaracao-derivada{color:var(--texto);font-size:.875rem;margin:.25rem 0 .75rem;max-width:var(--leitura)}
+.declaracao-derivada{color:var(--texto);font-size:.875rem;margin:.25rem 0 .75rem;}
 /* O Anexo grava por `submit` em formulários próprios, e não por HTMX: o grupo de símbolos convive
    ali com dois botões de verbo, que gravam o que se editou acima. O que separa as duas famílias é
    a fileira — conteúdo à esquerda, linha à direita —, e `margin-left:auto` é quem a separa. */
@@ -437,7 +440,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
 /* Os recursos (018). A fundamentação e a motivação são texto **escrito por alguém** e lido
    inteiro: ganham a largura de leitura e a moldura que as separa da prosa da tela, para que não
    se confundam com o que o sistema diz. */
-.fundamentacao,.motivacao{max-width:var(--leitura);white-space:pre-wrap;background:var(--branco);
+.fundamentacao,.motivacao{white-space:pre-wrap;background:var(--branco);
   border:1px solid var(--borda);border-left:4px solid var(--borda);border-radius:4px;
   padding:.75rem 1rem;margin:0 0 1.5rem}
 .julgado{margin:0 0 .35rem}
@@ -446,7 +449,7 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
    sugeriria que um é menos oficial que o outro. O rótulo acima dele é o que diz **de quem** o texto
    é: sem ele, o parecer atacado e a fundamentação de quem recorreu ficam dois parágrafos iguais, e
    quem julga precisa saber qual é qual. */
-.instruido{max-width:var(--leitura);background:var(--branco);border:1px solid var(--borda);
+.instruido{background:var(--branco);border:1px solid var(--borda);
   border-left:4px solid var(--borda);border-radius:4px;padding:.75rem 1rem;margin:0 0 1rem}
 .instruido .rotulo-do-parecer{margin:0;font-size:.75rem;text-transform:uppercase;
   letter-spacing:.04em;color:var(--texto-fraco)}
@@ -633,7 +636,7 @@ ul.documentos .entrega.ausente{font-style:italic}
 .registro-da-avaliacao .quando{margin:0;color:var(--texto-fraco);font-size:.9375rem}
 .parecer-registrado h3{font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;
   color:var(--texto-fraco);margin:0 0 .25rem;font-weight:600}
-.parecer-registrado p{margin:0 0 1rem;max-width:var(--leitura)}
+.parecer-registrado p{margin:0 0 1rem;}
 
 /* O painel do documento da Mesa mora em `grupos/visualizador.css` desde a 157: a conferência dos
    documentos da convocação usa o mesmo, e as duas telas a carregam pelo estilo da página. */
@@ -816,7 +819,7 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 /* A sucessão do ato vigente, recolhida (126, FR-4010, UX-223). Logo depois de emitir, o formulário
    de suceder ficava aberto e com o botão de maior peso da tela; sucessão é ato imutável, com motivo,
    e a exceção. O resumo diz qual ato e que ele exige motivo; aberto, o formulário é o de sempre. */
-.sucessao{margin:1rem 0;max-width:var(--leitura)}
+.sucessao{margin:1rem 0;}
 .sucessao>summary{display:inline-block;cursor:pointer;font-size:.875rem;font-weight:600;
   color:var(--verde-texto);padding:.35rem .7rem;border:1px solid var(--borda);border-radius:4px}
 .sucessao>summary:hover{border-color:var(--verde-texto)}
@@ -830,3 +833,47 @@ fieldset.linha>legend .alterada{font-size:.7rem;font-weight:700;text-transform:u
 /* A volta ao Centro, no fim do bloco (139, FR-4768): um link de texto, e não um botão — o bloco
    diz o próximo, e a volta é a saída (UX-320). */
 .retorno-ao-centro{margin:0 0 .8rem}
+
+/* ── Os componentes do design system, em toda a gestão (migração de 15/11) ─────────────────────
+
+   O que o usuário aprovou no piloto da `172`, sob `.piloto-ds`, vale agora para todas as telas. No
+   fim da folha comum para vencer, pela ordem, as regras de mesma especificidade acima; as folhas de
+   grupo e de tela vêm depois desta e continuam valendo onde redesenham o mesmo componente.
+
+   **O aviso é um componente**, com a espécie no texto (a marca da P0) e a cor como reforço: o
+   filete, o raio pequeno e o respiro da escala. */
+.aviso,.erro,.sucesso,.imutavel{border-radius:var(--raio-p);padding:var(--e-3) var(--e-4);
+  margin-bottom:var(--e-3)}
+/* **O botão tem uma altura por tamanho, e o `a` e o `button` têm a mesma** (a P1.4 do roadmap): 40
+   px o botão e a ação da barra de gravação, 32 px a ação de linha. O tamanho de fonte é o que cada
+   um já tinha: muda a caixa, e não a letra. */
+:is(.botao,.acao){display:inline-flex;align-items:center;justify-content:center;
+  box-sizing:border-box;border-radius:var(--raio-p)}
+.botao,.salvar .acao{min-height:var(--controle)}
+.acao{min-height:var(--controle-p)}
+/* **Respiro menor**, para a página não ficar mais alta que antes: a barra de gravação perde o filete
+   cinza e a folga de baixo, e dentro do formulário de confirmação o filete, que ali separava nada
+   de nada. */
+.salvar{gap:var(--e-3);padding:var(--e-4) 0 var(--e-8);border-top-color:var(--linha)}
+form.confirmar .salvar{border-top:0;padding:var(--e-2) 0 0}
+.sub{margin-bottom:var(--e-5)}
+/* **Rótulo e valor na mesma linha**: toda lista de definição lê "De onde a vaga veio: Edital…", e
+   não o valor quebrado e recuado abaixo do rótulo, como o navegador desenha por padrão. O rótulo se
+   distingue pelo peso e pela coluna da grade, e **não por dois-pontos gerados**: a primeira versão
+   os punha por `dt::after`, e escrevia "Volta atrás?:" nos rótulos do Sorteio que são pergunta e
+   "E o Anexo em papel?:" na Inscrição (revisão de código de 15/11, aprovada pelo usuário). Pelo
+   `:where`, a regra tem a especificidade de um elemento, e toda lista com desenho próprio continua
+   com o dela. No celular, o valor desce. */
+:where(main) dl{display:grid;grid-template-columns:max-content minmax(0,1fr);
+  gap:var(--e-1) var(--e-3);margin:0 0 var(--e-4)}
+:where(main) dt{font-weight:600;color:var(--tinta-2)}
+:where(main) dd{margin:0}
+/* A lista que agrupa cada par num `div` (o "Quem atuou" do Centro, as fichas) não é grade de duas
+   colunas: os grupos é que seriam os itens, e caíam um em cada coluna. O par fica na mesma linha
+   dentro do grupo, e a quebra, se houver, é a do texto. */
+:where(main) dl:has(>div){display:block}
+:where(main) dl>div{display:flex;flex-wrap:wrap;gap:0 var(--e-2);margin-bottom:var(--e-1)}
+@media (max-width:40rem){
+  :where(main) dl{grid-template-columns:minmax(0,1fr);gap:0}
+  :where(main) dd{margin-bottom:var(--e-2)}
+}

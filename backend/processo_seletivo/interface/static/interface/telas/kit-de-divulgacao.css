@@ -2,17 +2,17 @@
    só esta tela as carrega (091). Superfícies, bordas e cores são os tokens do GPS. */
 
 .kit-de-divulgacao{container-type:inline-size}
-.cabecalho-do-kit .nota{max-width:var(--leitura);margin-top:.35rem}
+.cabecalho-do-kit .nota{margin-top:.35rem}
 
 /* As faixas dizem em texto o que aconteceu; a cor só acompanha (FR-3443). */
-.faixa-do-kit{margin:1rem 0 0;max-width:var(--leitura)}
+.faixa-do-kit{margin:1rem 0 0;}
 .mudancas-do-kit{margin:.35rem 0 0;padding-left:1.25rem}
 
 .secao-do-kit{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin:1.25rem 0 0}
 .secao-do-kit h2{margin-top:0}
 .subtitulo-do-kit{font-size:1rem;margin:1rem 0 .25rem}
-.conferencia-do-kit,.notas-do-kit{margin:.5rem 0 0;padding-left:1.25rem;max-width:var(--leitura)}
+.conferencia-do-kit,.notas-do-kit{margin:.5rem 0 0;padding-left:1.25rem;}
 .conferencia-do-kit li,.notas-do-kit li{margin:.2rem 0}
 
 .situacao-da-copia{min-height:1.25rem;margin:0 0 .5rem;color:var(--verde-texto)}
@@ -39,7 +39,7 @@
 /* A escolha da identidade (119, FR-3830): rádios nativos, sem script, em listas fechadas. */
 .escolha-do-kit fieldset{min-width:0;margin:.75rem 0 .5rem;border:1px solid var(--borda);
   border-radius:6px;padding:.5rem .75rem}
-.opcao-da-escolha{display:block;margin:.25rem 0;max-width:var(--leitura)}
+.opcao-da-escolha{display:block;margin:.25rem 0;}
 /* Um formato por coluna quando cabe; empilhados a 375 px, sem rolagem lateral. */
 .formatos-do-kit{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));
   gap:1rem;margin-top:.75rem}

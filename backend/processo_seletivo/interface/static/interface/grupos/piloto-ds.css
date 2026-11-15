@@ -13,84 +13,18 @@
    literal e não inverte na tela uma sequência que a spec declarou. O piloto mexe na composição; o
    conteúdo e as ações são os de antes, e a comparação de cada estado o confere. */
 
-/* ── A largura: o texto ocupa a do conteúdo ────────────────────────────────────────────────────
+/* **Só o que é do piloto.** A migração de 15/11 levou à folha comum da gestão o texto na largura, o
+   aviso, o cartão das consequências, o indicador em partes iguais, o campo cheio, o "rótulo e valor"
+   na mesma linha, o botão de altura única e o respiro da barra de ações, com os mesmos valores que
+   esta folha tinha (revisão de código de 15/11: as cópias saíram daqui). Fica o que a comum não tem:
+   o respiro que o contêiner desfaz, a busca da Lista na largura do cartão, o recorte da Ocupação em
+   cartão e a consulta da Lista num cartão só. */
 
-   **Decisão do usuário em 15/11, depois de ver o antes e o depois** (D-012 da spec). A primeira
-   versão do piloto prendia toda prosa em 80 caracteres e centrava a confirmação numa coluna
-   estreita; a página ficou mais alta, a direita vazia, e o texto mais espremido que na `main`. O
-   que se quer é aproveitar a tela: parágrafo, nota, ajuda, item de lista, aviso, consequências e o
-   formulário da confirmação vão até a largura do conteúdo, que a moldura já limita a `--pagina`.
-
-   Isto desfaz, só aqui dentro, as medidas que a `main` aplica: a do parágrafo filho de `main` e a
-   do subtítulo e da ajuda (`componentes.css`), a da frase do recorte e da cobertura da faixa
-   (`telas/lista.css`) e a das caixas da confirmação (`grupos/confirmacao-de-ato.css`, da P0). O
-   `:is` com `form.confirmar` dá a esta regra especificidade maior que a de todas elas. */
-.piloto-ds :is(p,li,dd,.sub,.nota,.ajuda,.aviso,.erro,.sucesso,.imutavel,.bastao,.consequencias,
-  .frase-do-recorte,.cobertura-da-faixa,form.confirmar,section form,details.sucessao){max-width:none}
 /* O respiro antes da seção que vem depois de um formulário: a regra comum é `main>…`, e o contêiner
    tira o conteúdo de lá. Mesmo valor. */
 .piloto-ds>:is(form,.tabela-rolavel)+section[aria-labelledby]{margin-top:2rem}
-
-/* ── Os componentes, dentro do escopo ──────────────────────────────────────────────────────────
-
-   **O botão tem uma altura por tamanho, e o `a` e o `button` têm a mesma** (UX-854; a P1.4 do
-   roadmap, só aqui). Fora do escopo o `.acao` continua com as quatro alturas que o estudo mediu. O
-   tamanho de fonte é o que cada um já tinha: muda a caixa, e não a letra. */
-.piloto-ds :is(.botao,.acao){display:inline-flex;align-items:center;justify-content:center;
-  box-sizing:border-box;border-radius:var(--raio-p)}
-.piloto-ds .botao,.piloto-ds .salvar .acao{min-height:var(--controle)}
-.piloto-ds .acao{min-height:var(--controle-p)}
-
-/* **O aviso é um componente**, com a espécie no texto (a marca da P0) e a cor como reforço: o filete,
-   o raio pequeno e o respiro da escala. */
-.piloto-ds :is(.aviso,.erro,.sucesso,.imutavel){border-radius:var(--raio-p);
-  padding:var(--e-3) var(--e-4);margin-bottom:var(--e-3)}
-
-/* **O cartão**: o painel que agrupa, solto do fundo pela borda e pela sombra discreta. */
-.piloto-ds .consequencias{border-color:var(--linha);border-radius:var(--raio);box-shadow:var(--sombra-1);
-  padding:var(--e-4);margin-bottom:var(--e-4)}
-.piloto-ds .consequencias.irreversivel{border-color:var(--vermelho)}
-.piloto-ds .consequencias li{margin-bottom:var(--e-1)}
-
-/* **O indicador**: o número e o rótulo juntos, numa caixa própria, e **os indicadores de um grupo
-   dividem a linha em partes iguais** (pedido do usuário em 15/11). Do tamanho do texto, eles ficavam
-   empilhados à esquerda, cada um de uma largura, e a direita vazia. Em grade, a linha se reparte
-   entre eles; no estreito, a grade quebra em duas ou numa coluna sozinha. O tamanho do número é o
-   de `componentes.css`; muda a caixa, e não a letra. */
-.piloto-ds .resumo{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:var(--e-3)}
-.piloto-ds .resumo li{border-color:var(--linha);border-radius:var(--raio);
-  padding:var(--e-2) var(--e-4);min-width:0;box-shadow:var(--sombra-1)}
-
-/* **O campo ocupa a largura do formulário** (pedido do usuário em 15/11). A `main` limita texto,
-   área de texto e seleção a `--leitura` (`formularios.css`), e o campo do fundamento cobria metade
-   da área. O número e a data continuam do tamanho do que recebem. A busca da Lista ocupa a largura
-   do cartão. */
-.piloto-ds .campo>:is(textarea,input[type=text],input[type=search],input[type=email],select),
+/* A busca da Lista ocupa a largura do cartão, e não os 36rem de `telas/lista.css`. */
 .piloto-ds .busca-da-lista{max-width:none}
-
-/* **Rótulo e valor na mesma linha** (pedido do usuário em 15/11): toda lista de definição do escopo
-   lê "De onde a vaga veio: Edital…", e não o valor quebrado e recuado abaixo do rótulo, como o
-   navegador desenha por padrão. O rótulo se distingue pelo peso e pela coluna da grade, e **não por
-   dois-pontos gerados**: a primeira versão os punha por `dt::after`, que é texto que o template não
-   tem e a comparação do conteúdo não vê (revisão de código de 15/11, aprovada pelo usuário); e, na
-   migração para a gestão, a mesma regra escrevia "Volta atrás?:" nos rótulos que são pergunta. No
-   celular, o valor desce. */
-.piloto-ds dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--e-1) var(--e-3);
-  margin:0 0 var(--e-4)}
-.piloto-ds dt{font-weight:600;color:var(--tinta-2)}
-.piloto-ds dd{margin:0}
-@media (max-width:40rem){
-  .piloto-ds dl{grid-template-columns:minmax(0,1fr);gap:0}
-  .piloto-ds dd{margin-bottom:var(--e-2)}
-}
-
-/* **A barra de ações fica no fluxo, e não fixa.** Fixa ao pé da janela, ela poria o botão à vista
-   antes das consequências, e a C-S4 da spec ("a consequência antes da confirmação") se inverteria na
-   ordem visual. Fica depois do formulário, com o primário primeiro; dentro do cartão do formulário,
-   sem o filete, que ali separava nada de nada. */
-.piloto-ds .salvar{gap:var(--e-3);padding:var(--e-4) 0 var(--e-8);border-top-color:var(--linha)}
-.piloto-ds form.confirmar .salvar{border-top:0;padding:var(--e-2) 0 0}
-.piloto-ds .sub{margin-bottom:var(--e-5)}
 
 /* ── A Ocupação: cada recorte num cartão, e o gesto junto do número ──────────────────────────────
 

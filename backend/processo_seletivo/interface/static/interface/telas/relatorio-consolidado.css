@@ -8,7 +8,7 @@
 
 .relatorio-consolidado{container-type:inline-size}
 
-.cabecalho-do-consolidado .nota{max-width:var(--leitura);margin-top:.35rem}
+.cabecalho-do-consolidado .nota{margin-top:.35rem}
 
 .painel-do-consolidado{background:var(--branco);border:1px solid var(--borda);border-radius:6px;
   padding:1rem 1.25rem;margin:1.25rem 0 0}
@@ -44,7 +44,7 @@
 .secao-do-consolidado{margin-top:2.25rem}
 .secao-do-consolidado h2{margin-bottom:.6rem}
 
-.visao-geral-do-consolidado{max-width:var(--leitura);line-height:1.65;margin:0}
+.visao-geral-do-consolidado{line-height:1.65;margin:0}
 
 /* Três por linha, em duas linhas para os seis; duas, e depois uma, quando a área estreita. A
    medida é a da área do relatório, e não a da janela: a barra lateral recolhida ou aberta muda o
@@ -68,7 +68,7 @@
   line-height:1.45}
 
 .atencao-do-consolidado{border-left:3px solid var(--borda);padding:.1rem 0 .1rem 1rem}
-.atencao-do-consolidado ol{margin:0;padding-left:1.2rem;max-width:var(--leitura)}
+.atencao-do-consolidado ol{margin:0;padding-left:1.2rem;}
 .atencao-do-consolidado li{margin:.45rem 0;line-height:1.55}
 
 /* A escolha: critério e atalhos numa linha que quebra, e a lista dos Editais com a caixa à esquerda. */

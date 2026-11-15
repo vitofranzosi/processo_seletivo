@@ -186,7 +186,7 @@
 .consequencias.impedimentos h2{color:var(--amarelo);}
 .impedimento{margin-bottom:1rem;}
 .impedimento h3{margin:0 0 .25rem;}
-.impedimento p{margin:0 0 .5rem;max-width:var(--leitura);}
+.impedimento p{margin:0 0 .5rem;}
 
 /* A prévia pública com a moldura tracejada: é o que a página mostrará, e ainda não está nela. */
 .previa-publica{border:1px dashed var(--borda);border-radius:4px;padding:.75rem 1rem;background:var(--fundo);}
@@ -202,7 +202,7 @@
 .numero-de-inscricao{font-size:.8125rem;color:var(--texto-fraco);font-variant-numeric:tabular-nums;}
 
 /* O veículo: as duas escolhas, cada uma com o que exige logo abaixo dela. */
-.veiculo-da-agenda{border:0;margin:0;padding:0;max-width:var(--leitura);}
+.veiculo-da-agenda{border:0;margin:0;padding:0;}
 .veiculo-da-agenda legend{font-weight:600;margin-bottom:.5rem;}
 .opcao-de-veiculo{margin:.75rem 0 .35rem;}
 .veiculo-da-agenda .campo{margin:0 0 .5rem 1.5rem;}
@@ -218,7 +218,7 @@
 /* Quem recebe o aviso, recolhido: pessoa e protocolo, nunca o e-mail (`D-011`). */
 .destinatarios-dos-avisos{margin:0 0 .75rem;}
 .destinatarios-dos-avisos ul{margin:.35rem 0 0;padding-left:1.2rem;max-height:12rem;overflow-y:auto;position:relative;}
-.frase-dos-avisos{margin:0 0 .25rem;max-width:var(--leitura);font-size:.9375rem;}
+.frase-dos-avisos{margin:0 0 .25rem;font-size:.9375rem;}
 
 /* Depois da publicação (entrega C): os avisos num número só, o que não saiu com o reenvio, e os
    documentos dos atos em ordem. Remarcar e cancelar usam a moldura da configuração. */
