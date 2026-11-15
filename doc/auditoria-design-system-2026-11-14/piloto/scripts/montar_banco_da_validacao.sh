@@ -18,15 +18,23 @@
 # A versão antiga roda de uma worktree destacada da `main`, `piloto-172-antiga`, ao lado das outras
 # em `.claude/worktrees/`. Este roteiro a cria, ou a leva à `main` de agora se ela já existe.
 #
+# **De onde vem o dump da referência.** Ele não mora no repositório, e não há caminho padrão: diga-o
+# em `REFERENCIA_DUMP`. Para regerá-lo a partir do zero, de `backend/`:
+#
+#   sh ../doc/auditoria-design-system-2026-11-14/referencia-p0/scripts/montar_banco.sh ps_p0_referencia
+#   pg_dump -Fc -f <arquivo>.dump ps_p0_referencia
+#
+# O primeiro passo monta o banco com `seed_demo` e os 17 cenários de treinamento, e o README da
+# `referencia-p0/` explica por que os prazos dependem do dia em que ele roda.
+#
 # Rode de `backend/` da branch do piloto, com `LC_ALL` exportado (macOS com PostgreSQL do Homebrew).
 set -e
 BANCO=${1:?referencia, lista, v3, v4, v5 ou v6}
 DUMPS=${2:-}
-NOTAS="$HOME/Library/Application Support/Claude/side-session-notes/local_5a9cc322-5ca4-4c5c-b88b-c997a960b0b8"
 ALVO=ps_piloto_validacao
 
 if [ "$BANCO" = referencia ]; then
-  ORIGEM="${REFERENCIA_DUMP:-$NOTAS/ps_p0_referencia.dump}"
+  ORIGEM="${REFERENCIA_DUMP:?o caminho do dump da referência (ver o cabeçalho deste roteiro)}"
 else
   ORIGEM="${DUMPS:?a pasta dos dumps da jornada}/$BANCO.dump"
 fi
@@ -34,10 +42,15 @@ fi
 
 dropdb --if-exists "$ALVO"
 createdb "$ALVO"
-pg_restore --no-owner --no-privileges -d "$ALVO" "$ORIGEM" || true
+# A restauração que falha derruba o roteiro: um `|| true` aqui anunciava "pronto" num banco vazio.
+# Com `--no-owner --no-privileges`, os dumps da referência e das tarefas restauram sem aviso nenhum
+# (conferido em 15/11), e não há aviso esperado a filtrar.
+pg_restore --no-owner --no-privileges --exit-on-error -d "$ALVO" "$ORIGEM"
 DB_NAME=$ALVO DB_USER=$USER DB_RUNTIME_USER=$USER DJANGO_SETTINGS_MODULE=config.settings.development \
   uv run python manage.py migrate --no-input >/dev/null
-echo "Banco $ALVO pronto, a partir de $ORIGEM."
+EDITAIS=$(psql -At -d "$ALVO" -c "select count(*) from processos_edital")
+[ "$EDITAIS" -gt 0 ] || { echo "o banco $ALVO restaurou sem Edital nenhum: $ORIGEM é o dump certo?" >&2; exit 1; }
+echo "Banco $ALVO pronto, com $EDITAIS Editais, a partir de $ORIGEM."
 
 RAIZ=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
 ANTIGA="$RAIZ/.claude/worktrees/piloto-172-antiga"

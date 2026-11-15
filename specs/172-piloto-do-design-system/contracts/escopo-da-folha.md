@@ -23,8 +23,8 @@ teste novo o cobra (D-009). A medida que o confere é o SC-2602.*
 - Esconder texto: `display:none`, `visibility:hidden`, `clip`, `font-size:0`, `opacity:0`, altura
   zero com `overflow:hidden` ou recolhimento, sobre qualquer elemento com texto (FR-7711).
 - `content:` com texto, porque o texto gerado não está no template e não seria igual antes e depois.
-  **A exceção é uma só**: os dois-pontos depois do rótulo de uma lista de definição (`dt::after`),
-  pontuação de apresentação do "rótulo: valor" que o usuário pediu em 15/11.
+  Sem exceção: os dois-pontos depois do rótulo de uma lista de definição, que a primeira versão do
+  "rótulo: valor" gerava, saíram na revisão de 15/11; o rótulo se distingue pelo peso e pela grade.
 - `order`, `flex-direction: *-reverse` ou `grid` com posições que invertam uma sequência declarada na
   ordem visual sem invertê-la no documento (FR-7714). Mudar a ordem visual fora das sequências é
   permitido, e fica registrado.

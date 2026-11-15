@@ -13,7 +13,8 @@ equipe, e diz o que fica esperando por ela. A decisão sobre a migração é do 
 > **Ajustes da segunda leitura (15/11).** O usuário pediu, como padrão a generalizar, três coisas, que
 > a segunda versão já traz: os **indicadores dividem a linha em partes iguais**, em vez de caixas do
 > tamanho do texto; os **campos de texto ocupam a largura do formulário** (a `main` os limita a
-> 68ch); e o **rótulo e o valor ficam na mesma linha**, com dois-pontos, em toda lista de definição.
+> 68ch); e o **rótulo e o valor ficam na mesma linha**, o rótulo em peso maior, em toda lista de
+> definição. Os dois-pontos gerados pela folha saíram na revisão de código de 15/11 (D-012).
 
 ## Resposta curta
 

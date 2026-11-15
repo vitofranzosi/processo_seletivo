@@ -823,8 +823,12 @@ escolheu o texto na largura toda.**
 Consequências: a medida de leitura não vale nas cinco telas, nem a da P0 nas confirmações; a
 composição centrada sai; a linha longa vira diagnóstico. Os cartões, os indicadores, os avisos e os
 botões ficam, com três padrões da segunda leitura: os indicadores de um grupo dividem a linha em
-partes iguais, o campo de texto ocupa a largura do formulário e a lista de definição lê "rótulo:
-valor" na mesma linha (os dois-pontos são a única pontuação que a folha gera). A preferência do usuário pelo aproveitamento da tela vale como premissa para a
+partes iguais, o campo de texto ocupa a largura do formulário e a lista de definição põe rótulo e
+valor na mesma linha, o rótulo em peso maior. Os dois-pontos que o usuário mencionou chegaram a ser
+gerados pela folha (`dt::after`) e saíram na revisão de código de 15/11, aprovada por ele: era texto
+que o template não tem, fora do alcance da comparação do conteúdo, e na gestão inteira escrevia
+"Volta atrás?:" em rótulo que é pergunta. Pôr os dois-pontos no texto do template mudaria o conteúdo
+(FR-7707), e fica para quando o usuário o pedir como mudança de texto. A preferência do usuário pelo aproveitamento da tela vale como premissa para a
 migração das outras famílias, e o "Texto explicativo" e a "medida de leitura" do estudo de 14/11
 ficam subordinados a ela.
 
