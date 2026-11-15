@@ -25,7 +25,8 @@ pública e o horário na área do candidato. A entrega **C** acrescenta a
 origem `AGENDA` aos avisos da `066` (um aviso por pessoa, como a pendência da `134`), revê a FR-084 da
 `010` e traz remarcação, inclusão e cancelamento como atos individuais. A **D**, opcional, põe a agenda
 nas pendências do Centro e de Minhas atividades, e o horário na tela da Ocorrência; por decisão do
-usuário de 14/11, fica fora desta implementação.
+usuário de 14/11, ficava fora desta implementação, e foi feita no mesmo dia, num PR empilhado sobre o
+da C.
 
 As decisões técnicas estão em [research.md](research.md) (`T-001` a `T-023`); o modelo, em
 [data-model.md](data-model.md); as telas e as frases, em [contracts/](contracts/); o roteiro, em
@@ -175,7 +176,7 @@ backend/processo_seletivo/
 │   ├── urls.py, views.py                             # B: agendas/<id>/, o documento de cada ato, seção da seleção, bloco na inscrição
 │   ├── templates/portal/agenda_da_etapa.html, _agendas_da_selecao.html, _horario_da_inscricao.html
 │   └── static/portal/portal.css                      # B
-└── interface/{centro,atividades}.py, templates/interface/ocorrencia.html   # D (fora desta implementação)
+└── interface/{centro,atividades}.py, templates/interface/ocorrencia.html   # D
 specs/010-area-do-candidato/spec.md                   # C: FR-084 revista (sete situações)
 specs/033-navegacao-por-capacidade/inventario-das-negativas.md   # A, B, C: um 404 por linha
 backend/tests/
@@ -201,7 +202,7 @@ fecha com uma jornada demonstrável pela interface do ator (Constituição, VI).
 | **A** | Configurar e montar | configurar, ver a capacidade, preencher com prévia e ajustar à mão, sem publicar | — |
 | **B** | Conferir, publicar e mostrar | publicar com conferência, veículo e autoridade, com o documento PDF; a página pública e a área do candidato mostram o horário | A |
 | **C** | Avisar e remarcar | um aviso por pessoa, as falhas com reenvio; remarcação, inclusão e cancelamento | B |
-| D | Orientação *(fora desta implementação)* | a agenda como pendência no Centro e em Minhas atividades; o horário na Ocorrência | B |
+| D | Orientação *(opcional)* | a agenda como pendência no Centro e em Minhas atividades; o horário na Ocorrência | B |
 
 Dentro de cada entrega: o domínio puro e os testes de unidade, o modelo e a migration, os comandos e
 os testes de integração, as telas e os de interface, os guardiões, e por fim a jornada no navegador.
@@ -241,7 +242,7 @@ rodada):
 3. **Quem publica** (`D-013`). Quem gere a comissão, a presidência inclusive, com o escopo do Edital
    conferido no servidor; a autoridade signatária é escolha distinta. Nenhum papel novo (T-021, T089).
 
-A implementação faz **A, B e C**; a **D** fica fora.
+A implementação faz **A, B e C**; a **D** ficava fora, e foi feita depois, num PR próprio.
 
 ## Coordenação com a 168
 

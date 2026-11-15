@@ -27,6 +27,7 @@ from processo_seletivo.agendamento.domain.horarios import (
     Configuracao,
     derivar,
     dia_por_extenso,
+    horario_curto,
     periodo_por_extenso,
     zona,
 )
@@ -521,4 +522,102 @@ def agenda_publica(agenda_id, busca=""):
             for dia, horarios in sorted(dias.items())
         ],
         "remarcacoes": sum(1 for item in vigentes if item.remarcado_em),
+    }
+
+
+# --- a orientação (entrega D) ---------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class EstadoDaAgenda:
+    """O que a orientação precisa saber de uma agenda: publicada, e quem já tem horário nela."""
+
+    publicada: bool
+    #: As inscrições com `Agendamento`, só enquanto a agenda não está publicada; depois, vazio — o
+    #: que vale é o publicado, e a orientação não o lê.
+    agendados: frozenset = frozenset()
+
+
+def estado_das_agendas(edital):
+    """`{etapa_id: EstadoDaAgenda}` das agendas do Edital, em duas consultas no máximo (T-023).
+
+    É o que o Centro e Minhas atividades leem para dizer "Montar a agenda" e "Publicar a agenda".
+    **A participação não é lida aqui**: quem chama já tem a da Etapa, pelo panorama da distribuição,
+    que é a mesma `participacao_detalhada` da montagem. Lê-la de novo custaria a partição inteira
+    por Etapa, num Centro que tem orçamento de consultas por Edital.
+
+    Uma consulta para as agendas, com "publicada" ao lado; a segunda, só se alguma não estiver
+    publicada, para os agendamentos dela.
+    """
+    from django.db.models import Exists, OuterRef
+
+    agendas = list(
+        AgendaDaEtapa.objects.filter(edital=edital)
+        .annotate(
+            publicada=Exists(AtoDaAgenda.objects.filter(agenda=OuterRef("pk"), especie=PUBLICACAO))
+        )
+        .order_by("criada_em", "id")
+        .values_list("id", "etapa_id", "publicada")
+    )
+    abertas = [identidade for identidade, _etapa, publicada in agendas if not publicada]
+    agendados = {}
+    if abertas:
+        for agenda_id, inscricao_id in (
+            Agendamento.objects.filter(agenda_id__in=abertas)
+            .order_by("agenda_id", "inicio", "id")
+            .values_list("agenda_id", "inscricao_id")
+        ):
+            agendados.setdefault(agenda_id, set()).add(str(inscricao_id))
+    return {
+        str(etapa_id): EstadoDaAgenda(
+            publicada=publicada, agendados=frozenset(agendados.get(identidade, ()))
+        )
+        for identidade, etapa_id, publicada in agendas
+    }
+
+
+@dataclass(frozen=True)
+class HorarioNaOcorrencia:
+    """O horário publicado de uma pessoa, como a tela da Ocorrência o mostra (R-23, FR-7250)."""
+
+    quando: str
+    banca: str
+
+
+def horarios_na_ocorrencia(edital, etapa_id, inscricao_ids):
+    """`None` sem agenda publicada nesta Etapa; senão, `{inscricao_id: HorarioNaOcorrencia}`.
+
+    **Só informação** (FR-7250): a ausência continua sendo a Ocorrência, e nada aqui decide quem
+    pode tê-la. Quem não aparece no dicionário não tem horário vigente — nunca teve, ou teve o
+    horário cancelado. Duas consultas, e nenhuma por pessoa: a agenda publicada e os vigentes das
+    inscrições da página.
+    """
+    publicacao_ = (
+        AtoDaAgenda.objects.filter(
+            agenda__edital=edital, agenda__etapa_id=etapa_id, especie=PUBLICACAO
+        )
+        .order_by("praticado_em", "id")
+        .first()
+    )
+    if publicacao_ is None:
+        return None
+    agenda_id = publicacao_.agenda_id
+    # A banca se diz quando a agenda publicada tem mais de uma, como na página pública e na área do
+    # candidato; a contagem é a do ato, e não a da configuração de hoje.
+    varias = len(conteudo_do_ato(publicacao_).get("bancas") or []) > 1
+    if not inscricao_ids:
+        return {}
+    vigentes = (
+        HorarioPublicado.objects.filter(
+            ato__agenda_id=agenda_id,
+            inscricao_id__in=list(inscricao_ids),
+            situacao=AGENDADO,
+            substituicoes__isnull=True,
+        )
+        .order_by("inicio", "inscricao_id", "id")
+        .values_list("inscricao_id", "inicio", "banca_nome")
+    )
+    return {
+        str(inscricao_id): HorarioNaOcorrencia(horario_curto(inicio), banca_nome if varias else "")
+        for inscricao_id, inicio, banca_nome in vigentes
     }

@@ -100,6 +100,8 @@ CORTE, APURACAO, RESULTADO, CONVOCACAO = "corte", "apuracao", "resultado", "conv
 DISTRIBUIR, AVALIAR, CONSOLIDAR, REAVALIAR = "distribuir", "avaliar", "consolidar", "reavaliar"
 CONFERIR, RECURSO = "conferir", "recurso"
 ETAPA = "etapa"
+#: A agenda da Etapa que pede comparecimento (167, T-023): montar e publicar.
+AGENDA = "agenda"
 #: A passagem ao setor da formalização (153): definir, designar, exportar.
 FORMALIZACAO = "formalizacao"
 
@@ -515,6 +517,71 @@ def _avaliar_minhas(f):
             contagem=minhas,
         )
     ]
+
+
+ATO_DE_MONTAR_A_AGENDA = "Montar a agenda"
+ATO_DE_PUBLICAR_A_AGENDA = "Publicar a agenda"
+
+
+def situacao_da_agenda(f):
+    """A providência da agenda da Etapa, ou `None` (167, T-023). Pura.
+
+    `f` traz `participantes` (as inscrições que participam, do panorama da distribuição), `agenda`
+    (o `EstadoDaAgenda`, ou `None` quando a Etapa não tem agenda) e as duas rotas, `url_de_montar`
+    e `url_de_conferir`, vazias para quem não as abre.
+
+    **Só a Etapa com agenda pede agenda** (D-001 da `167`): a Etapa que exige comparecimento é a
+    que tem agenda configurada, e não há caixa no Edital que diga isso. Sem configuração não há
+    providência — dizer "configure a agenda" de toda Etapa cobraria da prova escrita o que só a
+    entrevista tem.
+
+    **Montar é o que a conferência exige antes de publicar**: todo participante com horário, e
+    nenhum horário de quem não participa mais (`conferir._impedimentos`). Enquanto falta um dos
+    dois, a providência é montar, e o link leva à montagem, onde os dois se resolvem. Os outros
+    impedimentos — local da banca, dias, autoridade — são da conferência, que os diz; repeti-los
+    aqui seria a segunda regra que esta derivação recusa.
+
+    **Publicada, nada**: depois da publicação, quem passou a participar se inclui por ato
+    individual (entrega C), e a tela da agenda publicada é que o diz. A ausência no dia nunca é
+    daqui (FR-7250): continua sendo a Ocorrência.
+    """
+    agenda = f.get("agenda")
+    participantes = set(f.get("participantes") or ())
+    if agenda is None or agenda.publicada or not participantes:
+        return None
+    agendados = set(agenda.agendados)
+    sem_horario = len(participantes - agendados)
+    sem_participar = len(agendados - participantes)
+    nota = f"{len(participantes) - sem_horario} de {len(participantes)} com horário"
+    if sem_horario or sem_participar:
+        razoes = []
+        if sem_horario:
+            razoes.append(_n(sem_horario, "pessoa sem horário", "pessoas sem horário"))
+        if sem_participar:
+            razoes.append(
+                _n(
+                    sem_participar,
+                    "horário de quem não participa mais",
+                    "horários de quem não participa mais",
+                )
+            )
+        return _c(
+            PENDENTE,
+            natureza=AGENDA,
+            ato=ATO_DE_MONTAR_A_AGENDA,
+            responsavel=CONDUZ,
+            url=f.get("url_de_montar") or "",
+            contagem=sem_horario or sem_participar,
+            nota=f"{nota} · {' e '.join(razoes)}" if sem_participar else nota,
+        )
+    return _c(
+        PENDENTE,
+        natureza=AGENDA,
+        ato=ATO_DE_PUBLICAR_A_AGENDA,
+        responsavel=CONDUZ,
+        url=f.get("url_de_conferir") or "",
+        nota=nota,
+    )
 
 
 def situacao_da_etapa_no_perfil(edital, *, participantes, consolidadas, reavaliacoes=0):
@@ -1839,6 +1906,8 @@ class _Leitor:
         self.providencias = []
         self.atencoes = []
         self._conferencia = {}
+        #: As agendas do Edital (167), lidas na primeira Etapa que as pede, e só então.
+        self._agendas = None
 
     # --- o todo ----------------------------------------------------------------------------
 
@@ -1937,6 +2006,12 @@ class _Leitor:
                     }
                 ):
                     self._acrescentar(celula, onde=nome, chave=("etapa", eid, AVALIAR))
+                # A agenda também: a Etapa sem efeito no GPS ainda pede comparecimento, e a agenda
+                # é operacional, e não norma (D-001 da `167`). Sem panorama, a participação só é
+                # lida se a Etapa tiver agenda por publicar.
+                agenda = None if em_curso else self._agenda(eid, resumo)
+                if agenda is not None:
+                    self._acrescentar(agenda, onde=nome, chave=("etapa", eid, AGENDA))
                 saida[eid] = {"resumo": resumo, "estados": {}, "participantes": set()}
                 continue
             url = (
@@ -1978,12 +2053,56 @@ class _Leitor:
             resumo, providencias = situacoes_da_etapa(fatos)
             for celula in providencias:
                 self._acrescentar(celula, onde=nome, chave=("etapa", eid))
+            agenda = (
+                self._agenda(eid, resumo, panorama.get("participantes") or ()) if panorama else None
+            )
+            if agenda is not None:
+                self._acrescentar(agenda, onde=nome, chave=("etapa", eid, AGENDA))
             saida[eid] = {
                 "resumo": resumo,
                 "estados": panorama.get("estados") or {},
                 "participantes": {str(i) for i in panorama.get("participantes") or ()},
             }
         return saida
+
+    def _agenda(self, eid, resumo, participantes=None):
+        """A providência da agenda desta Etapa, ou `None` (167, T-023).
+
+        `participantes` é o do panorama, quando a Etapa o tem; `None` é a Etapa sem efeito no GPS,
+        que não o lê, e então a participação é lida aqui — **só** se ela tiver agenda por publicar.
+
+        **O Edital sem inscrição enviada não paga nada**, e o que tem paga uma consulta: as agendas
+        do Edital são lidas uma vez, na primeira Etapa que as pede. O Centro e Minhas atividades têm
+        orçamento de consultas por Edital, e a maior parte dos Editais não tem agenda nenhuma.
+        **A Etapa concluída também não**: com todo participante consolidado, ninguém mais
+        comparece, e cobrar a agenda dela mandaria trabalhar no que já está decidido.
+        """
+        from processo_seletivo.agendamento.application import leitura as da_agenda
+
+        if resumo.situacao == FEITO or not self.inscritos_por_perfil:
+            return None
+        if self._agendas is None:
+            self._agendas = da_agenda.estado_das_agendas(self.edital)
+        estado = self._agendas.get(eid)
+        if estado is None or estado.publicada:
+            return None
+        if participantes is None:
+            participantes = da_agenda.participacao(self.edital, eid).participantes
+        rotas = {"url_de_montar": "montar", "url_de_conferir": "conferir"}
+        return situacao_da_agenda(
+            {
+                "participantes": {str(i) for i in participantes},
+                "agenda": estado,
+                **{
+                    campo: (
+                        reverse(f"interface:agenda-{segmento}", args=[self.edital.id, eid])
+                        if self.alcance.conduz
+                        else ""
+                    )
+                    for campo, segmento in rotas.items()
+                },
+            }
+        )
 
     def _etapa_no_perfil(self, eid, perfil_id, expectativa_do_perfil):
         lida = self.etapas_no_edital.get(eid)

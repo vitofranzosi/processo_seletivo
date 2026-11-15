@@ -44,7 +44,8 @@ _DO_TIPO = {
     a.RESULTADO: c.RESULTADO,
     a.CONVOCACAO: c.CONVOCACAO,
 }
-_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR)
+#: A agenda (167) é da Etapa: mora na fase dela, e na das vagas quando a Etapa é governada.
+_DA_ETAPA = (a.ETAPA, a.DISTRIBUIR, a.AVALIAR, a.CONSOLIDAR, a.REAVALIAR, a.AGENDA)
 _DA_NATUREZA = {
     **_DO_TIPO,
     **dict.fromkeys(_DA_ETAPA, c.AVALIACAO),

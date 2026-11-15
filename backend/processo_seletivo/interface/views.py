@@ -6987,6 +6987,7 @@ def registrar_ocorrencia(request, edital_id, etapa_id):
     """
     from django.core.paginator import Paginator
 
+    from processo_seletivo.agendamento.application.leitura import horarios_na_ocorrencia
     from processo_seletivo.inscricoes.models import Inscricao
 
     ator, edital, etapa = _etapa_para_distribuir(request, edital_id, etapa_id)
@@ -7039,6 +7040,17 @@ def registrar_ocorrencia(request, edital_id, etapa_id):
     )
     paginas = Paginator(pendentes, 25)
     pagina = paginas.get_page(request.GET.get("pagina") or 1)
+    linhas = list(pagina)
+    # O horário publicado da pessoa, **só como informação** (167, R-23, FR-7250): quem constata a
+    # ausência confere o horário que a pessoa perdeu sem abrir outra tela. A agenda nunca registra
+    # ausência, e nada aqui muda o que a Ocorrência aceita. `None` é a Etapa sem agenda publicada,
+    # e então a coluna nem aparece.
+    horarios = horarios_na_ocorrencia(
+        edital, etapa_id, [i.id for i in [*linhas, *(confirmacao or [])]]
+    )
+    if horarios is not None:
+        for inscricao in [*linhas, *(confirmacao or [])]:
+            inscricao.horario_publicado = horarios.get(str(inscricao.id))
     return marcar_como_privada(
         render(
             request,
@@ -7047,7 +7059,8 @@ def registrar_ocorrencia(request, edital_id, etapa_id):
                 "edital": edital,
                 "processo": edital.processo,
                 "etapa": etapa,
-                "linhas": list(pagina),
+                "linhas": linhas,
+                "com_agenda": horarios is not None,
                 "pagina": pagina,
                 "erro": erro,
                 "confirmacao": confirmacao,
