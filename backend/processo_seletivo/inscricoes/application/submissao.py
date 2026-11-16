@@ -431,6 +431,10 @@ def _gravar_o_ato(inscricao, *, modalidade, versao, agora):
                     protocolo=protocolo,
                     versao_aceita=versao,
                     declaracoes_aceitas_em=agora,
+                    # O rascunho criado antes da `178` nasceu com o escritor antigo, e nenhum
+                    # resumo do comprovante lhe foi mostrado: é no envio que o escritor se fixa
+                    # (FR-8163), e daí em diante a enviada não muda.
+                    comprovante_em_pdfa=True,
                 )
             return
         except IntegrityError as exc:

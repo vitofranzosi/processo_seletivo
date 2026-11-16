@@ -26,6 +26,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_TEXTO,
     DIREITA,
     ESQUERDA,
+    METRICA_DO_EDITAL,
     NEGRITO,
     Composicao,
     UnidadeDoAto,
@@ -45,7 +46,8 @@ SUBIR_PARA_A_LINHA = -11.5
 def render_resultado_pdf(conteudo: dict) -> bytes:
     """O documento do resultado divulgado, a partir dos bytes que a página também lê."""
     cabecalho = conteudo["cabecalho"]
-    composicao = Composicao()
+    # Medida pela fonte que o arquivo embute (178, FR-8158): PDF/A não declara fonte sem arquivo.
+    composicao = Composicao(metrica=METRICA_DO_EDITAL)
     _timbre(composicao, cabecalho)
     _identificacao(composicao, cabecalho)
     _lista(

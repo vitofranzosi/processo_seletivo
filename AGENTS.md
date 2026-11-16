@@ -242,6 +242,17 @@ migrations da `167`, da `168` e da `170` — não o migre, restaure a cópia com
 `REFERENCIA_DUMP=<dump> piloto/scripts/montar_banco_da_validacao.sh referencia` (o cabeçalho do
 roteiro diz como regerar o dump).
 
+**Os documentos que o GPS compõe são PDF/A desde a `178`, e o veraPDF os confere só no CI.** O job
+`pdfa` grava um exemplar de cada um dos nove tipos (`tests/pdfa/exemplares.py`), roda o veraPDF uma vez
+sobre o lote e compara o relatório com o nível esperado (`scripts/conferir_o_verapdf.py`). Localmente,
+o módulo do lote **pula** sem `PDFA_EXEMPLARES=<pasta>` — **um pulado a mais em toda configuração**, como
+os dois do piloto da `172` —, e `tests/unit/publicacoes/test_conformidade_pdfa.py` confere os
+acréscimos sem o validador. **Duas armadilhas já pagas:** `render_documento` recusa composição medida
+pela Helvetica, porque o arquivo embute a Edital Sans — documento novo usa
+`Composicao(metrica=METRICA_DO_EDITAL)` —; e o comprovante da inscrição enviada antes da `178` sai de
+`_documento_com_a_helvetica`, congelado, porque o resumo dele já foi mostrado ao candidato: mexer ali
+muda o comprovante de quem já se inscreveu (`Inscricao.comprovante_em_pdfa`).
+
 **Os cenários de treinamento (134) não rodam sozinhos, e restaurar não apaga.** Os quatro comandos
 (`carregar`, `listar`, `verificar` e `restaurar_cenario_de_treinamento`) exigem
 `CENARIOS_DE_TREINAMENTO=true` no ambiente **do comando**, e os que gravam exigem `--banco` igual ao

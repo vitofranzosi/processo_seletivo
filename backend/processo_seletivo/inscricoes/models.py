@@ -64,6 +64,14 @@ class Inscricao(models.Model):
     # aplica a `description` e `locality`. A unicidade se restringe ao que não é vazio, de modo
     # que os rascunhos convivam sem que `null` precise significar "ainda não".
     protocolo = models.CharField(max_length=32, blank=True, default="")
+    # Qual escritor compõe o comprovante desta inscrição (178, FR-8163, D-002, D-005). Falso só nas
+    # enviadas antes da `178`, que a migration encontrou: a página delas já mostrou ao candidato o
+    # SHA-256 do arquivo, e o comprovante continua o de antes, byte a byte. Verdadeiro em toda linha
+    # criada depois, e o envio o grava de novo: o rascunho de antes, enviado depois, ainda não
+    # tinha mostrado resumo nenhum. **Registro, e não data de corte**: a data da implantação não se
+    # conhece quando o código é escrito, e uma constante errada por um dia trocaria o comprovante
+    # de alguém.
+    comprovante_em_pdfa = models.BooleanField(default=True)
     created_at = models.DateTimeField()
 
     class Meta:

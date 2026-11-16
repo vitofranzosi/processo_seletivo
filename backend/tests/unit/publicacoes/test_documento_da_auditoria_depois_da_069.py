@@ -68,12 +68,14 @@ DEMONSTRACAO_096 = RAIZ / "specs" / "096-cadastro-de-reserva-como-cr" / "demonst
 # E de novo na `133` (o corte de alvo fixo diz "de cada lista de concorrência"): o que mudou entre a
 # `096` e a `133` é preso por `test_documento_da_auditoria_depois_da_133.py`.
 DEMONSTRACAO_133 = RAIZ / "specs" / "133-jornada-sem-ato-errado" / "demonstracao"
+# E na `178`, nos dois cenários: o arquivo passa a PDF/A-2u, e nenhuma página muda. Os da `069` e da
+# `133` ficam como evidência; que só o arquivo mudou é preso por
+# `test_documento_da_auditoria_depois_da_178.py`.
+DEMONSTRACAO_178 = RAIZ / "specs" / "178-documentos-em-pdfa" / "demonstracao"
 
 
 def gravado_agora(nome):
-    if nome.startswith("B-"):
-        return (DEMONSTRACAO_133 / nome.replace("-069.pdf", "-133.pdf")).read_bytes()
-    return da_069(nome)
+    return (DEMONSTRACAO_178 / nome.replace("-069.pdf", "-178.pdf")).read_bytes()
 
 
 @pytest.mark.parametrize("nome", sorted(COMPOSTOS))

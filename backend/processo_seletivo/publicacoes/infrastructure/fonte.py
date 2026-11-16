@@ -10,9 +10,10 @@ Regular e Bold: o subconjunto WinAnsi da Liberation Sans 2.1.5, sob a SIL OFL 1.
 TrueType é lido pela própria gramática — o diretório de tabelas, `head`, `hhea`, `hmtx`, `cmap`,
 `OS/2` e `post` —, que é tudo o que a composição e o descritor da fonte precisam.
 
-**Duas coisas, e só o Edital as usa** (FR-1383): a métrica, com as larguras da própria fonte
-(FR-1381), e os objetos do PDF que a embutem. O comprovante e a divulgação continuam com a
-Helvetica de `pdf.py`.
+**Duas coisas**: a métrica, com as larguras da própria fonte (FR-1381), e os objetos do PDF que a
+embutem. Até a `178` só o Edital as usava (a FR-1383 da `069`); desde ela, todo documento composto
+as usa (FR-8158), e só o comprovante da inscrição enviada antes continua com a Helvetica de
+`pdf.py`, pelo escritor congelado.
 """
 
 import hashlib

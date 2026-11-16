@@ -253,9 +253,18 @@ def test_a_funcao_nao_muda_o_snapshot():
 # `069` ficam como evidência dela. O A não tem Perfil de cadastro sem vaga, e continua com os bytes
 # da `069` — é a prova de que a `096` não mexe em quem não é `CR` (SC-901). O que a `096` mudou no B
 # é preso por `test_documento_da_auditoria_depois_da_096.py`.
+#
+# **E depois a `178`, nos dois**, que faz do arquivo um PDF/A-2u sem mudar página nenhuma: os bytes
+# esperados passam a ser os de `specs/178-…/demonstracao/`, e os de antes ficam como evidência. Que
+# só o arquivo mudou é preso por `test_documento_da_auditoria_depois_da_178.py`.
 
 DOCUMENTOS = RAIZ / "doc" / "auditoria-edital-pdf-2026-10-08" / "pdf"
 ESPERADOS = {
+    "A": RAIZ / "specs" / "178-documentos-em-pdfa" / "demonstracao" / "A-plana-178.pdf",
+    "B": RAIZ / "specs" / "178-documentos-em-pdfa" / "demonstracao" / "B-plana-178.pdf",
+}
+# Os de antes da `178`, que `test_documento_da_auditoria_depois_da_178.py` compara página a página.
+ANTES_DA_178 = {
     "A": RAIZ / "specs" / "069-edital-linguagem-simples" / "demonstracao" / "A-plana-069.pdf",
     # Da `133`: o corte de alvo fixo diz "de cada lista de concorrência" (FR-4553); a diferença
     # para o da `096` é presa por `test_documento_da_auditoria_depois_da_133.py`.

@@ -33,6 +33,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_NOTA,
     CORPO_SECAO,
     CORPO_TEXTO,
+    METRICA_DO_EDITAL,
     NEGRITO,
     Composicao,
     UnidadeDoAto,
@@ -52,14 +53,21 @@ ENTRE_SECOES = 10.0
 ENTRE_DOCUMENTOS = 6.0
 
 
-def render_comprovante_pdf(dados: dict) -> bytes:
+def render_comprovante_pdf(dados: dict, *, pdfa: bool) -> bytes:
     """Um documento de uma página, com o que se confere e o que se prova.
 
     `dados` é o que a aplicação já reuniu para a tela — nenhuma consulta acontece aqui. O
     renderizador não sabe de banco, de requisição nem de sessão: recebe fatos e devolve bytes, que
     é o que torna o resultado testável byte a byte.
+
+    `pdfa` diz qual escritor (178, D-002): o PDF/A, com a fonte do Edital embutida e medida, para a
+    inscrição enviada depois da `178`; o de antes, byte a byte, para a enviada antes — a página dela
+    já mostrou ao candidato o resumo do arquivo. Quem decide é o que a inscrição registrou no envio
+    (`Inscricao.comprovante_em_pdfa`), e não este módulo, que não sabe de banco. **Sem padrão, de
+    propósito**: um chamador novo que esquecesse o registro entregaria o PDF/A a quem já anotou o
+    resumo do comprovante antigo.
     """
-    composicao = Composicao()
+    composicao = Composicao(metrica=METRICA_DO_EDITAL) if pdfa else Composicao()
     _timbre(composicao, dados)
     _identificacao(composicao, dados)
     _dados_da_inscricao(composicao, dados)
@@ -68,6 +76,7 @@ def render_comprovante_pdf(dados: dict) -> bytes:
     return render_documento(
         composicao,
         identificacao=f"{dados['protocolo']} · Verificação {dados['codigo_de_verificacao']}",
+        pdfa=pdfa,
     )
 
 
