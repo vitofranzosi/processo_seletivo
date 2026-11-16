@@ -141,3 +141,75 @@ test("a imagem de teste gira de frente, à esquerda, de frente e à direita, a c
   assert.equal(g.giroDaImagemDeTeste(14), 1);
   assert.ok(g.giroDaImagemDeTeste(2.75) > 0 && g.giroDaImagemDeTeste(2.75) < 1);
 });
+
+/* A emenda da 176: o documento na imagem de teste, a frase da fala e o medidor do microfone. */
+
+test("a imagem de teste mostra o documento ao lado do rosto no começo do ciclo, e depois o tira (FR-8065)", () => {
+  assert.equal(g.rostosDaImagemDeTeste(0.2), 1);
+  assert.equal(g.rostosDaImagemDeTeste(1), 2);
+  assert.equal(g.rostosDaImagemDeTeste(2.5), 1);
+  assert.equal(g.rostosDaImagemDeTeste(11), 2);
+  // O documento aparece com o vulto de frente, e não durante um giro.
+  for (const t of [0.6, 1, 1.5, 2.1]) assert.equal(g.giroDaImagemDeTeste(t), 0, t);
+});
+
+test("a frase da fala põe em destaque só o que está entre aspas, sem acrescentar nada (FR-8072)", () => {
+  const texto =
+    "Olhe para a câmera e diga a frase «Eu me autodeclaro pessoa preta» ou «pessoa parda», como declarou.";
+  const partes = g.partesDaFrase(texto);
+  assert.equal(partes.map((p) => p.texto).join(""), texto);
+  assert.deepEqual(
+    partes.filter((p) => p.destaque).map((p) => p.texto),
+    ["«Eu me autodeclaro pessoa preta»", "«pessoa parda»"]
+  );
+  assert.deepEqual(g.partesDaFrase("Sem aspas."), [{ texto: "Sem aspas.", destaque: false }]);
+  assert.deepEqual(g.partesDaFrase("Aspa «sem fim"), [{ texto: "Aspa «sem fim", destaque: false }]);
+  assert.deepEqual(g.partesDaFrase(""), []);
+});
+
+test("a frase do roteiro de frente sai inteira das partes", () => {
+  // A do roteiro de verdade, como o template a entrega no `data-texto`.
+  const frente =
+    "Olhe para a câmera e diga o seu nome e a frase «Eu me autodeclaro pessoa preta» ou " +
+    "«pessoa parda», como declarou na inscrição. Não diga o seu CPF. Se preferir, mostre a " +
+    "frase escrita num papel, ou diga em Libras.";
+  assert.equal(g.partesDaFrase(frente).map((p) => p.texto).join(""), frente);
+});
+
+test("o pico sai das amostras em ponto flutuante ou em bytes, na mesma escala", () => {
+  assert.equal(g.picoDasAmostras(new Float32Array([0, 0.1, -0.25, 0.2]), false), 0.25);
+  assert.equal(g.picoDasAmostras(new Uint8Array([128, 128, 160, 96]), true), 0.25);
+  assert.equal(g.picoDasAmostras(new Uint8Array([128, 128]), true), 0);
+});
+
+test("a régua da fala continua a da 174: nível 20 a partir de 8% do fundo de escala (FR-8082)", () => {
+  assert.equal(g.LIMIAR_DA_FALA, 20);
+  assert.equal(g.nivelDoPico(0.08), 20);
+  assert.equal(g.nivelDoPico(1), 100);
+  assert.equal(g.nivelDoPico(0), 0);
+});
+
+test("a barra é em decibéis: a fala comum fica no meio, e a marca no limiar da fala (FR-8081)", () => {
+  assert.equal(g.fracaoDoMedidor(0), 0);
+  assert.equal(g.fracaoDoMedidor(1), 1);
+  // Um pico de -30 dB (fala baixa, longe do microfone) já sai do começo da barra.
+  assert.ok(g.fracaoDoMedidor(10 ** (-30 / 20)) > 0.4);
+  // Na escala linear de antes, o mesmo pico dava 8% da barra.
+  assert.ok(g.nivelDoPico(10 ** (-30 / 20)) < 10);
+  // A marca de "volume bom" é exatamente onde a régua da fala passa a ouvir.
+  assert.equal(g.MARCA_DO_VOLUME_BOM, g.fracaoDoMedidor(g.LIMIAR_DA_FALA / 250));
+  assert.ok(g.MARCA_DO_VOLUME_BOM > 0.55 && g.MARCA_DO_VOLUME_BOM < 0.7);
+  // O silêncio da sala (-60 dB) não mexe a barra.
+  assert.equal(g.fracaoDoMedidor(10 ** (-60 / 20)), 0);
+});
+
+test("a barra sobe rápido e desce devagar, para não piscar", () => {
+  // Em 50 ms a barra já subiu quase toda, e ainda não desceu quase nada; em um segundo, desceu.
+  const subida = g.suavizarMedidor(0, 1, 50);
+  const descida = g.suavizarMedidor(1, 0, 50);
+  assert.ok(subida > 0.6, String(subida));
+  assert.ok(descida > 0.85, String(descida));
+  assert.ok(g.suavizarMedidor(1, 0, 1000) < 0.15);
+  assert.equal(g.suavizarMedidor(0.5, 0.5, 16), 0.5);
+  assert.equal(g.suavizarMedidor(0.2, 1, 0), 0.2);
+});

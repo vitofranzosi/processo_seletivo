@@ -56,6 +56,10 @@ ARQUIVOS = {
 # de frente continuam pelo toque. O lado é o **da pessoa** (D-005), e quem o lê é o `deteccao.js`.
 GIRO_DO_PASSO = {"perfil-esquerdo": "esquerda", "perfil-direito": "direita"}
 
+# O passo do documento, que avança quando a foto dele apareceu como um segundo rosto e saiu (emenda,
+# FR-8060 a FR-8064, D-009). A detecção conta os rostos ali, e não lê o documento.
+PASSO_DO_DOCUMENTO = "documento"
+
 
 def ligada() -> bool:
     """A página oferece a detecção: as duas chaves ligadas (FR-8020)."""

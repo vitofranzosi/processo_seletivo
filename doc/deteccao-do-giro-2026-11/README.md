@@ -71,3 +71,29 @@ pedido pelo roteiro passar muito de 0,30, ou não chegar a ele, o limiar se ajus
 Capturas da jornada no navegador (câmera simulada do Chromium e imagem de teste), em `capturas/`: o
 documento e o perfil esquerdo a 375 px, o perfil esquerdo a 1280 px e o perfil visto a 375 px. O oval
 sai durante a gravação; a frase do roteiro fica inteira, em tamanho de leitura, nos passos de gesto.
+
+## O documento, a frase de frente e o microfone (emenda de 15/11, à noite)
+
+Depois do teste do usuário com câmera real no Safari do macOS, no C19 (FR-8060 a FR-8085, D-009 a
+D-011). Capturas em `capturas/`:
+
+- `375-documento-visto.png` — a imagem de teste mostra o "documento" (o cartão com um vulto pequeno)
+  ao lado do rosto; a tela diz "Documento visto" no lugar do sinal, e passa ao perfil esquerdo quando
+  o cartão sai. Sem modelo novo: o motor já procurava dois rostos.
+- `375-de-frente.png` e `1280-de-frente.png` — no passo de frente, o alto tem só "Passo 4 de 4 · De
+  frente"; a frase do roteiro, inteira, fica embaixo, com as frases entre aspas em destaque. No palco
+  deitado ela fica ao lado do botão. Medido no navegador: a 375 × 667 a faixa de cima ocupa 134 px
+  (20%; antes, a frase de 250 caracteres ocupava cerca de metade e a faixa cortava o fim), a frase
+  ocupa 162 px a partir de 59% da altura, sem rolagem; a 1280 × 800 ela começa a 70% da altura do
+  palco.
+- `375-preparo-microfone.png` — a barra do microfone, em decibéis, com a marca de "volume bom".
+
+**O medidor.** O tom da imagem de teste (ganho 0,05, pico de −26 dB) enchia 12% do `<meter>` de
+antes; na barra nova ele enche 52%, abaixo da marca (62%), e a frase continua pedindo "Fale alguma
+coisa" — a régua de "Estamos ouvindo você" é a mesma da `174`, e a marca é ela desenhada. A fala em voz
+normal, com pico entre −20 e −10 dB, enche de 67% a 90%. O pico em bytes da escala de antes parava em
+1/128 (−42 dB); a leitura passou a ponto flutuante onde o navegador oferece.
+
+**A medir com câmera real** (SC-2757, SC-2764, humano): o documento de verdade perto da câmera — o
+motor encontra a foto como segundo rosto? a que distância? — e a barra no Safari, com a voz.
+
