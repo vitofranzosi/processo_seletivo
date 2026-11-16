@@ -59,7 +59,7 @@ Caminhos relativos a `backend/`, salvo indicação.
 - [x] T027 Linha da `178` no `README.md`; nota do job no `CLAUDE.md`
 - [x] T028 `rastreabilidade.md`
 - [x] T029 `make lint check test-pg` com `DB_NAME=ps_178`
-- [ ] T030 O job `pdfa` verde no CI do PR
+- [x] T030 O job `pdfa` verde no CI do PR
 
 ## Dependencies
 
