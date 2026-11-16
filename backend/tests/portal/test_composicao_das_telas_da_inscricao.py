@@ -156,7 +156,7 @@ def _prazo(**kwargs):
     base = {
         "enviada": True,
         "fechada": None,
-        "conteudo": None,
+        "periodo": None,
         "agora": AGORA,
         "convocacao": None,
         "passo": None,
@@ -198,7 +198,7 @@ def test_o_rascunho_fechado_nao_tem_prazo():
     }
     fechado = periodo_de_inscricoes(conteudo, AGORA)
 
-    assert _prazo(enviada=False, fechada=fechado, conteudo=conteudo) is None
+    assert _prazo(enviada=False, fechada=fechado, periodo=fechado) is None
 
 
 def test_o_periodo_sem_termino_nao_tem_prazo():
@@ -209,7 +209,21 @@ def test_o_periodo_sem_termino_nao_tem_prazo():
         ]
     }
 
-    assert _prazo(enviada=False, conteudo=conteudo) is None
+    assert _prazo(enviada=False, periodo=periodo_de_inscricoes(conteudo, AGORA)) is None
+
+
+def test_o_rascunho_aberto_da_o_termino_do_periodo():
+    conteudo = {
+        "schedule": [
+            {
+                "isRegistrationPeriod": True,
+                "startAt": (AGORA - timedelta(days=1)).isoformat(),
+                "endAt": FUTURO.isoformat(),
+            }
+        ]
+    }
+
+    assert _prazo(enviada=False, periodo=periodo_de_inscricoes(conteudo, AGORA)) == FUTURO
 
 
 # --- Minha inscrição e Acompanhar ----------------------------------------------------------------
@@ -333,3 +347,75 @@ def test_a_acao_do_cartao_tem_a_largura_do_rotulo_na_tela_larga(folha):
         r"a\.principal\{align-self:flex-start",
         secao,
     )
+
+
+# --- O prazo do cartão é o do Acompanhamento (revisão do #577, D-009) ----------------------------
+
+
+@pytest.fixture
+def jornada(db, gestor, api_client, manager_headers, process_payload, raiz_de_arquivos):
+    from tests.fixtures import jornada_do_convocado
+
+    return jornada_do_convocado.Montagem(gestor, api_client, manager_headers, process_payload)
+
+
+@pytest.mark.parametrize("letra", ["C1", "E", "B2"])
+def test_o_cartao_diz_o_mesmo_prazo_que_o_acompanhamento_com_e_sem_providencia(
+    client, jornada, letra
+):
+    """D-009: com o Requerimento enviado (B2) ou tudo enviado (E), o Acompanhamento continua dizendo
+    o prazo da convocação (FR-6208 da 154), e o cartão diz o mesmo. Com providência (C1), também."""
+    from tests.fixtures import jornada_do_convocado
+    from tests.interface.test_portal_convocacao import entrar_como
+
+    cenario = jornada_do_convocado.montar(letra, jornada)
+    with cenario.relogio():
+        entrar_como(client, cenario.pessoa)
+        lista = client.get(reverse("portal:inscricoes")).content.decode()
+        acompanhamento = client.get(
+            reverse("portal:acompanhamento", args=[cenario.pessoa.id])
+        ).content.decode()
+
+    item = _item(lista, cenario.pessoa)
+    (no_cartao,) = re.findall(r"Prazo: (até [^.<]+?)(?: |$)", _visivel(item) + " ")
+    situacao = re.search(
+        r'<section class="situacao-da-inscricao".*?</section>', acompanhamento, re.S
+    ).group(0)
+    assert f"Prazo desta convocação: {no_cartao}" in _visivel(situacao)
+
+
+# --- O começo das duas telas irmãs sai da mesma versão (revisão do #577, D-008) ------------------
+
+
+def test_minha_inscricao_e_acompanhar_dizem_o_mesmo_perfil_depois_da_retificacao(
+    client, selecao, api_client
+):
+    """O começo vem da vigente nas duas telas; "O que você informou" continua na aceita."""
+    from tests.fixtures.candidato import PERFIL_DOCENTE
+    from tests.fixtures.publicacao import retify
+
+    registro = inscricao(selecao, MARIA, enviada=True)
+    aceito = views._perfil_do_conteudo(_conteudo(selecao), PERFIL_DOCENTE)["name"]
+    retify(
+        api_client,
+        selecao,
+        [
+            {
+                "targetPath": f"/profiles/id={PERFIL_DOCENTE}/name",
+                "operation": "REPLACE",
+                "newValue": "Docente de Informática renomeado",
+            }
+        ],
+    )
+    identificar(client, MARIA)
+
+    conferencia = client.get(reverse("portal:inscricao", args=[registro.id])).content.decode()
+    acompanhamento = client.get(
+        reverse("portal:acompanhamento", args=[registro.id])
+    ).content.decode()
+
+    for corpo in (conferencia, acompanhamento):
+        assert "Perfil de Vaga: Docente de Informática renomeado" in corpo
+    campos = conferencia[conferencia.find('<dl class="campos campos-em-grade">') :]
+    campos = campos[: campos.find("</dl>")]
+    assert aceito in campos and "renomeado" not in campos

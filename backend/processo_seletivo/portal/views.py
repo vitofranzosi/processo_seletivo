@@ -83,6 +83,7 @@ from processo_seletivo.inscricoes.application.submissao import (
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
 from processo_seletivo.inscricoes.domain.periodo import (
     ABERTO,
+    edital_recebe_inscricoes,
     periodo_de_inscricoes,
     recebe_inscricoes,
 )
@@ -1557,7 +1558,7 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=None):
     enviada = registro.status == Inscricao.Status.SUBMETIDA
     chamada = _convocacao_para_a_tela(convocacao, agora)
     aberta = chamada["convocacao"] is not None and chamada["desfecho"] is None
-    fechada = None
+    fechada = periodo = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
     else:
@@ -1568,11 +1569,13 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=None):
         # instituto — ele deixa de identificar qualquer coisa.
         processo = conteudo.get("processoTitle", "")
         if not enviada:
-            fechada = _rascunho_fechado(registro, conteudo, agora)
+            # O período uma vez só: o rascunho fechado e o prazo do cartão leem o mesmo (177).
+            periodo = periodo_de_inscricoes(conteudo, agora)
+            fechada = _rascunho_fechado(registro, conteudo, agora, periodo=periodo)
     prazo = _prazo_do_cartao(
         enviada=enviada,
         fechada=fechada,
-        conteudo=conteudo,
+        periodo=periodo,
         agora=agora,
         convocacao=chamada["convocacao"] if aberta else None,
         passo=passo,
@@ -1607,7 +1610,7 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=None):
     }
 
 
-def _prazo_do_cartao(*, enviada, fechada, conteudo, agora, convocacao, passo):
+def _prazo_do_cartao(*, enviada, fechada, periodo, agora, convocacao, passo):
     """O prazo da ação que o cartão oferece, ou `None` (177, FR-8106, D-003).
 
     Um só, e o da ação principal: com a convocação aberta, é ela que o botão abre; sem ela, o
@@ -1621,24 +1624,28 @@ def _prazo_do_cartao(*, enviada, fechada, conteudo, agora, convocacao, passo):
         fim = convocacao.vencimento
     elif passo is not None:
         fim = passo.fim
-    elif not enviada and fechada is None and conteudo is not None:
-        periodo = periodo_de_inscricoes(conteudo, agora)
+    elif not enviada and fechada is None and periodo is not None:
         fim = periodo.fim if periodo.estado == ABERTO else None
     else:
         fim = None
     return fim if fim is not None and fim > agora else None
 
 
-def _rascunho_fechado(registro, conteudo, agora):
+def _rascunho_fechado(registro, conteudo, agora, *, periodo=None):
     """O período, quando o rascunho já não pode ser enviado; `None` enquanto pode (009, FR-032).
 
     A pergunta é a mesma que o domínio faz ao gravar, anexar e enviar — `recebe_inscricoes` —, e não
     uma releitura do período: um Edital cancelado dentro do prazo também fecha o rascunho, e a tela
     que dissesse "continue" contrariaria a recusa logo adiante.
     """
-    if recebe_inscricoes(status=registro.edital.status, conteudo=conteudo, agora=agora):
+    if periodo is None:
+        return _rascunho_fechado(
+            registro, conteudo, agora, periodo=periodo_de_inscricoes(conteudo, agora)
+        )
+    # É `recebe_inscricoes` com o período já lido: a lista o lê uma vez e o reusa no prazo (177).
+    if edital_recebe_inscricoes(registro.edital.status) and periodo.aberto:
         return None
-    return periodo_de_inscricoes(conteudo, agora)
+    return periodo
 
 
 @require_http_methods(["GET", "POST"])
@@ -2077,12 +2084,14 @@ def _conferencia(request, registro, versao):
         "portal/inscricao_enviada.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(aceita),
-            # O Perfil no começo da tela (177, FR-8110): a trilha diz o Processo e o Edital, e é
-            # o Perfil que distingue duas inscrições no mesmo Edital. Da versão aceita, como os
-            # campos.
+            # **O começo da tela sai da versão vigente** (177, FR-8110, D-008), como o do
+            # Acompanhamento: as duas telas são irmãs e levam o mesmo cabeçalho, e depois de uma
+            # Retificação que renomeie o Perfil ou o Processo, ler a aceita aqui e a vigente lá
+            # mostrava dois nomes para a mesma inscrição. "O que você informou" continua na
+            # aceita, porque é a conferência do ato.
+            "selecao": _selecao(versao),
             "perfil_da_inscricao": _perfil_legivel(
-                _perfil_do_conteudo(conteudo, registro.profile_id)
+                _perfil_do_conteudo(versao.content, registro.profile_id)
             )["nome"],
             "campos": dados["campos"],
             "documentos": documentos,

@@ -40,6 +40,12 @@ implementação de cada história.
 - [x] T016 `make lint check`; `tests/portal`, `tests/interface`, `tests/integration/portal`, `tests/performance/test_lista_com_convocacao.py` e `tests/test_citacoes_de_requisito.py` contra PostgreSQL
 - [x] T017 PR para a `main`, sem merge, com as capturas
 
+## Phase 7: Revisão de código do #577
+
+- [x] T018 O prazo da convocação no cartão com e sem providência pendente, igual ao Acompanhamento (D-009); teste nos cenários C1, E e B2 da `154`
+- [x] T019 O começo de "Minha inscrição" pela versão vigente, como o de "Acompanhar" (D-008); teste com Retificação que renomeia o Perfil
+- [x] T020 O período de inscrições lido uma vez em `_item_da_lista` e passado ao prazo e ao rascunho fechado
+
 ## Dependencies
 
 T001 → T002 → (T003, T004) → US1, US2, US3 (independentes entre si) → T013 → T014 → T016 → T017.

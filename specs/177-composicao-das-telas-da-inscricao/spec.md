@@ -228,7 +228,8 @@ lado do valor; no celular, um sobre o outro. A ação principal é baixar o comp
   3. o rascunho que ainda pode ser enviado, com término do período de inscrições: esse término.
 
   Sem nenhum deles, a linha não aparece. O prazo DEVE sair do que a lista já lê, sem consulta nova ao
-  banco.
+  banco. O prazo da convocação aparece **com ou sem** providência pendente da pessoa, como no
+  Acompanhamento (a FR-6208 da `154`; D-009).
 - **FR-8107**: A situação do cartão DEVE aparecer em selo, com as frases de hoje: "✓ Inscrição
   enviada" em selo registrado; "Falta um passo seu: {Etapa}" e "Convocação aberta" em selo de atenção,
   com a seta; "Inscrição não enviada…" em selo neutro. A distinção entre eles DEVE ser visível sem cor:
@@ -244,7 +245,8 @@ lado do valor; no celular, um sobre o outro. A ação principal é baixar o comp
 - **FR-8110**: As duas telas DEVEM começar pelo mesmo molde: a trilha "Minhas inscrições ›
   {Processo} · Edital {número}/{ano}", com "Minhas inscrições" como link; o título da tela, como hoje;
   e a identificação "Perfil de Vaga: {nome}", no lugar do subtítulo que repetia o Processo. Sem Perfil,
-  a identificação não aparece.
+  a identificação não aparece. O começo das duas DEVE sair da mesma versão, a vigente; "O que você
+  informou" continua na versão aceita (D-008).
 - **FR-8111**: O prazo do Acompanhamento DEVE continuar onde a `174` e a `118` o puseram — o do passo em
   linha própria dentro de "Sua situação" (a FR-7857 da `174`), o da convocação em "O que fazer" —, e
   "Sua situação" DEVE ser o primeiro bloco depois do começo da tela. Esta spec não repete o prazo no
@@ -404,3 +406,31 @@ título, como ação secundária, e deixa de ocupar o lugar do subtítulo.
 
 O Acompanhamento tinha dois: a ação de "Sua situação" e "Ver o que enviei". A ação da situação é a
 resposta da tela (a `063`); conferir o que se enviou é consulta, e vira secundário.
+
+### D-008 — O começo das duas telas irmãs sai da versão vigente
+
+Revisão de código do #577. "Minha inscrição" lia o começo da versão aceita, e "Acompanhar", da vigente:
+depois de uma Retificação que renomeasse o Perfil ou o Processo, as duas telas irmãs mostravam nomes
+diferentes no mesmo cabeçalho. O começo passa a sair da vigente nas duas — é o nome de hoje, o mesmo da
+lista e da página da seleção. "O que você informou" continua na aceita, porque é a conferência do que
+foi enviado sob aquela versão (a `010`), e é ali que o nome do dia do envio continua legível.
+
+### D-009 — O prazo da convocação fica no cartão com ou sem providência pendente
+
+Revisão de código do #577, que perguntou se o cartão deveria esconder o vencimento quando a pessoa já
+entregou o que a convocação pede (o Requerimento enviado, por exemplo). Não esconde, por duas razões:
+
+1. **A `154` decidiu o contrário para o Acompanhamento e para a convocação.** A FR-6208 da `154` manda
+   o prazo continuar visível com a chamada aberta, **com ou sem** providência pendente; só a advertência
+   do não atendimento depende dela (a FR-6209 da `154`). Na tela de exemplo da revisão, o Acompanhamento
+   diz "Seu Requerimento de Matrícula foi enviado" **e** "Prazo desta convocação: até …". Esconder o
+   prazo só no cartão faria a lista e o Acompanhamento discordarem, que é o defeito que a revisão quis
+   evitar. O teste `test_o_cartao_diz_o_mesmo_prazo_que_o_acompanhamento_com_e_sem_providencia`
+   confere os dois nos cenários com providência (C1), com tudo enviado (E) e só com o Requerimento
+   enviado (B2).
+2. **A derivação custaria consulta por item.** "Não falta nada" sai da leitura dos documentos da
+   chamada e da política do Requerimento (a `118` e a `154`), que a lista não faz; o laço da lista
+   continua sem consulta (`test_lista_com_convocacao`).
+
+Se o usuário quiser outro comportamento, ele muda a FR-6208 da `154` primeiro, e o cartão a segue.
+
