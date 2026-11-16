@@ -1,0 +1,270 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.4",
+  "buildDate" : 1794229680000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.4",
+  "buildDate" : 1794229860000
+},{
+  "id" : "apps",
+  "version" : "1.30.4",
+  "buildDate" : 1794231600000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/tmp/w/saida/direto/I1-edital-gps-2b.pdf",
+  "size" : 84966
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 6820,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850128180,
+  "finish" : 1794850128376,
+  "difference" : 196,
+  "duration" : "00:00:00.196"
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794850128152,
+    "finish" : 1794850128383,
+    "difference" : 231,
+    "duration" : "00:00:00.231"
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "failedJobCount" : 0,
+    "compliantPdfaCount" : 1,
+    "totalJobCount" : 1,
+    "nonCompliantPdfaCount" : 0,
+    "successfulJobCount" : 1
+  }
+}}}{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.4",
+  "buildDate" : 1794229680000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.4",
+  "buildDate" : 1794229860000
+},{
+  "id" : "apps",
+  "version" : "1.30.4",
+  "buildDate" : 1794231600000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/tmp/w/saida/direto/I2-comprovante-gps-2b.pdf",
+  "size" : 12756
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 143,
+    "failedRules" : 1,
+    "passedChecks" : 1180,
+    "failedChecks" : 2,
+    "ruleSummaries" : [ {
+      "ruleStatus" : "FAILED",
+      "specification" : "ISO 19005-2:2011",
+      "clause" : "6.2.11.4.1",
+      "testNumber" : 1,
+      "status" : "failed",
+      "failedChecks" : 2,
+      "description" : "The font programs for all fonts used for rendering within a conforming file shall be embedded within that file, as defined in ISO 32000-1:2008, 9.9",
+      "object" : "PDFont",
+      "test" : "Subtype == \"Type3\" || Subtype == \"Type0\" || renderingMode == 3 || containsFontFile == true",
+      "checks" : [ {
+        "status" : "failed",
+        "context" : "root/document[0]/pages[0](6 0 obj PDPage)/contentStream[0](7 0 obj PDContentStream)/operators[14]/font[0](Helvetica)",
+        "errorMessage" : "The font program is not embedded",
+        "errorArguments" : [ ]
+      }, {
+        "status" : "failed",
+        "context" : "root/document[0]/pages[0](6 0 obj PDPage)/contentStream[0](7 0 obj PDContentStream)/operators[34]/font[0](Helvetica-Bold)",
+        "errorMessage" : "The font program is not embedded",
+        "errorArguments" : [ ]
+      } ]
+    } ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is not compliant with Validation Profile requirements.",
+  "compliant" : false
+} ],"processingTime":{
+  "start" : 1794850138865,
+  "finish" : 1794850139028,
+  "duration" : "00:00:00.163",
+  "difference" : 163
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794850138838,
+    "finish" : 1794850139040,
+    "duration" : "00:00:00.202",
+    "difference" : 202
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "compliantPdfaCount" : 0,
+    "failedJobCount" : 0,
+    "totalJobCount" : 1,
+    "nonCompliantPdfaCount" : 1,
+    "successfulJobCount" : 1
+  }
+}}}{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.4",
+  "buildDate" : 1794229680000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.4",
+  "buildDate" : 1794229860000
+},{
+  "id" : "apps",
+  "version" : "1.30.4",
+  "buildDate" : 1794231600000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/tmp/w/saida/direto/I1-edital-gps-2u.pdf",
+  "size" : 84966
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 146,
+    "failedRules" : 0,
+    "passedChecks" : 7168,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2u validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850149541,
+  "finish" : 1794850149785,
+  "duration" : "00:00:00.244",
+  "difference" : 244
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794850149515,
+    "finish" : 1794850149792,
+    "duration" : "00:00:00.277",
+    "difference" : 277
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "compliantPdfaCount" : 1,
+    "failedJobCount" : 0,
+    "totalJobCount" : 1,
+    "nonCompliantPdfaCount" : 0,
+    "successfulJobCount" : 1
+  }
+}}}{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.4",
+  "buildDate" : 1794229680000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.4",
+  "buildDate" : 1794229860000
+},{
+  "id" : "apps",
+  "version" : "1.30.4",
+  "buildDate" : 1794231600000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/tmp/w/saida/direto/I4-relatorio-gps-2u.pdf",
+  "size" : 133537
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 146,
+    "failedRules" : 0,
+    "passedChecks" : 41620,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2u validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850160248,
+  "finish" : 1794850160517,
+  "duration" : "00:00:00.269",
+  "difference" : 269
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794850160221,
+    "finish" : 1794850160523,
+    "duration" : "00:00:00.302",
+    "difference" : 302
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "failedJobCount" : 0,
+    "compliantPdfaCount" : 1,
+    "totalJobCount" : 1,
+    "nonCompliantPdfaCount" : 0,
+    "successfulJobCount" : 1
+  }
+}}}
