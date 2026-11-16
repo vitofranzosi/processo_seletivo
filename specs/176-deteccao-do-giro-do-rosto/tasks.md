@@ -131,4 +131,5 @@ recomendações.
 - [x] T039 Testes: `deteccao.test.js` (a sequência do documento e o vigia simulado), `gravacao.test.js` (o medidor, a frase, o documento da imagem de teste), `test_deteccao_do_giro.py` (as frases, o `data-documento`, a fala e o microfone) e `test_jornada_do_video.py` (a frase de frente nos quatro tamanhos, o medidor, um toque só)
 - [x] T040 Registrar em `doc/deteccao-do-giro-2026-11/` as capturas e as medidas, e a P-13 ampliada na porta do piloto
 - [ ] T041 *(humano)* Com câmera real e um documento de verdade, no Safari e num celular: o documento é percebido? a barra acompanha a voz? (SC-2757, SC-2764)
+  - 16/11, primeira passada, câmera real no computador: **o documento não foi percebido** — "Documento visto" nunca apareceu, e os dois perfis avançaram sozinhos na mesma tomada. Registro em [`doc/achado-documento-nao-percebido-com-camera-real.md`](../../doc/achado-documento-nao-percebido-com-camera-real.md). Faltam o celular e a barra.
 
