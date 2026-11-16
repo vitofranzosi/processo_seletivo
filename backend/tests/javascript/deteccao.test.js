@@ -328,3 +328,20 @@ test("pausar esquece o documento: o passo seguinte começa do zero", async () =>
   assert.equal(vigia.documento, "esperando");
   vigia.parar();
 });
+
+test("a foto do documento tapando o rosto não é a volta do rosto (revisão do #578)", () => {
+  // O rosto da pessoa mede 0,5 da altura; a foto do documento diante dele, 0,2.
+  const lidas = [];
+  let estado = "esperando";
+  const passo = (rostos, altura) => {
+    lidas.push({ ms: lidas.length * 150, rostos, altura });
+    estado = d.avaliarDocumento(lidas, estado, { referencia: 0.5 });
+  };
+  for (let i = 0; i < 4; i += 1) passo(1, 0.5);
+  for (let i = 0; i < 4; i += 1) passo(2, 0.5);
+  assert.equal(estado, "na-mao");
+  for (let i = 0; i < 6; i += 1) passo(1, 0.2);
+  assert.equal(estado, "na-mao");
+  for (let i = 0; i < 4; i += 1) passo(1, 0.45);
+  assert.equal(estado, "visto");
+});

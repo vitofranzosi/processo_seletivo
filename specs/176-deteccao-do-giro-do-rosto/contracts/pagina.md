@@ -22,7 +22,7 @@ Com a chave desligada, **nada** deste contrato aparece no HTML (SC-2751).
 | `data-gesto` em `[data-passo]` | `documento`, `esquerda`, `direita`; ausente no passo de frente |
 | `.gesto-do-passo` (`aria-hidden`) | sobre a prévia, só gravando; `.gesto-esquerda`, `.gesto-direita`, `.gesto-documento` |
 | `data-gesto` e `data-confirmado` no palco | escritos por `gravacao.js`; a folha mostra o sinal do passo e o esconde quando visto |
-| frases | "Sua esquerda", "Sua direita", "Mostre o documento" |
+| frases | "Sua esquerda", "Sua direita", "Mostre o documento ao lado do rosto" |
 
 ## Os ganchos do script
 

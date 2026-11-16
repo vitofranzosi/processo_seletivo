@@ -35,6 +35,9 @@
   var TETO_DA_LEITURA = 120;
   var LEITURAS_LENTAS = 5;
   var LEITURAS_GUARDADAS = 20;
+  // O rosto que volta no documento precisa ter pelo menos esta fração da altura do rosto da pessoa
+  // medido antes (revisão do #578): a foto do documento tapando o rosto também é "um rosto só".
+  var PROPORCAO_DO_ROSTO_DE_VOLTA = 0.6;
 
   // Os pontos da malha do rosto que bastam para o giro: a ponta do nariz e as duas bordas do rosto,
   // na altura das maçãs (T-005).
@@ -130,16 +133,25 @@
   function avaliarDocumento(leituras, anterior, opcoes) {
     opcoes = opcoes || {};
     var mantido = opcoes.mantido === undefined ? INSTANTE_MANTIDO : opcoes.mantido;
+    // A altura do rosto da pessoa, medida quando ela estava sozinha (`referencia`, de 0 a 1). Sem
+    // ela, qualquer rosto sozinho vale, como antes.
+    var referencia = Number(opcoes.referencia) || 0;
     function sozinho(leitura) {
       return leitura.rostos === 1;
     }
     function comDocumento(leitura) {
       return leitura.rostos >= 2;
     }
+    // A volta é a do rosto da pessoa, e não a da foto do documento diante dele (revisão do #578):
+    // a foto, mesmo perto da câmera, é menor que o rosto que o oval enquadrou.
+    function rostoDeVolta(leitura) {
+      if (!sozinho(leitura)) return false;
+      return !referencia || (leitura.altura || 0) >= referencia * PROPORCAO_DO_ROSTO_DE_VOLTA;
+    }
     var estado = anterior || "esperando";
     if (estado === "esperando") return corridaMantida(leituras, sozinho, mantido) ? "sozinha" : estado;
     if (estado === "sozinha") return corridaMantida(leituras, comDocumento, mantido) ? "na-mao" : estado;
-    if (estado === "na-mao") return corridaMantida(leituras, sozinho, mantido) ? "visto" : estado;
+    if (estado === "na-mao") return corridaMantida(leituras, rostoDeVolta, mantido) ? "visto" : estado;
     return estado;
   }
 
@@ -203,6 +215,7 @@
     this.giro = null;
     this.passouPelaFrente = false;
     this.documento = null;
+    this.alturaDoRosto = 0;
   }
 
   Vigia.prototype.estado = function (nome) {
@@ -316,6 +329,7 @@
     this.rosto = null;
     this.passouPelaFrente = false;
     this.documento = "esperando";
+    this.alturaDoRosto = 0;
     // O motor que chegou com a tomada em curso aquece no primeiro pedido fora dela.
     if (this.motor && !this.pronto && !this.parado && !this.gravando()) {
       if (this.aquecer(this.motor) === "falhou") {
@@ -397,11 +411,16 @@
       return;
     }
     if (this.alvo === "documento") {
-      this.leituras.push({ ms: performance.now(), rostos: leitura.rostos || 0 });
+      var altura = leitura.caixa ? leitura.caixa.altura : 0;
+      this.leituras.push({ ms: performance.now(), rostos: leitura.rostos || 0, altura: altura });
       if (this.leituras.length > LEITURAS_GUARDADAS) this.leituras.shift();
-      var documento = avaliarDocumento(this.leituras, this.documento);
+      var documento = avaliarDocumento(this.leituras, this.documento, {
+        referencia: this.alturaDoRosto,
+      });
       if (documento !== this.documento) {
         this.documento = documento;
+        // Sozinha, a altura do rosto da pessoa é a referência da volta (revisão do #578).
+        if (documento === "sozinha") this.alturaDoRosto = altura;
         // Visto, o vigia para de olhar: o passo vai mudar. Só "na-mao" e "visto" são notícia.
         if (documento === "visto") this.alvo = null;
         if ((documento === "na-mao" || documento === "visto") && this.opcoes.aoGiro) {

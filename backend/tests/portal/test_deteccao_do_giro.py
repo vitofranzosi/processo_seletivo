@@ -258,7 +258,7 @@ def test_o_sinal_do_gesto_vale_com_ou_sem_a_deteccao(cenario, client, settings, 
         "perfil-direito": "direita",
     }
     assert re.search(r'class="gesto-do-passo" data-so-gravando aria-hidden="true"', corpo)
-    for palavra in ("Sua esquerda", "Sua direita", "Mostre o documento"):
+    for palavra in ("Sua esquerda", "Sua direita", "Mostre o documento ao lado do rosto"):
         assert palavra in corpo
 
 

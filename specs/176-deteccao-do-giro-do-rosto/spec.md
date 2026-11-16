@@ -488,7 +488,8 @@ Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e 
 - **FR-8050**: Durante a gravação, os passos de gesto DEVEM mostrar sobre a prévia um sinal visual
   grande, com uma palavra ao lado: no perfil esquerdo, uma seta para a esquerda da tela e "Sua
   esquerda"; no perfil direito, uma seta para a direita e "Sua direita"; no documento, o pictograma
-  do documento e "Mostre o documento". A prévia é espelhada (a FR-7874 da `174`), e a esquerda da
+  do documento e "Mostre o documento ao lado do rosto" (*revisto na revisão do #578: "Mostre o
+  documento" levava a pô-lo diante do rosto, e a detecção, que conta dois rostos, não o via*). A prévia é espelhada (a FR-7874 da `174`), e a esquerda da
   tela é a esquerda da pessoa. O passo de frente NÃO DEVE ter sinal: a frase dele é o que a pessoa
   fala.
 - **FR-8051**: A frase do roteiro DEVE continuar inteira e à vista em todos os passos, sem recolher
@@ -514,7 +515,9 @@ Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e 
   do sinal do documento (FR-8053), e o leitor de tela DEVE ouvir a mesma frase.
 - **FR-8062**: Visto o documento, quando o rosto da pessoa ficar sozinho no quadro pelo mesmo instante,
   a tela DEVE passar ao passo seguinte, depois do instante de confirmação, pelo mesmo caminho do toque
-  e com a mesma marca (FR-8012).
+  e com a mesma marca (FR-8012). O rosto que volta DEVE ter pelo menos 0,6 da altura do rosto medido
+  quando a pessoa estava sozinha (*revisão do #578*): a foto do documento diante do rosto também é um
+  rosto só, e não deve passar por ele.
 - **FR-8063**: O sinal do documento DEVE continuar até o documento ser visto; e, visto, um segundo rosto
   que volte ao quadro DEVE adiar a passagem até ele sair de novo, sem frase nova.
 - **FR-8064**: Sem a sequência inteira — o rosto sozinho, os dois, e o rosto sozinho de novo —, nada
