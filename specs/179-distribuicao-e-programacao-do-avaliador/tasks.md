@@ -134,7 +134,7 @@ o POST confere, o conflito aparece na agenda publicada e na Distribuição, e so
 - [X] T035 [P] Atualizar a linha da `179` no `README.md` (Incremento 1 implementado) e, se a seção de avaliação for tocada, a Visão do Sistema
 - [X] T036 `make lint check` (`ruff check` **e** `ruff format --check`) e a suíte inteira uma vez, `make test-pg DB_NAME=ps_178`; anotar a contagem no PR
 - [X] T037 Percorrer o quickstart do Incremento 1 pela tela (cenário C20), com captura da Distribuição filtrada, da Mesa a 375 px e da remarcação com conflito; SC-2844 fica como validação humana, registrada no PR
-- [ ] T038 Abrir o PR do Incremento 1; o merge é do usuário
+- [X] T038 Abrir o PR do Incremento 1; o merge é do usuário (#583)
 
 ---
 
