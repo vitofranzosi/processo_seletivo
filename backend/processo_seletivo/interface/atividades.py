@@ -306,7 +306,16 @@ def esperas(itens):
     return [item for item in itens if item.grupo == p.EM_ESPERA and item.natureza != a.FORMALIZACAO]
 
 
-def linhas_de_avaliacao(atribuicoes, carga):
+def _proxima_entrevista(proxima):
+    """`próxima entrevista 25/11 às 08:00, Banca 01` — o trecho da linha (179, FR-8214)."""
+    from processo_seletivo.agendamento.domain.horarios import zona
+
+    inicio, banca = proxima
+    local = inicio.astimezone(zona())
+    return f"próxima entrevista {local:%d/%m} às {local:%H:%M}" + (f", {banca}" if banca else "")
+
+
+def linhas_de_avaliacao(atribuicoes, carga, proximas=None):
     """Uma linha por Etapa com inscrição pendente, pela carga — sem a derivação (R-005, D-010).
 
     O número é o da Mesa, o mesmo do cartão e da faixa da `104`. O Centro desconta o que ainda
@@ -320,17 +329,23 @@ def linhas_de_avaliacao(atribuicoes, carga):
         if not pendentes:
             continue
         nome = item["nome"]
+        # **A próxima entrevista**, quando a Etapa tem agenda publicada e há entrevista futura (179,
+        # FR-8214). Vem de uma leitura só para todas as Etapas, feita por quem chama.
+        proxima = (proximas or {}).get((edital.id, str(item["etapa_id"])))
+        lugar = f"{nome} · {_proxima_entrevista(proxima)}" if proxima else nome
         providencia = p.Providencia(
             natureza=a.AVALIAR,
             chave=("etapa", str(item["etapa_id"]), a.AVALIAR),
-            onde=nome,
+            # O `onde` é o que a linha mostra (`onde_por_extenso`): com a próxima entrevista, ela
+            # diz o lugar e o compromisso, e a chave continua a da Etapa.
+            onde=lugar,
             ato=a.ato_de_avaliar(pendentes),
             situacao=a.PENDENTE,
             responsavel=a.AVALIA,
             sua=True,
             url=reverse("interface:minha-etapa", args=[edital.id, item["etapa_id"]]),
             contagem=pendentes,
-            lugar=nome,
+            lugar=lugar,
             # O fim do período da Etapa (171, FR-7326): de toda Etapa com período, e não só da
             # restrita (D-006).
             ate=item.get("fim"),
@@ -496,7 +511,15 @@ def ler(ator, *, vinculos, atribuicoes, carga, agora=None):
         else:
             fazer += linhas_do_edital(da_conferencia(itens, perfis), edital, base, governadas)
 
-    fazer += linhas_de_avaliacao(atribuicoes, carga)
+    proximas = {}
+    if any(
+        (carga.get((item["edital"].id, str(item["etapa_id"]))) or {}).get("pendentes")
+        for item in atribuicoes
+    ):
+        from processo_seletivo.avaliacoes.application.programacao import proximas as ler_proximas
+
+        proximas = ler_proximas(ator.subject, agora=agora)
+    fazer += linhas_de_avaliacao(atribuicoes, carga, proximas)
     return Atividades(
         para_fazer=agrupar_entre_editais(ordenar(fazer)),
         em_espera=agrupar_entre_editais(ordenar(espera), espera=True),

@@ -413,8 +413,13 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 - **FR-7228**: A área do candidato MUST mostrar, na inscrição agendada: o dia e a hora em destaque,
   a duração prevista, a banca, o local ou o acesso à sala virtual, e as orientações. Antes da
   publicação, MUST dizer que o horário ainda não foi publicado e o período da Etapa no cronograma.
-- **FR-7229**: O endereço da sala virtual MUST chegar só à própria pessoa: na área dela, depois de
-  identificada, e no aviso dela.
+- **FR-7229** *(revisada pela `179` em 2026-11-16, com vigência na implementação do Incremento 1
+  dela)*: O endereço da sala virtual MUST chegar só à própria pessoa — na área dela, depois de
+  identificada, e no aviso dela — e ao avaliador autenticado e atribuído àquela entrevista, na Mesa
+  (a FR-8231 da `179`). Nenhum outro avaliador, nem o que é público, a recebe.
+
+  > **Redação anterior, preservada:** O endereço da sala virtual MUST chegar só à própria pessoa: na
+  > área dela, depois de identificada, e no aviso dela.
 
 #### Os avisos
 
@@ -439,6 +444,10 @@ horário novo com a marca; ver na trilha o horário anterior, o novo, o autor e 
 
 - **FR-7240**: Publicada a agenda, toda mudança MUST ser ato individual, sobre uma pessoa, com
   motivo; o preenchimento automático e a liberação de horário publicado MUST NOT estar disponíveis.
+  *(Acréscimo da `179` em 2026-11-16, com vigência na implementação do Incremento 1 dela:)* a
+  remarcação e a inclusão MUST dizer, antes da confirmação, quem avalia a pessoa e quem ficará com
+  duas entrevistas ao mesmo tempo no horário escolhido, e MUST NOT mudar Atribuição nenhuma (a
+  FR-8209 da `179`).
 - **FR-7241**: A remarcação MUST levar a pessoa a um horário livre, MUST exigir motivo, e MUST
   registrar o horário anterior, o novo, o autor, o instante e o motivo. O registro anterior MUST
   continuar existindo.

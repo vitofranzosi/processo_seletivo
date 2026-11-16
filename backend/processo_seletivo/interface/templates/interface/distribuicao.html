@@ -56,10 +56,12 @@ de a lista fechar — a agenda acompanha a participação, e não guarda lista p
   {% if agenda_da_etapa.publicacao %}
   <p><span class="situacao s-PUBLICADO">Agenda publicada</span> em {{ agenda_da_etapa.publicacao.praticado_em|date:"d/m/Y" }}. A página pública e a área de cada pessoa mostram o horário.</p>
   <p><a class="acao" href="{% url 'interface:agenda-publicada' edital.id etapa.id %}">Ver a agenda publicada</a></p>
+  {% url 'interface:distribuicao' edital.id etapa.id as url_da_distribuicao %}{% include "interface/_coerencia_da_agenda.html" with coerencia=agenda_aqui.coerencia so_conflitos=True %}
   {% elif agenda_da_etapa.existe %}
   <p><span class="situacao s-EM_ELABORACAO">Agenda em montagem</span> Nada é público até a agenda ser conferida e publicada.</p>
   <p>{{ agenda_da_etapa.com_horario }} de {{ agenda_da_etapa.participantes }} pessoa{{ agenda_da_etapa.participantes|pluralize:"s" }} com horário · {{ agenda_da_etapa.horarios }} horário{{ agenda_da_etapa.horarios|pluralize:"s" }}{% if agenda_da_etapa.falta %} · <strong>faltam {{ agenda_da_etapa.falta }}</strong>{% endif %}</p>
   <p><a class="acao" href="{% url 'interface:agenda-montar' edital.id etapa.id %}">Montar a agenda</a> <a class="acao" href="{% url 'interface:agenda-configurar' edital.id etapa.id %}">Ajustar a configuração</a></p>
+  {% url 'interface:distribuicao' edital.id etapa.id as url_da_distribuicao %}{% include "interface/_coerencia_da_agenda.html" with coerencia=agenda_aqui.coerencia so_conflitos=True %}
   {% else %}
   <p><strong>Esta Etapa ainda não tem agenda.</strong></p>
   <p>Se a Etapa exige que cada pessoa compareça num dia e horário, configure os dias, as janelas e as bancas. Dá para fazer isso antes de a lista de participantes estar fechada: a agenda acompanha a lista.</p>
@@ -226,7 +228,8 @@ FR-422).
     <tbody>
       {% for linha in carga %}
       <tr>
-        <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}</td>
+        <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}
+          {% with frases=conflitos_da_pessoa|dicionario_simples:linha.membro.identity_subject %}{% if frases %}<span class="marca-em-dois-lugares">em dois lugares</span>{% endif %}{% endwith %}</td>
         <td class="numero">{{ linha.atribuidas }}</td>
         <td class="numero">{{ linha.concluidas }}</td>
       </tr>
@@ -282,7 +285,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
   <div class="aviso" role="status" tabindex="-1" autofocus>
     <p><strong>{{ proposta.total }}</strong> atribuiç{{ proposta.total|pluralize:"ão,ões" }} em
       <strong>{{ proposta.inscricoes }}</strong> inscriç{{ proposta.inscricoes|pluralize:"ão,ões" }},
-      distribuídas por menor carga. Confira antes de confirmar — nada foi gravado ainda.</p>
+      distribuídas por menor carga.{% if agenda_aqui.existe %} As inscrições são percorridas na ordem da agenda — dia, horário, banca —, e ninguém recebe duas entrevistas ao mesmo tempo.{% endif %} Confira antes de confirmar — nada foi gravado ainda.</p>
     <div class="tabela-rolavel">
     <table class="tabela">
       <caption class="oculto">Quanto cada pessoa recebe nesta proposta</caption>
@@ -365,6 +368,24 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
         <option value="avaliacao_pendente" {% if cobertura == "avaliacao_pendente" %}selected{% endif %}>Com avaliação pendente</option>
       </select>
     </p>
+    {% if agenda_aqui.existe %}
+    {% comment %} A sessão da agenda (179, FR-8204, UX-970): dia e banca, no mesmo formulário dos
+    filtros de hoje. Com o dia, a lista vem em ordem de horário, e a sessão inteira numa página. {% endcomment %}
+    <p class="campo">
+      <label for="dia">Dia</label>
+      <select id="dia" name="dia">
+        <option value="">Todos</option>
+        {% for valor, rotulo in agenda_aqui.dias %}<option value="{{ valor }}" {% if dia == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </p>
+    <p class="campo">
+      <label for="banca">Banca</label>
+      <select id="banca" name="banca">
+        <option value="">Todas</option>
+        {% for valor, rotulo in agenda_aqui.bancas %}<option value="{{ valor }}" {% if banca == valor %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </p>
+    {% endif %}
     <p class="campo">
       <label for="avaliador">Avaliador</label>
       <input type="search" id="avaliador" name="avaliador" value="{{ avaliador }}"
@@ -374,6 +395,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
     <p class="acoes"><button type="submit" class="botao">Filtrar</button></p>
   </form>
 
+  {% if agenda_aqui.em_montagem %}<p class="aviso">Horários da agenda em montagem: ainda podem mudar até a publicação.</p>{% endif %}
   {% if linhas %}
   <form method="post">
     {% csrf_token %}
@@ -396,6 +418,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
       <thead>
         <tr>
           <th scope="col"><span class="oculto">Selecionar</span></th>
+          {% if agenda_aqui.existe %}<th scope="col">Horário</th>{% endif %}
           <th scope="col">Inscrição</th>
           {% comment %}
           **Quem distribui decide sobre pessoas, e a tela só dizia protocolos.** Conferir
@@ -418,6 +441,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
                    id="inscricao-{{ linha.inscricao.id }}"
                    aria-label="Inscrição {{ linha.inscricao.protocolo|default:linha.inscricao.id }}">
           </td>
+          {% if agenda_aqui.existe %}<td class="horario-da-linha">{% if linha.horario %}{{ linha.horario.inicio|date:"d/m" }} {{ linha.horario.inicio|date:"H:i" }}–{{ linha.horario.fim|date:"H:i" }} · {{ linha.horario.banca_nome }}{% else %}Sem horário{% endif %}</td>{% endif %}
           <td><label for="inscricao-{{ linha.inscricao.id }}">{{ linha.inscricao.protocolo|default:linha.inscricao.id }}</label></td>
           <td>{{ linha.inscricao.nome|default:"—" }}</td>
           <td>{{ linha.atribuidas }} de {{ resumo.previstas }}{% if linha.faltam %} — faltam {{ linha.faltam }}{% endif %}</td>
@@ -444,6 +468,7 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
             <span class="quem">{% rotulo_ou_nome atribuicao.membro.display_label atribuicao.membro.identity_subject %}</span>{% if not forloop.last %}, {% endif %}
             {% empty %}—
             {% endfor %}
+            {% with marcas=agenda_aqui.marcas|dicionario_simples:linha.inscricao.id %}{% for frase in marcas %}<p class="conflito-de-horario">Em dois lugares: {{ frase }}.</p>{% endfor %}{% endwith %}
           </td>
         </tr>
         {% endfor %}
@@ -527,11 +552,11 @@ abaixo, continua existindo inteiro — quem quer escolher inscrição por inscri
   {% if pagina.has_other_pages %}
   <nav class="paginacao" aria-label="Páginas de inscrições">
     {% if pagina.has_previous %}
-    <a href="?pagina={{ pagina.previous_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}{% if prontidao %}&prontidao={{ prontidao }}{% endif %}">Anterior</a>
+    <a href="?pagina={{ pagina.previous_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}{% if prontidao %}&prontidao={{ prontidao }}{% endif %}{% if dia %}&dia={{ dia }}{% endif %}{% if banca %}&banca={{ banca }}{% endif %}">Anterior</a>
     {% endif %}
     <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
     {% if pagina.has_next %}
-    <a href="?pagina={{ pagina.next_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}{% if prontidao %}&prontidao={{ prontidao }}{% endif %}">Próxima</a>
+    <a href="?pagina={{ pagina.next_page_number }}{% if cobertura %}&cobertura={{ cobertura }}{% endif %}{% if avaliador %}&avaliador={{ avaliador }}{% endif %}{% if prontidao %}&prontidao={{ prontidao }}{% endif %}{% if dia %}&dia={{ dia }}{% endif %}{% if banca %}&banca={{ banca }}{% endif %}">Próxima</a>
     {% endif %}
   </nav>
   {% endif %}

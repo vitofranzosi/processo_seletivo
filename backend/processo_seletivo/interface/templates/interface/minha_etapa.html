@@ -58,6 +58,14 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
 {% if por_alocacao %}
 <section aria-labelledby="mesa">
   <h2 id="mesa">Minha Mesa</h2>
+  {% if visao %}
+  {% comment %} As duas visões (179, FR-8211, FR-8212): a Programação, por horário, é a primeira
+  quando a agenda está publicada; "Por inscrição" é a lista de sempre. Links, e não abas de script. {% endcomment %}
+  <nav class="visoes-da-mesa" aria-label="Como ver a Mesa">
+    <a href="?visao=programacao{% if filtro %}&filtro={{ filtro }}{% endif %}" {% if visao == "programacao" %}aria-current="page"{% endif %}>Programação</a>
+    <a href="?visao=inscricoes{% if filtro %}&filtro={{ filtro }}{% endif %}" {% if visao == "inscricoes" %}aria-current="page"{% endif %}>Por inscrição</a>
+  </nav>
+  {% endif %}
 
   {% if contagens.total %}
   {% comment %}
@@ -69,17 +77,19 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
   com o seu número, e o escolhido marcado por forma, e não só por cor (`aria-current` + o traço).
   {% endcomment %}
   <nav class="filtros-da-mesa" aria-label="Filtrar a Mesa">
-    <a href="?" {% if not filtro %}aria-current="page"{% endif %}>
+    <a href="?{% if visao %}visao={{ visao }}{% endif %}" {% if not filtro %}aria-current="page"{% endif %}>
       <strong>{{ contagens.total }}</strong> <span>no total</span></a>
-    <a href="?filtro=nao-iniciadas" {% if filtro == "nao-iniciadas" %}aria-current="page"{% endif %}>
+    <a href="?{% if visao %}visao={{ visao }}&{% endif %}filtro=nao-iniciadas" {% if filtro == "nao-iniciadas" %}aria-current="page"{% endif %}>
       <strong>{{ contagens.nao_iniciadas }}</strong> <span>não iniciada{{ contagens.nao_iniciadas|pluralize:"s" }}</span></a>
-    <a href="?filtro=rascunhos" {% if filtro == "rascunhos" %}aria-current="page"{% endif %}>
+    <a href="?{% if visao %}visao={{ visao }}&{% endif %}filtro=rascunhos" {% if filtro == "rascunhos" %}aria-current="page"{% endif %}>
       <strong>{{ contagens.rascunhos }}</strong> <span>em rascunho</span></a>
-    <a href="?filtro=concluidas" {% if filtro == "concluidas" %}aria-current="page"{% endif %}>
+    <a href="?{% if visao %}visao={{ visao }}&{% endif %}filtro=concluidas" {% if filtro == "concluidas" %}aria-current="page"{% endif %}>
       <strong>{{ contagens.concluidas }}</strong> <span>concluída{{ contagens.concluidas|pluralize:"s" }}</span></a>
   </nav>
 
-  {% if linhas %}
+  {% if visao == "programacao" %}
+  {% include "interface/_programacao_da_mesa.html" %}
+  {% elif linhas %}
   {% comment %}
   Duas colunas não precisam da página inteira: com 1.480 px, o protocolo ficava numa ponta e a
   situação na outra, e o olho atravessava um vão para juntar as duas. A lista tem a largura do que
@@ -106,9 +116,9 @@ executa, e a página continua dizendo por qual porta ele veio (011, D-006).
   {% comment %} Quarenta e oito é comum; quinhentas não pode quebrar a tela (FR-022). {% endcomment %}
   {% if pagina.has_other_pages %}
   <nav class="paginacao" aria-label="Páginas da Mesa">
-    {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Anterior</a>{% endif %}
+    {% if pagina.has_previous %}<a href="?pagina={{ pagina.previous_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}{% if visao %}&visao={{ visao }}{% endif %}">Anterior</a>{% endif %}
     <span aria-current="page">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</span>
-    {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}">Próxima</a>{% endif %}
+    {% if pagina.has_next %}<a href="?pagina={{ pagina.next_page_number }}{% if filtro %}&filtro={{ filtro }}{% endif %}{% if visao %}&visao={{ visao }}{% endif %}">Próxima</a>{% endif %}
   </nav>
   {% endif %}
 

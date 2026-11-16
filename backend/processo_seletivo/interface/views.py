@@ -30,6 +30,7 @@ from django.utils.http import urlencode
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
 
+from processo_seletivo.agendamento.application import leitura as leitura_da_agenda
 from processo_seletivo.agendamento.domain.nomes import ROTULOS_DA_TRILHA as ROTULOS_DA_AGENDA
 from processo_seletivo.auditoria import selectors as auditoria_selectors
 from processo_seletivo.auditoria.application import record_event
@@ -49,7 +50,11 @@ from processo_seletivo.avaliacoes.application.trilha import auditar as auditar_a
 from processo_seletivo.avaliacoes.domain import barema
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.formas import Forma
-from processo_seletivo.avaliacoes.domain.previsao import forma_publicada, rotulos
+from processo_seletivo.avaliacoes.domain.previsao import (
+    avaliacoes_previstas,
+    forma_publicada,
+    rotulos,
+)
 from processo_seletivo.avisos.application import pendencias as avisos_pendencias
 from processo_seletivo.classificacao.application import ordem_sem_resultado
 from processo_seletivo.classificacao.application.corte import (
@@ -172,6 +177,7 @@ from processo_seletivo.inscricoes.application.consulta import (
 )
 from processo_seletivo.interface import (
     acoes,
+    agenda_na_distribuicao,
     andamento,
     atividades,
     atos,
@@ -7245,6 +7251,13 @@ def distribuicao(request, edital_id, etapa_id):
     panorama = prontidao_013.panorama_da_etapa(
         edital=edital, etapa=etapa, conteudo=conteudo_publicado
     )
+    # **A agenda dentro da Distribuição** (179): o horário de cada inscrição, o filtro por sessão e
+    # a coerência — lidos uma vez e entregues à listagem, que não consulta de novo (FR-8204).
+    agenda_aqui = agenda_na_distribuicao.contexto(
+        edital, etapa_id, previstas=avaliacoes_previstas(etapa)
+    )
+    dia = request.GET.get("dia") or ""
+    banca = request.GET.get("banca") or ""
     linhas, pagina = avaliacao_selectors.inscricoes_da_etapa(
         edital=edital,
         etapa=etapa,
@@ -7253,6 +7266,9 @@ def distribuicao(request, edital_id, etapa_id):
         avaliador=request.GET.get("avaliador") or None,
         panorama=panorama,
         prontidao=request.GET.get("prontidao") or None,
+        horarios=agenda_aqui.horarios,
+        dia=dia or None,
+        banca=banca or None,
     )
     resumo = avaliacao_selectors.resumo_da_etapa(edital=edital, etapa=etapa, panorama=panorama)
     return marcar_como_privada(
@@ -7291,6 +7307,12 @@ def distribuicao(request, edital_id, etapa_id):
                 # `ResultadoEtapa`.
                 "cobertura": request.GET.get("cobertura") or "",
                 "avaliador": request.GET.get("avaliador") or "",
+                "dia": dia,
+                "banca": banca,
+                "agenda_aqui": agenda_aqui,
+                "conflitos_da_pessoa": agenda_na_distribuicao.conflitos_da_pessoa(
+                    agenda_aqui.coerencia
+                ),
                 "erro": erro,
                 "proposta": proposta,
                 "resultado": request.session.pop("resultado_da_distribuicao", None),
@@ -12406,6 +12428,11 @@ def minhas_etapas(request):
     )
 
 
+# As duas visões da Mesa numa Etapa com agenda (179).
+VISAO_PROGRAMACAO = "programacao"
+VISAO_INSCRICOES = "inscricoes"
+
+
 @require_http_methods(["GET"])
 def minha_etapa(request, edital_id, etapa_id):
     """A Etapa como contexto de trabalho — e nada além disso (§27 e §50 da spec)."""
@@ -12451,22 +12478,52 @@ def minha_etapa(request, edital_id, etapa_id):
         if publicado
         else None
     )
-    # A Mesa: **todas e somente** as inscrições atribuídas a esta pessoa nesta Etapa (FR-020).
-    # Quem chegou por gestão não tem Mesa — organizar o trabalho não é executá-lo —, e a página
-    # continua sendo a da Etapa, dizendo por qual atribuição o ator chegou (011, D-006).
-    linhas, pagina, contagens = (
-        avaliacao_selectors.mesa(
+    # A Mesa: **todas e somente** as inscrições atribuídas a esta pessoa nesta Etapa (FR-020). Quem
+    # chegou por gestão não tem Mesa — organizar o trabalho não é executá-lo —, e a página continua
+    # sendo a da Etapa, dizendo por qual atribuição o ator chegou (011, D-006). **A Programação**
+    # (179, FR-8211, FR-8212, `D-005`): numa Etapa com agenda, a Mesa ganha a visão por horário, que
+    # é a primeira quando a agenda está publicada. É outra ordem das mesmas Atribuições, com a mesma
+    # autorização e os mesmos filtros — e não outra tela.
+    agenda_da_mesa, agenda_publicada = (
+        leitura_da_agenda.agenda_e_publicacao(edital, etapa_id) if por_alocacao else (None, False)
+    )
+    pedida = request.GET.get("visao") or ""
+    visao = (
+        ""
+        if agenda_da_mesa is None
+        else pedida
+        if pedida in (VISAO_PROGRAMACAO, VISAO_INSCRICOES)
+        else VISAO_PROGRAMACAO
+        if agenda_publicada
+        else VISAO_INSCRICOES
+    )
+    programacao_da_mesa = None
+    if por_alocacao and visao == VISAO_PROGRAMACAO:
+        linhas, pagina = None, None
+        programacao_da_mesa, contagens = avaliacao_selectors.programacao_da_mesa(
             ator=ator,
             edital=edital,
             etapa_id=etapa_id,
-            pagina=request.GET.get("pagina") or 1,
             filtro=request.GET.get("filtro") or None,
             vigentes=vigentes,
             conteudo=conteudo_da_mesa,
+            agenda=agenda_da_mesa,
+            publicada=agenda_publicada,
         )
-        if por_alocacao
-        else (None, None, None)
-    )
+    else:
+        linhas, pagina, contagens = (
+            avaliacao_selectors.mesa(
+                ator=ator,
+                edital=edital,
+                etapa_id=etapa_id,
+                pagina=request.GET.get("pagina") or 1,
+                filtro=request.GET.get("filtro") or None,
+                vigentes=vigentes,
+                conteudo=conteudo_da_mesa,
+            )
+            if por_alocacao
+            else (None, None, None)
+        )
     if por_gestao and not por_alocacao:
         # Pela gestão, a Etapa é de Processos Seletivos, como a Alocação de onde se veio (077,
         # `FR-1752`); o endereço, que é o de Minhas Etapas, diria a seção errada.
@@ -12487,6 +12544,9 @@ def minha_etapa(request, edital_id, etapa_id):
                 "pagina": pagina,
                 "contagens": contagens,
                 "filtro": request.GET.get("filtro") or "",
+                "visao": visao,
+                "agenda_publicada": agenda_publicada,
+                "programacao": programacao_da_mesa,
                 # O que saiu desta Mesa, e por qual ato: a revogação é imediata e silenciosa, e
                 # quem perdeu o trabalho era o único sem canal para saber por quê.
                 "retiradas": (

@@ -1,0 +1,44 @@
+{% comment %}
+A Programação de quem avalia (179, FR-8211 a FR-8213, UX-972, UX-973; `contracts/telas.md` §5.2).
+
+Todas e somente as entrevistas das Atribuições desta pessoa, por dia e em ordem de horário — e nunca
+a de outra pessoa (FR-020 da 012). Uma lista, e não tabela: no celular, cada entrevista é um item com
+a hora em destaque. A sala é botão, com o endereço no `href`, e só a quem avalia aquela entrevista
+(`D-006`); no presencial, o local por extenso. O dia de hoje vem primeiro aberto; os que passaram,
+recolhidos no fim, para o próximo compromisso ser a primeira coisa da tela.
+{% endcomment %}
+{% if not agenda_publicada %}
+<p class="vazio">A agenda desta Etapa ainda não foi publicada. Quando for, as suas entrevistas aparecem aqui, por dia e horário.</p>
+{% else %}
+{% for dia in programacao.futuros %}
+<section class="dia-da-programacao" aria-labelledby="dia-{{ forloop.counter }}">
+  <h3 id="dia-{{ forloop.counter }}">{% if dia.hoje %}Hoje — {% endif %}{{ dia.dia|date:"l, d/m/Y"|capfirst }} <span class="contagem-do-dia">{{ dia.entrevistas|length }} entrevista{{ dia.entrevistas|length|pluralize }}</span></h3>
+  <ol class="entrevistas">
+    {% for entrevista in dia.entrevistas %}{% include "interface/_entrevista_da_mesa.html" %}{% endfor %}
+  </ol>
+</section>
+{% empty %}
+{% if not programacao.passados %}<p class="vazio">Nenhuma entrevista sua com horário publicado nesta Etapa.</p>{% endif %}
+{% endfor %}
+{% if programacao.sem_horario %}
+<section class="dia-da-programacao" aria-labelledby="sem-horario">
+  <h3 id="sem-horario">Sem horário publicado <span class="contagem-do-dia">{{ programacao.sem_horario|length }}</span></h3>
+  <ul class="entrevistas">
+    {% for atribuicao in programacao.sem_horario %}<li class="entrevista"><a href="{% url 'interface:mesa-inscricao' edital.id etapa.id atribuicao.inscricao.id %}">{{ atribuicao.inscricao.nome|default:atribuicao.inscricao.protocolo }} · {{ atribuicao.inscricao.protocolo }}</a></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% if programacao.passados %}
+<details class="dias-passados">
+  <summary>Dias que já passaram ({{ programacao.passados|length }})</summary>
+  {% for dia in programacao.passados %}
+  <section class="dia-da-programacao" aria-labelledby="passado-{{ forloop.counter }}">
+    <h3 id="passado-{{ forloop.counter }}">{{ dia.dia|date:"l, d/m/Y"|capfirst }}</h3>
+    <ol class="entrevistas">
+      {% for entrevista in dia.entrevistas %}{% include "interface/_entrevista_da_mesa.html" %}{% endfor %}
+    </ol>
+  </section>
+  {% endfor %}
+</details>
+{% endif %}
+{% endif %}

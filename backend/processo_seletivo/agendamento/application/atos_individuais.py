@@ -220,7 +220,16 @@ def _ato_de_horario(
     motivo,
     idempotency_key,
     correlation_id="",
+    conflitos_no_horario=None,
+    assinatura_dos_conflitos=None,
 ):
+    """`conflitos_no_horario` e `assinatura_dos_conflitos` são da 179 (research T-006).
+
+    A agenda não sabe quem avalia — `agendamento` não importa `avaliacoes` —, e por isso a interface
+    lhe entrega a função que diz quem fica em conflito no horário escolhido. Ela é chamada aqui,
+    **depois** da trava do Processo, sobre o estado de agora; se o que ela diz não é o que a tela
+    anunciou, a remarcação é recusada para ser confirmada de novo. Sem a função, nada muda.
+    """
     motivo = (motivo or "").strip()
     with comando_de_comissao(
         actor=actor,
@@ -271,6 +280,14 @@ def _ato_de_horario(
         if ocupante is not None and ocupante.inscricao_id != inscricao.id:
             raise recusas.horario_ocupado()
         atual = montagem.por_inscricao.get(str(inscricao.id))
+        em_conflito = []
+        if conflitos_no_horario is not None:
+            assinatura, anunciados = conflitos_no_horario(
+                edital, etapa_id, inscricao.id, horario.inicio, horario.fim
+            )
+            if assinatura_dos_conflitos is not None and assinatura != assinatura_dos_conflitos:
+                raise recusas.conflitos_mudaram()
+            em_conflito = sorted({item.subject for item in anunciados})
         try:
             with transaction.atomic():
                 if atual is None:
@@ -372,6 +389,9 @@ def _ato_de_horario(
                 else None,
                 "posterior": _estado(inscricao.protocolo, banca.nome, horario.inicio),
                 "avisos": len(avisos),
+                # Quem ficou com duas entrevistas ao mesmo tempo por este ato (179, FR-8232): os
+                # identificadores, e nunca e-mail nem sala.
+                "avaliadores_em_conflito": em_conflito,
             },
         )
         ctx.concluir_sem_resultado(201, {"id": str(ato.id)})

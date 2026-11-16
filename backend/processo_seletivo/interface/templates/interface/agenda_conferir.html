@@ -41,6 +41,12 @@ nenhum dos dois é presumido.
 </section>
 {% endif %}
 {% for aviso in conferencia.avisos %}<p class="aviso">{{ aviso }}</p>{% endfor %}
+{% if conflitos_com_a_distribuicao %}
+<div class="aviso conflitos-com-a-distribuicao" role="status">
+  <p>A agenda, como está, dá a quem avalia {{ conflitos_com_a_distribuicao|length }} conflito{{ conflitos_com_a_distribuicao|length|pluralize }} de horário — duas entrevistas ao mesmo tempo. Isso não impede a publicação; resolva na <a href="{% url 'interface:distribuicao' edital.id etapa_id %}">Distribuição</a>.</p>
+  <ul>{% for frase in conflitos_com_a_distribuicao %}<li>{{ frase }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
 
 <section class="consequencias irreversivel" aria-labelledby="publica-titulo">
   <h2 id="publica-titulo">Será publicada</h2>

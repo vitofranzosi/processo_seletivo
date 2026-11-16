@@ -46,6 +46,8 @@ CONFIGURACAO_RECUSADA = "configuracao_recusada"
 
 # --- §3: a montagem -------------------------------------------------------------------------------
 HORARIO_OCUPADO = "horario_ocupado"
+# A distribuição mudou entre a tela da remarcação e a confirmação (179, research T-006).
+CONFLITOS_MUDARAM = "conflitos_mudaram"
 PESSOA_JA_AGENDADA = "pessoa_ja_agendada"
 PESSOA_NAO_PARTICIPA = "pessoa_nao_participa"
 HORARIO_INEXISTENTE = "horario_inexistente"
