@@ -81,7 +81,12 @@ from processo_seletivo.inscricoes.application.submissao import (
     teto_atingido,
 )
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
-from processo_seletivo.inscricoes.domain.periodo import periodo_de_inscricoes, recebe_inscricoes
+from processo_seletivo.inscricoes.domain.periodo import (
+    ABERTO,
+    edital_recebe_inscricoes,
+    periodo_de_inscricoes,
+    recebe_inscricoes,
+)
 from processo_seletivo.inscricoes.domain.pessoais import (
     formatar_cpf,
     formatar_telefone,
@@ -1512,7 +1517,10 @@ def _convocacoes_da_lista(minhas):
 
 
 def _passo_pendente_na_lista(registro, conteudo, agora):
-    """O nome da Etapa restrita em que falta um passo da pessoa, ou "" (171, achado de 15/11).
+    """O passo que falta à pessoa numa Etapa restrita, ou `None` (171, achado de 15/11).
+
+    Devolve o `Passo` inteiro, e não só o nome da Etapa, desde a 177: o cartão diz também até quando
+    (FR-8106), e o término já vem no passo, sem consulta a mais.
 
     O aviso do passo manda a pessoa para esta lista, e o cartão dizia só "Inscrição enviada": quem
     chegava pelo e-mail não via o passo sem abrir o acompanhamento. A derivação é a do
@@ -1520,19 +1528,19 @@ def _passo_pendente_na_lista(registro, conteudo, agora):
     consultas dela — as demais não consultam nada a mais (FR-7311).
     """
     if registro.status != Inscricao.Status.SUBMETIDA or conteudo is None:
-        return ""
+        return None
     if not passo_da_etapa._restritas_que_alcancam(conteudo, registro.modality_id, set()):
-        return ""
+        return None
     passos = passo_da_etapa.passos_da_inscricao(
         registro,
         conteudo=conteudo,
         resultados_visiveis=resultados_visiveis(registro),
         agora=agora,
     )
-    return next((x.etapa for x in passos if x.estado == passo_da_etapa.FALTA), "")
+    return next((x for x in passos if x.estado == passo_da_etapa.FALTA), None)
 
 
-def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
+def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=None):
     """O que decide a próxima ação de uma inscrição, e nada além disso.
 
     Perfil e Edital vêm do **conteúdo publicado**, como em toda tela do candidato: é o que foi
@@ -1550,7 +1558,7 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
     enviada = registro.status == Inscricao.Status.SUBMETIDA
     chamada = _convocacao_para_a_tela(convocacao, agora)
     aberta = chamada["convocacao"] is not None and chamada["desfecho"] is None
-    fechada = None
+    fechada = periodo = None
     if conteudo is None:
         perfil, edital, processo = {"nome": "", "codigo": ""}, "", ""
     else:
@@ -1561,7 +1569,17 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
         # instituto — ele deixa de identificar qualquer coisa.
         processo = conteudo.get("processoTitle", "")
         if not enviada:
-            fechada = _rascunho_fechado(registro, conteudo, agora)
+            # O período uma vez só: o rascunho fechado e o prazo do cartão leem o mesmo (177).
+            periodo = periodo_de_inscricoes(conteudo, agora)
+            fechada = _rascunho_fechado(registro, conteudo, agora, periodo=periodo)
+    prazo = _prazo_do_cartao(
+        enviada=enviada,
+        fechada=fechada,
+        periodo=periodo,
+        agora=agora,
+        convocacao=chamada["convocacao"] if aberta else None,
+        passo=passo,
+    )
     return {
         "id": registro.id,
         "perfil": perfil["nome"],
@@ -1573,7 +1591,8 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
         # prometia um envio que o domínio já recusava, e a pessoa só o descobria pela recusa.
         "fechada": fechada,
         "convocacao_aberta": aberta,
-        "passo_pendente": passo,
+        "passo_pendente": passo.etapa if passo else "",
+        "prazo": prazo,
         # O rótulo do desfecho é o da FR-1172 da `063`, como no acompanhamento e na convocação, e
         # não a espécie crua (156, FR-6405).
         "convocacao_concluida": situacao_da_inscricao.DESFECHOS.get(
@@ -1591,16 +1610,42 @@ def _item_da_lista(registro, conteudo, agora, convocacao=None, passo=""):
     }
 
 
-def _rascunho_fechado(registro, conteudo, agora):
+def _prazo_do_cartao(*, enviada, fechada, periodo, agora, convocacao, passo):
+    """O prazo da ação que o cartão oferece, ou `None` (177, FR-8106, D-003).
+
+    Um só, e o da ação principal: com a convocação aberta, é ela que o botão abre; sem ela, o
+    passo pendente; no rascunho, o envio. Tudo sai do que a lista já leu — a convocação vigente, o
+    passo e o conteúdo publicado —, e o laço continua sem consulta (`test_lista_com_convocacao`).
+
+    **Só o prazo que ainda corre.** O vencimento decorrido não é prazo a cumprir, e "Prazo: até"
+    uma data passada pareceria convite; a tela da convocação diz o vencido com a frase dela.
+    """
+    if convocacao is not None:
+        fim = convocacao.vencimento
+    elif passo is not None:
+        fim = passo.fim
+    elif not enviada and fechada is None and periodo is not None:
+        fim = periodo.fim if periodo.estado == ABERTO else None
+    else:
+        fim = None
+    return fim if fim is not None and fim > agora else None
+
+
+def _rascunho_fechado(registro, conteudo, agora, *, periodo=None):
     """O período, quando o rascunho já não pode ser enviado; `None` enquanto pode (009, FR-032).
 
     A pergunta é a mesma que o domínio faz ao gravar, anexar e enviar — `recebe_inscricoes` —, e não
     uma releitura do período: um Edital cancelado dentro do prazo também fecha o rascunho, e a tela
     que dissesse "continue" contrariaria a recusa logo adiante.
     """
-    if recebe_inscricoes(status=registro.edital.status, conteudo=conteudo, agora=agora):
+    if periodo is None:
+        return _rascunho_fechado(
+            registro, conteudo, agora, periodo=periodo_de_inscricoes(conteudo, agora)
+        )
+    # É `recebe_inscricoes` com o período já lido: a lista o lê uma vez e o reusa no prazo (177).
+    if edital_recebe_inscricoes(registro.edital.status) and periodo.aberto:
         return None
-    return periodo_de_inscricoes(conteudo, agora)
+    return periodo
 
 
 @require_http_methods(["GET", "POST"])
@@ -2039,7 +2084,15 @@ def _conferencia(request, registro, versao):
         "portal/inscricao_enviada.html",
         {
             "inscricao": registro,
-            "selecao": _selecao(aceita),
+            # **O começo da tela sai da versão vigente** (177, FR-8110, D-008), como o do
+            # Acompanhamento: as duas telas são irmãs e levam o mesmo cabeçalho, e depois de uma
+            # Retificação que renomeie o Perfil ou o Processo, ler a aceita aqui e a vigente lá
+            # mostrava dois nomes para a mesma inscrição. "O que você informou" continua na
+            # aceita, porque é a conferência do ato.
+            "selecao": _selecao(versao),
+            "perfil_da_inscricao": _perfil_legivel(
+                _perfil_do_conteudo(versao.content, registro.profile_id)
+            )["nome"],
             "campos": dados["campos"],
             "documentos": documentos,
             "codigo_de_verificacao": dados["codigo_de_verificacao"],
@@ -2124,6 +2177,9 @@ def acompanhamento(request, inscricao_id):
             "inscricao": registro,
             "horarios": horarios,
             "selecao": _selecao(versao),
+            # O Perfil no começo da tela (177, FR-8110), do mesmo conteúdo vigente de onde saem o
+            # canal e o cadastro reserva; vazio quando uma Retificação o retirou, e a linha some.
+            "perfil_da_inscricao": _perfil_legivel(perfil)["nome"],
             # **A situação antes de tudo** (063, FR-1166): Situação → Por quê → O que fazer, saída
             # de uma função pura sobre o que esta view já leu — nenhuma consulta a mais (D-007).
             # Ela não recebe o corte nem a apuração de ocupação, e é isso que a impede de deduzir

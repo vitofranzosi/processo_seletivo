@@ -1,8 +1,17 @@
 {% extends "portal/base.html" %}{% load interface_extras %}{% load prazo_da_convocacao %}
 {% block titulo %}Acompanhar{% endblock %}
 {% block conteudo %}
-<h1>Acompanhar</h1>
-<p class="sub">{{ selecao.processo_titulo }}</p>
+{% comment %}
+**A coluna da jornada do candidato** (177, FR-8100 a FR-8102, D-001). A tela tinha três larguras: "Sua
+situação" parava na medida de leitura, e a participação e o cronograma iam até a borda da página.
+Agora todo bloco tem a borda da coluna, e só o texto corrido continua na medida (FR-8104).
+
+O começo é o de "Minha inscrição": a trilha com o Processo e o Edital, o título e o Perfil (FR-8110). O
+prazo **não** se repete aqui: o do passo está em "Sua situação" (174, FR-7857), o da convocação em "O
+que fazer" (118), e "Sua situação" é o primeiro bloco depois do começo (FR-8111).
+{% endcomment %}
+<div class="jornada jornada-da-inscricao">
+{% include "portal/_comeco_da_inscricao.html" with titulo="Acompanhar" %}
 
 {% comment %}
 **Situação → Por quê → O que fazer, antes de qualquer documento** (063, FR-1166). A pessoa chega
@@ -279,5 +288,10 @@ processo. Uma data alcançada no Cronograma não é notícia sobre a sua partici
   {% endif %}
 </ul>
 
-<p><a class="principal" href="{% url 'portal:inscricao' inscricao.id %}">Ver o que enviei</a></p>
+{% comment %}
+**Secundário, e não cheio** (177, FR-8113, D-007): a ação da tela é a de "Sua situação", e conferir o que
+se enviou é consulta. Eram dois botões cheios na mesma tela.
+{% endcomment %}
+<p class="acoes-da-tela"><a class="secundario" href="{% url 'portal:inscricao' inscricao.id %}">Ver o que enviei</a></p>
+</div>
 {% endblock %}

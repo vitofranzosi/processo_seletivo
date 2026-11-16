@@ -1,0 +1,16 @@
+{% comment %}
+O começo de "Minha inscrição" e de "Acompanhar" (177, FR-8110, D-004, D-005): onde a pessoa está,
+o título da tela e qual inscrição é.
+
+**A trilha, e não "Voltar".** As duas telas são filhas de "Minhas inscrições" e irmãs entre si; a
+trilha diz de onde se veio e, no último elo, qual inscrição é — o Processo e o Edital. O subtítulo, que
+repetia o Processo, passou a dizer o Perfil, que era o que faltava para distinguir duas inscrições do
+mesmo Edital. Sem Perfil (uma Retificação o retirou), a linha some.
+
+Uso: `{% include "portal/_comeco_da_inscricao.html" with titulo="Acompanhar" %}`, com `selecao` e
+`perfil_da_inscricao` no contexto.
+{% endcomment %}<nav class="trilha-da-inscricao" aria-label="Onde você está">
+  <a href="{% url 'portal:inscricoes' %}">Minhas inscrições</a><span class="separador" aria-hidden="true">›</span><span>{{ selecao.processo_titulo }}{% if selecao.numero %} · Edital {{ selecao.numero }}/{{ selecao.ano }}{% endif %}</span>
+</nav>
+<h1>{{ titulo }}</h1>
+{% if perfil_da_inscricao %}<p class="sub identificacao-da-inscricao">Perfil de Vaga: {{ perfil_da_inscricao }}</p>{% endif %}

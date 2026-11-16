@@ -1,0 +1,1040 @@
+{
+ "minhas-inscricoes@320": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 288
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 246
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 246
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@320": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 288
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "p.sub",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "details.integridade",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 288
+   }
+  ],
+  "paragrafo_mais_largo": 288
+ },
+ "acompanhar@320": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 288
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 16,
+    "dir": 304,
+    "larg": 288
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 75,
+    "larg": 243
+   }
+  ],
+  "paragrafo_mais_largo": 288
+ },
+ "minhas-inscricoes@375": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 343
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 301
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 301
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@375": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 343
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "p.sub",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "details.integridade",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 343
+   }
+  ],
+  "paragrafo_mais_largo": 343
+ },
+ "acompanhar@375": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 16,
+   "dir": 16,
+   "larg": 343
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 16,
+    "dir": 359,
+    "larg": 343
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 75,
+    "larg": 298
+   }
+  ],
+  "paragrafo_mais_largo": 343
+ },
+ "minhas-inscricoes@768": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 32,
+   "dir": 32,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 203
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 176
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@768": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 32,
+   "dir": 32,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 32,
+    "dir": 717,
+    "larg": 685
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "p.sub",
+    "esq": 32,
+    "dir": 717,
+    "larg": 685
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 32,
+    "dir": 717,
+    "larg": 685
+   },
+   {
+    "el": "details.integridade",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 191
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "acompanhar@768": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 32,
+   "dir": 32,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 32,
+    "dir": 717,
+    "larg": 685
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 32,
+    "dir": 736,
+    "larg": 704
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 32,
+    "dir": 717,
+    "larg": 685
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 50,
+    "larg": 387
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "minhas-inscricoes@1280": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 288,
+   "dir": 288,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 203
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 176
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@1280": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 288,
+   "dir": 288,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 288,
+    "dir": 973,
+    "larg": 685
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "p.sub",
+    "esq": 288,
+    "dir": 973,
+    "larg": 685
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 288,
+    "dir": 973,
+    "larg": 685
+   },
+   {
+    "el": "details.integridade",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 191
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "acompanhar@1280": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 288,
+   "dir": 288,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 288,
+    "dir": 973,
+    "larg": 685
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 288,
+    "dir": 992,
+    "larg": 704
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 288,
+    "dir": 973,
+    "larg": 685
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 50,
+    "larg": 387
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "minhas-inscricoes@1440": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 368,
+   "dir": 368,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 203
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 176
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@1440": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 368,
+   "dir": 368,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 368,
+    "dir": 1053,
+    "larg": 685
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "p.sub",
+    "esq": 368,
+    "dir": 1053,
+    "larg": 685
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 368,
+    "dir": 1053,
+    "larg": 685
+   },
+   {
+    "el": "details.integridade",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 191
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "acompanhar@1440": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 368,
+   "dir": 368,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 368,
+    "dir": 1053,
+    "larg": 685
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 368,
+    "dir": 1072,
+    "larg": 704
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 368,
+    "dir": 1053,
+    "larg": 685
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 50,
+    "larg": 387
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "minhas-inscricoes@1920": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 608,
+   "dir": 608,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "div.comeco-da-lista",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "ul.selecoes.minhas-inscricoes",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Continuar inscrição",
+    "alt": 50,
+    "larg": 203
+   },
+   {
+    "texto": "Ver convocação",
+    "alt": 50,
+    "larg": 176
+   }
+  ],
+  "paragrafo_mais_largo": 0
+ },
+ "minha-inscricao@1920": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 608,
+   "dir": 608,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 608,
+    "dir": 1293,
+    "larg": 685
+   },
+   {
+    "el": "div.situacao-e-protocolo",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "dl.campos.campos-em-grade",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "p.sub",
+    "esq": 608,
+    "dir": 1293,
+    "larg": 685
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 608,
+    "dir": 1293,
+    "larg": 685
+   },
+   {
+    "el": "details.integridade",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Baixar comprovante",
+    "alt": 50,
+    "larg": 191
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ },
+ "acompanhar@1920": {
+  "rolagem_horizontal": false,
+  "coluna": {
+   "esq": 608,
+   "dir": 608,
+   "larg": 704
+  },
+  "blocos": [
+   {
+    "el": "nav.trilha-da-inscricao",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "p.sub.identificacao-da-inscricao",
+    "esq": 608,
+    "dir": 1293,
+    "larg": 685
+   },
+   {
+    "el": "section.situacao-da-inscricao",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "section.painel.convocacao-da-inscricao",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "section.cartao-de-lista",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "section.resultado-da-etapa",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.pessoal",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "ul.linha-do-tempo.processo",
+    "esq": 608,
+    "dir": 1312,
+    "larg": 704
+   },
+   {
+    "el": "p.acoes-da-tela",
+    "esq": 608,
+    "dir": 1293,
+    "larg": 685
+   }
+  ],
+  "principais": [
+   {
+    "texto": "Conferir o Requerimento de Matrícula enviado",
+    "alt": 50,
+    "larg": 387
+   }
+  ],
+  "paragrafo_mais_largo": 685
+ }
+}
