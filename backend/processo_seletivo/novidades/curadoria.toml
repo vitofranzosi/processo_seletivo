@@ -101,8 +101,12 @@ prs = [283]
 
 [[sem_nota]]
 motivo = "Só no ambiente de desenvolvimento, atrás de chave que a produção recusa: não chega a quem opera."
-prs = [287, 568, 571, 573]
+prs = [287, 568, 571, 573, 574, 578]
 
 [[sem_nota]]
 motivo = "Estudos e specs sem mudança no produto: o agendamento da Etapa (ainda em desenvolvimento, em PRs abertos) e a auditoria do design system."
 prs = [546, 549]
+
+[[sem_nota]]
+motivo = "Só o conteúdo e a regra de curadoria das próprias Novidades: a página já diz o que mudou."
+prs = [575]

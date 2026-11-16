@@ -719,3 +719,22 @@ A documentação descrevia o sistema até o #562 (`92348634`). Entre aquele pont
 - se a nota do piloto do assistente, presa a `ASSISTENTE_PILOTO`, deve aparecer em produção quando o piloto é habilitado por ato: hoje não aparece.
 
 **O que ficou desatualizado fora da Visão** (registro, e não escopo): os `Status` das specs 172, 174, 175 e 176 ainda dizem "sem merge" ou "o merge é do usuário", e o texto de ajuda do `--cenario`, em `treinamento/management/commands/_base.py`, ainda diz "C01 a C15".
+
+## Acréscimo de 16/11, à tarde: a 177, a emenda da 176 e as Novidades com 115 notas
+
+Depois do #576, entraram na `main` o #577 (a 177) e o #578 (a emenda da 176), e a curadoria das Novidades ficou com três PRs sem destino. Esta revisão descreve tudo contra a `main` em `4111bcef`.
+
+**O que mudou na documentação:**
+
+- **O portal do candidato ganhou a coluna da 177** (#577): *Minhas inscrições*, *Minha inscrição* e *Acompanhar* passam à coluna centrada de 44rem que a 174 criou, com um botão principal por tela, o cartão de cada inscrição com a situação em selo e o prazo da ação seguinte, e *O que você informou* em grade. Nada mudou dentro de *Sua situação*. Entrou como subseção da seção do design system.
+- **A emenda da 176** (#578), depois do teste do usuário com câmera real no Safari: o documento passa sozinho (dois rostos, depois o rosto de novo), a frase do passo de frente desce para junto do botão, o *Antes de gravar* ganha a linha do papel e da Libras, e o medidor do microfone passa a se mexer. A página **não lê o documento**, e a P-13 passa a cobrir essa leitura. O texto que dizia que "no documento o motor não lê nada" foi corrigido.
+- **As Novidades** passaram de 114 a **115 notas** — 42 funcionalidades, 51 melhorias e 22 correções; 14 transformadoras, 56 relevantes e 45 incrementais; 94 com exemplo:
+  - uma nota nova, *As telas do candidato depois da inscrição ficam numa coluna só* (#577);
+  - a nota do piloto virou *As telas da gestão usam a largura toda e ficam mais enxutas*, juntou a migração (#565) e subiu de incremental a relevante;
+  - o #574 e o #578, só de desenvolvimento, e o #575, só das próprias Novidades, entraram em `sem_nota`, com o motivo;
+  - o roteiro de curadoria diz *“Nada pendente: todo PR da janela já tem destino”*.
+- **Uma frase corrigida**: a Visão dizia que a suíte reprova o PR sem destino. A suíte só reprova o PR em **dois** destinos; o PR sem nenhum é apontado pelo roteiro, que precisa do `gh`.
+
+**Os números de *Maturidade*:** as pastas passaram a 177, os templates a 289 e os testes a 1 329 + 27; as tabelas append-only, os gatilhos, as migrations, os módulos e as rotas não mudaram.
+
+**Não verificado:** nenhuma tela foi percorrida, e a validação com a equipe da 177 não aconteceu; a suíte inteira não rodou, só a das Novidades (402 passaram).
