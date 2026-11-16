@@ -25,8 +25,10 @@ e distribuir a parte válida dele seria adivinhar a intenção.
 
 from django.utils import timezone
 
+from processo_seletivo.avaliacoes.application import programacao
 from processo_seletivo.avaliacoes.application.trilha import auditar
 from processo_seletivo.avaliacoes.domain import rodizio
+from processo_seletivo.avaliacoes.domain.conflito import Compromisso, cabe
 from processo_seletivo.avaliacoes.domain.conjunto import recusa_por_inscricoes_em_curso
 from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 from processo_seletivo.avaliacoes.models import Atribuicao, Avaliacao, Impedimento
@@ -297,6 +299,65 @@ EXPOSTO = (
     "e não pode avaliá-la."
 )
 
+# **O conflito de horário é regra sobre a linha** (179, FR-8205, a revisão da FR-085 da `012`): a
+# pessoa já tem entrevista que se sobrepõe ao horário desta inscrição, e não pode estar em duas
+# salas. A frase diz o outro compromisso e o que fazer, porque "conflito" sozinho manda a comissão
+# procurar.
+CONFLITO = (
+    "{membro} já tem entrevista das {inicio} às {fim} de {dia}, na {banca}. Escolha outro "
+    "avaliador para esta inscrição, ou distribua-a noutro gesto."
+)
+
+
+def _agenda_da_distribuicao(edital, etapa_id, membros):
+    """O horário de cada inscrição desta Etapa e os compromissos dos membros no Edital (179).
+
+    Lidos **depois** da trava do comando, para que duas distribuições simultâneas não vejam o
+    mesmo estado (research T-006). Sem agenda no Edital, dois dicionários vazios, e a distribuição é
+    a de antes. As duas fontes valem — a montagem e o publicado —, porque a distribuição pode vir
+    antes da publicação (FR-8201).
+    """
+    from processo_seletivo.agendamento.application.leitura import horarios_do_edital
+
+    horarios = horarios_do_edital(edital)
+    if not horarios:
+        return {}, {}
+    etapa = str(etapa_id)
+    da_etapa = {i: h for (e, i), h in horarios.items() if e == etapa}
+    compromissos = programacao.compromissos(
+        edital, subjects={m.identity_subject for m in membros}, horarios=horarios
+    )
+    return da_etapa, compromissos
+
+
+def _motivo_do_conflito(nome, impede):
+    from processo_seletivo.agendamento.domain.horarios import zona
+
+    inicio = impede.inicio.astimezone(zona())
+    return CONFLITO.format(
+        membro=nome,
+        inicio=f"{inicio:%H:%M}",
+        fim=f"{impede.fim.astimezone(zona()):%H:%M}",
+        dia=f"{inicio:%d/%m}",
+        banca=impede.banca_nome or "outra banca",
+    )
+
+
+def _na_ordem_da_agenda(inscricoes, horario):
+    """As inscrições com horário na ordem da agenda; as sem horário depois, como vieram.
+
+    É o que torna reproduzível qual linha é recusada quando duas do mesmo lote se sobrepõem: a mais
+    tarde (research T-004).
+    """
+    if not horario:
+        return inscricoes
+    com = [i for i in inscricoes if i.id in horario]
+    sem = [i for i in inscricoes if i.id not in horario]
+    com.sort(
+        key=lambda i: (horario[i.id].inicio, horario[i.id].banca_nome, i.protocolo or "", str(i.id))
+    )
+    return com + sem
+
 
 def distribuir(
     *,
@@ -361,10 +422,16 @@ def distribuir(
             identidade for (identidade, _etapa) in reavaliacoes_pendentes(edital, etapa_id=etapa_id)
         }
         nome_da_etapa = etapa.get("name") or str(etapa_id)
+        # **O horário e os compromissos, lidos sob a trava** (179, research T-004, T-006). Os
+        # compromissos crescem dentro do lote: duas linhas que se sobrepõem não passam juntas.
+        horario, compromissos = _agenda_da_distribuicao(edital, etapa_id, membros)
+        inscricoes = _na_ordem_da_agenda(inscricoes, horario)
+        nomes = programacao.rotulos(membros) if horario else {}
 
         criadas, recusas = [], []
         for inscricao in inscricoes:
             candidatos = []
+            marcado = horario.get(inscricao.id)
             for membro in membros:
                 motivo = _motivo_da_recusa(
                     membro, inscricao, impedidos, ja_atribuidas, ja_concluidas
@@ -374,6 +441,15 @@ def distribuir(
                         membro=membro.identity_subject,
                         protocolo=inscricao.protocolo or inscricao.id,
                     )
+                # **Entrevista que já acabou não põe ninguém em dois lugares** (revisão da 179): a
+                # reavaliação ou a troca de quem avalia depois do dia não esbarra num conflito que
+                # só existiu no passado — o mesmo critério do `passado` da coerência.
+                if motivo is None and marcado is not None and marcado.fim > ctx.now:
+                    impede = cabe(
+                        compromissos.get(membro.identity_subject, []), marcado.inicio, marcado.fim
+                    )
+                    if impede is not None:
+                        motivo = _motivo_do_conflito(nomes[membro.identity_subject], impede)
                 if motivo is not None:
                     recusas.append(Recusa(membro, inscricao, motivo))
                     continue
@@ -401,6 +477,16 @@ def distribuir(
                 )
                 ocupacao[inscricao.id] = ocupacao.get(inscricao.id, 0) + 1
                 criadas.append(atribuicao)
+                if marcado is not None:
+                    compromissos.setdefault(membro.identity_subject, []).append(
+                        Compromisso(
+                            marcado.inicio,
+                            marcado.fim,
+                            inscricao.id,
+                            str(etapa_id),
+                            marcado.banca_nome,
+                        )
+                    )
                 # Um evento por Atribuição, inclusive no lote: a trilha responde por agregado, e
                 # "quem passou a avaliar esta inscrição, e quando" é a pergunta que ela existe
                 # para responder (FR-016, FR-052).
@@ -471,6 +557,8 @@ def _plano_do_rodizio(processo, edital, etapa_id, ids_membros):
     # O rodízio não propõe o par exposto (165, FR-7082): para ele, é o mesmo que um impedimento.
     impedidos = impedidos | _expostos(edital, etapa, etapa_id, membros, inscricoes)
     carga = _carga_atual(edital, etapa_id, membros)
+    # Com agenda, o rodízio a percorre e não propõe par em conflito (179, FR-8207).
+    horario, compromissos = _agenda_da_distribuicao(edital, etapa_id, membros)
     pares, projecao, fora = rodizio.propor(
         previstas=previstas,
         inscricoes=inscricoes,
@@ -480,6 +568,9 @@ def _plano_do_rodizio(processo, edital, etapa_id, ids_membros):
         impedidos=impedidos,
         ja_atribuidas=ja_atribuidas,
         ja_concluidas=ja_concluidas,
+        horario={i: (h.inicio, h.fim, h.banca_nome) for i, h in horario.items()},
+        compromissos=compromissos,
+        agora=timezone.now(),
     )
     return etapa, membros, pares, projecao, fora, carga
 

@@ -416,6 +416,107 @@ def horarios_da_inscricao(inscricao):
     return blocos
 
 
+def agenda_e_publicacao(edital, etapa_id):
+    """`(agenda, publicada)` numa consulta só, sem janelas nem bancas (179, research T-007).
+
+    É o que a Mesa pergunta a cada abertura — a Etapa tem agenda? está publicada? —, e o orçamento
+    de consulta dela não comporta as três leituras de `agenda_da_etapa`.
+    """
+    from django.db.models import Exists, OuterRef
+
+    agenda = (
+        AgendaDaEtapa.objects.filter(edital=edital, etapa_id=etapa_id)
+        .annotate(
+            publicada=Exists(
+                AtoDaAgenda.objects.filter(agenda_id=OuterRef("pk"), especie=PUBLICACAO)
+            )
+        )
+        .first()
+    )
+    return agenda, bool(agenda is not None and agenda.publicada)
+
+
+# --- o horário de cada inscrição, para quem cruza a agenda com a distribuição (179) -------------
+
+#: As duas fontes de um horário (179, FR-8201): o publicado vigente, e o da montagem antes dele.
+PUBLICADO = "PUBLICADO"
+MONTAGEM = "MONTAGEM"
+
+
+@dataclass(frozen=True)
+class HorarioMarcado:
+    """Quando e onde uma inscrição é atendida numa Etapa, e de qual fonte isso vem (179, T-002)."""
+
+    etapa_id: str
+    inscricao_id: UUID
+    inicio: object
+    fim: object
+    banca_id: UUID
+    banca_nome: str
+    fonte: str
+    remarcado_em: object = None
+
+
+def horarios_do_edital(edital, *, so_publicados=False):
+    """`{(etapa_id, inscricao_id): HorarioMarcado}` de todas as agendas do Edital (179, T-002).
+
+    **A Etapa vai na chave como texto.** Ela chega como `UUID` da rota e como texto do conteúdo
+    publicado e das fixtures; comparar sem normalizar responderia "sem horário" em silêncio.
+
+    **Uma fonte por agenda, nunca as duas.** Publicada a agenda, o que vale é o vigente, e o
+    agendamento da montagem deixa de ser horário de alguém; antes, só ele existe. A Distribuição e o
+    conflito leem as duas fontes; a Programação de quem avalia e o aviso, só a publicada
+    (`so_publicados`), porque horário que ainda pode mudar não é compromisso de ninguém.
+
+    **Quatro consultas, e nenhuma por pessoa**: as agendas, as publicações, os vigentes e os
+    agendamentos. Esta função não sabe quem avalia: quem cruza é `avaliacoes`, que a chama
+    (`agendamento` não importa `avaliacoes`, research T-001).
+    """
+    agendas = {
+        agenda.id: agenda
+        for agenda in AgendaDaEtapa.objects.filter(edital=edital).order_by("criada_em", "id")
+    }
+    if not agendas:
+        return {}
+    publicadas = set(
+        AtoDaAgenda.objects.filter(agenda_id__in=agendas, especie=PUBLICACAO).values_list(
+            "agenda_id", flat=True
+        )
+    )
+    horarios = {}
+    if publicadas:
+        for item in _vigentes(HorarioPublicado.objects.filter(ato__agenda_id__in=publicadas)):
+            etapa_id = str(agendas[item.ato.agenda_id].etapa_id)
+            horarios[(etapa_id, item.inscricao_id)] = HorarioMarcado(
+                etapa_id=etapa_id,
+                inscricao_id=item.inscricao_id,
+                inicio=item.inicio,
+                fim=item.fim,
+                banca_id=item.banca_id,
+                banca_nome=item.banca_nome,
+                fonte=PUBLICADO,
+                remarcado_em=item.remarcado_em,
+            )
+    em_montagem = [agenda_id for agenda_id in agendas if agenda_id not in publicadas]
+    if em_montagem and not so_publicados:
+        for agendamento in (
+            Agendamento.objects.filter(agenda_id__in=em_montagem)
+            .select_related("banca")
+            .order_by("inicio", "banca__ordem", "inscricao_id", "id")
+        ):
+            etapa_id = str(agendas[agendamento.agenda_id].etapa_id)
+            horarios[(etapa_id, agendamento.inscricao_id)] = HorarioMarcado(
+                etapa_id=etapa_id,
+                inscricao_id=agendamento.inscricao_id,
+                inicio=agendamento.inicio,
+                fim=agendamento.fim,
+                banca_id=agendamento.banca_id,
+                banca_nome=agendamento.banca.nome,
+                fonte=MONTAGEM,
+            )
+    return horarios
+
+
 def agendas_publicadas_do_edital(edital_id):
     """As agendas publicadas do Edital, para a seção "Agendas" da seleção (T-016).
 

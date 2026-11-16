@@ -19,15 +19,17 @@ obrigatório e fica na trilha; não aparece ao candidato (FR-7246).
 <form class="remarcacao" method="post" action="{% url 'interface:agenda-remarcar' edital.id etapa_id inscricao.id %}">
   {% csrf_token %}
   <input type="hidden" name="chave_idempotencia" value="{{ chave_idempotencia }}">
+  <input type="hidden" name="assinatura_dos_conflitos" value="{{ assinatura_dos_conflitos }}">
   <div class="configuracao-colunas">
     <section class="secao-da-configuracao" aria-labelledby="novo-titulo">
       <p class="quem-remarca"><strong>{{ inscricao.nome|default:inscricao.protocolo }}</strong> <span class="numero-de-inscricao">{{ inscricao.protocolo }}</span></p>
       {% if inclusao %}<p class="sem-horario-ainda">Sem horário publicado: passou a participar da Etapa depois da publicação.</p>{% else %}<p class="horario-atual">Agora: {{ de }}</p>{% endif %}
+      {% if avaliam %}<p class="avaliadores-da-pessoa">Avaliam esta pessoa: {{ avaliam }}.</p>{% endif %}
       <h2 id="novo-titulo">{% if inclusao %}Horário{% else %}Novo horário{% endif %}</h2>
       {% if seletor %}
       <p class="dias-do-seletor" role="group" aria-label="Dia">{% for opcao in seletor.dias %}<button type="submit" class="dia-do-seletor" name="ver_dia" value="{{ opcao.dia }}" formnovalidate{% if opcao.atual %} aria-current="true"{% endif %}>{{ opcao.rotulo }} <span class="contagem">{{ opcao.livres }}</span></button>{% endfor %}</p>
       {% for grupo in seletor.grupos %}
-      <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"{% if opcao.valor == escolhido %} checked{% endif %}><span>{{ opcao.hora }}</span></label>{% endfor %}</fieldset>
+      <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"{% if opcao.valor == escolhido %} checked{% endif %}><span>{{ opcao.hora }}</span>{% if opcao.ocupados %}<span class="ocupado-na-opcao">{{ opcao.ocupados }}: outra entrevista</span>{% endif %}</label>{% endfor %}</fieldset>
       {% endfor %}
       {% else %}
       <p class="aviso">{{ sem_horario_livre }} <a href="{% url 'interface:agenda-configurar' edital.id etapa_id %}">Abrir a configuração</a></p>
@@ -43,6 +45,7 @@ obrigatório e fica na trilha; não aparece ao candidato (FR-7246).
         <li>A página pública e a área da pessoa mostram o horário {% if inclusao %}publicado{% else %}novo, com "remarcado em"{% endif %}.</li>
         {% if avisos_ligados %}<li>Só esta pessoa recebe e-mail.</li>{% else %}<li>Os avisos por e-mail estão desligados nesta instalação: ninguém recebe e-mail.</li>{% endif %}
         {% if not inclusao %}<li>O horário anterior fica livre, e o histórico o guarda.</li>{% endif %}
+        {% for frase in conflitos_anunciados %}<li class="conflito-de-horario">{{ frase }}</li>{% endfor %}
         <li>O ato tem documento próprio, ao lado do da publicação.</li>
       </ul>
       <div class="acao-do-simulador">

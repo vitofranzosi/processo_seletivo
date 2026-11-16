@@ -30,6 +30,10 @@ DA_167 = [
     # A entrega C: remarcar, que é também incluir, e cancelar.
     "agenda_remarcar.html",
     "agenda_cancelar.html",
+    # A 179: a coerência entre a distribuição e a agenda, que a agenda publicada e a Distribuição
+    # incluem. Ela fala de quem avalia cada pessoa — e por isso não diz "avaliador", que leria a
+    # banca como grupo de pessoas (a decisão da 167 que a 179 preserva).
+    "_coerencia_da_agenda.html",
 ]
 
 PROIBIDAS = [

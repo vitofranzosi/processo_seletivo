@@ -58,6 +58,8 @@ from processo_seletivo.agendamento.domain.recusas import (
     fora_do_periodo_vigente,
     nao_participa_mais,
 )
+from processo_seletivo.avaliacoes.application import programacao as programacao_app
+from processo_seletivo.avaliacoes.domain.previsao import avaliacoes_previstas
 from processo_seletivo.avisos.application.comando import envio_habilitado
 from processo_seletivo.interface import identidade
 from processo_seletivo.shared.api.problems import DomainError
@@ -482,7 +484,13 @@ def _seletor(montagem, dia_pedido):
                 {
                     "nome": banca.nome if len(bancas) > 1 else "Horários livres",
                     "opcoes": [
-                        {"valor": _texto_do_horario(h), "hora": hora(h.inicio)} for h in opcoes
+                        {
+                            "valor": _texto_do_horario(h),
+                            "hora": hora(h.inicio),
+                            "inicio": h.inicio,
+                            "fim": h.fim,
+                        }
+                        for h in opcoes
                     ],
                 }
             )
@@ -975,8 +983,18 @@ def _contexto_da_conferencia(request, edital, etapa, etapa_id, conferencia, **ex
         "quando": dados.get("quando", ""),
         "chave_idempotencia": dados.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         "mensagem": request.session.pop(MENSAGEM, None),
+        # **O conflito com quem já avalia, como aviso** (179, FR-8208, research T-012): a agenda
+        # conferida pode pôr um avaliador em dois lugares, e isso se diz aqui; mas a publicação
+        # é ato para os candidatos, e não depende da distribuição — por isso não é impedimento,
+        # e não entra na assinatura do que se confere.
+        "conflitos_com_a_distribuicao": _conflitos_com_a_distribuicao(edital, etapa_id, etapa),
         **extra,
     }
+
+
+def _conflitos_com_a_distribuicao(edital, etapa_id, etapa):
+    coerencia = programacao_app.coerencia(edital, etapa_id, previstas=avaliacoes_previstas(etapa))
+    return [frase for frase, _dia in coerencia.frases_vigentes]
 
 
 @require_http_methods(["GET"])
@@ -1102,6 +1120,15 @@ def publicada(request, edital_id, etapa_id):
         else 0
     )
     ligados = envio_habilitado()
+    # **Quem avalia, e se a distribuição cabe na agenda** (179, FR-8208, FR-8215, `D-007`): só aqui,
+    # na gestão. A página pública e o documento do ato têm leitores próprios e não recebem nada
+    # disso.
+    coerencia = programacao_app.coerencia(
+        edital,
+        etapa_id,
+        previstas=avaliacoes_previstas(etapa),
+        participantes=participacao.participantes,
+    )
     contexto = {
         "edital": edital,
         "processo": edital.processo,
@@ -1109,6 +1136,7 @@ def publicada(request, edital_id, etapa_id):
         "etapa_id": etapa_id,
         "agenda": agenda,
         "ato": ato,
+        "coerencia": coerencia,
         "documentos": leitura.documentos_da_agenda(agenda),
         "veiculo_gps": ato.veiculo == nomes.VEICULO_GPS,
         "tem_documento": hasattr(ato, "documento"),
@@ -1125,6 +1153,8 @@ def publicada(request, edital_id, etapa_id):
                 "quando": _rotulo_do_vigente(item, varias),
                 "pessoa": item.inscricao,
                 "remarcado_em": item.remarcado_em,
+                "avaliam": _nomes(coerencia.avaliadores.get(item.inscricao_id, [])),
+                "quando_iso": item.inicio.astimezone(zona()).date().isoformat(),
             }
             for item in vigentes
         ],
@@ -1171,6 +1201,18 @@ def _contexto_da_remarcacao(request, edital, etapa, etapa_id, agenda, inscricao,
     nomes_das_bancas = {str(banca.id): banca.nome for banca in agenda.bancas_em_ordem}
     ligados = envio_habilitado()
     inclusao = publicado is None
+    seletor = _seletor(montagem, _data(dados.get("ver_dia") or ""))
+    # **Quem avalia esta pessoa, e quem ficaria em conflito** (179, FR-8209, `D-003`): os horários
+    # livres em que um avaliador dela já tem entrevista são marcados, e não somem; o escolhido diz,
+    # antes da confirmação, quem passa a ter duas entrevistas. A assinatura disso vai no formulário,
+    # e o comando a confere sob a trava (research T-006).
+    avaliadores = programacao_app.avaliadores_da_pessoa(edital, etapa_id, inscricao.id)
+    for grupo in (seletor or {}).get("grupos", []):
+        for opcao in grupo["opcoes"]:
+            opcao["ocupados"] = _nomes(
+                [a.rotulo for a in avaliadores.conflitos_em(opcao["inicio"], opcao["fim"])]
+            )
+    anunciados = avaliadores.conflitos_em(para.inicio, para.fim) if para else []
     return {
         "edital": edital,
         "processo": edital.processo,
@@ -1183,7 +1225,10 @@ def _contexto_da_remarcacao(request, edital, etapa, etapa_id, agenda, inscricao,
         "para": _rotulo_longo(para.inicio, nomes_das_bancas.get(para.banca_id, ""), montagem)
         if para
         else "",
-        "seletor": _seletor(montagem, _data(dados.get("ver_dia") or "")),
+        "seletor": seletor,
+        "avaliam": _nomes(avaliadores.nomes),
+        "conflitos_anunciados": [_frase_do_anunciado(a) for a in anunciados],
+        "assinatura_dos_conflitos": programacao_app.assinatura_dos_conflitos(anunciados),
         "escolhido": escolhido,
         "motivo": dados.get("motivo", ""),
         "avisos_ligados": ligados,
@@ -1194,6 +1239,23 @@ def _contexto_da_remarcacao(request, edital, etapa, etapa_id, agenda, inscricao,
         "chave_idempotencia": dados.get("chave_idempotencia") or f"ui-{uuid4().hex}",
         **extra,
     }
+
+
+def _nomes(nomes):
+    """`Ana`, `Ana e Bruno`, `Ana, Bruno e Carla` — a lista de quem avalia, numa frase."""
+    nomes = list(nomes)
+    if len(nomes) <= 1:
+        return "".join(nomes)
+    return f"{', '.join(nomes[:-1])} e {nomes[-1]}"
+
+
+def _frase_do_anunciado(anunciado):
+    """O que a confirmação diz de quem fica em conflito (179, `contracts/telas.md` §2)."""
+    quando = anunciado.outro.inicio.astimezone(zona())
+    return (
+        f"{anunciado.rotulo} passa a ter duas entrevistas às {quando:%H:%M} de {quando:%d/%m}. "
+        "Resolva na Distribuição; enquanto isso, a pendência fica na agenda publicada."
+    )
 
 
 @require_http_methods(["GET", "POST"])
@@ -1227,11 +1289,20 @@ def remarcar(request, edital_id, etapa_id, inscricao_id):
             motivo=request.POST.get("motivo", ""),
             idempotency_key=request.POST.get("chave_idempotencia", ""),
             correlation_id=getattr(request, "correlation_id", ""),
+            conflitos_no_horario=programacao_app.conflitos_no_horario,
+            # Sem o campo, a tela não anunciou conflito nenhum — e é isso que o comando confere.
+            assinatura_dos_conflitos=request.POST.get(
+                "assinatura_dos_conflitos", programacao_app.assinatura_dos_conflitos([])
+            ),
         )
     except DomainError as recusa:
         if recusa.status == 404:
             raise _inexistente() from recusa
         extra = {"erro": recusa}
+        if recusa.code == nomes.CONFLITOS_MUDARAM:
+            # A mesma escolha volta com o que ela causa, e com chave nova: a confirmação seguinte é
+            # outro ato, sobre o que agora foi dito.
+            extra["chave_idempotencia"] = f"ui-{uuid4().hex}"
         if recusa.code == nomes.HORARIO_OCUPADO:
             # A lista mudou: o horário escolhido não vale mais, e a chave da tentativa também não.
             extra["chave_idempotencia"] = f"ui-{uuid4().hex}"

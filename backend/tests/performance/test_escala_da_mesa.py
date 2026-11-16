@@ -163,11 +163,15 @@ def test_a_tela_da_mesa_com_quinhentas_responde(
     O limite subiu de 20 para 22 quando a Mesa passou a mostrar **o que foi retirado dela**: uma
     consulta pelas atribuições inativas desta pessoa, e outra pelos atos que as retiraram, só
     quando há alguma. É custo fixo, e não por linha — que é o que este teste protege.
+
+    E de 22 para 23 com a Programação (179, research T-007): uma consulta pergunta se a Etapa tem
+    agenda e se ela está publicada — sem agenda, é a única; com ela, a Programação lê os horários
+    numa consulta a mais, também fixa (`test_a_programacao_nao_cresce`).
     """
     identificar(client, "joao", [])
     url = reverse("interface:minha-etapa", args=[cenario["edital"].id, cenario["etapa"]])
 
-    with django_assert_max_num_queries(22):
+    with django_assert_max_num_queries(23):
         resposta = client.get(url)
 
     assert resposta.status_code == 200
@@ -371,3 +375,39 @@ def test_o_rodizio_distribui_a_etapa_inteira_em_um_ato(cenario, gestor):
     # E a carga sai equilibrada, que é o que a aritmética manual não garantia.
     por_pessoa = sorted(linha["recebe"] for linha in proposta["por_pessoa"])
     assert por_pessoa[-1] - por_pessoa[0] <= 1
+
+
+@pytest.mark.django_db
+def test_a_programacao_nao_cresce(gestor, edital_a, etapa_a2):
+    """A Programação da 179 paga o mesmo com 2 e com 16 entrevistas (research T-007).
+
+    Uma consulta pela agenda e pela publicação, uma pelos horários das Atribuições da página: nada
+    por linha. O cenário é o da `167` (duas manhãs, uma banca), e não o de quinhentas, porque o que
+    se mede é o crescimento, e a agenda de quinhentas pessoas custaria minutos para montar.
+    """
+    from processo_seletivo.avaliacoes.application.selectors import programacao_da_mesa
+    from processo_seletivo.comissoes.domain.etapas import conteudo_vigente
+    from tests.fixtures.avaliacoes_com_agenda import agenda, atribuir, comissao, por_sessao
+    from tests.fixtures.comissao import inscrever
+
+    inscrever(edital_a, 16)
+    agenda(gestor, edital_a, etapa_a2, dias=2)
+    membros = comissao(gestor, edital_a, etapa_a2, ["ana"])
+    pessoas = [p for lista in por_sessao(edital_a, etapa_a2).values() for p in lista]
+    ana = ator_institucional("ana")
+    conteudo = conteudo_vigente(edital_a)
+
+    def medir():
+        with CaptureQueriesContext(connection) as consultas:
+            programacao, _ = programacao_da_mesa(
+                ator=ana, edital=edital_a, etapa_id=etapa_a2, conteudo=conteudo
+            )
+        return len(consultas.captured_queries), programacao.total
+
+    atribuir(gestor, edital_a, etapa_a2, [membros["ana"]], pessoas[:2], chave="poucas")
+    poucas, total = medir()
+    assert total == 2
+    atribuir(gestor, edital_a, etapa_a2, [membros["ana"]], pessoas[2:], chave="muitas")
+    muitas, total = medir()
+    assert total == 16
+    assert muitas == poucas, (poucas, muitas)

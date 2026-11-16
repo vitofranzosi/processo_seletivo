@@ -128,6 +128,21 @@ def configuracao_recusada(problemas):
 # --- §3 a montagem --------------------------------------------------------------------------------
 
 
+def conflitos_mudaram():
+    """A confirmação não disse quem fica em conflito, ou disse e mudou (179, FR-8209, T-006).
+
+    Não é recusa por haver conflito — a remarcação pode criá-lo (`D-003` da `179`) —, e sim por ele
+    não ter sido dito na confirmação: a tela volta com a lista de agora, e quem confirma decide.
+    """
+    return DomainError(
+        nomes.CONFLITOS_MUDARAM,
+        "Neste horário, quem avalia esta pessoa passa a ter duas entrevistas ao mesmo tempo, ou a "
+        "distribuição mudou enquanto você remarcava. Confira, abaixo, quem fica em conflito, e "
+        "confirme de novo.",
+        409,
+    )
+
+
 def horario_ocupado():
     return DomainError(
         nomes.HORARIO_OCUPADO,

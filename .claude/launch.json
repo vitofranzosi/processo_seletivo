@@ -809,6 +809,16 @@
       ],
       "port": 8187,
       "url": "http://localhost:8187"
+    },
+    {
+      "name": "programacao-179",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_178_demo DB_USER=$USER DB_RUNTIME_USER=$USER DB_RUNTIME_PASSWORD= INTERFACE_SELETOR_IDENTIDADE=true CENARIOS_DE_TREINAMENTO=true ARQUIVOS_CANDIDATOS_RAIZ=/private/tmp/claude-501/ps-178-arquivos uv run python manage.py runserver 8178"
+      ],
+      "port": 8178,
+      "url": "http://localhost:8178"
     }
   ]
 }

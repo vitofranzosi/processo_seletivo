@@ -1,0 +1,6 @@
+<li class="entrevista">
+  <p class="quando-da-entrevista"><strong>{{ entrevista.inicio|date:"H:i" }}–{{ entrevista.fim|date:"H:i" }}</strong>{% if entrevista.remarcado_em %} <span class="remarcado">remarcada em {{ entrevista.remarcado_em|date:"d/m" }}</span>{% endif %}</p>
+  <p class="quem-da-entrevista"><a href="{% url 'interface:mesa-inscricao' edital.id etapa.id entrevista.inscricao.id %}">{{ entrevista.inscricao.nome|default:entrevista.inscricao.protocolo }}</a> · {{ entrevista.inscricao.protocolo }}</p>
+  <p class="onde-da-entrevista">{{ entrevista.banca_nome }}{% if entrevista.local %} · {{ entrevista.local }}{% endif %}{% if entrevista.sala %} <a class="acao" href="{{ entrevista.sala }}" rel="noopener noreferrer" target="_blank">Entrar na sala<span class="oculto"> da {{ entrevista.banca_nome }}</span></a>{% endif %}</p>
+  <p class="situacao-da-entrevista">{% if entrevista.atribuicao.avaliacao and entrevista.atribuicao.avaliacao.estado == "CONCLUIDA" %}Avaliação concluída{% elif entrevista.atribuicao.avaliacao %}Avaliação em rascunho{% else %}Avaliação não iniciada{% endif %}</p>
+</li>

@@ -968,7 +968,9 @@ presidência confirma, e o ato registrado é o da confirmação. Nunca um ato do
 **FR-019** — Não implementar carga máxima, balanceamento por perfil, sorteio nem substituição
 automática antes de existir uso real que informe os parâmetros.
 
-**FR-107** — **A proposta de FR-018 passa a existir, e nos termos que ele fixou.** O uso real que
+**FR-107** *(revisada pela `179` em 2026-11-16, com vigência na implementação do Incremento 1
+dela; o acréscimo está ao fim deste requisito, e nada do texto anterior foi retirado)* — **A
+proposta de FR-018 passa a existir, e nos termos que ele fixou.** O uso real que
 FR-019 exigia apareceu no percurso de um Processo de 600 inscritos com dupla avaliação: distribuir
 custava 24 telas e cerca de 700 marcações, e o equilíbrio da carga era aritmética de quem
 distribui — o que não é organização do trabalho, é digitação.
@@ -994,6 +996,16 @@ formulário.
 
 **O caminho manual não é substituído.** Quem quer escolher inscrição por inscrição continua
 escolhendo, na mesma tela, com a mesma forma uniforme de FR-013.
+
+**Com agenda, a ordem é a dela, e o conflito é inelegibilidade** (revisão da `179`, a FR-8207
+dela). Numa Etapa com horários, a proposta percorre as inscrições na ordem da agenda — dia, horário,
+banca; as sem horário depois, pela ordem do protocolo —, e a pessoa que já tem entrevista que se
+sobrepõe ao horário da inscrição é inelegível para ela, como a impedida. A inscrição que fica sem
+cobertura por isso sai da proposta com esse motivo. A menor carga projetada, o desempate estável, o
+impedimento, a exposição e a conferência sob trava não mudam; sem agenda, a proposta é a de antes.
+A razão é medida: na ordem do protocolo, que não tem relação com o horário, o rodízio pôs a mesma
+dupla com dois candidatos ao mesmo tempo em 8 a 14 dos 15 horários do caso de 43 pessoas, 6
+avaliadores e 3 bancas; na ordem da agenda, em nenhum.
 
 ---
 
@@ -1324,16 +1336,25 @@ recusadas e o motivo de cada recusa, nomeando a linha. Sucesso parcial que não 
 surpresa administrativa, e quem distribuiu precisa saber o que ficou de fora sem conferir mil
 linhas.
 
-**FR-085** — O lote é uma transação, e a recusa tem dois tamanhos, porque as causas têm dois
-tamanhos:
+**FR-085** *(revisada pela `179` em 2026-11-16, com vigência na implementação do Incremento 1
+dela; a redação anterior está ao fim deste requisito)* — O lote é uma transação, e a recusa tem dois
+tamanhos, porque as causas têm dois tamanhos:
 
 - **regra sobre uma linha** — impedimento registrado, teto do FR-065 atingido, atribuição que já
-  existia — não derruba o lote: a linha é nomeada no resultado e o restante é distribuído. Recusar
-  quinhentas por causa de uma seria punir o caminho normal, que é o que a 011 já decidiu para a
-  alocação em lote;
+  existia, e o **conflito de horário**: a pessoa já tem entrevista que se sobrepõe ao horário da
+  inscrição na agenda da Etapa, ou o recebe de outra linha do mesmo lote (a FR-8205 da `179`) —
+  não derruba o lote: a linha é nomeada no resultado, com o outro compromisso, e o restante é
+  distribuído. Recusar quinhentas por causa de uma seria punir o caminho normal, que é o que a 011
+  já decidiu para a alocação em lote. Inscrição sem horário não passa pelo teste do conflito;
 - **erro sobre o pedido** — Etapa inexistente, avaliador sem alocação ativa, inscrição de outro
   Edital, inscrição não submetida — desfaz o lote inteiro e nomeia a causa. Aqui o pedido está
   errado, e distribuir a parte válida dele seria adivinhar a intenção.
+
+> **Redação anterior da primeira alínea, preservada porque a revisão a substitui, e não a apaga:**
+> **regra sobre uma linha** — impedimento registrado, teto do FR-065 atingido, atribuição que já
+> existia — não derruba o lote: a linha é nomeada no resultado e o restante é distribuído. Recusar
+> quinhentas por causa de uma seria punir o caminho normal, que é o que a 011 já decidiu para a
+> alocação em lote;
 
 **FR-086** — **Os mesmos quatro atos** seguem o invólucro de comando da 011, e pela mesma razão:
 bloquear o contêiner, **reavaliar a autorização depois do bloqueio** e reservar a idempotência

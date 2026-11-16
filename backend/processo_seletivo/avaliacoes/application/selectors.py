@@ -133,8 +133,23 @@ def _cobertura(atribuidas, previstas):
     return COMPLETA if atribuidas >= previstas else INCOMPLETA
 
 
+#: Quantas linhas cabem numa página quando a lista é uma sessão (dia, e talvez banca) da agenda: a
+#: sessão inteira, para "selecionar todas desta página" alcançá-la (179, UX-970, research T-011).
+POR_PAGINA_DA_SESSAO = 200
+
+
 def inscricoes_da_etapa(
-    *, edital, etapa, pagina=1, cobertura=None, avaliador=None, panorama=None, prontidao=None
+    *,
+    edital,
+    etapa,
+    pagina=1,
+    cobertura=None,
+    avaliador=None,
+    panorama=None,
+    prontidao=None,
+    horarios=None,
+    dia=None,
+    banca=None,
 ):
     """As inscrições submetidas do Edital, com quantas avaliações cada uma já tem.
 
@@ -150,8 +165,17 @@ def inscricoes_da_etapa(
     Com o panorama, a listagem passa a mostrar **participantes** por padrão — quem foi eliminado
     numa Etapa anterior ou ainda aguarda a anterior sai do conjunto (013, FR-005) — e o filtro de
     prontidão é o que traz cada grupo de volta, nomeado.
+
+    **`horarios` é o acréscimo da 179** (`horarios_do_edital`, lido uma vez pela tela): cada linha
+    diz o horário e a banca, e `dia` e `banca` recortam a sessão. Com o recorte, a lista vem em
+    ordem de horário e numa página só, até `POR_PAGINA_DA_SESSAO` (FR-8204, UX-970). Sem `horarios`,
+    nada muda — nem uma consulta a mais.
     """
     previstas = avaliacoes_previstas(etapa)
+    da_etapa = {}
+    if horarios:
+        etapa_ = str(etapa["id"])
+        da_etapa = {i: h for (e, i), h in horarios.items() if e == etapa_}
     consulta = (
         Inscricao.objects.filter(edital=edital, status=Inscricao.Status.SUBMETIDA)
         .annotate(
@@ -201,7 +225,28 @@ def inscricoes_da_etapa(
         consulta = consulta.filter(atribuidas__gte=previstas)
     elif cobertura == AVALIACAO_PENDENTE:
         consulta = consulta.filter(concluidas__lt=previstas)
-    paginas = Paginator(consulta, POR_PAGINA)
+    if da_etapa and (dia or banca):
+        from processo_seletivo.agendamento.domain.horarios import zona
+
+        na_sessao = {
+            i: h
+            for i, h in da_etapa.items()
+            if (not dia or h.inicio.astimezone(zona()).date().isoformat() == dia)
+            and (not banca or str(h.banca_id) == str(banca))
+        }
+        consulta = consulta.filter(id__in=list(na_sessao))
+        itens = sorted(
+            consulta,
+            key=lambda i: (
+                na_sessao[i.id].inicio,
+                na_sessao[i.id].banca_nome,
+                i.protocolo or "",
+                str(i.id),
+            ),
+        )
+        paginas = Paginator(itens, POR_PAGINA_DA_SESSAO)
+    else:
+        paginas = Paginator(consulta, POR_PAGINA)
     pagina_atual = paginas.get_page(pagina)
     linhas = [
         {
@@ -216,6 +261,7 @@ def inscricoes_da_etapa(
             # segunda posição é o que a tela mostra: "erro" não diz a ação seguinte, "1 de 2
             # avaliações concluída" diz (013, FR-012).
             "prontidao": (panorama or {}).get("estados", {}).get(inscricao.id),
+            "horario": da_etapa.get(inscricao.id),
         }
         for inscricao in pagina_atual
     ]
@@ -343,17 +389,11 @@ RASCUNHOS = "rascunhos"
 NAO_INICIADAS = "nao-iniciadas"
 
 
-def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteudo=None):
-    """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
+def _minhas_da_mesa(*, ator, edital, etapa_id, filtro=None, vigentes=None, conteudo=None):
+    """As Atribuições da Mesa já filtradas e as contagens — ou `None` sem autorização na Etapa.
 
-    A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
-    mesma regra do guard para o conjunto, numa leitura só. Chamar `pode_atuar_na_etapa` aqui faria
-    dele o gargalo da feature: com quinhentas atribuições seriam quinhentas verificações para
-    responder uma pergunta que já foi respondida (FR-024, FR-048).
-
-    Devolve `(linhas, pagina, contagens)`. `None` no lugar da página significa que esta pessoa não
-    atua nesta Etapa — quem chama decide se isso é 404 ou estado vazio, porque a distinção é da
-    tela: alcançar a Etapa é da alocação, alcançar a inscrição é da Atribuição (FR-023).
+    É a parte comum à lista por inscrição e à Programação da 179: a mesma autorização, a mesma
+    restrição aos participantes e os mesmos filtros, para que as duas visões contem o mesmo.
     """
     from processo_seletivo.comissoes.domain.autorizacao import etapas_autorizadas, membro_ativo
 
@@ -362,7 +402,7 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteu
     # modo de falha possível para uma verificação de autorização.
     identidade_da_etapa = etapa_id if isinstance(etapa_id, UUID) else UUID(str(etapa_id))
     if identidade_da_etapa not in etapas_autorizadas(ator, edital):
-        return None, None, None
+        return None
     membro = membro_ativo(ator, edital.processo)
     # `vigentes` chega da view, que já leu o conteúdo publicado para resolver a Etapa. Relê-lo aqui
     # custaria uma consulta a mais por abertura da Mesa — fixa, mas gratuita de evitar, e o
@@ -391,6 +431,32 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteu
         minhas = minhas.filter(avaliacao__isnull=True)
     elif filtro == PENDENTES:
         minhas = minhas.exclude(avaliacao__estado=Avaliacao.Estado.CONCLUIDA)
+    return minhas, contagens
+
+
+def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteudo=None):
+    """A lista de trabalho de quem avalia: **todas e somente** as inscrições dela (FR-020).
+
+    A autorização vem da forma **em lote** que a 011 entregou — `etapas_autorizadas` responde a
+    mesma regra do guard para o conjunto, numa leitura só. Chamar `pode_atuar_na_etapa` aqui faria
+    dele o gargalo da feature: com quinhentas atribuições seriam quinhentas verificações para
+    responder uma pergunta que já foi respondida (FR-024, FR-048).
+
+    Devolve `(linhas, pagina, contagens)`. `None` no lugar da página significa que esta pessoa não
+    atua nesta Etapa — quem chama decide se isso é 404 ou estado vazio, porque a distinção é da
+    tela: alcançar a Etapa é da alocação, alcançar a inscrição é da Atribuição (FR-023).
+    """
+    lido = _minhas_da_mesa(
+        ator=ator,
+        edital=edital,
+        etapa_id=etapa_id,
+        filtro=filtro,
+        vigentes=vigentes,
+        conteudo=conteudo,
+    )
+    if lido is None:
+        return None, None, None
+    minhas, contagens = lido
     paginas = Paginator(minhas.order_by("inscricao__protocolo", "inscricao_id"), POR_PAGINA)
     pagina_atual = paginas.get_page(pagina)
     linhas = [
@@ -406,6 +472,41 @@ def mesa(*, ator, edital, etapa_id, pagina=1, filtro=None, vigentes=None, conteu
         for atribuicao in pagina_atual
     ]
     return linhas, pagina_atual, contagens
+
+
+def programacao_da_mesa(
+    *,
+    ator,
+    edital,
+    etapa_id,
+    filtro=None,
+    vigentes=None,
+    conteudo=None,
+    agenda=None,
+    publicada=None,
+):
+    """A visão Programação da Mesa (179, FR-8211, FR-8213): as mesmas Atribuições, por horário.
+
+    `(programacao, contagens)`, ou `(None, None)` sem autorização — a mesma resposta da `mesa()`.
+    Uma consulta além das da lista: os vigentes da agenda desta Etapa (research T-007).
+    """
+    from processo_seletivo.avaliacoes.application import programacao
+
+    lido = _minhas_da_mesa(
+        ator=ator,
+        edital=edital,
+        etapa_id=etapa_id,
+        filtro=filtro,
+        vigentes=vigentes,
+        conteudo=conteudo,
+    )
+    if lido is None:
+        return None, None
+    minhas, contagens = lido
+    return (
+        programacao.programacao(minhas, edital, etapa_id, agenda=agenda, publicada=publicada),
+        contagens,
+    )
 
 
 def carga_nas_etapas(*, ator, atribuicoes):

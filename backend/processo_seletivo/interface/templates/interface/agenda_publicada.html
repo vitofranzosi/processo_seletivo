@@ -42,6 +42,13 @@ por pessoa, com motivo (FR-7240).
 </section>
 {% endif %}
 
+{% comment %} Os avaliadores (179, FR-8208, UX-974): uma linha quando a distribuição cabe na agenda, e o
+que resolver, com o caminho, quando não cabe. Só na gestão (`D-007`). {% endcomment %}
+<section class="resumo-dos-avaliadores" aria-labelledby="avaliadores-titulo">
+  <h2 id="avaliadores-titulo">Quem avalia</h2>
+  {% url 'interface:distribuicao' edital.id etapa_id as url_da_distribuicao %}{% include "interface/_coerencia_da_agenda.html" %}
+</section>
+
 {% if entrantes %}
 <section class="consequencias" aria-labelledby="entrantes-titulo">
   <h2 id="entrantes-titulo">Passou a participar depois da publicação ({{ entrantes|length }})</h2>
@@ -62,9 +69,9 @@ por pessoa, com motivo (FR-7240).
   <p class="ajuda">O horário anterior de quem for remarcado fica no histórico. Para abrir horários novos, <a href="{% url 'interface:agenda-configurar' edital.id etapa_id %}">acrescente um dia, uma janela ou uma banca</a>.</p>
   <div class="tabela-rolavel">
     <table class="tabela lista-publicada">
-      <thead><tr><th scope="col">Quando</th><th scope="col">Pessoa</th><th scope="col"><span class="oculto">Ação</span></th></tr></thead>
+      <thead><tr><th scope="col">Quando</th><th scope="col">Pessoa</th><th scope="col">Avaliam</th><th scope="col"><span class="oculto">Ação</span></th></tr></thead>
       <tbody>
-        {% for linha in linhas %}<tr><td>{{ linha.quando }}{% if linha.remarcado_em %} <span class="remarcado">remarcado em {{ linha.remarcado_em|date:"d/m" }}</span>{% endif %}</td><td>{{ linha.pessoa.nome|default:linha.pessoa.protocolo }} <span class="numero-de-inscricao">{{ linha.pessoa.protocolo }}</span></td><td><a class="acao" href="{% url 'interface:agenda-remarcar' edital.id etapa_id linha.pessoa.id %}">Remarcar<span class="oculto"> {{ linha.pessoa.nome|default:linha.pessoa.protocolo }}</span></a></td></tr>{% endfor %}
+        {% for linha in linhas %}<tr><td>{{ linha.quando }}{% if linha.remarcado_em %} <span class="remarcado">remarcado em {{ linha.remarcado_em|date:"d/m" }}</span>{% endif %}</td><td>{{ linha.pessoa.nome|default:linha.pessoa.protocolo }} <span class="numero-de-inscricao">{{ linha.pessoa.protocolo }}</span></td><td class="avaliam">{% if linha.avaliam %}{{ linha.avaliam }}{% else %}<a href="{% url 'interface:distribuicao' edital.id etapa_id %}?dia={{ linha.quando_iso }}#inscricoes">Ninguém ainda</a>{% endif %}</td><td><a class="acao" href="{% url 'interface:agenda-remarcar' edital.id etapa_id linha.pessoa.id %}">Remarcar<span class="oculto"> {{ linha.pessoa.nome|default:linha.pessoa.protocolo }}</span></a></td></tr>{% endfor %}
       </tbody>
     </table>
   </div>

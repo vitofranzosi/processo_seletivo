@@ -1,0 +1,24 @@
+{% comment %}
+A coerência entre a distribuição e a agenda (179, FR-8208, UX-974): uma linha só quando tudo está em
+ordem, e o que resolver, com o caminho, quando não está. Só a gestão vê — o que é público não recebe
+este fragmento, nem quem avalia (`D-007`). `url_da_distribuicao` vem de quem inclui. Na
+Distribuição, `so_conflitos`: a cobertura ela já conta nos números logo abaixo, e repetir a mesma
+contagem com outras palavras seria dizer duas vezes.
+{% endcomment %}
+{% if coerencia %}
+{% if so_conflitos %}
+{% if coerencia.frases_vigentes %}<div class="coerencia-da-agenda com-pendencia" role="status">
+  <p><strong>{{ coerencia.frases_vigentes|length }} conflito{{ coerencia.frases_vigentes|length|pluralize }} de horário</strong> — alguém com duas entrevistas ao mesmo tempo:</p>
+  <ul>{% for frase, dia in coerencia.frases_vigentes %}<li><a href="{{ url_da_distribuicao }}?dia={{ dia }}#inscricoes">{{ frase }}</a></li>{% endfor %}</ul>
+</div>{% endif %}
+{% elif coerencia.em_ordem %}
+<p class="coerencia-da-agenda">{{ coerencia.com_horario }} pessoa{{ coerencia.com_horario|pluralize:"s" }} com horário, todas com quem as avalie · ninguém com duas entrevistas ao mesmo tempo.</p>
+{% else %}
+<div class="coerencia-da-agenda com-pendencia" role="status">
+  {% if coerencia.sem_avaliador_suficiente %}<p><a href="{{ url_da_distribuicao }}?cobertura=carente#inscricoes"><strong>{{ coerencia.sem_avaliador_suficiente|length }} com avaliação distribuída a menos</strong></a> — a Etapa prevê {{ coerencia.previstas }} por pessoa.</p>{% endif %}
+  {% if coerencia.frases_vigentes %}<p><strong>{{ coerencia.frases_vigentes|length }} conflito{{ coerencia.frases_vigentes|length|pluralize }} de horário</strong> — alguém com duas entrevistas ao mesmo tempo:</p>
+  <ul>{% for frase, dia in coerencia.frases_vigentes %}<li><a href="{{ url_da_distribuicao }}?dia={{ dia }}#inscricoes">{{ frase }}</a></li>{% endfor %}</ul>
+  <p class="ajuda">Troque quem avalia essas entrevistas na Distribuição. Enquanto isso, a pendência fica aqui.</p>{% endif %}
+</div>
+{% endif %}
+{% endif %}

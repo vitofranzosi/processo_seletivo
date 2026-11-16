@@ -233,3 +233,11 @@
 .troca{margin:0 0 .75rem;font-variant-numeric:tabular-nums;}
 .efeitos{margin:0 0 .5rem;padding-left:1.1rem;font-size:.875rem;color:var(--texto-fraco);}
 .efeitos li{margin:0 0 .35rem;}
+
+/* Quem avalia a pessoa, na remarcação (179, FR-8209): a marca de ocupado fica dentro do rótulo do
+   horário, em texto, e o horário não some — a comissão pode escolhê-lo sabendo o que causa. */
+.avaliadores-da-pessoa{margin:.25rem 0 .75rem;color:var(--texto-fraco)}
+.ocupado-na-opcao{display:block;font-size:.75rem;color:var(--texto);border-left:3px solid var(--amarelo);padding-left:.25rem;margin-top:.125rem}
+.conflitos-com-a-distribuicao ul{margin:.25rem 0 0;padding-left:1.25rem}
+.resumo-dos-avaliadores h2{margin-bottom:.25rem}
+.lista-publicada .avaliam{color:var(--texto-fraco)}
