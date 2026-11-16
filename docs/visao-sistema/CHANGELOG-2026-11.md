@@ -738,3 +738,18 @@ Depois do #576, entraram na `main` o #577 (a 177) e o #578 (a emenda da 176), e 
 **Os números de *Maturidade*:** as pastas passaram a 177, os templates a 289 e os testes a 1 329 + 27; as tabelas append-only, os gatilhos, as migrations, os módulos e as rotas não mudaram.
 
 **Não verificado:** nenhuma tela foi percorrida, e a validação com a equipe da 177 não aconteceu; a suíte inteira não rodou, só a das Novidades (402 passaram).
+
+## Acréscimo de 16/11, à noite: os documentos em PDF/A (178)
+
+Depois do #580, a `main` recebeu o #581, que tornou conformes ao PDF/A os documentos que o GPS compõe. A Visão não o descrevia. Esta revisão a atualiza contra a `main` em `dc758944`.
+
+**O que mudou na documentação:**
+
+- **Subseção nova, *Os documentos que o GPS compõe nascem em PDF/A***, na seção do rito e da publicação, com o nível de cada documento — 2u para o Edital, a Retificação, o resultado, as publicações e o comprovante; 2a para os dois relatórios; a prévia do Edital não declara — e o que **não** muda: as páginas do Edital, da Retificação e dos relatórios saem byte a byte como antes.
+- **O comprovante de quem já se inscreveu fica no escritor antigo**, congelado, pela coluna `comprovante_em_pdfa` (`inscricoes/0008`); nada recompõe nem converte documento já gravado.
+- **O veraPDF roda só no CI**, num job novo, `pdfa`, exigido pelo veredito `test`; produção não ganha dependência.
+- **Fora do escopo, por decisão do usuário:** os documentos enviados pelos candidatos, a conferência periódica de fixidez, a assinatura digital e o PDF/UA.
+- **As Novidades** não ganharam nota: o #581 e o #579 (as próprias Novidades) entraram em `sem_nota`, com o motivo — o PDF não muda à vista. Fica registrado como julgamento editorial, que o usuário pode reverter.
+- **Maturidade recontada:** 178 pastas, 135 migrations, 648 arquivos Python (183,3 mil linhas), 289 templates e 1 333 + 27 testes; o resto não mudou.
+
+**Não verificado:** o veraPDF não foi rodado aqui, e os níveis vêm da descrição do PR e da spec; a suíte inteira não rodou. O roteiro de curadoria das Novidades não pôde ser rodado (o `gh pr list` devolve "unexpected end of JSON input" com a janela de 1000 PRs); a lista de pendentes foi feita à mão, pelos PRs entrados depois do último "Nada pendente".

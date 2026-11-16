@@ -109,4 +109,8 @@ prs = [546, 549]
 
 [[sem_nota]]
 motivo = "Só o conteúdo e a regra de curadoria das próprias Novidades: a página já diz o que mudou."
-prs = [575]
+prs = [575, 579]
+
+[[sem_nota]]
+motivo = "Os PDFs ficam iguais à vista — mesmo texto, mesmas páginas —; o que muda é o formato de preservação, por dentro do arquivo."
+prs = [581]
