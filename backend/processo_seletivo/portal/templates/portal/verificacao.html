@@ -107,6 +107,9 @@ a regra da classe vencia o `hidden` e ela nascia vermelha (A-2).
     <li>{% include "portal/_icone.html" with nome="documento" %}<span>O seu documento de identidade com foto.</span></li>
   </ul>
   <p class="teto-do-video">{% include "portal/_icone.html" with nome="tempo" %}<span>O vídeo tem até {{ teto_minutos }} minutos. Não há pressa em nenhum passo.</span></p>
+  {% comment %}O último passo, antes de gravar (176, emenda, FR-8073): quem prefere o papel o prepara
+  agora, e não com a câmera aberta. Fora da lista, que continua com três itens (a FR-7863 da 174).{% endcomment %}
+  <p class="ultimo-passo">No último passo, você diz o seu nome e a frase da sua autodeclaração. Se preferir, mostre a frase escrita num papel, ou diga em Libras.</p>
   <section class="quem-ve" aria-labelledby="t-quem-ve">
     <h3 id="t-quem-ve">Quem vê o seu vídeo</h3>
     <ul>
@@ -158,7 +161,7 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
     <p class="canto-do-palco" data-so-preparo><button type="button" class="botao-no-palco" data-ir="acolhimento">Voltar</button></p>
     <p class="guia-do-oval" data-so-preparo data-guia-do-oval>Encaixe o rosto no oval. Ele não aparece no vídeo.</p>
     <div class="faixa-de-cima" data-so-gravando>
-      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span>{% if deteccao %} <span class="ouvindo-voce" data-ouvindo hidden>Estamos ouvindo você.</span>{% endif %} <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
+      <p class="linha-do-selo"><span class="selo-gravando" data-selo>Gravando</span> <span class="tempo-da-gravacao"><span data-tempo>0:00</span> de {{ teto_minutos }}:00</span> <span class="microfone-do-selo" aria-hidden="true">{% include "portal/_icone.html" with nome="microfone" %}<span class="barra-do-som"><span class="volume-do-som" data-volume></span></span></span>{% if deteccao %} <span class="ouvindo-voce" data-ouvindo hidden>Estamos ouvindo você.</span>{% endif %} <button type="button" class="botao-no-palco" data-recomecar>Parar e recomeçar</button></p>
       <div class="instrucao-do-passo">
         <p class="rotulo-do-passo"><span data-passo-rotulo></span> · <span data-passo-titulo></span></p>
         <p class="texto-do-passo" data-passo-atual></p>
@@ -173,9 +176,14 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
     {% endcomment %}<div class="gesto-do-passo" data-so-gravando aria-hidden="true">
       <span class="gesto gesto-esquerda">{% include "portal/_icone.html" with nome="seta-esquerda" %}<span>Sua esquerda</span></span>
       <span class="gesto gesto-direita">{% include "portal/_icone.html" with nome="seta-direita" %}<span>Sua direita</span></span>
-      <span class="gesto gesto-documento">{% include "portal/_icone.html" with nome="documento" %}<span>Mostre o documento</span></span>
+      <span class="gesto gesto-documento">{% include "portal/_icone.html" with nome="documento" %}<span>Mostre o documento ao lado do rosto</span></span>
     </div>
-    <div class="faixa-de-baixo">
+    {% comment %}
+    **A frase do passo de frente fica embaixo** (176, emenda; FR-8070 a FR-8072, D-010). No alto, os
+    250 caracteres cobriam a testa e os olhos, que são o que a comissão olha, e a faixa de altura fixa
+    os cortava. Aqui ela cresce com o texto, junto do botão, e é a do roteiro, inteira (a D-003 da 174).
+    {% endcomment %}<div class="faixa-de-baixo">
+      <p class="fala-do-passo" data-fala-do-passo data-so-gravando></p>
       <button type="button" class="proximo" data-comecar data-so-preparo aria-describedby="o-que-voce-vai-fazer">Começar a gravar</button>
       <button type="button" class="proximo" data-proximo data-so-gravando>Próximo</button>
       <button type="button" class="link-no-palco" data-ir="nao-consigo">Não consigo usar a câmera</button>
@@ -188,7 +196,7 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
     painel, para estar à vista sem rolar no celular. Escondido até o motor ficar pronto: quem grava
     sem a detecção não lê nada sobre ela (UX-923).
     {% endcomment %}<div class="aviso-da-deteccao" data-aviso-deteccao hidden>
-      <p data-frase-deteccao>A tela acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece só neste aparelho: nada dessa leitura é enviado nem guardado.</p>
+      <p data-frase-deteccao>A tela percebe quando você mostra o documento e quando vira o rosto, para passar sozinha aos passos seguintes. Ela não lê o documento. Isso acontece só neste aparelho: nada dessa leitura é enviado nem guardado.</p>
       <p><button type="button" class="secundario" data-so-tocando>Prefiro avançar só tocando</button></p>
     </div>{% endif %}
     <p class="aviso" data-aviso-gravacao hidden></p>
@@ -196,14 +204,21 @@ de tela cheia do navegador, que no iPhone esconderia tudo isto (D-005).
     <div id="o-que-voce-vai-fazer">
       <h3>O que você vai fazer</h3>
       <ol class="passos-do-roteiro" data-passos>
-        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% for chave, gesto in gestos.items %}{% if chave == passo.chave %} data-gesto="{{ gesto }}"{% endif %}{% endfor %}{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
+        {% for passo in passos %}<li data-passo="{{ passo.chave }}" data-texto="{{ passo.instrucao }}" data-titulo="{{ passo.titulo }}"{% for chave, gesto in gestos.items %}{% if chave == passo.chave %} data-gesto="{{ gesto }}"{% endif %}{% endfor %}{% if deteccao %}{% for chave, lado in deteccao.giro_do_passo.items %}{% if chave == passo.chave %} data-giro="{{ lado }}"{% endif %}{% endfor %}{% if passo.chave == deteccao.documento %} data-documento{% endif %}{% endif %}>{{ passo.titulo }}</li>{% endfor %}
       </ol>
       <p class="ajuda"{% if deteccao %} data-ajuda-toque{% endif %}>O vídeo tem até {{ teto_minutos }} minutos. Você toca em «Próximo» a cada passo, no seu tempo.</p>
-      {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>O vídeo tem até {{ teto_minutos }} minutos. Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em «Próximo», no seu tempo.</p>{% endif %}
+      {% if deteccao %}<p class="ajuda" data-ajuda-deteccao hidden>O vídeo tem até {{ teto_minutos }} minutos. No documento e nos dois perfis, a tela passa sozinha. Você também pode tocar em «Próximo», no seu tempo.</p>{% endif %}
     </div>
     <p class="ajuda">Você se vê como num espelho. O vídeo enviado fica na posição normal, e o documento pode ser lido.</p>
     <p class="ajuda sugestao-do-retrato">Fica melhor com o celular em pé.</p>
-    <p class="nivel-do-som"><label for="nivel-do-som">Microfone</label> <meter id="nivel-do-som" data-nivel min="0" max="100" value="0"></meter></p>
+    {% comment %}
+    **A barra do microfone é da página, e não o medidor nativo** (176, emenda; FR-8080 a FR-8082,
+    D-011): o do Safari, com a altura ajustada pela folha, não acompanhava a voz. A largura vem de `gravacao.js`,
+    pelo CSSOM, em decibéis; a marca é o nível em que a página diz "Estamos ouvindo você". Decorativa
+    para o leitor de tela, que ouve a frase logo abaixo.
+    {% endcomment %}<div class="nivel-do-som"><span class="rotulo-do-som">Microfone</span>
+      <span class="medidor-do-som" aria-hidden="true"><span class="barra-do-som"><span class="volume-do-som" data-volume></span></span><span class="marca-do-volume" data-marca-do-volume><span>volume bom</span></span></span>
+    </div>
     <p class="estado-do-som" data-estado-do-som aria-live="polite">Fale alguma coisa para testar o microfone.</p>
   </div>
 </section>

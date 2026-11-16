@@ -62,7 +62,10 @@ dela, dois passos a mais:
   FR-7150 (o servidor continua sem analisar nada; o aparelho estima o giro e não guarda nem envia nada
   — D-001 da `176`), a base legal do tratamento (art. 11), o aviso e a escolha "Prefiro avançar só
   tocando" (D-003 da `176`), e registrar o tratamento no relatório de impacto. Se pedirem
-  consentimento expresso, a troca é de padrão: o aviso passa a perguntar antes de ligar.
+  consentimento expresso, a troca é de padrão: o aviso passa a perguntar antes de ligar. Desde a
+  emenda de 15/11 (D-009 da `176`), o aparelho também **conta** os rostos no passo do documento — a
+  foto do documento é um rosto a mais —, sem ler o documento nem comparar a foto com a pessoa; a
+  validação precisa cobrir essa leitura também.
 - **A compressão do motor no `nginx`.** O guia de implantação não declara `gzip_types`; sem
   `application/wasm` e `application/octet-stream` nele, o candidato baixa 15,4 MB em vez de cerca de
   6,7 (`doc/deteccao-do-giro-2026-11/`).

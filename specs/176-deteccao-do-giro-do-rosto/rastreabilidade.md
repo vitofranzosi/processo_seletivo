@@ -48,6 +48,24 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | FR-8052 | `.palco-da-gravacao[data-estado="gravando"] .oval` | NV |
 | FR-8053 | `data-confirmado` em `gravacao.js` | NV (perfis com a imagem de teste) |
 | FR-8054 | `aria-hidden` no sinal; o anúncio de sempre | DG, NV |
+| FR-8060 | `lerQuadro` devolve `rostos`; `numFaces: 2`; `PASSO_DO_DOCUMENTO` em `portal/deteccao.py`; `data-documento` | JD, DG |
+| FR-8061 | `aoGiro("na-mao")` em `gravacao.js`: "Documento visto", `data-confirmado`, o anúncio | NV (a imagem de teste) |
+| FR-8062 | `avaliarDocumento` ("visto"); `aoGiro("visto")` e `avancar()` | JD, NV |
+| FR-8063 | o estado "na-mao" espera o rosto sozinho de novo | JD |
+| FR-8064 | a sequência inteira; dois rostos desde o começo não contam | JD |
+| FR-8065 | `rostosDaImagemDeTeste`; o cartão desenhado em `fonteSintetica` | JG, NV |
+| FR-8066 | `soTocando` e `aoEstadoDaDeteccao` valem para o documento | NV (só tocando) |
+| FR-8070 | `[data-fala-do-passo]` em `.faixa-de-baixo`; `data-passo-da-fala` | DG, NV |
+| FR-8071 | `.fala-do-passo` sem altura fixa; `@container (min-aspect-ratio:4/3)` no palco deitado | NV (sem rolagem, a 375 e a 1280) |
+| FR-8072 | `partesDaFrase` | JG, NV (os dois destaques) |
+| FR-8073 | `.ultimo-passo` em `verificacao.html` | DG |
+| FR-8074 | `[data-anuncio]` continua com a frase inteira | NV |
+| FR-8080 | `.medidor-do-som`, `desenharVolume` (CSSOM) | DG, NV |
+| FR-8081 | `fracaoDoMedidor`, `suavizarMedidor`, `picoDasAmostras` | JG, NV |
+| FR-8082 | `MARCA_DO_VOLUME_BOM` da régua `nivelDoPico`/`ouviuFala` | JG, NV |
+| FR-8083 | `.microfone-do-selo` | DG, NV |
+| FR-8084 | `retomarSom` no começo da leitura e em `comecar` | **humano** (Safari) |
+| FR-8085 | nada do medidor no envio | NV (corpo do envio), 166 |
 | FR-8030 | nenhum campo novo no envio | DG, NV, 166 |
 | FR-8031 | nada da detecção no vídeo nem na trilha | DG |
 | FR-8032 | o oval e a confirmação por CSS, sobre a prévia; nenhum ponto desenhado | NV (capturas) |
@@ -65,12 +83,15 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | UX-922 | o traço do oval e a frase mudam juntos | NV |
 | UX-923 | tudo `hidden` até a detecção estar pronta; a ajuda da `174` volta sem ela | DG, NV |
 | UX-924 | nenhuma frase de falha | DG |
+| UX-925 | "Documento visto" | NV |
+| UX-926 | a frase de frente fora do alto | NV (a faixa de cima até um quarto do palco), capturas |
+| UX-927 | o comprimento e a marca, sem cor | NV, capturas |
 
 ## Critérios de sucesso
 
 | Critério | Como se verifica |
 |---|---|
-| SC-2750 | NV: dois toques além de "Começar a gravar", com a imagem de teste |
+| SC-2750 | revisto pela SC-2760: o "Próximo" do documento deixou de ser preciso |
 | SC-2751 | DG: sem a chave, a página e a política da `174`; NV: sem rosto, pelo toque |
 | SC-2752 | NV: as chaves e as marcas do corpo do envio |
 | SC-2753 | doc, **humano** (celular de entrada) |
@@ -80,3 +101,8 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações d
 | SC-2757 | **humano** (câmera real; a bancada de `doc/deteccao-do-giro-2026-11/`) |
 | SC-2759 | NV: a 375 px, o sinal à vista sem rolar em cada perfil, o oval escondido, a frase inteira |
 | SC-2758 | NV (motor sem rosto, pelo toque) e **humano** |
+| SC-2760 | NV: um toque além de "Começar a gravar", com a imagem de teste |
+| SC-2761 | JD: dois rostos desde o começo nunca saem de "esperando" |
+| SC-2762 | NV: a faixa de cima até um quarto, a frase sem rolar, à vista; a 1280, a partir de 60% da altura |
+| SC-2763 | NV: o tom da imagem de teste entre um terço e a marca, sem "Estamos ouvindo você"; o selo com a mesma leitura |
+| SC-2764 | **humano** (Safari, câmera real) |

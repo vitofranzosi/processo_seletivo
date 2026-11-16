@@ -1472,8 +1472,30 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .preparo-do-palco>.aviso{margin:0 0 .75rem}
 .passos-do-roteiro{margin:.25rem 0 .75rem;padding-left:1.3rem}
 .sugestao-do-retrato{display:none}
-.nivel-do-som{display:flex;align-items:center;gap:.75rem;margin:.75rem 0 .25rem}
-.nivel-do-som meter{flex:1;height:14px}
+.nivel-do-som{display:flex;align-items:flex-start;gap:.75rem;margin:.75rem 0 .25rem}
+/* A barra do microfone (176, emenda; FR-8080 a FR-8083, D-011, UX-927). O volume é um retângulo
+   inteiro escalado na horizontal a partir da esquerda: o `transform` vem do script, pelo CSSOM, e
+   não redesenha a página. A marca de "volume bom" é um traço com a palavra embaixo, e a sua posição
+   vem só do script, da mesma régua de "Estamos ouvindo você" — um valor aqui divergiria dela. Nenhum estado só pela cor: o
+   comprimento e a marca dizem tudo. */
+.rotulo-do-som{flex:none;line-height:14px;font-weight:600}
+.medidor-do-som{position:relative;display:block;flex:1;padding-bottom:1.1rem}
+.barra-do-som{display:block;position:relative;height:14px;overflow:hidden;border:1px solid var(--texto-fraco);
+  border-radius:7px;background:var(--fundo-p)}
+.volume-do-som{display:block;width:100%;height:100%;background:var(--verde);transform:scaleX(0);
+  transform-origin:left center}
+.marca-do-volume{position:absolute;top:-3px;width:0;height:20px;border-left:2px solid var(--texto)}
+.marca-do-volume span{position:absolute;top:21px;left:0;transform:translateX(-50%);white-space:nowrap;
+  font-size:.75rem;color:var(--texto-fraco)}
+/* O pequeno, no selo, durante a gravação (FR-8083, a FR-7873 da 174): o ícone e a barra curta,
+   sobre a faixa escura do selo. */
+.microfone-do-selo{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .45rem;border-radius:4px;
+  background:rgba(0,0,0,.65)}
+.microfone-do-selo .icone{width:1rem;height:1rem}
+.microfone-do-selo .barra-do-som{width:2.75rem;height:8px;border-color:rgba(255,255,255,.75);
+  background:transparent}
+.microfone-do-selo .volume-do-som{background:var(--branco)}
+.ultimo-passo{margin:.25rem 0 1rem}
 .estado-do-som{margin:0 0 .5rem;font-weight:600}
 /* A detecção do giro do rosto (176). O oval com o rosto dentro fica com o traço mais grosso e
    opaco, e a frase muda: nenhum estado só pela cor (UX-922). Fora dele, o oval é o da 174 — também
@@ -1508,6 +1530,28 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .palco-da-gravacao[data-gesto="direita"] .texto-do-passo,
 .palco-da-gravacao[data-gesto="documento"] .texto-do-passo{font-size:1rem;font-weight:400}
 .palco-da-gravacao[data-estado="gravando"] .oval{display:none}
+/* A frase do passo de frente embaixo (176, emenda; FR-8070 a FR-8072, D-010, UX-926). No alto fica só
+   o "Passo 4 de 4 · De frente": a testa e os olhos ficam livres. Embaixo, junto do botão, a frase do
+   roteiro inteira, sem altura fixa e sem rolagem, na faixa escura de 0,78 da instrução, com o que se
+   diz — o que está entre aspas no roteiro — maior e em negrito. */
+.fala-do-passo{display:none;max-width:36rem;margin:0;padding:.6rem .85rem;border-radius:8px;
+  background:rgba(0,0,0,.78);font-size:1rem;line-height:1.4;text-align:left}
+.fala-do-passo strong{font-size:1.1875rem;font-weight:700}
+.palco-da-gravacao[data-estado="gravando"][data-passo-da-fala] .fala-do-passo{display:block}
+.palco-da-gravacao[data-passo-da-fala] .texto-do-passo{display:none}
+.palco-da-gravacao[data-passo-da-fala] .rotulo-do-passo{margin:0}
+.palco-da-gravacao[data-passo-da-fala] .instrucao-do-passo{padding:.5rem .85rem}
+/* No palco deitado — o computador e o celular de lado —, a frase acima do botão chegava ao queixo:
+   ali ela fica ao lado de "Terminar a gravação", e a faixa de baixo fica baixa. */
+@container (min-aspect-ratio:4/3){
+  .palco-da-gravacao[data-passo-da-fala] .faixa-de-baixo{grid-template-columns:minmax(0,1fr) minmax(11rem,14rem);
+    align-items:end;column-gap:.75rem;}
+  .palco-da-gravacao[data-passo-da-fala] .fala-do-passo{grid-column:1;grid-row:1 / span 2;max-width:none;
+    font-size:.9375rem;line-height:1.35;}
+  .palco-da-gravacao[data-passo-da-fala] .fala-do-passo strong{font-size:1.0625rem;}
+  .palco-da-gravacao[data-passo-da-fala] .faixa-de-baixo .proximo,
+  .palco-da-gravacao[data-passo-da-fala] .faixa-de-baixo .link-no-palco{grid-column:2;}
+}
 .aviso-da-deteccao p:last-child{margin:0}
 .revisao,.video-do-titular{display:block;width:100%;max-height:70vh;background:var(--texto);border-radius:10px;}
 .autoconferencia{margin:.5rem 0 1rem;padding-left:1.25rem;}
@@ -1602,3 +1646,78 @@ dl.dados-do-ato-da-convocacao dd{margin:0}
 .lista-de-documentos-da-agenda{list-style:none;margin:0;padding:0}
 .lista-de-documentos-da-agenda li{display:flex;flex-wrap:wrap;gap:.25rem .75rem;align-items:baseline;margin:0 0 .5rem}
 .lista-de-documentos-da-agenda .documento{margin-top:0}
+/* --- A composição das telas da inscrição (177) ---------------------------------------------------
+   "Minhas inscrições", "Minha inscrição" e "Acompanhar" na coluna da jornada do candidato (`.jornada`,
+   da 174), sob a marca `.jornada-da-inscricao`, para que nada daqui alcance a verificação nem outra
+   tela do portal (FR-8119). As três telas tinham três larguras: blocos na medida de leitura ao lado de
+   blocos na largura da página, e a metade direita vazia a 1440 px (achado E7 do estudo de 14/11). */
+/* **A medida é do texto, e não do bloco** (FR-8102, FR-8104). Dentro da coluna o parágrafo deixa de ser
+   filho de `main`, e a regra comum `main>p` não o alcança mais; ela continua para o resto do portal, e
+   aqui a medida volta pelo parágrafo. Os blocos que paravam na medida passam à borda da coluna. */
+.jornada-da-inscricao p{max-width:var(--leitura)}
+.jornada-da-inscricao .situacao-da-inscricao,.jornada-da-inscricao .cartao-de-lista,
+.jornada-da-inscricao .resultado-da-etapa,.jornada-da-inscricao .aviso,
+.jornada-da-inscricao .selecoes{max-width:none}
+/* O começo da lista: o título e "Acesso à conta" na mesma faixa, que quebra no celular (D-006). */
+.comeco-da-lista{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;
+  gap:.25rem 1.5rem;margin:0 0 1.5rem}
+.comeco-da-lista h1{margin:0}
+.acesso-a-conta{font-size:.9375rem}
+/* O começo de "Minha inscrição" e de "Acompanhar" (FR-8110, D-004): a trilha em texto pequeno, o
+   título, e o Perfil no lugar do subtítulo. O último elo da trilha não é link: é onde se está. */
+.trilha-da-inscricao{margin:0 0 .35rem;font-size:.875rem;color:var(--texto-fraco);overflow-wrap:anywhere}
+.trilha-da-inscricao .separador{margin:0 .4rem}
+.identificacao-da-inscricao{margin-top:.1rem}
+/* O cartão de inscrição (FR-8105 a FR-8108): uma coluna de cartões, e não a grade da vitrine — na
+   coluna de 44rem cabe um só por linha, e dizê-lo evita o cartão de 26rem sozinho à esquerda. */
+.jornada-da-inscricao .selecoes{grid-template-columns:minmax(0,1fr)}
+.jornada-da-inscricao .minhas-inscricoes>.selecao{gap:.4rem;padding:1.25rem;border-radius:var(--raio)}
+.selos-da-inscricao{display:flex;flex-wrap:wrap;gap:.4rem .5rem;margin:.25rem 0}
+.prazo-do-cartao{font-size:.9375rem}
+/* **A ação com a largura do próprio rótulo na tela larga**, e a do cartão no celular (FR-8108): o botão
+   de 600 px no cartão inteiro parecia faixa, e não botão. O `Acompanhar` ao lado da convocação aberta
+   fica do tamanho dele, e não da linha inteira, porque é alvo acima do título esticado. */
+.jornada-da-inscricao .minhas-inscricoes a.principal{align-self:stretch;margin-top:.6rem}
+.jornada-da-inscricao .minhas-inscricoes a.acompanhar{align-self:flex-start}
+@media (min-width:40rem){
+  .jornada-da-inscricao .minhas-inscricoes a.principal{align-self:flex-start;padding-inline:1.75rem}
+}
+/* **O selo da inscrição** (FR-8107, UX-952): a pílula da 174, com a marca e a palavra que já estavam
+   no texto. Nome próprio, porque `.selo` é a marca da correção do documento (118). O registrado é
+   verde; o que pede a pessoa, de atenção; o resto, neutro. */
+.jornada-da-inscricao .selo-da-inscricao{display:inline-flex;align-items:center;gap:.35rem;margin:0;
+  padding:.15rem .75rem;border:1px solid var(--borda);border-radius:var(--raio-pilula);
+  background:var(--cinza-fundo);color:var(--texto);font-size:.9375rem;font-weight:600;line-height:1.5}
+.jornada-da-inscricao .selo-da-inscricao.enviada{border-color:var(--sucesso);background:var(--verde-claro);
+  color:var(--sucesso)}
+.jornada-da-inscricao .selo-da-inscricao.atencao{border-color:var(--amarelo);background:var(--amarelo-fundo);
+  color:var(--texto)}
+/* A situação e o protocolo de "Minha inscrição", numa faixa (FR-8117). */
+.situacao-e-protocolo{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:0 0 .5rem}
+.situacao-e-protocolo p{margin:0}
+/* **"O que você informou" em grade** (FR-8115): rótulo e valor na mesma linha a partir de 40rem, dentro
+   de um cartão, com um filete entre os pares; no celular, rótulo sobre valor. `dl.campos` é comum (a
+   convocação no Acompanhamento também o usa), e por isso a grade é um modificador. */
+.jornada-da-inscricao dl.campos-em-grade{gap:0;padding:.25rem 1rem;background:var(--branco);
+  border:1px solid var(--borda);border-radius:var(--raio)}
+.jornada-da-inscricao dl.campos-em-grade dt{padding-top:.65rem}
+.jornada-da-inscricao dl.campos-em-grade dd{margin:0;padding:.1rem 0 .65rem;border-bottom:1px solid var(--linha)}
+.jornada-da-inscricao dl.campos-em-grade dd:last-of-type{border-bottom:0}
+@media (min-width:40rem){
+  .jornada-da-inscricao dl.campos-em-grade{grid-template-columns:minmax(8rem,13rem) minmax(0,1fr);
+    padding:.25rem 1.25rem}
+  /* Sem vão entre as colunas, e o recuo no valor: o vão partia o filete ao meio. O rótulo, menor, tem
+     a altura de linha do valor, e as duas linhas de base ficam na mesma altura. */
+  .jornada-da-inscricao dl.campos-em-grade dt,
+  .jornada-da-inscricao dl.campos-em-grade dd{padding:.7rem 0;border-bottom:1px solid var(--linha)}
+  .jornada-da-inscricao dl.campos-em-grade dt{padding-right:1.5rem;line-height:1.6rem}
+  .jornada-da-inscricao dl.campos-em-grade dt:last-of-type,
+  .jornada-da-inscricao dl.campos-em-grade dd:last-of-type{border-bottom:0}
+}
+/* A ação secundária ao lado da principal, da mesma altura (FR-8113, FR-8116): link com desenho de
+   botão, como o "Gravar outro vídeo" do comprovante da 174. No celular, as duas ocupam a linha. */
+.jornada-da-inscricao a.secundario{display:inline-flex;align-items:center;justify-content:center;
+  min-height:var(--controle-g);text-decoration:none}
+@media (max-width:39.99rem){
+  .jornada-da-inscricao .acoes-da-tela a.secundario{width:100%;}
+}

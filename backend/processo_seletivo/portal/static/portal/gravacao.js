@@ -152,7 +152,7 @@
      nível de sinal, calculado no aparelho, e não entra no que se envia (FR-7890). `amostras` são
      `{nivel, ms}` em ordem de tempo. */
   function ouviuFala(amostras, limiar, minimo) {
-    limiar = limiar === undefined ? 20 : limiar;
+    limiar = limiar === undefined ? LIMIAR_DA_FALA : limiar;
     minimo = minimo === undefined ? 300 : minimo;
     var inicio = null;
     for (var i = 0; i < amostras.length; i += 1) {
@@ -164,6 +164,71 @@
       }
     }
     return false;
+  }
+
+  /* O medidor do microfone (176, emenda; FR-8080 a FR-8082, D-011). A régua da fala continua a da
+     174 — `nivelDoPico`, de 0 a 100, que `ouviuFala` lê —; o que muda é o que se desenha. A barra é
+     o pico em decibéis entre `DB_MINIMO` e `DB_MAXIMO`: na escala linear de antes, a fala comum
+     ficava no primeiro quinto da barra e parecia parada. Sobe em dezenas de milissegundos e desce em
+     quase meio segundo, para seguir a voz sem piscar a cada quadro. */
+  var DB_MINIMO = -48;
+  var DB_MAXIMO = -6;
+  var SUBIDA_DO_MEDIDOR = 40;
+  var DESCIDA_DO_MEDIDOR = 450;
+  var LIMIAR_DA_FALA = 20;
+
+  // O pico, de 0 a 1, das amostras do analisador: em ponto flutuante (-1 a 1) ou em bytes (128 é
+  // o silêncio), conforme o navegador oferecer.
+  function picoDasAmostras(amostras, emBytes) {
+    var pico = 0;
+    for (var i = 0; i < amostras.length; i += 1) {
+      var valor = emBytes ? (amostras[i] - 128) / 128 : amostras[i];
+      if (Math.abs(valor) > pico) pico = Math.abs(valor);
+    }
+    return Math.min(1, pico);
+  }
+
+  // A régua da 174 (`pico/128*250` sobre bytes), que decide "Estamos ouvindo você" (FR-7873).
+  function nivelDoPico(pico) {
+    return Math.min(100, Math.round((Number(pico) || 0) * 250));
+  }
+
+  // Quanto da barra o pico preenche, de 0 a 1, em decibéis.
+  function fracaoDoMedidor(pico) {
+    if (!(pico > 0)) return 0;
+    var db = 20 * Math.log10(pico);
+    return Math.max(0, Math.min(1, (db - DB_MINIMO) / (DB_MAXIMO - DB_MINIMO)));
+  }
+
+  // A marca de "volume bom" é o limiar da fala na régua da barra (FR-8082): onde a barra passa da
+  // marca, a página passa a dizer que ouve.
+  var MARCA_DO_VOLUME_BOM = fracaoDoMedidor(LIMIAR_DA_FALA / 250);
+
+  // Um passo de `ms` em direção ao `alvo`: rápido para cima, devagar para baixo.
+  function suavizarMedidor(anterior, alvo, ms) {
+    var constante = alvo > anterior ? SUBIDA_DO_MEDIDOR : DESCIDA_DO_MEDIDOR;
+    var passo = 1 - Math.exp(-Math.max(0, Number(ms) || 0) / constante);
+    return anterior + (alvo - anterior) * passo;
+  }
+
+  /* A frase do passo de frente, em partes, para o destaque do que se diz (176, emenda; FR-8072,
+     D-010): o que está entre «aspas» no roteiro vem em destaque, com as aspas, e nada é
+     acrescentado — juntas, as partes são o texto do roteiro, letra por letra. */
+  function partesDaFrase(texto) {
+    var partes = [];
+    var resto = String(texto || "");
+    while (resto) {
+      var abre = resto.indexOf("«");
+      var fecha = abre < 0 ? -1 : resto.indexOf("»", abre);
+      if (abre < 0 || fecha < 0) {
+        partes.push({ texto: resto, destaque: false });
+        break;
+      }
+      if (abre > 0) partes.push({ texto: resto.slice(0, abre), destaque: false });
+      partes.push({ texto: resto.slice(abre, fecha + 1), destaque: true });
+      resto = resto.slice(fecha + 1);
+    }
+    return partes;
   }
 
   /* O giro da imagem de teste no instante `t`, em segundos (176, FR-8040, research T-010): um ciclo
@@ -183,6 +248,16 @@
     return 0;
   }
 
+  /* Quantos rostos a imagem de teste mostra no instante `t` (176, emenda; FR-8065): entre 0,6 e 2,2
+     segundos do ciclo, de frente, um segundo vulto pequeno — o "documento" — aparece ao lado do
+     primeiro, e depois sai. A detecção simulada lê este número, e não a imagem. */
+  var DOCUMENTO_DA_IMAGEM_DE_TESTE = [0.6, 2.2];
+
+  function rostosDaImagemDeTeste(t) {
+    var x = ((Number(t) || 0) % 10 + 10) % 10;
+    return x >= DOCUMENTO_DA_IMAGEM_DE_TESTE[0] && x < DOCUMENTO_DA_IMAGEM_DE_TESTE[1] ? 2 : 1;
+  }
+
   var api = {
     FORMATOS: FORMATOS,
     escolherFormato: escolherFormato,
@@ -197,6 +272,14 @@
     duracaoPorExtenso: duracaoPorExtenso,
     ouviuFala: ouviuFala,
     giroDaImagemDeTeste: giroDaImagemDeTeste,
+    rostosDaImagemDeTeste: rostosDaImagemDeTeste,
+    picoDasAmostras: picoDasAmostras,
+    nivelDoPico: nivelDoPico,
+    fracaoDoMedidor: fracaoDoMedidor,
+    suavizarMedidor: suavizarMedidor,
+    MARCA_DO_VOLUME_BOM: MARCA_DO_VOLUME_BOM,
+    LIMIAR_DA_FALA: LIMIAR_DA_FALA,
+    partesDaFrase: partesDaFrase,
   };
   raiz.GravacaoDoVideo = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
@@ -220,6 +303,8 @@
       titulo: item.getAttribute("data-titulo"),
       // "esquerda" ou "direita" nos dois perfis, com a detecção (176); ausente no resto.
       giro: item.getAttribute("data-giro"),
+      // O passo do documento, com a detecção (176, emenda, FR-8060).
+      documento: item.hasAttribute("data-documento"),
       // O sinal sobre a prévia: "esquerda", "direita", "documento", ou nenhum (176, FR-8050).
       gesto: item.getAttribute("data-gesto") || "",
     };
@@ -228,7 +313,7 @@
     stream: null, sintetica: null, gravador: null, pedacos: [], marcas: [], passo: 0,
     inicio: 0, relogio: null, limiteDaTomada: null, descartar: "", tomada: null, envio: null,
     medidor: null, contexto: null, quedaSimulada: 0, ultimoAvanco: null, telaAcesa: null,
-    amostras: [], ouviu: false, tela: "escolha",
+    amostras: [], ouviu: false, tela: "escolha", volume: 0, volumeDesenhado: -1,
     // A detecção do giro (176): o vigia do palco, a escolha de tocar, a confirmação em curso e a fala
     // do passo de frente.
     vigia: null, soTocando: false, deteccaoAtiva: false, confirmando: null, prefixo: "",
@@ -353,6 +438,16 @@
       ctx.lineTo(240 + giro * 1.4 - 12, 300);
       ctx.lineTo(240 + giro * 1.4 + 12, 300);
       ctx.fill();
+      // O "documento" (176, emenda, FR-8065): um cartão com um vulto pequeno, ao lado do rosto, que
+      // aparece e sai no começo do ciclo.
+      if (rostosDaImagemDeTeste(t) > 1) {
+        ctx.fillStyle = "#d8dce3";
+        ctx.fillRect(330, 300, 120, 80);
+        ctx.fillStyle = "#6b7484";
+        ctx.beginPath();
+        ctx.ellipse(362, 335, 16, 21, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 24px system-ui, sans-serif";
       ctx.textAlign = "center";
@@ -381,6 +476,7 @@
         return {
           caixa: { x: (centro - 100) / 480, y: 125 / 640, largura: 200 / 480, altura: 270 / 640 },
           giro: g * 0.6,
+          rostos: rostosDaImagemDeTeste((performance.now() - comeco) / 1000),
         };
       },
       parar: function () {
@@ -456,12 +552,39 @@
     entrarNoPalco("");
   }
 
+  /* As barras do microfone (FR-8080, FR-8083): a do preparo e a pequena do selo. A largura muda por
+     `transform`, escrito pelo CSSOM — a política de conteúdo recusa o atributo `style`, e não a
+     propriedade —, e só quando muda de verdade, para não redesenhar a cada quadro. */
+  var barrasDoSom = Array.prototype.slice.call(pagina.querySelectorAll("[data-volume]"));
+  Array.prototype.forEach.call(pagina.querySelectorAll("[data-marca-do-volume]"), function (marca) {
+    marca.style.left = (MARCA_DO_VOLUME_BOM * 100).toFixed(1) + "%";
+  });
+
+  function desenharVolume(fracao) {
+    if (Math.abs(fracao - estado.volumeDesenhado) < 0.005) return;
+    estado.volumeDesenhado = fracao;
+    var transformacao = "scaleX(" + fracao.toFixed(3) + ")";
+    barrasDoSom.forEach(function (barra) {
+      barra.style.transform = transformacao;
+    });
+  }
+
+  // O Safari pode criar a leitura do som suspensa; pedir de novo não custa (FR-8084).
+  function retomarSom() {
+    var contexto = estado.contexto;
+    if (contexto && contexto.state === "suspended" && contexto.resume) {
+      contexto.resume().catch(function () {});
+    }
+  }
+
   function medirSom() {
     var faixas = estado.stream.getAudioTracks();
-    var medidor = q("[data-nivel]");
     var frase = q("[data-estado-do-som]");
     estado.amostras = [];
     estado.ouviu = false;
+    estado.volume = 0;
+    estado.volumeDesenhado = -1;
+    desenharVolume(0);
     if (!faixas.length) {
       frase.textContent = "Não encontramos o microfone. Você pode mostrar a frase escrita num papel.";
       return;
@@ -469,16 +592,23 @@
     frase.textContent = "Fale alguma coisa para testar o microfone.";
     var Contexto = window.AudioContext || window.webkitAudioContext;
     estado.contexto = new Contexto();
+    retomarSom();
     var analisador = estado.contexto.createAnalyser();
     analisador.fftSize = 512;
     estado.contexto.createMediaStreamSource(new MediaStream(faixas)).connect(analisador);
-    var amostras = new Uint8Array(analisador.fftSize);
+    // Em ponto flutuante onde houver: os bytes param em 1/128, e o silêncio da sala some neles.
+    var emBytes = !analisador.getFloatTimeDomainData;
+    var amostras = emBytes ? new Uint8Array(analisador.fftSize) : new Float32Array(analisador.fftSize);
+    var anterior = performance.now();
     function quadro() {
-      analisador.getByteTimeDomainData(amostras);
-      var pico = 0;
-      for (var i = 0; i < amostras.length; i += 1) pico = Math.max(pico, Math.abs(amostras[i] - 128));
-      var nivel = Math.min(100, Math.round((pico / 128) * 250));
-      medidor.value = nivel;
+      if (emBytes) analisador.getByteTimeDomainData(amostras);
+      else analisador.getFloatTimeDomainData(amostras);
+      var pico = picoDasAmostras(amostras, emBytes);
+      var nivel = nivelDoPico(pico);
+      var agora = performance.now();
+      estado.volume = suavizarMedidor(estado.volume, fracaoDoMedidor(pico), agora - anterior);
+      anterior = agora;
+      desenharVolume(estado.volume);
       if (!estado.ouviu) {
         estado.amostras.push({ nivel: nivel, ms: performance.now() });
         if (estado.amostras.length > 120) estado.amostras.shift();
@@ -521,6 +651,19 @@
     // FR-8051); a confirmação do perfil anterior não vale para o novo.
     palco.setAttribute("data-gesto", atual.gesto);
     palco.removeAttribute("data-confirmado");
+    // O passo da fala, o último: a frase desce para junto do botão, fora do rosto, com o que se diz
+    // em destaque (176, emenda; FR-8070 a FR-8072, D-010). No alto fica só o "Passo 4 de 4".
+    var daFala = estado.passo === passos.length - 1;
+    palco.toggleAttribute("data-passo-da-fala", daFala);
+    var fala = q("[data-fala-do-passo]");
+    fala.textContent = "";
+    if (daFala) {
+      partesDaFrase(atual.texto).forEach(function (parte) {
+        var trecho = parte.destaque ? document.createElement("strong") : document.createTextNode("");
+        trecho.textContent = parte.texto;
+        fala.appendChild(trecho);
+      });
+    }
     q("[data-proximo]").textContent = estado.passo < passos.length - 1 ? "Próximo" : "Terminar a gravação";
     // Quem avançou pelo giro ouve a confirmação antes do passo novo (176, FR-8012).
     q("[data-anuncio]").textContent = estado.prefixo + rotulo + ": " + atual.titulo + ". " + atual.texto;
@@ -606,7 +749,8 @@
     desligarDeteccao();
   });
 
-  // O que o vigia olha agora: o oval antes de começar, o lado nos perfis, nada no resto.
+  // O que o vigia olha agora: o oval antes de começar, o lado nos perfis, o documento no primeiro
+  // passo (emenda, FR-8060), nada no de frente.
   function observarPasso() {
     if (!estado.vigia) return;
     if (palco.getAttribute("data-estado") !== "gravando") {
@@ -616,7 +760,10 @@
     // Gravando, o oval não é mais pedido: volta ao traço da 174.
     aoRosto(false);
     var atual = passos[estado.passo];
-    estado.vigia.observar(atual && atual.giro ? atual.giro : null);
+    var alvo = null;
+    if (atual && atual.giro) alvo = atual.giro;
+    else if (atual && atual.documento) alvo = "documento";
+    estado.vigia.observar(alvo);
   }
 
   function aoEstadoDaDeteccao(situacao) {
@@ -638,6 +785,9 @@
       aoRosto(false);
       var confirmacao = q("[data-confirmacao]");
       if (confirmacao) confirmacao.hidden = true;
+      // A confirmação some, e o sinal do passo volta: sem isto, a detecção desligada logo depois de
+      // "Documento visto" deixava o passo sem sinal e sem confirmação (revisão da emenda).
+      palco.removeAttribute("data-confirmado");
       var ouvindo = q("[data-ouvindo]");
       if (ouvindo) ouvindo.hidden = true;
     }
@@ -655,9 +805,19 @@
     if (palco.getAttribute("data-estado") !== "gravando") return;
     var caixa = q("[data-confirmacao]");
     if (!caixa) return;
-    if (situacao === "visto") {
+    if (situacao === "na-mao") {
+      // O documento apareceu (emenda, FR-8061): "Documento visto", no tom do perfil (UX-925), no lugar
+      // do sinal; a passagem espera o rosto voltar sozinho (FR-8062). O leitor de tela ouve agora, e
+      // não de novo ao mudar de passo.
+      caixa.textContent = passos[estado.passo].titulo + " visto";
+      caixa.setAttribute("data-tipo", "visto");
+      caixa.hidden = false;
+      palco.setAttribute("data-confirmado", "");
+      q("[data-anuncio]").textContent = caixa.textContent + ".";
+    } else if (situacao === "visto") {
       // "Perfil esquerdo visto": o gesto bem feito, e não uma aprovação (UX-920).
       var frase = passos[estado.passo].titulo + " visto";
+      var jaAnunciado = !caixa.hidden && caixa.textContent === frase;
       caixa.textContent = frase;
       caixa.setAttribute("data-tipo", "visto");
       caixa.hidden = false;
@@ -666,7 +826,7 @@
       if (estado.confirmando) clearTimeout(estado.confirmando);
       estado.confirmando = setTimeout(function () {
         estado.confirmando = null;
-        estado.prefixo = frase + ". ";
+        estado.prefixo = jaAnunciado ? "" : frase + ". ";
         avancar();
       }, Deteccao.CONFIRMACAO);
     } else if (situacao === "outro-lado") {
@@ -725,6 +885,7 @@
       if (evento.data && evento.data.size) estado.pedacos.push(evento.data);
     };
     estado.gravador.onstop = aoParar;
+    retomarSom();
     estado.gravador.start(1000);
     estado.inicio = performance.now();
     estado.ultimoAvanco = estado.inicio;

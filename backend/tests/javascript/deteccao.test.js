@@ -252,3 +252,96 @@ test("pausar para o laço e esquece as leituras, mas guarda o motor", async () =
   vigia.parar();
   assert.equal(globalThis.__motor.fechados, 1);
 });
+
+// --- o documento (emenda de 15/11, FR-8060 a FR-8064, D-009) ------------------------------------
+
+// Leituras `{ms, rostos}` a cada 150 ms, e o estado depois de cada uma, como o vigia as avalia.
+function sequenciaDoDocumento(contagens) {
+  const vistas = [];
+  let estado = "esperando";
+  const lidas = [];
+  contagens.forEach((rostos, i) => {
+    lidas.push({ ms: i * 150, rostos });
+    estado = d.avaliarDocumento(lidas, estado);
+    vistas.push(estado);
+  });
+  return vistas;
+}
+
+test("o documento é visto quando um segundo rosto aparece e sai, e o da pessoa fica", () => {
+  const estados = sequenciaDoDocumento([1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 1, 1]);
+  assert.equal(estados[3], "sozinha");
+  assert.equal(estados[7], "na-mao");
+  assert.equal(estados[11], "visto");
+  assert.ok(!estados.slice(0, 11).includes("visto"));
+});
+
+test("dois rostos desde o começo nunca contam: quem está ao fundo não faz o passo andar (SC-2761)", () => {
+  const estados = sequenciaDoDocumento(Array(40).fill(2));
+  assert.ok(estados.every((e) => e === "esperando"));
+});
+
+test("quem entra e fica no quadro não deixa o passo terminar", () => {
+  const estados = sequenciaDoDocumento([1, 1, 1, 1, ...Array(30).fill(2)]);
+  assert.equal(estados.at(-1), "na-mao");
+});
+
+test("um relance do segundo rosto não conta, e o rosto que some não é o rosto sozinho", () => {
+  assert.equal(sequenciaDoDocumento([1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1]).at(-1), "sozinha");
+  assert.equal(sequenciaDoDocumento([1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 0]).at(-1), "na-mao");
+});
+
+test("o documento que volta ao quadro adia a passagem até sair de novo (FR-8063)", () => {
+  const estados = sequenciaDoDocumento([1, 1, 1, 1, 2, 2, 2, 2, 1, 1, 2, 2, 1, 1, 1, 1]);
+  assert.equal(estados[11], "na-mao");
+  assert.equal(estados.at(-1), "visto");
+});
+
+test("o vigia simulado conta o documento: avisa 'na-mao' e 'visto', e para de olhar", async () => {
+  let rostos = 1;
+  const avisos = [];
+  const vigia = new d.Vigia({
+    simulada: () => ({ caixa: null, giro: 0, rostos }),
+    aoGiro: (e) => avisos.push(e),
+  });
+  await vigia.carregar();
+  vigia.observar("documento");
+  await espera(d.INTERVALO * 5);
+  rostos = 2;
+  await espera(d.INTERVALO * 5);
+  assert.deepEqual(avisos, ["na-mao"]);
+  rostos = 1;
+  await espera(d.INTERVALO * 5);
+  assert.deepEqual(avisos, ["na-mao", "visto"]);
+  assert.equal(vigia.alvo, null);
+  vigia.parar();
+});
+
+test("pausar esquece o documento: o passo seguinte começa do zero", async () => {
+  const vigia = new d.Vigia({ simulada: () => ({ caixa: null, giro: 0, rostos: 1 }) });
+  await vigia.carregar();
+  vigia.observar("documento");
+  vigia.documento = "na-mao";
+  vigia.pausar();
+  assert.equal(vigia.documento, null);
+  vigia.observar("documento");
+  assert.equal(vigia.documento, "esperando");
+  vigia.parar();
+});
+
+test("a foto do documento tapando o rosto não é a volta do rosto (revisão do #578)", () => {
+  // O rosto da pessoa mede 0,5 da altura; a foto do documento diante dele, 0,2.
+  const lidas = [];
+  let estado = "esperando";
+  const passo = (rostos, altura) => {
+    lidas.push({ ms: lidas.length * 150, rostos, altura });
+    estado = d.avaliarDocumento(lidas, estado, { referencia: 0.5 });
+  };
+  for (let i = 0; i < 4; i += 1) passo(1, 0.5);
+  for (let i = 0; i < 4; i += 1) passo(2, 0.5);
+  assert.equal(estado, "na-mao");
+  for (let i = 0; i < 6; i += 1) passo(1, 0.2);
+  assert.equal(estado, "na-mao");
+  for (let i = 0; i < 4; i += 1) passo(1, 0.45);
+  assert.equal(estado, "visto");
+});
