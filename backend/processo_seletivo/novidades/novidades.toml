@@ -15,6 +15,25 @@
 # ---- novembro de 2026 ----------------------------------------------------------------------------
 
 [[nota]]
+id = "distribuicao-sem-choque-de-horario"
+data = 2026-11-16
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "A distribuição evita choque de horário e a Mesa mostra a agenda"
+resumo = """
+Ao distribuir as inscrições, você não põe a mesma pessoa em duas entrevistas ao mesmo tempo: a linha em
+conflito é recusada e diz com qual compromisso bate. Quem avalia abre a Minha Mesa e vê as entrevistas
+do dia, com a banca e a sala.
+"""
+exemplo = """
+Na distribuição de 43 pessoas em 3 bancas, o lote recusa a entrevista que cairia junto de outra do
+mesmo avaliador, e ele lê em Minhas atividades "próxima entrevista 25/11 às 08:00, Banca 01".
+"""
+destino = "interface:minhas-etapas"
+prs = [583]
+specs = ["179"]
+
+[[nota]]
 id = "telas-do-candidato-depois-da-inscricao"
 data = 2026-11-15
 categoria = "melhoria"
