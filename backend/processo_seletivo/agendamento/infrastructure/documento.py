@@ -29,6 +29,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_SECAO,
     CORPO_TEXTO,
     ESQUERDA,
+    METRICA_DO_EDITAL,
     NEGRITO,
     Composicao,
     UnidadeDoAto,
@@ -58,7 +59,8 @@ def titulo(conteudo):
 def render_agenda_pdf(conteudo: dict) -> bytes:
     """O documento de um ato da agenda, do conteúdo que a página também lê."""
     cabecalho = conteudo["cabecalho"]
-    composicao = Composicao()
+    # Medida pela fonte que o arquivo embute (178, FR-8158): PDF/A não declara fonte sem arquivo.
+    composicao = Composicao(metrica=METRICA_DO_EDITAL)
     _timbre(composicao, cabecalho, titulo(conteudo))
     _identificacao(composicao, cabecalho)
     _nota(composicao, cabecalho)

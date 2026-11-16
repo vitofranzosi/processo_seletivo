@@ -178,9 +178,15 @@ def test_os_enderecos_do_texto_viram_link_e_nenhum_e_acrescentado():
     assert uris == ["mailto:selecao.demo@exemplo.ifes.edu.br"]
 
 
-def test_sem_identificador_nem_marcacao():
+def test_sem_marcacao_e_com_o_identificador_do_conteudo():
+    """Sem marcação, como desde a `069` (FR-1388); o `/ID` veio com a `178` (FR-8154).
+
+    O identificador é derivado do corpo, e não sorteado: duas composições o repetem, e é por isso
+    que `test_os_mesmos_bytes_em_duas_composicoes` continua de pé.
+    """
     documento = por_perguntas("B")
-    assert b"/ID" not in documento.split(b"trailer", 1)[1]
+    trailer = documento.split(b"trailer", 1)[1]
+    assert re.search(rb"/ID \[<[0-9A-F]{32}> <[0-9A-F]{32}>\]", trailer)
     assert b"/StructTreeRoot" not in documento
     assert b"/MarkInfo" not in documento
 

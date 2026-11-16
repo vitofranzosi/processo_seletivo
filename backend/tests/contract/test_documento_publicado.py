@@ -59,7 +59,10 @@ from processo_seletivo.shared.canonical import canonical_sha256
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 SNAPSHOT = json.loads((FIXTURES / "snapshot_publicado.json").read_text(encoding="utf-8"))
-DOCUMENTO = (FIXTURES / "documento_publicado_v1.pdf").read_bytes()
+# A `v2` é a da `178`: o mesmo documento, em PDF/A-2u (FR-8150). A `v1` fica como evidência, e
+# `tests/unit/publicacoes/test_documento_da_auditoria_depois_da_178.py` prova que, entre as duas,
+# só o arquivo mudou — nenhuma página (FR-8159).
+DOCUMENTO = (FIXTURES / "documento_publicado_v2.pdf").read_bytes()
 
 # O hash do próprio snapshot, e não uma constante arbitrária: é o que o ato de publicação passa
 # ao renderizador, e é o que aparece na declaração de integridade do documento.

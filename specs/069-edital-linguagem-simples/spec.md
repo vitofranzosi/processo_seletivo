@@ -505,9 +505,16 @@ e precisa conferir na segunda emissão (FR-063a).
   - o resumo, os dados do sorteio e a declaração do Requerimento em bloco destacado de fundo claro.
 
   Nenhuma informação MUST depender de cor.
-- **FR-1383**: O comprovante de inscrição, o documento de divulgação de resultado e qualquer outro
-  documento composto pelo mesmo escritor MUST continuar byte a byte o mesmo. A fonte, a medição e a
-  composição novas são do Edital.
+- **FR-1383** *(revista pela `178` em 2026-11-16, que vigora com a implementação dela — a redação anterior está ao fim desta alínea)*:
+  O comprovante de inscrição das inscrições enviadas antes da implantação da `178` MUST continuar byte
+  a byte o mesmo, para sempre. O documento de divulgação de resultado, os demais compostos pelo mesmo
+  escritor e o comprovante das inscrições enviadas depois passam a ser PDF/A, com a fonte do Edital
+  embutida e medida (a FR-8150, a FR-8158 e a FR-8163 da `178`), e são presos byte a byte por novas
+  fixtures.
+
+  *Redação anterior (12/10/2026):* O comprovante de inscrição, o documento de divulgação de resultado
+  e qualquer outro documento composto pelo mesmo escritor MUST continuar byte a byte o mesmo. A fonte,
+  a medição e a composição novas são do Edital.
 
 #### Navegação
 
@@ -705,8 +712,12 @@ O número de cada seção é o calculado sobre as que existem: um Edital sem cer
 - **SC-521**: Em A, B e na variante: **zero** títulos órfãos, **zero** linhas de tabela partidas,
   **zero** continuações de tabela sem cabeçalho, **zero** páginas só com o fecho e **zero** tabelas
   que caberiam inteiras deixando uma linha só na página seguinte.
-- **SC-522**: O comprovante de inscrição e o documento de divulgação de resultado são **byte a byte**
-  idênticos antes e depois desta feature, para o mesmo conteúdo.
+- **SC-522** *(revisto pela `178` em 2026-11-16, com a FR-1383 — a redação anterior está ao fim desta alínea)*:
+  O comprovante de inscrição enviada antes da implantação da `178` é **byte a byte** idêntico ao de
+  antes desta feature, para o mesmo conteúdo (o SC-2823 da `178`).
+
+  *Redação anterior (12/10/2026):* O comprovante de inscrição e o documento de divulgação de resultado
+  são **byte a byte** idênticos antes e depois desta feature, para o mesmo conteúdo.
 - **SC-523**: O mesmo snapshot composto duas vezes produz **os mesmos bytes**. O hash do conteúdo de
   todo Edital já submetido, homologado ou publicado é o mesmo de antes.
 - **SC-524**: Em B, a tabela de Perfis não repete o nome comum aos Perfis do grupo: o nome sai **uma**

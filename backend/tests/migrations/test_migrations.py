@@ -1061,7 +1061,11 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # **Sobe para 7 com o A-03**: a `inscricoes/0007` leva ao banco a imutabilidade da Inscrição
         # enviada e dos documentos dela, que até ali só `save()` recusava. Só gatilhos, condicionais
         # ao estado — o rascunho continua mudando (`doc/parecer-a03-imutabilidade-2026-11-01.md`).
-        "inscricoes": 7,
+        # **Sobe para 8 com a 178**: a `inscricoes/0008` registra, em cada inscrição, qual escritor
+        # compõe o comprovante — falso nas que já existiam, para que o resumo já mostrado ao
+        # candidato continue conferindo (178, FR-8163, D-002). Coluna nova por catálogo, sem
+        # percorrer linha: o gatilho da enviada não dispara.
+        "inscricoes": 8,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o
