@@ -29,7 +29,7 @@ obrigatório e fica na trilha; não aparece ao candidato (FR-7246).
       {% if seletor %}
       <p class="dias-do-seletor" role="group" aria-label="Dia">{% for opcao in seletor.dias %}<button type="submit" class="dia-do-seletor" name="ver_dia" value="{{ opcao.dia }}" formnovalidate{% if opcao.atual %} aria-current="true"{% endif %}>{{ opcao.rotulo }} <span class="contagem">{{ opcao.livres }}</span></button>{% endfor %}</p>
       {% for grupo in seletor.grupos %}
-      <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"{% if opcao.valor == escolhido %} checked{% endif %}><span>{{ opcao.hora }}</span>{% if opcao.ocupados %}<span class="ocupado-na-opcao">{{ opcao.ocupados }}: outra entrevista</span>{% endif %}</label>{% endfor %}</fieldset>
+      <fieldset class="horarios-livres"><legend>{{ grupo.nome }}</legend>{% for opcao in grupo.opcoes %}<label class="opcao-de-horario"><input type="radio" name="horario" value="{{ opcao.valor }}"{% if opcao.valor == escolhido %} checked{% endif %}><span>{{ opcao.hora }}{% if opcao.ocupados %}<small class="ocupado-na-opcao">{{ opcao.ocupados }}: outra entrevista</small>{% endif %}</span></label>{% endfor %}</fieldset>
       {% endfor %}
       {% else %}
       <p class="aviso">{{ sem_horario_livre }} <a href="{% url 'interface:agenda-configurar' edital.id etapa_id %}">Abrir a configuração</a></p>

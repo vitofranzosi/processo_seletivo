@@ -50,8 +50,8 @@ def _url(edital, etapa, inscricao):
 def _opcoes(corpo):
     """`[(valor, hora, marca)]` dos horários livres do seletor do dia mostrado."""
     return re.findall(
-        r'<input type="radio" name="horario" value="([^"]+)"[^>]*><span>([^<]+)</span>'
-        r'(?:<span class="ocupado-na-opcao">([^<]+)</span>)?',
+        r'<input type="radio" name="horario" value="([^"]+)"[^>]*><span>([^<]+)'
+        r'(?:<small class="ocupado-na-opcao">([^<]+)</small>)?</span>',
         corpo,
     )
 
