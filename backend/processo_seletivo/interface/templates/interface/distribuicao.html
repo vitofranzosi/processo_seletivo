@@ -229,7 +229,7 @@ FR-422).
       {% for linha in carga %}
       <tr>
         <td>{% rotulo_ou_nome linha.membro.display_label linha.membro.identity_subject %}
-          {% with frases=conflitos_da_pessoa|dicionario_simples:linha.membro.identity_subject %}{% for frase in frases %}<p class="conflito-de-horario">Em dois lugares: {{ frase }}.</p>{% endfor %}{% endwith %}</td>
+          {% with frases=conflitos_da_pessoa|dicionario_simples:linha.membro.identity_subject %}{% if frases %}<span class="marca-em-dois-lugares">em dois lugares</span>{% endif %}{% endwith %}</td>
         <td class="numero">{{ linha.atribuidas }}</td>
         <td class="numero">{{ linha.concluidas }}</td>
       </tr>

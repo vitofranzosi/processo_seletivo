@@ -84,7 +84,11 @@ def test_quem_falta_e_o_conflito_com_os_caminhos(
     assert "Ninguém ainda</a>" in corpo
     distribuicao = _distribuicao(presidente, edital_a, etapa_a2)
     assert "1 conflito de horário" in distribuicao
-    assert "Em dois lugares: ana, às 08:00 de 23/11 (Banca 01 e Banca 02)." in distribuicao
+    # O detalhe fica no cartão, numa linha; em "Quem está alocado", só a marca (revisão de 16/11).
+    assert '<p class="conflito-no-cartao"' in distribuicao
+    assert "ana, às 08:00 de 23/11 (Banca 01 e Banca 02)" in distribuicao
+    assert '<span class="marca-em-dois-lugares">em dois lugares</span>' in distribuicao
+    assert "coerencia-da-agenda com-pendencia" not in distribuicao
     assert "Em dois lugares: ana tem outra entrevista às 08:00 (Banca 0" in distribuicao
 
 

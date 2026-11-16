@@ -3,14 +3,12 @@ A coerência entre a distribuição e a agenda (179, FR-8208, UX-974): uma linha
 ordem, e o que resolver, com o caminho, quando não está. Só a gestão vê — o que é público não recebe
 este fragmento, nem quem avalia (`D-007`). `url_da_distribuicao` vem de quem inclui. Na
 Distribuição, `so_conflitos`: a cobertura ela já conta nos números logo abaixo, e repetir a mesma
-contagem com outras palavras seria dizer duas vezes.
+contagem com outras palavras seria dizer duas vezes. E ali o conflito é **uma linha do cartão**, e
+não uma caixa dentro dele: o cartão já é a moldura (revisão visual de 16/11).
 {% endcomment %}
 {% if coerencia %}
 {% if so_conflitos %}
-{% if coerencia.frases_vigentes %}<div class="coerencia-da-agenda com-pendencia" role="status">
-  <p><strong>{{ coerencia.frases_vigentes|length }} conflito{{ coerencia.frases_vigentes|length|pluralize }} de horário</strong> — alguém com duas entrevistas ao mesmo tempo:</p>
-  <ul>{% for frase, dia in coerencia.frases_vigentes %}<li><a href="{{ url_da_distribuicao }}?dia={{ dia }}#inscricoes">{{ frase }}</a></li>{% endfor %}</ul>
-</div>{% endif %}
+{% if coerencia.frases_vigentes %}<p class="conflito-no-cartao" role="status"><strong>{{ coerencia.frases_vigentes|length }} conflito{{ coerencia.frases_vigentes|length|pluralize }} de horário:</strong> {% for frase, dia in coerencia.frases_vigentes %}<a href="{{ url_da_distribuicao }}?dia={{ dia }}#inscricoes">{{ frase }}</a>{% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
 {% elif coerencia.em_ordem %}
 <p class="coerencia-da-agenda">{{ coerencia.com_horario }} pessoa{{ coerencia.com_horario|pluralize:"s" }} com horário, todas com quem as avalie · ninguém com duas entrevistas ao mesmo tempo.</p>
 {% else %}

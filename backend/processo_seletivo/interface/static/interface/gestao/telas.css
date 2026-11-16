@@ -464,6 +464,11 @@ nove, a última linha continua com colunas do tamanho das outras, e não esticad
 .coerencia-da-agenda{margin:.5rem 0 0;color:var(--texto-fraco)}
 .coerencia-da-agenda.com-pendencia{color:var(--texto);background:var(--amarelo-fundo);border-left:4px solid var(--amarelo);padding:.5rem .75rem;border-radius:var(--raio-p)}
 .coerencia-da-agenda.com-pendencia ul{margin:.25rem 0;padding-left:1.25rem}
+/* No cartão Agenda da Distribuição, o conflito é uma linha do cartão, e não outra caixa dentro dele;
+   em "Quem está alocado", só a marca, porque o detalhe já está no cartão (revisão visual de 16/11). */
+.conflito-no-cartao{margin:.5rem 0 0;padding-left:.5rem;border-left:3px solid var(--amarelo);color:var(--texto)}
+.marca-em-dois-lugares{display:inline-block;margin-left:.5rem;padding:0 .4rem;font-size:.75rem;font-weight:600;
+  color:var(--texto);background:var(--amarelo-fundo);border-radius:999px;white-space:nowrap}
 /* A Programação da Mesa (179, UX-972, UX-973): uma lista por dia, cada entrevista um cartão curto com a
    hora em destaque; a 375 px nada pede rolagem lateral, e o botão da sala quebra para a linha de baixo. */
 .visoes-da-mesa{display:flex;gap:var(--e-3);margin:0 0 var(--e-3)}
