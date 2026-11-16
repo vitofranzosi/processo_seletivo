@@ -620,7 +620,7 @@ A documentação descrevia o sistema até a 165, ainda "sem merge". Entre 14/11 
   - "404 enquanto a chave não estiver ligada";
   - a lista de requisitos para abrir ao público, substituída por `RA-1` a `RA-12`;
   - a barreira de produção, que agora recusa qualquer serviço que não seja o Ollama e a própria `ASSISTENTE_PILOTO`.
-- **Os avisos por e-mail passaram de cinco a seis situações no código** (sete na norma da FR-084, em que a do desfecho da 156 ainda não tem código), e três ficam desligadas em produção. As lacunas "a convocação para heteroidentificação, entrevista ou títulos não tem ato" ganharam a ressalva: com agenda publicada, o ato existe.
+- **Os avisos por e-mail passaram de cinco a seis situações no código** (sete na norma da FR-084, em que a do desfecho da 156 ainda não tem código), e três ficavam desligadas em produção (desde o #570, de 15/11, vêm ligadas por padrão). As lacunas "a convocação para heteroidentificação, entrevista ou títulos não tem ato" ganharam a ressalva: com agenda publicada, o ato existe.
 - **A barra, os papéis e as rotas** ganharam *Novidades* e *Assistente do Edital*, a permissão `assistente:habilitar` e as rotas novas.
 - **A P0 de interface (#557 e #559)** não mudou rótulo citado pela Visão: as confirmações de ato passaram a abrir os avisos por *Impedimento:* e *Atenção:*, e os textos citados continuam literais.
 - **O #544 (números de linha do guia de implantação), o #549 e o #541 (estudos)** não pedem menção: o nome da branch do #544 sugeria armazenamento de anexos, mas o PR só corrige referências em `doc/implantacao-em-producao-ubuntu.md`.
@@ -669,3 +669,53 @@ O #561 foi mergeado depois da revisão acima, e três frases da seção das Novi
 - **A cobertura:** há notas das specs 167, 168, 170 e 171; nenhuma da 166, que só existe em desenvolvimento.
 
 **Não verificado:** nenhuma tela foi percorrida; a leitura é do diff e dos testes do PR, que passaram na CI.
+
+## Acréscimo de 16/11: as specs 172 a 176, os avisos ligados por padrão e os cenários C19 e C20
+
+A documentação descrevia o sistema até o #562 (`92348634`). Entre aquele ponto e a `main` em `399f90be` entraram 17 PRs: #563 a #568 (172, 174, a 171 corrigida), #569 a #575 (os avisos por padrão, os cenários, a 175, a 176 e as Novidades). Esta revisão descreve tudo contra a `main`.
+
+**O que mudou na documentação:**
+
+- **Os avisos por e-mail passaram a vir ligados por padrão (#570)**, por decisão do usuário em 15/11, e as frases "desligado em produção até a validação de LGPD" saíram de quinze lugares da Visão. A decisão tem um quadro próprio, *Os avisos vêm ligados por padrão*:
+  - a chave `AVISOS_AOS_CANDIDATOS` é uma só para as cinco origens — resultado, chamada, pendência, agenda e passo;
+  - continuam valendo o despacho por `despachar_avisos`, o correio que entrega e a janela de 24 horas;
+  - a validação de LGPD e de SPF/DKIM deixou de ser *condição* e ficou como *recomendação*.
+- **O design system na gestão** entrou como seção própria, *Parcial*:
+  - o piloto da 172, com cinco telas e o conteúdo idêntico nos 64 estados;
+  - a migração da 175, que levou os padrões a 110 das 123 telas rastreadas, todas da gestão.
+  A seção diz o que **não** foi feito: a validação com a equipe, a SC-2604 em sete estados, o portal e a desfeita da folha do piloto.
+- **A verificação por vídeo ganhou o desenho da 174**: a coluna centrada de 44rem, a trilha *Preparar*, *Gravar* e *Conferir e enviar*, o palco único da câmera e da gravação, e o comprovante que abre por *Seu vídeo foi enviado*. Os pendentes ganharam os aparelhos reais, as três pessoas de fora e o leitor de tela.
+- **A detecção do giro do rosto (176)** entrou como subseção *Parcial*, só em desenvolvimento: o motor roda no aparelho, nada vai ao servidor, a produção recusa a chave até a P-13 (CPVA e encarregado de dados), e a frase "o sistema não analisa o vídeo" ganhou a exceção do aparelho.
+- **Os cenários de treinamento** passaram de 17 a 20: a tabela ganhou o C18, o C19 e o C20, com as validades de 7 e de 27 dias, e a chave `VERIFICACAO_POR_VIDEO` do C19, que a produção recusa.
+- **As Novidades** passaram de 112 a **114 notas** — 42 funcionalidades, 50 melhorias e 22 correções; 14 transformadoras, 54 relevantes e 46 incrementais; 92 com exemplo —, com duas notas novas (os avisos e as telas mais compactas).
+- **A 171 corrigida pelo #567**: o assunto do aviso do passo passou a ser *Há um passo a mais para você*, o Centro diz *só para quem se inscreveu em {Modalidades}*, e *Minhas inscrições* acrescenta *➜ Falta um passo seu*.
+- **O #569** (o status da 167) não muda o produto.
+
+**Os números de *Maturidade*, recontados pelo mesmo roteiro**, que reproduziu os dez de 14/11 sobre `37ed0ad0`:
+
+| | 14/11 (`37ed0ad0`) | 16/11 (`399f90be`) |
+|---|---|---|
+| pastas de especificação | 163 | 176 |
+| tabelas append-only | 59 | 69 |
+| gatilhos | 91 em 36 migrations, sobre 73 tabelas | 100 em 39 migrations, sobre 78 tabelas |
+| migrations | 119 | 134 |
+| módulos de domínio | 24 | 27 |
+| Python de aplicação | 583 (167,1 mil linhas) | 647 (182,9 mil) |
+| templates | 266 | 288 |
+| testes | 1 233 + 25 | 1 328 + 27 |
+| rotas (gestão, portal) | 180, 42 | 190, 52 |
+| espécies de sinal | 8 | 8 |
+
+**Como foi conferido:**
+
+- duas leituras paralelas, cada uma com uma ficha de fatos conferida contra os templates e o código da `main`; onde spec e código divergiram, valeu o código;
+- a página passou pelos guardiões de documentação, não tem `id` repetido nem âncora sem destino.
+
+**Não verificado:**
+
+- a suíte inteira não rodou, e nenhuma tela foi percorrida;
+- o literal de `SIM-TREINAMENTO-019` e `020`, que foi inferido do padrão;
+- se o guia de implantação cita `VERIFICACAO_DETECCAO_DO_GIRO` e a compressão de WebAssembly;
+- se a nota do piloto do assistente, presa a `ASSISTENTE_PILOTO`, deve aparecer em produção quando o piloto é habilitado por ato: hoje não aparece.
+
+**O que ficou desatualizado fora da Visão** (registro, e não escopo): os `Status` das specs 172, 174, 175 e 176 ainda dizem "sem merge" ou "o merge é do usuário", e o texto de ajuda do `--cenario`, em `treinamento/management/commands/_base.py`, ainda diz "C01 a C15".
