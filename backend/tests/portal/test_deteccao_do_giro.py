@@ -37,9 +37,15 @@ def test_cada_arquivo_do_motor_tem_o_resumo_do_manifesto(caminho):
 
 
 def test_os_passos_que_giram_sao_os_dois_perfis_do_roteiro():
-    """D-002: só os perfis avançam sozinhos; o documento e o passo de frente, pelo toque."""
+    """D-002: só os perfis giram; o documento avança pela contagem (D-009); a frente, pelo toque."""
     assert set(deteccao.GIRO_DO_PASSO) <= set(roteiro.CHAVES)
     assert deteccao.GIRO_DO_PASSO == {"perfil-esquerdo": "esquerda", "perfil-direito": "direita"}
+
+
+def test_o_passo_do_documento_e_o_primeiro_do_roteiro():
+    """FR-8060, D-009: o documento é o primeiro passo, e não é um dos que giram."""
+    assert deteccao.PASSO_DO_DOCUMENTO == roteiro.CHAVES[0] == "documento"
+    assert deteccao.PASSO_DO_DOCUMENTO not in deteccao.GIRO_DO_PASSO
 
 
 @pytest.mark.parametrize(
@@ -84,12 +90,15 @@ def _abrir(client, cenario):
     return resposta
 
 
+# As frases da FR-8004 e da ajuda, revistas pela emenda (D-009): o documento também avança sozinho,
+# e a pessoa lê que ele não é lido.
 FRASES = (
-    "A tela acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece "
-    "só neste aparelho: nada dessa leitura é enviado nem guardado.",
+    "A tela percebe quando você mostra o documento e quando vira o rosto, para passar sozinha aos "
+    "passos seguintes. Ela não lê o documento. Isso acontece só neste aparelho: nada dessa leitura "
+    "é enviado nem guardado.",
     "Prefiro avançar só tocando",
-    "Nos dois perfis, a tela passa sozinha quando vê o giro. Você também pode tocar em "
-    "«Próximo», no seu tempo.",
+    "No documento e nos dois perfis, a tela passa sozinha. Você também pode tocar em «Próximo», "
+    "no seu tempo.",
 )
 
 
@@ -102,6 +111,7 @@ def test_sem_a_chave_a_pagina_e_a_da_174(cenario, client, settings):
     assert "data-deteccao" not in corpo
     assert "deteccao.js" not in corpo
     assert "data-giro" not in corpo
+    assert "data-documento" not in corpo
     assert "data-confirmacao" not in corpo
     for frase in FRASES:
         assert frase not in corpo
@@ -138,6 +148,8 @@ def test_so_os_dois_perfis_levam_o_lado_do_giro(cenario, client, settings):
     corpo = _abrir(client, cenario).content.decode()
     giros = dict(re.findall(r'data-passo="([\w-]+)"[^>]*?data-giro="(\w+)"', corpo))
     assert giros == {"perfil-esquerdo": "esquerda", "perfil-direito": "direita"}
+    # O documento leva a sua marca, e só ele (emenda, FR-8060).
+    assert re.findall(r'data-passo="([\w-]+)"[^>]*?data-documento[ >]', corpo) == ["documento"]
 
 
 def test_o_motor_so_vale_na_gravacao(cenario, client, settings):
@@ -248,3 +260,29 @@ def test_o_sinal_do_gesto_vale_com_ou_sem_a_deteccao(cenario, client, settings, 
     assert re.search(r'class="gesto-do-passo" data-so-gravando aria-hidden="true"', corpo)
     for palavra in ("Sua esquerda", "Sua direita", "Mostre o documento"):
         assert palavra in corpo
+
+
+# --- a fala e o microfone (emenda de 15/11) -------------------------------------------------------
+
+
+@pytest.mark.parametrize("ligada", [False, True], ids=["sem-deteccao", "com-deteccao"])
+def test_a_fala_e_o_microfone_valem_com_ou_sem_a_deteccao(cenario, client, settings, ligada):
+    """FR-8070, FR-8073, FR-8080, FR-8083: a faixa da fala embaixo, a frase do preparo, e as duas
+    barras do microfone — a do preparo, com a marca, e a do selo —, todas da página."""
+    settings.VERIFICACAO_DETECCAO_DO_GIRO = ligada
+    corpo = _abrir(client, cenario).content.decode()
+    faixa_de_baixo = corpo[corpo.index('class="faixa-de-baixo"') :]
+    assert faixa_de_baixo.index("data-fala-do-passo") < faixa_de_baixo.index("data-proximo")
+    assert (
+        "No último passo, você diz o seu nome e a frase da sua autodeclaração. Se preferir, "
+        "mostre a frase escrita num papel, ou diga em Libras."
+    ) in corpo
+    assert "<meter" not in corpo
+    assert corpo.count("data-volume") == 2
+    assert corpo.count("data-marca-do-volume") == 1
+    assert re.search(r'class="medidor-do-som" aria-hidden="true"', corpo)
+    assert re.search(r'class="microfone-do-selo" aria-hidden="true"', corpo)
+    # A frase do roteiro continua a mesma, e é dela que a faixa sai (D-010, a D-003 da 174).
+    frente = roteiro.PASSOS[-1]
+    assert frente.chave == "frente"
+    assert f'data-texto="{frente.instrucao}"' in corpo.replace("&#x27;", "'")

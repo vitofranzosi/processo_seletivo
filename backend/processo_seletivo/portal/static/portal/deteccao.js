@@ -7,8 +7,10 @@
    O que ela nunca faz (FR-8000 a FR-8003): mandar ao servidor, guardar ou mostrar a alguém qualquer
    quadro, ponto, ângulo ou resultado; ler cor, luz, expressão, idade ou identidade; decidir nada. As
    leituras vivem na memória desta página, no máximo as últimas `LEITURAS_GUARDADAS`, e somem ao sair
-   do palco. O motor só lê no preparo e nos dois perfis: no documento e no passo de frente ele não
-   olha nada, porque não há o que guiar ali (minimização, research T-008).
+   do palco. O motor só lê no preparo, no documento e nos dois perfis: no passo de frente ele não olha
+   nada, porque não há o que guiar ali (minimização, research T-008). No documento ele só **conta**
+   os rostos (emenda, FR-8060): a foto do documento é um rosto a mais, e nada além disso é lido — nem
+   o documento, nem se ele é um, nem se a foto é da pessoa.
 
    Quando ela não está — sem a chave, sem WebAssembly, com economia de dados, motor que não carrega,
    aparelho lento, ou a pessoa que prefere tocar —, a página é a da 174, sem frase de falha (FR-8016).
@@ -106,11 +108,7 @@
     var mantido = opcoes.mantido === undefined ? INSTANTE_MANTIDO : opcoes.mantido;
     var sentido = lado === "esquerda" ? 1 : -1;
     function corrida(cabe) {
-      var fim = leituras.length - 1;
-      if (fim < 0 || !cabe(leituras[fim])) return false;
-      var inicio = fim;
-      while (inicio > 0 && cabe(leituras[inicio - 1])) inicio -= 1;
-      return leituras[fim].ms - leituras[inicio].ms >= mantido;
+      return corridaMantida(leituras, cabe, mantido);
     }
     function noLado(leitura) {
       return leitura.giro !== null && leitura.giro !== undefined && leitura.giro * sentido >= limiar;
@@ -121,6 +119,37 @@
     if (corrida(noLado)) return "visto";
     if (permitirOposto && corrida(noOposto)) return "outro-lado";
     return "esperando";
+  }
+
+  /* O passo do documento (emenda, FR-8061 a FR-8064, D-009). Uma sequência, e não uma contagem: o
+     rosto da pessoa sozinho ("sozinha"), um segundo rosto mantido pelo instante ("na-mao" — a tela diz
+     "Documento visto") e o rosto sozinho de novo, mantido ("visto" — o passo pode passar). Cada
+     estado só anda para o seguinte, a partir de `anterior`, e as leituras são `{ms, rostos}`. Dois
+     rostos desde o começo nunca chegam a "sozinha": quem está ao fundo desde o início não conta, e
+     quem fica no quadro não deixa o passo terminar. */
+  function avaliarDocumento(leituras, anterior, opcoes) {
+    opcoes = opcoes || {};
+    var mantido = opcoes.mantido === undefined ? INSTANTE_MANTIDO : opcoes.mantido;
+    function sozinho(leitura) {
+      return leitura.rostos === 1;
+    }
+    function comDocumento(leitura) {
+      return leitura.rostos >= 2;
+    }
+    var estado = anterior || "esperando";
+    if (estado === "esperando") return corridaMantida(leituras, sozinho, mantido) ? "sozinha" : estado;
+    if (estado === "sozinha") return corridaMantida(leituras, comDocumento, mantido) ? "na-mao" : estado;
+    if (estado === "na-mao") return corridaMantida(leituras, sozinho, mantido) ? "visto" : estado;
+    return estado;
+  }
+
+  // A corrida mais recente de leituras que `cabe` aceita dura pelo menos `mantido` ms?
+  function corridaMantida(leituras, cabe, mantido) {
+    var fim = leituras.length - 1;
+    if (fim < 0 || !cabe(leituras[fim])) return false;
+    var inicio = fim;
+    while (inicio > 0 && cabe(leituras[inicio - 1])) inicio -= 1;
+    return leituras[fim].ms - leituras[inicio].ms >= mantido;
   }
 
   // O orçamento da leitura (FR-8017): `registrar` devolve `false` a partir da quinta leitura lenta
@@ -173,6 +202,7 @@
     this.rosto = null;
     this.giro = null;
     this.passouPelaFrente = false;
+    this.documento = null;
   }
 
   Vigia.prototype.estado = function (nome) {
@@ -231,8 +261,9 @@
           motor = await modulo.FaceLandmarker.createFromOptions(arquivos, {
             baseOptions: { modelAssetPath: enderecos.modelo, delegate: delegados[i] },
             runningMode: "VIDEO",
-            // Dois, para ficar com o maior (o rosto de quem grava); nem expressões nem matriz:
-            // a detecção lê só a direção do rosto (FR-8001).
+            // Dois: para ficar com o maior nos perfis (o rosto de quem grava) e para contar a foto
+            // do documento no primeiro passo (emenda, FR-8060). Nem expressões nem matriz: a
+            // detecção lê só a direção do rosto e quantos há (FR-8001).
             numFaces: 2,
             outputFaceBlendshapes: false,
             outputFacialTransformationMatrixes: false,
@@ -274,7 +305,8 @@
     this.agendar();
   };
 
-  // O que observar agora: "oval" no preparo, "esquerda" ou "direita" num perfil, ou `null` (nada).
+  // O que observar agora: "oval" no preparo, "esquerda" ou "direita" num perfil, "documento" no
+  // primeiro passo, ou `null` (nada).
   // Cada pedido começa do zero: as leituras do passo anterior não contam para o seguinte.
   Vigia.prototype.observar = function (alvo) {
     this.alvo = alvo || null;
@@ -283,6 +315,7 @@
     this.giro = "esperando";
     this.rosto = null;
     this.passouPelaFrente = false;
+    this.documento = "esperando";
     // O motor que chegou com a tomada em curso aquece no primeiro pedido fora dela.
     if (this.motor && !this.pronto && !this.parado && !this.gravando()) {
       if (this.aquecer(this.motor) === "falhou") {
@@ -336,7 +369,10 @@
         maior = { caixa: caixa, giro: giroDosPontos(rostos[i]) };
       }
     }
-    return maior || { caixa: null, giro: null };
+    // Quantos rostos, até os dois que o motor procura: o documento é contado, e não lido (FR-8060).
+    if (!maior) return { caixa: null, giro: null, rostos: 0 };
+    maior.rostos = rostos.length;
+    return maior;
   };
 
   Vigia.prototype.ler = function () {
@@ -357,6 +393,20 @@
       if (dentro !== this.rosto) {
         this.rosto = dentro;
         if (this.opcoes.aoRosto) this.opcoes.aoRosto(dentro);
+      }
+      return;
+    }
+    if (this.alvo === "documento") {
+      this.leituras.push({ ms: performance.now(), rostos: leitura.rostos || 0 });
+      if (this.leituras.length > LEITURAS_GUARDADAS) this.leituras.shift();
+      var documento = avaliarDocumento(this.leituras, this.documento);
+      if (documento !== this.documento) {
+        this.documento = documento;
+        // Visto, o vigia para de olhar: o passo vai mudar. Só "na-mao" e "visto" são notícia.
+        if (documento === "visto") this.alvo = null;
+        if ((documento === "na-mao" || documento === "visto") && this.opcoes.aoGiro) {
+          this.opcoes.aoGiro(documento);
+        }
       }
       return;
     }
@@ -383,6 +433,7 @@
     this.leituras = [];
     this.rosto = null;
     this.giro = null;
+    this.documento = null;
     clearTimeout(this.relogio);
     this.relogio = null;
   };
@@ -411,6 +462,7 @@
     caixaDosPontos: caixaDosPontos,
     rostoNoOval: rostoNoOval,
     avaliarGiro: avaliarGiro,
+    avaliarDocumento: avaliarDocumento,
     Orcamento: Orcamento,
     podeCarregar: podeCarregar,
     Vigia: Vigia,

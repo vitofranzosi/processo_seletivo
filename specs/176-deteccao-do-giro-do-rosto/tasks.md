@@ -117,3 +117,18 @@ demonstração. A US4 é o que permite provar tudo no navegador sem rosto.
 - [x] T031 `GESTO_DO_PASSO` em `processo_seletivo/portal/verificacao.py`, `data-gesto` nos passos e `.gesto-do-passo` em `verificacao.html`, ícones `seta-esquerda` e `seta-direita` em `_icone.html`
 - [x] T032 `gravacao.js`: `data-gesto` e `data-confirmado` no palco; `portal.css`: o sinal, a frase em tamanho de leitura nos gestos, o oval fora da gravação
 - [x] T033 Testes: o mapa contra o roteiro e a página com e sem a chave (`tests/portal/test_deteccao_do_giro.py`); a jornada nos quatro tamanhos confere o sinal de cada passo, o oval e o corpo da frase (`tests/navegador/test_jornada_do_video.py`)
+
+## Phase 9: Emenda de 15/11, à noite — o documento, a frase de frente e o microfone (FR-8060 a FR-8085, D-009 a D-011)
+
+O usuário testou com câmera real no Safari, no C19, e pediu três coisas; Q-5 e Q-6 decididas pelas
+recomendações.
+
+- [x] T034 Registrar a emenda na spec: Q-5, Q-6, US5 a US7, FR-8060 a FR-8085, UX-925 a UX-927, SC-2760 a SC-2764, D-009 a D-011; revistas a FR-8001, a FR-8004, a FR-8013, a FR-8051 e a D-002
+- [x] T035 `deteccao.js`: `avaliarDocumento`, `corridaMantida`, a contagem de rostos em `lerQuadro` e o alvo `documento` no `Vigia`; `PASSO_DO_DOCUMENTO` em `portal/deteccao.py` e `data-documento` em `verificacao.html`
+- [x] T036 `gravacao.js`: o alvo do documento em `observarPasso`, "na-mao" e "visto" em `aoGiro`, o cartão do documento na imagem de teste (`rostosDaImagemDeTeste`); o aviso e a ajuda revistos
+- [x] T037 A frase de frente embaixo: `[data-fala-do-passo]`, `data-passo-da-fala`, `partesDaFrase`, a folha (com o palco deitado por consulta de contêiner) e a frase do "Antes de gravar"
+- [x] T038 O medidor: a barra própria em decibéis com subida rápida e descida lenta, a marca de "volume bom", o indicador do selo (ícone `microfone`), a leitura em ponto flutuante e `resume()`
+- [x] T039 Testes: `deteccao.test.js` (a sequência do documento e o vigia simulado), `gravacao.test.js` (o medidor, a frase, o documento da imagem de teste), `test_deteccao_do_giro.py` (as frases, o `data-documento`, a fala e o microfone) e `test_jornada_do_video.py` (a frase de frente nos quatro tamanhos, o medidor, um toque só)
+- [x] T040 Registrar em `doc/deteccao-do-giro-2026-11/` as capturas e as medidas, e a P-13 ampliada na porta do piloto
+- [ ] T041 *(humano)* Com câmera real e um documento de verdade, no Safari e num celular: o documento é percebido? a barra acompanha a voz? (SC-2757, SC-2764)
+

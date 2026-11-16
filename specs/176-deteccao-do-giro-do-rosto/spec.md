@@ -8,6 +8,10 @@ da implementação da `174`, #568)
 **Status**: Especificada em 15/11; as quatro perguntas (Q-1 a Q-4) foram decididas pelo usuário no
 mesmo dia, pelas recomendações. Planejada, com tarefas e implementada no mesmo dia, sem merge (o merge
 é do usuário). Pendentes: a câmera real e o celular de entrada (SC-2753, SC-2757) e a P-13.
+Emendada em 15/11, à noite, depois do teste do usuário com câmera real no Safari: o documento passa
+a ser percebido (FR-8060 a FR-8066), a frase do passo de frente desce para junto do botão
+(FR-8070 a FR-8074) e o medidor do microfone é refeito (FR-8080 a FR-8085); Q-5 e Q-6 decididas pelo
+usuário pelas recomendações (D-009 a D-011).
 
 **Input**: em 15/11 o usuário gravou um vídeo real pela página da `166`, no Safari, e pediu que a
 gravação ficasse *"como acontece nos bancos — pedem para você ir para um lado, ele já detecta, gira
@@ -53,7 +57,8 @@ continua sem analisar nada.
 | Cobre | Fica fora, e por quê |
 |---|---|
 | Perceber, no aparelho, se há um rosto no oval antes de começar | qualquer leitura de luz, nitidez, cor ou "qualidade" (R-19 do estudo) |
-| Perceber, no aparelho, o giro para a esquerda e para a direita nos dois passos de perfil, e avançar sozinho | perceber o documento no passo 1: continua pelo toque |
+| Perceber, no aparelho, o giro para a esquerda e para a direita nos dois passos de perfil, e avançar sozinho | ler o que está no documento, conferir que ele é um documento ou comparar a foto dele com o rosto (reconhecimento facial) |
+| Perceber, no aparelho, que a foto do documento apareceu e saiu do quadro, no passo 1, e avançar sozinho (emenda, D-009) | qualquer leitura do documento além de "há mais um rosto no quadro" |
 | Dizer, no passo de frente, que o som da fala chegou (o nível que a `174` já mede) | terminar a gravação sozinha depois da fala; reconhecer o que foi dito |
 | A revisão estreita da FR-7150 da `166`, da R-19 do estudo e da FR-7890 da `174`, e do guardião | qualquer análise no servidor, que continua proibida |
 | A chave própria da detecção e a exceção de política de conteúdo que ela pede | ligar a detecção em produção: espera a P-0 e a validação da LGPD (P-13) |
@@ -94,6 +99,17 @@ pelo toque.
   frase em destaque; ou limpar e recolher a frase depois de alguns segundos, revendo a D-003 da `174` —,
   ele pediu **um meio-termo**: a frase do roteiro continua inteira e sempre à vista, mas nos passos de
   gesto deixa de ser o centro da tela, e o sinal visual passa a ser (FR-8050 a FR-8054, D-008).
+
+### Session 2026-11-15 (emenda: o documento, a fala e o microfone)
+
+- O usuário gravou com câmera real no Safari do macOS, no cenário C19, e pediu três coisas: que o passo
+  do documento também avance sozinho; que o texto do passo de frente pare de cobrir o rosto — ele tapa a
+  testa e os olhos e corta o fim, "Libras" pela metade —; e que o medidor do microfone se mexa quando a
+  pessoa fala.
+- **Q-5 e Q-6: adotadas as recomendações.** O documento avança quando a foto dele apareceu como um
+  segundo rosto e saiu, ficando o da pessoa (D-009); a frase do roteiro continua inteira, e desce para
+  junto do botão, com a frase a dizer em destaque (D-010). O medidor é defeito, e não pergunta: a FR-7873
+  da `174` já pedia que ele se mexesse e que ficasse pequeno no selo durante a gravação (D-011).
 
 ### Perguntas ao usuário (decididas em 15/11 pelas recomendações abaixo)
 
@@ -143,6 +159,31 @@ licença Apache 2.0:
 
 Nos dois, o motor só é baixado **depois** que a câmera abriu, enquanto a pessoa se vê no palco, e
 nunca quando o aparelho pede economia de dados (FR-8018).
+
+#### Q-5 — Quando o passo do documento avança sozinho? (emenda)
+
+O mesmo motor dos pontos do rosto encontra até dois rostos por quadro, e a foto do documento, perto da
+câmera, é um rosto a mais. Nenhum modelo novo. O roteiro diz «Mostre o seu documento de identidade com
+foto perto da câmera, e depois o seu rosto».
+
+| Opção | O que é | Implicações |
+|---|---|---|
+| **A (recomendada)** | **Visto e depois saiu**: um segundo rosto aparece por um instante, depois sai, e fica só o da pessoa; a tela diz "Documento visto" e o passo avança | Cumpre o "e depois o seu rosto". Quem está ao fundo desde o começo não conta, porque o segundo rosto precisa *aparecer*; quem fica não deixa o passo terminar. O documento que cobre o rosto não é percebido, e o toque resolve |
+| B | **Assim que aparecer**: avança quando o segundo rosto fica um instante | Mais rápido; o perfil começa com o documento na mão, e uma pessoa ao fundo avança o passo |
+| C | **Só confirma**: "Documento visto", e a pessoa toca | Nenhuma regra de avanço muda no documento; o toque que incomoda continua |
+
+#### Q-6 — Onde fica a frase do passo de frente? (emenda)
+
+A frase do passo de frente tem cerca de 250 caracteres (o A-4 da `174`). Sobre o vídeo, no alto, ela
+cobre a testa e os olhos — que são o que a comissão olha — e a faixa de altura fixa a corta. A D-003 da
+`174` e a FR-8051 exigem a frase inteira e à vista, e encurtá-la é versão nova do roteiro, que muda o
+que é enviado (FR-8030).
+
+| Opção | O que é | Implicações |
+|---|---|---|
+| **A (recomendada)** | **A frase inteira embaixo**: no alto, só "Passo 4 de 4 · De frente"; a frase do roteiro desce inteira para uma faixa junto do botão, fora do rosto, com o que se diz em destaque e altura que acompanha o texto. O "Antes de gravar" ganha uma linha sobre o papel e a Libras | Nenhuma regra muda: a frase é a do roteiro, inteira e à vista. O que muda é o lugar, e a faixa de baixo cresce no celular |
+| B | **Uma linha curta**: no alto, "Diga o seu nome e a frase da sua autodeclaração"; embaixo, só a frase a dizer; papel, Libras e CPF só no preparo | Revê a D-003 da `174` e a FR-8051: a pessoa deixaria de ver na gravação o texto que a comissão lê como "o que o candidato viu" |
+| C | **Só corrigir o corte**: a frase no alto, menor, sem altura fixa | Para de cortar; continua cobrindo a testa e os olhos |
 
 ---
 
@@ -246,6 +287,73 @@ envio, sem nenhum toque nos perfis.
 
 ---
 
+### User Story 5 — Mostrar o documento sem tocar na tela (Priority: P1, emenda)
+
+A candidata começa a gravar, aproxima o documento da câmera, ao lado do rosto, e vê "Documento visto".
+Ela abaixa o documento, a câmera volta a ver só o rosto dela, e a tela passa sozinha ao perfil
+esquerdo.
+
+**Why this priority**: é o primeiro passo, e era o único gesto da gravação que ainda pedia toque.
+
+**Independent Test**: com câmera real e um documento com foto; com a imagem de teste, cujo ciclo
+mostra um segundo vulto pequeno; e com o motor sem rosto, pelo toque.
+
+**Acceptance Scenarios**:
+
+1. **Given** o passo "Documento" em curso, **When** a foto do documento aparece ao lado do rosto por
+   um instante, **Then** a tela diz "Documento visto", e o sinal do documento sai (FR-8061, FR-8063).
+2. **Given** o documento visto, **When** ele sai do quadro e o rosto da pessoa fica sozinho por um
+   instante, **Then** a tela passa ao perfil esquerdo, anunciado como no toque (FR-8062).
+3. **Given** uma pessoa ao fundo desde o começo do passo, **When** a candidata mostra o documento,
+   **Then** nada avança sozinho, e "Próximo" resolve (FR-8064).
+4. **Given** o documento na frente do rosto, cobrindo-o, **When** o passo segue, **Then** nada avança
+   e nenhum erro aparece (FR-8064).
+
+---
+
+### User Story 6 — Ler a frase sem cobrir o rosto (Priority: P1, emenda)
+
+No passo de frente, com o celular em pé, o candidato vê o próprio rosto inteiro, com "Passo 4 de 4 ·
+De frente" no alto, e lê, embaixo, junto do botão, a frase inteira, com «Eu me autodeclaro pessoa
+preta» e «pessoa parda» em destaque.
+
+**Why this priority**: a comissão olha o rosto, e o texto o cobria no passo em que ele mais importa;
+e a frase cortada escondia a alternativa da Libras.
+
+**Independent Test**: a 375 px em retrato e a 1280 px, com a imagem de teste, medindo a faixa da
+frase contra a altura do palco e conferindo que ela não rola nem corta.
+
+**Acceptance Scenarios**:
+
+1. **Given** o passo de frente em curso, **When** a pessoa olha a tela, **Then** a faixa de cima tem
+   só o "Passo 4 de 4 · De frente" e o selo, e a frase inteira está embaixo, sem rolagem (FR-8070,
+   FR-8071).
+2. **Given** a frase embaixo, **When** se lê o texto, **Then** é o do roteiro, palavra por palavra, e
+   as frases entre aspas estão em destaque (FR-8072).
+
+---
+
+### User Story 7 — Ver o microfone responder (Priority: P2, emenda)
+
+Antes de começar, a candidata fala e vê a barra do microfone subir com a voz e passar da marca de
+"volume bom"; durante a gravação, um indicador pequeno, junto do selo, continua mostrando que o
+som chega.
+
+**Why this priority**: o medidor parado faz a pessoa achar que o microfone não funciona, e gravar
+três minutos sem som é perder a tomada.
+
+**Independent Test**: com câmera real no Safari e no Chrome, e com a imagem de teste, cujo tom
+sintético move a barra.
+
+**Acceptance Scenarios**:
+
+1. **Given** o palco antes de começar, **When** a pessoa fala em voz normal, **Then** a barra sobe
+   rápido, desce devagar e passa da marca, e a frase diz "Estamos ouvindo você" (FR-8080 a FR-8082).
+2. **Given** a gravação em curso, **When** a pessoa fala, **Then** o indicador pequeno do selo se
+   mexe (FR-8083).
+
+---
+
 ### Edge Cases
 
 - **Giro para o lado errado** (a confusão do espelho): a tela diz, sem tom de erro, "Para o outro
@@ -277,6 +385,15 @@ envio, sem nenhum toque nos perfis.
 - **Regravar**: ao sair do palco o vigia para de ler e esquece as leituras (FR-8003); o motor fica na
   página, e a detecção recomeça do oval, sem baixar nem aquecer de novo.
 - **Chave da detecção ligada e a do vídeo desligada**: nada aparece; a do vídeo continua mandando.
+- **(emenda) Documento que cobre o rosto**: a câmera vê um rosto só — o da foto —, e nada é percebido;
+  "Próximo" resolve. A detecção não sabe qual dos rostos é o do documento e não tenta saber.
+- **(emenda) Alguém passa ao fundo durante o documento**: o segundo rosto aparece e sai como um
+  documento, e o passo pode avançar. A marca do passo seguinte fica uns segundos antes do que deveria;
+  a comissão vê o vídeo inteiro, e a marca só ajuda a achar o trecho.
+- **(emenda) Documento sem foto, ou foto pequena demais para o motor**: nada é percebido; o toque
+  resolve. Nenhuma frase culpa o documento.
+- **(emenda) Microfone mudo ou sem permissão**: a barra fica no zero, e a frase da `174` ("Fale alguma
+  coisa…") continua; sem faixa de áudio, a frase de sem microfone, como hoje.
 
 ## Requirements *(mandatory)*
 
@@ -288,9 +405,10 @@ envio, sem nenhum toque nos perfis.
   da gravação, enquanto o palco está aberto. Nenhum quadro, ponto do rosto, ângulo, contagem ou
   resultado da detecção DEVE ser enviado ao servidor, guardado no aparelho além da memória da página,
   ou mostrado a qualquer outra pessoa.
-- **FR-8001**: A detecção DEVE produzir só três leituras: se há um rosto dentro do oval; para que
-  lado e quanto ele está virado; e se o giro pedido foi mantido. NÃO DEVE ler cor, tom de pele,
-  luz, nitidez, expressão, idade, gênero, identidade nem qualquer "qualidade" (R-19 do estudo).
+- **FR-8001**: A detecção DEVE produzir só quatro leituras: se há um rosto dentro do oval; para que
+  lado e quanto ele está virado; se o giro pedido foi mantido; e, no passo do documento, **quantos**
+  rostos há no quadro (emenda, FR-8060). NÃO DEVE ler cor, tom de pele, luz, nitidez, expressão,
+  idade, gênero, identidade nem qualquer "qualidade" (R-19 do estudo).
 - **FR-8002**: O servidor NÃO DEVE analisar o vídeo de nenhuma forma, como hoje (a FR-7150 da `166`).
   A revisão desta spec (Q-1, D-001) alcança só o aparelho e só o palco.
 - **FR-8003**: A detecção NÃO DEVE funcionar fora do palco: nem na revisão, nem no "assistir ao
@@ -300,8 +418,9 @@ envio, sem nenhum toque nos perfis.
 #### O que a pessoa sabe e escolhe
 
 - **FR-8004**: Com a detecção disponível, o palco DEVE dizer, antes de "Começar a gravar": "A tela
-  acompanha o giro do seu rosto para passar sozinha aos passos seguintes. Isso acontece só neste
-  aparelho: nada dessa leitura é enviado nem guardado."
+  percebe quando você mostra o documento e quando vira o rosto, para passar sozinha aos passos
+  seguintes. Ela não lê o documento. Isso acontece só neste aparelho: nada dessa leitura é enviado nem
+  guardado." (texto revisto pela emenda, D-009; antes, só o giro).
 - **FR-8005**: Ao lado dessa frase, o palco DEVE oferecer "Prefiro avançar só tocando" (Q-3, D-003).
   Escolhido, o motor NÃO DEVE ler nenhum quadro até a página ser recarregada, e o palco DEVE voltar a
   ser o da `174`. A escolha vale para a página, e não é guardada.
@@ -322,7 +441,8 @@ envio, sem nenhum toque nos perfis.
   sobre a prévia e, depois de um instante de confirmação, passar sozinha ao passo seguinte, com a marca
   no instante da passagem, exatamente como o toque (Q-2, D-002). O anúncio ao leitor de tela DEVE ser
   o mesmo do toque (UX-875 da `174`), precedido da confirmação.
-- **FR-8013**: O passo do documento e o passo de frente NÃO DEVEM avançar sozinhos. No passo de frente,
+- **FR-8013**: O passo de frente NÃO DEVE avançar sozinho; o do documento avança só pela regra da
+  FR-8062 (emenda, D-009 — antes, nenhum dos dois avançava). No passo de frente,
   quando o som passar do nível de fala, a tela DEVE dizer "Estamos ouvindo você" — a mesma leitura de
   nível que a `174` já faz antes de começar (a FR-7873 da `174`), sem reconhecer palavras. A gravação
   DEVE terminar só em "Terminar a gravação" ou no teto.
@@ -373,7 +493,8 @@ Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e 
   fala.
 - **FR-8051**: A frase do roteiro DEVE continuar inteira e à vista em todos os passos, sem recolher
   (a D-003 da `174`). Nos passos de gesto, ela DEVE vir em tamanho de leitura, e não grande: o sinal
-  é o destaque, e a frase o apoio. No passo de frente, continua grande. Revê a "texto grande" da
+  é o destaque, e a frase o apoio. No passo de frente, ela desce para junto do botão, com o que se
+  diz em destaque (FR-8070 a FR-8072, emenda). Revê a "texto grande" da
   FR-7868 da `174` só nos passos de gesto (D-008).
 - **FR-8052**: O oval NÃO DEVE aparecer durante a gravação: ele é o guia do enquadramento, antes de
   começar, e no meio do giro ocupava o centro da tela sem guiar nada.
@@ -381,6 +502,62 @@ Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e 
   DEVE continuar apontando o lado pedido enquanto a tela diz "Para o outro lado".
 - **FR-8054**: O sinal é decorativo para o leitor de tela (`aria-hidden`): o anúncio do passo, com a
   frase inteira, continua o mesmo (a UX-875 da `174`).
+
+#### O documento (emenda de 15/11, Q-5, D-009)
+
+- **FR-8060**: No passo do documento, a detecção DEVE contar quantos rostos o motor encontra no quadro,
+  até dois — o mesmo motor e a mesma leitura dos perfis, sem modelo novo. NÃO DEVE ler o documento,
+  conferir que ele é um documento, comparar a foto dele com o rosto da pessoa nem guardar a contagem
+  além das leituras da FR-8000.
+- **FR-8061**: Depois de ver o rosto da pessoa sozinho no passo, um segundo rosto que fique no quadro
+  pelo instante da FR-8011 DEVE fazer a tela dizer "Documento visto", com o sinal de feito, no lugar
+  do sinal do documento (FR-8053), e o leitor de tela DEVE ouvir a mesma frase.
+- **FR-8062**: Visto o documento, quando o rosto da pessoa ficar sozinho no quadro pelo mesmo instante,
+  a tela DEVE passar ao passo seguinte, depois do instante de confirmação, pelo mesmo caminho do toque
+  e com a mesma marca (FR-8012).
+- **FR-8063**: O sinal do documento DEVE continuar até o documento ser visto; e, visto, um segundo rosto
+  que volte ao quadro DEVE adiar a passagem até ele sair de novo, sem frase nova.
+- **FR-8064**: Sem a sequência inteira — o rosto sozinho, os dois, e o rosto sozinho de novo —, nada
+  DEVE acontecer: nenhuma frase, nenhum erro. Dois rostos desde o começo do passo não contam. "Próximo"
+  DEVE avançar como sempre, e o toque e a passagem a menos de meio segundo contam como um (FR-8014).
+- **FR-8065**: Na imagem de teste, o ciclo DEVE mostrar, de forma previsível, um segundo vulto pequeno
+  que aparece e sai, e a detecção simulada DEVE ler a contagem desenhada, e não a imagem (FR-8040).
+- **FR-8066**: "Prefiro avançar só tocando" e a detecção indisponível DEVEM valer também para o
+  documento: o passo volta a ser só pelo toque, sem frase.
+
+#### A frase do passo de frente (emenda de 15/11, Q-6, D-010)
+
+- **FR-8070**: No passo de frente, a frase do roteiro DEVE ficar **embaixo**, numa faixa junto de
+  "Terminar a gravação", e não no alto: o alto, onde ficam a testa e os olhos, DEVE ter só o "Passo 4 de
+  4 · De frente", o selo e o tempo. Nos passos de gesto, a frase continua no alto (FR-8051).
+- **FR-8071**: A faixa da frase NÃO DEVE ter altura fixa, rolagem nem corte: ela cresce com o texto, em
+  tamanho de leitura, e o palco DEVE caber na tela sem rolar a 375 px em retrato.
+- **FR-8072**: A frase DEVE ser a do roteiro, inteira e palavra por palavra (a D-003 da `174`); as
+  frases entre «aspas», que são o que se diz, DEVEM vir em destaque, maiores e em negrito, pela
+  própria marcação das aspas no roteiro, sem texto acrescentado.
+- **FR-8073**: O "Antes de gravar" DEVE ganhar, abaixo do teto, uma frase sobre o último passo: "No
+  último passo, você diz o seu nome e a frase da sua autodeclaração. Se preferir, mostre a frase
+  escrita num papel, ou diga em Libras." Os três itens do preparo continuam três (a FR-7863 da
+  `174`).
+- **FR-8074**: O anúncio ao leitor de tela DEVE continuar o mesmo, com a frase inteira (a UX-875 da
+  `174`): muda o lugar na tela, e não o que se anuncia.
+
+#### O medidor do microfone (emenda de 15/11, D-011)
+
+- **FR-8080**: O medidor DEVE ser uma barra própria da página, e não o `<meter>` do navegador, cuja
+  aparência nativa o Safari não redesenha com a altura ajustada pela folha. A largura DEVE mudar pela
+  folha de estilo da página, sem estilo escrito no template (a política de conteúdo).
+- **FR-8081**: A barra DEVE seguir o pico do som em decibéis, de modo que a fala em voz normal fique no
+  meio dela, e não no começo; DEVE subir rápido e descer devagar, para não piscar.
+- **FR-8082**: A barra DEVE ter uma marca de "volume bom" no nível em que a página passa a dizer
+  "Estamos ouvindo você" (a FR-7873 da `174`), com a mesma régua: o que a marca mostra e o que a frase
+  diz não podem divergir.
+- **FR-8083**: Durante a gravação, um indicador pequeno do microfone DEVE ficar junto do selo, com a
+  mesma leitura (a FR-7873 da `174`, que já o pedia). Ele é decorativo para o leitor de tela.
+- **FR-8084**: A página DEVE pedir ao navegador que retome a leitura do som quando ela começar
+  suspensa, e de novo no toque em "Começar a gravar".
+- **FR-8085**: Nada do medidor DEVE entrar no que é gravado ou enviado: a barra é nível de sinal, lido
+  no aparelho (a FR-7890 da `174`).
 
 #### O que não muda
 
@@ -420,6 +597,12 @@ Valem com ou sem a detecção: o sinal é navegação, como o "Passo N de 4", e 
   "falhou", nem "não foi possível".
 - **UX-924**: Nenhuma frase atribui à pessoa a falha da detecção — luz, óculos, cabelo, véu, pele,
   movimento. Se a tela não percebe, o toque resolve, e é isso que a instrução já diz.
+- **UX-925** (emenda): "Documento visto" tem o tom de "Perfil esquerdo visto" (UX-920): o gesto bem
+  feito, e não "Documento válido", "conferido" ou "aceito" — a tela não sabe se ele é válido.
+- **UX-926** (emenda): No passo de frente, o rosto inteiro — testa, olhos e boca — fica livre de texto
+  no celular em pé, com o rosto no meio do quadro.
+- **UX-927** (emenda): A barra do microfone se lê sem cor: o comprimento diz o volume, e a marca diz
+  onde fica o bom.
 
 ### Key Entities
 
@@ -432,7 +615,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
 
 - **SC-2750**: Com a detecção, a pessoa grava os quatro passos com **dois** toques além de "Começar a
   gravar" — o "Próximo" do documento e o "Terminar a gravação" —, contra quatro hoje, com câmera real
-  e com a imagem de teste.
+  e com a imagem de teste. *Revisto pela emenda: com o documento percebido, o toque é um só
+  (SC-2760).*
 - **SC-2751**: Sem a detecção (chave desligada, motor bloqueado ou "Prefiro avançar só tocando"), a
   jornada é a da `174` com o sinal do gesto da emenda (FR-8050 a FR-8052): os mesmos toques, as
   mesmas frases do roteiro, nenhuma frase da detecção à vista.
@@ -455,6 +639,20 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
   não aparece, e a frase do roteiro continua inteira na faixa de cima.
 - **SC-2758**: Uma pessoa que não vira o rosto grava até o fim pelo toque, sem ver nenhuma frase de
   erro *(humano, ou simulado com o motor carregado e o vulto parado)*.
+- **SC-2760** (emenda): Com a detecção, a pessoa grava os quatro passos com **um** toque além de
+  "Começar a gravar" — o "Terminar a gravação" —, com a imagem de teste e com câmera real e documento.
+- **SC-2761** (emenda): Com a imagem de teste, uma pessoa simulada ao fundo desde o começo do passo do
+  documento não faz o passo avançar sozinho.
+- **SC-2762** (emenda): A 375 px em retrato, no passo de frente, a faixa de cima não passa de um quarto
+  da altura do palco (antes, a frase ocupava cerca de metade), a frase inteira está embaixo sem rolar
+  (a altura rolável é igual à visível), e "Terminar a gravação" está à vista. No palco deitado, a
+  frase fica ao lado do botão, e a faixa de baixo não passa do terço de baixo.
+- **SC-2763** (emenda): Com a imagem de teste, cujo tom é constante e mais baixo que o nível de fala, a
+  barra do microfone fica no meio — acima de um terço e abaixo da marca de "volume bom" —, e a frase
+  não diz que ouviu: a marca e a frase concordam. Durante a gravação, o indicador do selo mostra a
+  mesma leitura.
+- **SC-2764** (emenda): Num Safari com câmera real, a barra sobe quando a pessoa fala e volta quando ela
+  cala *(humano)*.
 
 ## Assumptions
 
@@ -471,7 +669,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
 
 ## Out of Scope
 
-- Perceber o documento, ler o que está nele ou conferir a foto com o rosto.
+- Ler o que está no documento, conferir que ele é um documento ou comparar a foto dele com o rosto
+  (reconhecimento facial). A emenda percebe só que um rosto a mais apareceu e saiu (D-009).
 - Terminar a gravação sozinha, reconhecer a fala ou transcrevê-la.
 - Qualquer leitura de luz, enquadramento, nitidez ou "qualidade" (R-19 do estudo).
 - "Prova de vida", antifraude ou conferência de identidade.
@@ -492,7 +691,8 @@ e as chaves deles, para saber quais são de perfil) e a configuração da págin
 - **P-13 — A validação da detecção na LGPD.** A CPVA e o encarregado de dados precisam conhecer a
   revisão da FR-7150 da `166` (D-001), a base legal do tratamento (art. 11), a escolha da pessoa (Q-3)
   e o registro no relatório de impacto. Até lá, a chave fica recusada em produção (FR-8021). Esta spec
-  não decide nada disso.
+  não decide nada disso. A emenda acrescenta à P-13 a contagem de rostos no passo do documento
+  (FR-8060): o motor lê também a foto do documento como rosto, sem comparar nada.
 
 ## Achados (registro, e não escopo)
 
@@ -520,6 +720,9 @@ continua absoluta; no aparelho ela passa a ter uma exceção, nomeada, fixada po
 cobrada pelo guardião (FR-8024).
 
 ### D-002 — Só os perfis avançam sozinhos
+
+*Revista em parte pela D-009 (emenda): o documento passou a avançar sozinho, pela contagem de rostos.
+O passo de frente continua só pelo toque.*
 
 Recomendação da Q-2. Nos perfis, o gesto pedido é exatamente o que a detecção percebe, e avançar é o
 que o banco faz. No documento, a detecção teria de ler o documento, o que está fora (Out of Scope). No
@@ -569,3 +772,32 @@ guarda a versão do roteiro, e a comissão lê o que o candidato viu —; mantê
 com oito coisas na tela, e uma pessoa com o rosto virado não lê três linhas. A frase continua inteira
 e à vista, em tamanho de leitura; a seta diz o que fazer num relance. O passo de frente fica como
 está, porque nele a frase é a fala.
+
+### D-009 — O documento avança quando apareceu e saiu (emenda)
+
+Recomendação da Q-5. A D-002 deixava o documento de fora porque a detecção "teria de ler o documento".
+Não tem: a foto do documento é um rosto, e o motor que já roda nos perfis conta até dois. A regra pede
+a sequência inteira — o rosto sozinho, os dois, o rosto sozinho de novo — por três razões: é o que o
+roteiro pede ("e depois o seu rosto"); quem está ao fundo desde o começo nunca conta, porque o segundo
+rosto precisa aparecer; e quem fica no quadro nunca deixa o passo terminar. O que a detecção não sabe
+— qual dos rostos é o documento, se ele é um documento, se a foto é da pessoa — ela não tenta saber: isso
+seria conferência de identidade, que está fora, e o toque continua resolvendo tudo o que ela não
+percebe.
+
+### D-010 — A frase do passo de frente desce para junto do botão (emenda)
+
+Recomendação da Q-6. A garantia da D-003 da `174` é sobre o texto, e não sobre o lugar: o candidato vê,
+durante a gravação, o roteiro inteiro, que é o que a comissão lê. No alto, a frase de 250 caracteres
+cobria a testa e os olhos, que é o que a comissão olha; embaixo, perto do polegar, ela cobre o peito.
+O destaque das frases entre aspas sai da marcação do próprio roteiro, de modo que nenhuma palavra é
+acrescentada. Os passos de gesto continuam com a frase no alto, onde ela é curta e o sinal é o
+destaque (D-008).
+
+### D-011 — O medidor do microfone é refeito (emenda)
+
+O defeito tem três causas que se somam, e nenhuma muda regra: a escala linear deixava a fala comum no
+primeiro quinto da barra; o pico recalculado a cada quadro, sem suavização, piscava; e o `<meter>` do
+Safari, com a altura ajustada pela folha, não acompanha o valor. A barra própria, em decibéis, com
+subida rápida e descida lenta, resolve as três, e a marca de "volume bom" sai da mesma régua que decide
+"Estamos ouvindo você" — a FR-7873 da `174` não muda, só passa a ser visível. O indicador no selo era
+pedido pela FR-7873 e não tinha sido feito.

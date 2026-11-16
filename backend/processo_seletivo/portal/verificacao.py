@@ -98,7 +98,11 @@ def pagina(request, inscricao_id, etapa_id):
             # A detecção do giro do rosto (176): os endereços do motor e os passos que avançam
             # sozinhos. Sem a chave, nada disso chega ao HTML, e a página é a da 174 (SC-2751).
             "deteccao": (
-                {"enderecos": deteccao.enderecos(), "giro_do_passo": deteccao.GIRO_DO_PASSO}
+                {
+                    "enderecos": deteccao.enderecos(),
+                    "giro_do_passo": deteccao.GIRO_DO_PASSO,
+                    "documento": deteccao.PASSO_DO_DOCUMENTO,
+                }
                 if detectar
                 else None
             ),

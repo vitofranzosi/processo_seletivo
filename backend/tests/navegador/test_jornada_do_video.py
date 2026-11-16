@@ -98,6 +98,17 @@ def _sem_rolagem_horizontal(pagina):
     assert largura <= pagina.viewport_size["width"], f"a página rola na horizontal ({largura} px)"
 
 
+def _volume(pagina, seletor):
+    """Quanto da barra do microfone está preenchido, de 0 a 1, pelo `transform` da página."""
+    return pagina.evaluate(
+        """(seletor) => {
+             const t = getComputedStyle(document.querySelector(seletor)).transform;
+             return t === 'none' ? 1 : new DOMMatrix(t).a;
+           }""",
+        seletor,
+    )
+
+
 def _contraste_da_faixa(pagina):
     """O contraste do texto branco sobre a faixa da instrução, no pior caso: um quadro branco."""
     fundo = pagina.evaluate(
@@ -181,6 +192,14 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
     assert pagina.locator(".palco [data-comecar]").count() == 1
     assert _na_tela(pagina, comecar)
     assert _na_tela(pagina, pagina.locator(".link-no-palco"))
+    # O microfone simulado do Chromium apita: a barra da página se mexe (176, emenda; FR-8080), e
+    # não há mais o medidor nativo.
+    assert pagina.locator("meter").count() == 0
+    pagina.wait_for_function(
+        """() => new DOMMatrix(getComputedStyle(
+             document.querySelector('.medidor-do-som [data-volume]')).transform).a > 0.05""",
+        timeout=10_000,
+    )
     tela.capturar(pagina, "palco-preparo")
     comecar.click()
 
@@ -188,16 +207,43 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
     expect(palco).to_have_attribute("data-estado", "gravando")
     proximo = pagina.locator("[data-proximo]")
     titulos = [passo.titulo for passo in roteiro.PASSOS]
+    # O indicador do microfone fica no selo durante a gravação (176, emenda; FR-8083).
+    expect(pagina.locator(".microfone-do-selo")).to_be_visible()
     for indice, titulo in enumerate(titulos):
         expect(pagina.locator("[data-passo-rotulo]")).to_have_text(f"Passo {indice + 1} de 4")
         expect(pagina.locator("[data-passo-titulo]")).to_have_text(titulo)
         expect(pagina.locator("[data-passo-atual]")).to_have_text(roteiro.PASSOS[indice].instrucao)
         anuncio = f"Passo {indice + 1} de 4: {titulo}."
         expect(pagina.locator("[data-anuncio]")).to_contain_text(anuncio)
+        # O passo de frente: a frase do roteiro desce inteira para junto do botão, e o alto fica só
+        # com o "Passo 4 de 4" (176, emenda; FR-8070 a FR-8072, SC-2762).
+        da_fala = roteiro.PASSOS[indice].chave == "frente"
+        frase = pagina.locator(".fala-do-passo")
+        if da_fala:
+            expect(frase).to_have_text(roteiro.PASSOS[indice].instrucao)
+            expect(pagina.locator(".texto-do-passo")).to_be_hidden()
+            assert pagina.locator(".fala-do-passo strong").all_inner_texts() == [
+                "«Eu me autodeclaro pessoa preta»",
+                "«pessoa parda»",
+            ]
+            sem_rolagem = "(e => e.scrollHeight <= e.clientHeight + 1)"
+            assert pagina.evaluate(f"{sem_rolagem}(document.querySelector('.fala-do-passo'))")
+            caixa_do_palco = palco.bounding_box()
+            cima = pagina.locator(".faixa-de-cima").bounding_box()
+            assert cima["height"] <= caixa_do_palco["height"] / 4, (cima, caixa_do_palco)
+            caixa_da_frase = frase.bounding_box()
+            assert caixa_da_frase["y"] >= caixa_do_palco["y"] + caixa_do_palco["height"] / 2
+            if not celular:
+                # No palco deitado, a frase fica ao lado do botão, no terço de baixo.
+                topo = caixa_da_frase["y"] - caixa_do_palco["y"]
+                assert topo >= caixa_do_palco["height"] * 0.6, (topo, caixa_do_palco)
+            tela.capturar(pagina, "palco-de-frente")
+        else:
+            expect(frase).to_be_hidden()
         if celular:
             altura = palco.bounding_box()["height"]
             assert abs(altura - viewport["height"]) <= 1, altura
-            assert _na_tela(pagina, pagina.locator(".texto-do-passo"))
+            assert _na_tela(pagina, frase if da_fala else pagina.locator(".texto-do-passo"))
             assert _na_tela(pagina, proximo)
             assert _na_tela(pagina, pagina.locator(".link-no-palco"))
         assert pagina.locator(".passos-do-roteiro").is_hidden()
@@ -211,10 +257,11 @@ def test_do_acompanhamento_ao_comprovante(tela, gestor, api_client, manager_head
         if esperado:
             assert _na_tela(pagina, pagina.locator(f".gesto-{esperado}"))
         assert pagina.locator(".oval").is_hidden()
-        corpo_da_frase = pagina.evaluate(
-            "parseFloat(getComputedStyle(document.querySelector('.texto-do-passo')).fontSize)"
-        )
-        assert (corpo_da_frase <= 16.5) is bool(esperado), (titulo, corpo_da_frase)
+        if not da_fala:
+            corpo_da_frase = pagina.evaluate(
+                "parseFloat(getComputedStyle(document.querySelector('.texto-do-passo')).fontSize)"
+            )
+            assert (corpo_da_frase <= 16.5) is bool(esperado), (titulo, corpo_da_frase)
         if indice == 0:
             assert _contraste_da_faixa(pagina) >= 4.5
             tela.capturar(pagina, "palco-gravando")
@@ -371,11 +418,12 @@ def test_prefiro_avancar_so_tocando_desliga_a_deteccao(
 def test_com_a_imagem_de_teste_os_perfis_avancam_sozinhos(
     tela, gestor, api_client, manager_headers, settings, viewport
 ):
-    """176, SC-2750, SC-2752; FR-8011 a FR-8013, FR-8040.
+    """176, SC-2750, SC-2752, SC-2760, SC-2763; FR-8011 a FR-8013, FR-8040, FR-8060 a FR-8065.
 
-    A imagem de teste gira o vulto, e a detecção simulada lê o giro desenhado: dois toques além de
-    "Começar a gravar" — o "Próximo" do documento e o "Terminar a gravação" —, e o pedido de envio
-    com as mesmas chaves e marcas que o gravado pelo toque."""
+    A imagem de teste mostra o "documento" e gira o vulto, e a detecção simulada lê a contagem e o
+    giro desenhados: **um** toque além de "Começar a gravar" — o "Terminar a gravação" (antes da
+    emenda, o documento pedia o segundo) —, e o pedido de envio com as mesmas chaves e marcas que
+    o gravado pelo toque."""
     settings.DEBUG = True
     settings.VERIFICACAO_DETECCAO_DO_GIRO = True
     cenario = montar_com_video(gestor, api_client, manager_headers, seed=17630, quantas=2)
@@ -402,13 +450,24 @@ def test_com_a_imagem_de_teste_os_perfis_avancam_sozinhos(
         "Rosto no oval. Ele não aparece no vídeo."
     )
     tela.capturar(pagina, "deteccao-rosto-no-oval")
+    # O tom da imagem de teste é constante e mais baixo que a fala: a barra fica no meio, abaixo da
+    # marca de "volume bom", e a frase não diz que ouviu — a marca e a frase concordam (SC-2763).
+    pagina.wait_for_timeout(800)
+    marca = pagina.evaluate("GravacaoDoVideo.MARCA_DO_VOLUME_BOM")
+    volume = _volume(pagina, ".medidor-do-som [data-volume]")
+    assert 1 / 3 < volume < marca, (volume, marca)
+    expect(pagina.locator("[data-estado-do-som]")).to_have_text(
+        "Fale alguma coisa para testar o microfone."
+    )
     toques = 0
     pagina.get_by_role("button", name="Começar a gravar").click()
-    pagina.wait_for_timeout(600)
-    pagina.locator("[data-proximo]").click()
-    toques += 1
-    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo")
+    assert abs(_volume(pagina, ".microfone-do-selo [data-volume]") - volume) < 0.1
+    # O documento aparece e sai no começo de cada ciclo de dez segundos: o passo passa sozinho.
     confirmacao = pagina.locator("[data-confirmacao]")
+    expect(confirmacao).to_have_text("Documento visto", timeout=15_000)
+    tela.capturar(pagina, "deteccao-documento-visto")
+    expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil esquerdo", timeout=5_000)
+    expect(pagina.locator("[data-anuncio]")).to_contain_text("Passo 2 de 4")
     expect(confirmacao).to_have_text("Perfil esquerdo visto", timeout=15_000)
     tela.capturar(pagina, "deteccao-perfil-visto")
     expect(pagina.locator("[data-passo-titulo]")).to_have_text("Perfil direito", timeout=5_000)
@@ -420,7 +479,7 @@ def test_com_a_imagem_de_teste_os_perfis_avancam_sozinhos(
     expect(pagina.locator("[data-passo-titulo]")).to_have_text("De frente")
     pagina.locator("[data-proximo]").click()
     toques += 1
-    assert toques == 2
+    assert toques == 1
     expect(pagina.get_by_role("heading", name="Assista antes de enviar")).to_be_visible()
     pagina.get_by_role("button", name="Enviar este vídeo").click()
     pagina.wait_for_url("**/comprovante*", timeout=30_000)
