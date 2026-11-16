@@ -1,0 +1,61 @@
+| amostra | KB | pág | veraPDF 2b antes | gs s | KB depois | ×tam | veraPDF 2b depois | texto | pix% | assinatura |
+| C1-textual-helvetica.pdf | 2 | 1 | FALHA (6.2.4.3-4,6.2.11.4.1-1,6.6.2.1-1,6.1.7.1-2) | 0.031 | 13 | 6.62 | OK  | 1.0 [903, 903] | 0.0 |  |
+| C1b-textual-fonte-embutida.pdf | 24 | 1 | FALHA (6.1.7.1-2,6.2.4.3-4,6.6.2.1-1) | 0.028 | 17 | 0.7 | OK  | 0.8275 [903, 900] | 0.01 |  |
+| C2-digitalizado.pdf | 248 | 1 | FALHA (6.2.4.3-4,6.6.2.1-1) | 0.029 | 252 | 1.01 | OK  | None [0, 0] | 0.0 |  |
+| C3-multipagina-imagens.pdf | 1082 | 6 | FALHA (6.2.4.3-4,6.2.4.3-2,6.6.2.1-1,6.2.10-2,6.1.7.1-2,6.2.11.4.1-1) | 0.05 | 874 | 0.81 | OK  | 1.0 [191, 191] | 0.0 |  |
+| C4-assinado.pdf | 29 | 1 | FALHA (6.2.4.3-4,6.6.2.1-1,6.1.7.1-2) | 0.028 | 17 | 0.57 | OK  | 0.8275 [903, 900] | 0.01 | [{'intacta': True, 'valida': True, 'cobre': 'ENTIRE_FILE'}] → campos 0 [] |
+| C5-js-formulario.pdf | 4 | 1 | FALHA (6.2.4.3-4,6.2.4.3-2,6.5.1-1,6.2.11.4.1-1,6.6.2.1-1) | 0.033 | 9 | 2.59 | OK  | 1.0 [53, 53] | 0.0 |  |
+| C6-protegido-senha.pdf | 3 | None | erro  | 0.032 | 5 | 1.7 | OK  | None [0, 0] | None |  |
+| C6b-restricao-sem-senha.pdf | 25 | 1 | FALHA (6.1.7.1-2,6.2.4.3-4,6.1.3-2,6.6.2.1-1) | 0.031 | 16 | 0.66 | OK  | 0.8275 [903, 900] | 0.01 |  |
+| C7-truncado.pdf | 541 | None | erro  | 0.027 | 5 | 0.01 | OK  | None [0, 0] | None |  |
+| C8-falso-pdfa.pdf | 2 | 1 | FALHA (6.2.4.3-4,6.2.11.4.1-1) | 0.031 | 12 | 6.19 | OK  | 1.0 [903, 903] | 0.0 |  |
+| I1-edital-gps.pdf | 98 | 7 | FALHA (6.2.4.3-2,6.3.2-1,6.2.4.3-4,6.1.3-1,6.6.2.1-1) | 0.046 | 55 | 0.57 | OK  | 0.9948 [12346, 12339] | 0.701 |  |
+| I2-comprovante-gps.pdf | 12 | 1 | FALHA (6.6.2.1-1,6.2.4.3-2,6.2.11.4.1-1,6.1.3-1,6.2.4.3-4) | 0.034 | 25 | 2.15 | OK  | 1.0 [2041, 2041] | 1.051 |  |
+| I3-divulgacao-gps.pdf | 26 | 3 | FALHA (6.2.4.3-4,6.6.2.1-1,6.2.4.3-2,6.2.11.4.1-1,6.1.3-1) | 0.036 | 27 | 1.01 | OK  | 1.0 [4808, 4808] | 0.318 |  |
+| I4-relatorio-gps.pdf | 171 | 4 | FALHA (6.1.3-1,6.6.2.1-1,6.3.2-1,6.2.4.3-2,6.2.4.3-4) | 0.044 | 50 | 0.29 | OK  | 0.9979 [11649, 11649] | 0.006 |  |
+{'sem_epoch_iguais': False, 'com_SOURCE_DATE_EPOCH_iguais': False, 'js_politica_2': [0, []]}
+--- regras falhas nos originais do GPS (2b):
+I1-edital-gps.pdf FALHA
+    6.2.4.3-2 DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB c
+    6.3.2-1 Except for annotation dictionaries whose Subtype value is Popup, all annotation dictionaries shall contain the
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    6.1.3-1 The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in I
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+I2-comprovante-gps.pdf FALHA
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+    6.2.4.3-2 DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB c
+    6.2.11.4.1-1 The font programs for all fonts used for rendering within a conforming file shall be embedded within that file
+    6.1.3-1 The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in I
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+I3-divulgacao-gps.pdf FALHA
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+    6.2.4.3-2 DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB c
+    6.2.11.4.1-1 The font programs for all fonts used for rendering within a conforming file shall be embedded within that file
+    6.1.3-1 The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in I
+I4-relatorio-gps.pdf FALHA
+    6.1.3-1 The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in I
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+    6.3.2-1 Except for annotation dictionaries whose Subtype value is Popup, all annotation dictionaries shall contain the
+    6.2.4.3-2 DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB c
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+C8-falso-pdfa.pdf FALHA
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    6.2.11.4.1-1 The font programs for all fonts used for rendering within a conforming file shall be embedded within that file
+C1b-textual-fonte-embutida.pdf FALHA
+    6.1.7.1-2 The stream keyword shall be followed either by a CARRIAGE RETURN (0Dh) and LINE FEED (0Ah) character sequence 
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+C2-digitalizado.pdf FALHA
+    6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+--- 2u: {'I1-edital-gps.pdf': ('FALHA', ['6.2.4.3-2', '6.2.4.3-4', '6.6.2.1-1', '6.1.3-1', '6.3.2-1']), 'I1-edital-gps.pdfa.pdf': ('FALHA', ['6.2.11.7.2-1', '6.6.4-3']), 'I2-comprovante-gps.pdfa.pdf': ('FALHA', ['6.6.4-3'])}
+    I1-edital-gps.pdf 6.2.4.3-2 DeviceRGB shall only be used if a device independent DefaultRGB colour space has been set when the DeviceRGB c
+    I1-edital-gps.pdf 6.2.4.3-4 DeviceGray shall only be used if a device independent DefaultGray colour space has been set when the DeviceGra
+    I1-edital-gps.pdf 6.6.2.1-1 The Catalog dictionary of a conforming file shall contain the Metadata key whose value is a metadata stream as
+    I1-edital-gps.pdf 6.1.3-1 The file trailer dictionary shall contain the ID keyword whose value shall be File Identifiers as defined in I
+    I1-edital-gps.pdf 6.3.2-1 Except for annotation dictionaries whose Subtype value is Popup, all annotation dictionaries shall contain the
+    I1-edital-gps.pdfa.pdf 6.2.11.7.2-1 The Font dictionary of all fonts shall define the map of all used character codes to Unicode values, either vi
+    I1-edital-gps.pdfa.pdf 6.6.4-3 A Level A conforming file shall specify the value of "pdfaid:conformance" as A. A Level B conforming file shal
+    I2-comprovante-gps.pdfa.pdf 6.6.4-3 A Level A conforming file shall specify the value of "pdfaid:conformance" as A. A Level B conforming file shal
+--- tempo veraPDF ms (depois): {'C1-textual-helvetica.pdfa.pdf': 141, 'C1b-textual-fonte-embutida.pdfa.pdf': 32, 'C2-digitalizado.pdfa.pdf': 7, 'C3-multipagina-imagens.pdfa.pdf': 13, 'C4-assinado.pdfa.pdf': 24, 'C5-js-formulario.pdfa.pdf': 6, 'C6-protegido-senha.pdfa.pdf': 2, 'C6b-restricao-sem-senha.pdfa.pdf': 12, 'C7-truncado.pdfa.pdf': 3, 'C8-falso-pdfa.pdfa.pdf': 6, 'I1-edital-gps.pdfa.pdf': 32, 'I2-comprovante-gps.pdfa.pdf': 8, 'I3-divulgacao-gps.pdfa.pdf': 10, 'I4-relatorio-gps.pdfa.pdf': 26}

@@ -1,0 +1,323 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.30.4",
+  "buildDate" : 1794229680000
+},{
+  "id" : "validation-model",
+  "version" : "1.30.4",
+  "buildDate" : 1794229860000
+},{
+  "id" : "apps",
+  "version" : "1.30.4",
+  "buildDate" : 1794231600000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/tmp/w/saida/C1-textual-helvetica.pdfa.pdf",
+  "size" : 12999
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 1090,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047306,
+  "finish" : 1794850047447,
+  "difference" : 141,
+  "duration" : "00:00:00.141"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C1b-textual-fonte-embutida.pdfa.pdf",
+  "size" : 17020
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 4894,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047453,
+  "finish" : 1794850047485,
+  "difference" : 32,
+  "duration" : "00:00:00.032"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C2-digitalizado.pdfa.pdf",
+  "size" : 257709
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 219,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047486,
+  "finish" : 1794850047493,
+  "difference" : 7,
+  "duration" : "00:00:00.007"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C3-multipagina-imagens.pdfa.pdf",
+  "size" : 894728
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 1312,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047494,
+  "finish" : 1794850047507,
+  "difference" : 13,
+  "duration" : "00:00:00.013"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C4-assinado.pdfa.pdf",
+  "size" : 17020
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 4894,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047508,
+  "finish" : 1794850047532,
+  "difference" : 24,
+  "duration" : "00:00:00.024"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C5-js-formulario.pdfa.pdf",
+  "size" : 9418
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 835,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047533,
+  "finish" : 1794850047539,
+  "difference" : 6,
+  "duration" : "00:00:00.006"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C6-protegido-senha.pdfa.pdf",
+  "size" : 4946
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 175,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047540,
+  "finish" : 1794850047542,
+  "difference" : 2,
+  "duration" : "00:00:00.002"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C6b-restricao-sem-senha.pdfa.pdf",
+  "size" : 16707
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 4848,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047543,
+  "finish" : 1794850047555,
+  "difference" : 12,
+  "duration" : "00:00:00.012"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C7-truncado.pdfa.pdf",
+  "size" : 4946
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 175,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047556,
+  "finish" : 1794850047559,
+  "difference" : 3,
+  "duration" : "00:00:00.003"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/C8-falso-pdfa.pdfa.pdf",
+  "size" : 12686
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 1044,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047559,
+  "finish" : 1794850047565,
+  "difference" : 6,
+  "duration" : "00:00:00.006"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/I1-edital-gps.pdfa.pdf",
+  "size" : 56561
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 4722,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047566,
+  "finish" : 1794850047598,
+  "difference" : 32,
+  "duration" : "00:00:00.032"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/I2-comprovante-gps.pdfa.pdf",
+  "size" : 25450
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 1649,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047599,
+  "finish" : 1794850047607,
+  "difference" : 8,
+  "duration" : "00:00:00.008"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/I3-divulgacao-gps.pdfa.pdf",
+  "size" : 27292
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 3560,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047608,
+  "finish" : 1794850047618,
+  "difference" : 10,
+  "duration" : "00:00:00.010"
+}},{"itemDetails":{
+  "name" : "/tmp/w/saida/I4-relatorio-gps.pdfa.pdf",
+  "size" : 51422
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 144,
+    "failedRules" : 0,
+    "passedChecks" : 8400,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/A-2b validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794850047619,
+  "finish" : 1794850047645,
+  "difference" : 26,
+  "duration" : "00:00:00.026"
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794850047280,
+    "finish" : 1794850047646,
+    "difference" : 366,
+    "duration" : "00:00:00.366"
+  },
+  "totalJobs" : 14,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : true,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "compliantPdfaCount" : 14,
+    "failedJobCount" : 0,
+    "totalJobCount" : 14,
+    "nonCompliantPdfaCount" : 0,
+    "successfulJobCount" : 14
+  }
+}}}

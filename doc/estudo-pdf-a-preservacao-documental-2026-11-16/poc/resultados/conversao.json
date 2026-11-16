@@ -1,0 +1,432 @@
+{
+ "resultados": [
+  {
+   "amostra": "C1-textual-helvetica.pdf",
+   "bytes": 1964,
+   "sha256": "1f22289d0e107892",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.031,
+   "gs_msgs": [],
+   "bytes_pdfa": 12999,
+   "variacao_tamanho": 6.62,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    903,
+    903
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 0.0,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C1b-textual-fonte-embutida.pdf",
+   "bytes": 24192,
+   "sha256": "bb35d2039e869d21",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.028,
+   "gs_msgs": [],
+   "bytes_pdfa": 17020,
+   "variacao_tamanho": 0.7,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    903,
+    900
+   ],
+   "texto_igual": 0.8275,
+   "pixels_diferentes_pct_max": 0.01,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C2-digitalizado.pdf",
+   "bytes": 253907,
+   "sha256": "e44fc83c019c4cec",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.029,
+   "gs_msgs": [],
+   "bytes_pdfa": 257709,
+   "variacao_tamanho": 1.01,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    0,
+    0
+   ],
+   "texto_igual": null,
+   "pixels_diferentes_pct_max": 0.0,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C3-multipagina-imagens.pdf",
+   "bytes": 1108468,
+   "sha256": "4e81fe615285abce",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 6,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.05,
+   "gs_msgs": [],
+   "bytes_pdfa": 894728,
+   "variacao_tamanho": 0.81,
+   "paginas_pdfa": 6,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    191,
+    191
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 0.0,
+   "paginas_renderizadas": [
+    6,
+    6
+   ]
+  },
+  {
+   "amostra": "C4-assinado.pdf",
+   "bytes": 30070,
+   "sha256": "c6543806ef4fb0b7",
+   "cifrado": false,
+   "assinaturas": 1,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "assinatura_antes": [
+    {
+     "intacta": true,
+     "valida": true,
+     "cobre": "ENTIRE_FILE"
+    }
+   ],
+   "gs_rc": 0,
+   "gs_segundos": 0.028,
+   "gs_msgs": [
+    "WARNING: AcroForm field 'Sig' with no AP not implemented."
+   ],
+   "bytes_pdfa": 17020,
+   "variacao_tamanho": 0.57,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "assinatura_depois": [],
+   "texto_chars": [
+    903,
+    900
+   ],
+   "texto_igual": 0.8275,
+   "pixels_diferentes_pct_max": 0.01,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C5-js-formulario.pdf",
+   "bytes": 3642,
+   "sha256": "32decc7078ab3f97",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.033,
+   "gs_msgs": [],
+   "bytes_pdfa": 9418,
+   "variacao_tamanho": 2.59,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    53,
+    53
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 0.0,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C6-protegido-senha.pdf",
+   "bytes": 2910,
+   "sha256": "d7e60fc6110e5edc",
+   "cifrado": true,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": null,
+   "erro": "senha de abertura",
+   "gs_rc": 0,
+   "gs_segundos": 0.032,
+   "gs_msgs": [
+    "**** Error: Couldn't initialise file.",
+    "               Output may be incorrect.",
+    "   No pages will be processed (FirstPage > LastPage).",
+    "GPL Ghostscript 10.00.0: ",
+    "   **** This file requires a password for access."
+   ],
+   "bytes_pdfa": 4946,
+   "variacao_tamanho": 1.7,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    0,
+    0
+   ],
+   "texto_igual": null,
+   "pixels_diferentes_pct_max": null,
+   "paginas_renderizadas": [
+    0,
+    1
+   ]
+  },
+  {
+   "amostra": "C6b-restricao-sem-senha.pdf",
+   "bytes": 25130,
+   "sha256": "5a7ce66c2f46f298",
+   "cifrado": true,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.031,
+   "gs_msgs": [
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO",
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO",
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO",
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO",
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO",
+    "GPL Ghostscript 10.00.0: Text string detected in DOCINFO cannot be represented in XMP for PDF/A1, discarding DOCINFO"
+   ],
+   "bytes_pdfa": 16707,
+   "variacao_tamanho": 0.66,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    903,
+    900
+   ],
+   "texto_igual": 0.8275,
+   "pixels_diferentes_pct_max": 0.01,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "C7-truncado.pdf",
+   "bytes": 554234,
+   "sha256": "66ce315d1b69aa30",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": null,
+   "erro": "PdfError: amostras/C7-truncado.pdf: unable to find trailer dictionary while recovering dam",
+   "gs_rc": 0,
+   "gs_segundos": 0.027,
+   "gs_msgs": [
+    "**** Error: Couldn't initialise file.",
+    "               Output may be incorrect.",
+    "   No pages will be processed (FirstPage > LastPage).",
+    "Catalog dictionary not located in file, unable to proceed"
+   ],
+   "bytes_pdfa": 4946,
+   "variacao_tamanho": 0.01,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    0,
+    0
+   ],
+   "texto_igual": null,
+   "pixels_diferentes_pct_max": null,
+   "paginas_renderizadas": [
+    0,
+    1
+   ]
+  },
+  {
+   "amostra": "C8-falso-pdfa.pdf",
+   "bytes": 2049,
+   "sha256": "3b6b32d9dde1d35b",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": "2B",
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.031,
+   "gs_msgs": [],
+   "bytes_pdfa": 12686,
+   "variacao_tamanho": 6.19,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    903,
+    903
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 0.0,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "I1-edital-gps.pdf",
+   "bytes": 100004,
+   "sha256": "8279b5d7cca54d9e",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 7,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.046,
+   "gs_msgs": [
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file",
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file",
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file"
+   ],
+   "bytes_pdfa": 56561,
+   "variacao_tamanho": 0.57,
+   "paginas_pdfa": 7,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    12346,
+    12339
+   ],
+   "texto_igual": 0.9948,
+   "pixels_diferentes_pct_max": 0.701,
+   "paginas_renderizadas": [
+    7,
+    7
+   ]
+  },
+  {
+   "amostra": "I2-comprovante-gps.pdf",
+   "bytes": 11836,
+   "sha256": "9dde6752d84e1d4e",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 1,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.034,
+   "gs_msgs": [],
+   "bytes_pdfa": 25450,
+   "variacao_tamanho": 2.15,
+   "paginas_pdfa": 1,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    2041,
+    2041
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 1.051,
+   "paginas_renderizadas": [
+    1,
+    1
+   ]
+  },
+  {
+   "amostra": "I3-divulgacao-gps.pdf",
+   "bytes": 26909,
+   "sha256": "337df44d12608df8",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 3,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.036,
+   "gs_msgs": [],
+   "bytes_pdfa": 27292,
+   "variacao_tamanho": 1.01,
+   "paginas_pdfa": 3,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    4808,
+    4808
+   ],
+   "texto_igual": 1.0,
+   "pixels_diferentes_pct_max": 0.318,
+   "paginas_renderizadas": [
+    3,
+    3
+   ]
+  },
+  {
+   "amostra": "I4-relatorio-gps.pdf",
+   "bytes": 174814,
+   "sha256": "22c35183694132e5",
+   "cifrado": false,
+   "assinaturas": 0,
+   "alega_pdfa": null,
+   "paginas": 4,
+   "erro": null,
+   "gs_rc": 0,
+   "gs_segundos": 0.044,
+   "gs_msgs": [
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file",
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file",
+    "GPL Ghostscript 10.00.0: Annotation set to non-printing,",
+    " not permitted in PDF/A, annotation will not be present in output file"
+   ],
+   "bytes_pdfa": 51422,
+   "variacao_tamanho": 0.29,
+   "paginas_pdfa": 4,
+   "assinaturas_pdfa": 0,
+   "texto_chars": [
+    11649,
+    11649
+   ],
+   "texto_igual": 0.9979,
+   "pixels_diferentes_pct_max": 0.006,
+   "paginas_renderizadas": [
+    4,
+    4
+   ]
+  }
+ ],
+ "determinismo": {
+  "sem_epoch_iguais": false,
+  "com_SOURCE_DATE_EPOCH_iguais": false,
+  "js_politica_2": [
+   0,
+   []
+  ]
+ }
+}
