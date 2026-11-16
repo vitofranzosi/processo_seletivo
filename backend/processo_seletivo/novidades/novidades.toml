@@ -15,6 +15,24 @@
 # ---- novembro de 2026 ----------------------------------------------------------------------------
 
 [[nota]]
+id = "telas-do-candidato-depois-da-inscricao"
+data = 2026-11-15
+categoria = "melhoria"
+relevancia = "relevante"
+titulo = "As telas do candidato depois da inscrição ficam numa coluna só"
+resumo = """
+Em Minhas inscrições, Minha inscrição e Acompanhar, o candidato lê tudo numa coluna centrada, com um
+botão principal por tela. No cartão de cada inscrição ele vê a situação em destaque e o prazo da
+próxima ação.
+"""
+exemplo = """
+A candidata abre Minhas inscrições no celular e vê, no cartão do Edital 20/2026, "Falta um passo seu"
+e até quando fazer, com o botão do tamanho da tela.
+"""
+prs = [577]
+specs = ["177"]
+
+[[nota]]
 id = "passo-da-autodeclaracao"
 data = 2026-11-15
 categoria = "novidade"
@@ -113,14 +131,19 @@ specs = ["168"]
 id = "telas-mais-compactas"
 data = 2026-11-15
 categoria = "melhoria"
-relevancia = "incremental"
-titulo = "Confirmação do Edital, Ocupação e lista de Processos mais enxutas"
+relevancia = "relevante"
+titulo = "As telas da gestão usam a largura toda e ficam mais enxutas"
 resumo = """
-Nessas três telas o texto passou a usar a largura toda, os números ficam lado a lado e cada dado aparece
-na mesma linha do seu nome. Você rola menos, e nada mudou no que cada tela mostra ou permite.
+O texto passou a ocupar a largura do conteúdo, os números ficam lado a lado e cada dado aparece na
+mesma linha do seu nome. Você rola menos em quase todas as telas da gestão, e nada mudou no que cada
+uma mostra ou permite.
 """
-prs = [564]
-specs = ["172"]
+exemplo = """
+Na confirmação de um Edital, a lista do que o ato provoca cabe na tela sem você descer a página para
+chegar ao botão.
+"""
+prs = [564, 565]
+specs = ["172", "175"]
 
 [[nota]]
 id = "confirmacoes-mais-legiveis"
