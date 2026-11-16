@@ -44,7 +44,7 @@ def _documentos():
         "prévia do edital": (contrato.documento(_snapshot(), modo=MODO_PREVIA), "PRÉVIA"),
         "comprovante": (
             render_comprovante_pdf(
-                json.loads((FIXTURES / "comprovante_v1.json").read_text("utf-8"))
+                json.loads((FIXTURES / "comprovante_v1.json").read_text("utf-8")), pdfa=True
             ),
             "COMPROVANTE DE INSCRIÇÃO",
         ),

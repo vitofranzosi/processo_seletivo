@@ -6,7 +6,9 @@ as escolhas da implementação e o que foi medido nela.
 
 ## R-001 — Os objetos novos vão depois dos de sempre
 
-**Decisão**: o perfil e os metadados são os dois últimos objetos do arquivo, e o catálogo ganha
+**Decisão**: um lugar só acrescenta a conformidade, `pdf._arquivo_em_pdfa`, e um lugar só monta o
+arquivo do Edital e da família (`_arquivo_do_edital`, que `render_documento` chama sem navegação). O
+perfil e os metadados são os dois últimos objetos do arquivo, e o catálogo ganha
 `/Metadata` e `/OutputIntents` no fim do dicionário.
 
 **Por quê**: os números dos objetos de página não andam, e por isso os fluxos de conteúdo — que citam
@@ -34,6 +36,11 @@ tem título e autor (o Edital e os relatórios), com o mesmo texto; nenhuma data
 **Por quê**: a regra 6.6.3 cobra que as duas descrições concordem, e a forma mais segura é o XMP não
 dizer nada que o `/Info` não diga. Datas quebrariam o determinismo. A família não tem `/Info`, e os
 metadados declaram só a conformidade (FR-8153).
+
+**Uma descrição só para os dois** (revisão de 16/11): `pdfa.descricao` saneia o título e o autor uma
+vez — tira o que o XML 1.0 não admite e trata o vazio como ausente — e o `/Info` (`pdf._informacao`) e
+o XMP leem dela. O relatório consolidado de unidade sem nome declarava `/Author ()` e um `dc:creator`
+vazio; agora não declara autor em nenhum dos dois.
 
 **Fluxo sem filtro**: a norma proíbe compressão no fluxo dos metadados.
 
@@ -79,6 +86,10 @@ depois muda o padrão para verdadeiro; o envio o grava verdadeiro.
 
 **Alternativas**: uma data de corte no código (rejeitada em D-005); um `NULL` para "antes" (a coluna
 booleana com padrão diz o mesmo sem o terceiro estado).
+
+**O desfazer é recusado** (revisão de 16/11) enquanto houver enviada com o comprovante em PDF/A:
+desfazer apagaria o registro, e refazer recriaria a coluna falsa em toda linha, trocando o comprovante
+de quem já viu o resumo do PDF/A. Antes do primeiro envio, desfazer não perde nada.
 
 **O gatilho da enviada**: `ADD COLUMN ... DEFAULT false` é alteração de catálogo no PostgreSQL 11+ e não
 percorre linha; o `inscricao_enviada_imutavel` (`0007`) não dispara. O teste desfaz e refaz a migration

@@ -68,6 +68,30 @@ def test_sao_os_nove_tipos_da_fr_8150():
     assert len(POR_NOME) == 9
 
 
+# O que cada exemplar tem de continuar exercitando. Os exemplares saem dos cenários de outros
+# testes (`tests/pdfa/exemplares.py`), e um cenário reduzido lá esvaziaria em silêncio o que o
+# veraPDF valida aqui: sem links, a regra das anotações imprimíveis nem é testada.
+EXERCITA = {
+    "edital": {b"/Subtype /Link": 1, b"/Type /Outlines": 1},
+    "retificacao": {b"/Subtype /Link": 1, b"/Type /Outlines": 1},
+    "relatorio-do-edital": {b"/Subtype /Link": 1, b"/S /Table": 1, b"/S /Figure": 1},
+    "relatorio-consolidado": {b"/S /Table": 1, b"/S /Figure": 1, b"/Type /Outlines": 1},
+}
+# E a lista que atravessa páginas, com o cabeçalho repetido, na família.
+PAGINAS_NO_MINIMO = {"resultado": 2, "edital": 2, "relatorio-do-edital": 2}
+
+
+@pytest.mark.parametrize("nome", sorted(EXERCITA))
+def test_o_exemplar_continua_exercitando_o_que_a_norma_cobra(compostos, nome):
+    for marca, minimo in EXERCITA[nome].items():
+        assert leitura.contagem(compostos[nome], marca) >= minimo, marca
+
+
+@pytest.mark.parametrize("nome", sorted(PAGINAS_NO_MINIMO))
+def test_o_exemplar_continua_com_mais_de_uma_pagina(compostos, nome):
+    assert len(leitura.paginas(compostos[nome])) >= PAGINAS_NO_MINIMO[nome]
+
+
 @pytest.mark.parametrize("nome", sorted(POR_NOME))
 def test_o_identificador_e_derivado_do_corpo(compostos, nome):
     """FR-8154: o `/ID` é o resumo de tudo o que vem antes do trailer."""
@@ -98,8 +122,10 @@ def test_os_metadados_repetem_o_info_e_nada_mais(compostos, nome):
         assert autor is None
     else:
         info = leitura.objetos(documento)[id_info]
-        assert _desescapar(titulo[1]) == leitura.cadeia(info, b"Title")
-        assert _desescapar(autor[1]) == leitura.cadeia(info, b"Author")
+        # Cada um presente nos dois, ou ausente nos dois — o relatório de unidade sem nome não tem
+        # autor em nenhum.
+        assert (titulo and _desescapar(titulo[1])) == (leitura.cadeia(info, b"Title") or None)
+        assert (autor and _desescapar(autor[1])) == (leitura.cadeia(info, b"Author") or None)
     for proibido in ("CreateDate", "ModifyDate", "MetadataDate", "Producer", "CreatorTool"):
         assert proibido not in xmp
         assert proibido.encode() not in documento.replace(_xmp(documento), b"")
@@ -203,11 +229,45 @@ def test_a_composicao_medida_pela_fonte_embutida_passa():
 
 
 def test_o_xmp_escapa_o_texto_e_recusa_nivel_desconhecido():
-    xmp = pdfa.xmp(pdfa.NIVEL_U, titulo="Edital nº 1 <A & B>", autor="Ifes — Cefor").decode()
+    descricao = pdfa.descricao("Edital nº 1 <A & B>", "Ifes — Cefor")
+    xmp = pdfa.xmp(pdfa.NIVEL_U, descricao).decode()
     assert "Edital nº 1 &lt;A &amp; B&gt;" in xmp
     assert "<rdf:li>Ifes — Cefor</rdf:li>" in xmp
     with pytest.raises(ValueError):
         pdfa.xmp("B")
+
+
+def test_a_descricao_tira_o_que_o_xml_nao_admite_e_o_vazio():
+    """Um controle colado do Word tornaria o XMP mal-formado; um autor vazio, um criador vazio."""
+    descricao = pdfa.descricao("Edital\x0b nº 1\x00", "  ")
+    assert descricao == pdfa.Descricao(titulo="Edital nº 1", autor=None)
+    xmp = pdfa.xmp(pdfa.NIVEL_A, descricao).decode()
+    assert "dc:creator" not in xmp
+    assert "\x0b" not in xmp
+
+
+def test_o_info_e_os_metadados_saem_da_mesma_descricao():
+    from processo_seletivo.publicacoes.infrastructure.pdf import _informacao
+
+    descricao = pdfa.descricao("Relatório", "")
+    assert (
+        _informacao(descricao)
+        == b"<< /Title <FEFF" + "Relatório".encode("utf-16-be").hex().upper().encode() + b"> >>"
+    )
+
+
+def test_o_relatorio_de_unidade_sem_nome_nao_declara_autor():
+    """O caso que nenhum exemplar cobria: `autor=""` sai do `/Info` e dos metadados juntos."""
+    from processo_seletivo.interface import relatorio_pdf
+    from tests.unit.interface.test_diagramacao_do_relatorio_do_edital import _relatorio
+
+    relatorio = _relatorio()
+    relatorio.unidade["nome"] = ""
+    documento = relatorio_pdf.compor(relatorio, emissao=1)
+    trailer = documento.rsplit(b"trailer", 1)[1]
+    info = leitura.objetos(documento)[leitura.referencia(trailer, b"Info")]
+    assert b"/Author" not in info
+    assert b"dc:creator" not in _xmp(documento)
 
 
 def test_o_xmp_sem_info_declara_so_a_conformidade():

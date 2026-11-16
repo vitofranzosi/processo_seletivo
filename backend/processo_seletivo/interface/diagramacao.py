@@ -34,8 +34,9 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     NEGRITO,
     NOME_DO_BRASAO,
     REGULAR,
+    _arquivo_em_pdfa,
     _cadeia_do_pdf,
-    _montar_o_arquivo,
+    _informacao,
     _objeto_do_brasao,
     _quebrar,
     _texto_pdf,
@@ -1332,9 +1333,10 @@ def _arquivo(telas, raiz, marcadores, titulo, autor):
         objetos.append(
             b"<< /Length " + str(len(fluxo)).encode() + b" >>\nstream\n" + fluxo + b"\nendstream"
         )
-    objetos.append(
-        f"<< /Title {_cadeia_do_pdf(titulo)} /Author {_cadeia_do_pdf(autor)} >>".encode()
-    )
+    # Saneada uma vez, para o `/Info` e para os metadados (FR-8153): unidade sem nome não declara
+    # autor vazio, e não declara autor nenhum.
+    descricao = pdfa.descricao(titulo, autor)
+    objetos.append(_informacao(descricao))
     # Marcadores num nível só, na ordem das seções: é o que o leitor de PDF mostra ao lado.
     if marcadores:
         objetos.append(
@@ -1382,10 +1384,4 @@ def _arquivo(telas, raiz, marcadores, titulo, autor):
             f"<< /Type /StructElem /S /{elemento.tipo} /P {pai} 0 R{alt} "
             f"/K [{' '.join(filhos)}] >>".encode()
         )
-    # O título e o autor do `/Info`, repetidos nos metadados com o mesmo texto (FR-8153).
-    da_conformidade, entradas = pdfa.objetos(
-        len(objetos) + 1, nivel=pdfa.NIVEL_A, titulo=titulo, autor=autor
-    )
-    objetos.extend(da_conformidade)
-    objetos[0] = objetos[0].removesuffix(b" >>") + f" {entradas} >>".encode()
-    return _montar_o_arquivo(objetos, informacao=id_info, identificado=True)
+    return _arquivo_em_pdfa(objetos, nivel=pdfa.NIVEL_A, informacao=id_info, descricao=descricao)

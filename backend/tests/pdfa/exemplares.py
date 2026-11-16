@@ -74,7 +74,7 @@ def retificacao():
 def comprovante():
     from processo_seletivo.inscricoes.infrastructure.comprovante_pdf import render_comprovante_pdf
 
-    return render_comprovante_pdf(_json("comprovante_v1.json"))
+    return render_comprovante_pdf(_json("comprovante_v1.json"), pdfa=True)
 
 
 def resultado():

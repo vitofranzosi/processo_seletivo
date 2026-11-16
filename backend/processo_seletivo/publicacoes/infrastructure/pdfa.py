@@ -27,6 +27,8 @@ de cada tipo (`tests/pdfa/`). Produção não ganha Java.
 """
 
 import hashlib
+import re
+from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
 from xml.sax.saxutils import escape
@@ -63,8 +65,39 @@ def conferir():
     return None if resumo == SHA256_DO_PERFIL else resumo
 
 
-def xmp(nivel, *, titulo=None, autor=None) -> bytes:
-    """Os metadados XMP: a parte e o nível, e o título e o autor do `/Info`, se houver.
+@dataclass(frozen=True)
+class Descricao:
+    """O título e o autor que o arquivo declara — no `/Info` e nos metadados, o mesmo texto."""
+
+    titulo: str | None = None
+    autor: str | None = None
+
+
+# O que o XML 1.0 não admite: os controles C0 fora de tabulação e quebras, os substitutos e os dois
+# não caracteres do fim do plano básico. Um deles nos metadados os torna mal-formados, e o arquivo
+# deixaria de ser PDF/A sem que nada acusasse.
+_FORA_DO_XML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]")
+
+
+def descricao(titulo=None, autor=None) -> Descricao:
+    """A descrição do arquivo, saneada **uma vez** para os dois lugares que a declaram (FR-8153).
+
+    Tira o que o XML não admite e trata texto vazio como ausente: um relatório de unidade sem nome
+    não declara autor vazio, e não declara autor nenhum. O `/Info` (`pdf._informacao`) e o XMP leem
+    o resultado daqui, e por isso concordam por construção.
+    """
+
+    def limpo(valor):
+        if valor is None:
+            return None
+        valor = _FORA_DO_XML.sub("", str(valor)).strip()
+        return valor or None
+
+    return Descricao(titulo=limpo(titulo), autor=limpo(autor))
+
+
+def xmp(nivel, descricao=None) -> bytes:
+    """Os metadados XMP: a parte e o nível, e o título e o autor da descrição, se houver.
 
     **Só o que o `/Info` declara**, e com o mesmo texto: a norma cobra que as duas descrições
     concordem, e a mais segura das concordâncias é não dizer nos metadados nada que o `/Info` não
@@ -72,26 +105,27 @@ def xmp(nivel, *, titulo=None, autor=None) -> bytes:
     """
     if nivel not in NIVEIS:
         raise ValueError(f"Nível de PDF/A desconhecido: {nivel!r}.")
-    descricao_dc = ""
-    if titulo is not None or autor is not None:
-        partes = []
-        if titulo is not None:
-            partes.append(
-                "<dc:title><rdf:Alt>"
-                f'<rdf:li xml:lang="x-default">{escape(str(titulo))}</rdf:li>'
-                "</rdf:Alt></dc:title>"
-            )
-        if autor is not None:
-            partes.append(
-                f"<dc:creator><rdf:Seq><rdf:li>{escape(str(autor))}</rdf:li></rdf:Seq></dc:creator>"
-            )
-        descricao_dc = (
-            '<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">'
-            + "".join(partes)
-            + "</rdf:Description>"
+    descricao = descricao or Descricao()
+    partes = []
+    if descricao.titulo is not None:
+        partes.append(
+            "<dc:title><rdf:Alt>"
+            f'<rdf:li xml:lang="x-default">{escape(descricao.titulo)}</rdf:li>'
+            "</rdf:Alt></dc:title>"
         )
+    if descricao.autor is not None:
+        partes.append(
+            f"<dc:creator><rdf:Seq><rdf:li>{escape(descricao.autor)}</rdf:li></rdf:Seq></dc:creator>"
+        )
+    descricao_dc = (
+        '<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">'
+        + "".join(partes)
+        + "</rdf:Description>"
+        if partes
+        else ""
+    )
     texto = (
-        '<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>\n'
+        '<?xpacket begin="\ufeff" id="W5M0MpCehiHzreSzNTczkc9d"?>\n'
         '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
         '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
         '<rdf:Description rdf:about="" xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/">'
@@ -105,18 +139,19 @@ def xmp(nivel, *, titulo=None, autor=None) -> bytes:
     return texto.encode("utf-8")
 
 
-def objetos(primeiro, *, nivel, titulo=None, autor=None):
+def objetos(primeiro, *, nivel, descricao=None):
     """Os dois objetos da conformidade, numerados a partir de `primeiro`, e o que o catálogo cita.
 
     Devolve `(objetos, entradas)`: o perfil ICC e os metadados, e o trecho do catálogo que aponta
-    para eles — `/Metadata` e `/OutputIntents`.
+    para eles — `/Metadata` e `/OutputIntents`. Quem os acrescenta ao arquivo é
+    `pdf._arquivo_em_pdfa`, e só ele.
 
     **Nenhum dos dois é `<< /Length N >>`**, como o arquivo da fonte (`fonte.objetos`): os
     extratores de texto dos testes leem só esse formato como conteúdo de página. E nenhum é
     comprimido: a norma proíbe filtro no fluxo dos metadados, e o perfil tem 3 KB.
     """
     icc = perfil()
-    metadados = xmp(nivel, titulo=titulo, autor=autor)
+    metadados = xmp(nivel, descricao)
     saida = [
         f"<< /N 3 /Length {len(icc)} >>\nstream\n".encode() + icc + b"\nendstream",
         f"<< /Type /Metadata /Subtype /XML /Length {len(metadados)} >>\nstream\n".encode()

@@ -52,7 +52,18 @@ def main(argv):
         print(__doc__, file=sys.stderr)
         return 2
     manifesto = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
-    relatorio = json.loads(Path(argv[2]).read_text(encoding="utf-8"))
+    # O workflow roda o veraPDF com `|| true`, para que a decisão seja daqui: se ele nem chegou a
+    # rodar (imagem ausente, máquina virtual sem memória), o relatório vem vazio ou cortado, e isso
+    # é infraestrutura, não conformidade — e tem de dizer isso, e não quebrar com um traceback.
+    try:
+        relatorio = json.loads(Path(argv[2]).read_text(encoding="utf-8"))
+        relatorio["report"]["jobs"]
+    except (OSError, ValueError, KeyError, TypeError) as erro:
+        print(
+            f"O relatório do veraPDF ({argv[2]}) está ausente, vazio ou ilegível: o validador não "
+            f"rodou até o fim. Veja a saída do passo anterior. ({type(erro).__name__}: {erro})"
+        )
+        return 1
     problemas = conferir(manifesto, relatorio)
     for linha in problemas:
         print(linha)

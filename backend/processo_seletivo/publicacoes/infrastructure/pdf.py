@@ -310,9 +310,10 @@ def largura(texto: str, tamanho: float, fonte: str = REGULAR) -> float:
 class Metrica:
     """Como a composição mede o texto — a Helvetica de hoje, salvo quando outra é dada (069, R-005).
 
-    **Da composição, e não do módulo.** O Edital passa a embutir a fonte e a medir pelas larguras
-    dela, e o comprovante e a divulgação continuam com a Helvetica, byte a byte (FR-1383): as duas
-    medidas só convivem se cada composição carregar a sua. Uma função global trocada pelo Edital
+    **Da composição, e não do módulo.** O Edital passou a embutir a fonte e a medir pelas larguras
+    dela na `069`, e todo documento composto desde a `178` (FR-8158); só o comprovante da inscrição
+    enviada antes continua medido pela Helvetica, byte a byte (FR-8164): as duas medidas só convivem
+    se cada composição carregar a sua. Uma função global trocada pelo Edital
     mudaria, na mesma chamada, a quebra de linha de todo comprovante emitido depois.
     """
 
@@ -341,8 +342,8 @@ CORPO_NOTA = 7.5
 # **A hierarquia da `069`** (FR-1382): o título de seção ganha corpo e um fio abaixo, e a subseção
 # um corpo próprio. A calibração da `008` — título no corpo do texto, a hierarquia pelo peso — dava
 # título e parágrafo quase iguais num documento longo, e a auditoria de 08/10 o apontou (ED-16 e o
-# teste heurístico). `CORPO_SECAO` continua o de antes: é o do comprovante e da divulgação, que não
-# mudam (FR-1383).
+# teste heurístico). `CORPO_SECAO` continua o de antes: é o do comprovante e da divulgação, que a
+# `069` não mudou (FR-1383) e a `178` só fez embutir a fonte.
 CORPO_TITULO_DE_SECAO = 12.5
 CORPO_SUBSECAO = 11.0
 # O fundo do bloco destacado: o resumo, os dados do sorteio e a declaração (FR-1382). Mais claro que
@@ -747,7 +748,7 @@ class Composicao:
     ):
         self.itens: list = []
         # A regra de equilíbrio da paginação do Edital (069, FR-1392, R-011). Desligada por padrão:
-        # o comprovante e a divulgação paginam como sempre, byte a byte (FR-1383).
+        # o comprovante e a divulgação paginam sem ela.
         self.equilibrio = equilibrio
         # A medida de toda quebra, posição e justificação desta composição (069, R-005).
         self.metrica = metrica
@@ -5856,14 +5857,23 @@ def _numero(valor):
 
 
 def _arquivo_do_edital(
-    composicao, *, identificacao, marca="", paginas=None, navegacao=None, pdfa=False
+    composicao,
+    *,
+    identificacao,
+    marca="",
+    paginas=None,
+    navegacao=None,
+    pdfa=False,
+    estrito=True,
+    com_brasao=True,
+    fio_sob_o_titulo=True,
 ):
-    """O arquivo do Edital: o de `render_documento`, com a fonte embutida (069, R-005).
+    """O arquivo do Edital, com a fonte embutida (069, R-005) — e, desde a `178`, de todo documento.
 
-    **Escritor próprio, e não um parâmetro do compartilhado.** O comprovante se regenera a cada
-    download e promete ao candidato o SHA-256 do arquivo; o escritor dele não pode mudar um byte
-    (FR-1383). O do Edital muda só no que é do Edital: as fontes `/TrueType` embutidas nos mesmos
-    recursos `F1` e `F2`, a medida da página pela fonte embutida e o fio sob os títulos de seção.
+    Nasceu escritor próprio do Edital porque o comprovante tinha bytes prometidos (FR-1383). A `178`
+    levou a ele a família de `render_documento`, sem navegação e sem o fio sob os títulos
+    (`fio_sob_o_titulo=False`, `estrito` e `com_brasao` do chamador); o escritor de antes ficou
+    congelado em `_documento_com_a_helvetica`, só para o comprovante da inscrição enviada antes.
 
     Objetos: 1 catálogo, 2 páginas, 3 brasão, depois as seis das fontes e os pares página/conteúdo
     — numeração fixa, para que o mesmo snapshot dê os mesmos bytes. Com `navegacao` (069, R-012),
@@ -5883,10 +5893,10 @@ def _arquivo_do_edital(
             f"Página {numero} de {len(paginas)}",
             marca=marca,
             tracos=tracos,
-            com_brasao=numero == 1,
-            estrito=True,
+            com_brasao=com_brasao and numero == 1,
+            estrito=estrito,
             metrica=composicao.metrica,
-            fio_sob_o_titulo=True,
+            fio_sob_o_titulo=fio_sob_o_titulo,
         )
         for numero, (linhas, tracos) in enumerate(paginas, 1)
     ]
@@ -5924,10 +5934,7 @@ def _arquivo_do_edital(
             )
         if not pdfa:
             return _montar_o_arquivo(objetos)
-        da_conformidade, entradas = pdfa_.objetos(len(objetos) + 1, nivel=pdfa_.NIVEL_U)
-        objetos.extend(da_conformidade)
-        objetos[0] = f"<< /Type /Catalog /Pages 2 0 R {entradas} >>".encode()
-        return _montar_o_arquivo(objetos, identificado=True)
+        return _arquivo_em_pdfa(objetos, nivel=pdfa_.NIVEL_U)
 
     posicoes = _posicoes_dos_titulos(paginas, navegacao.marcadores)
     anotacoes = _anotacoes(
@@ -5964,10 +5971,7 @@ def _arquivo_do_edital(
         objetos.append(
             b"<< /Length " + str(len(fluxo)).encode() + b" >>\nstream\n" + fluxo + b"\nendstream"
         )
-    objetos.append(
-        f"<< /Title {_cadeia_do_pdf(navegacao.titulo)} "
-        f"/Author {_cadeia_do_pdf(navegacao.autor)} >>".encode()
-    )
+    objetos.append(_informacao(pdfa_.descricao(navegacao.titulo, navegacao.autor)))
 
     def destino(posicao):
         pagina, topo = posicao
@@ -6034,13 +6038,44 @@ def _arquivo_do_edital(
             )
     if not pdfa:
         return _montar_o_arquivo(objetos, informacao=id_da_informacao)
-    # O título e o autor do `/Info`, repetidos nos metadados com o mesmo texto (FR-8153).
-    da_conformidade, entradas = pdfa_.objetos(
-        len(objetos) + 1, nivel=pdfa_.NIVEL_U, titulo=navegacao.titulo, autor=navegacao.autor
+    return _arquivo_em_pdfa(
+        objetos,
+        nivel=pdfa_.NIVEL_U,
+        informacao=id_da_informacao,
+        descricao=pdfa_.descricao(navegacao.titulo, navegacao.autor),
     )
-    objetos.extend(da_conformidade)
-    objetos[0] = objetos[0].removesuffix(b" >>") + f" {entradas} >>".encode()
-    return _montar_o_arquivo(objetos, informacao=id_da_informacao, identificado=True)
+
+
+def _informacao(descricao):
+    """O `/Info` do arquivo, só com o que a descrição tem (FR-8153).
+
+    Recebe a descrição já passada por `pdfa.descricao` — a mesma que vai aos metadados XMP —, e por
+    isso as duas concordam por construção: o mesmo texto, e a mesma ausência quando um vem vazio.
+    """
+    partes = []
+    if descricao.titulo is not None:
+        partes.append(f"/Title {_cadeia_do_pdf(descricao.titulo)}")
+    if descricao.autor is not None:
+        partes.append(f"/Author {_cadeia_do_pdf(descricao.autor)}")
+    return f"<< {' '.join(partes)} >>".encode()
+
+
+def _arquivo_em_pdfa(objetos, *, nivel, informacao=None, descricao=None):
+    """O arquivo, com o que faz dele PDF/A-2 — o único lugar que acrescenta a conformidade (178).
+
+    Os dois objetos de `pdfa.objetos` entram depois de todos os outros, e o catálogo (o objeto 1)
+    ganha `/Metadata` e `/OutputIntents` no fim: nenhum número de objeto anda, e nenhum fluxo de
+    página muda (FR-8159). O trailer ganha o `/ID` derivado do corpo (FR-8154).
+    """
+    catalogo = objetos[0]
+    if not catalogo.startswith(b"<< /Type /Catalog ") or not catalogo.endswith(b" >>"):
+        raise ValueError(
+            f"O primeiro objeto não é o catálogo que este escritor escreve: {catalogo!r}"
+        )
+    descricao = descricao or pdfa_.Descricao()
+    da_conformidade, entradas = pdfa_.objetos(len(objetos) + 1, nivel=nivel, descricao=descricao)
+    objetos = [catalogo[:-3] + f" {entradas} >>".encode(), *objetos[1:], *da_conformidade]
+    return _montar_o_arquivo(objetos, informacao=informacao, identificado=True)
 
 
 def _objeto_do_brasao():
@@ -6115,54 +6150,17 @@ def render_documento(
             "O documento em PDF/A embute a fonte do Edital, e a composição tem de ser medida por "
             "ela: Composicao(metrica=METRICA_DO_EDITAL)."
         )
-    paginas = composicao.paginar()
-    fluxos = [
-        _fluxo_da_pagina(
-            linhas,
-            identificacao,
-            f"Página {numero} de {len(paginas)}",
-            marca=marca,
-            tracos=tracos,
-            com_brasao=com_brasao and numero == 1,
-            estrito=estrito,
-            metrica=composicao.metrica,
-        )
-        for numero, (linhas, tracos) in enumerate(paginas, 1)
-    ]
-    # Objetos: 1 catálogo, 2 páginas, 3 brasão, as seis das fontes, os pares página/conteúdo, e por
-    # fim o perfil de cor e os metadados — a numeração do `_arquivo_do_edital` sem navegação.
-    objetos_das_fontes, ids_das_fontes = fonte_do_edital.objetos(4)
-    primeira_pagina = 4 + len(objetos_das_fontes)
-    ids_paginas = [primeira_pagina + indice * 2 for indice in range(len(fluxos))]
-    objetos = [
-        b"",
-        (
-            b"<< /Type /Pages /Kids ["
-            + b" ".join(f"{identificador} 0 R".encode() for identificador in ids_paginas)
-            + f"] /Count {len(fluxos)} >>".encode()
-        ),
-        _objeto_do_brasao(),
-        *objetos_das_fontes,
-    ]
-    recursos = (
-        f"/Resources << /Font << /F1 {ids_das_fontes[REGULAR]} 0 R "
-        f"/F2 {ids_das_fontes[NEGRITO]} 0 R >> "
-        f"/XObject << /{NOME_DO_BRASAO} 3 0 R >> >> "
-    ).encode()
-    for indice, fluxo in enumerate(fluxos):
-        objetos.append(
-            f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {LARGURA} {ALTURA}] ".encode()
-            + recursos
-            + f"/Contents {ids_paginas[indice] + 1} 0 R >>".encode()
-        )
-        objetos.append(
-            b"<< /Length " + str(len(fluxo)).encode() + b" >>\nstream\n" + fluxo + b"\nendstream"
-        )
-    # Sem `/Info`, os metadados só declaram a conformidade (FR-8153).
-    da_conformidade, entradas = pdfa_.objetos(len(objetos) + 1, nivel=pdfa_.NIVEL_U)
-    objetos.extend(da_conformidade)
-    objetos[0] = f"<< /Type /Catalog /Pages 2 0 R {entradas} >>".encode()
-    return _montar_o_arquivo(objetos, identificado=True)
+    # O mesmo arquivo do Edital, sem navegação e sem o fio sob os títulos: a numeração dos objetos,
+    # as fontes embutidas e a conformidade moram num lugar só (`_arquivo_do_edital`).
+    return _arquivo_do_edital(
+        composicao,
+        identificacao=identificacao,
+        marca=marca,
+        pdfa=True,
+        estrito=estrito,
+        com_brasao=com_brasao,
+        fio_sob_o_titulo=False,
+    )
 
 
 def _documento_com_a_helvetica(

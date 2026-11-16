@@ -27,7 +27,7 @@ A faixa da spec abre em FR-8150 e SC-2820; o que a reserva tinha acima do últim
 | FR-8150 | `publicacoes/infrastructure/pdfa.py`; `pdf.py` (`_arquivo_do_edital`, `render_documento`); `interface/diagramacao.py` | VP (os nove PASS); CF `test_sao_os_nove_tipos_da_fr_8150` |
 | FR-8151 | `pdfa.NIVEL_U`, `pdfa.NIVEL_A`; `diagramacao._arquivo` declara A | CF `test_os_metadados_declaram_a_parte_e_o_nivel_esperados`, `test_os_relatorios_continuam_marcados`; VP (2a) |
 | FR-8152 | `pdfa.xmp` | CF `test_os_metadados_declaram…`; VP: `conferir_o_verapdf.py` recusa nível declarado diferente do esperado |
-| FR-8153 | `pdfa.xmp` (título e autor só quando há `/Info`) | CF `test_os_metadados_repetem_o_info_e_nada_mais`, `test_o_xmp_sem_info_declara_so_a_conformidade`, `test_o_xmp_escapa_o_texto…` |
+| FR-8153 | `pdfa.descricao` (saneada uma vez), `pdfa.xmp`, `pdf._informacao` | CF `test_os_metadados_repetem_o_info_e_nada_mais`, `test_o_xmp_sem_info_declara_so_a_conformidade`, `test_o_xmp_escapa_o_texto…`, `test_a_descricao_tira_o_que_o_xml_nao_admite_e_o_vazio`, `test_o_info_e_os_metadados_saem_da_mesma_descricao`, `test_o_relatorio_de_unidade_sem_nome_nao_declara_autor` |
 | FR-8154 | `pdfa.identificador`; `pdf._montar_o_arquivo(identificado=)` | CF `test_o_identificador_e_derivado_do_corpo`, `test_o_identificador_tem_dezesseis_bytes…`; `test_arquivo_do_edital.py::test_sem_marcacao_e_com_o_identificador_do_conteudo` |
 | FR-8155 | sem data, sem produtor, `/ID` derivado | CF `test_o_mesmo_conteudo_da_os_mesmos_bytes`; `test_arquivo_do_edital.py::test_os_mesmos_bytes_em_duas_composicoes`; CP (página e download) |
 | FR-8156 | `cor/sRGB2014.icc`, `cor/LICENSE`, `cor/ORIGEM.md`; `pdfa.objetos` | CF `test_o_perfil_e_o_que_a_origem_registra`, `test_o_perfil_e_um_icc_rgb_de_monitor`, `test_a_condicao_de_saida_aponta_o_perfil_versionado` |
@@ -38,14 +38,14 @@ A faixa da spec abre em FR-8150 e SC-2820; o que a reserva tinha acima do últim
 | FR-8161 | nenhum caminho recompõe documento gravado; a coluna nova não percorre linha | D178 compara arquivos gravados; CP `test_a_migration_nao_toca_a_enviada_pelo_gatilho` |
 | FR-8162 | `render_edital_pdf(..., pdfa=not previa)` | CF `test_a_previa_nao_declara_pdfa` |
 | FR-8163 | `inscricoes/models.py` (`comprovante_em_pdfa`); `inscricoes/migrations/0008_comprovante_em_pdfa.py`; `inscricoes/application/submissao.py` | CP `test_a_inscricao_enviada_depois_da_178…`, `test_o_rascunho_de_antes_enviado_depois_recebe_o_pdfa` |
-| FR-8164 | `pdf._documento_com_a_helvetica` (congelado); `render_comprovante_pdf(pdfa=False)` | CT `test_o_comprovante_da_inscricao_enviada_antes_da_178_sai_com_os_bytes_de_sempre`; CP `test_a_inscricao_enviada_antes_da_178_continua…` |
+| FR-8164 | `pdf._documento_com_a_helvetica` (congelado); `render_comprovante_pdf(pdfa=)` sem padrão; o desfazer da `0008` recusado com enviada no PDF/A | CT `test_o_comprovante_da_inscricao_enviada_antes_da_178_sai_com_os_bytes_de_sempre`; CP `test_a_inscricao_enviada_antes_da_178_continua…` (os bytes do escritor antigo sobre os dados da view), `test_desfazer_a_migration_e_recusado_com_enviada_no_pdfa` |
 | FR-8165 | `portal/views.py` (`comprovante`, `comprovante_em_pdf`) | CP: o resumo da página é o do arquivo baixado, nos dois escritores |
 | FR-8166 | `specs/069-edital-linguagem-simples/spec.md` (FR-1383 e SC-522 revistos) | `tests/test_citacoes_de_requisito.py` |
 | FR-8167 | nenhum objeto de assinatura; o `/ID` é resumo, não certificado | CF (o XMP e o catálogo só têm o que a FR-8152 a FR-8156 pedem) |
 | FR-8168 | `.github/workflows/backend.yml` (job `pdfa`); `scripts/conferir_o_verapdf.py` | VP; sabotagem local: nível B e `/F` ausente reprovados com arquivo e regra |
 | FR-8169 | uma execução do veraPDF sobre a pasta | VP |
 | FR-8170 | nenhuma dependência nova em `pyproject.toml`; o veraPDF só no CI | CF `test_producao_nao_ganha_dependencia` |
-| FR-8171 | `tests/pdfa/exemplares.py`, `tests/pdfa/leitura.py` | CF inteiro |
+| FR-8171 | `tests/pdfa/exemplares.py`, `tests/pdfa/leitura.py` | CF inteiro, inclusive `test_o_exemplar_continua_exercitando_o_que_a_norma_cobra` |
 
 ## Critérios de sucesso
 

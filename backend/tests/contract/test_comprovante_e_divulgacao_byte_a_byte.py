@@ -56,7 +56,9 @@ def test_o_comprovante_da_inscricao_enviada_antes_da_178_sai_com_os_bytes_de_sem
 
 
 def test_o_comprovante_novo_sai_com_os_bytes_da_178():
-    assert render_comprovante_pdf(_conteudo("comprovante_v1")) == _fixture("comprovante_v2")
+    assert render_comprovante_pdf(_conteudo("comprovante_v1"), pdfa=True) == _fixture(
+        "comprovante_v2"
+    )
 
 
 def test_o_documento_de_divulgacao_sai_com_os_bytes_da_178():
