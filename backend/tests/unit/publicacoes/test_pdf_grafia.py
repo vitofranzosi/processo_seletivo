@@ -26,6 +26,7 @@ from processo_seletivo.editais.domain.validation import (
 )
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_TEXTO,
+    METRICA_DO_EDITAL,
     MODO_PREVIA,
     CaractereSemGrafia,
     Composicao,
@@ -105,7 +106,8 @@ def test_os_outros_documentos_continuam_sem_recusar():
 
     Neles o `?` continua — é registro à parte no achado —, mas a normalização vale.
     """
-    composicao = Composicao()
+    # Medida pela fonte embutida, como a `178` exige de todo documento em PDF/A.
+    composicao = Composicao(metrica=METRICA_DO_EDITAL)
     composicao.escrever("● Nome com ≥", tamanho=CORPO_TEXTO)
     texto = texto_de(render_documento(composicao, identificacao="Comprovante"))
     assert "• Nome com ?" in texto

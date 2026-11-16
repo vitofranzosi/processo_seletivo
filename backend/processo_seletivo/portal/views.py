@@ -3582,7 +3582,9 @@ def comprovante_em_pdf(request, inscricao_id):
         raise DomainError("not_found", "Recurso não encontrado.", 404)
     versao = registro.versao_aceita or versao
     dados = _dados_do_comprovante(request, registro, versao.content, versao)
-    arquivo = comprovante_pdf.render_comprovante_pdf(dados)
+    # O escritor que a inscrição registrou no envio (178, FR-8163): o mesmo que a página usou para
+    # calcular o resumo que mostra, ou o resumo deixaria de conferir (FR-8165).
+    arquivo = comprovante_pdf.render_comprovante_pdf(dados, pdfa=registro.comprovante_em_pdfa)
     resposta = HttpResponse(arquivo, content_type="application/pdf")
     # `attachment`, e não `inline`: o candidato veio buscar um arquivo para guardar, e abrir no
     # visualizador do navegador o devolveria à mesma tela de onde saiu.
@@ -3634,7 +3636,8 @@ def comprovante(request, inscricao_id):
             # candidato clicar, e idêntico de novo daqui a um ano.
             "resumo_do_pdf": sha256(
                 comprovante_pdf.render_comprovante_pdf(
-                    _dados_do_comprovante(request, registro, conteudo, versao)
+                    _dados_do_comprovante(request, registro, conteudo, versao),
+                    pdfa=registro.comprovante_em_pdfa,
                 )
             ).hexdigest(),
             # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção

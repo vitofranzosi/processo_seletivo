@@ -25,7 +25,7 @@ cadeia inteira até a tabela, e nenhuma parte de tabela fica com uma linha só.
 
 from dataclasses import dataclass, field
 
-from processo_seletivo.publicacoes.infrastructure import brasao
+from processo_seletivo.publicacoes.infrastructure import brasao, pdfa
 from processo_seletivo.publicacoes.infrastructure import fonte as fonte_do_edital
 from processo_seletivo.publicacoes.infrastructure.pdf import (
     ALTURA,
@@ -1266,7 +1266,13 @@ def _numero(valor):
 
 
 def _arquivo(telas, raiz, marcadores, titulo, autor):
-    """Os objetos do PDF marcado, numerados em ordem fixa: os mesmos blocos, os mesmos bytes."""
+    """Os objetos do PDF marcado, numerados em ordem fixa: os mesmos blocos, os mesmos bytes.
+
+    **PDF/A-2a desde a `178`** (FR-8151): o arquivo já era marcado — árvore de estrutura, idioma,
+    artefatos —, e o nível A só pedia o que o Edital também pede: o perfil de cor e os metadados no
+    fim, que o catálogo cita, as anotações imprimíveis e o `/ID` derivado do corpo. Os fluxos das
+    páginas não mudam (FR-8159).
+    """
     objetos_das_fontes, ids_das_fontes = fonte_do_edital.objetos(4)
     primeira_pagina = 4 + len(objetos_das_fontes)
     ids_paginas = [primeira_pagina + 2 * i for i in range(len(telas))]
@@ -1350,6 +1356,7 @@ def _arquivo(telas, raiz, marcadores, titulo, autor):
             retangulo = " ".join(_numero(v) for v in (x0, y0, x1, y1))
             objetos.append(
                 f"<< /Type /Annot /Subtype /Link /Rect [{retangulo}] /Border [0 0 0] "
+                f"{pdfa.ANOTACAO_IMPRIMIVEL} "
                 f"/A << /S /URI /URI {_cadeia_do_pdf(_uri(uri))} >> >>".encode()
             )
     objetos.append(
@@ -1375,4 +1382,10 @@ def _arquivo(telas, raiz, marcadores, titulo, autor):
             f"<< /Type /StructElem /S /{elemento.tipo} /P {pai} 0 R{alt} "
             f"/K [{' '.join(filhos)}] >>".encode()
         )
-    return _montar_o_arquivo(objetos, informacao=id_info)
+    # O título e o autor do `/Info`, repetidos nos metadados com o mesmo texto (FR-8153).
+    da_conformidade, entradas = pdfa.objetos(
+        len(objetos) + 1, nivel=pdfa.NIVEL_A, titulo=titulo, autor=autor
+    )
+    objetos.extend(da_conformidade)
+    objetos[0] = objetos[0].removesuffix(b" >>") + f" {entradas} >>".encode()
+    return _montar_o_arquivo(objetos, informacao=id_info, identificado=True)

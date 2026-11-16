@@ -29,6 +29,7 @@ from processo_seletivo.publicacoes.infrastructure.pdf import (
     CORPO_SECAO,
     CORPO_TEXTO,
     ESQUERDA,
+    METRICA_DO_EDITAL,
     NEGRITO,
     Composicao,
     _tabela,
@@ -44,7 +45,8 @@ def render_inscricoes_pdf(conteudo: dict) -> bytes:
     """
     cabecalho = conteudo["cabecalho"]
     grupos = grupos_publicados(conteudo)
-    composicao = Composicao()
+    # Medida pela fonte que o arquivo embute (178, FR-8158): PDF/A não declara fonte sem arquivo.
+    composicao = Composicao(metrica=METRICA_DO_EDITAL)
     _timbre(composicao, cabecalho)
     _moldura(composicao, cabecalho)
     _explicacao(composicao, cabecalho, grupos)

@@ -107,18 +107,50 @@ jobs:
       # `pythonpath` do `pyproject.toml` valer, e só o `-m` põe o diretório corrente no caminho.
       - run: uv run python -m pytest -n 4 --dist worksteal -p tests.fatias --fatia=${{ matrix.fatia }}/3
 
+  # **Os documentos que o GPS compõe são PDF/A, e um validador independente o confere** (178,
+  # FR-8168). Um exemplar de cada um dos nove tipos (`tests/pdfa/exemplares.py`), gravado pela
+  # suíte sem banco, e o veraPDF sobre o lote inteiro numa execução só: a partida da máquina virtual
+  # dele leva ~10 s, e nove partidas seriam um minuto e meio. O veraPDF valida cada arquivo contra o
+  # nível que ele declara; `conferir_o_verapdf.py` exige, além disso, que a declaração seja a
+  # esperada (2u, e 2a nos relatórios). Produção não ganha Java: o validador só existe aqui.
+  pdfa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      PDFA_EXEMPLARES: ${{ github.workspace }}/pdfa
+      # A imagem oficial, presa pelo resumo: uma `latest` nova mudaria a régua sem PR nenhum.
+      VERAPDF: verapdf/cli:v1.30.4@sha256:f085855d442ad415e79fabbabcdd1803c2db4ee097cd5b94506c95ecdcfa1728
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --extra dev --locked
+      - run: uv run python -m pytest tests/pdfa -q
+      # Pelo espelho primeiro, como o PostgreSQL das fatias (o `toomanyrequests` do PR #270); o
+      # espelho só tem a imagem que alguém já pediu, e por isso o Docker Hub fica de reserva.
+      - name: Baixar o veraPDF
+        run: docker pull "mirror.gcr.io/$VERAPDF" && docker tag "mirror.gcr.io/$VERAPDF" verapdf || { docker pull "$VERAPDF" && docker tag "$VERAPDF" verapdf; }
+      # O código de saída do veraPDF é 1 quando algum arquivo não é conforme, e quem decide é o
+      # passo seguinte, que diz qual arquivo e qual regra: `|| true` para não esconder o relatório.
+      - run: docker run --rm -v "$PDFA_EXEMPLARES:/data" verapdf --format json /data > "$RUNNER_TEMP/verapdf.json" || true
+      - run: uv run python scripts/conferir_o_verapdf.py "$PDFA_EXEMPLARES/manifesto.json" "$RUNNER_TEMP/verapdf.json"
+
   # **O nome `test` continua sendo o veredito da suíte**, para quem lê os checks e para o que
-  # dependa dele: verde só com o lint e as três fatias verdes. `!cancelled()` para que uma fatia
-  # vermelha dê um `test` vermelho, e não um `test` pulado — pulado conta como aprovado —, sem fazê-lo
-  # rodar numa run que a concorrência cancelou, como `always()` faria.
+  # dependa dele: verde só com o lint, as três fatias e o PDF/A verdes. `!cancelled()` para que uma
+  # fatia vermelha dê um `test` vermelho, e não um `test` pulado — pulado conta como aprovado —, sem
+  # fazê-lo rodar numa run que a concorrência cancelou, como `always()` faria.
   test:
-    needs: [lint, fatia]
+    needs: [lint, fatia, pdfa]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - run: |
           test "${{ needs.lint.result }}" = success
           test "${{ needs.fatia.result }}" = success
+          test "${{ needs.pdfa.result }}" = success
 
   # O ambiente containerizado é o caminho canônico de desenvolvimento, e caminho documentado que
   # ninguém executa apodrece calado. Este job é o que impede isso: ele sobe a mesma pilha que a
