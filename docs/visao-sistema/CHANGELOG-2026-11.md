@@ -753,3 +753,20 @@ Depois do #580, a `main` recebeu o #581, que tornou conformes ao PDF/A os docume
 - **Maturidade recontada:** 178 pastas, 135 migrations, 648 arquivos Python (183,3 mil linhas), 289 templates e 1 333 + 27 testes; o resto não mudou.
 
 **Não verificado:** o veraPDF não foi rodado aqui, e os níveis vêm da descrição do PR e da spec; a suíte inteira não rodou. O roteiro de curadoria das Novidades não pôde ser rodado (o `gh pr list` devolve "unexpected end of JSON input" com a janela de 1000 PRs); a lista de pendentes foi feita à mão, pelos PRs entrados depois do último "Nada pendente".
+
+## Acréscimo de 16/11, no fim da noite: a agenda e a distribuição se cruzam (179)
+
+Depois do #584, a `main` recebeu o #583, o incremento 1 da 179. Esta revisão a descreve contra a `main` em `643a1561`.
+
+**O que mudou na documentação:**
+
+- **Subseção nova na seção da agenda da Etapa**, *Parcial*, com o que o incremento 1 muda:
+  - o conflito de horário — duas entrevistas da mesma pessoa que se sobrepõem — recusado no lote da Distribuição e tratado como inelegibilidade no rodízio;
+  - a remarcação e a inclusão, que dizem quem avalia a pessoa, anunciam o conflito antes de confirmar e o conferem por assinatura sob a trava do Processo;
+  - a agenda publicada, com a coluna *Avaliam* e a seção *Quem avalia*, e a conferência que avisa sem impedir;
+  - a visão *Programação* na Mesa, com a sala só para o avaliador atribuído, e a próxima entrevista em Minhas atividades.
+- **A 179 revisa a FR-085 e a FR-107 da 012 e a FR-7229 e a FR-7240 da 167**, com a redação anterior preservada. O incremento 2, o aviso por e-mail ao avaliador, não existe.
+- **As Novidades** ganharam uma nota nova — *A distribuição evita choque de horário e a Mesa mostra a agenda* —, e passaram a **116 notas**: 43 funcionalidades, 51 melhorias e 22 correções; 14 transformadoras, 57 relevantes e 45 incrementais; 95 com exemplo.
+- **Maturidade recontada:** 179 pastas, 651 arquivos Python (184,4 mil linhas), 292 templates e 1 346 + 27 testes; migrations, tabelas append-only, gatilhos, módulos e rotas não mudaram.
+
+**Não verificado:** a suíte inteira não rodou e nenhuma tela foi percorrida; o percurso no cenário C20 é o que o #583 registrou. O SC-2844, de validação humana, segue aberto.
