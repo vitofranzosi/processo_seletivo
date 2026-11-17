@@ -215,6 +215,18 @@ def enviar_inscricao(
             )
         # 5 — a modalidade continua sendo do Perfil, e continua obrigatória quando há escolha.
         modalidade = _modalidade_escolhida(conteudo, travada.profile_id, travada.modality_id)
+        # 5b — a data de nascimento do cadastro (180, FR-8303). Antes das declarações e dos
+        # documentos: é a única recusa que manda a pessoa para fora desta tela, e ela precisa
+        # saber disso antes de marcar o que for marcar aqui. Lida do contrato, como nome e CPF:
+        # ele é remontado do registro a cada requisição. A recusa é do comando, e a revisão só a
+        # antecipa — quem chamar `enviar_inscricao` direto encontra a mesma recusa aqui.
+        data_nascimento = getattr(identidade, "data_nascimento", None)
+        if data_nascimento is None:
+            raise DomainError(
+                "birth_date_required",
+                "Falta informar sua data de nascimento em Seus dados.",
+                422,
+            )
         # 6 e 7 — só documentos aplicáveis, e todos os obrigatórios presentes.
         _conferir_documentos(conteudo, travada)
         pendentes = pendencias_para_enviar(conteudo, travada)
@@ -240,7 +252,13 @@ def enviar_inscricao(
         # 12 — os fatos que o Edital declara, na forma que ele declarou.
         valores = _valores_dos_fatos(conteudo, travada, fatos or {})
         # 13 — unicidade, garantida pelo banco; aqui só se transforma em recusa legível.
-        _gravar_o_ato(travada, modalidade=modalidade, versao=versao, agora=agora)
+        _gravar_o_ato(
+            travada,
+            modalidade=modalidade,
+            versao=versao,
+            agora=agora,
+            data_nascimento=data_nascimento,
+        )
         # O congelamento é da **mesma transação** que muda o status: um valor gravado fora dela
         # existiria para uma inscrição que não chegou a ser submetida, e uma submissão sem os
         # valores seria classificável sobre fato que ninguém declarou.
@@ -409,7 +427,7 @@ def _congelar(inscricao, valores, *, versao, agora):
     )
 
 
-def _gravar_o_ato(inscricao, *, modalidade, versao, agora):
+def _gravar_o_ato(inscricao, *, modalidade, versao, agora, data_nascimento):
     """A gravação, com o protocolo sorteado de novo se colidir.
 
     Duas unicidades protegem esta tabela, e elas não significam a mesma coisa: a de identidade,
@@ -435,6 +453,10 @@ def _gravar_o_ato(inscricao, *, modalidade, versao, agora):
                     # resumo do comprovante lhe foi mostrado: é no envio que o escritor se fixa
                     # (FR-8163), e daí em diante a enviada não muda.
                     comprovante_em_pdfa=True,
+                    # A data do cadastro no instante do ato, e só aqui (180, FR-8308): é a única
+                    # escrita que o gatilho da enviada deixa passar, porque `OLD.status` ainda é
+                    # RASCUNHO.
+                    data_nascimento=data_nascimento,
                 )
             return
         except IntegrityError as exc:

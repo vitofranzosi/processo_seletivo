@@ -22,6 +22,7 @@ obsoleto até a pessoa sair e entrar — e a regra é que corrigir o nome alcanc
 """
 
 from dataclasses import dataclass
+from datetime import date
 
 from django.conf import settings
 
@@ -45,6 +46,10 @@ class IdentidadeDoCandidato:
     nome: str = ""
     cpf: str = ""
     email: str = ""
+    # A data de nascimento do cadastro (180). O envio a lê **daqui**, como lê nome e CPF: o
+    # contrato é remontado do registro a cada requisição, e o ato congela o que ele carrega
+    # (FR-8308).
+    data_nascimento: date | None = None
 
 
 def normalizar_cpf(valor: str) -> str:
@@ -97,6 +102,7 @@ def contrato_de(registro: CandidateIdentity | None) -> IdentidadeDoCandidato | N
         nome=registro.nome,
         cpf=formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
         email=principal.email_como_informado if principal else "",
+        data_nascimento=registro.data_nascimento,
     )
 
 

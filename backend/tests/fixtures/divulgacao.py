@@ -20,6 +20,7 @@ from processo_seletivo.comissoes.domain.funcoes import Funcao
 from processo_seletivo.resultados.application.consolidacao import consolidar
 from tests.conftest import ator_institucional
 from tests.fixtures.autoridades import AUTORIDADE_DO_RESULTADO
+from tests.fixtures.candidato import NASCIMENTO_PADRAO
 from tests.fixtures.comissao import alocar_em, constituir, inscrever, rascunho_com_etapas
 from tests.fixtures.edital import corte_que_nao_governa, identificador
 from tests.fixtures.mesa import concluir_como, distribuir_para
@@ -447,6 +448,7 @@ def entrar_como_titular(client, inscricao):
         defaults={
             "nome": inscricao.nome,
             "cpf_normalizado": inscricao.cpf_normalizado,
+            "data_nascimento": inscricao.data_nascimento or NASCIMENTO_PADRAO,
             "created_at": timezone.now(),
         },
     )

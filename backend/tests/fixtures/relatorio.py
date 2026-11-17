@@ -132,12 +132,14 @@ def _etapas(numero=NUMERO):
 def _registrar(identidade):
     from processo_seletivo.identidade.application.associacao import associar_credencial
     from processo_seletivo.identidade.models import CandidateEmail, CandidateIdentity
+    from tests.fixtures.candidato import NASCIMENTO_PADRAO
 
     registro, _ = CandidateIdentity.objects.get_or_create(
         subject=identidade.subject,
         defaults={
             "nome": identidade.nome,
             "cpf_normalizado": identidade.cpf.replace(".", "").replace("-", ""),
+            "data_nascimento": identidade.data_nascimento or NASCIMENTO_PADRAO,
             "created_at": timezone.now(),
         },
     )
@@ -321,6 +323,7 @@ class _Cenario:
         )
         from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
         from processo_seletivo.portal.identidade import IdentidadeDoCandidato
+        from tests.fixtures.candidato import NASCIMENTO_PADRAO
 
         e = self.escala
         for i in range(1, 36 * e + 1):
@@ -330,6 +333,7 @@ class _Cenario:
                     f"Pessoa Candidata {i:02d}",
                     cpf_valido(100000000 + i * 7919),
                     f"pessoa{i:02d}@exemplo.test",
+                    NASCIMENTO_PADRAO,
                 )
             )
         p = self.pessoas
@@ -394,6 +398,7 @@ class _Cenario:
                 f"Pessoa Candidata {indice:02d}",
                 cpf_valido(100000000 + indice * 7919),
                 f"pessoa{indice:02d}@exemplo.test",
+                NASCIMENTO_PADRAO,
             )
             with em(instante):
                 _registrar(pessoa)

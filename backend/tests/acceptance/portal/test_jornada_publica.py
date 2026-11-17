@@ -74,7 +74,9 @@ def test_identidade_nova_vai_da_vaga_ao_rascunho_pelos_formularios(client, selec
 
     # 4. "Seus dados", pelo formulário — nome e CPF de teste do repositório.
     resposta = client.post(
-        reverse("portal:meus-dados"), {"nome": "Ana Visitante", "cpf": CPF_JOAO}, follow=True
+        reverse("portal:meus-dados"),
+        {"nome": "Ana Visitante", "cpf": CPF_JOAO, "data_nascimento": "01/01/2000"},
+        follow=True,
     )
     destino, _ = resposta.redirect_chain[-1]
     assert destino == f"{reverse('portal:selecao', args=[selecao.id])}#vaga-{PERFIL_DOCENTE}"

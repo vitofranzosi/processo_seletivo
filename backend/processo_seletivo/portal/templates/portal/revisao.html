@@ -82,6 +82,14 @@ pedi-la sobre o que a pessoa não viu. Seus dados e arquivos continuam onde esta
   <dl class="dados">
     <dt>Nome</dt><dd>{{ inscricao.nome }}</dd>
     <dt>CPF</dt><dd>{{ inscricao.cpf }}</dd>
+    {% comment %}
+    A data vem do cadastro, e não do rascunho: é no envio que ela congela na inscrição (180, R3). Sem
+    ela o envio é recusado, e esta linha leva até onde informá-la — e de volta para cá (FR-8303).
+    {% endcomment %}
+    <dt>Data de nascimento</dt>
+    <dd>{% if identidade.data_nascimento %}{{ identidade.data_nascimento|date:"d/m/Y" }}{% else %}Falta
+      informar. <a href="{% url 'portal:meus-dados' %}?destino={% url 'portal:revisao' inscricao.id %}">Informar
+      em Seus dados</a>{% endif %}</dd>
     <dt>E-mail</dt><dd>{{ inscricao.email }}</dd>
     {% if inscricao.telefone %}<dt>Telefone</dt><dd>{{ inscricao.telefone }}</dd>{% endif %}
   </dl>

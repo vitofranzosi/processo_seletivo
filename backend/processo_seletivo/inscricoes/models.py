@@ -41,6 +41,11 @@ class Inscricao(models.Model):
     cpf_normalizado = models.CharField(max_length=11, blank=True)
     email = models.EmailField(blank=True)
     telefone = models.CharField(max_length=30, blank=True)
+    # A data de nascimento do cadastro **no instante do envio**, e só ali (180, FR-8308). O
+    # rascunho não a guarda: lida no ato, ela acompanha o cadastro até o envio sem a janela em que
+    # uma cópia no rascunho divergiria da correção feita em "Seus dados". Nula nas enviadas antes
+    # da `180`.
+    data_nascimento = models.DateField(null=True, blank=True)
     # O que o candidato viu e confirmou durante o preenchimento (FR-059a) e o que ele aceitou no
     # envio (FR-058). São duas coisas, e confundi-las faria o aviso de Retificação se repetir para
     # sempre ou nunca aparecer.

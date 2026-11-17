@@ -89,6 +89,7 @@ from processo_seletivo.inscricoes.domain.periodo import (
 )
 from processo_seletivo.inscricoes.domain.pessoais import (
     formatar_cpf,
+    formatar_data,
     formatar_telefone,
     telefone_valido,
 )
@@ -1244,10 +1245,18 @@ def _de_volta_a_vaga(destino):
     endereço é **reconstruído** pela rota, sem consulta nem fragmento vindos de fora, e não carrega
     autorização: a titularidade é conferida de novo pela própria convocação, ao abrir (`S4`). O nome
     da função ficou, porque três chamadores e dois testes o usam.
+
+    **E a revisão, desde a `180`** (FR-8303): a quarta rota da lista. Quem a revisão mandou a "Seus
+    dados" para informar a data de nascimento volta ao envio; é GET e não pratica ato.
     """
     rota = _rota_do_destino(destino)
     if rota is not None and rota.view_name == "portal:convocacao":
         return reverse("portal:convocacao", args=[rota.kwargs["inscricao_id"]])
+    if rota is not None and rota.view_name == "portal:revisao":
+        # **E a revisão, desde a `180`** (FR-8303): quem foi a "Seus dados" informar a data que o
+        # envio pediu volta ao envio. É GET, não pratica ato, e a titularidade é conferida de novo
+        # pela própria revisão, ao abrir — como a convocação.
+        return reverse("portal:revisao", args=[rota.kwargs["inscricao_id"]])
     if rota is not None and rota.view_name == "portal:selecao":
         selecao = reverse("portal:selecao", args=[rota.kwargs["edital_id"]])
         return f"{selecao}#resultados-titulo"
@@ -1322,6 +1331,11 @@ def _rota_do_destino(destino):
 def _destino_e_vaga(destino):
     rota = _rota_do_destino(destino)
     return rota is not None and rota.view_name == "portal:inscrever"
+
+
+def _destino_e_revisao(destino):
+    rota = _rota_do_destino(destino) if destino else None
+    return rota is not None and rota.view_name == "portal:revisao"
 
 
 def _destino_e_convocacao(destino):
@@ -1651,35 +1665,73 @@ def _rascunho_fechado(registro, conteudo, agora, *, periodo=None):
 @require_http_methods(["GET", "POST"])
 @resposta_privada
 def meus_dados(request):
-    """Nome e CPF, uma vez na vida da identidade — e corrigíveis depois (FR-005, FR-008).
+    """Nome, CPF e data de nascimento, uma vez na vida da identidade — e corrigíveis (FR-008).
 
     Vive fora da jornada de inscrição de propósito: a `009` não é reaberta, e o que mudou foi de
-    onde vêm os dados que ela consome, não a jornada que os usa (P-008).
+    onde vêm os dados que ela consome, não a jornada que os usa (P-008). A data entrou com a `180`
+    (FR-8300); quem se cadastrou antes chega aqui com nome e CPF já preenchidos e só a data a
+    informar (FR-8302, UX-1001).
     """
     registro = identidade_do_candidato.identidade_autenticada(request)
     if registro is None:
         return redirect(reverse("portal:acesso"))
     editavel = not nucleo_da_identidade.cpf_congelado(registro)
+    data_editavel = nucleo_da_identidade.data_editavel(registro)
     dados = {
         "nome": registro.nome,
         "cpf": formatar_cpf(registro.cpf_normalizado) if registro.cpf_normalizado else "",
+        "data_nascimento": formatar_data(registro.data_nascimento),
     }
     contexto = {
         "dados": dados,
         "erros": {},
         "cpf_editavel": editavel,
+        "data_editavel": data_editavel,
+        # O foco vai para o que falta: quem volta só para informar a data não deve cair no nome,
+        # que já está certo (UX-1001).
+        "foco_na_data": bool(registro.nome and registro.cpf_normalizado)
+        and registro.data_nascimento is None,
         "vaga": _vaga_do_destino(request.session.get(CHAVE_DO_DESTINO, "")),
     }
     if request.method != "POST":
+        volta = request.GET.get("destino", "")
+        if volta and _destino_e_revisao(volta):
+            # A revisão manda para cá quem precisa informar a data antes do envio, e é para ela que
+            # a pessoa volta depois de guardar (FR-8303). Só a revisão: a lista fechada de destinos
+            # continua a de `_de_volta_a_vaga`, e um `?destino=` qualquer não é guardado.
+            request.session[CHAVE_DO_DESTINO] = volta
+        elif _destino_e_revisao(request.session.get(CHAVE_DO_DESTINO, "")):
+            # A volta à revisão vale para **esta** visita. Quem desistiu e volta dias depois por
+            # "Sua conta" não pode ser levado a uma revisão que nem lembra mais.
+            request.session.pop(CHAVE_DO_DESTINO, None)
         return render(request, "portal/meus_dados.html", contexto)
 
-    dados = {campo: request.POST.get(campo, "").strip() for campo in ("nome", "cpf")}
-    erros = nucleo_da_identidade.recusas(dados, cpf_editavel=editavel)
+    dados = {
+        campo: request.POST.get(campo, "").strip() for campo in ("nome", "cpf", "data_nascimento")
+    }
+    if not data_editavel:
+        # Congelada, ela volta à tela como estava, e não como o campo somente leitura a reenviou.
+        dados["data_nascimento"] = formatar_data(registro.data_nascimento)
+    erros = nucleo_da_identidade.recusas(
+        dados, cpf_editavel=editavel, data_editavel=data_editavel, hoje=timezone.localdate()
+    )
     if erros:
-        contexto.update({"dados": dados, "erros": erros})
+        # O foco vai para a primeira recusa, e não para o campo que faltava antes do POST.
+        contexto.update(
+            {
+                "dados": dados,
+                "erros": erros,
+                "foco_na_data": list(erros) == ["data_nascimento"],
+            }
+        )
         return render(request, "portal/meus_dados.html", contexto)
 
-    nucleo_da_identidade.gravar_nucleo(registro, nome=dados["nome"], cpf=dados["cpf"])
+    nucleo_da_identidade.gravar_nucleo(
+        registro,
+        nome=dados["nome"],
+        cpf=dados["cpf"],
+        data_nascimento=dados["data_nascimento"] if data_editavel else "",
+    )
     destino = request.session.pop(CHAVE_DO_DESTINO, "")
     if destino and _destino_e_vaga(destino):
         # A confirmação vai junto da vaga, e não na tela seguinte qualquer que seja (FR-1625).

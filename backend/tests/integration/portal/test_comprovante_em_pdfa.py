@@ -54,9 +54,16 @@ def _refazer_a_migration():
     executor.loader.build_graph()
     pais = executor.loader.graph.node_map[MIGRATION].parents
     (anterior,) = [pai.key for pai in pais if pai.key[0] == "inscricoes"]
-    executor.migrate([anterior])
-    executor.loader.build_graph()
-    executor.migrate([no for no in executor.loader.graph.leaf_nodes() if no[0] == "inscricoes"])
+    try:
+        executor.migrate([anterior])
+    finally:
+        # **Reaplicar até as folhas mesmo quando o desfazer é recusado.** Voltar à `0007` desfaz
+        # antes as migrations que dependem da `0008` — a `0009` da `180` foi a primeira —, e a
+        # recusa da `0008` só acontece depois delas. Sem o `finally`, a coluna da `0009` ficava
+        # faltando no banco do worker, e todo teste seguinte quebrava longe daqui.
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate([no for no in executor.loader.graph.leaf_nodes() if no[0] == "inscricoes"])
 
 
 def _baixado_e_publicado(client, inscricao):

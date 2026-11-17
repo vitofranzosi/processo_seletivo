@@ -6,7 +6,7 @@ ar; não é fixture de teste nem carga de produção.
 """
 
 import contextlib
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 
 from django.conf import settings
@@ -1727,9 +1727,18 @@ class Command(BaseCommand):
             defaults={
                 "nome": inscricao.nome,
                 "cpf_normalizado": inscricao.cpf_normalizado,
+                # A data entrou no cadastro com a `180`: sem ela, quem entra no portal com uma
+                # identidade da demonstração seria levado a "Seus dados" antes de qualquer vaga.
+                "data_nascimento": date(1994, 7, 12),
                 "created_at": agora,
             },
         )
+        if identidade.data_nascimento is None:
+            # Num banco semeado antes da `180`, a identidade já existe e o `get_or_create` não a
+            # completa.
+            CandidateIdentity.objects.filter(pk=identidade.pk).update(
+                data_nascimento=date(1994, 7, 12)
+            )
         CandidateEmail.objects.get_or_create(
             email_canonico=canonizar(inscricao.email),
             defaults={

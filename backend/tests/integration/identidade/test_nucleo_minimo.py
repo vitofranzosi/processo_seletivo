@@ -5,6 +5,7 @@ de novo seria cobrar duas vezes o mesmo — e é o tipo de atrito que esta featu
 """
 
 import uuid
+from datetime import date
 
 import pytest
 from django.urls import reverse
@@ -43,7 +44,10 @@ def test_a_vaga_leva_ao_formulario_quando_falta_o_nucleo(client, nova, selecao):
 def test_informados_uma_vez_nao_sao_pedidos_de_novo(client, nova, selecao):
     vaga = reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE])
     client.post(vaga)
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     client.post(vaga)
 
     outra = reverse("portal:inscrever", args=[selecao.id, PERFIL_TECNICO])
@@ -54,7 +58,10 @@ def test_informados_uma_vez_nao_sao_pedidos_de_novo(client, nova, selecao):
 
 
 def test_o_rascunho_recebe_o_nucleo_da_identidade(client, nova, selecao):
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     client.post(reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE]))
 
     inscricao = Inscricao.objects.get()
@@ -63,11 +70,17 @@ def test_o_rascunho_recebe_o_nucleo_da_identidade(client, nova, selecao):
 
 
 def test_quem_veio_da_009_nunca_ve_o_formulario(client, selecao):
-    """A reconciliação já trouxe nome e CPF: pedi-los seria pedir o que o sistema já sabe."""
+    """A reconciliação já trouxe nome e CPF: pedi-los seria pedir o que o sistema já sabe.
+
+    **Com a data de nascimento, desde a `180`.** A reconciliação não a traz, e quem veio da `009`
+    sem ela vai a "Seus dados" na próxima vaga — só para a data, com nome e CPF já preenchidos
+    (FR-8302; `test_nascimento_no_nucleo.py`). Este caso é o de quem já a informou.
+    """
     legada = CandidateIdentity.objects.create(
         subject=novo_subject(),
         nome="Maria Silva",
         cpf_normalizado="12345678909",
+        data_nascimento=date(1998, 3, 7),
         created_at=timezone.now(),
     )
     associacao.associar_credencial(legada, "maria@exemplo.test", "maria@exemplo.test")
@@ -82,7 +95,8 @@ def test_quem_veio_da_009_nunca_ve_o_formulario(client, selecao):
 
 def test_cpf_invalido_e_recusado_com_explicacao(client, nova):
     resposta = client.post(
-        reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "111.111.111-11"}
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": "111.111.111-11", "data_nascimento": "01/01/2000"},
     )
     corpo = resposta.content.decode()
     # A recusa afirma o que o sistema confere — os dígitos verificadores —, e não a existência do
@@ -93,14 +107,19 @@ def test_cpf_invalido_e_recusado_com_explicacao(client, nova):
 
 def test_primeiro_nome_sozinho_e_recusado(client, nova):
     """O nome vai no comprovante, e é por ele que a conferência documental acontece."""
-    resposta = client.post(reverse("portal:meus-dados"), {"nome": "Maria", "cpf": CPF})
+    resposta = client.post(
+        reverse("portal:meus-dados"), {"nome": "Maria", "cpf": CPF, "data_nascimento": "01/01/2000"}
+    )
     assert "nome completo" in resposta.content.decode()
 
 
 def test_o_cpf_congela_depois_da_primeira_enviada(client, nova, selecao):
     from processo_seletivo.publicacoes.models_retificacao import VersaoConsolidada
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     Inscricao.objects.create(
         id=uuid.uuid4(),
         identity_subject=nova.subject,
@@ -122,17 +141,26 @@ def test_o_cpf_congela_depois_da_primeira_enviada(client, nova, selecao):
     nova.refresh_from_db()
 
     assert nucleo.cpf_congelado(nova)
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "987.654.321-00"})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": "987.654.321-00", "data_nascimento": "01/01/2000"},
+    )
     nova.refresh_from_db()
     assert nova.cpf_normalizado == "12345678909", "o CPF que consta do comprovante não muda"
 
 
 def test_corrigir_o_nome_alcanca_o_rascunho_e_nao_a_enviada(client, nova, selecao):
     """Uma regra só para os três campos do núcleo: rascunho acompanha, enviada congela (FR-014)."""
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     client.post(reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE]))
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria S. Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     inscricao = Inscricao.objects.get()
     corpo = client.get(reverse("portal:inscricao", args=[inscricao.id])).content.decode()
@@ -149,7 +177,10 @@ def test_quem_informou_o_nucleo_volta_para_a_vaga_que_escolheu(client, nova, sel
     """
     client.post(reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE]))
 
-    resposta = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    resposta = client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     vaga = reverse("portal:selecao", args=[selecao.id])
     assert resposta["Location"] == f"{vaga}#vaga-{PERFIL_DOCENTE}"
@@ -164,6 +195,9 @@ def test_destino_que_nao_e_vaga_volta_para_as_inscricoes(client, nova):
     sessao[CHAVE_DO_DESTINO] = "/portal/sair"
     sessao.save()
 
-    resposta = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    resposta = client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     assert resposta["Location"] == reverse("portal:inscricoes")

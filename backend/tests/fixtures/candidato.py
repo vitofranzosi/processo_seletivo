@@ -11,6 +11,8 @@ um dicionário na sessão — ela cria a identidade e a credencial, e guarda o i
 troca que a feature fez no produto: o que estava declarado passou a estar registrado.
 """
 
+from datetime import date
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
@@ -18,12 +20,24 @@ from processo_seletivo.portal.identidade import IdentidadeDoCandidato
 from tests.fixtures.edital import identificador
 
 CPF_MARIA = "123.456.789-09"
+# A data de nascimento entrou no núcleo com a `180`: sem ela, toda identidade de teste "faltaria o
+# núcleo" e todo envio seria recusado. Uma data só para todas, porque nenhum teste a compara entre
+# pessoas; os da `180` criam identidades **sem** ela quando é isso que medem.
+NASCIMENTO_PADRAO = date(2000, 1, 1)
 MARIA = IdentidadeDoCandidato(
-    "cand:00000000000000000000000000000001", "Maria Silva", CPF_MARIA, "m@ex.br"
+    "cand:00000000000000000000000000000001",
+    "Maria Silva",
+    CPF_MARIA,
+    "m@ex.br",
+    NASCIMENTO_PADRAO,
 )
 CPF_JOAO = "987.654.321-00"
 JOAO = IdentidadeDoCandidato(
-    "cand:00000000000000000000000000000002", "João Souza", CPF_JOAO, "j@ex.br"
+    "cand:00000000000000000000000000000002",
+    "João Souza",
+    CPF_JOAO,
+    "j@ex.br",
+    NASCIMENTO_PADRAO,
 )
 
 PERFIL_DOCENTE = identificador(401, 0)
@@ -57,6 +71,7 @@ def registrar(identidade):
         defaults={
             "nome": identidade.nome,
             "cpf_normalizado": digitos(identidade.cpf),
+            "data_nascimento": identidade.data_nascimento,
             "created_at": timezone.now(),
         },
     )

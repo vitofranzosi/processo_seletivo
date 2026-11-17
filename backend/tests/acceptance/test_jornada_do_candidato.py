@@ -61,7 +61,8 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
     assert DesafioDeAcesso.objects.get().consumido_em is not None
 
     dados = client.post(
-        reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "123.456.789-09"}
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": "123.456.789-09", "data_nascimento": "01/01/2000"},
     )
     assert dados["Location"].startswith(reverse("portal:selecao", args=[selecao.id])), (
         "volta para a vaga que ela escolheu, e não para um interstício"

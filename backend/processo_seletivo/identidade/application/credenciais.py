@@ -1,4 +1,10 @@
-"""O núcleo mínimo da identidade: o nome e o CPF que a Inscrição exige.
+"""O núcleo mínimo da identidade: o nome, o CPF e a data de nascimento que a Inscrição exige.
+
+**A data entrou com a `180`** (FR-8300), por decisão da reunião de 17/11/2026: ao lado do CPF, é o
+que a Receita pede para confirmar um CPF, e a equipe passa a poder conferir manualmente, em caso de
+dúvida. Ela é declarada, como o CPF, e não decide acesso nem propriedade em caminho nenhum
+(FR-8310). Quem se cadastrou antes a informa na próxima vaga que abrir: as portas que levam a "Seus
+dados" já perguntam a `falta_o_nucleo`, e é ela que muda (FR-8302).
 
 **Por que a identidade os carrega.** A abertura de rascunho os copia (`inscricoes/application/
 rascunho.py`), e o nome vai no comprovante — é por ele que a conferência documental acontece. Um
@@ -23,14 +29,21 @@ from processo_seletivo.identidade.application.associacao import (
     identidade_da_credencial,
 )
 from processo_seletivo.identidade.models import CandidateEmail, CandidateIdentity
-from processo_seletivo.inscricoes.domain.pessoais import cpf_valido, digitos
+from processo_seletivo.inscricoes.domain.pessoais import (
+    DataDeNascimentoRecusada,
+    cpf_valido,
+    digitos,
+    ler_data_de_nascimento,
+)
 from processo_seletivo.inscricoes.models import Inscricao
 
 LIMITE_DO_NOME = 255
 
 
 def falta_o_nucleo(identidade: CandidateIdentity) -> bool:
-    return not identidade.nome or not identidade.cpf_normalizado
+    return (
+        not identidade.nome or not identidade.cpf_normalizado or identidade.data_nascimento is None
+    )
 
 
 def cpf_congelado(identidade: CandidateIdentity) -> bool:
@@ -44,7 +57,18 @@ def cpf_congelado(identidade: CandidateIdentity) -> bool:
     ).exists()
 
 
-def recusas(dados: dict, *, cpf_editavel: bool) -> dict:
+def data_editavel(identidade: CandidateIdentity) -> bool:
+    """A data congela com o CPF — mas só a que existe (180, D-001, FR-8309).
+
+    Pela regra literal, quem se inscreveu antes da `180` teria o CPF já congelado e nunca poderia
+    informar a data que a `180` passou a exigir: ficaria preso fora de toda vaga nova. Data vazia,
+    por isso, se informa uma vez; informada, congela como o CPF, e corrigi-la passa a ser ato
+    institucional.
+    """
+    return identidade.data_nascimento is None or not cpf_congelado(identidade)
+
+
+def recusas(dados: dict, *, cpf_editavel: bool, data_editavel: bool = False, hoje=None) -> dict:
     """As recusas que a pessoa lê — as mesmas da `009`, e pelos mesmos motivos.
 
     O comprimento entra aqui porque sem ele o campo grande demais atravessa a aplicação inteira e
@@ -73,11 +97,22 @@ def recusas(dados: dict, *, cpf_editavel: bool) -> dict:
             # existe" soava como afirmação sobre a pessoa, e era a resposta que ela lia depois de
             # digitar um número que existe e que ela errou por um dígito.
             recusado["cpf"] = "Estes números não formam um CPF válido. Confira o que digitou."
+
+    if data_editavel:
+        try:
+            ler_data_de_nascimento(dados.get("data_nascimento", ""), hoje or timezone.localdate())
+        except DataDeNascimentoRecusada as recusa:
+            recusado["data_nascimento"] = str(recusa)
     return recusado
 
 
-def gravar_nucleo(identidade: CandidateIdentity, *, nome: str, cpf: str = "") -> CandidateIdentity:
-    """Grava nome e — quando ainda editável — CPF.
+def gravar_nucleo(
+    identidade: CandidateIdentity, *, nome: str, cpf: str = "", data_nascimento: str = ""
+) -> CandidateIdentity:
+    """Grava nome e — quando ainda editáveis — CPF e data de nascimento.
+
+    A data chega como a pessoa a digitou, e quem chama já a passou por `recusas`: lê-la de novo
+    aqui é o que garante que só uma `date` válida encoste no modelo.
 
     Não toca em inscrição alguma: os rascunhos abertos leem da identidade a cada requisição, e as
     enviadas congelaram o que constava no ato (FR-014).
@@ -85,6 +120,8 @@ def gravar_nucleo(identidade: CandidateIdentity, *, nome: str, cpf: str = "") ->
     campos = {"nome": nome.strip()}
     if cpf and not cpf_congelado(identidade):
         campos["cpf_normalizado"] = digitos(cpf)
+    if data_nascimento and data_editavel(identidade):
+        campos["data_nascimento"] = ler_data_de_nascimento(data_nascimento, timezone.localdate())
     CandidateIdentity.objects.filter(pk=identidade.pk).update(**campos)
     identidade.refresh_from_db()
     return identidade

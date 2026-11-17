@@ -62,7 +62,10 @@ def inscricao(selecao, identidade, *, perfil=PERFIL_DOCENTE, enviada=False):
 def test_corrigir_o_nome_alcanca_o_rascunho(client, dentro, selecao):
     rascunho = inscricao(selecao, dentro)
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria S. Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     corpo = client.get(reverse("portal:inscricao", args=[rascunho.id])).content.decode()
     assert "Maria S. Silva" in corpo
@@ -72,7 +75,10 @@ def test_corrigir_o_nome_nao_alcanca_a_enviada(client, dentro, selecao):
     enviada = inscricao(selecao, dentro, enviada=True)
     antes = Inscricao.objects.values().get(pk=enviada.pk)
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria S. Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     assert Inscricao.objects.values().get(pk=enviada.pk) == antes
     corpo = client.get(reverse("portal:inscricao", args=[enviada.id])).content.decode()
@@ -82,7 +88,10 @@ def test_corrigir_o_nome_nao_alcanca_a_enviada(client, dentro, selecao):
 def test_o_cpf_e_corrigivel_enquanto_nao_houver_enviada(client, dentro, selecao):
     inscricao(selecao, dentro)
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": OUTRO_CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": OUTRO_CPF, "data_nascimento": "01/01/2000"},
+    )
 
     dentro.refresh_from_db()
     assert dentro.cpf_normalizado == "98765432100"
@@ -91,7 +100,10 @@ def test_o_cpf_e_corrigivel_enquanto_nao_houver_enviada(client, dentro, selecao)
 def test_o_cpf_congela_na_primeira_enviada(client, dentro, selecao):
     inscricao(selecao, dentro, enviada=True)
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": OUTRO_CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": OUTRO_CPF, "data_nascimento": "01/01/2000"},
+    )
 
     dentro.refresh_from_db()
     assert dentro.cpf_normalizado == "12345678909"
@@ -120,7 +132,10 @@ def test_o_nome_continua_corrigivel_depois_da_enviada(client, dentro, selecao):
     inscricao(selecao, dentro, enviada=True)
     rascunho = inscricao(selecao, dentro, perfil=PERFIL_TECNICO)
 
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria S. Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria S. Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
 
     dentro.refresh_from_db()
     assert dentro.nome == "Maria S. Silva"

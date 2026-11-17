@@ -41,7 +41,10 @@ def test_percurso_da_entrega_3(client, canal, selecao):
     assert entrar(client, canal, destino=vaga)["Location"] == reverse("portal:meus-dados")
     # O retorno é a **página da vaga**, com a vaga à vista: o interstício que ficava aqui não
     # nomeava a seleção nem trazia nada que ela não trouxesse.
-    dados = client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    dados = client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     selecao_com_a_vaga = reverse("portal:selecao", args=[selecao.id])
     assert dados["Location"] == f"{selecao_com_a_vaga}#vaga-{PERFIL_DOCENTE}"
     assert "Inscrever-se nesta vaga" in client.get(selecao_com_a_vaga).content.decode()
@@ -65,7 +68,10 @@ def test_percurso_da_entrega_3(client, canal, selecao):
 def test_continuar_retoma_o_que_ficou(client, canal, selecao):
     vaga = reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE])
     entrar(client, canal, destino=vaga)
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": CPF})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": CPF, "data_nascimento": "01/01/2000"},
+    )
     client.post(vaga)
     inscricao = Inscricao.objects.get()
     client.post(reverse("portal:inscricao", args=[inscricao.id]), {"telefone": "(27) 99999-0000"})
