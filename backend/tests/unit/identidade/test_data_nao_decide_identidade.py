@@ -15,6 +15,8 @@ divulgação está na lista, e o que entrar reprova aqui antes de publicar a dat
 import ast
 from pathlib import Path
 
+import pytest
+
 from processo_seletivo.identidade.models import CandidateIdentity
 from processo_seletivo.inscricoes.models import Inscricao
 
@@ -58,9 +60,10 @@ FUNCOES_QUE_PODEM_CITAR = {
     "inscricoes/application/consulta.py": {"identidade_para_conferencia"},
 }
 
-#: Os métodos do ORM que **procuram** por um valor, pelo nome do argumento. `update`, `values_list`
-#: e `get_or_create` com `defaults` gravam ou leem a coluna, e não decidem de quem é um cadastro.
-BUSCAS_POR_NOME = {"filter", "exclude", "get"}
+#: Os métodos do ORM que **procuram** por um valor, pelo nome do argumento — e o `Q`, que é como a
+#: mesma busca se escreve para ser composta. `update`, `values_list` e `get_or_create` com
+#: `defaults` gravam ou leem a coluna, e não decidem de quem é um cadastro.
+BUSCAS_POR_NOME = {"filter", "exclude", "get", "Q"}
 #: E os que recebem o nome da coluna como texto. `get` fica fora desta:
 #: `dados.get("data_nascimento")` é leitura de dicionário, e é assim que a tela "Seus dados" lê o
 #: que a pessoa digitou.
@@ -142,24 +145,32 @@ def test_os_demais_modulos_da_identidade_nao_citam_a_data():
         assert CAMPO not in caminho.read_text(encoding="utf-8"), relativo
 
 
+def _alvo(chamada):
+    funcao = chamada.func
+    return funcao.id if isinstance(funcao, ast.Name) else getattr(funcao, "attr", "")
+
+
+def _busca_pela_data(chamada):
+    """A chamada procura pela data? Pelo nome do argumento, inclusive através de relação
+    (`identidade__data_nascimento`, `data_nascimento__year`), ou pelo nome em texto."""
+    alvo = _alvo(chamada)
+    if alvo in BUSCAS_POR_NOME and any(
+        chave.arg and CAMPO in chave.arg.split("__") for chave in chamada.keywords
+    ):
+        return True
+    return alvo in BUSCAS_POR_TEXTO and any(
+        isinstance(valor, ast.Constant) and isinstance(valor.value, str) and CAMPO in valor.value
+        for valor in chamada.args
+    )
+
+
 def _buscas_pela_data(caminho):
     arvore = ast.parse(caminho.read_text(encoding="utf-8"))
-    achadas = []
-    for no in ast.walk(arvore):
-        if not (isinstance(no, ast.Call) and isinstance(no.func, ast.Attribute)):
-            continue
-        por_nome = no.func.attr in BUSCAS_POR_NOME and any(
-            chave.arg and chave.arg.startswith(CAMPO) for chave in no.keywords
-        )
-        por_texto = no.func.attr in BUSCAS_POR_TEXTO and any(
-            isinstance(valor, ast.Constant)
-            and isinstance(valor.value, str)
-            and CAMPO in valor.value
-            for valor in no.args
-        )
-        if por_nome or por_texto:
-            achadas.append(f"{caminho.relative_to(RAIZ)}:{no.lineno} .{no.func.attr}(…)")
-    return achadas
+    return [
+        f"{caminho.relative_to(RAIZ)}:{no.lineno} {_alvo(no)}(…)"
+        for no in ast.walk(arvore)
+        if isinstance(no, ast.Call) and _busca_pela_data(no)
+    ]
 
 
 def test_ninguem_procura_cadastro_ou_inscricao_pela_data():
@@ -191,3 +202,35 @@ def test_a_coluna_nao_e_chave_nem_indice():
             or CAMPO in str(getattr(restricao, "condition", "") or "")
         ]
         assert em_indices == [] and em_restricoes == [], modelo.__name__
+
+
+@pytest.mark.parametrize(
+    "codigo",
+    [
+        "Inscricao.objects.filter(cpf_normalizado=c, data_nascimento=d)",
+        "Inscricao.objects.filter(identidade__data_nascimento=d)",
+        "CandidateIdentity.objects.get(data_nascimento__year=1990)",
+        "CandidateIdentity.objects.filter(Q(data_nascimento=d) | Q(nome=n))",
+        "Inscricao.objects.order_by('data_nascimento')",
+    ],
+)
+def test_a_varredura_reconhece_as_formas_de_procurar_pela_data(codigo):
+    """Quem verifica que o detector ainda enxerga — inclusive a busca através de relação e o `Q`,
+    que a primeira versão deixava passar."""
+    chamadas = [no for no in ast.walk(ast.parse(codigo)) if isinstance(no, ast.Call)]
+
+    assert any(_busca_pela_data(no) for no in chamadas)
+
+
+@pytest.mark.parametrize(
+    "codigo",
+    [
+        "dados.get('data_nascimento', '')",
+        "CandidateIdentity.objects.filter(pk=p).update(data_nascimento=d)",
+        "Inscricao.objects.values_list('data_nascimento', flat=True)",
+    ],
+)
+def test_a_varredura_nao_confunde_gravar_ou_ler_com_procurar(codigo):
+    chamadas = [no for no in ast.walk(ast.parse(codigo)) if isinstance(no, ast.Call)]
+
+    assert not any(_busca_pela_data(no) for no in chamadas)

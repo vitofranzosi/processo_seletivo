@@ -13,7 +13,6 @@ from datetime import date
 import pytest
 from django.urls import reverse
 
-from processo_seletivo.auditoria import selectors as trilha
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.identidade.models import CandidateIdentity
 from processo_seletivo.inscricoes.application import consulta
@@ -320,8 +319,3 @@ def test_a_conferencia_de_outro_edital_nao_aparece_nesta_trilha(
 
     assert "Conferência de identidade de inscrição" not in corpo
     assert MOTIVO not in corpo
-
-
-def test_a_trilha_le_o_nome_que_a_consulta_grava():
-    """Os dois módulos escrevem a operação, porque `auditoria` não importa outro app."""
-    assert trilha.OPERACAO_DA_CONFERENCIA_DE_IDENTIDADE == consulta.CONFERIR_IDENTIDADE

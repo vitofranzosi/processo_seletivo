@@ -40,8 +40,8 @@ from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import tamanho_legivel
 
 CONSULTAR = "inscricao:consultar"
-#: A conferência de identidade (180, D-002). O nome é lido também pela trilha do Edital, que a
-#: reúne aos atos do certame (`auditoria/selectors.py`).
+#: A conferência de identidade (180, D-002). A trilha do Edital a lê daqui para reuni-la aos atos
+#: do certame (`auditoria/selectors._conferencias_de_identidade`).
 CONFERIR_IDENTIDADE = "CONFERIR_IDENTIDADE"
 #: O motivo vai à trilha, e a trilha não é lugar de redação: o bastante para o número de um
 #: processo e uma frase.
@@ -58,6 +58,30 @@ def _edital_no_escopo(actor, edital_id, *, com_processo=False):
         return editais.get(pk=edital_id, institution_scope=actor.institution_scope)
     except Edital.DoesNotExist as exc:
         raise DomainError("not_found", "Recurso não encontrado.", 404) from exc
+
+
+def _inscricao_no_escopo(actor, inscricao_id, *relacionados):
+    """A inscrição que o ator alcança, ou a recusa — a porta única do dossiê e do que sai dele.
+
+    O detalhe, o documento e a conferência de identidade (180, FR-8317) respondem igual ao mesmo
+    ator: 403 a quem não tem a permissão, e 404 ao que não existe e ao que é de outra unidade, sem
+    distinguir os dois (FR-072). Eram três cópias do mesmo preâmbulo, e uma porta que mudasse
+    sozinha passaria a revelar o que as outras recusam.
+
+    O escopo vai **no filtro**, e não numa segunda leitura do Edital: é a ordem que não vaza (a
+    FR-487 da `033`), e custa uma consulta em vez de duas.
+    """
+    require_permission(actor, CONSULTAR)
+    # `select_related()` sem argumento segue toda chave estrangeira; por isso só com o pedido.
+    inscricoes = Inscricao.objects
+    if relacionados:
+        inscricoes = inscricoes.select_related(*relacionados)
+    inscricao = inscricoes.filter(
+        pk=inscricao_id, edital__institution_scope=actor.institution_scope
+    ).first()
+    if inscricao is None:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    return inscricao
 
 
 def _nome_no_conteudo(conteudo, inscricao):
@@ -389,15 +413,7 @@ def inscricao_para_consulta(*, actor, inscricao_id):
     sem arquivo, que é informação — não uma linha que some.
     """
     # `edital__processo`, e não só `edital`: a trilha da tela passa pelo Processo (085, D-003).
-    inscricao = (
-        Inscricao.objects.select_related("edital__processo", "versao_aceita")
-        .filter(pk=inscricao_id)
-        .first()
-    )
-    if inscricao is None:
-        require_permission(actor, CONSULTAR)
-        raise DomainError("not_found", "Recurso não encontrado.", 404)
-    _edital_no_escopo(actor, inscricao.edital_id)
+    inscricao = _inscricao_no_escopo(actor, inscricao_id, "edital__processo", "versao_aceita")
     versao = inscricao.versao_aceita or selectors.selecao_publica(edital_id=inscricao.edital_id)
     conteudo = versao.content
     perfil, modalidade = _nome_no_conteudo(conteudo, inscricao)
@@ -495,9 +511,9 @@ def identidade_para_conferencia(*, actor, inscricao_id, motivo, correlation_id="
     fica na trilha com quem conferiu e por quê. **A trilha recebe o motivo e o protocolo, e nunca o
     CPF nem a data** (FR-8316) — o registro diz que alguém viu, e não o que viu.
 
-    **A porta é a do detalhe** (FR-8317): a mesma permissão e o mesmo escopo de
-    `inscricao_para_consulta`, na mesma ordem. Quem não abre o dossiê não chega aqui por endereço
-    montado à mão, e recebe a mesma resposta que receberia lá.
+    **A porta é a do detalhe** (FR-8317): `_inscricao_no_escopo`, a mesma de
+    `inscricao_para_consulta`. Quem não abre o dossiê não chega aqui por endereço montado à mão, e
+    recebe a mesma resposta que receberia lá.
 
     **Os valores são os da inscrição, e não os do cadastro.** O que a pessoa declarou no envio é o
     que está congelado no ato; o cadastro pode ter sido corrigido depois por ato institucional. A
@@ -507,11 +523,7 @@ def identidade_para_conferencia(*, actor, inscricao_id, motivo, correlation_id="
     **O motivo é conferido antes de qualquer leitura do que será revelado** (FR-8315), e o registro
     é gravado na mesma transação que devolve os valores: sem registro não há revelação (SC-2906).
     """
-    inscricao = Inscricao.objects.select_related("edital__processo").filter(pk=inscricao_id).first()
-    if inscricao is None:
-        require_permission(actor, CONSULTAR)
-        raise DomainError("not_found", "Recurso não encontrado.", 404)
-    _edital_no_escopo(actor, inscricao.edital_id)
+    inscricao = _inscricao_no_escopo(actor, inscricao_id, "edital__processo")
     if inscricao.status != Inscricao.Status.SUBMETIDA:
         # Rascunho não tem o que conferir. Inexistente, e não recusa explicada: a tela do rascunho
         # não oferece a ação, e quem chega aqui montou o endereço.
@@ -556,11 +568,7 @@ def _requerimento_do_dossie(inscricao):
 
 def documento_para_consulta(*, actor, inscricao_id, requirement_id):
     """O documento que a equipe abre, conferido antes de sair um byte."""
-    inscricao = Inscricao.objects.filter(pk=inscricao_id).first()
-    if inscricao is None:
-        require_permission(actor, CONSULTAR)
-        raise DomainError("not_found", "Recurso não encontrado.", 404)
-    _edital_no_escopo(actor, inscricao.edital_id)
+    inscricao = _inscricao_no_escopo(actor, inscricao_id)
     documento = DocumentoSubmetido.objects.filter(
         inscricao=inscricao, requirement_id=requirement_id
     ).first()

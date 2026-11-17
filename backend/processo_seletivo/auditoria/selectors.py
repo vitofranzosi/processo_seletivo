@@ -25,10 +25,6 @@ OPERACOES_DO_DOCUMENTO_NA_FORMALIZACAO = (
     "ARQUIVO_INDISPONIVEL",
     "INTEGRIDADE",
 )
-#: A conferência de identidade de uma inscrição (180, D-002). Escrita aqui pela mesma razão das de
-#: cima; `tests/interface/test_conferencia_de_identidade.py` prende que é o nome que a consulta
-#: grava.
-OPERACAO_DA_CONFERENCIA_DE_IDENTIDADE = "CONFERIR_IDENTIDADE"
 LIMITE_MAXIMO = 100
 
 
@@ -176,6 +172,9 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
     resposta nesta tela: teria no banco. É a mesma reunião que `trilha_da_comissao` faz, e pela
     mesma razão que a `011` registrou ao fazê-la.
 
+    **E as conferências de identidade das inscrições** (180, D-002), e só elas: ver
+    `_conferencias_de_identidade`.
+
     **O custo é conhecido e aceito**: a lista de identificadores cresce com o certame, e a consulta
     é paginada. A alternativa seria uma coluna de Edital no registro de auditoria — um subsistema
     paralelo de log para uma tela, que é exatamente o que a `D-018` da `011` recusou.
@@ -208,12 +207,16 @@ def _conferencias_de_identidade(edital):
 
     Fora de `_atos_da_conducao` de propósito: o relatório do Edital conta os atos dela como registro
     posterior ao desfecho, e uma conferência é leitura registrada, e não ato do certame.
+
+    O nome da operação vem de quem a grava, e não de uma cópia aqui: import tardio, como o de
+    `_atos_da_conducao`, pela mesma razão.
     """
+    from processo_seletivo.inscricoes.application.consulta import CONFERIR_IDENTIDADE
     from processo_seletivo.inscricoes.models import Inscricao
 
     return Q(
         aggregate_type="Inscricao",
-        operation=OPERACAO_DA_CONFERENCIA_DE_IDENTIDADE,
+        operation=CONFERIR_IDENTIDADE,
         aggregate_id__in=Inscricao.objects.filter(edital=edital).values("id"),
     )
 
