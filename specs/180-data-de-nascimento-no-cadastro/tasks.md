@@ -1,6 +1,6 @@
 # Tasks: A data de nascimento entra no cadastro do candidato
 
-**Estado em 17/11**: o MVP (fundação, histórias 1 e 2 e o requerimento) está implementado no PR desta branch. A história 3 (T024–T029), as guardas T033 e T034, o percurso manual (T038), a nota das Novidades (T039) e a planilha (T040) ficam para o PR seguinte. A T001 não foi necessária: a suíte cria o próprio banco, e `ps_180` foi o nome dele.
+**Estado em 17/11**: o MVP (fundação, histórias 1 e 2 e o requerimento) entrou pelo #586. O PR seguinte traz a história 3 (T024–T029), as guardas T032, T033 e T034 e duas tarefas que a implementação acrescentou (T041 e T042). Ficam abertas a nota das Novidades (T039), que pela regra da curadoria só entra depois do merge, e a planilha (T040), que é do usuário. A T001 não foi necessária: a suíte cria o próprio banco.
 
 **Input**: `spec.md`, `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md` desta pasta.
 Caminhos de código relativos a `backend/`.
@@ -81,12 +81,14 @@ preenchidos e foco na data; rascunho aberto sem data → envio recusado com cami
 **Independent Test**: no detalhe da enviada, conferir sem motivo recusa; com motivo revela CPF e data
 e grava a trilha sem os valores; papel sem consulta recebe 404.
 
-- [ ] T024 [US3] `identidade_para_conferencia(*, actor, inscricao_id, motivo, correlation_id)` em `processo_seletivo/inscricoes/application/consulta.py`: o escopo de `inscricao_para_consulta`; 404 para rascunho; recusa de motivo vazio (`DomainError("reason_required", "Escreva o motivo da conferência.", 422)`); `record_event` com `operation="CONFERIR_IDENTIDADE"`, `permission=CONSULTAR` e `reason` com o motivo cortado em 300 caracteres; devolve nome, CPF formatado e data (FR-8312, FR-8315, FR-8316, FR-8317)
-- [ ] T025 [US3] View `conferir_identidade` (`POST`) em `processo_seletivo/interface/views.py` e rota `inscricoes/<uuid:inscricao_id>/conferir-identidade` (`name="conferir-identidade"`) em `processo_seletivo/interface/urls.py`; resposta com `marcar_como_privada`; motivo vazio devolve o detalhe com a recusa em 422
-- [ ] T026 [US3] Bloco "Conferir identidade" em `processo_seletivo/interface/templates/interface/inscricao_detalhe.html`, só para enviada: frase, campo Motivo com a dica, botão (contrato da gestão)
-- [ ] T027 [US3] Template `processo_seletivo/interface/templates/interface/conferencia_de_identidade.html`: nome, CPF, data ou "Não informada nesta inscrição", motivo, instante e o link de volta; as regras na folha da gestão (`interface/static/interface/gestao/` ou `interface/telas/`), sem inline
-- [ ] T028 [US3] Linha da negativa nova em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` e, se for o caso, o módulo na lista de `tests/test_gramatica_das_portas.py`
-- [ ] T029 [P] [US3] `tests/interface/test_conferencia_de_identidade.py`: revela com motivo; recusa sem motivo, sem revelar; 404 sem permissão e fora do escopo; 404 em rascunho; a trilha tem o motivo e **não** tem CPF nem data; POST repetido grava dois eventos; o detalhe continua com o CPF mascarado; enviada antes da `180` mostra "Não informada"; a resposta é privada (`no-store`)
+- [x] T024 [US3] `identidade_para_conferencia(*, actor, inscricao_id, motivo, correlation_id)` em `processo_seletivo/inscricoes/application/consulta.py`: o escopo de `inscricao_para_consulta`; 404 para rascunho; recusa de motivo vazio (`DomainError("reason_required", "Escreva o motivo da conferência.", 422)`); `record_event` com `operation="CONFERIR_IDENTIDADE"`, `permission=CONSULTAR` e `reason` com o protocolo e o motivo cortado em 300 caracteres; devolve nome, CPF formatado e data (FR-8312, FR-8315, FR-8316, FR-8317)
+- [x] T025 [US3] View `conferir_identidade` (`POST`) em `processo_seletivo/interface/views.py` e rota `inscricoes/<uuid:inscricao_id>/conferir-identidade` (`name="conferir-identidade"`) em `processo_seletivo/interface/urls.py`; resposta com `marcar_como_privada`; motivo vazio devolve o detalhe com a recusa em 422
+- [x] T026 [US3] Bloco "Conferir identidade" em `processo_seletivo/interface/templates/interface/inscricao_detalhe.html`, só para enviada: frase, campo Motivo com a dica, botão (contrato da gestão)
+- [x] T027 [US3] Template `processo_seletivo/interface/templates/interface/conferencia_de_identidade.html`: nome, CPF, data ou "Não informada nesta inscrição", motivo, instante e o link de volta; as regras na folha da gestão (`interface/static/interface/gestao/` ou `interface/telas/`), sem inline — não foi preciso regra nova: as duas telas usam só classes que a folha comum já tem
+- [x] T028 [US3] Linha da negativa nova em `specs/033-navegacao-por-capacidade/inventario-das-negativas.md` e, se for o caso, o módulo na lista de `tests/test_gramatica_das_portas.py` — a view mora em `views.py`, que já está na lista, e propaga o 404 do domínio
+- [x] T029 [P] [US3] `tests/interface/test_conferencia_de_identidade.py`: revela com motivo; recusa sem motivo, sem revelar; 403 sem permissão, como o detalhe, e 404 fora do escopo (o contrato foi corrigido); 404 em rascunho; a trilha tem o motivo e **não** tem CPF nem data; POST repetido grava dois eventos; o detalhe continua com o CPF mascarado; enviada antes da `180` mostra "Não informada"; a resposta é privada (`no-store`)
+
+- [x] T041 [US3] A trilha do Edital reúne a conferência, e só ela: `_conferencias_de_identidade` em `processo_seletivo/auditoria/selectors.py`, somada a `trilha_do_edital` por um `Q` com subconsulta; rótulo `CONFERIR_IDENTIDADE` em `OPERACOES` (`interface/views.py`). Acrescentada na implementação: sem ela o registro ficava no banco e em tela nenhuma (R8 da pesquisa, SC-2906). Casos no arquivo da T029: a trilha mostra a conferência com o motivo, não traz o resto do que é auditado sob a inscrição, e não mostra a de outro Edital
 
 **Checkpoint**: SC-2906 verificável.
 
@@ -96,19 +98,20 @@ e grava a trilha sem os valores; papel sem consulta recebe 404.
 
 - [x] T030 Em `processo_seletivo/requerimentos/application/preencher.py::abrir_rascunho`, na criação, quando `_copiar_para_a_frente` não trouxe `data_de_nascimento`, usar a do `CandidateIdentity` do titular (FR-8313, R6)
 - [x] T031 [P] `tests/integration/requerimentos/test_requerimento_com_a_data.py`: nasce preenchido; o herdado vence; alterar no requerimento não muda o cadastro; reabrir não sobrescreve a correção; cadastro sem data deixa o campo vazio
-- [ ] T032 Garantir que o fato declarado "data de nascimento" do Perfil continua pedido na inscrição e não é preenchido pelo cadastro: um caso em `tests/integration/inscricoes/test_envio_sem_data.py` (FR-8318)
+- [x] T032 Garantir que o fato declarado "data de nascimento" do Perfil continua pedido na inscrição e não é preenchido pelo cadastro: três casos em `tests/integration/inscricoes/test_envio_sem_data.py` (FR-8318) — o envio recusa sem o fato, os dois valores congelam separados, e a revisão traz o campo do fato vazio. No mesmo arquivo, o caso explícito da FR-8304
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T033 [P] Guarda de vazamento: teste que percorre a vitrine, a página do Edital e as publicações de um Edital com inscrições enviadas e confere que nenhuma data de nascimento aparece; e que nenhum `RegistroAuditoria` criado pela jornada contém a data (FR-8311, SC-2903), em `tests/integration/inscricoes/test_data_nao_vaza.py`
-- [ ] T034 [P] Guarda de identidade: teste que mostra que a retomada, a reconciliação e a adição de credencial não leem `data_nascimento` (FR-8310, SC-2904), em `tests/unit/identidade/test_data_nao_decide_identidade.py`
+- [x] T033 [P] Guarda de vazamento: teste que percorre a vitrine, a página do Edital e as publicações de um Edital com inscrições enviadas e confere que nenhuma data de nascimento aparece; e que nenhum `RegistroAuditoria` criado pela jornada contém a data (FR-8311, SC-2903), em `tests/integration/inscricoes/test_data_nao_vaza.py`
+- [x] T034 [P] Guarda de identidade: teste que mostra que a retomada, a reconciliação e a adição de credencial não leem `data_nascimento` (FR-8310, SC-2904), em `tests/unit/identidade/test_data_nao_decide_identidade.py` — por varredura: a lista literal de quem cita a coluna, a fronteira por função nos módulos de acesso, nenhuma busca do ORM pela data e nenhum índice
+- [x] T042 [P] O caso-limite pelo lado de quem tentaria: `tests/integration/identidade/test_data_nao_da_acesso.py` — outra pessoa declara nome, CPF e data de Maria; os cadastros não se fundem, as inscrições dela não abrem, e a tela de acesso não pede nem aceita a data (FR-8310). Acrescentada na implementação
 - [x] T035 Escrever `specs/180-data-de-nascimento-no-cadastro/rastreabilidade.md`: FR-8300 a FR-8318, SC-2900 a SC-2907, UX-1000, UX-1001 e **uma linha por caso-limite**, cada um com o teste que o prende
 - [x] T036 `make lint check` e `tests/test_citacoes_de_requisito.py`
 - [x] T037 Suíte inteira: `make test-pg DB_NAME=ps_180`; agrupar falhas por mensagem; se forem de fixture sem data, voltar à T007
 - [ ] T038 Percurso manual do `quickstart.md` no navegador, celular incluído (UX-1000), com captura das telas para o PR
-- [ ] T039 Nota das Novidades em `processo_seletivo/novidades/novidades.toml`, seguindo `doc/curadoria-das-novidades.md` (só a parte da gestão: conferir identidade)
+- [ ] T039 Nota das Novidades em `processo_seletivo/novidades/novidades.toml`, seguindo `doc/curadoria-das-novidades.md` (só a parte da gestão: conferir identidade) — **depois do merge**: a curadoria só admite nota que cite PR já na `main`
 - [ ] T040 Atualizar a planilha do checklist: tarefa T10 para "Feito" e nota nos itens 3.03 e 3.04
 
 ---
@@ -135,7 +138,8 @@ e grava a trilha sem os valores; papel sem consulta recebe 404.
 1. **MVP = Fundação + US1 + US2**: com elas, todo cadastro novo e todo envio passam a ter a data, que
    é a decisão da reunião e o que o checklist do TMD cobra (itens 3.03 e 3.04).
 2. **US3** fecha a finalidade (a conferência). Pode sair no mesmo PR ou num segundo, sem bloquear o
-   MVP.
+   MVP. **Saiu no segundo, e precisa estar na `main` antes de o primeiro Edital abrir**: a D-002
+   recusou guardar o dado e deixar a tela para depois.
 3. **D-003** é pequeno e independente; entra com o MVP.
 4. Rodar a suíte inteira **uma vez** depois de ligar a recusa do envio (T017), porque é ela que alcança
    as fixtures de toda a suíte.

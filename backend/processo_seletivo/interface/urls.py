@@ -371,6 +371,13 @@ urlpatterns = [
         views.inscricao_recebida,
         name="inscricao-recebida",
     ),
+    # A conferência de identidade (180, D-002): só `POST`, e sem página com endereço próprio — a
+    # revelação do CPF completo e da data não fica no histórico do navegador.
+    path(
+        "inscricoes/<uuid:inscricao_id>/conferir-identidade",
+        views.conferir_identidade,
+        name="conferir-identidade",
+    ),
     path(
         "inscricoes/<uuid:inscricao_id>/documentos/<uuid:requirement_id>",
         views.documento_da_inscricao,

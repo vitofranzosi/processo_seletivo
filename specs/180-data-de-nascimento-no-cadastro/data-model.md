@@ -33,7 +33,8 @@ Dois acréscimos de coluna, ambos anuláveis, sem preenchimento retroativo.
 ## Trilha (`auditoria`) — sem mudança de esquema
 
 - Operação nova `CONFERIR_IDENTIDADE`, com permissão `inscricao:consultar`, agregado = a inscrição e
-  `reason` = "Conferência de identidade: <motivo>". Nunca CPF nem data (FR-8316).
+  `reason` = "Conferência de identidade da inscrição <protocolo>: <motivo>". Nunca CPF nem data
+  (FR-8316). A trilha do Edital a reúne pela operação (R8).
 
 ## Contagem de migrations
 

@@ -15,6 +15,7 @@ from uuid import UUID
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 
+from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.editais.domain.documentos import (
     NAO_SE_APLICA,
     OBRIGATORIO,
@@ -29,15 +30,22 @@ from processo_seletivo.inscricoes.application.rascunho import (
     requisitos_da_inscricao,
 )
 from processo_seletivo.inscricoes.domain.autenticidade import codigo_de_verificacao
-from processo_seletivo.inscricoes.domain.pessoais import mascarar_cpf
+from processo_seletivo.inscricoes.domain.pessoais import formatar_cpf, mascarar_cpf
 from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao
 from processo_seletivo.processos.models import Edital
 from processo_seletivo.publicacoes.application import selectors
 from processo_seletivo.seguranca.application.authorization import require_permission
 from processo_seletivo.shared.api.problems import DomainError
+from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import tamanho_legivel
 
 CONSULTAR = "inscricao:consultar"
+#: A conferência de identidade (180, D-002). O nome é lido também pela trilha do Edital, que a
+#: reúne aos atos do certame (`auditoria/selectors.py`).
+CONFERIR_IDENTIDADE = "CONFERIR_IDENTIDADE"
+#: O motivo vai à trilha, e a trilha não é lugar de redação: o bastante para o número de um
+#: processo e uma frase.
+TAMANHO_DO_MOTIVO = 300
 
 
 def _edital_no_escopo(actor, edital_id, *, com_processo=False):
@@ -456,6 +464,11 @@ def inscricao_para_consulta(*, actor, inscricao_id):
             codigo_de_verificacao(inscricao, enviados.values()) if inscricao.protocolo else ""
         ),
         "cpf": mascarar_cpf(inscricao.cpf),
+        # A conferência de identidade só existe para a enviada (180, FR-8312): rascunho não é ato, e
+        # o que ele mostraria é o cadastro de agora, e não o que a pessoa declarou num envio. Chave
+        # própria pela mesma razão de `enviado_o_requerimento`, abaixo.
+        "conferivel": inscricao.status == Inscricao.Status.SUBMETIDA,
+        "tamanho_do_motivo": TAMANHO_DO_MOTIVO,
         "versao": versao,
         "documentos": documentos,
         "nao_se_aplicam": nao_se_aplicam,
@@ -472,6 +485,66 @@ def inscricao_para_consulta(*, actor, inscricao_id):
         # some numa renomeação — e o bloco passaria a dizer *"em preenchimento"* sobre um
         # requerimento enviado, sem que nada acusasse.
         "enviado_o_requerimento": bool(bloco_do_requerimento and bloco_do_requerimento["enviado"]),
+    }
+
+
+def identidade_para_conferencia(*, actor, inscricao_id, motivo, correlation_id=""):
+    """O CPF completo e a data de nascimento de uma inscrição enviada, por ato com motivo (180).
+
+    É a D-002: o único lugar da gestão em que os dois aparecem inteiros. Não é leitura: é ato, e
+    fica na trilha com quem conferiu e por quê. **A trilha recebe o motivo e o protocolo, e nunca o
+    CPF nem a data** (FR-8316) — o registro diz que alguém viu, e não o que viu.
+
+    **A porta é a do detalhe** (FR-8317): a mesma permissão e o mesmo escopo de
+    `inscricao_para_consulta`, na mesma ordem. Quem não abre o dossiê não chega aqui por endereço
+    montado à mão, e recebe a mesma resposta que receberia lá.
+
+    **Os valores são os da inscrição, e não os do cadastro.** O que a pessoa declarou no envio é o
+    que está congelado no ato; o cadastro pode ter sido corrigido depois por ato institucional. A
+    enviada antes da `180` não tem data, e devolve `None` — a tela diz que não foi informada, em vez
+    de buscar a do cadastro e apresentá-la como se fosse daquele envio (FR-8304).
+
+    **O motivo é conferido antes de qualquer leitura do que será revelado** (FR-8315), e o registro
+    é gravado na mesma transação que devolve os valores: sem registro não há revelação (SC-2906).
+    """
+    inscricao = Inscricao.objects.select_related("edital__processo").filter(pk=inscricao_id).first()
+    if inscricao is None:
+        require_permission(actor, CONSULTAR)
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    _edital_no_escopo(actor, inscricao.edital_id)
+    if inscricao.status != Inscricao.Status.SUBMETIDA:
+        # Rascunho não tem o que conferir. Inexistente, e não recusa explicada: a tela do rascunho
+        # não oferece a ação, e quem chega aqui montou o endereço.
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    # Espaços e quebras de linha viram um espaço só: o motivo é uma linha na trilha, e "só espaços"
+    # é motivo nenhum.
+    texto = " ".join((motivo or "").split())[:TAMANHO_DO_MOTIVO].strip()
+    if not texto:
+        raise DomainError(
+            "reason_required", "Escreva o motivo da conferência.", 422, campo="motivo"
+        )
+    with command_context() as agora:
+        record_event(
+            actor=actor,
+            permission=CONSULTAR,
+            operation=CONFERIR_IDENTIDADE,
+            aggregate=inscricao,
+            now=agora,
+            correlation_id=correlation_id,
+            # O protocolo vai na frase porque a tela da trilha mostra o tipo do agregado, e não o
+            # identificador: sem ele, "qual inscrição" (FR-8316) estaria no banco e não na tela.
+            reason=f"Conferência de identidade da inscrição {inscricao.protocolo}: {texto}",
+            new_state="",
+            new_revision=None,
+        )
+    return {
+        "inscricao": inscricao,
+        "nome": inscricao.nome,
+        "cpf": formatar_cpf(inscricao.cpf),
+        "data_nascimento": inscricao.data_nascimento,
+        "motivo": texto,
+        "conferida_em": agora,
+        "conferida_por": actor.subject,
     }
 
 

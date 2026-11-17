@@ -227,6 +227,7 @@ reprova**, e obrigar quem o escreveu a classificá-lo é o ponto.
 | 7516 | `documentos_da_mesa` | sim | não | vínculo de **Atribuição** | **acrescentada pela `157`** — a lista de documentos da inscrição, relida pelo visualizador: a mesma recusa de `inscricao_da_mesa`, pela porta da Mesa |
 | 9924 | `pedir_aviso_de_pendencia_view` | sim | não | objeto inexistente | **acrescentada pela `157`** — o pedido de aviso de uma pessoa: a recusa de inexistente do comando do aviso. A porta `_convocacao_para_conferir` decide escopo e autorização antes |
 | 60 | `_inexistente` | sim | não | objeto inexistente | **acrescentada pela `167`**, em `interface/agenda_da_etapa.py` — a agenda da Etapa: a pessoa ou o horário que a rota nomeia e não existe, ou o 404 que o domínio declarou. A porta é `_etapa_para_distribuir`, que decide escopo e autorização antes |
+| 6279 | `conferir_identidade` | sim | não | escopo institucional ∪ inexistente | **acrescentada pela `180`** — a conferência de identidade de uma inscrição enviada: a view não tem `raise Http404` próprio, e propaga o `not_found` de `inscricoes/application/consulta.py::identidade_para_conferencia`, que é a porta do dossiê (`inscricao_para_consulta`) na mesma ordem — inscrição inexistente ou de Edital de outra unidade, e o rascunho, que não tem o que conferir. A autorização vem antes, por `require_permission` com `inscricao:consultar`, e responde **403**, como o dossiê; o motivo vazio é recusa do ato (422), e não negativa |
 
 ---
 
