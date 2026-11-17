@@ -17,7 +17,7 @@ aconteceu, e sem a qual a pessoa fictícia não teria como entrar no portal.
 
 import copy
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -29,6 +29,10 @@ from processo_seletivo.seguranca.domain import Actor
 from processo_seletivo.shared.tempo import ZONA
 from processo_seletivo.treinamento import identificadores as ids
 from processo_seletivo.treinamento.identificadores import MOLDE, do_molde
+
+# A data de nascimento entrou no cadastro com a `180`. Uma só para todas as pessoas de treino: os
+# cenários não a comparam, e sem ela o envio pelo caminho do portal seria recusado.
+NASCIMENTO_DE_TREINO = date(1995, 5, 20)
 
 # Quem pratica cada passo. Identificadores próprios, que se denunciam na trilha e na página de
 # acesso da demonstração — e que **não** começam por `pessoa-`, o formato do identificador
@@ -678,9 +682,16 @@ class Montagem:
             defaults={
                 "nome": pessoa["nome"],
                 "cpf_normalizado": pessoa["cpf"].replace(".", "").replace("-", ""),
+                "data_nascimento": NASCIMENTO_DE_TREINO,
                 "created_at": self.agora,
             },
         )
+        if identidade.data_nascimento is None:
+            # A pessoa de treino que já existia antes da `180` fica sem data pelo `get_or_create`, e
+            # o envio por roteiro congelaria na inscrição uma data que o cadastro não tem.
+            CandidateIdentity.objects.filter(pk=identidade.pk).update(
+                data_nascimento=NASCIMENTO_DE_TREINO
+            )
         CandidateEmail.objects.get_or_create(
             email_canonico=canonizar(pessoa["email"]),
             defaults={
@@ -697,7 +708,7 @@ class Montagem:
         from processo_seletivo.portal.identidade import IdentidadeDoCandidato
 
         return IdentidadeDoCandidato(
-            pessoa["subject"], pessoa["nome"], pessoa["cpf"], pessoa["email"]
+            pessoa["subject"], pessoa["nome"], pessoa["cpf"], pessoa["email"], NASCIMENTO_DE_TREINO
         )
 
     def inscrever(self, quantidade, *, reservada=()):

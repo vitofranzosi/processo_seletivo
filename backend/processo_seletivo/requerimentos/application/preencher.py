@@ -287,11 +287,34 @@ def _copiar_para_a_frente(inscricao):
     """
     anterior = _anterior_da_identidade(inscricao)
     if anterior is None:
-        return {"telefone_celular": inscricao.telefone}
+        return {
+            "telefone_celular": inscricao.telefone,
+            "data_de_nascimento": _nascimento_do_cadastro(inscricao),
+        }
     copiado = {campo: getattr(anterior, campo) for campo in CAMPOS_DECLARADOS}
     copiado["telefone_celular"] = anterior.telefone_celular or inscricao.telefone
     copiado["nacionalidade"] = _nacionalidade_na_lista(anterior.nacionalidade)
+    copiado["data_de_nascimento"] = anterior.data_de_nascimento or _nascimento_do_cadastro(
+        inscricao
+    )
     return copiado
+
+
+def _nascimento_do_cadastro(inscricao):
+    """A data do cadastro como ponto de partida, e nunca como verdade imposta (180, D-003).
+
+    Só na **criação** do rascunho, porque é daqui que ela é chamada: preencher a cada abertura
+    apagaria a correção que a pessoa fez no requerimento. O que veio de um requerimento anterior
+    vence, porque é declaração mais recente da própria pessoa naquele documento (R6). E corrigir
+    aqui não muda o cadastro: são dois registros, e o requerimento enviado é ato à parte.
+    """
+    from processo_seletivo.identidade.models import CandidateIdentity
+
+    return (
+        CandidateIdentity.objects.filter(subject=inscricao.identity_subject)
+        .values_list("data_nascimento", flat=True)
+        .first()
+    )
 
 
 def _nacionalidade_na_lista(declarada: str) -> str:

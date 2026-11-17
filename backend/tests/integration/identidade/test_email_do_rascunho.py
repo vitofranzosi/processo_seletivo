@@ -30,7 +30,10 @@ def com_dois_enderecos(client):
 
 
 def test_o_rascunho_recebe_o_principal(client, com_dois_enderecos, selecao):
-    client.post(reverse("portal:meus-dados"), {"nome": "Maria Silva", "cpf": "123.456.789-09"})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Maria Silva", "cpf": "123.456.789-09", "data_nascimento": "01/01/2000"},
+    )
     client.post(reverse("portal:inscrever", args=[selecao.id, PERFIL_DOCENTE]))
 
     assert Inscricao.objects.get().email == PRINCIPAL

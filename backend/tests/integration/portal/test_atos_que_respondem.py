@@ -102,7 +102,7 @@ def test_corrigir_o_nome_confirma(client, caixa):
 
     resposta = client.post(
         reverse("portal:meus-dados"),
-        {"nome": "Rita Pereira Nunes", "cpf": "111.444.777-35"},
+        {"nome": "Rita Pereira Nunes", "cpf": "111.444.777-35", "data_nascimento": "01/01/2000"},
         follow=True,
     )
 
@@ -142,7 +142,10 @@ def test_a_recusa_e_a_confirmacao_nao_se_confundem(client, caixa, candidatos_reg
 
 def test_o_aviso_e_lido_uma_vez_so(client, caixa):
     entrar_com(client, "efemera@exemplo.test")
-    client.post(reverse("portal:meus-dados"), {"nome": "Rita Pereira", "cpf": "111.444.777-35"})
+    client.post(
+        reverse("portal:meus-dados"),
+        {"nome": "Rita Pereira", "cpf": "111.444.777-35", "data_nascimento": "01/01/2000"},
+    )
 
     primeira = client.get(reverse("portal:inscricoes")).content.decode()
     segunda = client.get(reverse("portal:inscricoes")).content.decode()

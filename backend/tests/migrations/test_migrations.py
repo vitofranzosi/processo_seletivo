@@ -1065,7 +1065,10 @@ def test_a_022_nao_acrescenta_migration_aos_apps_que_ela_apenas_le():
         # compõe o comprovante — falso nas que já existiam, para que o resumo já mostrado ao
         # candidato continue conferindo (178, FR-8163, D-002). Coluna nova por catálogo, sem
         # percorrer linha: o gatilho da enviada não dispara.
-        "inscricoes": 8,
+        # **Sobe para 9 com a 180**: a `inscricoes/0009` dá à inscrição a data de nascimento do
+        # cadastro, escrita só no envio (180, FR-8308). Nula nas que já existiam, sem percorrer
+        # linha.
+        "inscricoes": 9,
         # **Sobe para 3 com a 029**, e a justificativa é própria: a `processos/0003` dá ao Edital a
         # declaração do Requerimento de Matrícula — se o certame o exige, em que momento, e com que
         # texto de veracidade. Não é a 022 tocando o que lê: é outra feature, dizendo o que o

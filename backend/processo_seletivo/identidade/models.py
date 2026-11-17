@@ -49,6 +49,11 @@ class CandidateIdentity(models.Model):
     # **não** é único: duas identidades podem declarar o mesmo, e a coincidência é assinalada onde
     # importa em vez de bloqueada onde machuca (FR-064).
     cpf_normalizado = models.CharField(max_length=11, blank=True)
+    # Declarada como o CPF, e pelo mesmo motivo: ao lado dele, é o que a Receita pede para confirmar
+    # um CPF, e é para isso que existe — conferência manual, em caso de dúvida (180, FR-8300).
+    # Ela **não** prova quem a pessoa é, e nenhum caminho de acesso a lê (FR-8310). Nula nos
+    # cadastros de antes da `180`: eles a informam na próxima vaga que abrirem (FR-8302).
+    data_nascimento = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField()
 
     def __str__(self):

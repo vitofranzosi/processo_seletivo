@@ -12,7 +12,12 @@ Pedidos uma vez na vida da identidade, e reusados em todas as inscrições segui
 vez. O texto abaixo é a proposta que aguarda validação de quem responde pela proteção de dados
 (`specs/072-jornada-publica-do-portal/validacao-humana.md`); sem ela, a feature não se publica.
 {% endcomment %}
-<p class="sub">Seu nome completo e seu CPF identificam você nas inscrições e nos resultados. Pedimos
+{% comment %}
+**A data de nascimento, desde a `180`** (FR-8300, FR-8314): a finalidade é dita aqui, no ponto da
+coleta, como a `072` pede para nome e CPF.
+{% endcomment %}
+<p class="sub">Seu nome completo e seu CPF identificam você nas inscrições e nos resultados. A data de
+  nascimento, junto do CPF, permite à instituição confirmar sua identidade em caso de dúvida. Pedimos
   uma única vez: nas próximas inscrições, não perguntamos de novo.</p>
 
 <form method="post" action="{% url 'portal:meus-dados' %}" novalidate>
@@ -20,7 +25,7 @@ vez. O texto abaixo é a proposta que aguarda validação de quem responde pela 
   <div class="campo">
     <label for="nome">Nome completo</label>
     <input type="text" id="nome" name="nome" value="{{ dados.nome }}" autocomplete="name"
-           autofocus required
+           {% if not foco_na_data %}autofocus{% endif %} required
            {% if erros.nome %}aria-invalid="true" aria-describedby="erro-nome"{% endif %}>
     {% if erros.nome %}<span class="recusa" id="erro-nome">{{ erros.nome }}</span>{% endif %}
   </div>
@@ -36,6 +41,29 @@ vez. O texto abaixo é a proposta que aguarda validação de quem responde pela 
     mãos. Corrigi-lo deixa de ser ato de quem se inscreve.
     {% endcomment %}
     <span class="sub">Você já enviou uma inscrição com este CPF. Para corrigi-lo, fale com
+    {% include "portal/_atendimento.html" %}.</span>
+    {% endif %}
+  </div>
+  <div class="campo curto">
+    {% comment %}
+    Texto, e não `type="date"`: o seletor do celular abre no mês corrente, e chegar ao ano de
+    nascimento custa dezenas de toques (UX-1000). `bday` deixa o navegador preencher.
+    {% endcomment %}
+    <label for="data_nascimento">Data de nascimento</label>
+    <span class="sub" id="dica-data_nascimento">Dia/mês/ano, por exemplo 07/03/1998.</span>
+    <input type="text" id="data_nascimento" name="data_nascimento"
+           value="{{ dados.data_nascimento }}" inputmode="numeric" autocomplete="bday"
+           maxlength="10" required
+           {% if foco_na_data %}autofocus{% endif %}
+           {% if not data_editavel %}readonly{% endif %}
+           {% if erros.data_nascimento %}aria-invalid="true" aria-describedby="dica-data_nascimento erro-data_nascimento"{% else %}aria-describedby="dica-data_nascimento"{% endif %}>
+    {% if erros.data_nascimento %}<span class="recusa" id="erro-data_nascimento">{{ erros.data_nascimento }}</span>{% endif %}
+    {% if not data_editavel %}
+    {% comment %}
+    Congela com o CPF (180, D-001): os dois servem juntos à conferência, e corrigir um sem o outro a
+    desfaria.
+    {% endcomment %}
+    <span class="sub">Você já enviou uma inscrição com esta data. Para corrigi-la, fale com
     {% include "portal/_atendimento.html" %}.</span>
     {% endif %}
   </div>
