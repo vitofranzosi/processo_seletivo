@@ -11,11 +11,11 @@ podia quebrar.
 
 import logging
 import threading
+from datetime import timedelta
 
 import pytest
 from django.core import mail
-from django.core.mail.backends.base import BaseEmailBackend
-from django.db import connection, connections
+from django.db import connection, connections, transaction
 
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.inscricoes.application import confirmacao
@@ -27,6 +27,8 @@ from processo_seletivo.inscricoes.application.rascunho import (
 )
 from processo_seletivo.inscricoes.application.submissao import enviar_inscricao
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.shared.concurrency import travar_consultivamente
+from tests.fixtures import correio
 from tests.fixtures.candidato import MARIA, MODALIDADE_AC, PERFIL_DOCENTE, PERFIL_TECNICO, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 
@@ -51,22 +53,9 @@ DADOS = {
 }
 
 
-class CorreioForaDoAr(BaseEmailBackend):
-    """O servidor que não responde: a exceção que o SMTP levanta."""
-
-    def send_messages(self, email_messages):
-        raise ConnectionRefusedError("servidor de correio fora do ar")
-
-
-class CorreioQueNaoAceita(BaseEmailBackend):
-    """O servidor que responde e não aceita, **sem erro**: devolve zero mensagens enviadas."""
-
-    def send_messages(self, email_messages):
-        return 0
-
-
-FORA_DO_AR = f"{__name__}.CorreioForaDoAr"
-NAO_ACEITA = f"{__name__}.CorreioQueNaoAceita"
+#: O servidor que não responde: a exceção que o SMTP levanta. A resposta `0` é o que aceita a
+#: conexão e não aceita a mensagem, sem erro.
+FORA_DO_AR = ConnectionRefusedError("servidor de correio fora do ar")
 LOCMEM = "django.core.mail.backends.locmem.EmailBackend"
 
 
@@ -85,6 +74,12 @@ def registro_tecnico():
     logger.addHandler(handler)
     yield linhas
     logger.removeHandler(handler)
+
+
+@pytest.fixture
+def sem_intervalo(monkeypatch):
+    """A nova tentativa sem o minuto de espera (FR-8363), para os casos que a fazem em seguida."""
+    monkeypatch.setattr(confirmacao, "INTERVALO_ENTRE_TENTATIVAS", timedelta(0))
 
 
 @pytest.fixture
@@ -232,10 +227,10 @@ def test_duas_requisicoes_simultaneas_mandam_uma_mensagem(caixa, selecao):
 # --- FR-8352, FR-8360, FR-8361: a falha -----------------------------------------------------------
 
 
-@pytest.mark.parametrize("backend", [FORA_DO_AR, NAO_ACEITA], ids=["fora-do-ar", "nao-aceita"])
-def test_a_falha_e_registrada_como_nao_enviada(settings, selecao, backend):
+@pytest.mark.parametrize("resposta", [FORA_DO_AR, 0], ids=["fora-do-ar", "nao-aceita"])
+def test_a_falha_e_registrada_como_nao_enviada(settings, selecao, resposta):
     enviada = _enviada(selecao)
-    settings.EMAIL_BACKEND = backend
+    correio.usar(settings, resposta)
 
     tentativa = _confirmar(enviada)
 
@@ -246,12 +241,12 @@ def test_a_falha_e_registrada_como_nao_enviada(settings, selecao, backend):
     assert enviada.status == Inscricao.Status.SUBMETIDA, "a falha não toca a inscrição"
 
 
-def test_depois_da_falha_a_nova_tentativa_envia_e_e_a_segunda(settings, caixa, selecao):
+def test_depois_da_falha_a_nova_tentativa_envia_e_e_a_segunda(settings, selecao, sem_intervalo):
     """FR-8363 e SC-2925: a trilha responde quantas tentativas, quando e com que resultado."""
     enviada = _enviada(selecao)
-    settings.EMAIL_BACKEND = FORA_DO_AR
+    correio.usar(settings, FORA_DO_AR)
+    caixa = mail.outbox
     _confirmar(enviada)
-    settings.EMAIL_BACKEND = LOCMEM
 
     tentativa = _confirmar(enviada)
 
@@ -266,7 +261,7 @@ def test_depois_da_falha_a_nova_tentativa_envia_e_e_a_segunda(settings, caixa, s
 def test_o_log_diz_a_inscricao_e_nao_o_endereco(settings, selecao, registro_tecnico):
     """FR-8361: o identificador acha a falha na trilha; o endereço não tem por que estar no log."""
     enviada = _enviada(selecao)
-    settings.EMAIL_BACKEND = NAO_ACEITA
+    correio.usar(settings, 0)
 
     _confirmar(enviada)
 
@@ -292,22 +287,94 @@ def test_a_trilha_que_falha_nao_derruba_quem_pediu(caixa, selecao, monkeypatch, 
 # --- FR-8368: cada inscrição tem a sua --------------------------------------------------------
 
 
-def test_duas_inscricoes_da_mesma_pessoa_tem_cada_uma_a_sua(settings, caixa, selecao):
+def test_duas_inscricoes_da_mesma_pessoa_tem_cada_uma_a_sua(settings, selecao, sem_intervalo):
     docente = _enviada(selecao, PERFIL_DOCENTE)
     tecnico = _enviada(selecao, PERFIL_TECNICO)
+    correio.usar(settings, 1, FORA_DO_AR)
 
     _confirmar(docente)
-    settings.EMAIL_BACKEND = FORA_DO_AR
     _confirmar(tecnico)
 
-    assert len(caixa) == 1
+    assert len(mail.outbox) == 1
     assert confirmacao.ultima(docente).enviada
     assert not confirmacao.ultima(tecnico).enviada
-    settings.EMAIL_BACKEND = LOCMEM
     assert _confirmar(tecnico).numero == 2, "a confirmação da outra não conta para esta"
-    assert len(caixa) == 2
+    assert len(mail.outbox) == 2
 
 
 def test_sem_tentativa_a_ultima_e_nenhuma(selecao):
     """A inscrição anterior à 181, ou a do cenário de treinamento: a tela não afirma nada."""
     assert confirmacao.ultima(_enviada(selecao)) is None
+
+
+# --- Revisão de 18/11: o intervalo, a trava que não espera, o endereço e a contenção -------------
+
+
+def test_dentro_do_intervalo_a_nova_tentativa_nao_sai(settings, selecao):
+    """FR-8363: o clique repetido não vira carga sobre um servidor de correio fora do ar."""
+    enviada = _enviada(selecao)
+    correio.usar(settings, FORA_DO_AR)
+    _confirmar(enviada)
+
+    assert _confirmar(enviada) is None
+    assert mail.outbox == []
+    assert len(_trilha(enviada)) == 1
+    espera = confirmacao.espera_para_tentar_de_novo(confirmacao.ultima(enviada))
+    assert timedelta(0) < espera <= confirmacao.INTERVALO_ENTRE_TENTATIVAS
+
+
+@SOMENTE_POSTGRES
+def test_com_outra_tentativa_em_curso_volta_sem_esperar_e_sem_enviar(caixa, selecao):
+    """A trava não espera: a outra tentativa registra o que acontecer, e esta não enfileira."""
+    enviada = _enviada(selecao)
+    tomada, liberar = threading.Event(), threading.Event()
+
+    def segurar_a_trava():
+        try:
+            with transaction.atomic():
+                travar_consultivamente(f"inscricao:confirmar:{enviada.pk}")
+                tomada.set()
+                liberar.wait(timeout=10)
+        finally:
+            connections.close_all()
+
+    fio = threading.Thread(target=segurar_a_trava)
+    fio.start()
+    try:
+        assert tomada.wait(timeout=10)
+        assert _confirmar(enviada) is None
+    finally:
+        liberar.set()
+        fio.join(timeout=10)
+
+    assert caixa == []
+    assert _trilha(enviada) == []
+
+
+def test_sem_endereco_nao_tenta_nem_registra(caixa, selecao):
+    """Uma falha que nenhuma nova tentativa resolve não vira botão na tela (FR-8362)."""
+    enviada = _enviada(selecao)
+    enviada.email = ""
+
+    assert _confirmar(enviada) is None
+    assert caixa == []
+    assert _trilha(enviada) == []
+
+
+def test_nenhuma_falha_do_caminho_escapa_de_confirmar(caixa, selecao, registro_tecnico):
+    """FR-8352: a inscrição já está gravada; o que falhar aqui vai ao registro técnico."""
+    enviada = _enviada(selecao)
+
+    def faltou_um_dado():
+        raise KeyError("Edital")
+
+    assert (
+        confirmacao.confirmar(
+            inscricao=enviada,
+            ator=ator_do_candidato(MARIA, enviada.edital),
+            montar_dados=faltou_um_dado,
+        )
+        is None
+    )
+    assert caixa == []
+    assert any("não foi tentada até o fim" in linha for linha in registro_tecnico)

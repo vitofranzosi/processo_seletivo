@@ -24,7 +24,8 @@ O aviso da confirmação, sempre com a classe `nao-imprime` (FR-8366):
 |---|---|
 | `GET` | `405` |
 | Sem sessão, sessão de outra pessoa, inscrição inexistente ou rascunho | `404`, e nada sai (FR-8364) |
-| Enviada da titular | `confirmacao.confirmar`; `302` para `portal:comprovante`. Se já houve tentativa aceita, nada sai e nada se registra (FR-8351) |
+| Enviada da titular, última tentativa falhou há menos de um minuto | nada sai; a frase "Acabamos de tentar enviar a confirmação. Espere um minuto antes de tentar de novo." vai para o aviso de falha do comprovante; `302` para `portal:comprovante` (FR-8363) |
+| Enviada da titular | `confirmacao.confirmar`; `302` para `portal:comprovante`. Se já houve tentativa aceita, ou outra está em curso, nada sai e nada se registra (FR-8351) |
 
 CSRF exigido, como todo `POST` do portal. Resposta privada (`Cache-Control: private, no-store`).
 
@@ -47,5 +48,7 @@ tentativas(inscricao) -> list[Tentativa]
 ultima(inscricao) -> Tentativa | None
 ```
 
-`confirmar` devolve `None` quando não tentou (inscrição não enviada, ou já confirmada); `montar_dados`
-só é chamado quando há envio.
+`confirmar` devolve `None` quando não tentou — inscrição não enviada ou sem endereço, já confirmada,
+outra tentativa em curso, última de menos de um minuto — ou quando algo falhou no caminho, que vai ao
+registro técnico e nunca sobe como exceção. `montar_dados` só é chamado quando há envio.
+`espera_para_tentar_de_novo(tentativa)` diz quanto falta para a próxima poder sair.

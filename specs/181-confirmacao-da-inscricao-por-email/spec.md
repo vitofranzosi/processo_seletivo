@@ -5,9 +5,10 @@ merge do #586)
 
 **Created**: 2026-11-18
 
-**Status**: Especificada. As quatro decisões (D-001 a D-004) foram tomadas nesta spec, a pedido do
-usuário, que pediu que as alternativas do comprovante fossem avaliadas e a solução mais simples fosse
-escolhida.
+**Status**: Especificada e implementada. As quatro decisões (D-001 a D-004) foram tomadas nesta spec, a
+pedido do usuário, que pediu que as alternativas do comprovante fossem avaliadas e a solução mais
+simples fosse escolhida. A revisão de código de 18/11 acrescentou o intervalo entre tentativas, a
+trava que não espera e a contenção de toda falha da confirmação (FR-8352, FR-8355, FR-8363).
 
 **Input**: pedido do usuário em 18/11/2026 — *"ao concluir a inscrição, o candidato recebe uma
 comunicação clara, profissional e confiável, confirmando o que aconteceu e orientando seus próximos
@@ -128,9 +129,11 @@ inscrição enviada do mesmo jeito, e o botão de tentar de novo.
    tentativa.
 4. **Given** a confirmação já aceita, **When** chega um pedido de enviar de novo (por exemplo, de uma
    aba antiga), **Then** nada sai, e a tela continua dizendo que a confirmação foi enviada.
-5. **Given** uma inscrição enviada antes desta feature, **When** o comprovante abre, **Then** a tela não
+5. **Given** uma tentativa que falhou há menos de um minuto, **When** a pessoa pede para enviar de novo,
+   **Then** nada sai, e a tela pede que ela espere um minuto.
+6. **Given** uma inscrição enviada antes desta feature, **When** o comprovante abre, **Then** a tela não
    diz nada sobre a confirmação: o sistema não sabe o que aconteceu com ela, e não afirma.
-6. **Given** o comprovante, **When** a pessoa o imprime ou baixa o PDF, **Then** o aviso sobre a
+7. **Given** o comprovante, **When** a pessoa o imprime ou baixa o PDF, **Then** o aviso sobre a
    mensagem não aparece no papel.
 
 ---
@@ -171,8 +174,14 @@ enviada, sem endereço, nome nem protocolo.
   outra.
 - **Pedido de enviar de novo em inscrição alheia, ou em rascunho**: a resposta é a mesma de inscrição
   inexistente, e nada sai.
-- **Pedido de enviar de novo enquanto outra tentativa da mesma inscrição está em curso**: espera a outra
-  terminar e, se ela foi aceita, não envia.
+- **Pedido de enviar de novo enquanto outra tentativa da mesma inscrição está em curso**: não espera nem
+  envia; a outra registra o que acontecer, e a tela mostra. Esperar empilharia requisições atrás de um
+  servidor de correio lento.
+- **Dois cliques no envio, e a primeira tentativa falhou**: o segundo encontra a falha de menos de um
+  minuto e não tenta (FR-8363); a pessoa vê o aviso e pode tentar depois.
+- **Inscrição sem endereço**: não deveria existir. Se existir, a confirmação não é tentada nem
+  registrada, o registro técnico diz qual inscrição, e a tela do comprovante não diz nada — em vez de
+  um aviso de falha com um botão que falharia sempre.
 - **Edital retificado depois do envio**: a confirmação diz o que a inscrição aceitou, como o
   comprovante (a versão aceita), e nenhuma mensagem nova sai por causa da Retificação.
 - **Os cenários de treinamento da `134`** criam inscrições enviadas sem passar pela tela: não mandam
@@ -192,7 +201,9 @@ enviada, sem endereço, nome nem protocolo.
   mesmo envio repetido — duplo clique, duas abas, a repetição idempotente do ato — e o pedido de enviar
   de novo depois de uma tentativa aceita NÃO PODEM produzir segunda mensagem.
 - **FR-8352**: A falha da confirmação NÃO PODE desfazer nem impedir o envio da inscrição: a pessoa DEVE
-  chegar ao comprovante do mesmo jeito (reafirma a FR-084b da `010`).
+  chegar ao comprovante do mesmo jeito (reafirma a FR-084b da `010`). Isso vale para qualquer falha no
+  caminho da confirmação — o servidor de correio, o banco, um dado que falte para montar a mensagem —,
+  que vai ao registro técnico e nunca chega à pessoa como erro.
 
 #### O que a mensagem diz
 
@@ -203,9 +214,10 @@ enviada, sem endereço, nome nem protocolo.
   da área do candidato, para onde a mensagem leva — uma nova tentativa dias depois a diria velha.
 - **FR-8355**: A mensagem DEVE conter o que a FR-084a da `010` exige — protocolo, código de
   verificação, a oportunidade (Processo Seletivo, Edital, Perfil e concorrência), o instante do envio e
-  os documentos enviados — e, além disso, o que acontece agora: que não há nada a fazer por enquanto,
-  que enviada não quer dizer aceita, que o resultado sai conforme o Edital, e que a situação e qualquer
-  passo novo aparecem na área do candidato.
+  os documentos enviados — e, além disso, o que acontece agora: que enviada não quer dizer aceita, que
+  o resultado sai conforme o Edital, e que a situação e qualquer passo pedido à pessoa aparecem na área
+  do candidato. Pela razão da FR-8354, NÃO PODE dizer que não há nada a fazer: uma nova tentativa
+  semanas depois chegaria a quem já tem um passo pendente.
 - **FR-8356**: A mensagem NÃO PODE conter CPF, telefone, data de nascimento, anexo nem link que
   autentica (FR-084a da `010`). O comprovante em PDF NÃO PODE ir anexado (D-001).
 - **FR-8357**: O link da mensagem DEVE levar ao comprovante da inscrição. Quem o abre sem sessão DEVE ir
@@ -232,7 +244,10 @@ enviada, sem endereço, nome nem protocolo.
   registrada, NÃO PODE dizer nada sobre a confirmação.
 - **FR-8363**: Quando a última tentativa não foi enviada, a tela DEVE oferecer à titular enviar a
   confirmação de novo. A nova tentativa obedece à FR-8351, à FR-8358 e à FR-8360, e vai ao e-mail
-  gravado na inscrição.
+  gravado na inscrição. Entre duas tentativas da mesma inscrição DEVE haver ao menos um minuto: o
+  pedido antes disso não chega ao servidor de correio, e a tela diz que é preciso esperar. Cada
+  tentativa pode levar até o limite de tempo do correio, e sem o intervalo os cliques de quem espera um
+  servidor fora do ar viram carga sobre o portal inteiro.
 - **FR-8364**: Só a titular de uma inscrição enviada PODE pedir nova tentativa. Pedido de outra pessoa,
   sem sessão ou sobre rascunho DEVE ter a mesma resposta de inscrição inexistente, e nada sai (FR-085 e
   FR-086 da `010`).

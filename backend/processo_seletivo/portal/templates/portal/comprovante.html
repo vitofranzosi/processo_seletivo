@@ -44,6 +44,7 @@ a mensagem chegou (FR-8359): por isso a lembrança da caixa de spam.
   <p><strong>Não conseguimos enviar a confirmação para {{ inscricao.email }}.</strong></p>
   <p>Sua inscrição foi enviada do mesmo jeito, e este comprovante vale como prova: baixe o PDF
     abaixo.</p>
+  {% if aviso_da_confirmacao %}<p>{{ aviso_da_confirmacao }}</p>{% endif %}
   <form method="post" action="{% url 'portal:comprovante-confirmacao' inscricao.id %}">
     {% csrf_token %}
     <button type="submit" class="secundario">Enviar a confirmação de novo</button>

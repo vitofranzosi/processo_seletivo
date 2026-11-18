@@ -29,6 +29,8 @@ código de acesso e a confirmação. No compose, as duas chegam em <http://local
    novo"**. A inscrição está enviada.
 3. Volte ao correio de console, aperte o botão: a mensagem sai, e a tela passa a dizer que foi enviada.
 4. Apertar de novo numa aba antiga não manda nada.
+5. Com o correio fora do ar, apertar "Enviar a confirmação de novo" logo depois da falha não tenta: a
+   tela pede para esperar um minuto.
 
 ## 4. As provas automatizadas
 

@@ -13,22 +13,33 @@ avisos da `066`: o aviso é decisão de uma pessoa da equipe sobre um ato public
 minuto seguinte — quando a tela já teria dito à pessoa o que aconteceu.
 
 **A ordem é a do contrato** (R2): travar a inscrição, ler as tentativas, não enviar se uma foi
-aceita, enviar, registrar. A trava é consultiva e da transação: ela serializa duas requisições da
-mesma inscrição sem tocar a linha dela, e só é liberada depois de a tentativa estar gravada — a
-segunda requisição a encontra e não envia.
+aceita ou se a última é de menos de um minuto, enviar, registrar. A trava é consultiva e da
+transação: ela serializa duas requisições da mesma inscrição sem tocar a linha dela, e só é liberada
+depois de a tentativa estar gravada.
+
+**A trava não espera** (revisão de 18/11). A conversa com o servidor de correio acontece sob ela, e
+pode levar até `EMAIL_TIMEOUT`. Esperar empilharia requisições — e workers — atrás de um servidor
+fora do ar; quem não consegue a trava sabe que outra tentativa da mesma inscrição está em curso, e
+volta sem enviar: a outra registra o que acontecer. O intervalo de um minuto entre tentativas faz o
+mesmo para os cliques em sequência.
+
+**Nenhuma falha daqui chega à pessoa** (FR-8352). A inscrição já está gravada quando `confirmar` é
+chamado, e uma queda de banco, um dado que falte para montar a mensagem ou um erro de regra viram
+registro técnico — e a pessoa chega ao comprovante do mesmo jeito.
 """
 
-import hashlib
 import logging
 from dataclasses import dataclass
+from datetime import timedelta
 
-from django.db import connection, transaction
+from django.db import transaction
 from django.utils import timezone
 
 from processo_seletivo.auditoria.application import record_event
 from processo_seletivo.auditoria.models import RegistroAuditoria
 from processo_seletivo.inscricoes.application import mensagem
 from processo_seletivo.inscricoes.models import Inscricao
+from processo_seletivo.shared.concurrency import travar_consultivamente
 
 logger = logging.getLogger("processo_seletivo.inscricoes")
 
@@ -39,6 +50,11 @@ OPERACAO = "CONFIRMAR_POR_EMAIL"
 #: fora do alcance do sistema, como já está escrito para os avisos da `066`.
 ENVIADA = "ENVIADA"
 NAO_ENVIADA = "NAO_ENVIADA"
+
+#: O menor intervalo entre duas tentativas da mesma inscrição (FR-8363). Cada tentativa pode prender
+#: um worker até `EMAIL_TIMEOUT`; sem intervalo, os cliques de quem espera um servidor fora do ar
+#: viram carga sobre ele e sobre o portal.
+INTERVALO_ENTRE_TENTATIVAS = timedelta(minutes=1)
 
 
 @dataclass(frozen=True)
@@ -73,36 +89,50 @@ def ultima(inscricao):
     return lidas[-1] if lidas else None
 
 
-def _travar(inscricao):
-    """A trava consultiva da inscrição, liberada no fim da transação.
-
-    A técnica de `submissao._travar_o_par`, e pela mesma razão: serializa sem travar linha. Fora do
-    PostgreSQL é no-op, e é honesto que seja — o SQLite serializa a escrita inteira.
-    """
-    if connection.vendor != "postgresql":
-        return
-    material = f"inscricao:confirmar:{inscricao.pk}".encode()
-    chave = int.from_bytes(hashlib.sha256(material).digest()[:8], "big", signed=True)
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [chave])
+def espera_para_tentar_de_novo(tentativa, agora=None):
+    """Quanto falta para a próxima tentativa poder sair — `timedelta(0)` quando já pode."""
+    if tentativa is None:
+        return timedelta(0)
+    restante = tentativa.em + INTERVALO_ENTRE_TENTATIVAS - (agora or timezone.now())
+    return max(restante, timedelta(0))
 
 
 def confirmar(*, inscricao, ator, montar_dados, correlation_id=""):
     """Envia a confirmação, se ela ainda não saiu, e registra a tentativa.
 
     Devolve a `Tentativa` registrada, ou `None` quando não tentou: inscrição que não está enviada
-    (FR-8350), ou confirmação já aceita (FR-8351). `montar_dados` só é chamado quando há envio,
-    porque montar os dados lê o comprovante inteiro — e a repetição não precisa dele.
+    (FR-8350) ou sem endereço, confirmação já aceita (FR-8351), outra tentativa em curso ou a última
+    de menos de um minuto (FR-8363) — e também quando algo falhou no caminho, que vai ao registro
+    técnico. `montar_dados` só é chamado quando há envio, porque montar os dados lê o comprovante
+    inteiro — e a repetição não precisa dele.
 
     **Chamado depois do commit do envio**, nunca dentro dele (FR-084b da `010`, FR-8352): a
     transação daqui é outra, e a falha de qualquer coisa nela não alcança a inscrição gravada.
     """
     if inscricao.status != Inscricao.Status.SUBMETIDA:
         return None
+    if not inscricao.email:
+        # Sem endereço, tentar seria registrar uma falha que nenhuma nova tentativa resolve, e a
+        # tela ofereceria um botão que sempre falha. Sem tentativa, ela não diz nada (FR-8362).
+        logger.warning(
+            "A inscrição %s não tem endereço: a confirmação não foi tentada.", inscricao.pk
+        )
+        return None
+    try:
+        return _tentar(inscricao, ator, montar_dados, correlation_id)
+    except Exception:  # noqa: BLE001 — a inscrição já está gravada; a falha não chega à pessoa
+        logger.exception("A confirmação da inscrição %s não foi tentada até o fim.", inscricao.pk)
+        return None
+
+
+def _tentar(inscricao, ator, montar_dados, correlation_id):
     with transaction.atomic():
-        _travar(inscricao)
+        if not travar_consultivamente(f"inscricao:confirmar:{inscricao.pk}", esperar=False):
+            return None
         anteriores = tentativas(inscricao)
         if any(tentativa.enviada for tentativa in anteriores):
+            return None
+        if anteriores and espera_para_tentar_de_novo(anteriores[-1]):
             return None
         aceita = mensagem.enviar_comprovante(
             para=inscricao.email, dados=montar_dados(), inscricao_id=inscricao.pk

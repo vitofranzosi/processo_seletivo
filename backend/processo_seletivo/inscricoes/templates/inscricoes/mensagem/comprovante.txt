@@ -4,7 +4,8 @@ A confirmação do envio da inscrição, em texto puro (010, FR-084; 181). A PRI
 "Enviada", e nunca "recebida" (181, FR-8354, D-004): na área do candidato, "Inscrição recebida" é o
 degrau da relação que a comissão publica depois (148), e dizê-lo aqui contaria à pessoa um passo que
 ela ainda não deu. A situação de agora não se fixa na mensagem: ela é a da área do candidato, e uma
-nova tentativa dias depois a diria velha.
+nova tentativa dias depois a diria velha. Pelo mesmo motivo, "o que acontece agora" não diz que não há
+nada a fazer: semanas depois, a pessoa pode já ter um passo pendente (revisão de 18/11).
 
 O que a pessoa acabou de ver na tela do comprovante, sem CPF e sem telefone. Um parágrafo por linha:
 quem quebra a linha é o leitor de e-mail, na largura da tela de quem lê — a quebra fixa deixava
@@ -28,9 +29,9 @@ Documentos enviados:
 {% endfor %}
 O que acontece agora
 
-Por enquanto, você não precisa fazer nada. Enviada não quer dizer aceita: a comissão analisa as inscrições, e o resultado será publicado conforme o Edital.
+Enviada não quer dizer aceita: a comissão analisa as inscrições, e o resultado será publicado conforme o Edital.
 
-Acompanhe a situação da sua inscrição na área do candidato. Se o Edital pedir algum passo seu, ele aparece lá.
+Acompanhe a situação da sua inscrição na área do candidato: é lá que aparece qualquer passo que o Edital pedir a você.
 
 Para ver o seu comprovante, acesse:
 {{ endereco }}

@@ -66,6 +66,17 @@ recusando → aviso e botão; o botão envia e a tela muda.
 - [x] T018 Atualizar a docstring de `processo_seletivo/inscricoes/application/mensagem.py`, a linha da `181` na tabela de incrementos do `README.md`, o rótulo `CONFIRMAR_POR_EMAIL` da trilha legível em `processo_seletivo/interface/views.py`, e o caso sem sessão de `tests/authorization/test_idor_area.py`. **A nota das Novidades do GPS fica para depois do merge**: `novidades.toml` só aceita nota de PR que já está na `main`
 - [x] T019 `make lint check`, a suíte inteira contra PostgreSQL, e as capturas da mensagem e do comprovante pelo quickstart
 
+## Phase 7: Revisão de código de 18/11
+
+- [x] T020 Conter toda falha de `confirmar` no registro técnico, sem 500 depois da inscrição gravada (FR-8352) em `processo_seletivo/inscricoes/application/confirmacao.py`
+- [x] T021 Trava sem espera e intervalo de um minuto entre tentativas, com a frase na tela (FR-8363) em `processo_seletivo/inscricoes/application/confirmacao.py`, `processo_seletivo/portal/views.py` e `processo_seletivo/portal/templates/portal/comprovante.html`
+- [x] T022 Tirar "Por enquanto, você não precisa fazer nada" da mensagem (FR-8355) nos dois modelos de `processo_seletivo/inscricoes/templates/inscricoes/mensagem/`
+- [x] T023 Não tentar a confirmação de inscrição sem endereço em `processo_seletivo/inscricoes/application/confirmacao.py`
+- [x] T024 [P] Mover a trava consultiva para `processo_seletivo/shared/concurrency.py` (`travar_consultivamente`), usada também por `inscricoes/application/submissao.py`
+- [x] T025 [P] Extrair `_ao_acesso_sem_sessao` em `processo_seletivo/portal/views.py`, usado pela convocação e pelo comprovante
+- [x] T026 [P] Usar o servidor de correio simulado de `tests/fixtures/correio.py` nos dois arquivos de teste, no lugar de classes definidas num deles
+- [x] T027 Testar o duplo clique na revisão de ponta a ponta, a trava ocupada, o intervalo, a inscrição sem endereço e a contenção em `tests/integration/inscricoes/test_confirmacao_por_email.py` e `tests/integration/portal/test_confirmacao_de_inscricao.py`
+
 ## Dependencies & Execution Order
 
 - T001 → T002 → T003. US1 e US2 dependem de T002.

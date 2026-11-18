@@ -29,8 +29,8 @@ foi enviado; o que acontece agora, antes do único botão; e como entrar.
 {% for documento in documentos %}<li class="item">{{ documento.requisito }}: {{ documento.arquivo }}</li>
 {% endfor %}</ul>{% else %}<p class="texto">(nenhum)</p>{% endif %}
 <p class="rotulo espaco">O que acontece agora</p>
-<p class="texto">Por enquanto, você não precisa fazer nada. Enviada não quer dizer aceita: a comissão analisa as inscrições, e o resultado será publicado conforme o Edital.</p>
-<p class="texto">Acompanhe a situação da sua inscrição na área do candidato. Se o Edital pedir algum passo seu, ele aparece lá.</p>
+<p class="texto">Enviada não quer dizer aceita: a comissão analisa as inscrições, e o resultado será publicado conforme o Edital.</p>
+<p class="texto">Acompanhe a situação da sua inscrição na área do candidato: é lá que aparece qualquer passo que o Edital pedir a você.</p>
 {% include "correio/_botao.html" with endereco=endereco rotulo="Ver meu comprovante" %}
 <p class="fraco">Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há senha.</p>
 {% endblock %}

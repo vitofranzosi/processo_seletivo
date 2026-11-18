@@ -44,18 +44,28 @@ própria duplicaria a trilha para responder uma pergunta que ela já responde.
 **Alternativas recusadas**: coluna na `Inscricao` (a enviada é imutável por gatilho, e "estado de
 envio" é exatamente a coluna que a `066` recusou); tabela nova (D-002).
 
-## R2 — Uma vez só: trava por inscrição e leitura da trilha antes de enviar
+## R2 — Uma vez só: trava por inscrição, sem espera, e leitura da trilha antes de enviar
 
-**Escolha**: `confirmar` abre uma transação, toma `pg_advisory_xact_lock` sobre uma chave derivada do
-identificador da inscrição, lê as tentativas, **não envia** se alguma foi `ENVIADA`, envia e grava a
-tentativa. A trava é liberada no commit, depois de a tentativa estar gravada.
+**Escolha**: `confirmar` abre uma transação, **tenta** a trava consultiva da inscrição
+(`pg_try_advisory_xact_lock`, por `shared.concurrency.travar_consultivamente(esperar=False)`), lê as
+tentativas, **não envia** se alguma foi `ENVIADA` ou se a última é de menos de um minuto, envia e grava
+a tentativa. A trava é liberada no commit, depois de a tentativa estar gravada. Quem não consegue a
+trava volta sem enviar: outra tentativa da mesma inscrição está em curso, e ela registra o resultado.
 
-**Por quê**: é a técnica que `submissao._travar_o_par` já usa, e serializa duas requisições da mesma
-inscrição sem tocar a linha dela. A segunda requisição espera, lê a `ENVIADA` da primeira, e não envia
-(FR-8351). Fora do PostgreSQL é no-op, como lá.
+**Por quê**: serializa duas requisições da mesma inscrição sem tocar a linha dela (FR-8351). A
+primeira redação esperava a trava; a revisão de código de 18/11 mostrou o custo — a conversa com o
+servidor de correio acontece sob ela, até o `EMAIL_TIMEOUT`, e cliques repetidos ou várias abas
+empilhavam requisições e workers atrás de um servidor fora do ar. O intervalo de um minuto
+(`INTERVALO_ENTRE_TENTATIVAS`, FR-8363) limita o mesmo efeito para cliques em sequência. A técnica da
+trava passou a morar em `shared.concurrency`, e `submissao._travar_o_par` a usa, com a mesma chave.
 
 **Custo aceito**: a transação fica aberta durante a conversa com o servidor de correio, até o
-`EMAIL_TIMEOUT`. Ela só segura a trava consultiva daquela inscrição — nenhuma linha, nenhuma tabela.
+`EMAIL_TIMEOUT` — uma por inscrição e por minuto, no máximo. Ela só segura a trava consultiva daquela
+inscrição: nenhuma linha, nenhuma tabela.
+
+**Contenção** (FR-8352): toda exceção de `confirmar` — a trava, a leitura, `montar_dados`, o commit —
+vai ao registro técnico com o identificador da inscrição e devolve `None`. Antes, uma queda de banco
+nesse caminho virava 500 com a inscrição já gravada.
 
 **Caso pensado**: a trilha falha depois de a mensagem sair. A gravação vai num ponto de salvamento, e
 a falha dela vai ao log; a mensagem já saiu, e a próxima tentativa — se a titular pedir — poderia
@@ -84,7 +94,8 @@ identificador (FR-8357).
 
 **Escolha**: `POST /selecoes/inscricoes/<id>/comprovante/confirmacao` (`portal:comprovante-confirmacao`).
 Exige sessão e titularidade (`_inscricao_do_titular`), e inscrição enviada; sem isso, a mesma resposta
-de inscrição inexistente. Chama `confirmacao.confirmar` com os mesmos dados do primeiro envio e
+de inscrição inexistente. Dentro do minuto depois de uma falha, não chama `confirmar`: guarda a frase
+`ESPERE_PARA_TENTAR_DE_NOVO` na sessão, que o comprovante mostra no aviso de falha. Chama `confirmacao.confirmar` com os mesmos dados do primeiro envio e
 redireciona ao comprovante (POST → redirect → GET). Se a última tentativa já foi aceita, `confirmar` não
 envia nada, e a tela continua dizendo que foi enviada (FR-8351).
 
@@ -95,7 +106,9 @@ lista "Minhas inscrições" (o comprovante é onde a pessoa vê o aviso, e um lu
 
 **Escolha**: assunto "Sua inscrição foi enviada — Edital ‹número›/‹ano›"; título "Sua inscrição foi
 enviada."; o quadro com protocolo e código; os dados (Perfil, concorrência, "Enviada em"); os
-documentos; "O que acontece agora", com três frases; o botão "Ver meu comprovante"; a nota de acesso por
+documentos; "O que acontece agora", com duas frases que valem em qualquer dia — a primeira redação
+dizia "Por enquanto, você não precisa fazer nada", e a revisão de 18/11 a tirou, porque uma nova
+tentativa semanas depois a diria a quem já tem passo pendente; o botão "Ver meu comprovante"; a nota de acesso por
 código. A ressalva antiga ("O recebimento não implica deferimento…") sai da mensagem e fica no
 comprovante (D-004): "Enviada não quer dizer aceita" diz o mesmo sem a palavra do deferimento.
 

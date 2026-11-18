@@ -21,6 +21,8 @@ já existe (R1 da pesquisa).
 
 - `n` é o número de tentativas anteriores da mesma inscrição, mais um, lido sob a trava (R2).
 - Uma inscrição tem no máximo uma tentativa `ENVIADA`, e nenhuma tentativa depois dela (FR-8351).
+- Entre duas tentativas da mesma inscrição há ao menos um minuto (FR-8363).
+- Inscrição sem endereço não tem tentativa.
 - `ENVIADA` quer dizer aceita pelo servidor de correio (FR-8359).
 - A "última tentativa" é a de maior `occurred_at`, com o número da tentativa como desempate.
 

@@ -590,6 +590,22 @@ def _destino_seguro(request, padrao):
     return padrao
 
 
+def _ao_acesso_sem_sessao(request):
+    """Sem identidade na sessão, o acesso com a volta para cá; com ela, `None` (121, FR-3876; 181).
+
+    **Antes de qualquer consulta.** Os links das mensagens — a convocação e a confirmação da
+    inscrição — levam a páginas da titular, e sem sessão eles davam 404 à própria titular. A
+    pergunta lê só a chave da sessão, e a resposta não depende do identificador: real, inventado e
+    alheio recebem o mesmo redirecionamento, no mesmo tempo. O destino é só um caminho, e a
+    titularidade é conferida de novo quando a pessoa voltar. A chave, e não `identidade_da_sessao`:
+    ela só existe depois do código provado, e ler o registro aqui seria a segunda leitura da mesma
+    identidade, que `_inscricao_do_titular` já faz logo depois.
+    """
+    if request.session.get(identidade_do_candidato.CHAVE_SESSAO):
+        return None
+    return redirect(f"{reverse('portal:acesso')}?{urlencode({'destino': request.path})}")
+
+
 def selecao(request, edital_id, *, assistente=True):
     """O detalhe de uma seleção, orientado à decisão de participar.
 
@@ -2729,11 +2745,8 @@ def convocacao(request, inscricao_id):
         vigentes_por_inscricao,
     )
 
-    # A chave da sessão, e não `identidade_da_sessao`: a chave só existe depois do código provado
-    # (`abrir_sessao`), e ler o registro aqui seria a segunda leitura da mesma identidade, que
-    # `_inscricao_do_titular` já faz logo abaixo.
-    if not request.session.get(identidade_do_candidato.CHAVE_SESSAO):
-        return redirect(f"{reverse('portal:acesso')}?{urlencode({'destino': request.path})}")
+    if (ao_acesso := _ao_acesso_sem_sessao(request)) is not None:
+        return ao_acesso
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     agora = timezone.now()
     # **Vigente é a que ninguém sucedeu**, como em toda a feature: uma convocação corrigida foi
@@ -3575,6 +3588,12 @@ def _dados_da_confirmacao(request, registro):
     }
 
 
+#: O que a tela diz a quem pede a nova tentativa antes do intervalo (181, FR-8363).
+ESPERE_PARA_TENTAR_DE_NOVO = (
+    "Acabamos de tentar enviar a confirmação. Espere um minuto antes de tentar de novo."
+)
+
+
 @require_http_methods(["POST"])
 @resposta_privada
 def confirmar_de_novo(request, inscricao_id):
@@ -3587,7 +3606,13 @@ def confirmar_de_novo(request, inscricao_id):
     registro, identidade, _ = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         raise DomainError("not_found", "Recurso não encontrado.", 404)
-    _confirmar_por_email(request, registro, identidade)
+    ultima = confirmacao.ultima(registro)
+    if ultima is not None and not ultima.enviada and confirmacao.espera_para_tentar_de_novo(ultima):
+        # O intervalo de um minuto (FR-8363): o clique repetido não vira carga sobre um servidor de
+        # correio fora do ar. `confirmar` também o recusa; aqui só se diz à pessoa por quê.
+        _avisar(request, ESPERE_PARA_TENTAR_DE_NOVO)
+    else:
+        _confirmar_por_email(request, registro, identidade)
     return redirect(reverse("portal:comprovante", args=[registro.id]))
 
 
@@ -3690,8 +3715,8 @@ def comprovante(request, inscricao_id):
     confirmação leva aqui, e sem sessão ele dava 404 à própria titular. É o desenho da convocação
     (121, FR-3876): a resposta não depende do identificador, e a titularidade é conferida na volta.
     """
-    if not request.session.get(identidade_do_candidato.CHAVE_SESSAO):
-        return redirect(f"{reverse('portal:acesso')}?{urlencode({'destino': request.path})}")
+    if (ao_acesso := _ao_acesso_sem_sessao(request)) is not None:
+        return ao_acesso
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
@@ -3738,6 +3763,8 @@ def comprovante(request, inscricao_id):
             # O que aconteceu com a mensagem, pela última tentativa (181, FR-8362). Sem tentativa —
             # a inscrição anterior à 181, o cenário de treinamento —, a tela não afirma nada.
             "confirmacao": confirmacao.ultima(registro),
+            # Só a frase do intervalo (FR-8363); a recusa, quando houver, é de outra tela.
+            "aviso_da_confirmacao": request.session.pop(CHAVE_DO_AVISO, ""),
         },
     )
 

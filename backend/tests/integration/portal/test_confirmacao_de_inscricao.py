@@ -16,16 +16,21 @@ sem tela, está em `tests/integration/inscricoes/test_confirmacao_por_email.py`.
 """
 
 import re
+import threading
 import uuid
+from datetime import timedelta
 from urllib.parse import unquote
 
 import pytest
 from django.core import mail
+from django.db import connection, connections
+from django.test import Client
 from django.urls import reverse
 
 from processo_seletivo.inscricoes.application import confirmacao
 from processo_seletivo.inscricoes.application.rascunho import anexar_documento, gravar_dados
 from processo_seletivo.inscricoes.models import Inscricao
+from tests.fixtures import correio
 from tests.fixtures.candidato import JOAO, MARIA, MODALIDADE_AC, identificar, pdf
 from tests.fixtures.selecao import DOCUMENTO_DE_TODOS, DOCUMENTO_DO_PERFIL
 
@@ -244,7 +249,14 @@ def test_envio_recusado_nao_manda_mensagem(client, caixa, pronta):
 # -------------------------------------------------
 
 
-FORA_DO_AR = "tests.integration.inscricoes.test_confirmacao_por_email.CorreioForaDoAr"
+#: O servidor de correio fora do ar na primeira mensagem; as seguintes, o simulado aceita.
+FORA_DO_AR = ConnectionRefusedError("servidor de correio fora do ar")
+
+
+@pytest.fixture
+def sem_intervalo(monkeypatch):
+    """A nova tentativa sem o minuto de espera (FR-8363), para os casos que a fazem em seguida."""
+    monkeypatch.setattr(confirmacao, "INTERVALO_ENTRE_TENTATIVAS", timedelta(0))
 
 
 def test_o_comprovante_diz_inscricao_enviada_e_para_onde_foi_a_mensagem(client, caixa, pronta):
@@ -260,9 +272,10 @@ def test_o_comprovante_diz_inscricao_enviada_e_para_onde_foi_a_mensagem(client, 
     assert "Enviar a confirmação de novo" not in corpo
 
 
-def test_falhou_a_tela_avisa_e_a_titular_tenta_de_novo(client, caixa, pronta, settings):
+def test_falhou_a_tela_avisa_e_a_titular_tenta_de_novo(client, pronta, settings, sem_intervalo):
     """FR-8362, FR-8363, D-003: a falha é visível e tratável por quem está na tela."""
-    settings.EMAIL_BACKEND = FORA_DO_AR
+    correio.usar(settings, FORA_DO_AR)
+    caixa = mail.outbox
     identificar(client, MARIA)
 
     corpo = enviar(client, pronta).content.decode()
@@ -273,7 +286,6 @@ def test_falhou_a_tela_avisa_e_a_titular_tenta_de_novo(client, caixa, pronta, se
     assert "Enviar a confirmação de novo" in corpo
     assert "Enviamos a confirmação" not in corpo
 
-    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
     resposta = client.post(reverse("portal:comprovante-confirmacao", args=[pronta.id]), follow=True)
 
     assert len(caixa) == 1
@@ -295,7 +307,7 @@ def test_a_aba_antiga_nao_manda_a_segunda(client, caixa, pronta):
     assert len(confirmacao.tentativas(pronta)) == 1
 
 
-def test_nova_tentativa_so_da_titular_e_da_enviada(client, caixa, pronta, settings):
+def test_nova_tentativa_so_da_titular_e_da_enviada(client, pronta, settings, sem_intervalo):
     """FR-8364: sem sessão, outra pessoa ou rascunho — a resposta de inexistente, e nada sai."""
     endereco = reverse("portal:comprovante-confirmacao", args=[pronta.id])
 
@@ -303,16 +315,15 @@ def test_nova_tentativa_so_da_titular_e_da_enviada(client, caixa, pronta, settin
     identificar(client, MARIA)
     assert client.post(endereco).status_code == 404, "rascunho"
 
-    settings.EMAIL_BACKEND = FORA_DO_AR
+    correio.usar(settings, FORA_DO_AR)
     enviar(client, pronta)
-    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
     identificar(client, JOAO)
     assert client.post(endereco).status_code == 404, "outra pessoa"
     inventado = reverse("portal:comprovante-confirmacao", args=[uuid.uuid4()])
     assert client.post(inventado).status_code == 404, "inexistente"
     assert client.get(endereco).status_code == 405
 
-    assert caixa == []
+    assert mail.outbox == []
     assert len(confirmacao.tentativas(pronta)) == 1
 
 
@@ -329,17 +340,95 @@ def test_sem_tentativa_o_comprovante_nao_fala_da_mensagem(client, caixa, pronta,
     assert "confirmação para" not in corpo
 
 
-def test_o_aviso_da_mensagem_fica_fora_do_papel(client, caixa, pronta, settings):
+def test_o_aviso_da_mensagem_fica_fora_do_papel(client, pronta, settings, sem_intervalo):
     """FR-8366: o aviso é da tela; o PDF não muda quando a confirmação muda."""
-    settings.EMAIL_BACKEND = FORA_DO_AR
+    correio.usar(settings, FORA_DO_AR)
     identificar(client, MARIA)
     corpo = enviar(client, pronta).content.decode()
     aviso = re.search(r'<div class="([^"]*)" role="status">\s*<p><strong>Não conseguimos', corpo)
     assert "nao-imprime" in aviso.group(1).split()
     pdf_com_a_falha = client.get(reverse("portal:comprovante-pdf", args=[pronta.id])).content
 
-    settings.EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
     client.post(reverse("portal:comprovante-confirmacao", args=[pronta.id]))
     pdf_com_a_mensagem = client.get(reverse("portal:comprovante-pdf", args=[pronta.id])).content
 
     assert pdf_com_a_falha == pdf_com_a_mensagem
+
+
+# --- Revisão de 18/11 -------------------------------------------------------------------------
+
+
+def test_dentro_do_intervalo_a_tela_pede_para_esperar_e_nada_sai(client, pronta, settings):
+    """FR-8363: o segundo clique logo depois da falha não chega ao servidor de correio."""
+    from processo_seletivo.portal.views import ESPERE_PARA_TENTAR_DE_NOVO
+
+    correio.usar(settings, FORA_DO_AR)
+    identificar(client, MARIA)
+    enviar(client, pronta)
+
+    resposta = client.post(reverse("portal:comprovante-confirmacao", args=[pronta.id]), follow=True)
+
+    corpo = resposta.content.decode()
+    assert ESPERE_PARA_TENTAR_DE_NOVO in corpo
+    assert "Enviar a confirmação de novo" in corpo
+    assert mail.outbox == []
+    assert len(confirmacao.tentativas(pronta)) == 1
+
+
+def test_falha_de_banco_na_confirmacao_nao_derruba_o_envio(client, caixa, pronta, monkeypatch):
+    """FR-8352: a inscrição já está gravada; a pessoa chega ao comprovante, e não a um 500."""
+
+    def banco_fora(*_, **__):
+        raise RuntimeError("conexão perdida")
+
+    monkeypatch.setattr(confirmacao, "travar_consultivamente", banco_fora)
+    identificar(client, MARIA)
+
+    resposta = enviar(client, pronta)
+
+    pronta.refresh_from_db()
+    assert resposta.status_code == 200
+    assert pronta.status == Inscricao.Status.SUBMETIDA
+    assert pronta.protocolo in resposta.content.decode()
+    assert caixa == []
+
+
+@pytest.mark.skipif(
+    connection.vendor != "postgresql",
+    reason="A corrida é entre conexões; em sqlite a escrita já é serializada e ela não existe.",
+)
+def test_dois_cliques_simultaneos_no_envio_mandam_uma_mensagem(caixa, pronta):
+    """O defeito que a 181 fecha, de ponta a ponta: duas requisições do mesmo envio, ao mesmo tempo.
+
+    `enviar_inscricao` devolve a mesma inscrição à segunda (a repetição idempotente), e antes da
+    181 a view mandava a confirmação de novo.
+    """
+    clientes = [Client(), Client()]
+    for cliente in clientes:
+        identificar(cliente, MARIA)
+    barreira = threading.Barrier(2, timeout=10)
+    respostas = []
+
+    def clicar(cliente):
+        try:
+            barreira.wait()
+            respostas.append(
+                cliente.post(
+                    reverse("portal:revisao", args=[pronta.id]),
+                    {"veracidade": "on", "ciencia": "on"},
+                ).status_code
+            )
+        finally:
+            connections.close_all()
+
+    fios = [threading.Thread(target=clicar, args=(cliente,)) for cliente in clientes]
+    for fio in fios:
+        fio.start()
+    for fio in fios:
+        fio.join(timeout=30)
+
+    pronta.refresh_from_db()
+    assert pronta.status == Inscricao.Status.SUBMETIDA
+    assert respostas == [302, 302]
+    assert len(caixa) == 1
+    assert [t.numero for t in confirmacao.tentativas(pronta)] == [1]
