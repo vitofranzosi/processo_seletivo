@@ -15,6 +15,42 @@
 # ---- novembro de 2026 ----------------------------------------------------------------------------
 
 [[nota]]
+id = "inscricao-confirmada-uma-vez-so"
+data = 2026-11-18
+categoria = "melhoria"
+relevancia = "relevante"
+titulo = "Quem se inscreve recebe uma confirmação clara, uma vez só"
+resumo = """
+Ao enviar a inscrição, a pessoa recebe um e-mail que diz "enviada" — e não "recebida" —, com um botão para
+o comprovante. Se o correio falhar, o comprovante avisa e deixa pedir a confirmação de novo.
+"""
+exemplo = """
+Uma candidata envia a inscrição ao Edital 05/2026 e clica duas vezes: chega um e-mail só. Com o correio
+fora do ar, o comprovante diz que a confirmação não saiu e oferece "Enviar a confirmação de novo".
+"""
+documentacao = "confirmacao-da-inscricao"
+prs = [590]
+specs = ["181"]
+
+[[nota]]
+id = "data-de-nascimento-no-cadastro"
+data = 2026-11-18
+categoria = "novidade"
+relevancia = "relevante"
+titulo = "Confira CPF e data de nascimento de quem se inscreveu, com motivo"
+resumo = """
+O cadastro do candidato agora pede a data de nascimento. No detalhe da inscrição você vê o CPF completo
+e a data informando o motivo, e fica registrado quem conferiu e por quê — nunca os dados.
+"""
+exemplo = """
+Surge uma dúvida sobre o CPF de uma inscrição do Edital 03/2026. Você abre o detalhe, escreve "pedido da
+presidência" e lê CPF e data para conferir no site da Receita.
+"""
+documentacao = "data-de-nascimento"
+prs = [586, 588]
+specs = ["180"]
+
+[[nota]]
 id = "distribuicao-sem-choque-de-horario"
 data = 2026-11-16
 categoria = "novidade"

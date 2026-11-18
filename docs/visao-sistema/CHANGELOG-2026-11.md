@@ -770,3 +770,21 @@ Depois do #584, a `main` recebeu o #583, o incremento 1 da 179. Esta revisão a 
 - **Maturidade recontada:** 179 pastas, 651 arquivos Python (184,4 mil linhas), 292 templates e 1 346 + 27 testes; migrations, tabelas append-only, gatilhos, módulos e rotas não mudaram.
 
 **Não verificado:** a suíte inteira não rodou e nenhuma tela foi percorrida; o percurso no cenário C20 é o que o #583 registrou. O SC-2844, de validação humana, segue aberto.
+
+## Acréscimo de 18/11: a data de nascimento e a conferência de identidade (180), a confirmação da inscrição (181)
+
+Depois do #585, a `main` recebeu o #587, o #589, o #586 (o cadastro da 180), o #588 (a conferência de identidade da 180) e o #590 (a 181). Esta revisão descreve as duas specs contra a `main` em `a8a36944`.
+
+**O que mudou na documentação:**
+
+- **Subseção nova na área do candidato**, *Implementado*, sobre a 180:
+  - a data de nascimento pedida em *Seus dados*, ao lado de nome e CPF, congelada na inscrição no envio, sem idade mínima e sem prova de identidade;
+  - o bloco *Conferir identidade* no dossiê da inscrição enviada, com motivo obrigatório, só `POST`, a porta do detalhe e a operação `CONFERIR_IDENTIDADE` na trilha — sem o CPF nem a data;
+  - os três guardiões de que a data não vaza, não decide identidade e não dá acesso;
+  - as duas decisões registradas e não tomadas (o dossiê do requerimento já mostrava a data, e o motivo é texto livre).
+- **Subseção nova sobre a 181**, *Implementado*: a hipótese do pedido não se confirmou (a confirmação existe desde a 010), e o que faltava — falha sem rastro, servidor que não aceita passando por sucesso, duplo clique com duas mensagens, palavras trocadas — foi o que a spec mudou. O PDF não vai anexado, cada tentativa vai à trilha sem endereço, e o comprovante diz o que aconteceu e deixa pedir de novo, com um minuto entre tentativas.
+- **A linha dos e-mails** deixou de dizer *“Inscrição recebida”* e passou a *“Sua inscrição foi enviada — Edital NN/AAAA”*; a jornada do candidato ganhou a data nos passos 3 e 6 e a confirmação no passo 7; a tabela *Seus dados* da área do candidato também.
+- **As Novidades** ganharam duas notas — *Confira CPF e data de nascimento de quem se inscreveu, com motivo* e *Quem se inscreve recebe uma confirmação clara, uma vez só* —, e passaram a **118 notas**: 44 funcionalidades, 52 melhorias e 22 correções; 14 transformadoras, 59 relevantes e 45 incrementais; 97 com exemplo. O registro de curadoria recebeu os PRs só de documentação (#569, #576, #580, #582, #584, #585, #587 e #589) como *sem nota*.
+- **Maturidade recontada:** 181 pastas, 137 migrations (a 180 acrescentou duas), 652 arquivos Python (185,1 mil linhas), 293 templates, 1 356 + 27 testes e 191 + 53 rotas; tabelas append-only, gatilhos e módulos não mudaram.
+
+**Não verificado:** a suíte inteira não rodou e nenhuma tela foi percorrida; os percursos no navegador são os que os PRs registram. O #586 não foi lido como PR: o cadastro é descrito pela spec e pelo código. O roteiro de curadoria das Novidades continua sem rodar (o `gh pr list` de 1000 PRs devolve JSON incompleto), e a lista dos PRs sem destino foi feita à mão.
