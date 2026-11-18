@@ -114,3 +114,7 @@ prs = [575, 579]
 [[sem_nota]]
 motivo = "Os PDFs ficam iguais à vista — mesmo texto, mesmas páginas —; o que muda é o formato de preservação, por dentro do arquivo."
 prs = [581]
+
+[[sem_nota]]
+motivo = "Só documentação — estudos, achados e a Visão do Sistema: nada muda para quem usa."
+prs = [569, 576, 580, 582, 584, 585, 587, 589]
