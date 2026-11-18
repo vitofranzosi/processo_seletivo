@@ -173,6 +173,7 @@ from processo_seletivo.inscricoes.application.consulta import (
     CONSULTAR,
     consulta_de_inscricoes,
     documento_para_consulta,
+    identidade_para_conferencia,
     inscricao_para_consulta,
 )
 from processo_seletivo.interface import (
@@ -5686,6 +5687,9 @@ OPERACOES = {
     "CONSULTAR_DOCUMENTO_DA_CONVOCACAO": "Consulta a documento apresentado na convocação",
     "CONSULTAR_DOCUMENTOS_DA_CONVOCACAO": "Consulta aos documentos de uma convocação",
     "CONSULTAR_DOSSIE": "Consulta ao dossiê da inscrição",
+    # A conferência de identidade (180, D-002): quem viu o CPF completo e a data de nascimento de
+    # uma inscrição, e por quê. O motivo vai na frase; os valores, nunca (FR-8316).
+    "CONFERIR_IDENTIDADE": "Conferência de identidade de inscrição",
     # O envio do Requerimento de Matrícula (029). Mesma trilha, pela razão de sempre: quem responde
     # *"o que esta pessoa declarou, e sob qual declaração?"* lê a mesma tela de quem investiga uma
     # publicação. **As duas frases dizem o ato, e não o nome da função** (`FR-296`).
@@ -6269,6 +6273,43 @@ def _registrar_consulta_ao_dossie(ator, inscricao_id, request):
             new_state="",
             new_revision=None,
         )
+
+
+@require_http_methods(["POST"])
+def conferir_identidade(request, inscricao_id):
+    """O CPF completo e a data de nascimento de uma inscrição enviada, por ato com motivo (180).
+
+    **Só `POST`, e a página que responde não tem endereço próprio.** Um `GET` deixaria a revelação
+    no histórico do navegador e repetível por um clique; o `POST` com CSRF obriga o gesto, e cada
+    gesto é uma conferência na trilha. Atualizar a página reenvia o formulário, e o navegador avisa.
+
+    **Sem motivo, volta o dossiê com a recusa, e nada é revelado** (FR-8315). A porta já passou
+    quando a recusa do motivo chega — `identidade_para_conferencia` confere permissão e escopo
+    antes —, e por isso reabrir o dossiê aqui não mostra nada a quem não o abriria.
+    """
+    ator = identidade.ator_da_sessao(request)
+    if ator is None:
+        return identidade.pedir_identificacao(request)
+    try:
+        contexto = identidade_para_conferencia(
+            actor=ator,
+            inscricao_id=inscricao_id,
+            motivo=request.POST.get("motivo"),
+            correlation_id=getattr(request, "correlation_id", ""),
+        )
+    except DomainError as exc:
+        if exc.code != "reason_required":
+            raise
+        contexto = inscricao_para_consulta(actor=ator, inscricao_id=inscricao_id)
+        # O dossiê voltou à tela, e a abertura dele deixa rastro como qualquer outra (115, FR-3604).
+        _registrar_consulta_ao_dossie(ator, inscricao_id, request)
+        contexto["recusa_da_conferencia"] = exc.detail
+        return marcar_como_privada(
+            render(request, "interface/inscricao_detalhe.html", contexto, status=422)
+        )
+    return marcar_como_privada(
+        render(request, "interface/conferencia_de_identidade.html", contexto)
+    )
 
 
 @require_http_methods(["GET"])

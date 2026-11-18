@@ -87,9 +87,10 @@ o POST com CSRF obriga o gesto. Reusar a permissão do detalhe é a D-002 ("quem
 **O que vai na trilha**: o motivo, e não CPF nem data (FR-8316). O motivo é texto livre da equipe, e
 a tela diz "não escreva CPF nem data aqui".
 
-**Negativas**: inscrição inexistente ou fora do escopo responde como o detalhe (404). Linha nova no
-inventário de negativas da `033` (`test_gramatica_das_portas.py`). Motivo vazio volta o detalhe com
-a recusa, em 422, sem revelar nada.
+**Negativas**: inscrição inexistente ou fora do escopo responde como o detalhe (404), e o ator sem
+a permissão recebe o 403 do detalhe. Linha nova no inventário de negativas da `033`
+(`test_gramatica_das_portas.py`). Motivo vazio volta o detalhe com a recusa, em 422, sem revelar
+nada.
 
 ## R6 — O requerimento nasce com a data do cadastro
 
@@ -110,3 +111,38 @@ casos desta feature criam identidades **sem** data explicitamente.
 
 **Por quê**: a regra nova faz toda identidade de teste "faltar o núcleo" e todo envio de teste ser
 recusado. A causa é uma só, e se conserta na fixture (ver o risco no plano).
+
+## R8 — A conferência aparece na trilha do Edital, e só ela
+
+*Acrescentada na implementação da história 3, em 17/11.*
+
+**O que foi lido**: `auditoria/selectors.trilha_do_edital` reúne o Edital, as Retificações e os atos
+da condução (`_atos_da_conducao`). **Nenhum registro auditado sob a inscrição entra ali** — nem os
+atos do candidato, nem `CONSULTAR_DOSSIE` da `115`. Gravada só como a R5 descreve, a conferência
+ficaria no banco e em tela nenhuma, e o SC-2906 ("aparece na trilha com motivo") e o passo 5 do
+roteiro não se cumpririam para quem audita.
+
+**Escolha**: `trilha_do_edital` passa a consultar por um `Q` que soma, aos identificadores de sempre,
+os registros com `aggregate_type="Inscricao"`, `operation="CONFERIR_IDENTIDADE"` e a inscrição entre
+as do Edital (subconsulta). A frase do registro leva o **protocolo**, porque a tela mostra o tipo do
+agregado e não o identificador: sem ele, "qual inscrição" (FR-8316) estaria no banco e não na tela.
+
+**Alternativas recusadas**:
+- pôr a inscrição entre os identificadores da trilha: traria tudo o que é auditado sob ela (os atos
+  do candidato no rascunho, cada abertura do dossiê) e mudaria o que a tela mostra por uma razão que
+  não é desta feature;
+- auditar a conferência sob o Edital: a FR-8316 pede "qual inscrição", e o modelo de dados já diz
+  que o agregado é a inscrição;
+- acrescentar a `_atos_da_conducao`: o relatório do Edital (`interface/relatorio_trilha.py`) conta os
+  atos dela como registro posterior ao desfecho, e uma conferência é leitura registrada, e não ato
+  do certame.
+
+**Custo**: nenhuma consulta a mais na página; a subconsulta vai no mesmo `SELECT`.
+
+## R9 — O motivo é texto livre, e a tela pede que não se escreva CPF nem data nele
+
+*Registrada na implementação da história 3.* A FR-8316 proíbe gravar CPF e data na trilha, e o
+sistema não os grava. O motivo, porém, é digitado pela equipe, e nada impede alguém de escrever ali
+o CPF que acabou de ler. A R5 decidiu pela dica na tela ("Não escreva CPF nem data aqui"), e a
+implementação a seguiu sem acrescentar filtro: recusar motivo que contenha o CPF da inscrição seria
+requisito novo, e fica como **ponto para decisão do usuário**, e não como escopo desta história.

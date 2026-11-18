@@ -1,0 +1,43 @@
+{% extends "interface/base.html" %}{% load interface_extras %}
+{% block titulo %}Conferência de identidade — {{ inscricao.protocolo }}{% endblock %}
+{% block caminho_do_contexto %}<nav aria-label="Trilha de navegação" class="caminho-da-secao">{% include "interface/_produto_na_trilha.html" %} <a href="{% url 'interface:lista' %}">Processos Seletivos</a> › <a href="{% url 'interface:processo-detalhe' inscricao.edital.processo_id %}">{{ inscricao.edital.processo.institutional_code }}</a> › <a href="{% url 'interface:detalhe' inscricao.edital.id %}">Edital {{ inscricao.edital.number }}/{{ inscricao.edital.year }}</a> › <a href="{% url 'interface:inscricoes' inscricao.edital_id %}">Inscrições</a> › <a href="{% url 'interface:inscricao-recebida' inscricao.id %}">{{ inscricao.protocolo }}</a> › <span aria-current="page">Conferência de identidade</span></nav>{% endblock %}
+{% block conteudo %}
+<h1>Conferência de identidade</h1>
+<p class="sub">Inscrição {{ inscricao.protocolo }} · enviada em {{ inscricao.submitted_at|date:"d/m/Y" }} às {{ inscricao.submitted_at|date:"H\hi" }}</p>
+
+<section class="conferencia" aria-labelledby="dados-declarados">
+  <h2 id="dados-declarados">Dados declarados no envio</h2>
+  {% comment %}
+  **Os valores sao os da inscricao, e nao os do cadastro** (180, FR-8312): o que a pessoa declarou no
+  envio e o que esta congelado no ato. A enviada antes da 180 nao tem data, e a tela o diz em vez de
+  buscar a do cadastro e apresenta-la como se fosse daquele envio (FR-8304).
+
+  **Declarados, e nao provados.** O sistema confere que o CPF e um numero possivel e que a data
+  existe; quem confirma que sao desta pessoa e a consulta a Receita, fora daqui.
+
+  **Esta pagina nao tem endereco proprio**: veio de um POST, nao fica guardada pelo navegador, e nao
+  ha link nem formulario nela que repita a revelacao.
+  {% endcomment %}
+  <dl class="dados-da-inscricao">
+    <dt>Nome</dt><dd>{{ nome }}</dd>
+    <dt>CPF</dt><dd>{{ cpf }}</dd>
+    <dt>Data de nascimento</dt>
+    <dd>{% if data_nascimento %}{{ data_nascimento|date:"d/m/Y" }}{% else %}Não informada nesta inscrição{% endif %}</dd>
+  </dl>
+  <p class="ajuda">São os dados que a pessoa declarou ao enviar a inscrição. O sistema não os
+    confirma: a conferência é feita por você, na Receita Federal.{% if not data_nascimento %} Esta
+    inscrição foi enviada antes de a data de nascimento ser pedida no cadastro.{% endif %}</p>
+</section>
+
+<section class="conferencia" aria-labelledby="registro-da-conferencia">
+  <h2 id="registro-da-conferencia">Registro desta conferência</h2>
+  <dl class="dados-da-inscricao">
+    <dt>Quem conferiu</dt><dd>{% nome_de_pessoa conferida_por %}</dd>
+    <dt>Quando</dt><dd>{{ conferida_em|date:"d/m/Y" }} às {{ conferida_em|date:"H\hi" }}</dd>
+    <dt>Motivo</dt><dd>{{ motivo }}</dd>
+  </dl>
+  <p class="ajuda">Este registro está na trilha de auditoria do Edital, sem o CPF e sem a data.</p>
+</section>
+
+<p class="salvar"><a class="acao" href="{% url 'interface:inscricao-recebida' inscricao.id %}">Voltar à inscrição</a></p>
+{% endblock %}

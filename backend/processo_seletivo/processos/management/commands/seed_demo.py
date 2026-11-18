@@ -34,6 +34,9 @@ from processo_seletivo.unidades.application.semente import semear as semear_unid
 from processo_seletivo.unidades.domain.nomes import GERIR as GERIR_AUTORIDADES
 
 ESCOPO = "cefor"
+#: A data de nascimento de toda pessoa da demonstração (180). Uma só, porque nenhum roteiro a
+#: compara entre pessoas; o cadastro e a inscrição enviada a recebem iguais, como o envio faria.
+NASCIMENTO_DA_DEMONSTRACAO = date(1994, 7, 12)
 # As autoridades que a demonstração usa, só com o cargo, como o registro inicial do Cefor fica até
 # o Cefor fornecer nome e portaria (060, FR-1124). São cadastradas pelo comando, com um Gestor, e
 # reaproveitadas quando a demonstração roda de novo com outro código.
@@ -1239,6 +1242,9 @@ class Command(BaseCommand):
                 submitted_at=agora,
                 versao_aceita=versao,
                 declaracoes_aceitas_em=agora,
+                # A data do cadastro, como o envio a congela desde a `180`: sem ela, a conferência
+                # de identidade da demonstração diria "não informada" em toda inscrição.
+                data_nascimento=NASCIMENTO_DA_DEMONSTRACAO,
             )
             inscricao.refresh_from_db()
             # A lista do que foi pedido, como o envio grava (044): com a versão e o instante do
@@ -1407,6 +1413,9 @@ class Command(BaseCommand):
                 submitted_at=agora,
                 versao_aceita=versao,
                 declaracoes_aceitas_em=agora,
+                # A data do cadastro, como o envio a congela desde a `180`: sem ela, a conferência
+                # de identidade da demonstração diria "não informada" em toda inscrição.
+                data_nascimento=NASCIMENTO_DA_DEMONSTRACAO,
             )
             inscricao.refresh_from_db()
             # A lista do que foi pedido, como o envio grava (044): com a versão e o instante do
@@ -1729,7 +1738,7 @@ class Command(BaseCommand):
                 "cpf_normalizado": inscricao.cpf_normalizado,
                 # A data entrou no cadastro com a `180`: sem ela, quem entra no portal com uma
                 # identidade da demonstração seria levado a "Seus dados" antes de qualquer vaga.
-                "data_nascimento": date(1994, 7, 12),
+                "data_nascimento": NASCIMENTO_DA_DEMONSTRACAO,
                 "created_at": agora,
             },
         )
@@ -1737,7 +1746,7 @@ class Command(BaseCommand):
             # Num banco semeado antes da `180`, a identidade já existe e o `get_or_create` não a
             # completa.
             CandidateIdentity.objects.filter(pk=identidade.pk).update(
-                data_nascimento=date(1994, 7, 12)
+                data_nascimento=NASCIMENTO_DA_DEMONSTRACAO
             )
         CandidateEmail.objects.get_or_create(
             email_canonico=canonizar(inscricao.email),

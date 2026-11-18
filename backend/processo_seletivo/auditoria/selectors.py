@@ -172,6 +172,9 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
     resposta nesta tela: teria no banco. É a mesma reunião que `trilha_da_comissao` faz, e pela
     mesma razão que a `011` registrou ao fazê-la.
 
+    **E as conferências de identidade das inscrições** (180, D-002), e só elas: ver
+    `_conferencias_de_identidade`.
+
     **O custo é conhecido e aceito**: a lista de identificadores cresce com o certame, e a consulta
     é paginada. A alternativa seria uma coluna de Edital no registro de auditoria — um subsistema
     paralelo de log para uma tela, que é exatamente o que a `D-018` da `011` recusou.
@@ -181,7 +184,41 @@ def trilha_do_edital(*, actor, edital, cursor=None, limit=LIMITE_PADRAO):
         *edital.retificacoes.values_list("id", flat=True),
         *_atos_da_conducao(edital),
     ]
-    return consultar(actor=actor, aggregate_ids=identificadores, cursor=cursor, limit=limit)
+    return consultar(
+        actor=actor,
+        aggregate_filter=Q(aggregate_id__in=identificadores) | _conferencias_de_identidade(edital),
+        cursor=cursor,
+        limit=limit,
+    )
+
+
+def _conferencias_de_identidade(edital):
+    """As conferências de identidade das inscrições deste Edital, e só elas (180, D-002, SC-2906).
+
+    A conferência é auditada sob a inscrição, e a inscrição não está entre os agregados que esta
+    trilha reúne. Sem isto, "quem viu o CPF e a data desta pessoa, e por quê" teria resposta no
+    banco e não na tela de quem audita — o que a D-002 prometeu ao trocar "à vista de todos" por
+    "por ato com motivo e trilha".
+
+    **Pela operação, e não pelo identificador da inscrição.** Pôr a inscrição em `identificadores`
+    traria junto tudo o que é auditado sob ela — os atos do candidato no rascunho e cada abertura do
+    dossiê —, e mudaria o que esta tela mostra por uma razão que não é desta feature. Subconsulta, e
+    não lista: não cresce com as inscrições do certame nem acrescenta consulta à página.
+
+    Fora de `_atos_da_conducao` de propósito: o relatório do Edital conta os atos dela como registro
+    posterior ao desfecho, e uma conferência é leitura registrada, e não ato do certame.
+
+    O nome da operação vem de quem a grava, e não de uma cópia aqui: import tardio, como o de
+    `_atos_da_conducao`, pela mesma razão.
+    """
+    from processo_seletivo.inscricoes.application.consulta import CONFERIR_IDENTIDADE
+    from processo_seletivo.inscricoes.models import Inscricao
+
+    return Q(
+        aggregate_type="Inscricao",
+        operation=CONFERIR_IDENTIDADE,
+        aggregate_id__in=Inscricao.objects.filter(edital=edital).values("id"),
+    )
 
 
 def _atos_da_conducao(edital):

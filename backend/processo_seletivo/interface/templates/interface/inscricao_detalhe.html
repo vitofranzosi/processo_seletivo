@@ -33,6 +33,32 @@
   </dl>
 </section>
 
+{% if conferivel %}
+<section class="conferencia" aria-labelledby="conferir-identidade">
+  <h2 id="conferir-identidade">Conferir identidade</h2>
+  {% comment %}
+  O CPF completo e a data de nascimento saem por ato, e nunca ficam nesta tela (180, D-002): o caso
+  e excepcional, e o dado a vista o tempo todo exporia mais do que ele pede. O formulario e POST
+  porque a revelacao nao pode ficar no historico do navegador nem ser repetida por um clique.
+
+  So para a enviada: rascunho nao e ato, e o que ele mostraria e o cadastro de agora.
+  {% endcomment %}
+  <p>Para conferir CPF e data de nascimento na Receita, em caso de dúvida. Fica registrado quem
+    conferiu e por quê.</p>
+  <form method="post" action="{% url 'interface:conferir-identidade' inscricao.id %}">
+    {% csrf_token %}
+    {% if recusa_da_conferencia %}<p class="erro" role="alert" id="recusa-da-conferencia" tabindex="-1" autofocus>{{ recusa_da_conferencia }}</p>{% endif %}
+    <p class="campo">
+      <label for="motivo-da-conferencia">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+      <textarea id="motivo-da-conferencia" name="motivo" rows="2" maxlength="{{ tamanho_do_motivo }}" required aria-required="true" aria-describedby="ajuda-motivo-da-conferencia{% if recusa_da_conferencia %} recusa-da-conferencia{% endif %}"{% if recusa_da_conferencia %} aria-invalid="true"{% endif %}></textarea>
+      <span class="ajuda" id="ajuda-motivo-da-conferencia">Por exemplo, o número do processo ou a
+        dúvida que surgiu. Não escreva CPF nem data aqui: o motivo vai à trilha, com o seu nome.</span>
+    </p>
+    <p class="salvar"><button type="submit" class="botao">Conferir identidade</button></p>
+  </form>
+</section>
+{% endif %}
+
 {% if requerimento %}
 <section class="conferencia" aria-labelledby="requerimento-de-matricula">
   <h2 id="requerimento-de-matricula">Requerimento de Matrícula</h2>
