@@ -98,8 +98,19 @@ def test_a_recusa_e_indistinguivel_da_inexistente(client, do_joao):
 
 
 def test_sem_sessao_nada_e_alcancavel(client, do_joao):
-    for rota, args in (
-        ("portal:inscricao", [do_joao.id]),
-        ("portal:comprovante", [do_joao.id]),
-    ):
-        assert client.get(reverse(rota, args=args)).status_code == 404, rota
+    assert client.get(reverse("portal:inscricao", args=[do_joao.id])).status_code == 404
+
+
+def test_sem_sessao_o_comprovante_leva_ao_acesso_e_nada_dele(client, do_joao):
+    """O link da confirmação por e-mail leva ao comprovante (181, FR-8357), como o da convocação
+    (121): sem sessão, o acesso, antes de qualquer consulta. Nada da inscrição vem na resposta, e o
+    identificador inventado recebe o mesmo redirecionamento — continua não alcançável.
+    """
+    resposta = client.get(reverse("portal:comprovante", args=[do_joao.id]))
+
+    assert resposta.status_code == 302
+    assert resposta["Location"].startswith(reverse("portal:acesso") + "?destino=")
+    assert do_joao.protocolo not in resposta.content.decode()
+    inventada = client.get(reverse("portal:comprovante", args=[INEXISTENTE]))
+    assert inventada.status_code == 302
+    assert inventada["Location"].replace(str(INEXISTENTE), str(do_joao.id)) == resposta["Location"]

@@ -5730,6 +5730,10 @@ OPERACOES = {
     # O aviso de pendência documental (134): o gesto de quem confere e cada resultado do despacho.
     "AVISO_PENDENCIAS": "Aviso de pendência documental às pessoas convocadas",
     "AVISO_PENDENCIA_ENVIO": "Resultado do envio de aviso de pendência documental",
+    # Cada tentativa da confirmação da inscrição por e-mail (181, FR-8358). "Enviada" quer dizer
+    # aceita pelo servidor de correio, e não recebida (FR-8359): o rótulo diz tentativa, e não
+    # entrega.
+    "CONFIRMAR_POR_EMAIL": "Tentativa da confirmação da inscrição por e-mail",
     "ACESSO_CONCEDER": "Concessão de acesso",
     "ACESSO_REVOGAR": "Revogação de acesso",
     # A entrega documental à formalização (117, FR-3699): a definição, a designação, a consulta e o

@@ -53,6 +53,7 @@ def _comprovante(**trocas):
             "protocolo": "2026-0042-7731",
             "verificacao": "K7Q2-9XPA",
             "selecao": "Especialização em Docência\nEdital 72/2026",
+            "edital": "72/2026",
             "perfil": "Professores da rede pública",
             "modalidade": "Ampla concorrência",
             "quando": "13/11/2026 às 10:02",
@@ -171,7 +172,7 @@ MENSAGENS = {
 }
 
 ROTULOS_DE_BOTAO = {
-    "Rever minha inscrição",
+    "Ver meu comprovante",
     "Acessar minha convocação",
     *correio.ROTULOS_DAS_ROTAS.values(),
 }
@@ -275,11 +276,18 @@ def test_o_comprovante_nao_leva_cpf_nem_telefone_e_guarda_o_que_os_testes_guarda
     for frase in (
         "Código de verificação:",
         "Perfil de vaga:",
-        "não implica deferimento",
+        # A ressalva de que enviar não é ser aceito, sem a palavra do deferimento (181, FR-8354).
+        "Enviada não quer dizer aceita",
         "código de acesso a cada entrada",
     ):
         assert frase in texto
     assert "CPF" not in texto
+
+
+def test_o_assunto_do_comprovante_diz_enviada_e_o_edital():
+    """181, FR-8353: sem o Edital, o assunto não fica com um buraco."""
+    assert _comprovante().assunto == "Sua inscrição foi enviada — Edital 72/2026"
+    assert _comprovante(edital="").assunto == "Sua inscrição foi enviada"
 
 
 def test_a_convocacao_tem_um_endereco_so_e_o_prazo_no_preheader():

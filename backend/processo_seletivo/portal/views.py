@@ -57,12 +57,13 @@ from processo_seletivo.identidade.application.mensagem import (
 from processo_seletivo.identidade.domain import codigo as codigo_de_acesso
 from processo_seletivo.identidade.domain.enderecos import canonizar, endereco_aceitavel
 from processo_seletivo.identidade.models import VALIDADE_EM_MINUTOS, DesafioDeAcesso
+from processo_seletivo.inscricoes.application import confirmacao
 from processo_seletivo.inscricoes.application.lista_exigida import lista_exigida
-from processo_seletivo.inscricoes.application.mensagem import enviar_comprovante
 from processo_seletivo.inscricoes.application.rascunho import (
     NOME_DA_AMPLA,
     abrir_inscricao,
     anexar_documento,
+    ator_do_candidato,
     descartes_por_mudanca_de_modalidade,
     gravar_dados,
     modalidades_publicadas,
@@ -3470,7 +3471,7 @@ def revisao(request, inscricao_id):
                     correlation_id=getattr(request, "correlation_id", ""),
                     fatos=fatos_informados,
                 )
-                _confirmar_por_email(request, registro)
+                _confirmar_por_email(request, registro, identidade)
                 return redirect(reverse("portal:comprovante", args=[registro.id]))
             except DomainError as exc:
                 erros.append(exc.detail)
@@ -3523,38 +3524,71 @@ def revisao(request, inscricao_id):
     )
 
 
-def _confirmar_por_email(request, registro):
+def _confirmar_por_email(request, registro, identidade):
     """O recibo do envio, na caixa de quem enviou — depois de a inscrição estar gravada.
 
     Chamado aqui, e não dentro de `enviar_inscricao`: o ato é do domínio, a mensagem é do canal, e
     amarrar um ao outro faria uma falha de SMTP desfazer uma inscrição válida (ver `mensagem.py`).
 
+    **Uma vez só, e com rastro** (181): `confirmacao.confirmar` trava a inscrição, não envia de novo
+    o que já foi aceito — o duplo clique simultâneo devolve a mesma inscrição às duas requisições, e
+    as duas chegavam aqui — e registra cada tentativa na trilha. A mesma chamada serve à nova
+    tentativa que a titular pede no comprovante.
+    """
+    if registro.versao_aceita is None:
+        # A enviada sem versão aceita não tem o que a mensagem diz; o comprovante dela também não.
+        return None
+    return confirmacao.confirmar(
+        inscricao=registro,
+        ator=ator_do_candidato(identidade, registro.edital),
+        montar_dados=lambda: _dados_da_confirmacao(request, registro),
+        correlation_id=getattr(request, "correlation_id", ""),
+    )
+
+
+def _dados_da_confirmacao(request, registro):
+    """Os dados da mensagem, lidos do que o comprovante mostra.
+
     Lê a **versão aceita**, como o comprovante: a mensagem e o papel precisam dizer a mesma coisa,
     e a vigente pode já ter mudado por Retificação no instante seguinte.
     """
     aceita = registro.versao_aceita
-    if aceita is None:
-        return
     dados = _dados_do_comprovante(request, registro, aceita.content, aceita)
     campos = dict(dados["campos"])
-    enviar_comprovante(
-        para=registro.email,
-        dados={
-            "protocolo": dados["protocolo"],
-            "verificacao": dados["codigo_de_verificacao"],
-            "endereco": dados["endereco"],
-            # Sem CPF e sem telefone: não ajudam quem lê, e viajam com a mensagem encaminhada.
-            "selecao": f"{campos['Processo Seletivo']}\nEdital {campos['Edital']}",
-            "perfil": campos["Perfil de Vaga"],
-            "modalidade": campos["Concorrência"],
-            "quando": campos["Enviada em"],
-            "documentos": dados["documentos"],
-            # A unidade que o ato gravou, a mesma do comprovante em papel (109, FR-3209, D-004).
-            "assinatura": identificacao.do_ato(
-                dados["unidade"]["sigla"], registro.edital.institution_scope
-            ).rotulo,
-        },
-    )
+    return {
+        "protocolo": dados["protocolo"],
+        "verificacao": dados["codigo_de_verificacao"],
+        # O comprovante **desta** inscrição, e não a vitrine (181, FR-8357). O link não autentica:
+        # sem sessão, o comprovante leva ao acesso, e depois do código volta para cá.
+        "endereco": request.build_absolute_uri(reverse("portal:comprovante", args=[registro.id])),
+        # Sem CPF e sem telefone: não ajudam quem lê, e viajam com a mensagem encaminhada.
+        "selecao": f"{campos['Processo Seletivo']}\nEdital {campos['Edital']}",
+        "edital": campos["Edital"],
+        "perfil": campos["Perfil de Vaga"],
+        "modalidade": campos["Concorrência"],
+        "quando": campos["Enviada em"],
+        "documentos": dados["documentos"],
+        # A unidade que o ato gravou, a mesma do comprovante em papel (109, FR-3209, D-004).
+        "assinatura": identificacao.do_ato(
+            dados["unidade"]["sigla"], registro.edital.institution_scope
+        ).rotulo,
+    }
+
+
+@require_http_methods(["POST"])
+@resposta_privada
+def confirmar_de_novo(request, inscricao_id):
+    """A nova tentativa da confirmação, pedida pela titular no comprovante (181, FR-8363, D-003).
+
+    **Só a titular, e só da enviada** (FR-8364): sem sessão, de outra pessoa ou de rascunho, a mesma
+    resposta de inscrição inexistente, e nada sai. Se a confirmação já foi aceita — a aba antiga, o
+    botão apertado duas vezes —, `confirmar` não envia nada, e a tela continua dizendo que saiu.
+    """
+    registro, identidade, _ = _inscricao_do_titular(request, inscricao_id)
+    if registro.status != Inscricao.Status.SUBMETIDA:
+        raise DomainError("not_found", "Recurso não encontrado.", 404)
+    _confirmar_por_email(request, registro, identidade)
+    return redirect(reverse("portal:comprovante", args=[registro.id]))
 
 
 def _unidade_da_versao(versao):
@@ -3651,7 +3685,13 @@ def comprovante(request, inscricao_id):
 
     Imprimível pelo navegador, e não PDF gerado: o comprovante não é ato normativo — é a prova de
     que a inscrição chegou, e o navegador já sabe imprimir uma página.
+
+    **Sem identidade na sessão, o acesso, e antes de qualquer consulta** (181, FR-8357). O link da
+    confirmação leva aqui, e sem sessão ele dava 404 à própria titular. É o desenho da convocação
+    (121, FR-3876): a resposta não depende do identificador, e a titularidade é conferida na volta.
     """
+    if not request.session.get(identidade_do_candidato.CHAVE_SESSAO):
+        return redirect(f"{reverse('portal:acesso')}?{urlencode({'destino': request.path})}")
     registro, identidade, versao = _inscricao_do_titular(request, inscricao_id)
     if registro.status != Inscricao.Status.SUBMETIDA:
         return redirect(reverse("portal:inscricao", args=[registro.id]))
@@ -3695,6 +3735,9 @@ def comprovante(request, inscricao_id):
             # Formatado na saída, e não só na entrada: inscrições anteriores a esta correção
             # guardaram o CPF como a pessoa digitou.
             "cpf_do_candidato": formatar_cpf(registro.cpf),
+            # O que aconteceu com a mensagem, pela última tentativa (181, FR-8362). Sem tentativa —
+            # a inscrição anterior à 181, o cenário de treinamento —, a tela não afirma nada.
+            "confirmacao": confirmacao.ultima(registro),
         },
     )
 

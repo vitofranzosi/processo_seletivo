@@ -76,6 +76,12 @@ urlpatterns = [
         name="requerimento-anterior",
     ),
     path("inscricoes/<uuid:inscricao_id>/comprovante", views.comprovante, name="comprovante"),
+    # A nova tentativa da confirmação por e-mail, pedida pela titular no comprovante (181, FR-8363).
+    path(
+        "inscricoes/<uuid:inscricao_id>/comprovante/confirmacao",
+        views.confirmar_de_novo,
+        name="comprovante-confirmacao",
+    ),
     # A verificação da autodeclaração por vídeo (166), atrás da chave `VERIFICACAO_POR_VIDEO`, que a
     # produção recusa. A Etapa vai no endereço porque um Edital pode ter mais de uma que admita o
     # vídeo; nada sobre a pessoa vai nele (FR-073 da `009`).

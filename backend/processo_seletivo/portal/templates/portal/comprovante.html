@@ -24,8 +24,33 @@ Continua sendo página imprimível, e não PDF gerado (FR-063): o comprovante n�
 </div>
 
 {% include "portal/_etapas.html" %}
-<p class="situacao aberto nao-imprime" role="status">✓ Inscrição realizada</p>
+{% comment %}
+"Enviada", a palavra da área do candidato e da mensagem (181, FR-8365). "Realizada" era uma terceira,
+e "recebida" é o degrau da relação que a comissão publica depois (148).
+{% endcomment %}
+<p class="situacao aberto nao-imprime" role="status">✓ Inscrição enviada</p>
 <h1>Comprovante de inscrição</h1>
+{% if confirmacao %}
+{% comment %}
+O que aconteceu com a mensagem (181, FR-8362), fora do papel: o comprovante impresso e o PDF continuam
+como estavam (FR-8366). "Enviamos" é o que o sistema sabe — o servidor de correio aceitou —, e não que
+a mensagem chegou (FR-8359): por isso a lembrança da caixa de spam.
+{% endcomment %}
+{% if confirmacao.enviada %}
+<p class="nao-imprime ajuda">Enviamos a confirmação para <strong>{{ inscricao.email }}</strong> em
+  {{ confirmacao.em|date:"d/m/Y \à\s H\hi" }}. Se não a encontrar, procure na caixa de spam.</p>
+{% else %}
+<div class="nao-imprime aviso" role="status">
+  <p><strong>Não conseguimos enviar a confirmação para {{ inscricao.email }}.</strong></p>
+  <p>Sua inscrição foi enviada do mesmo jeito, e este comprovante vale como prova: baixe o PDF
+    abaixo.</p>
+  <form method="post" action="{% url 'portal:comprovante-confirmacao' inscricao.id %}">
+    {% csrf_token %}
+    <button type="submit" class="secundario">Enviar a confirmação de novo</button>
+  </form>
+</div>
+{% endif %}
+{% endif %}
 
 <div class="protocolo">
   <p class="linha-protocolo">

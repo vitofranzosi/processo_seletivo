@@ -1,13 +1,15 @@
 {% extends "correio/base.html" %}
 {% comment %}
-A confirmação do envio da inscrição, em HTML. O protocolo e o código de verificação vêm primeiro, num
-quadro de confirmação: são o que a pessoa precisa guardar. Depois, o que foi enviado, numa tabela de
-duas colunas; e a ressalva de que receber não é deferir, antes do único botão.
+A confirmação do envio da inscrição, em HTML (010, FR-084; 181). O protocolo e o código de
+verificação vêm primeiro, num quadro de confirmação: são o que a pessoa precisa guardar. Depois, o que
+foi enviado; o que acontece agora, antes do único botão; e como entrar.
+
+"Enviada", e nunca "recebida" (181, FR-8354): o porquê está no texto puro, que diz o mesmo.
 {% endcomment %}
-{% block titulo_do_documento %}Inscrição recebida — {{ protocolo }}{% endblock %}
+{% block titulo_do_documento %}Sua inscrição foi enviada{% if edital %} — Edital {{ edital }}{% endif %}{% endblock %}
 {% block preheader %}Protocolo: {{ protocolo }}{% endblock %}
 {% block conteudo %}
-<h1 class="titulo">Recebemos a sua inscrição.</h1>
+<h1 class="titulo">Sua inscrição foi enviada.</h1>
 <p class="subtitulo">{% for linha in selecao %}{{ linha }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" class="quadro">
 <tr><td class="destaque-confirmacao">
@@ -22,12 +24,13 @@ duas colunas; e a ressalva de que receber não é deferir, antes do único botã
 <tr><td class="dado-rotulo">Concorrência</td><td class="dado-valor">{{ modalidade }}</td></tr>
 <tr><td class="dado-rotulo">Enviada em</td><td class="dado-valor">{{ quando }}</td></tr>
 </table>
-<p class="rotulo">Documentos recebidos</p>
+<p class="rotulo">Documentos enviados</p>
 {% if documentos %}<ul class="lista">
 {% for documento in documentos %}<li class="item">{{ documento.requisito }}: {{ documento.arquivo }}</li>
 {% endfor %}</ul>{% else %}<p class="texto">(nenhum)</p>{% endif %}
-<p class="fraco">O recebimento não implica deferimento: a conferência dos documentos e a análise dos requisitos são feitas pela comissão, nos prazos do Edital.</p>
-<p class="texto">Para rever a inscrição e baixar o comprovante, acesse:</p>
-{% include "correio/_botao.html" with endereco=endereco rotulo="Rever minha inscrição" %}
+<p class="rotulo espaco">O que acontece agora</p>
+<p class="texto">Por enquanto, você não precisa fazer nada. Enviada não quer dizer aceita: a comissão analisa as inscrições, e o resultado será publicado conforme o Edital.</p>
+<p class="texto">Acompanhe a situação da sua inscrição na área do candidato. Se o Edital pedir algum passo seu, ele aparece lá.</p>
+{% include "correio/_botao.html" with endereco=endereco rotulo="Ver meu comprovante" %}
 <p class="fraco">Entre com este e-mail: enviamos um código de acesso a cada entrada, e não há senha.</p>
 {% endblock %}

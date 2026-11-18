@@ -29,6 +29,11 @@ dentro da transação amarraria um ato administrativo à disponibilidade de um s
 falha de rede desfaria uma inscrição válida, e um rollback posterior deixaria na caixa da pessoa a
 confirmação de algo que não aconteceu (Princípio IV). Falha de envio não custa a inscrição, e por
 isso ela é registrada no servidor em vez de interromper a pessoa.
+
+**Quantas vezes, e o que aconteceu, é de `confirmacao.py`** (181). Este módulo continua sendo o
+único da confirmação que põe mensagem na fila — é ele que `tests/test_situacoes_de_mensagem.py`
+declara —, e responde só se o servidor de correio aceitou. A trava, a leitura das tentativas
+anteriores e o registro na trilha moram ao lado, para que esta regra não dependa de quem chama.
 """
 
 import logging
@@ -64,6 +69,9 @@ def compor_comprovante(dados):
             "assinatura": assinatura,
             "protocolo": dados["protocolo"],
             "verificacao": dados["verificacao"],
+            # O Edital no assunto (181, FR-8353): quem se inscreve em mais de uma seleção distingue
+            # as mensagens sem abrir cada uma. Vazio, o assunto sai sem ele, e não com um buraco.
+            "edital": dados.get("edital", ""),
             "selecao": [linha for linha in str(dados["selecao"]).split("\n") if linha.strip()],
             "perfil": dados["perfil"],
             "modalidade": dados["modalidade"],
@@ -75,7 +83,7 @@ def compor_comprovante(dados):
 
 
 def entregar(*, para, mensagem):
-    """Põe a mensagem na fila do correio: texto puro, HTML e os cabeçalhos de mensagem automática.
+    """Põe a mensagem na fila do correio e devolve quantas o servidor aceitou.
 
     **Um destinatário só, sem cópia.** `EmailMultiAlternatives`, e não `send_mail`, porque só ela
     leva cabeçalho: `Auto-Submitted` diz aos servidores que ninguém a escreveu à mão, e a resposta
@@ -89,19 +97,32 @@ def entregar(*, para, mensagem):
         headers=dict(correio.CABECALHOS),
     )
     email.attach_alternative(mensagem.html, "text/html")
-    email.send(fail_silently=False)
+    return email.send(fail_silently=False)
 
 
-def enviar_comprovante(*, para: str, dados: dict) -> None:
-    """Envia o recibo do envio — e, falhando, registra sem interromper quem se inscreveu.
+def enviar_comprovante(*, para: str, dados: dict, inscricao_id=None) -> bool:
+    """Envia o recibo do envio e diz se o servidor de correio o aceitou — sem interromper ninguém.
+
+    **O retorno é contado** (181, FR-8360). O envio devolve quantas mensagens entraram na fila, e um
+    backend que engole a mensagem devolve `0` sem levantar exceção: tratá-lo como sucesso diria à
+    pessoa que a confirmação saiu quando não saiu — a mesma armadilha que `comunicar.py` da
+    convocação já documentou.
 
     Sem `para` não há o que fazer: uma inscrição sem endereço não deveria existir, mas se existir
     não é aqui que ela vai ser descoberta.
     """
     if not para:
-        return
+        return False
     try:
-        entregar(para=para, mensagem=compor_comprovante(dados))
+        aceitas = entregar(para=para, mensagem=compor_comprovante(dados))
     except Exception:
-        # Sem o endereço e sem o protocolo: o registro técnico diz que falhou, e nada além disso.
-        logger.exception("Falha ao enviar a confirmação de inscrição.")
+        # A inscrição, pelo identificador, e não o endereço nem o protocolo (181, FR-8361): é o que
+        # permite achar a falha na trilha sem pôr dado pessoal no registro técnico.
+        logger.exception("Falha ao enviar a confirmação da inscrição %s.", inscricao_id)
+        return False
+    if not aceitas:
+        logger.error(
+            "A confirmação da inscrição %s não foi aceita pelo servidor de correio.", inscricao_id
+        )
+        return False
+    return True
