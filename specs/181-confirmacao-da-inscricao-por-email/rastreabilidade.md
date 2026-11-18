@@ -9,8 +9,11 @@ Caminhos de código relativos a `backend/processo_seletivo/`. As abreviações:
 - **AE** — `tests/unit/test_apresentacao_dos_emails.py` (a mensagem composta)
 - **SM** — `tests/test_situacoes_de_mensagem.py` (nenhum remetente novo)
 
-**Estado em 18/11**: implementado. A verificação no navegador, com as capturas em `capturas/`, está
-descrita ao fim.
+**Estado em 18/11**: implementado. A suíte inteira contra PostgreSQL, com 4 workers, fechou em
+**21797 passando e 29 pulados, sem falha** (sem os grupos `assistente` e `navegador`). A primeira
+passada acusou três guardiões — o rótulo da operação na trilha legível, a linha no `README` e o caso
+sem sessão de `tests/authorization/test_idor_area.py` —, corrigidos antes da segunda. A verificação no
+navegador, com as capturas em `capturas/`, está descrita ao fim.
 
 ---
 
