@@ -819,6 +819,20 @@
       ],
       "port": 8178,
       "url": "http://localhost:8178"
+    },
+    {
+      "name": "confirmacao-181",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_181_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-181 uv run python manage.py runserver 8181"],
+      "port": 8181,
+      "url": "http://localhost:8181"
+    },
+    {
+      "name": "confirmacao-181-correio-fora",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd backend && LC_ALL=pt_BR.UTF-8 DJANGO_SETTINGS_MODULE=config.settings.development DB_NAME=ps_181_demo DB_USER=$USER DB_RUNTIME_USER=$USER INTERFACE_SELETOR_IDENTIDADE=true ARQUIVOS_CANDIDATOS_RAIZ=/tmp/ps-arquivos-181 DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend EMAIL_HOST=localhost EMAIL_PORT=1 EMAIL_USE_TLS=false EMAIL_TIMEOUT=2 uv run python manage.py runserver 8182"],
+      "port": 8182,
+      "url": "http://localhost:8182"
     }
   ]
 }

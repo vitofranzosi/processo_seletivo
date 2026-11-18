@@ -71,7 +71,7 @@ def test_o_envio_leva_ao_comprovante(client, inscricao_de_maria):
     corpo = client.get(resposta["Location"]).content.decode()
     enviada = Inscricao.objects.get()
     assert enviada.protocolo in corpo
-    assert "Inscrição realizada" in corpo
+    assert "Inscrição enviada" in corpo
     assert "Professor de Informática" in corpo
     assert "rg.pdf" in corpo
 

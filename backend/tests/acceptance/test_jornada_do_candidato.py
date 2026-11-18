@@ -117,7 +117,7 @@ def test_do_edital_publicado_ate_a_equipe_abrir_os_documentos(client, selecao, s
     inscricao.refresh_from_db()
     comprovante = client.get(envio["Location"]).content.decode()
     assert inscricao.protocolo in comprovante
-    assert "Inscrição realizada" in comprovante
+    assert "Inscrição enviada" in comprovante
     assert inscricao.status == Inscricao.Status.SUBMETIDA
     assert inscricao.versao_aceita_id is not None
     assert DocumentoSubmetido.objects.filter(inscricao=inscricao).count() == 3

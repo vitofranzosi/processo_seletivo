@@ -7,7 +7,6 @@ mão. Dez eixos, e a lista está escrita como lista de propósito: uma verifica�
 aparece como erro, aparece como inscrição aceita que não devia ter sido.
 """
 
-import hashlib
 from datetime import date
 
 from django.conf import settings
@@ -29,7 +28,7 @@ from processo_seletivo.inscricoes.models import DocumentoSubmetido, Inscricao, V
 from processo_seletivo.shared.api.problems import DomainError
 from processo_seletivo.shared.application.commands import command_context
 from processo_seletivo.shared.arquivos import ASSINATURA_PDF, resumo
-from processo_seletivo.shared.concurrency import compare_and_swap
+from processo_seletivo.shared.concurrency import compare_and_swap, travar_consultivamente
 from processo_seletivo.shared.idempotency import reserve
 
 SUBMETER = "inscricao:submeter"
@@ -49,14 +48,10 @@ def _travar_o_par(inscricao):
     desnecessária entre dois candidatos, nunca correção.
 
     Fora do PostgreSQL é no-op, e é honesto que seja: SQLite serializa a escrita inteira, e a
-    corrida que este lock impede não existe lá.
+    corrida que este lock impede não existe lá. A técnica mora em
+    `shared.concurrency.travar_consultivamente`, com a mesma chave de antes.
     """
-    if connection.vendor != "postgresql":
-        return
-    material = f"{inscricao.identity_subject}:{inscricao.edital_id}".encode()
-    chave = int.from_bytes(hashlib.sha256(material).digest()[:8], "big", signed=True)
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [chave])
+    travar_consultivamente(f"{inscricao.identity_subject}:{inscricao.edital_id}")
 
 
 def _travar_o_edital(inscricao):
