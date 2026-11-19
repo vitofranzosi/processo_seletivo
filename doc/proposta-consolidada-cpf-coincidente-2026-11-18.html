@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Proposta consolidada — CPF coincidente e teto de inscrições</title>
+  <style>
+    :root {
+      --fundo: #f4f6f5;
+      --papel: #ffffff;
+      --tinta: #17211e;
+      --secundaria: #52615c;
+      --linha: #d9dfdc;
+      --marca: #176b55;
+      --marca-fundo: #e5f3ed;
+      --atencao: #8a5700;
+      --atencao-fundo: #fff1d5;
+      --neutro: #edf0ee;
+      --raio: 14px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fundo: #121816;
+        --papel: #1a221f;
+        --tinta: #edf2f0;
+        --secundaria: #abb8b3;
+        --linha: #34423d;
+        --marca: #76d5b7;
+        --marca-fundo: #173a30;
+        --atencao: #f0c36e;
+        --atencao-fundo: #3b2d11;
+        --neutro: #25302c;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--fundo);
+      color: var(--tinta);
+      font: 17px/1.58 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main { max-width: 840px; margin: 0 auto; padding: 38px 18px 72px; }
+    header { margin-bottom: 42px; }
+    h1, h2, h3 { line-height: 1.2; }
+    h1 { margin: 7px 0 14px; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -.025em; }
+    h2 { margin: 46px 0 14px; font-size: 1.48rem; }
+    h3 { margin: 26px 0 8px; font-size: 1.08rem; }
+    p { margin: 0 0 13px; }
+    ul, ol { margin: 0 0 16px; padding-left: 24px; }
+    li { margin-bottom: 7px; }
+    code { font: .9em ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .sobre {
+      margin: 0;
+      color: var(--secundaria);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .abertura { color: var(--secundaria); font-size: 1.14rem; max-width: 720px; }
+    .estado {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--atencao-fundo);
+      color: var(--atencao);
+      font-size: .79rem;
+      font-weight: 700;
+    }
+    .destaque {
+      padding: 20px;
+      border: 1px solid var(--linha);
+      border-left: 5px solid var(--marca);
+      border-radius: 0 var(--raio) var(--raio) 0;
+      background: var(--papel);
+    }
+    .destaque p:last-child { margin-bottom: 0; }
+    .formula {
+      margin: 18px 0;
+      padding: 17px;
+      border-radius: var(--raio);
+      background: var(--marca-fundo);
+      color: var(--marca);
+      text-align: center;
+      font-size: 1.04rem;
+      font-weight: 750;
+    }
+    .comparacao {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    @media (min-width: 640px) { .comparacao { grid-template-columns: 1fr 1fr; } }
+    .cartao {
+      padding: 17px;
+      border: 1px solid var(--linha);
+      border-radius: var(--raio);
+      background: var(--papel);
+    }
+    .cartao h3 { margin-top: 0; }
+    .cartao p:last-child { margin-bottom: 0; }
+    .fluxo {
+      margin: 18px 0;
+      padding: 18px 20px;
+      border-radius: var(--raio);
+      background: var(--neutro);
+      font: .94rem/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+    .passos { counter-reset: passo; list-style: none; padding: 0; }
+    .passos li {
+      counter-increment: passo;
+      position: relative;
+      min-height: 48px;
+      margin: 0 0 10px;
+      padding: 12px 14px 12px 55px;
+      border: 1px solid var(--linha);
+      border-radius: 11px;
+      background: var(--papel);
+    }
+    .passos li::before {
+      content: counter(passo);
+      position: absolute;
+      top: 10px;
+      left: 13px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--marca-fundo);
+      color: var(--marca);
+      font-weight: 800;
+      line-height: 30px;
+      text-align: center;
+    }
+    .nota {
+      margin: 18px 0;
+      padding: 14px 16px;
+      border-radius: var(--raio);
+      background: var(--atencao-fundo);
+      color: var(--tinta);
+    }
+    .nota strong { color: var(--atencao); }
+    .decisao {
+      margin-top: 48px;
+      padding: 22px;
+      border-radius: var(--raio);
+      background: var(--marca-fundo);
+    }
+    .decisao h2 { margin-top: 0; color: var(--marca); }
+    footer {
+      margin-top: 50px;
+      padding-top: 18px;
+      border-top: 1px solid var(--linha);
+      color: var(--secundaria);
+      font-size: .86rem;
+    }
+
+    @media print {
+      :root {
+        --fundo: #ffffff;
+        --papel: #ffffff;
+        --tinta: #111111;
+        --secundaria: #444444;
+        --linha: #cccccc;
+        --marca: #145944;
+        --marca-fundo: #edf6f2;
+        --atencao: #6d4500;
+        --atencao-fundo: #fff5df;
+        --neutro: #f1f1f1;
+      }
+      body { font-size: 11pt; }
+      main { max-width: none; padding: 0; }
+      h2 { break-after: avoid; }
+      .cartao, .destaque, .nota, .decisao, .passos li { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="sobre">Proposta consolidada · GPS · 18/11/2026</p>
+    <h1>CPF coincidente e teto de inscrições</h1>
+    <p class="abertura">Uma solução sem dependência inicial do Gov.br, que evita trajetórias
+      duplicadas em sorteios e processos classificatórios, respeita o limite de Perfis publicado
+      pelo Edital e protege a inscrição legítima.</p>
+    <span class="estado">Proposta para discussão</span>
+  </header>
+
+  <section aria-labelledby="objetivo">
+    <h2 id="objetivo">Objetivo</h2>
+    <p>Manter o acesso simples por e-mail e garantir que nenhuma pessoa obtenha duas oportunidades
+      na mesma seleção, sem permitir que um terceiro cancele uma inscrição legítima apenas
+      conhecendo o CPF.</p>
+    <p>A solução também deve respeitar o teto de inscrições por candidato publicado pelo Edital. Um
+      teto igual a um, por exemplo, permite participação em somente um Perfil, ainda que contas
+      diferentes tenham declarado o mesmo CPF.</p>
+  </section>
+
+  <section aria-labelledby="regra-central">
+    <h2 id="regra-central">Regra central</h2>
+    <div class="destaque">
+      <p>O tratamento possui duas camadas complementares:</p>
+      <div class="formula"><code>Edital + Perfil + CPF normalizado declarado</code></div>
+      <p>Forma uma única participação dentro do Perfil e impede que contas diferentes produzam
+        trajetórias independentes na mesma oportunidade.</p>
+      <div class="formula"><code>Edital + CPF normalizado declarado</code></div>
+      <p>Reúne as participações dos diferentes Perfis para verificar se ultrapassam o teto publicado
+        pelo Edital.</p>
+      <p>Esses agrupamentos são provisórios: não afirmam que todas as inscrições pertencem à mesma
+        pessoa e não transformam o CPF em identidade ou credencial.</p>
+    </div>
+
+    <div class="comparacao">
+      <article class="cartao">
+        <h3>Sem coincidência</h3>
+        <div class="fluxo">uma inscrição
+└── uma participação</div>
+      </article>
+      <article class="cartao">
+        <h3>Mesmo Perfil</h3>
+        <div class="fluxo">inscrição da conta A
+inscrição da conta B
+└── uma participação</div>
+      </article>
+    </div>
+
+    <article class="cartao">
+      <h3>Perfis diferentes</h3>
+      <div class="fluxo">CPF declarado
+├── participação no Perfil A
+├── participação no Perfil B
+└── quantidade confrontada com o teto do Edital</div>
+      <p>Sem teto, as duas participações são permitidas. Com teto igual a um, é necessário definir
+        qual Perfil permanece antes do primeiro marco decisório envolvido.</p>
+    </article>
+  </section>
+
+  <section aria-labelledby="alem-do-sorteio">
+    <h2 id="alem-do-sorteio">Impacto além do sorteio</h2>
+    <p>O risco existe em qualquer processo que trate cada inscrição como uma trajetória independente.
+      Duas identidades com o mesmo CPF podem receber documentos, avaliações, resultados, posições,
+      recursos e convocações separados.</p>
+    <div class="comparacao">
+      <article class="cartao">
+        <h3>Análise documental</h3>
+        <p>A mesma pessoa pode apresentar versões diferentes e conservar a inscrição que for
+          habilitada.</p>
+      </article>
+      <article class="cartao">
+        <h3>Prova, entrevista ou avaliação</h3>
+        <p>Duas inscrições podem produzir tentativas, bancas ou avaliações independentes, permitindo
+          aproveitar o melhor resultado.</p>
+      </article>
+      <article class="cartao">
+        <h3>Classificação por pontuação</h3>
+        <p>Mesmo com notas iguais, a pessoa pode ocupar duas posições. Com notas diferentes, pode
+          conservar a melhor trajetória.</p>
+      </article>
+      <article class="cartao">
+        <h3>Modalidades e Perfis</h3>
+        <p>Contas diferentes podem ampliar o conjunto de listas e oportunidades além do teto
+          publicado pelo Edital.</p>
+      </article>
+      <article class="cartao">
+        <h3>Recursos</h3>
+        <p>Cada inscrição pode produzir contestação e reavaliação próprias, multiplicando caminhos
+          para alcançar um resultado favorável.</p>
+      </article>
+      <article class="cartao">
+        <h3>Convocação e ocupação</h3>
+        <p>As inscrições podem ser chamadas separadamente, ocupar posições e reter vagas até que a
+          duplicidade seja descoberta.</p>
+      </article>
+    </div>
+    <div class="nota">
+      <strong>Conclusão.</strong> A proteção não pode existir somente na geração dos números do
+      sorteio. Ela precisa governar qual inscrição representa a pessoa em todo o percurso.
+    </div>
+  </section>
+
+  <section aria-labelledby="deteccao">
+    <h2 id="deteccao">Quando surge uma coincidência ou excesso</h2>
+    <ol class="passos">
+      <li>Dentro da mesma identidade, o teto atual continua sendo aplicado no envio e a inscrição
+        excedente é recusada.</li>
+      <li>Quando outra identidade declara o mesmo CPF, a inscrição é aceita para que um terceiro não
+        consiga bloquear preventivamente o titular.</li>
+      <li>Nenhuma inscrição anterior é cancelada ou substituída automaticamente.</li>
+      <li>Se estiverem no mesmo Perfil, são agrupadas em uma única participação.</li>
+      <li>Se estiverem em Perfis diferentes, a quantidade é confrontada com o teto do Edital.</li>
+      <li>Todas as contas envolvidas recebem um aviso por e-mail e na área do candidato.</li>
+      <li>Nenhuma conta recebe nome, e-mail, protocolo ou documento da outra.</li>
+    </ol>
+    <div class="nota">
+      <strong>Proteção de privacidade.</strong> Antes do envio, o sistema não deve confirmar que
+      determinado CPF já participa da seleção. A confirmação permitiria consultar a participação
+      de terceiros. A comunicação acontece depois do envio.
+    </div>
+  </section>
+
+  <section aria-labelledby="prazo">
+    <h2 id="prazo">Prazo operacional</h2>
+    <p>A detecção e a comunicação acontecem no momento do envio, e não apenas depois do encerramento
+      das inscrições. O cronograma do Edital reserva uma janela de regularização antes do primeiro
+      marco que possa produzir vantagem independente.</p>
+    <ul>
+      <li>O prazo mínimo é contado do aviso, inclusive quando a coincidência surge no último dia.</li>
+      <li>Casos autorregularizados saem imediatamente da fila.</li>
+      <li>A comissão recebe somente as coincidências que continuarem pendentes perto do marco.</li>
+      <li>O bloqueio alcança apenas os Perfis e atos que consumiriam a participação pendente.</li>
+    </ul>
+    <p>A duração da janela e a consequência da ausência de manifestação precisam constar no Edital.
+      Não deve existir uma regra automática oculta para escolher um Perfil.</p>
+  </section>
+
+  <section aria-labelledby="autorregularizacao">
+    <h2 id="autorregularizacao">Autorregularização</h2>
+
+    <article class="cartao">
+      <h3>Reconheço as duas contas</h3>
+      <p>A pessoa comprova o controle dos dois e-mails, por códigos separados, e escolhe qual
+        inscrição deve representá-la. A outra permanece no histórico, marcada como sucedida.</p>
+      <p>Quando o teto entre Perfis tiver sido ultrapassado, ela escolhe quais participações deseja
+        manter, respeitando a quantidade publicada pelo Edital.</p>
+    </article>
+
+    <article class="cartao">
+      <h3>Informei o CPF incorretamente</h3>
+      <p>A pessoa comunica o erro e apresenta a evidência exigida. Se a correção for concluída antes
+        do fechamento da população que seguirá no certame, a inscrição passa ao agrupamento
+        correto. O valor originalmente enviado permanece preservado.</p>
+      <p>Sem fonte oficial, uma nova declaração não basta para corrigir um CPF já enviado.</p>
+    </article>
+
+    <article class="cartao">
+      <h3>Não reconheço a outra inscrição</h3>
+      <p>A contestação é feita na área autenticada. Ela não cria outra chance e não cancela ninguém:
+        apenas marca o agrupamento como disputado e registra quem contestou e quando.</p>
+    </article>
+  </section>
+
+  <section aria-labelledby="correcao">
+    <h2 id="correcao">Correção da própria inscrição</h2>
+    <p>Enquanto o prazo estiver aberto, o candidato pode substituir a própria inscrição pela mesma
+      conta. Como uma inscrição enviada é imutável, a correção ocorre por sucessão:</p>
+    <div class="fluxo">inscrição original
+→ ato de substituição
+→ conteúdo sucessor vigente</div>
+    <p>A original continua guardada. A regra “vale a última” é segura aqui porque a mesma identidade
+      está substituindo seu próprio envio. Ela não deve valer automaticamente entre contas
+      diferentes.</p>
+  </section>
+
+  <section aria-labelledby="estabilizacao">
+    <h2 id="estabilizacao">Marco de estabilização da participação</h2>
+    <p>Antes de uma inscrição receber avaliação, resultado, posição, número de sorteio ou convocação,
+      o sistema precisa saber qual inscrição representa cada participação. A representante segue;
+      as demais permanecem no histórico sem produzir efeitos.</p>
+    <div class="fluxo">inscrições enviadas
+→ detecção e autorregularização
+→ uma inscrição representante por participação
+→ habilitação, avaliação, classificação ou sorteio</div>
+    <h3>Processo com sorteio</h3>
+    <p>A relação que alimenta o sorteio contém somente inscrições representantes. Cada participação
+      recebe um número, e a coincidência não volta a aparecer como dois itens na relação.</p>
+    <h3>Processo sem sorteio</h3>
+    <p>A distribuição para análise documental, prova, entrevista ou avaliação também contém somente
+      inscrições representantes. Resultado, classificação, recurso e convocação derivam dessa mesma
+      escolha.</p>
+    <h3>Excesso do teto entre Perfis</h3>
+    <p>O excesso precisa ser resolvido antes do primeiro marco afetado. Como os Perfis possuem
+      universos independentes, deixar a pessoa avançar em mais Perfis do que o teto permite já
+      produziria vantagem.</p>
+    <div class="nota">
+      <strong>Não há solução posterior neutra.</strong> Sortear, avaliar ou classificar todas as
+      inscrições e escolher depois concede oportunidades adicionais. Excluir todas permite que um
+      terceiro prejudique o titular. Por isso, o sistema detecta cedo, oferece autorregularização e
+      bloqueia apenas o avanço relacionado se a pendência continuar sem solução.
+    </div>
+  </section>
+
+  <section aria-labelledby="analise">
+    <h2 id="analise">Quando a análise institucional é necessária</h2>
+    <p>A maioria dos casos deve sair por autorregularização. Quando as contas não resolverem a
+      situação, a instituição precisa definir a inscrição representante antes do primeiro marco
+      que produziria trajetórias independentes.</p>
+    <ol class="passos">
+      <li>A comissão abre todas as inscrições relacionadas ao agrupamento.</li>
+      <li>Confere documentos e manifestações apresentadas.</li>
+      <li>Registra decisão motivada e comunica as contas envolvidas.</li>
+      <li>Assegura prazo e canal de recurso.</li>
+    </ol>
+    <p>A decisão não apaga inscrição. Ela registra qual continua eficaz, quais deixam de produzir
+      efeitos e, quando houver correção, qual dado foi confirmado.</p>
+  </section>
+
+  <section aria-labelledby="cenarios">
+    <h2 id="cenarios">Proteção nos principais cenários</h2>
+    <div class="comparacao">
+      <article class="cartao">
+        <h3>Mesma pessoa, dois e-mails</h3>
+        <p>Duas inscrições formam um agrupamento e somente uma trajetória segue. Não há vantagem.</p>
+      </article>
+      <article class="cartao">
+        <h3>Terceiro usa CPF alheio</h3>
+        <p>A inscrição legítima não é cancelada automaticamente. Documentos e manifestações
+          determinam quem representa a participação antes do próximo marco decisório.</p>
+      </article>
+      <article class="cartao">
+        <h3>Candidato não lê o e-mail</h3>
+        <p>Sua chance continua preservada no agrupamento, sem depender de reação dentro do prazo.</p>
+      </article>
+      <article class="cartao">
+        <h3>Contestação falsa</h3>
+        <p>A contestação não cria outra trajetória. Todas as inscrições relacionadas são
+          confrontadas antes de avançar.</p>
+      </article>
+      <article class="cartao">
+        <h3>Teto igual a um, dois Perfis</h3>
+        <p>A pessoa escolhe um Perfil durante a autorregularização. Se afirmar que as inscrições são
+          de pessoas distintas, apresenta evidência para que cada uma siga sob o CPF correto antes
+          do primeiro marco afetado.</p>
+      </article>
+      <article class="cartao">
+        <h3>Edital sem teto</h3>
+        <p>Participações em Perfis diferentes são legítimas. A coincidência só reduz duplicidades
+          que existam dentro do mesmo Perfil.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="travas">
+    <h2 id="travas">Travas necessárias</h2>
+    <p>Não é necessário bloquear o Edital inteiro. O sistema impede somente:</p>
+    <ul>
+      <li>a inclusão de duas inscrições do mesmo agrupamento numa relação de habilitados;</li>
+      <li>a distribuição de inscrições coincidentes para avaliações independentes;</li>
+      <li>a emissão de classificação ou sorteio com participação ainda indefinida;</li>
+      <li>a convocação sem definição de qual inscrição representa a participação;</li>
+      <li>o avanço dos Perfis relacionados a um excesso de teto ainda não resolvido;</li>
+      <li>que uma inscrição sucedida continue produzindo efeitos.</li>
+    </ul>
+    <p>Perfis que não estejam relacionados à pendência continuam normalmente.</p>
+  </section>
+
+  <section aria-labelledby="edital">
+    <h2 id="edital">Regra conceitual para o Edital</h2>
+    <div class="destaque">
+      <p>“Cada candidato terá uma única participação por Perfil. Inscrições que declarem o mesmo CPF
+        serão agrupadas em uma única participação, sem cancelamento automático. Se o agrupamento
+        não for autorregularizado, a instituição verificará qual inscrição pode representá-lo antes
+        da habilitação, avaliação, classificação ou sorteio. Quando o Edital limitar a quantidade
+        de inscrições por candidato, as participações em Perfis diferentes também serão consideradas
+        em conjunto. Excesso não resolvido deverá ser regularizado antes do primeiro marco afetado.
+        Inscrições anteriores, substituídas ou inválidas permanecerão preservadas no histórico, sem
+        produzir participação adicional.”</p>
+    </div>
+    <p>A redação jurídica final deve ser validada pela instituição.</p>
+  </section>
+
+  <section class="decisao" aria-labelledby="decisao">
+    <h2 id="decisao">Decisão recomendada</h2>
+    <ol>
+      <li>Manter o acesso por e-mail e deixar o Gov.br fora do primeiro incremento.</li>
+      <li>Aceitar todas as inscrições sem cancelamento automático.</li>
+      <li>Permitir substituição somente pela própria identidade ou com controle comprovado das duas
+        contas.</li>
+      <li>Notificar imediatamente as contas envolvidas.</li>
+      <li>Oferecer autorregularização pela área autenticada.</li>
+      <li>Agrupar coincidências do mesmo Perfil em uma única participação em todo o certame.</li>
+      <li>Aplicar o teto do Edital sobre o conjunto de Perfis associado ao CPF declarado.</li>
+      <li>Definir uma inscrição representante antes da primeira habilitação, avaliação,
+        classificação ou sorteio que possa gerar vantagem independente.</li>
+      <li>Resolver excesso do teto entre Perfis antes do primeiro marco relacionado.</li>
+      <li>Fazer resultados, recursos, ocupação e convocação consumirem somente a participação
+        efetiva.</li>
+      <li>Preservar inscrições e decisões em histórico imutável.</li>
+      <li>Garantir decisão motivada, comunicação e recurso quando houver análise institucional.</li>
+    </ol>
+    <p><strong>Resultado:</strong> o trabalho humano não desaparece completamente, mas deixa de ser
+      rotina. Ele fica restrito aos casos que não foram autorregularizados antes do marco de
+      estabilização. Esse custo é necessário porque, depois que duas inscrições recebem avaliações
+      ou posições independentes, a vantagem já ocorreu.</p>
+  </section>
+
+  <footer>
+    Documento de discussão. Não representa decisão institucional, especificação aprovada ou
+    autorização de implementação.
+  </footer>
+</main>
+</body>
+</html>
