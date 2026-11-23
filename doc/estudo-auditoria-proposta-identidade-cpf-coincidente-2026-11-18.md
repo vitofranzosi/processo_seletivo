@@ -24,13 +24,15 @@ A coincidência não pode formar automaticamente uma pessoa, fundir contas, esco
 retirar efeito. Esses efeitos nascem somente do ato motivado da comissão, depois de manifestação e
 evidência suficientes.
 
-A proposta já pode seguir para especificação, mas não para implementação. Permanecem dois pontos P1:
+A proposta já pode seguir para especificação, mas não para implementação. Permanece um ponto P1:
 
-1. definir a base normativa, as evidências, os resultados possíveis, o prazo e a contestação da
-   decisão da comissão;
-2. compatibilizar o gate com a publicação existente: a relação de recebidas contém todas as
-   inscrições enviadas e é opcional, portanto não pode ser o único marco nem pode omitir em silêncio
-   a inscrição preservada no histórico.
+1. o comprovante público da Receita confirma os dados e a situação cadastral do CPF, mas não prova
+   que quem controla uma das identidades de acesso é o titular. A spec precisa definir a evidência
+   complementar que autoriza concluir “mesma pessoa” e aplicar a regra da última inscrição.
+
+O ponto da publicação fica encaminhado pela decisão de instalar gates em todos os fluxos necessários:
+a relação de recebidas preserva todas as inscrições enviadas, e nenhum consumidor de participação
+avança com caso pendente no seu recorte.
 
 ### Recomendação consolidada
 
@@ -64,6 +66,9 @@ ao valor apenas informado no formulário.
 - [Spec 010 — Área do candidato](../specs/010-area-do-candidato/spec.md)
 - [Spec 015 — Ordenação e classificação](../specs/015-ordenacao-e-classificacao/spec.md)
 - [Spec 148 — Publicação e homologação das inscrições](../specs/148-publicacao-e-homologacao-das-inscricoes/spec.md)
+- [Receita Federal — Consultar cadastro de pessoa física](https://www.gov.br/pt-br/servicos/consultar-cadastro-de-pessoas-fisicas)
+- [Receita Federal — Perguntas e respostas sobre CPF](https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/cadastros/cpf/assuntos-relacionados/perguntas-e-respostas)
+- [Modelo oficial do comprovante de situação cadastral](https://normas.receita.fazenda.gov.br/sijut2consulta/anexoOutros.action?idArquivoBinario=72461)
 - [Modelo de identidade](../backend/processo_seletivo/identidade/models.py)
 - [Associação de credenciais](../backend/processo_seletivo/identidade/application/associacao.py)
 - [Modelo de inscrição](../backend/processo_seletivo/inscricoes/models.py)
@@ -164,6 +169,35 @@ Isso produz duas consequências para a proposta:
    sorteio e convocação não dependem dela. A decisão definitiva deve existir antes do **primeiro**
    entre a publicação e qualquer operação que conceda trajetória independente.
 
+### 3.6 Data de nascimento e consulta à Receita Federal
+
+A consulta pública da Receita pede CPF e data de nascimento e emite comprovante com CPF, nome, data
+de nascimento e situação cadastral. Ela também permite verificar a autenticidade do comprovante.
+O nome correto do documento gerado é **Comprovante de Situação Cadastral no CPF**; o próprio modelo
+oficial informa que ele não substitui o **Comprovante de Inscrição no CPF**. A spec e a interface não
+devem tratar os dois como sinônimos.
+
+No sistema atual, porém, data de nascimento **não é atributo obrigatório de `CandidateIdentity` nem
+de toda inscrição**. Ela é um fato declarado quando o Edital decide coletá-la, ou aparece em jornadas
+posteriores específicas. Portanto, a premissa “sempre pedimos data de nascimento” ainda não é um
+invariante implementado. A futura spec deve escolher entre:
+
+- tornar data de nascimento dado obrigatório da inscrição para os Editais sujeitos a esta regra; ou
+- impedir a publicação do Edital enquanto todos os Perfis não declararem esse fato de forma uniforme.
+
+Em ambos os casos, a finalidade, o acesso e a retenção devem ser explícitos, porque se trata de novo
+uso obrigatório de dado pessoal.
+
+O comprovante da Receita prova a consistência e a situação **cadastral** daquele CPF. Ele não prova,
+sozinho, que a pessoa que controla um e-mail é o titular. A própria Receita orienta que o comprovante
+seja acompanhado de documento oficial com foto quando usado para identificar o titular. Logo:
+
+- consulta compatível pode sustentar `CPF_CADASTRALMENTE_COMPATIVEL`;
+- ela não basta, isoladamente, para concluir `MESMA_PESSOA` entre duas identidades conflitantes;
+- a comissão precisa de evidência complementar, como controle comprovado dos dois e-mails ou
+  documento oficial com foto já legitimamente exigido e acessível no processo;
+- a consulta será manual, sem integração ou automação com Receita/Gov.br neste incremento.
+
 ## 4. Confronto com a Constituição
 
 | Princípio | Avaliação | Condição para consistência |
@@ -173,7 +207,7 @@ Isso produz duas consequências para a proposta:
 | III — Segurança, dados e auditoria | **Parcial** | A decisão de usar a comissão evita vínculo automático, mas a spec ainda deve definir menor privilégio, evidência proporcional, notificação, contestação, minimização e auditoria append-only. |
 | IV — Regras explícitas e consistência | **Parcial** | Coincidência, análise, contestação e decisão precisam de máquina de estados, comandos transacionais e tratamento de concorrência. O gate deve alcançar publicação e todos os consumidores posteriores. |
 | V — Rastreabilidade e qualidade | **Parcial** | As specs 010, 015 e 148 precisam ser compatibilizadas explicitamente. Todos os consumidores posteriores precisam de requisitos e testes de regressão. |
-| VI — Jornada completa | **Parcial** | A comissão entra no fluxo, mas ainda faltam canal, prazo, ausência de resposta, contestação, erro de CPF e correção posterior de ponta a ponta. |
+| VI — Jornada completa | **Parcial** | O e-mail institucional foi escolhido como canal, mas ainda faltam prazo, falha de entrega, ausência de resposta, contestação, erro de CPF e correção posterior de ponta a ponta. |
 
 ### Invariante de múltiplos Perfis
 
@@ -254,6 +288,27 @@ preservadas, e apenas quando:
 
 Ela nunca pode escolher entre identidades apenas porque compartilham CPF. Também não pode ser
 aplicada retroativamente a Edital publicado que não contenha a regra.
+
+**Decisão de 23/11:** comprovado que se trata da mesma pessoa, a inscrição efetiva será a última
+submetida. A comissão decide os fatos do caso; ela não escolhe livremente qual inscrição prefere.
+Confirmado `MESMA_PESSOA`, o sistema deve derivar e mostrar na confirmação:
+
+- **efetiva:** a última inscrição conforme ordem total determinística;
+- **substituída por envio posterior:** cada inscrição anterior, que continua submetida e histórica,
+  mas não produz outra participação.
+
+“Substituída por envio posterior” é preferível a “cancelada” ou apenas “sem efeito”: descreve o
+motivo, preserva o ato recebido e não sugere exclusão. Deve ser efeito de uma decisão separada, sem
+acrescentar mutabilidade ao status `SUBMETIDA`.
+
+A ordem precisa ter desempate explícito — por exemplo, instante de submissão e protocolo — para que
+duas submissões muito próximas não deixem a comissão escolher. Quando o Edital publicar teto `N`
+entre Perfis, a interpretação recomendada é manter efetivas as `N` inscrições mais recentes da mesma
+pessoa no Edital, respeitada primeiro a unicidade efetiva dentro de cada Perfil. Se essa não for a
+intenção institucional, a spec deve substituir esta regra antes da implementação.
+
+A regra vale somente para Editais novos que a publiquem. Como o sistema ainda não está em produção,
+não haverá aplicação retroativa nem Retificação automática de Edital existente.
 
 #### Correção de CPF
 
@@ -354,16 +409,30 @@ comprovante antes, durante e depois de pedido negado ou contestado.
 **Situação em 23/11:** não bloqueia o primeiro incremento porque associação e recuperação de
 histórico foram retiradas do escopo. O finding volta a ser bloqueador quando essa fase for iniciada.
 
-### P1-03 — Falta base normativa para a representante e para o gate — ABERTO
+### P1-03 — Base normativa e prova da mesma pessoa — PARCIALMENTE ABERTO
 
-**Evidência:** os textos recomendam uma representante e, em versões anteriores, “a última”, mas
-deixam a regra para o Edital sem definir transição para Editais já publicados.
-**Risco:** retirada de efeito ou atraso sem regra publicada, com tratamento diferente entre
-candidatos e possível alteração retroativa.
-**Controle exigido:** regra estruturada e versionada no Edital; aplicação prospectiva; ato
-institucional explícito; definição dos marcos e do que ocorre na ausência de resposta.
-**Teste necessário:** Edital sem regra não recebe comportamento novo; Retificação afeta apenas o
-futuro; atos anteriores continuam reproduzíveis.
+**Decisões incorporadas:** a comissão decide; comprovada a mesma pessoa, a última inscrição é a
+efetiva e as anteriores ficam `SUBSTITUIDAS_POR_ENVIO_POSTERIOR`; a regra constará apenas de Editais
+novos; a decisão permanece válida sem resposta; manifestação e revisão usam o e-mail institucional
+do Processo Seletivo.
+
+**Evidência proposta:** consulta manual à Receita com CPF e data de nascimento e comprovante de
+situação cadastral autêntico.
+
+**Risco ainda aberto:** esse comprovante confirma CPF, nome, nascimento e situação cadastral, mas é
+obtido em consulta pública com dados conhecidos. Ele não prova que o controlador de um dos e-mails é
+o titular. Um terceiro que conheça CPF e nascimento poderia enviar por último e, se o comprovante
+fosse prova única, substituir a inscrição legítima.
+
+**Controle exigido:** tratar o comprovante como confirmação cadastral e exigir evidência complementar
+para `MESMA_PESSOA`: controle dos dois e-mails ou documento oficial com foto legitimamente coletado e
+conferido. Sem evidência suficiente, o resultado é `INCONCLUSIVO`, nunca aplicação automática da
+última inscrição. O Edital deve publicar regra, prazo de revisão e efeito da ausência de resposta.
+
+**Teste necessário:** Edital sem regra não recebe o comportamento; terceiro com CPF e nascimento da
+vítima não substitui sua inscrição apenas por enviar por último; comprovada a mesma pessoa, a última
+vence por ordem determinística; ausência de resposta mantém a decisão registrada; atos anteriores
+continuam reproduzíveis.
 
 ### P1-04 — Recuperação institucional ainda pode virar tomada de conta — FORA DO INCREMENTO
 
@@ -395,7 +464,7 @@ do primeiro ato, nenhum agrupamento automático, nenhum Gov.br, associação ou 
 incremento. Os documentos anteriores continuam como histórico de discussão, não como fontes
 simultâneas de requisito.
 
-### P1-06 — A publicação não é um marco universal e a relação de recebidas não pode omitir — ABERTO
+### P1-06 — A publicação não é um marco universal e a relação de recebidas não pode omitir — ENCAMINHADO
 
 **Evidência:** a spec 148 torna a publicação opcional, proíbe que os fluxos posteriores a exijam e
 manda a relação de recebidas contemplar toda inscrição enviada.
@@ -407,6 +476,10 @@ efetivas; nunca excluir ou reescrever o ato original.
 **Teste necessário:** sem publicação, um caso pendente impede o consumidor afetado; resolvido o caso,
 a relação de recebidas ainda reproduz tudo que foi enviado; decisão revista depois de publicação
 gera sucessão/correção, não mutação.
+
+**Situação em 23/11:** a decisão de instalar o gate em todos os fluxos necessários fecha a lacuna de
+marco. A futura spec deve listar os comandos alcançados e preservar todas as submetidas na relação de
+recebidas.
 
 ### P2-01 — Gate pode virar negação de serviço operacional
 
@@ -477,6 +550,17 @@ arquivo ativo, acesso direto, troca de identificador e retenção excessiva.
 forem suficientes; nomes opacos; autorização no download; tipo e tamanho permitidos no backend;
 entrega como anexo quando aplicável; nenhuma interpretação ativa pelo navegador; varredura ou
 quarentena proporcional ao ambiente; descarte conforme a política aprovada.
+
+### P2-08 — Consulta manual à Receita depende de operação externa
+
+A consulta tem captcha, pode estar indisponível e produz documento que pode ser apresentado pelo
+próprio interessado. Erro de digitação, consulta à pessoa errada ou comprovante adulterado não podem
+virar decisão definitiva.
+
+**Controles:** a comissão faz a consulta diretamente no canal oficial; valida QR Code ou código de
+controle; registra ator, instante, resultado e referência da evidência sem duplicar CPF completo na
+auditoria; não automatiza nem contorna captcha; indisponibilidade mantém o caso pendente e aciona o
+SLA, sem decisão presumida.
 
 ### P3-01 — Vocabulário pode criar um segundo conceito de participante
 
@@ -595,21 +679,27 @@ entrega. Até lá, “CPF verificado” e “CPF declarado” precisam ser conce
 3. O backend abre um caso de coincidência, sem concluir identidade compartilhada.
 4. O caso entra imediatamente na fila da comissão; novas inscrições coincidentes atualizam o mesmo
    caso e invalidam qualquer prévia obsoleta.
-5. Todas as identidades afetadas recebem aviso neutro e canal autenticado de manifestação.
+5. Todas as identidades afetadas recebem aviso neutro nos e-mails verificados e instrução para se
+   manifestar pelo e-mail institucional do Processo Seletivo.
 6. Quem não reconhece a outra inscrição contesta sem receber dados dela; controlar os dois e-mails
    é evidência, mas não funde as identidades.
-7. A comissão examina as inscrições e as manifestações, pede evidência adicional somente quando
-   necessária e registra a conclusão nos dois eixos: relação entre identidades e situação do CPF.
-8. Encerrado o período de inscrições, a comissão estabiliza os casos ainda abertos antes da primeira
-   publicação ou operação que gere vantagem, o que ocorrer primeiro.
-9. A decisão motivada define efeitos prospectivos, representante quando aplicável e o alcance por
-   Edital e Perfil, preservando todas as inscrições originais.
-10. Os envolvidos são notificados e têm canal e prazo de revisão; a decisão não concede acesso ao
-    histórico da outra identidade.
-11. A relação de recebidas, quando publicada, continua reproduzindo todas as inscrições enviadas. A
+7. A comissão consulta manualmente a Receita com CPF e data de nascimento, valida a autenticidade do
+   comprovante e registra somente a evidência necessária, com acesso restrito.
+8. A comissão trata a consulta como confirmação cadastral. Para concluir `MESMA_PESSOA`, exige ainda
+   controle dos dois e-mails ou documento oficial com foto legitimamente disponível no processo.
+9. A comissão registra a conclusão nos dois eixos: relação entre identidades e situação do CPF.
+10. Encerrado o período de inscrições, a comissão estabiliza os casos ainda abertos antes da primeira
+    publicação ou operação que gere vantagem, o que ocorrer primeiro.
+11. Confirmada a mesma pessoa, o sistema deriva a última inscrição como efetiva e marca as anteriores
+    como substituídas por envio posterior, respeitando o teto publicado entre Perfis.
+12. A decisão motivada define efeitos prospectivos e alcance por Edital e Perfil, preservando todas
+    as inscrições originais.
+13. Os envolvidos recebem a decisão e o prazo de revisão pelo canal institucional. Sem resposta no
+    prazo publicado, a decisão da comissão permanece válida.
+14. A relação de recebidas, quando publicada, continua reproduzindo todas as inscrições enviadas. A
     decisão da comissão governa a participação efetiva e os atos posteriores.
-12. Se a revisão mudar decisão já publicada, o sistema produz sucessor/correção, nunca edição.
-13. Associação de histórico, recuperação sem e-mail antigo e Gov.br permanecem em fases futuras.
+15. Se a revisão mudar decisão já publicada, o sistema produz sucessor/correção, nunca edição.
+16. Associação de histórico, recuperação sem e-mail antigo e Gov.br permanecem em fases futuras.
 
 Esse fluxo mantém baixa fricção no caso comum. A complexidade aparece somente quando já existe um
 conflito real, sem transformar CPF em senha ou exigir validação civil de todos os candidatos.
@@ -619,6 +709,7 @@ conflito real, sem transformar CPF em senha ou exigir validação civil de todos
 | Risco | Controle de domínio | Evidência automatizada necessária |
 |---|---|---|
 | CPF alheio usado primeiro | Envio sempre aceito; sem reserva ou vínculo | Teste ponta a ponta com atacante antes da vítima |
+| CPF e nascimento conhecidos | Comprovante da Receita não basta para `MESMA_PESSOA` | atacante envia por último e não substitui a vítima |
 | Duas chances no mesmo Perfil | Uma decisão efetiva antes do primeiro marco | Testes em sorteio e em avaliação sem sorteio |
 | Teto atravessado em Perfis | Regra versionada e decisão por pessoa comprovada | Concorrência PostgreSQL em Perfis diferentes |
 | Acesso cruzado indevido | Decisão do certame não associa identidades | IDOR e matriz de autorização negativa |
@@ -631,6 +722,7 @@ conflito real, sem transformar CPF em senha ou exigir validação civil de todos
 | Vazamento por aviso | Conteúdo neutro e respostas equivalentes | Testes de mensagem e enumeração |
 | Abuso interno | capacidades separadas e escopo mínimo | matriz de permissões e auditoria completa |
 | Evidência excessiva | coleta mínima, acesso restrito e retenção definida | autorização negativa e descarte conforme política |
+| Data de nascimento ausente | Campo obrigatório e validado nos Editais alcançados | publicação/inscrição recusada sem o dado exigido |
 | Retificação | vigência explícita e não retroatividade | casos antes/depois da nova versão |
 | Prazo encerrando | SLA e contingência publicados | caso criado no último dia e ausência de resposta |
 
@@ -642,6 +734,15 @@ conflito real, sem transformar CPF em senha ou exigir validação civil de todos
 - CPF coincidente abre caso, mas não forma automaticamente uma pessoa ou participação;
 - o envio continua aceito;
 - acesso continua por e-mail;
+- a comissão consulta manualmente CPF e data de nascimento na Receita Federal;
+- o comprovante autêntico da situação cadastral é evidência cadastral do caso;
+- comprovada a mesma pessoa, a última inscrição submetida é a efetiva;
+- as anteriores ficam “substituídas por envio posterior”, sem alteração ou exclusão da submissão;
+- a regra constará somente de Editais novos;
+- a decisão permanece válida se não houver manifestação no prazo;
+- manifestação e revisão usam o e-mail institucional do Processo Seletivo;
+- há gates na publicação e em todos os fluxos posteriores que possam produzir vantagem;
+- a relação de recebidas preserva todas as inscrições enviadas;
 - Gov.br, associação de históricos e recuperação sem e-mail antigo ficam fora do primeiro incremento;
 - a decisão do certame não muda titularidade nem concede acesso cruzado.
 
@@ -649,18 +750,18 @@ conflito real, sem transformar CPF em senha ou exigir validação civil de todos
 
 1. Qual é o nome e o significado exato do novo agregado, sem confundi-lo com identidade ou
    participante do sorteio?
-2. Qual norma autoriza escolher representante e tornar outra inscrição sem efeito?
-3. A regra vale apenas para Editais novos ou haverá Retificação expressa dos vigentes?
-4. Como o teto publicado é aplicado quando a identidade civil ainda não foi comprovada?
-5. Quais evidências permitem concluir mesma pessoa, pessoas distintas, erro ou uso indevido?
-6. Qual é a regra na ausência de manifestação, especialmente no último dia e perto da publicação?
-7. Qual é o canal, prazo e efeito da revisão da decisão da comissão?
-8. A primeira lista continua sendo a relação de todas as recebidas ou a instituição quer um novo ato
-   de inscrições efetivas?
-9. Qual é o SLA da comissão entre o encerramento das inscrições e a primeira publicação?
-10. Qual capacidade autoriza analisar, decidir e revisar, separada da capacidade de publicar?
-11. Quais atos posteriores consomem a fonte única de participação efetiva em cada modalidade?
-12. Que evidências adicionais podem ser coletadas, com qual acesso, retenção e descarte?
+2. Qual evidência complementar ao comprovante da Receita será aceita para concluir `MESMA_PESSOA`?
+3. A data de nascimento vira campo obrigatório comum ou fato obrigatório em todos os Perfis dos
+   Editais alcançados?
+4. Qual é o prazo de revisão e o que acontece quando a mensagem não é entregue ao e-mail?
+5. O teto `N` entre Perfis mantém exatamente as `N` inscrições mais recentes, como recomendado neste
+   estudo, ou haverá outra regra objetiva?
+6. Qual é o SLA da comissão entre o encerramento das inscrições e a primeira publicação?
+7. Qual capacidade autoriza analisar, decidir e revisar, separada da capacidade de publicar?
+8. Quais atos posteriores consomem a fonte única de participação efetiva em cada modalidade?
+9. Quais dados do comprovante e das evidências serão guardados, com qual acesso, retenção e descarte?
+10. Qual redação padrão o Edital usará para publicar a última inscrição efetiva, a substituição das
+    anteriores, a ausência de resposta e o direito de revisão?
 
 ## 13. Ordem recomendada de implementação futura
 
@@ -686,13 +787,15 @@ automática por CPF, desde que a futura spec preserve o envio, o histórico e o 
 
 ### Gate de segurança: SEGURAR A IMPLEMENTAÇÃO
 
-Permanecem abertos P1-03 e P1-06. O menor próximo passo verificável é a spec definir:
+Permanece parcialmente aberto apenas o P1-03. O P1-06 fica encaminhado pelos gates em todos os
+fluxos e pela preservação integral da relação de recebidas. O menor próximo passo verificável é a
+spec definir:
 
-- fundamento e critérios da decisão da comissão;
-- manifestação, prazo, ausência de resposta e revisão;
-- relação de recebidas como universo completo, ou outro ato expressamente modelado;
-- gate no primeiro entre publicação e qualquer consumidor posterior;
-- regra prospectiva para Editais novos e tratamento explícito dos já publicados.
+- evidência complementar ao comprovante cadastral da Receita para provar `MESMA_PESSOA`;
+- coleta obrigatória e uniforme da data de nascimento nos Editais alcançados;
+- prazo de revisão, ausência de resposta e falha de entrega do e-mail;
+- ordem total determinística da última inscrição e aplicação do teto `N` entre Perfis;
+- acesso, retenção e descarte dos comprovantes e documentos usados pela comissão.
 
 Associação de histórico, recuperação sem e-mail antigo e Gov.br não são pré-condições desta entrega e
 não devem reaparecer implicitamente no plano.
